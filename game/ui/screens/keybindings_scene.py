@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UILabel, UIPanel
+from pygame_gui.elements import UIButton, UILabel, UIPanel, UIScrollingContainer
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.ui.fonts import get_font
@@ -36,14 +36,15 @@ logger = logging.getLogger(__name__)
 # ── Layout constants ────────────────────────────────────────────────
 _TITLE_HEIGHT = 60
 _FOOTER_HEIGHT = 60
-_ROW_HEIGHT = 36
-_GROUP_HEADER_HEIGHT = 32
-_GROUP_GAP = 8
-_COL_ACTION_W = 280
-_COL_BINDING_W = 160
-_COL_REBIND_W = 90
-_COL_RESET_W = 70
-_ROW_PADDING = 10
+_ROW_HEIGHT = 32
+_GROUP_HEADER_HEIGHT = 28
+_GROUP_GAP = 6
+_COL_ACTION_W = 220
+_COL_BINDING_W = 120
+_COL_REBIND_W = 70
+_COL_RESET_W = 60
+_ROW_PADDING = 6
+_COLUMN_GAP = 20  # Gap between the two display columns
 
 # Modifier-only pygame key constants (ignored during capture)
 _MODIFIER_KEYS = frozenset({
@@ -125,38 +126,85 @@ class KeybindingsScene:
         )
         self._ui_elements.append(title)
 
-        # Content area (between title and footer)
+        # Content area (between title and footer) — scrollable
         content_top = _TITLE_HEIGHT
         content_height = self._height - _TITLE_HEIGHT - _FOOTER_HEIGHT
 
-        # Build rows inside a panel (acts as scrollable container visually)
-        self._build_action_rows(content_top, content_height)
+        self._scroll_container = UIScrollingContainer(
+            relative_rect=pygame.Rect(0, content_top, self._width, content_height),
+            manager=self._ui_manager,
+        )
+        self._ui_elements.append(self._scroll_container)
+
+        # Build rows inside the scrolling container in 2-column layout
+        total_content_height = self._build_action_rows()
+
+        # Set scrollable area to fit all content
+        self._scroll_container.set_scrollable_area_dimensions(
+            (self._width - 20, max(total_content_height + 10, content_height))
+        )
 
         # Footer buttons
         self._build_footer()
 
-    def _build_action_rows(self, top: int, max_height: int) -> None:
-        """Populate action rows grouped by context."""
-        y = top + _GROUP_GAP
-        content_left = max(0, (self._width - (_COL_ACTION_W + _COL_BINDING_W + _COL_REBIND_W + _COL_RESET_W + _ROW_PADDING * 4)) // 2)
+    def _build_action_rows(self) -> int:
+        """Populate action rows in 2-column layout inside scroll container.
 
-        for group_name, actions in ACTION_GROUPS.items():
-            # Group header
-            header_rect = pygame.Rect(content_left, y, _COL_ACTION_W + _COL_BINDING_W + _COL_REBIND_W + _COL_RESET_W + _ROW_PADDING * 3, _GROUP_HEADER_HEIGHT)
-            header = UILabel(
-                relative_rect=header_rect,
-                text=f"  {group_name}",
-                manager=self._ui_manager,
-            )
-            self._ui_elements.append(header)
-            self._group_rows[group_name] = {"label": header}
-            y += _GROUP_HEADER_HEIGHT
+        Returns:
+            Total content height in pixels.
+        """
+        col_w = _COL_ACTION_W + _COL_BINDING_W + _COL_REBIND_W + _COL_RESET_W + _ROW_PADDING * 3
+        total_w = col_w * 2 + _COLUMN_GAP
+        content_left = max(10, (self._width - total_w) // 2)
 
-            for action in actions:
-                self._build_action_row(action, content_left, y)
-                y += _ROW_HEIGHT
+        # Collect all groups into a flat list of (group_name, actions) pairs
+        groups = list(ACTION_GROUPS.items())
 
-            y += _GROUP_GAP
+        # Split groups across 2 columns — count total rows per group to balance
+        def group_height(actions):
+            return _GROUP_HEADER_HEIGHT + len(actions) * _ROW_HEIGHT + _GROUP_GAP
+
+        total_height = sum(group_height(a) for _, a in groups)
+        half = total_height // 2
+
+        # Assign groups to columns
+        col1_groups = []
+        col2_groups = []
+        col1_h = 0
+        for g_name, g_actions in groups:
+            gh = group_height(g_actions)
+            if col1_h <= half:
+                col1_groups.append((g_name, g_actions))
+                col1_h += gh
+            else:
+                col2_groups.append((g_name, g_actions))
+
+        max_y = 0
+        for col_idx, col_groups in enumerate([col1_groups, col2_groups]):
+            col_x = content_left + col_idx * (col_w + _COLUMN_GAP)
+            y = _GROUP_GAP
+
+            for group_name, actions in col_groups:
+                # Group header
+                header = UILabel(
+                    relative_rect=pygame.Rect(col_x, y, col_w, _GROUP_HEADER_HEIGHT),
+                    text=f"  {group_name}",
+                    manager=self._ui_manager,
+                    container=self._scroll_container,
+                )
+                self._ui_elements.append(header)
+                self._group_rows[group_name] = {"label": header}
+                y += _GROUP_HEADER_HEIGHT
+
+                for action in actions:
+                    self._build_action_row(action, col_x, y)
+                    y += _ROW_HEIGHT
+
+                y += _GROUP_GAP
+
+            max_y = max(max_y, y)
+
+        return max_y
 
     def _build_action_row(self, action: InputAction, x: int, y: int) -> None:
         """Build one row: [Action Name] [Binding] [Rebind] [Reset]."""
@@ -171,6 +219,7 @@ class KeybindingsScene:
             relative_rect=pygame.Rect(cx, y, _COL_ACTION_W, _ROW_HEIGHT),
             text=f"  {display_name}",
             manager=self._ui_manager,
+            container=self._scroll_container,
         )
         self._ui_elements.append(name_label)
         cx += _COL_ACTION_W + _ROW_PADDING
@@ -180,6 +229,7 @@ class KeybindingsScene:
             relative_rect=pygame.Rect(cx, y, _COL_BINDING_W, _ROW_HEIGHT),
             text=binding_text,
             manager=self._ui_manager,
+            container=self._scroll_container,
         )
         self._ui_elements.append(binding_label)
         cx += _COL_BINDING_W + _ROW_PADDING
@@ -189,6 +239,7 @@ class KeybindingsScene:
             relative_rect=pygame.Rect(cx, y, _COL_REBIND_W, _ROW_HEIGHT),
             text="Rebind",
             manager=self._ui_manager,
+            container=self._scroll_container,
         )
         self._ui_elements.append(rebind_btn)
         cx += _COL_REBIND_W + _ROW_PADDING
@@ -198,6 +249,7 @@ class KeybindingsScene:
             relative_rect=pygame.Rect(cx, y, _COL_RESET_W, _ROW_HEIGHT),
             text="Reset",
             manager=self._ui_manager,
+            container=self._scroll_container,
         )
         self._ui_elements.append(reset_btn)
 

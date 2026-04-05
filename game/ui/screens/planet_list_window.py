@@ -28,6 +28,16 @@ from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
 from game.ui.screens.planet_data_source import PlanetDataSource
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
+from game.ui.panels.planet_report_panel import format_compact_number
+
+
+def _format_population(planet) -> str:
+    """Format total planet population for the list column."""
+    pops = getattr(planet, 'populations', [])
+    if not pops:
+        return "—"
+    total = sum(getattr(p, 'count', 0) for p in pops)
+    return format_compact_number(total) if total > 0 else "—"
 
 class PlanetListWindow(UIWindow):
     def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None):
@@ -87,7 +97,8 @@ class PlanetListWindow(UIWindow):
             {'id': 'grav', 'width': 90, 'title': 'Grav (g)', 'func': lambda p: f"{p.surface_gravity/9.81:.2f}", 'visible': True},
             {'id': 'temp', 'width': 90, 'title': 'Temp (K)', 'attr': 'surface_temperature', 'fmt': "{:.0f}", 'visible': True},
             {'id': 'water', 'width': 90, 'title': 'Water %', 'attr': 'surface_water', 'fmt': "{:.0%}", 'visible': False},
-            {'id': 'pressure', 'width': 100, 'title': 'Press (atm)', 'attr': 'total_pressure_atm', 'fmt': "{:.2f}", 'visible': False}
+            {'id': 'pressure', 'width': 100, 'title': 'Press (atm)', 'attr': 'total_pressure_atm', 'fmt': "{:.2f}", 'visible': False},
+            {'id': 'population', 'width': 120, 'title': 'Population', 'func': lambda p: _format_population(p), 'visible': False},
         ]
         # Add Resource Columns
         for res in _PLANETARY_IDS:

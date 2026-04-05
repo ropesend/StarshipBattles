@@ -61,7 +61,9 @@ class TransferDialog(UIWindow):
     ARROW_WIDTHS = [36, 30, 26]  # Widths for 1000, 10, 1
     # Pending label in center
     PENDING_X = 310
-    PENDING_W = 85
+    PENDING_W = 60
+    ZERO_BTN_X = 374
+    ZERO_BTN_W = 22
     # 3 drop arrow buttons
     DROP_ARROWS_X = 400
     MAX_DROP_X = 496
@@ -88,6 +90,7 @@ class TransferDialog(UIWindow):
         # Widget mappings for event routing
         self._arrow_buttons: Dict[int, Tuple[str, int]] = {}  # button id -> (cargo_key, delta)
         self._max_buttons: Dict[int, Tuple[str, str]] = {}  # button id -> (cargo_key, 'load'|'drop')
+        self._zero_buttons: Dict[int, str] = {}  # button id -> cargo_key
         self._pending_labels: Dict[str, UILabel] = {}  # cargo_key -> label widget
         self._grid_widgets: List[Any] = []  # All widgets in the grid (for cleanup)
 
@@ -165,10 +168,17 @@ class TransferDialog(UIWindow):
 
         # --- Buttons at bottom ---
         btn_y = self.rect.height - 80
-        btn_w = 150
+        btn_w = 120
         self.btn_confirm = UIButton(
             pygame.Rect(padding, btn_y, btn_w, 40),
             "Confirm All",
+            self.ui_manager,
+            container=self
+        )
+        clear_x = padding + btn_w + 10
+        self.btn_clear_all = UIButton(
+            pygame.Rect(clear_x, btn_y, btn_w, 40),
+            "Clear All",
             self.ui_manager,
             container=self
         )
@@ -313,6 +323,7 @@ class TransferDialog(UIWindow):
         self._grid_widgets.clear()
         self._arrow_buttons.clear()
         self._max_buttons.clear()
+        self._zero_buttons.clear()
         self._pending_labels.clear()
 
         # Get data from facade
@@ -471,6 +482,14 @@ class TransferDialog(UIWindow):
         self._pending_labels[cargo_key] = pending_lbl
         self._grid_widgets.append(pending_lbl)
 
+        # Zero button (resets pending to 0)
+        zero_btn = UIButton(
+            pygame.Rect(self.ZERO_BTN_X, y + 2, self.ZERO_BTN_W, self.ROW_HEIGHT - 4),
+            "0", self.ui_manager, container=container
+        )
+        self._zero_buttons[id(zero_btn)] = cargo_key
+        self._grid_widgets.append(zero_btn)
+
         # Drop arrow buttons (right: >, >>, >>>>)
         x = self.DROP_ARROWS_X
         for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS_DROP, ARROW_LABELS_DROP, self.ARROW_WIDTHS)):
@@ -542,6 +561,16 @@ class TransferDialog(UIWindow):
         self._filter_empty = not self._filter_empty
         self.btn_filter.set_text("Show All" if self._filter_empty else "Filter Empty")
         self._build_grid()
+
+    def _on_clear_all(self):
+        """Clear all pending transfers after confirmation."""
+        # Reset all pending values to 0
+        for key in self.pending_transfers:
+            self.pending_transfers[key] = 0
+        # Update all labels
+        for key in self._pending_labels:
+            self._update_pending_label(key)
+        logger.info("TransferDialog: Cleared all pending transfers")
 
     def _on_confirm(self):
         """Issue all non-zero transfers as commands."""
@@ -689,6 +718,12 @@ class TransferDialog(UIWindow):
             elif id(btn) in self._max_buttons:
                 cargo_key, direction = self._max_buttons[id(btn)]
                 self._on_max_click(cargo_key, direction)
+            elif id(btn) in self._zero_buttons:
+                cargo_key = self._zero_buttons[id(btn)]
+                self.pending_transfers[cargo_key] = 0
+                self._update_pending_label(cargo_key)
+            elif btn == self.btn_clear_all:
+                self._on_clear_all()
 
     def handle_external_selection(self, obj):
         """Update source/target selection based on an external selection."""

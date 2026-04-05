@@ -291,31 +291,37 @@ class TestOnBuildQueueClose:
 # ===========================================================================
 
 class TestOnColonizeClick:
-    """Test on_colonize_click() method."""
+    """Test on_colonize_click() — opens load dialog at colony, then enters target mode."""
 
-    def test_on_colonize_click_delegates_to_colonization(self):
-        """on_colonize_click() should delegate to colonization system."""
-        screen, _ = _make_strategy_screen()
-        screen.selected_fleet = MagicMock()
-        screen._colonization.on_colonize_click.return_value = None
-
-        screen.on_colonize_click()
-
-        screen._colonization.on_colonize_click.assert_called_once_with(screen.selected_fleet)
-
-    def test_on_colonize_click_prompts_planet_selection(self):
-        """on_colonize_click() should prompt for planet when multiple available."""
+    def test_on_colonize_click_opens_load_dialog_at_colony(self):
+        """Opens transfer dialog when fleet is at owned colony."""
         screen, mocks = _make_strategy_screen()
-        screen.selected_fleet = MagicMock()
-        planets = [MagicMock(), MagicMock()]
-        screen._colonization.on_colonize_click.return_value = {
-            'type': 'prompt',
-            'planets': planets
-        }
+        fleet = MagicMock()
+        fleet.owner_id = 0
+        fleet.location = MagicMock()
+        screen.selected_fleet = fleet
+        planet = MagicMock()
+        planet.owner_id = 0
+        screen._facade = MagicMock()
+        screen._facade.get_planets_at_hex.return_value = [planet]
 
         screen.on_colonize_click()
 
-        mocks['ui'].prompt_planet_selection.assert_called_once()
+        mocks['ui'].open_transfer_dialog.assert_called_once()
+
+    def test_on_colonize_click_skips_load_when_no_colony(self):
+        """Skips load dialog when fleet is not at a colony."""
+        screen, mocks = _make_strategy_screen()
+        fleet = MagicMock()
+        fleet.owner_id = 0
+        fleet.location = MagicMock()
+        screen.selected_fleet = fleet
+        screen._facade = MagicMock()
+        screen._facade.get_planets_at_hex.return_value = []
+
+        screen.on_colonize_click()
+
+        mocks['ui'].open_transfer_dialog.assert_not_called()
 
 
 # ===========================================================================
@@ -674,13 +680,14 @@ class TestErrorHandlingPaths:
         mocks['build_queue'].on_build_yard_click.assert_called_once()
 
     def test_on_colonize_click_no_selected_fleet(self):
-        """on_colonize_click() should handle no fleet gracefully."""
-        screen, _ = _make_strategy_screen()
+        """on_colonize_click() should return early when no fleet selected."""
+        screen, mocks = _make_strategy_screen()
         screen.selected_fleet = None
 
         screen.on_colonize_click()
 
-        screen._colonization.on_colonize_click.assert_called_once_with(None)
+        # No dialog opened, no crash
+        mocks['ui'].open_transfer_dialog.assert_not_called()
 
 
 # ===========================================================================

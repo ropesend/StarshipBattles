@@ -146,11 +146,11 @@ class MockRaceConfig:
         self.race_id = race_id
 
 
-class TestColonizeTransfersPassengers:
-    """Test that colonization transfers passengers to colony."""
+class TestColonizeDoesNotTransfer:
+    """Colonization claims planet and deploys pod only — no population/cargo transfer."""
 
-    def test_colonize_transfers_passengers_to_colony(self, fresh_registries):
-        """Passengers in fleet cargo become colony founding population."""
+    def test_colonize_does_not_transfer_passengers(self, fresh_registries):
+        """Passengers stay on fleet — transfer happens via separate TRANSFER orders."""
         # Setup
         location = HexCoord(0, 0)
         planet = _make_planet(location)
@@ -175,19 +175,15 @@ class TestColonizeTransfersPassengers:
             component_registry=_make_component_registry()
         )
 
-        # Verify
+        # Verify planet claimed
         assert result.colonized is True
         assert planet.owner_id == empire.id
 
-        # Colony should have 50 pop (from passengers)
-        assert len(planet.populations) == 1
-        pop = planet.populations[0]
-        assert pop.race_id == "humans"
-        assert pop.count == 50
-        assert pop.happiness == 0.5  # Neutral starting happiness
+        # Colony should have NO population (transferred via separate TRANSFER orders)
+        assert len(planet.populations) == 0
 
-    def test_colonize_passengers_unloaded_from_ships(self, fresh_registries):
-        """Ship cargo is emptied during colonization."""
+    def test_colonize_keeps_passengers_on_fleet(self, fresh_registries):
+        """Ship cargo stays intact during colonization — no auto-transfer."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
         planet.id = 1
@@ -202,7 +198,6 @@ class TestColonizeTransfersPassengers:
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
-        # Verify cargo before
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = OrderProcessor()
@@ -211,8 +206,9 @@ class TestColonizeTransfersPassengers:
             component_registry=_make_component_registry()
         )
 
-        # Cargo should be empty after (fleet is consumed so check planet)
-        assert planet.total_population == 75
+        # Passengers remain on fleet, planet has no population
+        assert planet.total_population == 0
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
 
 class TestColonizeWithoutPassengers:
@@ -251,10 +247,10 @@ class TestColonizeWithoutPassengers:
 
 
 class TestColonizeMultipleShips:
-    """Test colonization with multiple ships carrying passengers."""
+    """Test colonization with multiple ships — passengers stay on fleet."""
 
-    def test_colonize_aggregates_all_ship_passengers(self, fresh_registries):
-        """All passengers from all ships are transferred."""
+    def test_colonize_does_not_auto_transfer_passengers(self, fresh_registries):
+        """Colonization claims planet but does not move passengers."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
         planet.id = 1
@@ -264,15 +260,13 @@ class TestColonizeMultipleShips:
         empire.race_config = MockRaceConfig("humans")
 
         fleet = Fleet(1, empire.id, location)
-        # Multiple ships with passengers
         ship1 = _make_ship_with_cargo("Transport 1", cargo_capacity=100, current_cargo=30, registries=fresh_registries)
         ship2 = _make_ship_with_cargo("Transport 2", cargo_capacity=100, current_cargo=45, registries=fresh_registries)
-        ship3 = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)  # No cargo
+        ship3 = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         fleet.ships.extend([ship1, ship2, ship3])
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
-        # Total passengers = 30 + 45 = 75
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = OrderProcessor()
@@ -281,8 +275,10 @@ class TestColonizeMultipleShips:
             component_registry=_make_component_registry()
         )
 
-        # All passengers should transfer
-        assert planet.total_population == 75
+        # Planet claimed but no population transferred
+        assert planet.owner_id == empire.id
+        assert planet.total_population == 0
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
 
 class TestExistingColonizationBehavior:

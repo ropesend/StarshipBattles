@@ -43,6 +43,10 @@
     "detail_panel.planet_orders": {"key": "K_o", "modifiers": []},
 
     "planet.shield_toggle": {"key": "K_h", "modifiers": []},
+    "planet.geologic_toggle": {"key": "K_g", "modifiers": []},
+    "planet.stellar_toggle": {"key": "K_j", "modifiers": []},
+    "planet.warp_toggle": {"key": "K_k", "modifiers": []},
+    "planet.abilities_window": {"key": "K_a", "modifiers": []},
 
     "build_queue.close": {"key": "K_ESCAPE", "modifiers": []},
     "build_queue.add": {"key": "K_a", "modifiers": []},

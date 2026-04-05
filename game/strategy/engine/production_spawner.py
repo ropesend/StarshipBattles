@@ -244,18 +244,13 @@ class ProductionSpawner:
             logger.warning(f"Cannot spawn to staging yard: design '{design_id}' not found")
             return
 
-        # Calculate mass from design
+        # Calculate mass from design using ShipStatsCalculator (single source of truth)
         total_mass = 0.0
         if self._registries:
-            from game.core.patterns.layer_iterator import iter_components
-            for comp in iter_components(design_data):
-                if isinstance(comp, dict):
-                    comp_id = comp.get('id', '')
-                    comp_def = self._registries.components.get(comp_id)
-                    if comp_def is not None:
-                        total_mass += getattr(comp_def, 'mass', 0)
-                    else:
-                        total_mass += comp.get('mass', 0)
+            from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+            calc = ShipStatsCalculator(registries=self._registries)
+            stats = calc.calculate_stats(design_data)
+            total_mass = stats.get('mass', 0.0)
 
         staging_item = {
             'design_id': design_id,

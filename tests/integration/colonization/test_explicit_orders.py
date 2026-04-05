@@ -22,11 +22,11 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.session.facade = MagicMock()
         self.session.turn_engine = MagicMock()
 
-    def test_colonize_command_always_adds_load_order(self):
-        """ColonizeCommandHandler should always add LOAD_POPULATION (BUG-70).
+    def test_colonize_command_does_not_add_load_order(self):
+        """ColonizeCommandHandler should NOT auto-insert LOAD_POPULATION.
 
-        The LOAD_POPULATION order is generic — no planet_id. Colony is resolved
-        at execution time, not command time.
+        Colonize commands now only queue COLONIZE. Population loading is
+        handled separately by the player.
         """
         colony = MagicMock()
         colony.id = 10
@@ -43,13 +43,12 @@ class TestExplicitColonizeOrders(unittest.TestCase):
 
         handler.execute(self.session, cmd)
 
-        # Should have 2 orders: LOAD_POPULATION and COLONIZE
-        self.assertEqual(len(self.fleet.orders), 2)
-        self.assertEqual(self.fleet.orders[0].type, OrderType.LOAD_POPULATION)
-        self.assertEqual(self.fleet.orders[1].type, OrderType.COLONIZE)
-        # Generic order has no planet_id or species_id
-        self.assertNotIn('planet_id', self.fleet.orders[0].target)
-        self.assertNotIn('species_id', self.fleet.orders[0].target)
+        # Should have 1 order: COLONIZE only (no LOAD_POPULATION)
+        self.assertEqual(len(self.fleet.orders), 1)
+        self.assertEqual(self.fleet.orders[0].type, OrderType.COLONIZE)
+        # No LOAD_POPULATION order should be present
+        order_types = [o.type for o in self.fleet.orders]
+        self.assertNotIn(OrderType.LOAD_POPULATION, order_types)
 
     def test_processor_handles_load_population_as_transfer(self):
         """OrderProcessor should recognize LOAD_POPULATION as a valid transfer order."""

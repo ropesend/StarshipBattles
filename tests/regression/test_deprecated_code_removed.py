@@ -148,9 +148,9 @@ class TestSingletonUsageCount:
     """
 
     # Expected counts from PROJ-195 audit (2026-02-25)
-    # game/: 13 (app.py: 2, registry.py: 9, build_queue_source.py: 1, strategy_detail_formatter.py: 1)
+    # game/: 14 (app.py: 2, registry.py: 9, build_queue_source.py: 1, strategy_detail_formatter.py: 1, strategy_detail_fmt.py: 1)
     # tests/: 82 (all legitimate singleton/isolation tests + resource unification integration tests)
-    EXPECTED_GAME_COUNT = 13
+    EXPECTED_GAME_COUNT = 14
     EXPECTED_TESTS_COUNT = 82
 
     def test_singleton_usage_count_game(self):

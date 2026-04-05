@@ -201,9 +201,7 @@ class TestColonizeProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        with patch.object(processor, '_deploy_drop_pod'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-             patch.object(processor, '_transfer_founding_population'):
+        with patch.object(processor, '_deploy_drop_pod'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=component_registry
@@ -231,9 +229,7 @@ class TestColonizeProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        with patch.object(processor, '_deploy_drop_pod'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-             patch.object(processor, '_transfer_founding_population'):
+        with patch.object(processor, '_deploy_drop_pod'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=component_registry
@@ -324,9 +320,7 @@ class TestEndTurnOrderProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        with patch.object(processor, '_deploy_drop_pod'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-             patch.object(processor, '_transfer_founding_population'):
+        with patch.object(processor, '_deploy_drop_pod'):
             result = processor.execute_action_order(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=component_registry
@@ -553,9 +547,7 @@ class TestColonizeDropPodDeployment:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        with patch.object(processor, '_deploy_drop_pod') as mock_deploy, \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-             patch.object(processor, '_transfer_founding_population'):
+        with patch.object(processor, '_deploy_drop_pod') as mock_deploy:
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=mock_component_registry
@@ -584,9 +576,7 @@ class TestColonizeDropPodDeployment:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        with patch.object(processor, '_deploy_drop_pod'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-             patch.object(processor, '_transfer_founding_population'):
+        with patch.object(processor, '_deploy_drop_pod'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=mock_component_registry
@@ -614,9 +604,7 @@ class TestColonizeDropPodDeployment:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        with patch.object(processor, '_deploy_drop_pod'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-             patch.object(processor, '_transfer_founding_population'):
+        with patch.object(processor, '_deploy_drop_pod'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=mock_component_registry

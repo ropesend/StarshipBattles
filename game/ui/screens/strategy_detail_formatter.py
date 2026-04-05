@@ -106,6 +106,10 @@ class StrategyDetailFormatter:
         return self._widgets.get('btn_atmosphere')
 
     @property
+    def btn_abilities(self):
+        return self._widgets.get('btn_abilities')
+
+    @property
     def btn_orders(self):
         return self._widgets['btn_orders']
 
@@ -201,6 +205,8 @@ class StrategyDetailFormatter:
             self.btn_planet_orders.hide()  # PROJ-238
         if self.btn_atmosphere:
             self.btn_atmosphere.hide()
+        if self.btn_abilities:
+            self.btn_abilities.hide()
         self.btn_orders.hide()
         self.btn_fleet_report.hide()
         self.btn_build_fleet.hide()
@@ -321,9 +327,50 @@ class StrategyDetailFormatter:
             if has_yard:
                 self.btn_build_yard.show()
             if self.btn_planet_orders:
-                self.btn_planet_orders.show()  # PROJ-238
+                self.btn_planet_orders.show()
             if self.btn_atmosphere:
                 self.btn_atmosphere.show()
+            if self.btn_abilities:
+                self.btn_abilities.show()
+        self._layout_action_buttons()
+
+    def _layout_action_buttons(self):
+        """Position all visible action buttons in a horizontal row at the bottom."""
+        try:
+            all_buttons = [
+                self.btn_planet_orders, self.btn_atmosphere, self.btn_build_yard,
+                self.btn_abilities,
+                self.btn_orders, self.btn_fleet_report, self.btn_colonize, self.btn_build_fleet,
+            ]
+            visible = [b for b in all_buttons if b and getattr(b, 'visible', False)]
+            if not visible:
+                return
+
+            btn_h = 36
+            btn_gap = 6
+            panel_w = int(self.detail_panel.rect.width)
+            y = int(self.detail_panel.rect.height) - btn_h - 10
+
+            # Calculate button widths based on text (min 80px)
+            btn_widths = []
+            for btn in visible:
+                text = getattr(btn, 'text', '') or ''
+                text_w = max(80, len(text) * 9 + 20)
+                btn_widths.append(text_w)
+
+            total_w = sum(btn_widths) + btn_gap * (len(visible) - 1)
+
+            if total_w > panel_w - 20:
+                scale = (panel_w - 20) / total_w
+                btn_widths = [int(w * scale) for w in btn_widths]
+
+            x = 10
+            for btn, w in zip(visible, btn_widths):
+                btn.set_relative_position((x, y))
+                btn.set_dimensions((w, btn_h))
+                x += w + btn_gap
+        except (TypeError, AttributeError):
+            pass  # Mock objects in tests — skip layout
 
     def _format_sector_environment(self, obj) -> str:
         """Format sector environment details."""
@@ -367,6 +414,7 @@ class StrategyDetailFormatter:
                 if res.is_valid:
                     self.btn_colonize.show()
 
+        self._layout_action_buttons()
         return text
 
     def _format_warp_point(self, obj) -> str:

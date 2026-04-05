@@ -200,7 +200,7 @@ def _planet_has_shield_facility(planet) -> bool:
 def _get_system_ability_status(system) -> dict:
     """Scan all planets in a system for activatable abilities and their status.
 
-    Returns dict mapping ability_key -> bool (True if active on any planet).
+    Returns dict mapping ability_key -> dict with 'active' bool and 'planet_name' str.
     Only includes abilities that have facilities present.
     """
     result = {}
@@ -211,11 +211,10 @@ def _get_system_ability_status(system) -> dict:
         for ability_key in _ACTIVATABLE_DISPLAY_NAMES:
             if _planet_has_ability_facility(planet, ability_key):
                 active = getattr(planet, 'active_abilities', {}).get(ability_key, False)
-                # If any planet has it active, mark as active for the system
                 if ability_key not in result:
-                    result[ability_key] = active
+                    result[ability_key] = {'active': active, 'planet_name': planet.name}
                 elif active:
-                    result[ability_key] = True
+                    result[ability_key] = {'active': True, 'planet_name': planet.name}
     return result
 
 
@@ -249,13 +248,12 @@ def _get_ability_status_text(planet, ability_name: str) -> str:
 def _planet_has_ability_facility(planet, ability_key: str) -> bool:
     """Check if a planet has any facility with a specific ability."""
     from game.core.patterns.layer_iterator import iter_components
-    from game.strategy.services.component_inspector import get_component_abilities
-    from game.core.registry import get_default_registry_provider
+    from game.strategy.services.component_inspector import extract_abilities_from_component
 
-    component_registry = None
+    registries = None
     try:
-        provider = get_default_registry_provider()
-        component_registry = provider.get_components()
+        from game.core.registry import RegistryManager
+        registries = RegistryManager.instance()
     except Exception:
         pass
 
@@ -264,13 +262,9 @@ def _planet_has_ability_facility(planet, ability_key: str) -> bool:
         if not isinstance(design_data, dict):
             continue
         for comp in iter_components(design_data):
-            if isinstance(comp, dict) and ability_key in comp.get('abilities', {}):
+            abilities = extract_abilities_from_component(comp, registries)
+            if ability_key in abilities:
                 return True
-            comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
-            if comp_id and component_registry:
-                comp_def = component_registry.get(comp_id)
-                if comp_def and ability_key in get_component_abilities(comp_def):
-                    return True
     return False
 
 
@@ -299,8 +293,10 @@ def format_star_system_info(system) -> str:
     _system_abilities = _get_system_ability_status(system)
     for ability_key, display_name in _ACTIVATABLE_DISPLAY_NAMES.items():
         if ability_key in _system_abilities:
-            status = "Active" if _system_abilities[ability_key] else "Inactive"
-            text += f"<br><b>{display_name}:</b> {status}"
+            info = _system_abilities[ability_key]
+            status = "Active" if info['active'] else "Inactive"
+            planet_name = info.get('planet_name', '')
+            text += f"<br><b>{display_name}:</b> {status} ({planet_name})"
 
     return text
 
@@ -376,27 +372,32 @@ def _format_cargo_summary(fleet: IFleet) -> str:
     """
     Format aggregated cargo summary across all ships in the fleet.
 
-    Args:
-        fleet: Fleet object (IFleet protocol)
-
-    Returns:
-        HTML string with cargo summary, or empty string if no cargo
+    Shows resource cargo, passengers, and carried items (drop pods).
     """
     totals: dict[str, int] = {}
+    carried_items: dict[str, int] = {}  # name -> count
+
     for ship in fleet.ships:
         s: IShipInstance = ship
-        # IShipInstance.cargo_contents is always present (Dict)
         for cargo_type, amount in s.cargo_contents.items():
             if amount > 0:
                 totals[cargo_type] = totals.get(cargo_type, 0) + amount
+        items = getattr(s, 'carried_items', None)
+        if isinstance(items, list):
+            for item in items:
+                name = item.get('name', 'Unknown')
+                carried_items[name] = carried_items.get(name, 0) + 1
 
-    if not totals:
+    if not totals and not carried_items:
         return ""
 
     text = "<b>Cargo:</b><br>"
     for cargo_type, amount in totals.items():
         cargo_label = display_name(cargo_type)
         text += f" {cargo_label}: {amount}<br>"
+    for name, count in carried_items.items():
+        label = f"{name} x{count}" if count > 1 else name
+        text += f" {label}<br>"
 
     return text
 

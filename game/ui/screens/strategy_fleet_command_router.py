@@ -77,6 +77,8 @@ class FleetCommandRouter:
 
         elif action == InputAction.FLEET_COLONIZE:
             if self.scene.selected_fleet:
+                # Open load dialog if at owned colony, then enter target mode
+                self.scene.on_colonize_click()
                 self.input_mode = 'COLONIZE_TARGET'
                 logger.debug("Input Mode: COLONIZE - Select target planet.")
             else:

@@ -125,8 +125,8 @@ class TestColonizeCommandHandler:
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
-        # BUG-70: Now always adds LOAD_POPULATION + COLONIZE (2 calls)
-        assert mock_fleet.add_order.call_count == 2
+        # Colonize command only adds COLONIZE (no LOAD_POPULATION)
+        assert mock_fleet.add_order.call_count == 1
 
 
 class TestMoveCommandHandler:

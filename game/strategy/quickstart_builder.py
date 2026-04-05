@@ -31,7 +31,7 @@ INITIAL_COMPLEXES = [
     'qs_radioactives_complex',
     'qs_exotics_complex',
     'qs_resupply_depot',
-    'qs_shield_complex',     # PROJ-237: Planetary shield + energy
+    'qs_geologic_stabilizer_complex',  # Geologic stabilizer + energy
 ]
 
 

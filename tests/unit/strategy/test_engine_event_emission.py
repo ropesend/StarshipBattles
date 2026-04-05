@@ -479,8 +479,6 @@ class TestColonyFoundedEvent:
             mock_val.find_ship_with_drop_pod.return_value = (fleet.ships[0], 0)
 
             with patch.object(processor, '_deploy_drop_pod'), \
-                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-                 patch.object(processor, '_transfer_founding_population'), \
                  patch('game.strategy.engine.order_processor.log_event', fake):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
@@ -577,9 +575,7 @@ class TestColonyFoundedEvent:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'), \
-                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-                 patch.object(processor, '_transfer_founding_population'):
+            with patch.object(processor, '_deploy_drop_pod'):
                 with patch('game.strategy.engine.order_processor.log_event', fake):
                     result = processor.process_colonize(
                         fleet, empire, galaxy,
@@ -1037,8 +1033,6 @@ class TestColonizationEventLocationEnrichment:
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
             with patch.object(processor, '_deploy_drop_pod'), \
-                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-                 patch.object(processor, '_transfer_founding_population'), \
                  patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
@@ -1094,8 +1088,6 @@ class TestColonizationEventLocationEnrichment:
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
             with patch.object(processor, '_deploy_drop_pod'), \
-                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
-                 patch.object(processor, '_transfer_founding_population'), \
                  patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 

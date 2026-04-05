@@ -7,6 +7,7 @@ Crash 2: Mass calculation called .get('mass') on a Component object
 (returned by registries.components), which has no .get() method.
 """
 
+import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.engine.production_spawner import ProductionSpawner
 
@@ -69,51 +70,33 @@ class TestSpawnToStagingYardEmpireParam:
 
 
 class TestSpawnToStagingYardMassCalculation:
-    """Regression: mass calculation must handle Component objects from registry."""
+    """Mass calculation uses ShipStatsCalculator (single source of truth)."""
 
-    def test_mass_from_component_object_not_dict(self):
-        """When registries.components returns a Component object (not a dict),
-        the mass calculation must use attribute access, not .get()."""
-        # Create a mock Component object with a mass attribute (not a dict)
-        mock_component = MagicMock()
-        mock_component.mass = 25.0
-        # Ensure .get() is NOT available (like a real Component)
-        del mock_component.get
+    def test_mass_calculated_via_stats_calculator(self):
+        """Mass should be calculated by ShipStatsCalculator with modifiers applied."""
+        from game.core.registry import GameRegistries
+        from game.simulation.components.component import load_components_data, load_modifiers_data
+        from game.simulation.entities.ship_loader import load_vehicle_classes_data
 
-        mock_registries = MagicMock()
-        mock_registries.components.get.return_value = mock_component
+        minimal = GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={})
+        registries = GameRegistries(
+            components=load_components_data(registries=minimal),
+            modifiers=load_modifiers_data(),
+            vehicle_classes=load_vehicle_classes_data(),
+            resources={}
+        )
 
-        spawner = ProductionSpawner(registries=mock_registries)
+        spawner = ProductionSpawner(registries=registries)
         empire = _make_empire(empire_id=1)
         planet = _make_planet()
-        design_data = {
-            'name': 'TestFighter',
-            'layers': {
-                'weapons': [{'id': 'laser_mk1', 'mass': 10}]
-            }
-        }
-        item = {'design_id': 'fighter_1', 'type': 'fighter',
-                'design_data': design_data}
-
-        # This must NOT raise AttributeError: 'Component' object has no attribute 'get'
-        spawner._spawn_to_staging_yard(planet, 'fighter_1', item, empire, '/fake/save')
-
-        staging_item = planet.add_to_staging_yard.call_args[0][0]
-        assert staging_item['mass'] == 25.0
-
-    def test_mass_fallback_when_component_not_in_registry(self):
-        """When a component ID is not in the registry, fall back to the
-        inline mass from the design data dict."""
-        mock_registries = MagicMock()
-        mock_registries.components.get.return_value = None
-
-        spawner = ProductionSpawner(registries=mock_registries)
-        empire = _make_empire(empire_id=1)
-        planet = _make_planet()
+        # Design with a real component and size modifier (0.5 = half mass)
         design_data = {
             'name': 'TestPod',
+            'ship_class': 'Drop Pod (Small)',
             'layers': {
-                'hull': [{'id': 'unknown_comp', 'mass': 15}]
+                'CORE': [{'id': 'crew_quarters', 'modifiers': [
+                    {'id': 'simple_size_mount', 'value': 0.5}
+                ]}]
             }
         }
         item = {'design_id': 'pod_1', 'type': 'drop_pod',
@@ -122,4 +105,5 @@ class TestSpawnToStagingYardMassCalculation:
         spawner._spawn_to_staging_yard(planet, 'pod_1', item, empire, '/fake/save')
 
         staging_item = planet.add_to_staging_yard.call_args[0][0]
-        assert staging_item['mass'] == 15
+        # crew_quarters base mass=30, with 0.5 size modifier = 15
+        assert staging_item['mass'] == pytest.approx(15.0, abs=1.0)

@@ -3178,6 +3178,80 @@
                 "radioactives": 200,
                 "vapors": 300
             }
+        },
+        {
+            "id": "quality_improver_system",
+            "name": "System Enrichment Array",
+            "type": "QualityImprovement",
+            "mass": 800,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "QualityImprovement": [
+                    {
+                        "resource_type": "metals",
+                        "improvement_rate": 0.05,
+                        "scope": "system"
+                    },
+                    {
+                        "resource_type": "organics",
+                        "improvement_rate": 0.05,
+                        "scope": "system"
+                    },
+                    {
+                        "resource_type": "vapors",
+                        "improvement_rate": 0.05,
+                        "scope": "system"
+                    },
+                    {
+                        "resource_type": "radioactives",
+                        "improvement_rate": 0.05,
+                        "scope": "system"
+                    },
+                    {
+                        "resource_type": "exotics",
+                        "improvement_rate": 0.05,
+                        "scope": "system"
+                    }
+                ],
+                "CrewRequired": 50
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 2000,
+                "organics": 500,
+                "vapors": 500,
+                "exotics": 200
+            }
+        },
+        {
+            "id": "geologic_stabilizer_system_scope",
+            "name": "System Geologic Stabilization Array",
+            "type": "PlanetaryDefense",
+            "mass": 1000,
+            "hp": 600,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "GeologicStabilizer": {
+                    "scope": "system",
+                    "energy_drain_rate": 100.0,
+                    "activation_time": 100,
+                    "deactivation_time": 20
+                },
+                "CrewRequired": 60
+            },
+            "major_classification": "PlanetaryDefense",
+            "resource_cost": {
+                "metals": 3000,
+                "radioactives": 1000,
+                "exotics": 500
+            }
         }
     ]
 }

@@ -313,13 +313,12 @@ class TestColonizeMissionCommandHandler:
             result = session.handle_command(cmd)
 
             assert result.is_valid is True
-            # BUG-70: Order queue is now LOAD_POPULATION + MOVE + COLONIZE
-            assert len(fleet.orders) == 3
-            assert fleet.orders[0].type == OrderType.LOAD_POPULATION
-            assert fleet.orders[1].type == OrderType.MOVE
-            assert fleet.orders[1].target == target_hex
-            assert fleet.orders[2].type == OrderType.COLONIZE
-            assert fleet.orders[2].target == planet
+            # Order queue is now MOVE + COLONIZE (no LOAD_POPULATION)
+            assert len(fleet.orders) == 2
+            assert fleet.orders[0].type == OrderType.MOVE
+            assert fleet.orders[0].target == target_hex
+            assert fleet.orders[1].type == OrderType.COLONIZE
+            assert fleet.orders[1].target == planet
 
     def test_colonize_mission_no_path(self):
         """Colonize mission fails if no path to target."""

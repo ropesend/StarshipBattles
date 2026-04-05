@@ -1,7 +1,7 @@
 {
-    "name": "Colony Drop Pod",
-    "vehicle_type": "Drop Pod",
-    "ship_class": "Drop Pod (Small)",
+    "name": "QS Enrichment Complex",
+    "ship_class": "Planetary Complex (Tier 2)",
+    "vehicle_type": "Planetary Complex",
     "theme_id": "Federation",
     "team_id": 0,
     "color": [
@@ -18,6 +18,14 @@
                     {
                         "id": "simple_size_mount",
                         "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
                     }
                 ]
             },
@@ -26,6 +34,10 @@
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
                         "value": 1.0
                     }
                 ]
@@ -36,14 +48,9 @@
                     {
                         "id": "simple_size_mount",
                         "value": 1.0
-                    }
-                ]
-            },
-            {
-                "id": "crew_quarters",
-                "modifiers": [
+                    },
                     {
-                        "id": "simple_size_mount",
+                        "id": "hardened_mount",
                         "value": 1.0
                     }
                 ]
@@ -53,6 +60,36 @@
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
                         "value": 1.0
                     }
                 ]
@@ -63,6 +100,10 @@
                     {
                         "id": "simple_size_mount",
                         "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
                     }
                 ]
             },
@@ -72,120 +113,108 @@
                     {
                         "id": "simple_size_mount",
                         "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
                     }
                 ]
             },
             {
-                "id": "planetary_yard_module",
+                "id": "life_support",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "metal_harvester",
-                "modifiers": [
+                        "value": 1.0
+                    },
                     {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "organic_harvester",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "vapor_harvester",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "radioactive_harvester",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "exotic_harvester",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "resource_vault_metals",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "resource_vault_organics",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "resource_vault_vapors",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "resource_vault_radioactives",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
-                    }
-                ]
-            },
-            {
-                "id": "resource_vault_exotics",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 0.2
+                        "id": "hardened_mount",
+                        "value": 1.0
                     }
                 ]
             }
-        ]
+        ],
+        "INNER": [],
+        "OUTER": [
+            {
+                "id": "quality_improver_metals",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "quality_improver_organics",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "quality_improver_vapors",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "quality_improver_radioactives",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "quality_improver_exotics",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": []
     },
-    "initial_stockpile": {
-        "metals": 200,
-        "organics": 100,
-        "vapors": 50,
-        "radioactives": 50,
-        "exotics": 25
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 0
     },
     "expected_stats": {
-        "max_hp": 1270,
-        "mass": 770.0,
+        "max_hp": 1970,
         "max_fuel": 0,
         "max_energy": 0,
         "max_ammo": 0,
@@ -193,10 +222,7 @@
         "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
+        "mass": 2310.0,
         "armor_hp_pool": 0
-    },
-    "_metadata": {
-        "is_obsolete": false,
-        "times_built": 0
     }
 }

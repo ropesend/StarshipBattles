@@ -123,6 +123,10 @@
                     "formula": "param"
                 },
                 {
+                    "stat": "crew_req_mult",
+                    "formula": "param"
+                },
+                {
                     "stat": "harvest_rate_mult",
                     "formula": "param"
                 },

@@ -87,24 +87,6 @@ def add_move_order_if_needed(
     return ValidationResult.success()
 
 
-def create_auto_load_population_order() -> 'Order':
-    """Create a generic LOAD_POPULATION order for colonize workflows.
-
-    BUG-70: The order is always inserted at command time. At execution time,
-    the fleet order processor auto-resolves the colony at the fleet's current
-    hex. If no owned colony is present, the order is a no-op.
-
-    Returns:
-        Order for LOAD_POPULATION (always returns an order, never None).
-    """
-    from game.strategy.engine.commands import TransferDirection
-    transfer_params = {
-        'direction': TransferDirection.LOAD,
-        'cargo_type': 'passengers',
-        'amount': 0,  # 0 = load as much as possible
-    }
-    return Order(OrderType.LOAD_POPULATION, target=transfer_params)
-
 
 @runtime_checkable
 class ICommandHandler(Protocol):
@@ -345,10 +327,7 @@ class ColonizeCommandHandler(BaseCommandHandler):
 
         # 3. Apply
         if result.is_valid:
-            # BUG-70: Always insert LOAD_POPULATION before MOVE/COLONIZE.
-            # Colony is resolved at execution time, not command time.
-            fleet.add_order(create_auto_load_population_order())
-            logger.debug(f"BUG-70: Inserted LOAD_POPULATION order for fleet {fleet.id}")
+            # Loading is handled by explicit TRANSFER orders from the UI dialog.
 
             # Add MOVE order to get to the target planet
             planet_global_hex = session.galaxy.get_planet_global_hex(target_planet)
@@ -490,12 +469,9 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             # Pod availability is validated at execution time, not command time.
             # The player may load a pod onto the ship before the fleet arrives.
 
-        # 3. BUG-70: Always insert LOAD_POPULATION before MOVE/COLONIZE.
-        # Colony is resolved at execution time, not command time.
-        fleet.add_order(create_auto_load_population_order())
-        logger.debug(f"BUG-70: Inserted LOAD_POPULATION order for fleet {fleet.id}")
+        # Loading is handled by explicit TRANSFER orders from the UI dialog.
 
-        # 4. Queue MOVE order if needed (chain-aware path calculation)
+        # 3. Queue MOVE order if needed (chain-aware path calculation)
         # PROJ-207 Phase 5: Use shared helper with auto chain detection
         move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
         if not move_result.is_valid:
@@ -876,7 +852,9 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
     def _check_design_valid(self, session: 'GameSession', entity, design_id: str) -> bool:
-        """Check if a design is valid for construction (within mass budget).
+        """Check if a design is valid for construction.
+
+        Uses DesignValidator to check crew, life support, and mass budgets.
 
         Args:
             session: Game session for save_path.
@@ -884,7 +862,7 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             design_id: ID of the design to check.
 
         Returns:
-            True if the design is valid, False if it exceeds mass budget.
+            True if the design is valid, False if it has errors.
         """
         try:
             empire_id = getattr(entity, 'owner_id', 0)
@@ -892,8 +870,18 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             design_data = library.load_design_data(design_id)
             if design_data is None:
                 return True  # Can't validate, allow by default
-            expected_stats = design_data.get('expected_stats', {})
-            return expected_stats.get('mass_valid', True)
+
+            if session.registries:
+                from game.strategy.services.design_validator import DesignValidator
+                validator = DesignValidator(session.registries)
+                result = validator.validate(design_data)
+                if not result.is_valid:
+                    logger.warning(
+                        f"Design '{design_id}' failed validation: {'; '.join(result.errors)}"
+                    )
+                return result.is_valid
+
+            return True
         except (OSError, ValueError, KeyError):
             return True  # Can't validate, allow by default
 

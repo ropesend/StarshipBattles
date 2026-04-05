@@ -249,42 +249,48 @@ class StrategyScreen:
     # =========================================================================
 
     def on_colonize_click(self):
-        """Handle colonize action."""
-        result = self._colonization.on_colonize_click(self.selected_fleet)
-        if result and result.get('type') == 'prompt':
-            planets = result['planets']
-            if len(planets) == 1:
-                # Single planet — skip selection, go straight to colonize dialog
-                self._on_colonize_planet_selected(planets[0])
-            else:
-                self.ui.prompt_planet_selection(
-                    planets,
-                    lambda p: self._on_colonize_planet_selected(p)
-                )
-        elif result and result.get('type') == 'success':
-            self.on_ui_selection(self.selected_fleet)
+        """Handle colonize action — opens load dialog if fleet is at a colony.
+
+        Flow:
+        1. If at owned colony: open transfer dialog to load cargo/population
+        2. The transfer dialog's confirm queues TRANSFER(load) orders
+        3. After dialog closes, input mode enters COLONIZE_TARGET (handled by fleet_command_router)
+        4. Player clicks destination → drop dialog opens → colonize + TRANSFER(unload) queued
+        """
+        fleet = self.selected_fleet
+        if not fleet:
+            return
+
+        # If fleet is at an owned colony, open load dialog first
+        if self._is_fleet_at_owned_colony(fleet):
+            self.ui.open_transfer_dialog(fleet, fleet.location)
+        # Input mode is set to COLONIZE_TARGET by the fleet_command_router
+        # regardless of whether the load dialog was opened
+
+    def _is_fleet_at_owned_colony(self, fleet) -> bool:
+        """Check if fleet is at a hex with an owned colony."""
+        planets = self._facade.get_planets_at_hex(fleet.location)
+        if not planets:
+            return False
+        empire_id = fleet.owner_id
+        return any(p.owner_id == empire_id for p in planets)
 
     def _on_colonize_planet_selected(self, planet):
-        """Handle planet selection — issue colonize command, then open transfer dialog.
+        """Handle planet selection — issue colonize command, then open drop dialog.
 
-        The colonize command queues LOAD_POPULATION + MOVE + COLONIZE.
-        The transfer dialog then queues TRANSFER orders that execute after colonization,
-        allowing the player to choose how much population and cargo to leave at the colony.
+        Orders queued: MOVE + COLONIZE, then TRANSFER(unload) from drop dialog.
         """
         fleet = self.selected_fleet
         result = self._colonization.issue_colonize_order(fleet, planet)
         if result and result.get('type') == 'success':
-            # Open transfer dialog so player can queue unload orders after colonization
-            target_hex = self._facade.get_planet(planet.id)
-            if target_hex:
-                planet_global_hex = None
-                # Find planet's global hex for the transfer dialog
-                for sys in self.systems:
-                    if planet in sys.planets:
-                        planet_global_hex = sys.global_location + planet.location
-                        break
-                if planet_global_hex:
-                    self.ui.open_transfer_dialog(fleet, planet_global_hex)
+            # Find planet's global hex for the drop transfer dialog
+            planet_global_hex = None
+            for sys in self.systems:
+                if planet in sys.planets:
+                    planet_global_hex = sys.global_location + planet.location
+                    break
+            if planet_global_hex:
+                self.ui.open_transfer_dialog(fleet, planet_global_hex)
             self.on_ui_selection(fleet)
 
     def request_colonize_order(self, fleet, planet=None):

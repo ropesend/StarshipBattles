@@ -319,7 +319,19 @@ class SystemTreePanel:
                         self.items.append(leaf)
 
             if flat_view:
-                create_planet_nodes(None, 0)
+                # Flat view: show all planets at root level, no hex grouping
+                all_planets_sorted = sorted(planets, key=lambda p: p.mass, reverse=True)
+                for p in all_planets_sorted:
+                    p_label = p.name
+                    p_icon = scene_interface._get_object_asset(p)
+                    leaf = SystemTreeItem(p, p_label, p_icon,
+                                          container=self.scrolling_container,
+                                          manager=self.manager,
+                                          width=self.rect.width - 20,
+                                          indent=0,
+                                          parent_panel=self)
+                    self.root_items.append(leaf)
+                    self.items.append(leaf)
             else:
                 if len(planets) > 1:
                     largest = max(planets, key=lambda p: p.mass)

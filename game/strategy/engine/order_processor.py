@@ -173,14 +173,10 @@ class OrderProcessor:
         if not order or order.type != OrderType.COLONIZE:
             return ColonizeResult(colonized=False)
 
-        # Extract target planet and optional population/cargo amounts
+        # Extract target planet (may be a plain Planet or a dict with planet key)
         raw_target = order.target
-        population_amount = None
-        cargo_amounts = None
         if isinstance(raw_target, dict):
             target_planet = raw_target.get('planet')
-            population_amount = raw_target.get('population')
-            cargo_amounts = raw_target.get('cargo')
         else:
             target_planet = raw_target
 
@@ -212,18 +208,13 @@ class OrderProcessor:
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
-        # Execute colonization
+        # Execute colonization — claim planet and deploy pod only.
+        # Population and cargo transfer is handled by TRANSFER orders queued after COLONIZE.
         empire.add_colony(final_planet)
         fleet.pop_order()
 
-        # Transfer passengers from fleet to colony as founding population
-        self._transfer_founding_population(fleet, final_planet, empire, population_amount)
-
         # Deploy drop pod as facility on the new colony
         self._deploy_drop_pod(fleet, final_planet)
-
-        # Transfer resource cargo from fleet to planet stockpile
-        self._transfer_cargo_resources_to_colony(fleet, final_planet, cargo_amounts)
 
         logger.info(f"OrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
 
@@ -619,37 +610,6 @@ class OrderProcessor:
 
         return unloaded
 
-    def _transfer_cargo_resources_to_colony(
-        self, fleet: Fleet, planet, cargo_amounts: dict = None
-    ) -> None:
-        """Transfer resource cargo from fleet to the new colony's stockpile.
-
-        Args:
-            fleet: Fleet with cargo to transfer.
-            planet: New colony planet.
-            cargo_amounts: Optional dict of resource_type -> amount to transfer.
-                If None, transfers all cargo. Amounts are clamped to available.
-        """
-        resource_types = [
-            "metals", "organics", "vapors", "radioactives", "exotics",
-            "fuel", "energy", "ammo",
-        ]
-        transferred = {}
-        for res in resource_types:
-            available = fleet.resources.get_fleet_cargo_current(res)
-            if cargo_amounts is not None:
-                to_transfer = min(cargo_amounts.get(res, 0), available)
-            else:
-                to_transfer = available
-            if to_transfer > 0:
-                actual = fleet.resources.unload_cargo_from_fleet(res, to_transfer)
-                if actual > 0:
-                    planet.add_to_stockpile(res, float(actual))
-                    transferred[res] = actual
-
-        if transferred:
-            logger.info(f"Transferred cargo to {planet.name}: {transferred}")
-
     def _deploy_drop_pod(self, fleet: Fleet, planet) -> None:
         """Deploy a drop pod from fleet cargo as a facility on the planet.
 
@@ -686,73 +646,6 @@ class OrderProcessor:
 
         logger.info(f"Deployed drop pod '{facility.name}' on {planet.name}")
 
-    def _transfer_founding_population(
-        self,
-        fleet: Fleet,
-        planet: 'Planet',
-        empire: 'Empire',
-        population_amount: int = None
-    ) -> int:
-        """
-        Transfer passengers from fleet to colony as founding population.
-
-        Args:
-            fleet: Fleet that colonized the planet
-            planet: Newly colonized planet
-            empire: Empire that owns the colony
-            population_amount: Specific number to transfer (None = all passengers)
-
-        Returns:
-            Number of population units seeded.
-        """
-        from game.strategy.data.planet import SpeciesPopulation
-
-        # Get passengers from fleet
-        try:
-            passengers = fleet.resources.get_fleet_cargo_current("passengers")
-        except (AttributeError, TypeError):
-            passengers = 0
-
-        # Determine founding population — clamp to available
-        if population_amount is not None:
-            founding_pop = min(population_amount, passengers)
-        else:
-            founding_pop = passengers if isinstance(passengers, int) else 0
-
-        # If no passengers but empire has race_config, seed minimum
-        race_config = empire.race_config
-        # Check for actual RaceConfig (not MagicMock) - RaceConfig has race_id attribute
-        has_race_config = (
-            race_config is not None
-            and isinstance(race_config.race_id, str)
-        )
-
-        # if founding_pop == 0 and has_race_config:
-        #     founding_pop = 100  # Minimum seed: 100K people - REMOVED per user request
-
-        if founding_pop <= 0:
-            return 0
-
-        # Unload passengers from fleet
-        if founding_pop > 0:
-            try:
-                fleet.resources.unload_cargo_from_fleet("passengers", founding_pop)
-            except (AttributeError, TypeError):
-                pass  # Mock fleet, skip unload
-
-        # Determine race_id from empire
-        race_id = empire.race_config.race_id if empire.race_config else "default"
-
-        # Create founding population on planet
-        species_pop = SpeciesPopulation(
-            race_id=race_id,
-            count=founding_pop,
-            happiness=0.5  # Neutral starting happiness
-        )
-        planet.populations.append(species_pop)
-
-        logger.debug(f"Colonization: Seeded {founding_pop} {race_id} on {planet.name}")
-        return founding_pop
 
     def execute_action_order(
         self,

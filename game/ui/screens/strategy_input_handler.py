@@ -92,6 +92,10 @@ class StrategyInputHandler:
             self.scene.on_build_yard_click()
         elif event.ui_element == ui.btn_build_fleet:
             self.scene.on_fleet_build_click()
+        elif event.ui_element == ui.btn_abilities:
+            current_sel = getattr(self.scene.ui, 'current_selection', None)
+            if current_sel:
+                self.scene.ui.open_planet_abilities_window(current_sel)
         # Navigation
         elif event.ui_element == ui.btn_prev_colony:
             self.scene.cycle_selection('colony', -1)
