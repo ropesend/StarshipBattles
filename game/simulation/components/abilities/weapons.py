@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
 from game.core.math import angle_from_vector
-from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.formula_system import FormulaEvaluator
 
 logger = logging.getLogger(__name__)
 from .base import Ability
@@ -30,7 +30,7 @@ def _parse_formula_field(raw, default: float = 0.0, formula_context: dict = None
 
     if isinstance(raw, str) and raw.startswith('='):
         formula_str = raw[1:]
-        value = float(max(0, safe_evaluate_math_formula(formula_str, formula_context)))
+        value = float(max(0, FormulaEvaluator.safe_evaluate(formula_str, formula_context)))
         return value, formula_str
     elif raw is not None:
         return float(raw), None
@@ -46,7 +46,7 @@ class WeaponAbility(Ability):
         - Static numbers: damage=100
         - Runtime formulas: damage="=10 + range_to_target * 0.5"
 
-        Formulas start with '=' and are evaluated at runtime using safe_evaluate_math_formula().
+        Formulas start with '=' and are evaluated at runtime using FormulaEvaluator.safe_evaluate().
         Available context variables:
         - range_to_target (float): Distance to the target in game units
 
@@ -204,7 +204,7 @@ class WeaponAbility(Ability):
         """
         if self.damage_formula:
             context = {'range_to_target': range_to_target}
-            return max(0.0, safe_evaluate_math_formula(self.damage_formula, context))
+            return max(0.0, FormulaEvaluator.safe_evaluate(self.damage_formula, context))
         return self.damage
 
     def get_ui_rows(self):

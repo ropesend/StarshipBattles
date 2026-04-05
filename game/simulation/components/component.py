@@ -59,7 +59,6 @@ Key Classes:
 """
 import json
 import logging
-from game.simulation.formula_system import safe_evaluate_math_formula
 from game.core.singleton import SingletonMeta
 from typing import Optional, TYPE_CHECKING
 # PROJ-211: Removed get_default_registry_provider import - DI is now required

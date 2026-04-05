@@ -11,7 +11,7 @@ PROJ-88: God Class Decomposition - Simulation Core Tier
 """
 from typing import TYPE_CHECKING, Optional
 
-from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.formula_system import FormulaEvaluator
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -109,7 +109,7 @@ class ComponentResourceManager:
         for res, amount in base_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
                 # Evaluate formula on-demand
-                amount = safe_evaluate_math_formula(
+                amount = FormulaEvaluator.safe_evaluate(
                     amount[1:], eval_context, default=0
                 )
             result[res] = int(amount * multiplier)
