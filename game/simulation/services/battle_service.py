@@ -205,8 +205,8 @@ class BattleService:
 
         # Start the engine with the condition (or default)
         self._engine.start(
-            team1_ships=self._team0_ships,
-            team2_ships=self._team1_ships,
+            team0_ships=self._team0_ships,
+            team1_ships=self._team1_ships,
             seed=self._seed,
             end_condition=end_condition,
             absolute_max_ticks=absolute_max_ticks
