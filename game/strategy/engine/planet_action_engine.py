@@ -137,64 +137,85 @@ class PlanetActionEngine:
     ) -> None:
         """Execute a completed planet order."""
         if order.type == OrderType.ACTIVATE_SHIELD:
-            self._execute_activate_shield(planet, order, empire)
+            self._execute_activate_ability(planet, order, empire, 'PlanetaryShield')
         elif order.type == OrderType.DEACTIVATE_SHIELD:
-            self._execute_deactivate_shield(planet, order, empire)
+            self._execute_deactivate_ability(planet, order, empire, 'PlanetaryShield')
+        elif order.type == OrderType.ACTIVATE_ABILITY:
+            ability_name = order.target.get('ability_name', '') if isinstance(order.target, dict) else ''
+            self._execute_activate_ability(planet, order, empire, ability_name)
+        elif order.type == OrderType.DEACTIVATE_ABILITY:
+            ability_name = order.target.get('ability_name', '') if isinstance(order.target, dict) else ''
+            self._execute_deactivate_ability(planet, order, empire, ability_name)
 
-    def _execute_activate_shield(
+    def _execute_activate_ability(
         self,
         planet: 'Planet',
         order: 'PlanetOrder',
         empire: 'Empire',
+        ability_name: str,
     ) -> None:
-        """Activate the planetary shield."""
-        planet.shield_active = True
+        """Activate a toggleable ability on a planet."""
+        # Update planet-level ability state
+        if not hasattr(planet, 'active_abilities'):
+            planet.active_abilities = {}
+        planet.active_abilities[ability_name] = True
+
+        # Legacy: keep shield_active in sync for PlanetaryShield
+        if ability_name == 'PlanetaryShield':
+            planet.shield_active = True
 
         # Set component state on target facility
         facility = self._find_target_facility(planet, order)
         if facility:
-            comp_id = self._find_shield_component_id(facility)
+            comp_id = self._find_ability_component_id(facility, ability_name)
             if comp_id:
                 facility.set_component_active(comp_id, True)
 
-        logger.info(f"Planet {planet.name}: planetary shield activated")
+        logger.info(f"Planet {planet.name}: {ability_name} activated")
         try:
             from game.strategy.events.event_types import EventType, EventCategory
             log_event(
                 EventType.SHIELD_ACTIVATED,
                 category=EventCategory.PLANET_OPERATIONS,
                 empire_id=empire.id,
-                message=f"Planetary shield activated on {planet.name}",
+                message=f"{ability_name} activated on {planet.name}",
                 planet_id=planet.id,
                 planet_name=planet.name,
             )
         except (ImportError, AttributeError):
-            pass  # Events not yet defined during early testing
+            pass
 
-    def _execute_deactivate_shield(
+    def _execute_deactivate_ability(
         self,
         planet: 'Planet',
         order: 'PlanetOrder',
         empire: 'Empire',
+        ability_name: str,
     ) -> None:
-        """Deactivate the planetary shield."""
-        planet.shield_active = False
+        """Deactivate a toggleable ability on a planet."""
+        if not hasattr(planet, 'active_abilities'):
+            planet.active_abilities = {}
+        planet.active_abilities[ability_name] = False
+
+        # Legacy: keep shield_active in sync for PlanetaryShield
+        if ability_name == 'PlanetaryShield':
+            planet.shield_active = False
 
         # Clear component state on target facility
         facility = self._find_target_facility(planet, order)
         if facility:
-            comp_id = self._find_shield_component_id(facility)
+            comp_id = self._find_ability_component_id(facility, ability_name)
             if comp_id:
                 facility.set_component_active(comp_id, False)
 
-        logger.info(f"Planet {planet.name}: planetary shield deactivated")
+        logger.info(f"Planet {planet.name}: {ability_name} deactivated")
         try:
             from game.strategy.events.event_types import EventType, EventCategory
             log_event(
                 EventType.SHIELD_DEACTIVATED,
                 category=EventCategory.PLANET_OPERATIONS,
                 empire_id=empire.id,
-                message=f"Planetary shield deactivated on {planet.name}",
+                message=f"{ability_name} deactivated on {planet.name}",
                 planet_id=planet.id,
                 planet_name=planet.name,
             )
@@ -222,19 +243,28 @@ class PlanetActionEngine:
                 for f in planet.facilities:
                     if f.instance_id == facility_id:
                         return f
-        # Fallback: find first facility with shield ability
+            # Fallback: find first facility with the target ability
+            ability_name = target.get('ability_name', 'PlanetaryShield')
+            for f in planet.facilities:
+                if self._find_ability_component_id(f, ability_name):
+                    return f
+        # Legacy fallback: find first facility with shield ability
         for f in planet.facilities:
-            if self._find_shield_component_id(f):
+            if self._find_ability_component_id(f, 'PlanetaryShield'):
                 return f
         return None
 
-    def _find_shield_component_id(self, facility) -> Optional[str]:
-        """Find the component ID of a PlanetaryShield in a facility."""
-        registries = self._registries
+    def _find_ability_component_id(self, facility, ability_name: str) -> Optional[str]:
+        """Find the component ID that provides a specific ability in a facility."""
+        from game.strategy.services.component_inspector import extract_abilities_from_component
         for comp in iter_components(facility.design_data):
-            shield_data = get_shield_info(comp, registries)
-            if shield_data is not None:
+            abilities = extract_abilities_from_component(comp, self._registries)
+            if ability_name in abilities:
                 if isinstance(comp, dict):
                     return comp.get('id', '')
                 return str(comp)
         return None
+
+    def _find_shield_component_id(self, facility) -> Optional[str]:
+        """Find the component ID of a PlanetaryShield in a facility (legacy)."""
+        return self._find_ability_component_id(facility, 'PlanetaryShield')

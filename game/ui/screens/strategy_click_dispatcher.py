@@ -171,26 +171,16 @@ class ClickModeDispatcher:
                 fleet_ref = self.scene.selected_fleet
                 target_hex = result.get('target_hex')
 
-                def on_planet_and_amounts(planet, pop_amount, cargo_amounts):
-                    """Issue colonize mission with amounts from dialog."""
-                    self.scene._colonization.queue_colonize_mission(
-                        target_hex, planet, fleet_ref,
-                        population_amount=pop_amount,
-                        cargo_amounts=cargo_amounts,
+                def on_planet_selected(planet):
+                    """Issue colonize mission, then open transfer dialog for cargo amounts."""
+                    mission_result = self.scene._colonization.queue_colonize_mission(
+                        target_hex, planet, fleet_ref
                     )
+                    if mission_result and mission_result.get('type') == 'success':
+                        # Open transfer dialog so player can queue unload orders
+                        self.scene.ui.open_transfer_dialog(fleet_ref, target_hex)
                     if self.scene.selected_fleet == fleet_ref:
                         self.scene.on_ui_selection(self.scene.selected_fleet)
-
-                def on_planet_selected(planet):
-                    """After planet selection, open colonize dialog for amounts."""
-                    passenger_cap, cargo_caps = self.scene._colonization.get_fleet_capacities(fleet_ref)
-
-                    def on_confirmed(pop_amount, cargo_amounts):
-                        on_planet_and_amounts(planet, pop_amount, cargo_amounts)
-
-                    self.scene.ui.open_colonize_dialog(
-                        planet.name, passenger_cap, cargo_caps, on_confirmed
-                    )
 
                 planets = result['planets']
                 if len(planets) == 1:

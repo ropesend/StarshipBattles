@@ -85,6 +85,17 @@ class ActionTimeResolver:
         if order.type in MOVEMENT_ORDER_TYPES:
             return 0
 
+        # Generic ability toggle: read ability name from order target
+        if order.type in (OrderType.ACTIVATE_ABILITY, OrderType.DEACTIVATE_ABILITY):
+            target = order.target if isinstance(order.target, dict) else {}
+            ability_name = target.get('ability_name', '')
+            time_field = 'activation_time' if order.type == OrderType.ACTIVATE_ABILITY else 'deactivation_time'
+            if not ability_name:
+                return 1
+            return ActionTimeResolver._find_planet_ability_time(
+                entity, order, ability_name, time_field, component_registry
+            )
+
         # Get the ability name for this order type
         ability_name = ORDER_TO_ABILITY_MAP.get(order.type)
         if ability_name is None:

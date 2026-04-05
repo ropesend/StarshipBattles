@@ -75,6 +75,10 @@ class InputAction(str, Enum):
 
     # --- Planet commands ---
     PLANET_SHIELD_TOGGLE = "planet.shield_toggle"  # PROJ-238
+    PLANET_GEOLOGIC_TOGGLE = "planet.geologic_toggle"
+    PLANET_STELLAR_TOGGLE = "planet.stellar_toggle"
+    PLANET_WARP_TOGGLE = "planet.warp_toggle"
+    PLANET_ABILITIES_WINDOW = "planet.abilities_window"
 
     # --- Build queue screen ---
     BUILD_QUEUE_CLOSE = "build_queue.close"
@@ -138,6 +142,10 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.DETAIL_PANEL_BUILD_YARD: "Build Space Yard",
     InputAction.DETAIL_PANEL_PLANET_ORDERS: "Planet Orders",
     InputAction.PLANET_SHIELD_TOGGLE: "Toggle Shield",
+    InputAction.PLANET_GEOLOGIC_TOGGLE: "Toggle Geologic Stabilizer",
+    InputAction.PLANET_STELLAR_TOGGLE: "Toggle Stellar Stabilizer",
+    InputAction.PLANET_WARP_TOGGLE: "Toggle Warp Stabilizer",
+    InputAction.PLANET_ABILITIES_WINDOW: "Planet Abilities",
     # Build queue
     InputAction.BUILD_QUEUE_CLOSE: "Close Build Yard",
     InputAction.BUILD_QUEUE_ADD: "Add to Queue",
@@ -203,6 +211,10 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
     ],
     "Planet": [
         InputAction.PLANET_SHIELD_TOGGLE,
+        InputAction.PLANET_GEOLOGIC_TOGGLE,
+        InputAction.PLANET_STELLAR_TOGGLE,
+        InputAction.PLANET_WARP_TOGGLE,
+        InputAction.PLANET_ABILITIES_WINDOW,
     ],
     "Build Yard": [
         InputAction.BUILD_QUEUE_CLOSE,

@@ -378,18 +378,20 @@ class ReorderConstructionQueueCommand(Command):
 
 @dataclass
 class IssuePlanetOrderCommand(Command):
-    """Command to issue an order to a planet (e.g., activate/deactivate shield).
+    """Command to issue an order to a planet (e.g., activate/deactivate ability).
 
     Args:
         planet_id: Planet to issue order to.
-        order_type: OrderType name (e.g., "ACTIVATE_SHIELD").
+        order_type: OrderType name (e.g., "ACTIVATE_ABILITY").
         facility_instance_id: Target facility UUID.
         component_id: Optional specific component within facility.
+        ability_name: Ability name for generic ACTIVATE_ABILITY/DEACTIVATE_ABILITY.
     """
     planet_id: int
     order_type: str
     facility_instance_id: str
     component_id: Optional[str] = None
+    ability_name: Optional[str] = None
 
 
 @dataclass

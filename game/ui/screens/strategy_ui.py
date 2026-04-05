@@ -410,11 +410,9 @@ class StrategyUI:
         """Open the quick cargo drop/load dialog (PROJ-100)."""
         self.window_manager.open_cargo_quick_dialog(fleet, hex_coord, direction)
 
-    def open_colonize_dialog(self, planet_name, passenger_capacity, cargo_capacities, on_confirm):
-        """Open the colonization population/cargo amount dialog."""
-        self.window_manager.open_colonize_dialog(
-            planet_name, passenger_capacity, cargo_capacities, on_confirm
-        )
+    def open_planet_abilities_window(self, planet):
+        """Open the planet abilities management window."""
+        self.window_manager.open_planet_abilities_window(planet)
 
     def open_empire_panel(self):
         """Open the Empire Panel Window."""

@@ -199,8 +199,21 @@ class FleetCommandRouter:
                 self.scene.ui.open_orders_window(current_sel, entity_type="planet")
             return True
         elif action == InputAction.PLANET_SHIELD_TOGGLE:
-            # PROJ-238: H key toggles shield on selected planet
-            self._handle_shield_toggle()
+            self._handle_ability_toggle('PlanetaryShield')
+            return True
+        elif action == InputAction.PLANET_GEOLOGIC_TOGGLE:
+            self._handle_ability_toggle('GeologicStabilizer')
+            return True
+        elif action == InputAction.PLANET_STELLAR_TOGGLE:
+            self._handle_ability_toggle('StellarStabilizer')
+            return True
+        elif action == InputAction.PLANET_WARP_TOGGLE:
+            self._handle_ability_toggle('WarpFieldStabilizer')
+            return True
+        elif action == InputAction.PLANET_ABILITIES_WINDOW:
+            current_sel = getattr(self.scene.ui, 'current_selection', None)
+            if current_sel and is_planet(current_sel):
+                self.scene.ui.open_planet_abilities_window(current_sel)
             return True
         elif action == InputAction.DETAIL_PANEL_FLEET_REPORT:
             if self.scene.selected_fleet:
@@ -213,17 +226,17 @@ class FleetCommandRouter:
 
         return False
 
-    def _handle_shield_toggle(self) -> None:
-        """Toggle planetary shield on selected planet.
+    def _handle_ability_toggle(self, ability_name: str) -> None:
+        """Toggle a toggleable ability on the selected planet.
 
-        PROJ-238: Issues ACTIVATE_SHIELD or DEACTIVATE_SHIELD based on current state.
+        Issues ACTIVATE_ABILITY or DEACTIVATE_ABILITY based on current state.
         """
         current_sel = getattr(self.scene.ui, 'current_selection', None)
         if not current_sel or not is_planet(current_sel):
             return
         planet = current_sel
 
-        # Find shield facility — MUST use registry lookup (not inline abilities)
+        # Find facility with this ability — MUST use registry lookup
         from game.strategy.validation.planet_order_validator import _facility_has_ability
         from game.core.registry import get_default_registry_provider
         component_registry = None
@@ -233,27 +246,34 @@ class FleetCommandRouter:
         except Exception:
             pass
 
-        shield_facility_id = None
+        target_facility_id = None
         for facility in planet.facilities:
-            if _facility_has_ability(facility, 'PlanetaryShield', component_registry):
-                shield_facility_id = facility.instance_id
+            if _facility_has_ability(facility, ability_name, component_registry):
+                target_facility_id = facility.instance_id
                 break
 
-        if not shield_facility_id:
-            return  # No shield facility on this planet
+        if not target_facility_id:
+            return  # No facility with this ability on this planet
 
         # Determine order type based on current state
-        order_type = "DEACTIVATE_SHIELD" if planet.shield_active else "ACTIVATE_SHIELD"
+        active_abilities = getattr(planet, 'active_abilities', {})
+        is_active = active_abilities.get(ability_name, False)
+        # Legacy shield compat
+        if ability_name == 'PlanetaryShield':
+            is_active = is_active or getattr(planet, 'shield_active', False)
+
+        order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
 
         from game.strategy.engine.commands import IssuePlanetOrderCommand
         cmd = IssuePlanetOrderCommand(
             planet_id=planet.id,
             order_type=order_type,
-            facility_instance_id=shield_facility_id,
+            facility_instance_id=target_facility_id,
+            ability_name=ability_name,
         )
         result = self.scene.facade.handle_command(cmd)
         if result and not result.is_valid:
-            logger.warning(f"Shield toggle failed: {result.message}")
+            logger.warning(f"{ability_name} toggle failed: {result.message}")
 
     def finish_move_action(self, fleet) -> None:
         """Common cleanup after move action.
