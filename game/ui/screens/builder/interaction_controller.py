@@ -15,7 +15,7 @@ class InteractionController:
     - Drag-and-drop from palette to ship view
     - Clone operations (Alt+click on existing component)
     - Multi-placement mode (Shift held during drop)
-    - Hover detection for visual feedback
+    - Deselection when clicking schematic view
 
     The controller maintains selection state and coordinates with registered
     drop targets to determine valid drop locations.
@@ -77,33 +77,10 @@ class InteractionController:
                     return
 
                 if self.view.rect.collidepoint(event.pos) and not self.dragged_item:
-                    found = self.view.get_component_at(event.pos, self.builder.ship)
-                    if found:
-                        keys = pygame.key.get_pressed()
-                        if keys[pygame.K_LALT] or keys[pygame.K_RALT]:
-                            # Clone
-                            original = found[2]
-                            self.dragged_item = original.clone()
-                            for m in original.modifiers:
-                                new_m = m.definition.create_modifier(m.value)
-                                self.dragged_item.modifiers.append(new_m)
-                            self.dragged_item.recalculate_stats()
-                        elif self.selected_component == found:
-                            # Pick up — route through ViewModel so VehicleDesignService
-                            # validates the removal and SHIP_UPDATED/SELECTION_CHANGED
-                            # events are emitted automatically.
-                            layer, index, comp = found
-                            picked = self.builder.viewmodel.pick_up_component(layer, index)
-                            self.dragged_item = picked if picked is not None else comp
-                            self.selected_component = None
-                        else:
-                            # Select
-                            self.selected_component = found
-                            self.builder.on_selection_changed(found)
-                    else:
-                        # Deselect
-                        self.selected_component = None
-                        self.builder.on_selection_changed(None)
+                    # Clicking in the schematic view deselects current selection.
+                    # (Component picking from schematic is disabled.)
+                    self.selected_component = None
+                    self.builder.on_selection_changed(None)
                         
         elif event.type == pygame.MOUSEBUTTONUP:
              if event.button == 1 and self.dragged_item:
@@ -130,12 +107,7 @@ class InteractionController:
         Called each frame to track which component (if any) is under the
         mouse cursor. Updates hovered_component for visual feedback.
         """
-        mx, my = pygame.mouse.get_pos()
         self.hovered_component = None
-        if self.view.rect.collidepoint(mx, my):
-             found = self.view.get_component_at((mx, my), self.builder.ship)
-             if found:
-                 self.hovered_component = found[2]
 
     @profile_action("Builder: Drop Component")
     def _handle_drop(self, pos):

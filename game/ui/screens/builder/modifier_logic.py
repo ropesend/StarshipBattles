@@ -2,20 +2,35 @@
 Game logic for component modifiers.
 Handles validation, mandatory checks, and default value calculations.
 
-PROJ-43: Now uses ComponentService for modifier registry access instead of
-direct MODIFIER_REGISTRY import. Uses class-level service injection.
-
-PROJ-211: ComponentService now requires registry_provider. Use init_service()
-to initialize with a provider before use.
+ModifierLogicService is the instance-based service following the codebase's
+constructor injection pattern (like VehicleClassService, ComponentService).
 """
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
 
 
-class ModifierLogic:
-    """Static utility class for component modifier validation and calculations.
+# Dispatch table: modifier_id -> initial value (or callable(service, component, mod_def) -> float)
+_INITIAL_VALUE_DEFAULTS = {
+    'simple_size_mount': 1.0,
+    'range_mount': 0.0,
+    'facing': 0.0,
+    'precision_mount': 0.0,
+}
+
+# Ability type names to search for nested firing_arc values
+_WEAPON_ABILITY_TYPES = (
+    'ProjectileWeaponAbility', 'BeamWeaponAbility',
+    'SeekerWeaponAbility', 'WeaponAbility',
+)
+
+
+class ModifierLogicService:
+    """Instance-based service for component modifier validation and calculations.
 
     Provides logic for:
     - Determining which modifiers are allowed for a component type
@@ -24,159 +39,118 @@ class ModifierLogic:
     - Computing component-specific min/max value constraints
     - Snap calculations for step buttons
 
-    This class has no instance state and all methods are static or class methods.
-    It acts as a bridge between UI controls and the underlying ModifierService,
-    adding builder-specific business logic on top.
-
-    PROJ-43: Uses a class-level ComponentService for registry access.
-    PROJ-211: Must call init_service(provider) before first use.
+    Uses constructor injection for the registry provider, following the
+    codebase's established DI pattern.
     """
 
-    # Class-level service instance (must be initialized via init_service)
-    _component_service = None
-
-    # Note: Mandatory modifier IDs are defined in ModifierService.MANDATORY_MODIFIERS.
-    # This class determines mandatory modifiers dynamically via get_mandatory_modifiers().
-
-    @classmethod
-    def init_service(cls, registry_provider: 'IRegistryProvider') -> None:
-        """Initialize the ComponentService with a registry provider.
-
-        PROJ-211: Must be called before any other methods are used.
+    def __init__(self, registry_provider: 'IRegistryProvider'):
+        """Initialize with a registry provider (strict DI).
 
         Args:
-            registry_provider: Registry provider for DI.
-        """
-        from game.ui.services.component_service import ComponentService
-        cls._component_service = ComponentService(registry_provider)
+            registry_provider: Registry provider for component/modifier access.
 
-    @classmethod
-    def _get_service(cls):
-        """Get the ComponentService instance."""
-        if cls._component_service is None:
-            raise RuntimeError(
-                "ModifierLogic.init_service() must be called before use. "
-                "Call init_service(registry_provider) from the builder/workshop."
+        Raises:
+            ValidationException: If registry_provider is None.
+        """
+        if registry_provider is None:
+            raise ValidationException(
+                "registry_provider is required",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"service": "ModifierLogicService", "parameter": "registry_provider"}
             )
-        return cls._component_service
+        from game.ui.services.component_service import ComponentService
+        self._component_service = ComponentService(registry_provider)
 
-    @classmethod
-    def set_service(cls, service):
-        """Set the ComponentService instance (for testing)."""
-        cls._component_service = service
+    def is_modifier_allowed(self, mod_id: str, component) -> bool:
+        """Check if a modifier is allowed for the given component."""
+        return self._component_service.is_modifier_allowed(mod_id, component)
 
-    @staticmethod
-    def is_modifier_allowed(mod_id, component):
-        """Check if a modifier is allowed for the given component.
-
-        PROJ-43: Delegates to ComponentService.
-        """
-        return ModifierLogic._get_service().is_modifier_allowed(mod_id, component)
-
-    @staticmethod
-    def get_mandatory_modifiers(component):
+    def get_mandatory_modifiers(self, component) -> list:
         """Returns a list of modifier IDs that are mandatory for this component.
 
-        All applicable modifiers are mandatory - they are auto-applied at their
+        All applicable modifiers are mandatory — they are auto-applied at their
         default value and cannot be toggled off. Users can only adjust values.
         """
-        mandatory = []
-        modifiers = ModifierLogic._get_service().get_modifier_registry()
-        for mod_id in modifiers:
-            if ModifierLogic.is_modifier_allowed(mod_id, component):
-                mandatory.append(mod_id)
-        return mandatory
+        modifiers = self._component_service.get_modifier_registry()
+        return [mod_id for mod_id in modifiers
+                if self._component_service.is_modifier_allowed(mod_id, component)]
 
-    @staticmethod
-    def is_modifier_mandatory(mod_id, component):
+    def is_modifier_mandatory(self, mod_id: str, component) -> bool:
         """Check if a specific modifier is mandatory for this component."""
-        return mod_id in ModifierLogic.get_mandatory_modifiers(component)
+        return mod_id in self.get_mandatory_modifiers(component)
 
-    @staticmethod
-    def get_initial_value(mod_id, component):
+    def get_initial_value(self, mod_id: str, component) -> float:
         """Get the initial value for a newly applied modifier.
 
-        PROJ-43: Uses ComponentService for modifier lookup.
+        Uses a dispatch table for known modifier defaults. Unknown modifiers
+        fall back to the definition's default_val.
         """
-        mod_def = ModifierLogic._get_service().get_modifier_definition(mod_id)
+        mod_def = self._component_service.get_modifier_definition(mod_id)
         if not mod_def:
             return 0
 
-        if mod_id == 'simple_size_mount':
-            return 1.0
-        elif mod_id == 'range_mount':
-            return 0.0
-        elif mod_id == 'facing':
-            return 0.0
-        elif mod_id == 'precision_mount':
-            return 0.0
-        elif mod_id == 'turret_mount':
-            # Default to base firing arc
-            # Use comp.data to get the TRUE base value, ignoring any current runtime modifications
-            base_arc = component.data.get('firing_arc')
-            # Phase 6: Check inside ability dicts if not at root level
-            if base_arc is None:
-                abilities = component.data.get('abilities', {})
-                for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                    ab_data = abilities.get(ab_name, {})
-                    if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
-                        base_arc = ab_data['firing_arc']
-                        break
-            if base_arc is None:
-                base_arc = mod_def.min_val
-            return float(base_arc)
+        # Check static defaults first
+        if mod_id in _INITIAL_VALUE_DEFAULTS:
+            return float(_INITIAL_VALUE_DEFAULTS[mod_id])
+
+        # turret_mount: default to component's base firing arc
+        if mod_id == 'turret_mount':
+            arc = self._get_base_firing_arc(component)
+            return arc if arc is not None else float(mod_def.min_val)
 
         return mod_def.default_val
-        
-    @staticmethod
-    def ensure_mandatory_modifiers(component):
+
+    def get_local_min_max(self, mod_id: str, component) -> tuple:
+        """Returns (min, max) for a modifier, accounting for component-specific constraints."""
+        mod_def = self._component_service.get_modifier_definition(mod_id)
+        if not mod_def:
+            return (0, 100)
+
+        local_min = float(mod_def.min_val)
+        local_max = float(mod_def.max_val)
+
+        if mod_id == 'turret_mount':
+            arc = self._get_base_firing_arc(component)
+            if arc is not None:
+                local_min = arc
+
+        return (local_min, local_max)
+
+    def ensure_mandatory_modifiers(self, component) -> None:
         """Ensures all mandatory modifiers are present on the component."""
-        mandatory = ModifierLogic.get_mandatory_modifiers(component)
+        mandatory = self.get_mandatory_modifiers(component)
         for mod_id in mandatory:
             if not component.get_modifier(mod_id):
                 component.add_modifier(mod_id)
                 m = component.get_modifier(mod_id)
                 if m:
-                    m.value = ModifierLogic.get_initial_value(mod_id, component)
+                    m.value = self.get_initial_value(mod_id, component)
 
-    @staticmethod
-    def get_local_min_max(mod_id, component):
-        """Returns (min, max) for a modifier, accounting for component-specific constraints.
+    def _get_base_firing_arc(self, component) -> Optional[float]:
+        """Extract base firing arc from component data.
 
-        PROJ-43: Uses ComponentService for modifier lookup.
+        Checks root-level 'firing_arc' first, then falls back to searching
+        inside weapon ability dictionaries.
         """
-        mod_def = ModifierLogic._get_service().get_modifier_definition(mod_id)
-        if not mod_def:
-            return (0, 100)
-        
-        local_min = float(mod_def.min_val)
-        local_max = float(mod_def.max_val)
-        
-        if mod_id == 'turret_mount':
-            # Min value cannot be less than the component's base fixed arc
-            # Use comp.data to get the TRUE base value, ignoring any current runtime modifications
-            base_arc = component.data.get('firing_arc')
-            # Phase 6: Check inside ability dicts if not at root level
-            if base_arc is None:
-                abilities = component.data.get('abilities', {})
-                for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                    ab_data = abilities.get(ab_name, {})
-                    if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
-                        base_arc = ab_data['firing_arc']
-                        break
-            if base_arc is None:
-                base_arc = local_min
-            local_min = float(base_arc)
-            
-        return (local_min, local_max)
+        base_arc = component.data.get('firing_arc')
+        if base_arc is not None:
+            return float(base_arc)
+
+        abilities = component.data.get('abilities', {})
+        for ab_name in _WEAPON_ABILITY_TYPES:
+            ab_data = abilities.get(ab_name, {})
+            if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
+                return float(ab_data['firing_arc'])
+
+        return None
 
     @staticmethod
     def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False):
-        """Calculates value for snap buttons."""
-        
+        """Calculates value for snap buttons. Pure function — no dependencies."""
+
         # Smart floor logic (Size Mount special behavior)
         if smart_floor and direction < 0 and current <= step:
-             return min_val
+            return min_val
 
         if direction < 0:
             # Decrement
@@ -195,3 +169,64 @@ class ModifierLogic:
             else:
                 target = current + dist
             return min(max_val, target)
+
+
+# ---------------------------------------------------------------------------
+# Deprecated: ModifierLogic static wrapper
+# Kept during transition so unmigrated callers still work.
+# Will be removed once all callers are updated to use ModifierLogicService.
+# ---------------------------------------------------------------------------
+
+class ModifierLogic:
+    """Deprecated static wrapper. Use ModifierLogicService instead."""
+
+    _service_instance: Optional[ModifierLogicService] = None
+
+    @classmethod
+    def init_service(cls, registry_provider: 'IRegistryProvider') -> None:
+        """Initialize the backing ModifierLogicService."""
+        cls._service_instance = ModifierLogicService(registry_provider)
+
+    @classmethod
+    def _get_service(cls) -> ModifierLogicService:
+        if cls._service_instance is None:
+            raise RuntimeError(
+                "ModifierLogic.init_service() must be called before use. "
+                "Call init_service(registry_provider) from the builder/workshop."
+            )
+        return cls._service_instance
+
+    @classmethod
+    def set_service(cls, service):
+        """Set the service instance (for testing)."""
+        cls._service_instance = service
+
+    @staticmethod
+    def is_modifier_allowed(mod_id, component):
+        return ModifierLogic._get_service().is_modifier_allowed(mod_id, component)
+
+    @staticmethod
+    def get_mandatory_modifiers(component):
+        return ModifierLogic._get_service().get_mandatory_modifiers(component)
+
+    @staticmethod
+    def is_modifier_mandatory(mod_id, component):
+        return ModifierLogic._get_service().is_modifier_mandatory(mod_id, component)
+
+    @staticmethod
+    def get_initial_value(mod_id, component):
+        return ModifierLogic._get_service().get_initial_value(mod_id, component)
+
+    @staticmethod
+    def ensure_mandatory_modifiers(component):
+        return ModifierLogic._get_service().ensure_mandatory_modifiers(component)
+
+    @staticmethod
+    def get_local_min_max(mod_id, component):
+        return ModifierLogic._get_service().get_local_min_max(mod_id, component)
+
+    @staticmethod
+    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False):
+        return ModifierLogicService.calculate_snap_value(
+            current, step, direction, min_val, max_val, smart_floor
+        )

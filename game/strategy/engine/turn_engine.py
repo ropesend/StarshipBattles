@@ -10,17 +10,22 @@ PROJ-161: Moved harvesting into per-tick processing.
 
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
-       - Phase 0:   Harvesting (via HarvestingEngine) - 1/100th per tick
-       - Phase 0b:  Per-turn resources (via ConsumableManagementEngine)
-       - Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
-       - Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
-       - Phase 0e:  Construction resource consumption (via ProductionEngine)
-       - Phase 1:   Instant orders (via OrderProcessor)
-       - Phase 1.5: Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
-       - Phase 2:   Calculate moves (via FleetMovementEngine)
-       - Phase 3:   Apply moves (via FleetMovementEngine)
-       - Phase 4:   Combat (via ConflictResolutionEngine)
+       - Phase 0:    Harvesting (via HarvestingEngine) - 1/100th per tick
+       - Phase 0b:   Per-turn resources (via ConsumableManagementEngine)
+       - Phase 0c:   Fuel generation at facilities (via ResupplyEngine)
+       - Phase 0c1:  Planet energy generation/consumption (via PlanetEnergyEngine)
+       - Phase 0d:   Fleet resupply from facilities (via ResupplyEngine)
+       - Phase 0e:   Construction resource consumption (via ProductionEngine)
+       - Phase 0f:   Environmental hazards - storm damage/fuel drain (via EnvironmentalHazardEngine)
+       - Phase 1:    Instant orders (via OrderProcessor)
+       - Phase 1.5:  Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
+       - Phase 1.6:  Planet action orders (via PlanetActionEngine) - shield activation, etc.
+       - Phase 2:    Calculate moves (via FleetMovementEngine)
+       - Phase 3:    Apply moves (via FleetMovementEngine)
+       - Phase 4:    Combat (via ConflictResolutionEngine)
     2. POPULATION GROWTH (via PopulationEngine)
+    3. QUALITY IMPROVEMENT (via QualityEngine) - once per turn
+    4. ATMOSPHERE MODIFICATION (via AtmosphereEngine) - once per turn
 
 Delegated Engines:
     - FleetMovementEngine: Movement calculation and application
@@ -54,7 +59,7 @@ import logging
 
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +89,21 @@ if TYPE_CHECKING:
     from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
 
+class _NullBattleResolver:
+    """Placeholder battle resolver that raises if actually invoked.
+
+    Used when no ai_factory or battle_resolver is provided (e.g., in tests
+    that don't trigger combat). Allows TurnEngine construction without
+    requiring an AI factory for non-combat scenarios.
+    """
+
+    def resolve_battle(self, *args, **kwargs):
+        raise RuntimeError(
+            "No battle resolver configured. Provide ai_factory or battle_resolver "
+            "to TurnEngine when combat resolution is needed."
+        )
+
+
 class TurnEngine:
     """
     Engine for processing strategy turns.
@@ -109,6 +129,7 @@ class TurnEngine:
         battle_resolver: Optional['IBattleResolver'] = None,
         *,
         registries: GameRegistries,
+        ai_factory: Optional[Any] = None,
         movement_engine: Optional['IMovementEngine'] = None,
         production_engine: Optional['IProductionEngine'] = None,
         order_processor: Optional['IOrderProcessor'] = None,
@@ -155,11 +176,10 @@ class TurnEngine:
                            If None, creates EnvironmentalHazardEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
-        if battle_resolver is None:
-            from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-            self._battle_resolver = SimulationBattleResolver()
-        else:
-            self._battle_resolver = battle_resolver
+        # PROJ-239: Store battle_resolver and ai_factory; resolver is created lazily
+        # when conflict_engine is first accessed (not at construction time).
+        self._battle_resolver = battle_resolver
+        self._ai_factory = ai_factory
 
         # PROJ-211: Store registries for passing to sub-engines (required)
         self._registries = registries
@@ -198,6 +218,10 @@ class TurnEngine:
     def _time_phase(self, key: str, fn, *args, **kwargs):
         """Execute a phase function and accumulate its duration to _phase_times.
 
+        Catches and logs exceptions from sub-engines so that a failure in one
+        phase does not crash the entire turn. The failed phase is skipped and
+        processing continues with the next phase.
+
         Args:
             key: Phase timing key (must exist in _phase_times dict).
             fn: Callable to execute and time.
@@ -206,9 +230,18 @@ class TurnEngine:
 
         Returns:
             Whatever fn returns (used by phases that return event lists or move queues).
+            Returns None if the phase raised an exception.
         """
         t0 = time.perf_counter()
-        result = fn(*args, **kwargs)
+        try:
+            result = fn(*args, **kwargs)
+        except Exception:
+            self._phase_times[key] += time.perf_counter() - t0
+            logger.error(
+                "Sub-engine phase '%s' failed during tick processing",
+                key, exc_info=True,
+            )
+            return None
         self._phase_times[key] += time.perf_counter() - t0
         return result
 
@@ -254,10 +287,22 @@ class TurnEngine:
         if self._conflict_engine is None:
             from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
             from game.strategy.services.area_effect_manager import AreaEffectManager
+            # PROJ-239: Lazily create battle resolver if not injected
+            battle_resolver = self._battle_resolver
+            if battle_resolver is None and self._ai_factory is not None:
+                from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+                battle_resolver = SimulationBattleResolver(ai_factory=self._ai_factory)
+                self._battle_resolver = battle_resolver
+            if battle_resolver is None:
+                logger.warning(
+                    "TurnEngine: no battle_resolver or ai_factory provided. "
+                    "Combat resolution will fail if battles occur."
+                )
+                battle_resolver = _NullBattleResolver()
             # PROJ-50: Pass registries for strict DI compliance
             # PROJ-189: Pass AreaEffectManager for storm shield interference
             self._conflict_engine = ConflictResolutionEngine(
-                self._battle_resolver,
+                battle_resolver,
                 registries=self._registries,
                 area_effect_manager=AreaEffectManager()
             )
@@ -468,7 +513,8 @@ class TurnEngine:
 
         # --- Phase 0f: Environmental Hazards (storm damage, fuel drain) ---
         env_events = self._time_phase('environmental', self.environmental_engine.process_environmental_tick, tick, empires, galaxy)
-        self.last_environmental_events.extend(env_events)
+        if env_events:
+            self.last_environmental_events.extend(env_events)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
         self._time_phase('instant_orders', self.order_processor.process_instant_orders, empires)
@@ -494,7 +540,7 @@ class TurnEngine:
         self._time_phase('combat', self.conflict_engine.resolve_all_conflicts, empires, galaxy=galaxy)
 
 
-def create_default_turn_engine(registries: GameRegistries) -> TurnEngine:
+def create_default_turn_engine(registries: GameRegistries, ai_factory=None) -> TurnEngine:
     """
     Factory function to create a TurnEngine with all default engines.
 
@@ -531,5 +577,5 @@ def create_default_turn_engine(registries: GameRegistries) -> TurnEngine:
             production_engine=mock_production
         )
     """
-    return TurnEngine(registries=registries)
+    return TurnEngine(registries=registries, ai_factory=ai_factory)
 

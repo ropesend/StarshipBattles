@@ -25,6 +25,7 @@ from game.strategy.data.build_queue_source import get_default_production_rates, 
 from game.strategy.engine.production_math import find_limiting_resource_ticks
 from game.strategy.engine.production_spawner import ProductionSpawner
 from game.strategy.events.event_types import EventType, EventCategory
+from game.strategy.interfaces.engines import IProductionEngine
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 if TYPE_CHECKING:
@@ -41,38 +42,9 @@ COMPLETION_EPSILON = 0.001  # Tolerance for float comparison in completion check
 MAX_QUEUE_ITERATIONS = 10  # Safety limit to prevent infinite loops
 
 
-def _colony_has_planetary_yard(colony, registries=None) -> bool:
-    """Check if a colony has an operational facility with PlanetaryYard ability.
-
-    Scans facility design data for the PlanetaryYard ability key.
-    """
-    from game.core.patterns.layer_iterator import iter_components
-    from game.strategy.services.component_inspector import get_component_abilities
-
-    for facility in colony.facilities:
-        if not facility.is_operational:
-            continue
-        for comp in iter_components(facility.design_data):
-            # Check inline abilities
-            if isinstance(comp, dict):
-                abilities = comp.get('abilities', {})
-                if 'PlanetaryYard' in abilities:
-                    return True
-                # Check registry
-                comp_id = comp.get('id')
-                if comp_id and registries:
-                    comp_def = registries.components.get(comp_id)
-                    if comp_def:
-                        reg_abilities = get_component_abilities(comp_def)
-                        if 'PlanetaryYard' in reg_abilities:
-                            return True
-            elif isinstance(comp, str) and registries:
-                comp_def = registries.components.get(comp)
-                if comp_def:
-                    reg_abilities = get_component_abilities(comp_def)
-                    if 'PlanetaryYard' in reg_abilities:
-                        return True
-    return False
+# PROJ-239: _colony_has_planetary_yard moved to build_queue_source.py to fix
+# data/→engine/ dependency. Import here for backward compatibility.
+from game.strategy.data.build_queue_source import colony_has_planetary_yard as _colony_has_planetary_yard
 
 
 class QueueItemAction(Enum):
@@ -97,7 +69,7 @@ class TickExpenditure(NamedTuple):
 from game.strategy.data.fleet import Fleet
 
 
-class ProductionEngine:
+class ProductionEngine(IProductionEngine):
     """
     Engine for processing production/construction.
 

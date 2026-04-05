@@ -54,11 +54,6 @@ class Empire:
             self.colonies.append(planet)
             planet.owner_id = self.id
 
-    def remove_colony(self, planet):
-        if planet in self.colonies:
-            self.colonies.remove(planet)
-            planet.owner_id = None
-
     def add_fleet(self, fleet):
         """Add fleet to empire and auto-register with galaxy for O(1) lookup.
 

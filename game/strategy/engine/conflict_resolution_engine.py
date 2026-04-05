@@ -16,6 +16,7 @@ from typing import Optional, List, TYPE_CHECKING
 
 from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+from game.strategy.interfaces.engines import IConflictEngine
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class ConflictResult:
     fleets_destroyed: List[int]  # Fleet IDs
 
 
-class ConflictResolutionEngine:
+class ConflictResolutionEngine(IConflictEngine):
     """
     Engine for resolving combat conflicts between empires.
 
@@ -48,7 +49,7 @@ class ConflictResolutionEngine:
 
     def __init__(
         self,
-        battle_resolver: Optional['IBattleResolver'] = None,
+        battle_resolver: 'IBattleResolver',
         *,
         registries: Optional['GameRegistries'] = None,
         area_effect_manager: Optional['AreaEffectManager'] = None
@@ -57,8 +58,9 @@ class ConflictResolutionEngine:
         Initialize the conflict resolution engine.
 
         Args:
-            battle_resolver: Optional battle resolver implementation.
-                           If None, defaults to SimulationBattleResolver.
+            battle_resolver: Battle resolver implementation (required).
+                           PROJ-239: Made required to eliminate default
+                           SimulationBattleResolver creation (which needed AI import).
             registries: Optional GameRegistries for DI. Required for strict DI
                        compliance in PROJ-50.
             area_effect_manager: Optional AreaEffectManager for environmental
@@ -75,12 +77,7 @@ class ConflictResolutionEngine:
         self._area_effect_manager: Optional['AreaEffectManager'] = area_effect_manager
         self._galaxy: Optional['Galaxy'] = None  # Set during resolve_all_conflicts
 
-        # PROJ-11: Inject battle resolver for clean layer separation
-        if battle_resolver is None:
-            from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-            self._battle_resolver = SimulationBattleResolver()
-        else:
-            self._battle_resolver = battle_resolver
+        self._battle_resolver = battle_resolver
 
     def _generate_battle_seed(self) -> int:
         """Generate a deterministic seed for battles."""

@@ -18,6 +18,7 @@ from game.core.patterns.layer_iterator import iter_components
 from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 from game.strategy.engine.planet_energy_engine import get_shield_info
+from game.strategy.interfaces.engines import IPlanetActionEngine
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class PlanetActionTickResult:
     action_time: int
 
 
-class PlanetActionEngine:
+class PlanetActionEngine(IPlanetActionEngine):
     """
     Engine for tick-based planet order execution.
 

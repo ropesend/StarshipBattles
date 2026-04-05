@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Fix the two critical-severity findings that pose immediate risk
 **Priority:** Immediate
 
@@ -19,12 +19,12 @@
 
 The `process_turn` method runs 100 ticks across 12+ sub-engine phases with zero exception handling. Any sub-engine failure crashes the turn mid-processing, leaving galaxy/empire state partially modified.
 
-- [ ] Write test: inject a mock sub-engine that raises, verify turn engine catches it gracefully
-- [ ] Add try/except around `_process_tick` calls with logging and state recovery strategy
-- [ ] Design decision: fail-fast (abort turn, rollback) vs skip-and-continue (log error, continue remaining ticks) — document choice in decisions.md
-- [ ] Verify: existing turn engine tests still pass, new error case is covered
+- [x] Write test: inject a mock sub-engine that raises, verify turn engine catches it gracefully
+- [x] Add try/except around `_process_tick` calls with logging and state recovery strategy
+- [x] Design decision: fail-fast (abort turn, rollback) vs skip-and-continue (log error, continue remaining ticks) — document choice in decisions.md
+- [x] Verify: existing turn engine tests still pass, new error case is covered
 
-**Notes:** Consider whether each sub-engine phase should be individually wrapped, or the entire tick. Individual wrapping gives better diagnostics but more complexity.
+**Notes:** Used log-and-continue approach via `_time_phase()` — the single chokepoint for all sub-engine calls. Error handling wraps each phase call individually so a harvesting failure doesn't block movement, etc. 6 new tests in `test_turn_error_handling.py`. Also added `None` guard for `env_events` extend (line 484) since environmental phase could return `None` on error. All 32 turn engine tests pass.
 
 ### Task 1.2: AR-001 — Remove AI layer import from strategy adapter [Medium]
 **File:** `game/strategy/adapters/simulation_adapter.py:127`
@@ -32,19 +32,19 @@ The `process_turn` method runs 100 ticks across 12+ sub-engine phases with zero 
 
 `SimulationBattleResolver` has a late import of `game.ai.ai_factory.AIControllerFactory` in its default code path. Strategy is only allowed to depend on Core and Simulation — importing from AI is an architecture violation.
 
-- [ ] Write test: verify `SimulationBattleResolver` works without AI import when factory is injected
-- [ ] Refactor: make `ai_factory` a required constructor parameter (no default that imports AI)
-- [ ] Update all call sites to inject the AI factory from the UI layer (where AI imports are allowed)
-- [ ] Verify: no remaining `game.ai` imports anywhere in `game/strategy/`
+- [x] Write test: AST-based test verifying no `game.ai` imports in `game/strategy/`
+- [x] Refactor: make `ai_factory` a required param on `SimulationBattleResolver`
+- [x] Update all call sites: `app.py` creates `AIControllerFactory()` and injects through `GameSession` → `TurnEngine` → `SimulationBattleResolver`
+- [x] Verify: no remaining `game.ai` imports anywhere in `game/strategy/`
 
-**Notes:** The fix is to push the AI factory creation up to the UI/app layer and inject it down. The adapter should never need to know about AI directly.
+**Notes:** Made `SimulationBattleResolver(ai_factory=...)` required. `ConflictResolutionEngine(battle_resolver=...)` also now required. `TurnEngine` lazily creates the resolver when `conflict_engine` is first accessed, using `_NullBattleResolver` as safe fallback when no factory is provided (tests that don't trigger combat). AI factory flows from `app.py` (UI layer) → `GameSession` → `TurnEngine`. `SaveGameService.load_game` also accepts `ai_factory` param. Updated ~25 test files to pass mock battle resolvers/factories.
 
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 2
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 2

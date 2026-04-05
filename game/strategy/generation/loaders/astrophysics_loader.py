@@ -55,59 +55,6 @@ class AstrophysicsLoader:
         self._validate_schema(data)
         return data
 
-    def get_mass_distribution(self, category: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Get mass distribution parameters for a category.
-
-        Args:
-            category: Distribution category ('rocky', 'gas_giant', etc.)
-            data: Loaded astrophysics data from load().
-
-        Returns:
-            Distribution parameters dict.
-        """
-        distributions = data.get("mass_distributions", {})
-        if category not in distributions:
-            raise ValidationException(
-                f"Unknown mass distribution: {category}",
-                code=ErrorCode.VALIDATION_FAILED.value,
-                context={"category": category, "available": list(distributions.keys())}
-            )
-        return distributions[category]
-
-    def get_orbit_zone(self, zone: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Get orbit zone parameters.
-
-        Args:
-            zone: Zone name ('hot', 'habitable', 'cold', 'outer')
-            data: Loaded astrophysics data from load().
-
-        Returns:
-            Zone parameters dict.
-        """
-        zones = data.get("orbit_zones", {})
-        if zone not in zones:
-            raise ValidationException(
-                f"Unknown orbit zone: {zone}",
-                code=ErrorCode.VALIDATION_FAILED.value,
-                context={"zone": zone, "available": list(zones.keys())}
-            )
-        return zones[zone]
-
-    def get_habitable_zone_factors(self, data: Dict[str, Any]) -> tuple:
-        """
-        Get habitable zone inner/outer factors.
-
-        Args:
-            data: Loaded astrophysics data from load().
-
-        Returns:
-            Tuple of (inner_factor, outer_factor)
-        """
-        hz = data.get("habitable_zone", {})
-        return (hz.get("inner_factor", 0.95), hz.get("outer_factor", 1.37))
-
     def _validate_schema(self, data: Dict[str, Any]) -> None:
         """
         Validate astrophysics schema.

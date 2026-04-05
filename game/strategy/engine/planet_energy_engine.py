@@ -22,6 +22,7 @@ import logging
 
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
+from game.strategy.interfaces.engines import IPlanetEnergyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -30,55 +31,6 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
     from game.strategy.data.planetary_facility import PlanetaryFacility
 
-
-def get_strategic_generation_info(comp, resource_type: str, registries: Optional[GameRegistries] = None) -> Optional[dict]:
-    """Extract StrategicResourceGeneration info for a specific resource from a component.
-
-    Scans for StrategicResourceGeneration ability entries matching the given
-    resource type. Supports both inline abilities and registry lookup.
-
-    Args:
-        comp: Component entry from design_data layers (dict or str).
-        resource_type: Resource type to match (e.g. value from resources.json).
-        registries: Optional GameRegistries for component lookup.
-
-    Returns:
-        Dict with 'generation_rate' and 'resource', or None.
-    """
-    abilities = _extract_abilities(comp, registries)
-    gen_data = abilities.get('StrategicResourceGeneration')
-    if gen_data is None:
-        return None
-    # Can be a list (multiple resources) or a single dict
-    entries = gen_data if isinstance(gen_data, list) else [gen_data]
-    for entry in entries:
-        if isinstance(entry, dict) and entry.get('resource') == resource_type:
-            return entry
-    return None
-
-
-def get_resource_storage_info(comp, resource_type: str, registries: Optional[GameRegistries] = None) -> Optional[dict]:
-    """Extract ResourceStorage info for a specific resource from a component.
-
-    Scans for ResourceStorage ability entries matching the given resource type.
-
-    Args:
-        comp: Component entry from design_data layers (dict or str).
-        resource_type: Resource type to match.
-        registries: Optional GameRegistries for component lookup.
-
-    Returns:
-        Dict with 'amount' (capacity) and 'resource', or None.
-    """
-    abilities = _extract_abilities(comp, registries)
-    storage_data = abilities.get('ResourceStorage')
-    if storage_data is None:
-        return None
-    entries = storage_data if isinstance(storage_data, list) else [storage_data]
-    for entry in entries:
-        if isinstance(entry, dict) and entry.get('resource') == resource_type:
-            return entry
-    return None
 
 
 def get_shield_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
@@ -142,7 +94,7 @@ def _set_ability_active(planet, ability_key: str, active: bool):
     planet.active_abilities[ability_key] = active
 
 
-class PlanetEnergyEngine:
+class PlanetEnergyEngine(IPlanetEnergyEngine):
     """
     Engine for processing planetary energy generation and consumption.
 

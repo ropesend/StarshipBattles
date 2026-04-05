@@ -148,7 +148,7 @@ def _load_topdown_thumbnail_uncached(design: DesignMetadata, target_height: int)
         ship_class.replace(" ", "_"),
         ship_class.replace(" ", ""),
         ship_class.lower().replace(" ", "_"),
-        ship_class.lower().replace(" ", " "),
+        ship_class.lower().replace(" ", "-"),
     ]
 
     # Try to find the skin file

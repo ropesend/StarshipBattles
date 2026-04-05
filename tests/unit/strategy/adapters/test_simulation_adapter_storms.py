@@ -16,7 +16,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         # Create fleets with no ships (triggers early return)
         # PROJ-210: to_battle_ships accessed via fleet.battle property
@@ -42,7 +42,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         # Create mock battle ships with real shield values
         mock_ship1 = MagicMock()
@@ -91,7 +91,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         mock_ship1 = MagicMock()
         mock_ship1.max_shields = 1000
@@ -135,7 +135,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         """resolve_battle with None effects does not modify shields."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         mock_ship1 = MagicMock()
         mock_ship1.max_shields = 1000

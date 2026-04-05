@@ -19,6 +19,7 @@ import logging
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType, ACTION_ORDER_TYPES
+from game.strategy.interfaces.engines import IMovementEngine
 from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class MovementResult:
     new_location: Optional[HexCoord] = None
 
 
-class FleetMovementEngine:
+class FleetMovementEngine(IMovementEngine):
     """
     Engine for processing fleet movement.
 

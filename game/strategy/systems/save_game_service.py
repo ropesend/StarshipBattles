@@ -109,7 +109,7 @@ class SaveGameService:
             return False, f"Save failed: Unable to serialize game state", None
 
     @staticmethod
-    def load_game(save_path: str, turn_number: Optional[int] = None) -> Tuple[Optional[object], str]:
+    def load_game(save_path: str, turn_number: Optional[int] = None, ai_factory=None) -> Tuple[Optional[object], str]:
         """
         Load game state from save folder.
 
@@ -133,7 +133,7 @@ class SaveGameService:
             return None, error
 
         # Step 3: Reconstruct game session
-        game_session, error = SaveGameService._reconstruct_game_session(game_state, resolved_path)
+        game_session, error = SaveGameService._reconstruct_game_session(game_state, resolved_path, ai_factory=ai_factory)
         if error:
             return None, error
 
@@ -374,20 +374,21 @@ class SaveGameService:
         return game_state, None
 
     @staticmethod
-    def _reconstruct_game_session(game_state: dict, save_path: str) -> Tuple[Optional[object], Optional[str]]:
+    def _reconstruct_game_session(game_state: dict, save_path: str, ai_factory=None) -> Tuple[Optional[object], Optional[str]]:
         """
         Reconstruct GameSession from loaded game state.
 
         Args:
             game_state: Validated game state dictionary
             save_path: Absolute path to save folder (for restoring save_path reference)
+            ai_factory: Optional AI controller factory for battle resolution (PROJ-239).
 
         Returns:
             Tuple of (GameSession, None) on success or (None, error_msg) on failure
         """
         try:
             from game.strategy.engine.game_session import GameSession
-            game_session = GameSession.from_dict(game_state)
+            game_session = GameSession.from_dict(game_state, ai_factory=ai_factory)
             game_session.save_path = save_path
             return game_session, None
         except KeyError as e:

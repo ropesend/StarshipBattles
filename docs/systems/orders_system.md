@@ -14,7 +14,7 @@ This document describes the unified tick-based orders system for the strategy la
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  1. QUEUE         User issues order via command handler         │
-│       │           → Creates FleetOrder with type and target     │
+│       │           → Creates Order with type and target     │
 │       │           → Adds to fleet.orders queue                  │
 │       ▼                                                         │
 │  2. WAIT          Order sits in queue until it's first          │
@@ -34,10 +34,10 @@ This document describes the unified tick-based orders system for the strategy la
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### FleetOrder Data Structure
+### Order Data Structure
 
 ```python
-class FleetOrder:
+class Order:
     type: OrderType           # MOVE, COLONIZE, etc.
     target: Any               # HexCoord, Planet, Fleet, or params dict
     execution_progress: int   # Ticks spent executing (0 at start)
@@ -106,6 +106,18 @@ Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` rea
 | OrderType | Behavior |
 |-----------|----------|
 | `JOIN_FLEET` | Processed instantly by `OrderProcessor` (not tick-based); merges fleet into target fleet |
+
+### Planet Action Orders (`PLANET_ACTION_ORDER_TYPES`)
+
+Handled by `PlanetActionEngine`. Processed every tick (no speed concept — planets act immediately).
+
+| OrderType | Target | Behavior |
+|-----------|--------|----------|
+| `ACTIVATE_ABILITY` | ability name | Activates a planetary ability (e.g., PlanetaryShield) |
+| `DEACTIVATE_ABILITY` | ability name | Deactivates a planetary ability |
+
+These are generic ability toggles issued via the planet orders UI. Both Fleet and Planet
+implement the `IOrderable` protocol, so the unified `Order` class is used for both.
 
 ### Special: BUILD Order
 
@@ -183,7 +195,7 @@ Action times are defined on component abilities in `data/components.json`:
 
 ## Execution Progress Tracking
 
-`execution_progress` on `FleetOrder` tracks ticks spent on current action:
+`execution_progress` on `Order` tracks ticks spent on current action:
 
 ```
 Turn 1, Tick 20: COLONIZE order, progress 0 → 1
@@ -361,7 +373,7 @@ class YourNewOrderCommandHandler(BaseCommandHandler):
             return error
         # 2. Validate
         # 3. Create order
-        order = FleetOrder(OrderType.YOUR_NEW_ORDER, target=...)
+        order = Order(OrderType.YOUR_NEW_ORDER, target=...)
         fleet.add_order(order)
         return ValidationResult.success()
 ```
@@ -384,7 +396,7 @@ registry.register('YourNewOrderCommand', YourNewOrderCommandHandler())
 | Component | File |
 |-----------|------|
 | OrderType enum | `game/strategy/data/order_types.py` |
-| FleetOrder class | `game/strategy/data/order_types.py` |
+| Order class | `game/strategy/data/order_types.py` |
 | Order categories | `game/strategy/data/order_types.py` |
 | ActionExecutionEngine | `game/strategy/engine/action_execution_engine.py` |
 | ActionTimeResolver | `game/strategy/services/action_time_resolver.py` |
@@ -407,7 +419,7 @@ registry.register('YourNewOrderCommand', YourNewOrderCommandHandler())
 4. **Interruptibility**: Multi-tick actions can be cancelled mid-progress
 5. **Simplicity**: One loop, one model, one set of rules
 
-### Why execution_progress on FleetOrder?
+### Why execution_progress on Order?
 
 1. **State locality**: Progress belongs to the order being executed
 2. **Clean cancellation**: Clearing orders discards progress automatically

@@ -180,24 +180,8 @@ class FleetNavigationService:
         if state.location == destination:
             return []
 
-        # Use find_hybrid_path for pathfinding
-        # Create minimal fleet-like object for warp capability check
-        # PROJ-210: Create capabilities-like object matching new API (fleet.capabilities.can_use_warp())
-        can_warp_value = state.can_warp
-
-        class MockCapabilities:
-            def __init__(self, can_warp):
-                self._can_warp = can_warp
-
-            def can_use_warp(self):
-                return self._can_warp
-
-        fleet_like = type('Fleet', (), {
-            'id': -1,  # Projection context, no real fleet ID
-            'capabilities': MockCapabilities(can_warp_value)
-        })()
-
-        path = find_hybrid_path(galaxy, state.location, destination, fleet=fleet_like)
+        # PROJ-239: Pass can_warp directly instead of constructing a fake fleet object
+        path = find_hybrid_path(galaxy, state.location, destination, can_warp=state.can_warp)
 
         if not path:
             return []

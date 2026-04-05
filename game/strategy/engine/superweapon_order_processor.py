@@ -704,96 +704,72 @@ class SuperweaponOrderProcessor:
             message=f"{len(ships_to_remove)} ships self-destructed"
         )
 
-    def _is_planet_stabilized(
-        self, target_planet, galaxy, empires: List['Empire']
+    def _is_stabilized(
+        self, ability_name: str, scopes: List[str],
+        reference_entity, galaxy, empires: List['Empire']
     ) -> bool:
-        """Check if a planet is protected by any active GeologicStabilizer.
+        """Check if a location is protected by an active stabilizer ability.
 
-        Scans for stabilizers at PLANET, SECTOR, and SYSTEM scope from any
-        empire's facilities. A stabilizer on any empire's colony can protect
-        any planet in its scope.
+        PROJ-239: Unified from three near-identical methods (_is_planet_stabilized,
+        _is_system_stellar_stabilized, _is_system_warp_stabilized).
+
+        Scans for the named ability across the given scopes from any empire's
+        facilities. A stabilizer on any empire's colony can protect any entity
+        in its scope.
 
         Args:
-            target_planet: The planet being targeted by a superweapon.
+            ability_name: Stabilizer ability to scan for (e.g., "GeologicStabilizer").
+            scopes: List of scopes to check (e.g., ["planet", "sector", "system"]).
+            reference_entity: Planet or entity for spatial scope resolution.
             galaxy: Galaxy for spatial queries.
             empires: All empires to scan for stabilizers.
 
         Returns:
-            True if any active stabilizer protects this planet.
+            True if any active stabilizer of the given type protects the location.
         """
         from game.strategy.services.strategic_ability_scanner import find_abilities_in_scope
 
         for empire in empires:
-            for scope in ["planet", "sector", "system"]:
+            for scope in scopes:
                 stabilizers = find_abilities_in_scope(
-                    "GeologicStabilizer", target_planet, galaxy, empire, scope
+                    ability_name, reference_entity, galaxy, empire, scope
                 )
                 if stabilizers:
                     return True
         return False
+
+    def _is_planet_stabilized(
+        self, target_planet, galaxy, empires: List['Empire']
+    ) -> bool:
+        """Check if a planet is protected by any active GeologicStabilizer."""
+        return self._is_stabilized(
+            "GeologicStabilizer", ["planet", "sector", "system"],
+            target_planet, galaxy, empires
+        )
 
     def _is_system_stellar_stabilized(
         self, fleet_location, galaxy, empires: List['Empire']
     ) -> bool:
-        """Check if a system is protected by any active StellarStabilizer.
-
-        Scans for StellarStabilizer abilities at SECTOR and SYSTEM scope
-        from any empire's facilities in the system.
-
-        Args:
-            fleet_location: HexCoord of the fleet executing the superweapon.
-            galaxy: Galaxy for spatial queries.
-            empires: All empires to scan for stabilizers.
-
-        Returns:
-            True if any active stellar stabilizer protects this system.
-        """
-        from game.strategy.services.strategic_ability_scanner import find_abilities_in_scope
-
-        # Need a planet as reference for spatial queries — use any planet in the system
+        """Check if a system is protected by any active StellarStabilizer."""
         ref_planet = self._get_reference_planet(fleet_location, galaxy, empires)
         if ref_planet is None:
             return False
-
-        for empire in empires:
-            for scope in ["sector", "system"]:
-                stabilizers = find_abilities_in_scope(
-                    "StellarStabilizer", ref_planet, galaxy, empire, scope
-                )
-                if stabilizers:
-                    return True
-        return False
+        return self._is_stabilized(
+            "StellarStabilizer", ["sector", "system"],
+            ref_planet, galaxy, empires
+        )
 
     def _is_system_warp_stabilized(
         self, fleet_location, galaxy, empires: List['Empire']
     ) -> bool:
-        """Check if a system is protected by any active WarpFieldStabilizer.
-
-        Scans for WarpFieldStabilizer abilities at SECTOR and SYSTEM scope
-        from any empire's facilities in the system.
-
-        Args:
-            fleet_location: HexCoord of the fleet executing the superweapon.
-            galaxy: Galaxy for spatial queries.
-            empires: All empires to scan for stabilizers.
-
-        Returns:
-            True if any active warp field stabilizer protects this system.
-        """
-        from game.strategy.services.strategic_ability_scanner import find_abilities_in_scope
-
+        """Check if a system is protected by any active WarpFieldStabilizer."""
         ref_planet = self._get_reference_planet(fleet_location, galaxy, empires)
         if ref_planet is None:
             return False
-
-        for empire in empires:
-            for scope in ["sector", "system"]:
-                stabilizers = find_abilities_in_scope(
-                    "WarpFieldStabilizer", ref_planet, galaxy, empire, scope
-                )
-                if stabilizers:
-                    return True
-        return False
+        return self._is_stabilized(
+            "WarpFieldStabilizer", ["sector", "system"],
+            ref_planet, galaxy, empires
+        )
 
     def _get_reference_planet(self, fleet_location, galaxy, empires):
         """Find any planet in the system at fleet_location to use as reference for scanning.

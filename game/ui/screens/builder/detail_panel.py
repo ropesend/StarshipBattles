@@ -13,7 +13,7 @@ import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.core.constants import LayerType  # Canonical location for LayerType
-from .modifier_logic import ModifierLogic
+from .modifier_logic import ModifierLogic, ModifierLogicService
 from game.ui.fonts import get_font
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CR
 from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT, GRID_BG, TEXT_ITEM
 
 class ComponentDetailPanel:
-    def __init__(self, manager, rect, image_base_path, event_bus=None):
+    def __init__(self, manager, rect, image_base_path, event_bus=None, modifier_logic=None):
         self.manager = manager
         self.rect = rect
         self.image_base_path = image_base_path
@@ -35,6 +35,8 @@ class ComponentDetailPanel:
         if event_bus:
             event_bus.subscribe("SELECTION_CHANGED", self.on_selection_changed)
         
+        self._logic = modifier_logic if modifier_logic is not None else ModifierLogic
+
         self.current_component = None
         self.last_html = ""
         self.last_img_comp = None
@@ -169,7 +171,7 @@ class ComponentDetailPanel:
         if comp.modifiers:
             lines.append("<br>Modifiers:")
             for m in comp.modifiers:
-                is_mandatory = ModifierLogic.is_modifier_mandatory(m.definition.id, comp)
+                is_mandatory = self._logic.is_modifier_mandatory(m.definition.id, comp)
 
                 name_str = m.definition.name
                 color = HINT_CREW_CAP  # Green for optional

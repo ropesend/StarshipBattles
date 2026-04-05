@@ -254,11 +254,13 @@ class Game:
         """Handle new game start from setup screen."""
         from game.strategy.engine.game_session import GameSession
         from game.strategy.systems.save_game_service import SaveGameService
+        from game.ai.ai_factory import AIControllerFactory
 
         logger.info(f"Starting new game: {config.save_name} with {len(config.players)} players")
 
         # Create game session
-        session = GameSession(config=config)
+        # PROJ-239: AI factory created here (UI layer) and injected into strategy layer
+        session = GameSession(config=config, ai_factory=AIControllerFactory())
 
         # Save initial state
         success, message, save_path = SaveGameService.save_game(session, config.save_name)
@@ -370,11 +372,13 @@ class Game:
     def _on_load_game(self, save_path, turn_number=None):
         """Load the selected save game."""
         from game.strategy.systems.save_game_service import SaveGameService
+        from game.ai.ai_factory import AIControllerFactory
 
         logger.info(f"Loading game from: {save_path}, turn: {turn_number}")
 
         # Load game session (optionally at specific turn)
-        game_session, message = SaveGameService.load_game(save_path, turn_number=turn_number)
+        # PROJ-239: AI factory created here (UI layer) and injected into strategy layer
+        game_session, message = SaveGameService.load_game(save_path, turn_number=turn_number, ai_factory=AIControllerFactory())
 
         if game_session:
             # Create new strategy scene with loaded session

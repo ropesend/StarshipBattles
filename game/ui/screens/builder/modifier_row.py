@@ -6,7 +6,7 @@ adjusting modifier values in the ship builder's modifier panel.
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel
-from .modifier_logic import ModifierLogic
+from .modifier_logic import ModifierLogic, ModifierLogicService
 
 
 class ModifierControlRow:
@@ -35,7 +35,8 @@ class ModifierControlRow:
         component_context: The Component being edited (set during update).
     """
 
-    def __init__(self, manager, container, width, mod_id, mod_def, config, on_change_callback):
+    def __init__(self, manager, container, width, mod_id, mod_def, config, on_change_callback,
+                 modifier_logic=None):
         """Initialize the modifier control row.
 
         Args:
@@ -63,7 +64,8 @@ class ModifierControlRow:
         self.mod_def = mod_def
         self.config = config
         self.on_change_callback = on_change_callback
-        
+        self._logic = modifier_logic if modifier_logic is not None else ModifierLogic
+
         self.ui_elements = [] # Keep track for destruction
         self.buttons = {} # Map button -> data
         self.slider = None
@@ -89,11 +91,11 @@ class ModifierControlRow:
             Tuple of (min_value, max_value, clamped_value) where clamped_value
             is current_value constrained to [min_value, max_value].
 
-        Uses ModifierLogic.get_local_min_max() when component context is
+        Uses self._logic.get_local_min_max() when component context is
         available, otherwise falls back to mod_def defaults.
         """
         if self.component_context:
-            min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, self.component_context)
+            min_v, max_v = self._logic.get_local_min_max(self.mod_id, self.component_context)
         else:
             min_v, max_v = self.mod_def.min_val, self.mod_def.max_val
         clamped = max(min_v, min(max_v, self.current_value))
@@ -247,12 +249,6 @@ class ModifierControlRow:
                 is_active = True
                 val = mod.value
             
-            # Check mandatory status (Auto-set if needed)
-            if ModifierLogic.is_modifier_mandatory(self.mod_id, component) and not is_active:
-                # Should have been handled by Logic ensure, but visually treat as active
-                # Actually, main panel should ensure logic. 
-                # If we are here and it's mandatory but missing, it's inactive.
-                pass
         else:
             if self.mod_id in template_modifiers:
                 is_active = True
@@ -264,12 +260,6 @@ class ModifierControlRow:
         # 2. Update UI Text/Visuals
         check_char = 'x' if is_active else ' '
         
-        # Readonly check
-        if self.mod_def.readonly or (component and ModifierLogic.is_modifier_mandatory(self.mod_id, component)):
-             # Even if mandatory, we show [x] or [AUTO]?
-             # Let's keep [x] but maybe disable toggle
-             pass
-             
         self.toggle_btn.set_text(f"[{check_char}] {self.mod_def.name}")
 
         # Enable/Disable Controls and update values
@@ -282,7 +272,7 @@ class ModifierControlRow:
             self.slider.set_current_value(val)
                 
         # Mandatory lock
-        if component and ModifierLogic.is_modifier_mandatory(self.mod_id, component):
+        if component and self._logic.is_modifier_mandatory(self.mod_id, component):
             # Disable toggle so it can't be unchecked (visual cue + prevent click)
              self.toggle_btn.disable()
         else:
@@ -300,7 +290,7 @@ class ModifierControlRow:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.toggle_btn:
                 # Toggle Logic
-                if self.component_context and ModifierLogic.is_modifier_mandatory(self.mod_id, self.component_context):
+                if self.component_context and self._logic.is_modifier_mandatory(self.mod_id, self.component_context):
                     return False # Ignore click on mandatory
                 
                 # Active Flip
@@ -325,9 +315,9 @@ class ModifierControlRow:
                 elif mode == 'delta_sub':
                     new_val = self.current_value - step
                 elif mode == 'snap_floor':
-                    new_val = ModifierLogic.calculate_snap_value(self.current_value, step, -1, min_v, max_v, smart_floor)
+                    new_val = self._logic.calculate_snap_value(self.current_value, step, -1, min_v, max_v, smart_floor)
                 elif mode == 'snap_ceil':
-                    new_val = ModifierLogic.calculate_snap_value(self.current_value, step, 1, min_v, max_v, smart_floor)
+                    new_val = self._logic.calculate_snap_value(self.current_value, step, 1, min_v, max_v, smart_floor)
 
                 # Clamp
                 new_val = max(min_v, min(max_v, new_val))

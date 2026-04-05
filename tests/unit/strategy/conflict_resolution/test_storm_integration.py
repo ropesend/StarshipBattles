@@ -20,7 +20,7 @@ class TestConflictResolutionStormEffects:
         from game.strategy.services.area_effect_manager import AreaEffectManager
 
         manager = AreaEffectManager()
-        engine = ConflictResolutionEngine(area_effect_manager=manager)
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock(), area_effect_manager=manager)
 
         assert engine._area_effect_manager is manager
 
@@ -28,7 +28,7 @@ class TestConflictResolutionStormEffects:
         """ConflictResolutionEngine defaults to None area_effect_manager."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         assert engine._area_effect_manager is None
 
@@ -157,7 +157,7 @@ class TestConflictResolutionStormEffects:
         """resolve_all_conflicts stores galaxy reference for effect lookup."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         mock_galaxy = MagicMock()
         empire = MagicMock()
@@ -178,7 +178,7 @@ class TestConflictResolutionEngineGalaxyParameter:
         """resolve_all_conflicts accepts optional galaxy parameter."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         mock_galaxy = MagicMock()
         empire = MagicMock()

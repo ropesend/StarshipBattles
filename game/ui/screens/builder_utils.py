@@ -26,37 +26,9 @@ class PanelHeights:
     modifier_grid_panel: int = 450 # Component modifier impact grid (above weapons report)
 
 
-@dataclass(frozen=True)
-class Margins:
-    """Standard spacing values."""
-    edge: int = 20                 # Edge padding from screen borders
-    gutter: int = 10               # Gap between adjacent panels
-    section: int = 20              # Space between logical sections
-
-
-@dataclass(frozen=True)
-class BuilderSpacing:
-    """Standard spacing values for builder UI."""
-    EDGE: int = 10
-    SMALL: int = 5
-    MEDIUM: int = 10
-    LARGE: int = 20
-
-
-@dataclass(frozen=True)
-class BuilderButtons:
-    """Standard button sizes for builder UI."""
-    HEIGHT_SMALL: int = 25
-    HEIGHT_MEDIUM: int = 30
-    HEIGHT_LARGE: int = 40
-
-
 # Singleton instances for easy import
 PANEL_WIDTHS = PanelWidths()
 PANEL_HEIGHTS = PanelHeights()
-MARGINS = Margins()
-BUILDER_SPACING = BuilderSpacing()
-BUILDER_BUTTONS = BuilderButtons()
 
 
 def calculate_center_width(screen_width: int) -> int:

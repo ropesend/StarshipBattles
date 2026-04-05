@@ -24,6 +24,7 @@ import logging
 
 from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+from game.strategy.interfaces.engines import IOrderProcessor
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import Fleet
@@ -59,7 +60,7 @@ class TransferResult:
     message: str = ""
 
 
-class OrderProcessor:
+class OrderProcessor(IOrderProcessor):
     """
     Processor for fleet order lifecycle management.
 
