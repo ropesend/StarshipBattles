@@ -39,7 +39,6 @@ simulation_tests/
 │   ├── beam_scenarios.py            # Beam weapon accuracy, resource tests
 │   ├── projectile_scenarios.py      # Projectile weapon tests
 │   ├── seeker_scenarios.py          # Seeker weapon tests
-│   ├── modifier_scenarios.py        # Stat modifier tests
 │   │   # Ability-specific categories
 │   ├── tohit_attack_scenarios.py    # ToHitAttackModifier
 │   ├── tohit_attack_fleet_scenarios.py # ToHitAttackModifier (fleet scope)

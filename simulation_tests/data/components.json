@@ -2143,6 +2143,34 @@
           }
         ]
       }
+    },
+    {
+      "_comment": "=== SEEKER ENDURANCE MODIFIER TEST COMPONENT ===",
+      "id": "test_seeker_endurance_test",
+      "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 10000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 3.0,
+          "reload": 999.0,
+          "firing_arc": 360
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "ammo",
+            "amount": 1,
+            "trigger": "activation"
+          }
+        ]
+      }
     }
   ]
 }

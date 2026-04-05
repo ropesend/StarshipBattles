@@ -1,333 +1,464 @@
 """
-Reload Multiplier Modifier Test Scenarios (MOD-RELOAD-001 to MOD-RELOAD-004)
+Reload Multiplier Modifier Test Scenarios (MOD-RELOAD-001 through MOD-RELOAD-005)
 
-These tests validate the reload_mult modifier using a beam weapon with
-reload=0.1 (fires once every ~10 ticks).  The test_reload_boost modifier
-uses formula 1.0/param, so param=2 yields reload_mult=0.5, halving reload
-from 10.0 to 5.0.
+Behavioral simulation tests for the reload_mult modifier. Reload time controls
+how frequently a weapon fires. The test_reload_boost modifier uses formula
+1.0/param (inverse), so param=2 halves reload time (fires 2x as fast).
+The test_reload_penalty uses formula param (direct), so param=2 doubles
+reload time (fires half as fast).
+
+Test component: test_beam_med_acc_1dmg_reload10
+  - reload=0.1s (fires every ~10 ticks), damage=1, accuracy=2.0
+  - Base: ~50 shots in 500 ticks
+  - Boosted (0.5x reload): ~100 shots in 500 ticks
+  - Penalized (2.0x reload): ~25 shots in 500 ticks
+
+Shot count is the primary metric — it's deterministic (independent of hit/miss RNG).
+Damage is also checked where the weapon hits (point-blank, high accuracy).
+
+Ship Files:
+- Test_Attacker_Beam_ReloadBoost.json — test_beam_med_acc_1dmg_reload10
+  + test_reload_boost(2), reload 0.1->0.05s (~100 shots/500 ticks)
+- Test_Attacker_Beam_ReloadBase.json — test_beam_med_acc_1dmg_reload10
+  (no modifier, reload=0.1s, ~50 shots/500 ticks)
+- Test_Attacker_Beam_ReloadPenalty.json — test_beam_med_acc_1dmg_reload10
+  + test_reload_penalty(2), reload 0.1->0.2s (~25 shots/500 ticks)
+- Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 
 Test Coverage:
-- MOD-RELOAD-001: Static + dynamic check that reload is halved (boosted ship)
-- MOD-RELOAD-002: Identity baseline — no modifier, reload stays at 10.0
-- MOD-RELOAD-003: Comparison — variant deals more damage (fires 2x as often)
-- MOD-RELOAD-004: Comparison — variant fires roughly 2x more shots
+- MOD-RELOAD-001: Stat gate — reload halved (0.1->0.05s), fires and hits
+- MOD-RELOAD-002: Shot count — boosted fires ~2x more shots than baseline (100 vs 50)
+- MOD-RELOAD-003: Damage ratio — boosted deals ~2x damage (more shots = more hits)
+- MOD-RELOAD-004: Penalty reduces fire rate — penalized fires ~half as many shots (25 vs 50)
+- MOD-RELOAD-005: Stat gate — penalty doubles reload (0.1->0.2s), fires and hits
 """
 
 from simulation_tests.scenarios.base import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
-from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
+from simulation_tests.scenarios.validation import check_approx, check_true
 from simulation_tests.test_constants import (
     STANDARD_SEED,
     POINT_BLANK_DISTANCE,
-    MODIFIER_TEST_TICKS,
 )
 
 # =============================================================================
-# CONSTANTS
+# COMMON SHIP REFERENCES
 # =============================================================================
 
-RELOAD_BASE = 0.1           # base reload of test_beam_med_acc_1dmg_reload10 (0.1 seconds = ~10 ticks)
-RELOAD_BOOST_PARAM = 2      # test_reload_boost(value=2)
-RELOAD_EXPECTED = 0.05      # 0.1 * (1.0 / 2) = 0.05 seconds (~5 ticks)
+# test_beam_med_acc_1dmg_reload10 + test_reload_boost(2), reload 0.1->0.05s
+BOOST_SHIP = "Test_Attacker_Beam_ReloadBoost.json"
+# test_beam_med_acc_1dmg_reload10, no modifier, reload=0.1s
+BASE_SHIP = "Test_Attacker_Beam_ReloadBase.json"
+# test_beam_med_acc_1dmg_reload10 + test_reload_penalty(2), reload 0.1->0.2s
+PENALTY_SHIP = "Test_Attacker_Beam_ReloadPenalty.json"
+# test_armor_extreme_hp (1B HP, stationary)
+TARGET_SHIP = "Test_Target_Stationary.json"
 
-RELOAD_BOOST_ATTACKER = "Test_Attacker_Beam_ReloadBoost.json"
-RELOAD_BASE_ATTACKER = "Test_Attacker_Beam_ReloadBase.json"
-RELOAD_TARGET = "Test_Target_Stationary.json"
+# =============================================================================
+# RELOAD CONSTANTS
+# =============================================================================
+
+BASE_RELOAD = 0.1               # seconds (10 ticks per shot)
+BOOST_PARAM = 2                 # test_reload_boost value
+BOOSTED_RELOAD = BASE_RELOAD * (1.0 / BOOST_PARAM)  # 0.05s (5 ticks per shot)
+PENALTY_PARAM = 2               # test_reload_penalty value
+PENALIZED_RELOAD = BASE_RELOAD * PENALTY_PARAM       # 0.2s (20 ticks per shot)
+
+TEST_TICKS = 500
+
+# Expected shot counts (deterministic — weapon fires on timer regardless of hit/miss)
+# Shots = floor(test_duration_seconds / reload_seconds) ≈ ticks / ticks_per_shot
+# Note: first shot fires at tick 0 or after first reload cycle; approximate ±1
+EXPECTED_SHOTS_BASE = 50        # 500 ticks / 10 ticks per shot
+EXPECTED_SHOTS_BOOSTED = 100    # 500 ticks / 5 ticks per shot
+EXPECTED_SHOTS_PENALIZED = 25   # 500 ticks / 20 ticks per shot
+SHOT_TOLERANCE = 3              # ±3 shots for timing edge cases
 
 
 # =============================================================================
-# MOD-RELOAD-001: Reload Halved (Boosted Ship)
+# MOD-RELOAD-001: Stat Gate — Reload Halved
 # =============================================================================
 
-class ReloadBoostAttributeScenario(StaticTargetScenario):
+class ModReload001_StatGateScenario(StaticTargetScenario):
     """
-    MOD-RELOAD-001: Verify test_reload_boost halves beam reload time.
+    MOD-RELOAD-001: Quick sanity — reload modifier applied correctly.
 
-    Setup: Beam with reload=0.1 + test_reload_boost(value=2) at point-blank.
-    Static check: beam.reload_time == 5.0
-    Dynamic check: damage_dealt > 0 (weapon fires and hits)
+    Boosted beam at point-blank: reload_time==0.05s (0.1 * 1/2), fires
+    and hits target. Confirms modifier loaded before behavioral tests.
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-001",
         category="ReloadMultiplier",
-        subcategory="Basic Effect",
-        name="Reload halved by modifier (10.0 -> 5.0)",
-        summary="Verify test_reload_boost(value=2) halves reload from 10.0 to 5.0",
+        subcategory="ReloadMultiplier",
+        name="Stat gate — reload halved (0.1->0.05s)",
+        summary=f"Verify test_reload_boost(2) halves reload to {BOOSTED_RELOAD}s; weapon fires and hits",
         conditions=[
-            f"Base beam reload: {RELOAD_BASE}",
-            f"Reload boost param: {RELOAD_BOOST_PARAM} (reload_mult = 0.5)",
-            f"Expected modified reload: {RELOAD_EXPECTED}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Attacker: {BOOST_SHIP} (test_beam_med_acc_1dmg_reload10 + test_reload_boost({BOOST_PARAM}), reload {BASE_RELOAD}->{BOOSTED_RELOAD}s)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
         ],
-        edge_cases=[],
-        expected_outcome=f"beam.reload_time == {RELOAD_EXPECTED}, damage_dealt > 0",
-        pass_criteria=f"beam.reload_time == {RELOAD_EXPECTED} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Inverse formula: reload_mult = 1.0/param = 0.5"],
+        expected_outcome=f"beam.reload_time == {BOOSTED_RELOAD}, damage > 0",
+        pass_criteria=f"reload_time == {BOOSTED_RELOAD} AND damage > 0",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        ui_priority=30,
-        tags=["modifier", "reload_mult"],
+        tags=["modifier", "reload_mult", "stat_gate"],
     )
 
-    attacker_ship = RELOAD_BOOST_ATTACKER
-    target_ship = RELOAD_TARGET
+    attacker_ship = BOOST_SHIP
+    target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def custom_setup(self, battle_engine):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_reload_time = beam.reload_time
-        else:
-            self.actual_reload_time = None
+        self.actual_reload = beam.reload_time if beam else None
 
     def _collect_extra_results(self, battle_engine):
-        self.results['base_reload'] = RELOAD_BASE
-        self.results['reload_boost_param'] = RELOAD_BOOST_PARAM
-        self.results['expected_reload'] = RELOAD_EXPECTED
-        self.results['actual_reload_time'] = self.actual_reload_time
+        self.results['expected_reload'] = BOOSTED_RELOAD
+        self.results['actual_reload'] = self.actual_reload
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
+        checks.append(check_true("Beam Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
 
-        # Data: reload attribute is correctly halved
+        # Data: reload modifier applied
         checks.append(check_approx(
-            "Modified Reload Time", RELOAD_EXPECTED,
-            self.actual_reload_time or 0.0, tolerance=0.001,
-            phase="data",
+            "Boosted Reload Time", BOOSTED_RELOAD,
+            self.actual_reload or 0.0, tolerance=0.001, phase="data",
         ))
 
-        # Outcome: weapon fired and dealt damage
+        # Outcome: weapon fired and hit
         checks.append(check_true(
             "Damage Dealt", self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
+            detail=f"damage={self.damage_dealt}", phase="outcome",
         ))
+
         return checks
 
 
 # =============================================================================
-# MOD-RELOAD-002: Identity Baseline (No Modifier)
+# MOD-RELOAD-002: Shot Count — Boosted Fires 2x More
 # =============================================================================
 
-class ReloadBaselineAttributeScenario(StaticTargetScenario):
+class ModReload002_ShotCountScenario(ComparisonScenario):
     """
-    MOD-RELOAD-002: Verify unmodified beam keeps reload == 10.0.
+    MOD-RELOAD-002: Prove boosted reload fires ~2x more shots.
 
-    Setup: Beam with reload=0.1 and no modifier at point-blank.
-    Static check: beam.reload_time == 10.0
-    Dynamic check: damage_dealt > 0 (weapon fires, just slower)
+    Base (reload=0.1s): ~50 shots in 500 ticks
+    Boosted (reload=0.05s): ~100 shots in 500 ticks
+
+    Shot count is deterministic — the weapon fires on its reload timer
+    regardless of hit/miss RNG. This directly measures fire rate.
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-002",
         category="ReloadMultiplier",
-        subcategory="Boundary",
-        name="Reload unmodified baseline (10.0)",
-        summary="Verify beam reload stays at 10.0 with no modifier applied",
+        subcategory="ReloadMultiplier",
+        name="Shot count — boosted fires ~2x more shots",
+        summary=(
+            f"Base (~{EXPECTED_SHOTS_BASE} shots at {BASE_RELOAD}s reload) vs "
+            f"boosted (~{EXPECTED_SHOTS_BOOSTED} shots at {BOOSTED_RELOAD}s reload)"
+        ),
         conditions=[
-            f"Base beam reload: {RELOAD_BASE}",
-            "No modifier applied",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Baseline: {BASE_SHIP} (test_beam_med_acc_1dmg_reload10, no modifier, reload={BASE_RELOAD}s, ~{EXPECTED_SHOTS_BASE} shots)",
+            f"Variant: {BOOST_SHIP} (test_beam_med_acc_1dmg_reload10 + test_reload_boost({BOOST_PARAM}), reload={BOOSTED_RELOAD}s, ~{EXPECTED_SHOTS_BOOSTED} shots)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
+            f"Duration: {TEST_TICKS} ticks",
         ],
-        edge_cases=[],
-        expected_outcome=f"beam.reload_time == {RELOAD_BASE}, damage_dealt > 0",
-        pass_criteria=f"beam.reload_time == {RELOAD_BASE} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Shot count is deterministic (not affected by hit/miss)"],
+        expected_outcome=(
+            f"Baseline: ~{EXPECTED_SHOTS_BASE} shots. "
+            f"Variant: ~{EXPECTED_SHOTS_BOOSTED} shots. Ratio ~2.0x."
+        ),
+        pass_criteria=f"Both shot counts within ±{SHOT_TOLERANCE}, ratio ≈ 2.0x",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        ui_priority=31,
-        tags=["modifier", "reload_mult"],
+        tags=["modifier", "reload_mult", "shot_count", "behavioral"],
     )
 
-    attacker_ship = RELOAD_BASE_ATTACKER
-    target_ship = RELOAD_TARGET
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = BOOST_SHIP
+    variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
-
-    def custom_setup(self, battle_engine):
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_reload_time = beam.reload_time
-        else:
-            self.actual_reload_time = None
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['base_reload'] = RELOAD_BASE
-        self.results['expected_reload'] = RELOAD_BASE
-        self.results['actual_reload_time'] = self.actual_reload_time
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
-        if beam is None:
-            return checks
+        b_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        v_shots = self.results.get('variant_attacker_total_shots_fired', 0)
 
-        # Data: reload attribute is unchanged
+        # Precondition: both fired
+        checks.append(check_true(
+            "Baseline Fired", b_shots > 0,
+            detail=f"shots={b_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Fired", v_shots > 0,
+            detail=f"shots={v_shots}", phase="precondition",
+        ))
+
+        # Outcome: shot counts match expected values
         checks.append(check_approx(
-            "Unmodified Reload Time", RELOAD_BASE,
-            self.actual_reload_time or 0.0, tolerance=0.001,
-            phase="data",
+            "Baseline Shot Count", float(EXPECTED_SHOTS_BASE),
+            float(b_shots), tolerance=SHOT_TOLERANCE, phase="outcome",
+        ))
+        checks.append(check_approx(
+            "Variant Shot Count", float(EXPECTED_SHOTS_BOOSTED),
+            float(v_shots), tolerance=SHOT_TOLERANCE, phase="outcome",
         ))
 
-        # Outcome: weapon fired and dealt damage
-        checks.append(check_true(
-            "Damage Dealt", self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
-        ))
+        # Outcome: ratio is ~2.0x
+        if b_shots > 0:
+            ratio = v_shots / b_shots
+            checks.append(check_approx(
+                "Shot Ratio (variant/baseline)", 2.0,
+                ratio, tolerance=0.2, phase="outcome",
+            ))
+
         return checks
 
 
 # =============================================================================
-# MOD-RELOAD-003: Boosted Ship Deals More Damage
+# MOD-RELOAD-003: Damage Ratio — Boosted Deals ~2x Damage
 # =============================================================================
 
-class ReloadBoostMoreDamageScenario(ComparisonScenario):
+class ModReload003_DamageRatioScenario(ComparisonScenario):
     """
-    MOD-RELOAD-003: Boosted reload fires more often, dealing more damage.
+    MOD-RELOAD-003: Prove boosted reload translates to ~2x combat damage.
 
-    Baseline: reload=0.1 (no modifier)
-    Variant:  reload=0.05  (test_reload_boost, value=2)
-
-    The variant fires ~2x as often over the same duration, so it should
-    deal significantly more damage.
+    More shots at point-blank with high accuracy means proportionally more hits.
+    Damage ratio should approximate the shot ratio (~2.0x).
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-003",
         category="ReloadMultiplier",
-        subcategory="Combat Outcome",
-        name="Reload boost increases total damage",
-        summary="Boosted reload (5.0) deals more damage than base (10.0) over same duration",
+        subcategory="ReloadMultiplier",
+        name="Damage ratio — boosted deals ~2x damage",
+        summary=(
+            f"Boosted fires ~2x shots -> ~2x hits -> ~2x damage at point-blank"
+        ),
         conditions=[
-            f"Baseline attacker: {RELOAD_BASE_ATTACKER} (reload={RELOAD_BASE})",
-            f"Variant attacker: {RELOAD_BOOST_ATTACKER} (reload={RELOAD_EXPECTED})",
-            f"Target: {RELOAD_TARGET} (stationary)",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Baseline: {BASE_SHIP} (reload={BASE_RELOAD}s, ~{EXPECTED_SHOTS_BASE} shots)",
+            f"Variant: {BOOST_SHIP} (reload={BOOSTED_RELOAD}s, ~{EXPECTED_SHOTS_BOOSTED} shots)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank, high hit rate)",
         ],
-        edge_cases=[],
-        expected_outcome="Variant damage > baseline damage",
-        pass_criteria="variant_damage_dealt > baseline_damage_dealt",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Damage ratio approximates shot ratio at high accuracy"],
+        expected_outcome="Variant damage ≈ 2x baseline damage",
+        pass_criteria="variant_damage > baseline_damage AND ratio ≈ 2.0",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        ui_priority=32,
-        tags=["modifier", "reload_mult"],
+        tags=["modifier", "reload_mult", "damage_ratio"],
     )
 
-    baseline_attacker_ship = RELOAD_BASE_ATTACKER
-    baseline_target_ship = RELOAD_TARGET
-    variant_attacker_ship = RELOAD_BOOST_ATTACKER
-    variant_target_ship = RELOAD_TARGET
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = BOOST_SHIP
+    variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: both battles dealt some damage
+        # Precondition: both dealt damage
         checks.append(check_true(
-            "Baseline Dealt Damage", self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt, phase="precondition",
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
         ))
         checks.append(check_true(
-            "Variant Dealt Damage", self.variant_damage_dealt > 0,
-            actual=self.variant_damage_dealt, phase="precondition",
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
         ))
 
-        # Outcome: variant dealt more damage than baseline
+        # Outcome: damage ratio ≈ 2.0x
+        if self.baseline_damage_dealt > 0:
+            ratio = self.variant_damage_dealt / self.baseline_damage_dealt
+            checks.append(check_approx(
+                "Damage Ratio (variant/baseline)", 2.0,
+                ratio, tolerance=0.3, phase="outcome",
+            ))
+
+        # Outcome: variant dealt more damage
         checks.append(check_true(
-            "Boosted Reload Deals More Damage",
+            "Boosted Deals More Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            actual=f"baseline={self.baseline_damage_dealt}, variant={self.variant_damage_dealt}",
+            detail=(
+                f"baseline={self.baseline_damage_dealt}, "
+                f"variant={self.variant_damage_dealt}"
+            ),
             phase="outcome",
         ))
+
         return checks
 
 
 # =============================================================================
-# MOD-RELOAD-004: Boosted Ship Fires ~2x More Shots
+# MOD-RELOAD-004: Penalty Reduces Fire Rate
 # =============================================================================
 
-class ReloadBoostMoreShotsScenario(ComparisonScenario):
+class ModReload004_PenaltyReducesFireRateScenario(ComparisonScenario):
     """
-    MOD-RELOAD-004: Boosted reload fires roughly 2x as many shots.
+    MOD-RELOAD-004: Prove penalty modifier reduces fire rate.
 
-    Baseline: reload=0.1 (no modifier)
-    Variant:  reload=0.05  (test_reload_boost, value=2)
+    Base (reload=0.1s): ~50 shots in 500 ticks
+    Penalized (reload=0.2s): ~25 shots in 500 ticks
 
-    With halved reload time, the variant should fire approximately twice
-    as many shots over the same number of ticks.
+    The penalty modifier doubles reload time, halving the fire rate.
+    Shot count and damage both decrease proportionally.
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-004",
         category="ReloadMultiplier",
-        subcategory="Combat Outcome",
-        name="Reload boost doubles shot count",
-        summary="Boosted reload (5.0) fires ~2x more shots than base (10.0)",
+        subcategory="ReloadMultiplier",
+        name="Penalty reduces fire rate — penalized fires ~half as many shots",
+        summary=(
+            f"Base (~{EXPECTED_SHOTS_BASE} shots at {BASE_RELOAD}s) vs "
+            f"penalized (~{EXPECTED_SHOTS_PENALIZED} shots at {PENALIZED_RELOAD}s)"
+        ),
         conditions=[
-            f"Baseline attacker: {RELOAD_BASE_ATTACKER} (reload={RELOAD_BASE})",
-            f"Variant attacker: {RELOAD_BOOST_ATTACKER} (reload={RELOAD_EXPECTED})",
-            f"Target: {RELOAD_TARGET} (stationary)",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Baseline: {BASE_SHIP} (test_beam_med_acc_1dmg_reload10, no modifier, reload={BASE_RELOAD}s)",
+            f"Variant: {PENALTY_SHIP} (test_beam_med_acc_1dmg_reload10 + test_reload_penalty({PENALTY_PARAM}), reload={PENALIZED_RELOAD}s)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Duration: {TEST_TICKS} ticks",
         ],
-        edge_cases=[],
-        expected_outcome="Variant shots_fired ~2x baseline shots_fired",
-        pass_criteria="variant_shots / baseline_shots between 1.5 and 2.5",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=[
+            "Penalty uses direct multiply: reload_mult = param = 2.0",
+            "Tests modifier bidirectionality (slower, not faster)",
+        ],
+        expected_outcome=(
+            f"Baseline: ~{EXPECTED_SHOTS_BASE} shots. "
+            f"Penalized: ~{EXPECTED_SHOTS_PENALIZED} shots."
+        ),
+        pass_criteria=f"Penalized shot count ≈ {EXPECTED_SHOTS_PENALIZED}, less than baseline",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        ui_priority=33,
-        tags=["modifier", "reload_mult"],
+        tags=["modifier", "reload_mult", "penalty", "behavioral"],
     )
 
-    baseline_attacker_ship = RELOAD_BASE_ATTACKER
-    baseline_target_ship = RELOAD_TARGET
-    variant_attacker_ship = RELOAD_BOOST_ATTACKER
-    variant_target_ship = RELOAD_TARGET
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = PENALTY_SHIP
+    variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
-        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        # Data: verify penalty applied
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        if beam:
+            checks.append(check_approx(
+                "Penalized Reload Time", PENALIZED_RELOAD,
+                beam.reload_time, tolerance=0.001, phase="data",
+            ))
 
-        # Precondition: both ships fired
-        checks.append(check_true(
-            "Baseline Fired Shots", baseline_shots > 0,
-            actual=baseline_shots, phase="precondition",
+        b_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        v_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+
+        # Outcome: penalized fires fewer shots
+        checks.append(check_approx(
+            "Penalized Shot Count", float(EXPECTED_SHOTS_PENALIZED),
+            float(v_shots), tolerance=SHOT_TOLERANCE, phase="outcome",
         ))
-        checks.append(check_true(
-            "Variant Fired Shots", variant_shots > 0,
-            actual=variant_shots, phase="precondition",
+        checks.append(check_approx(
+            "Baseline Shot Count", float(EXPECTED_SHOTS_BASE),
+            float(b_shots), tolerance=SHOT_TOLERANCE, phase="outcome",
         ))
 
-        # Outcome: variant fires more shots
+        # Outcome: penalty fires fewer than baseline
         checks.append(check_true(
-            "Variant Fires More Shots",
-            variant_shots > baseline_shots,
-            actual=f"baseline={baseline_shots}, variant={variant_shots}",
+            "Penalty Reduces Fire Rate",
+            v_shots < b_shots,
+            detail=f"baseline={b_shots}, penalized={v_shots}",
             phase="outcome",
         ))
 
-        # Outcome: shot ratio is approximately 2x (between 1.5 and 2.5)
-        if baseline_shots > 0:
-            ratio = variant_shots / baseline_shots
-            checks.append(check_approx(
-                "Shot Count Ratio (~2x)", 2.0, ratio, tolerance=0.5,
-                phase="outcome",
-            ))
-        else:
-            checks.append(check_true(
-                "Shot Count Ratio (~2x)", False,
-                actual="Cannot compute ratio — baseline fired 0 shots",
-                phase="outcome",
-            ))
+        # Outcome: penalty deals less damage
+        checks.append(check_true(
+            "Penalty Reduces Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=(
+                f"baseline_dmg={self.baseline_damage_dealt}, "
+                f"penalty_dmg={self.variant_damage_dealt}"
+            ),
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-RELOAD-005: Stat Gate — Penalty Doubles Reload
+# =============================================================================
+
+class ModReload005_PenaltyStatGateScenario(StaticTargetScenario):
+    """
+    MOD-RELOAD-005: Quick sanity — penalty modifier doubles reload.
+
+    Penalized beam at point-blank: reload_time==0.2s (0.1 * 2.0), fires
+    and hits. Confirms negative modifier loaded correctly.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-RELOAD-005",
+        category="ReloadMultiplier",
+        subcategory="ReloadMultiplier",
+        name="Stat gate — penalty doubles reload (0.1->0.2s)",
+        summary=f"Verify test_reload_penalty(2) doubles reload to {PENALIZED_RELOAD}s",
+        conditions=[
+            f"Attacker: {PENALTY_SHIP} (test_beam_med_acc_1dmg_reload10 + test_reload_penalty({PENALTY_PARAM}), reload {BASE_RELOAD}->{PENALIZED_RELOAD}s)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
+        ],
+        edge_cases=["Penalty uses direct multiply: reload_mult = param = 2.0"],
+        expected_outcome=f"beam.reload_time == {PENALIZED_RELOAD}, damage > 0",
+        pass_criteria=f"reload_time == {PENALIZED_RELOAD} AND damage > 0",
+        max_ticks=TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "reload_mult", "penalty", "stat_gate"],
+    )
+
+    attacker_ship = PENALTY_SHIP
+    target_ship = TARGET_SHIP
+    distance = POINT_BLANK_DISTANCE
+
+    def custom_setup(self, battle_engine):
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        self.actual_reload = beam.reload_time if beam else None
+
+    def _collect_extra_results(self, battle_engine):
+        self.results['expected_reload'] = PENALIZED_RELOAD
+        self.results['actual_reload'] = self.actual_reload
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+
+        # Data: penalty applied
+        checks.append(check_approx(
+            "Penalized Reload Time", PENALIZED_RELOAD,
+            self.actual_reload or 0.0, tolerance=0.001, phase="data",
+        ))
+
+        # Outcome: weapon still fires and hits at point-blank
+        checks.append(check_true(
+            "Damage Dealt", self.damage_dealt > 0,
+            detail=f"damage={self.damage_dealt}", phase="outcome",
+        ))
 
         return checks

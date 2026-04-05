@@ -2,9 +2,9 @@
   "_metadata": {
     "_schema_version": "1.0",
     "_data_version": "1.0",
-    "_description": "Seeker with endurance_mult modifier (param=2 → 2x endurance)"
+    "_description": "Seeker with test_seeker_endurance_test + test_endurance_penalty(0.5), endurance 3.0→1.5s, max travel=1500px"
   },
-  "name": "Test Attacker Seeker EndurBoost",
+  "name": "Test Attacker Seeker EndurTest Penalty",
   "color": [255, 0, 0],
   "team_id": 1,
   "ship_class": "TestS_2L",
@@ -13,9 +13,9 @@
   "layers": {
     "CORE": [
       {
-        "id": "test_seeker_slow",
+        "id": "test_seeker_endurance_test",
         "modifiers": [
-          { "id": "test_endurance_boost", "value": 2 }
+          { "id": "test_endurance_penalty", "value": 0.5 }
         ]
       },
       { "id": "test_storage_ammo_100k" }
@@ -23,7 +23,7 @@
     "ARMOR": []
   },
   "expected_stats": {
-    "max_hp": 120,
+    "max_hp": 130,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 100000,

@@ -72,8 +72,16 @@ CATEGORY_GROUPS = {
     "ToHitAttackModifier": "Abilities",
     "ToHitDefenseModifier": "Abilities",
     "CommandAndControl": "Abilities",
-    # Standalone groups
-    "Modifiers": "Modifiers",
+    # Modifiers — each modifier type maps to the Modifiers group
+    "DamageMultiplier": "Modifiers",
+    "RangeMultiplier": "Modifiers",
+    "ReloadMultiplier": "Modifiers",
+    "ThrustMultiplier": "Modifiers",
+    "AccuracyAdditive": "Modifiers",
+    "ArcSet": "Modifiers",
+    "EnduranceMultiplier": "Modifiers",
+    "ConsumptionMultiplier": "Modifiers",
+    "ModifierStacking": "Modifiers",
     "DamagePipeline": "DamagePipeline",
     "Propulsion": "Propulsion",
     "Resource System": "Resource System",

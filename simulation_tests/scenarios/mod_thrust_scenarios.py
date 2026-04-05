@@ -5,6 +5,12 @@ Dedicated test scenarios for the thrust_mult modifier applied via test_thrust_bo
 These validate that the modifier correctly scales engine thrust and that all derived
 physics stats (max_speed, acceleration_rate) respond correctly.
 
+Ship Files:
+- Test_Engine_ThrustBoost.json — hull_test_s(mass=400) + test_engine_no_fuel(thrust=500)
+  + test_thrust_boost(param=2), thrust 500->1000
+- Test_Engine_1x_MedMass.json — hull_test_m(mass=1000) + 2x mass_sim_1k(mass=1000 each)
+  + test_engine_no_fuel(thrust=500), no modifier (baseline), total mass=3000
+
 Test Coverage:
 - MOD-THRUST-001: Static thrust and max_speed after 2x modifier
 - MOD-THRUST-002: Baseline unmodified engine (identity check)
@@ -28,16 +34,20 @@ from simulation_tests.test_constants import (
 # EXPECTED VALUES FOR THRUST MODIFIER TESTS
 # =============================================================================
 
-# Ship: Test_Engine_ThrustBoost.json (hull_test_s mass=400, test_engine_no_fuel thrust=500, thrust_mult=2)
+# Ship: Test_Engine_ThrustBoost.json
+#   hull_test_s(mass=400) + test_engine_no_fuel(thrust=500) + test_thrust_boost(param=2)
+#   thrust 500 * 2 = 1000, mass=400
 THRUST_BOOST_MASS = 400
 THRUST_BOOST_BASE_THRUST = MOD_BASE_ENGINE_THRUST           # 500
 THRUST_BOOST_MODIFIED_THRUST = MOD_EXPECTED_THRUST           # 1000
 THRUST_BOOST_MAX_SPEED = (THRUST_BOOST_MODIFIED_THRUST * K_SPEED) / THRUST_BOOST_MASS  # 62.5
 THRUST_BOOST_ACCEL = (THRUST_BOOST_MODIFIED_THRUST * K_THRUST) / (THRUST_BOOST_MASS ** 2)  # 0.15625
 
-# Ship: Test_Engine_1x_MedMass.json (hull mass=1000 region, test_engine_no_fuel thrust=500, no modifier)
+# Ship: Test_Engine_1x_MedMass.json
+#   hull_test_m(mass=1000) + 2x mass_sim_1k(mass=1000 each) + test_engine_no_fuel(thrust=500)
+#   no modifier, total mass=3000, thrust=500
 BASELINE_SHIP_FILE = "Test_Engine_1x_MedMass.json"
-BASELINE_MASS = 3000  # hull_test_m(1000) + 2x mass_sim_1k
+BASELINE_MASS = 3000  # hull_test_m(1000) + 2x mass_sim_1k(1000 each)
 BASELINE_THRUST = 500
 BASELINE_MAX_SPEED = (BASELINE_THRUST * K_SPEED) / BASELINE_MASS  # ~4.1667
 
@@ -59,14 +69,12 @@ class ModThrustStaticScenario(PropulsionScenario):
     metadata = TestMetadata(
         test_id="MOD-THRUST-001",
         category="ThrustMultiplier",
-        subcategory="Basic Effect",
+        subcategory="ThrustMultiplier",
         name="Thrust modifier doubles thrust and max_speed",
         summary="Verify test_thrust_boost(param=2) doubles engine thrust from 500 to 1000 and max_speed to 62.5",
         conditions=[
-            f"Base engine thrust: {THRUST_BOOST_BASE_THRUST}",
-            f"Thrust multiplier: {THRUST_BOOST_PARAM}x",
-            f"Expected modified thrust: {THRUST_BOOST_MODIFIED_THRUST}",
-            f"Ship mass: {THRUST_BOOST_MASS}",
+            f"Ship: {THRUST_BOOST_ENGINE_SHIP} (hull_test_s + test_engine_no_fuel + test_thrust_boost(param={THRUST_BOOST_PARAM}), mass={THRUST_BOOST_MASS})",
+            f"Base engine thrust: {THRUST_BOOST_BASE_THRUST}, modified: {THRUST_BOOST_MODIFIED_THRUST} (x{THRUST_BOOST_PARAM})",
             f"Expected max_speed: {THRUST_BOOST_MAX_SPEED}",
         ],
         edge_cases=[],
@@ -124,13 +132,12 @@ class ModThrustBaselineScenario(PropulsionScenario):
     metadata = TestMetadata(
         test_id="MOD-THRUST-002",
         category="ThrustMultiplier",
-        subcategory="Boundary",
+        subcategory="ThrustMultiplier",
         name="Baseline engine without thrust modifier",
         summary="Verify unmodified engine produces expected thrust (identity baseline for modifier comparison)",
         conditions=[
-            f"Ship: {BASELINE_SHIP_FILE}",
-            f"Engine thrust: {BASELINE_THRUST} (no modifier)",
-            f"Ship mass: {BASELINE_MASS}",
+            f"Ship: {BASELINE_SHIP_FILE} (hull_test_m + 2x mass_sim_1k + test_engine_no_fuel, no modifier)",
+            f"Engine thrust: {BASELINE_THRUST} (unmodified), mass: {BASELINE_MASS}",
             f"Expected max_speed: {BASELINE_MAX_SPEED:.4f}",
         ],
         edge_cases=["No modifier applied - identity check"],
@@ -189,14 +196,13 @@ class ModThrustDynamicVelocityScenario(PropulsionScenario):
     metadata = TestMetadata(
         test_id="MOD-THRUST-003",
         category="ThrustMultiplier",
-        subcategory="Combat Outcome",
+        subcategory="ThrustMultiplier",
         name="Thrust modifier produces faster movement",
         summary="Verify ship with 2x thrust modifier reaches velocity >= 60.0 within 500 ticks",
         conditions=[
-            f"Modified thrust: {THRUST_BOOST_MODIFIED_THRUST}",
-            f"Ship mass: {THRUST_BOOST_MASS}",
-            f"Expected max_speed: {THRUST_BOOST_MAX_SPEED}",
-            "Thrust forward for 500 ticks",
+            f"Ship: {THRUST_BOOST_ENGINE_SHIP} (hull_test_s + test_engine_no_fuel + test_thrust_boost(param={THRUST_BOOST_PARAM}), mass={THRUST_BOOST_MASS})",
+            f"Modified thrust: {THRUST_BOOST_MODIFIED_THRUST}, expected max_speed: {THRUST_BOOST_MAX_SPEED}",
+            f"Thrust forward for {MOD_THRUST_TEST_TICKS} ticks",
         ],
         edge_cases=["Dynamic verification - not just attribute check"],
         expected_outcome="Ship velocity.length() >= 60.0 (close to max_speed 62.5)",
@@ -255,7 +261,7 @@ class ModThrustAccelerationScenario(PropulsionScenario):
     metadata = TestMetadata(
         test_id="MOD-THRUST-004",
         category="ThrustMultiplier",
-        subcategory="Basic Effect",
+        subcategory="ThrustMultiplier",
         name="Thrust modifier produces correct acceleration_rate",
         summary=(
             f"Verify acceleration_rate = (total_thrust * K_THRUST) / mass^2 "
@@ -263,10 +269,9 @@ class ModThrustAccelerationScenario(PropulsionScenario):
             f"= {THRUST_BOOST_ACCEL}"
         ),
         conditions=[
-            f"Modified thrust: {THRUST_BOOST_MODIFIED_THRUST}",
-            f"Ship mass: {THRUST_BOOST_MASS}",
-            f"K_THRUST: {K_THRUST}",
-            f"Expected acceleration_rate: {THRUST_BOOST_ACCEL}",
+            f"Ship: {THRUST_BOOST_ENGINE_SHIP} (hull_test_s + test_engine_no_fuel + test_thrust_boost(param={THRUST_BOOST_PARAM}), mass={THRUST_BOOST_MASS})",
+            f"Modified thrust: {THRUST_BOOST_MODIFIED_THRUST}, K_THRUST: {K_THRUST}",
+            f"Expected acceleration_rate: ({THRUST_BOOST_MODIFIED_THRUST} * {K_THRUST}) / {THRUST_BOOST_MASS}^2 = {THRUST_BOOST_ACCEL}",
         ],
         edge_cases=["Derived stat depends on modified thrust, not base thrust"],
         expected_outcome=f"ship.acceleration_rate == {THRUST_BOOST_ACCEL}",

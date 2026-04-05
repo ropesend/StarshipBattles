@@ -1,24 +1,45 @@
 """
 Damage Multiplier Modifier Scenarios (MOD-DMG-001 through MOD-DMG-005)
 
-Dedicated test scenarios for the damage_mult modifier at various parameter values.
-Uses StaticTargetScenario for single-ship stat/outcome validation and
-ComparisonScenario for A/B damage ratio comparisons.
+Behavioral simulation tests for the damage_mult modifier. The damage multiplier
+scales per-hit damage linearly — a 1.5x modifier on a 1-damage beam produces
+1.5 damage per hit. Since both baseline and variant fire at the same rate and
+hit at the same rate (same accuracy, same target, same distance), the total
+damage ratio should exactly match the multiplier value.
+
+This is more deterministic than accuracy tests: the damage ratio is independent
+of RNG because both ships have identical hit chances.
+
+Base component: test_beam_med_acc_1dmg (damage=1, accuracy=2.0, falloff=0.001, reload=0)
+
+Ship Files:
+- Test_Attacker_Beam_DamageBoost.json — test_beam_med_acc_1dmg
+  + test_damage_boost(1.5), dmg 1->1.5
+- Test_Attacker_Beam_DmgBoost_Min.json — test_beam_med_acc_1dmg
+  + test_damage_boost(1.0), dmg 1->1.0 (identity)
+- Test_Attacker_Beam_DmgBoost_Max.json — test_beam_med_acc_1dmg
+  + test_damage_boost(10.0), dmg 1->10.0
+- Test_Attacker_Beam_DmgPenalty.json — test_beam_med_acc_1dmg
+  + test_damage_penalty(0.5), dmg 1->0.5
+- Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg
+  (no modifier, dmg=1, baseline)
+- Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 
 Test Coverage:
-- MOD-DMG-001: Damage boost 1.5x (standard param)
-- MOD-DMG-002: Damage boost 1.0x (identity / minimum)
-- MOD-DMG-003: Damage boost 10.0x (maximum)
-- MOD-DMG-004: Comparison — boosted (1.5x) vs unboosted baseline
-- MOD-DMG-005: Comparison — max (10.0x) vs min (1.0x)
+- MOD-DMG-001: Stat gate — damage boosted (1->1.5), weapon fires and hits
+- MOD-DMG-002: Damage ratio — 1.5x boost produces exactly 1.5x total damage
+- MOD-DMG-003: Extreme ratio — 10.0x vs 1.0x produces exactly 10.0x total damage
+- MOD-DMG-004: Negative penalty — 0.5x damage reduces total damage by half
+- MOD-DMG-005: Range-independent — damage ratio holds at mid-range (same hits, scaled damage)
 """
 
 from simulation_tests.scenarios.base import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
-from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
+from simulation_tests.scenarios.validation import check_approx, check_true
 from simulation_tests.test_constants import (
     STANDARD_SEED,
     POINT_BLANK_DISTANCE,
+    MID_RANGE_DISTANCE,
     MODIFIER_TEST_TICKS,
     MOD_BASE_BEAM_DAMAGE,
     DAMAGE_BOOST_PARAM,
@@ -26,412 +47,391 @@ from simulation_tests.test_constants import (
     DAMAGE_BOOST_ATTACKER_SHIP,
 )
 
-# Ship filenames
-DMGBOOST_MIN_SHIP = "Test_Attacker_Beam_DmgBoost_Min.json"
-DMGBOOST_MAX_SHIP = "Test_Attacker_Beam_DmgBoost_Max.json"
-BASELINE_BEAM_SHIP = "Test_Attacker_Beam360_Med.json"
-STATIONARY_TARGET = "Test_Target_Stationary.json"
-STANDARD_TARGET = "Test_Target.json"
+# =============================================================================
+# COMMON SHIP REFERENCES
+# =============================================================================
 
-# Expected modified damage values
-DMGBOOST_MIN_EXPECTED = MOD_BASE_BEAM_DAMAGE * 1.0   # 1.0 (identity)
-DMGBOOST_MAX_EXPECTED = MOD_BASE_BEAM_DAMAGE * 10.0  # 10.0
+# test_beam_med_acc_1dmg + test_damage_boost(1.5), dmg 1->1.5
+BOOST_SHIP = DAMAGE_BOOST_ATTACKER_SHIP
+# test_beam_med_acc_1dmg + test_damage_boost(1.0), dmg 1->1.0 (identity)
+IDENTITY_SHIP = "Test_Attacker_Beam_DmgBoost_Min.json"
+# test_beam_med_acc_1dmg + test_damage_boost(10.0), dmg 1->10.0
+MAX_SHIP = "Test_Attacker_Beam_DmgBoost_Max.json"
+# test_beam_med_acc_1dmg + test_damage_penalty(0.5), dmg 1->0.5
+PENALTY_SHIP = "Test_Attacker_Beam_DmgPenalty.json"
+# test_beam_med_acc_1dmg (no modifier, dmg=1)
+BASELINE_SHIP = "Test_Attacker_Beam360_Med.json"
+# test_armor_extreme_hp (1B HP, stationary)
+TARGET_SHIP = "Test_Target_Stationary.json"
+
+# =============================================================================
+# DAMAGE CONSTANTS
+# =============================================================================
+
+BASE_DAMAGE = MOD_BASE_BEAM_DAMAGE      # 1
+BOOSTED_DAMAGE = MOD_EXPECTED_DAMAGE    # 1.5
+MAX_DAMAGE = BASE_DAMAGE * 10.0         # 10.0
+IDENTITY_DAMAGE = BASE_DAMAGE * 1.0     # 1.0
+PENALIZED_DAMAGE = BASE_DAMAGE * 0.5    # 0.5
+
+PENALTY_PARAM = 0.5
+TEST_TICKS = MODIFIER_TEST_TICKS        # 500
+
+# Damage ratio tolerance: since both ships fire at the same rate and have
+# the same hit chance, the ratio should be very precise. Tolerance accounts
+# for rounding of fractional damage per hit.
+RATIO_TOLERANCE = 0.1
 
 
-# ============================================================================
-# MOD-DMG-001: Damage Boost 1.5x (standard)
-# ============================================================================
+# =============================================================================
+# MOD-DMG-001: Stat Gate — Damage Boosted
+# =============================================================================
 
-class ModDmg001_StandardBoostScenario(StaticTargetScenario):
+class ModDmg001_StatGateScenario(StaticTargetScenario):
     """
-    MOD-DMG-001: Verify test_damage_boost(1.5) multiplies beam damage to 1.5.
+    MOD-DMG-001: Quick sanity — damage modifier applied correctly.
 
-    Setup: Medium accuracy beam with damage_mult=1.5 at point-blank vs standard target.
-    Data check: beam.damage == 1.5 (base 1 * 1.5)
-    Outcome check: damage_dealt > 0
+    Boosted beam at point-blank: beam.damage == 1.5 (1 * 1.5), fires and
+    hits with substantial damage. Confirms modifier loaded before behavioral tests.
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-001",
         category="DamageMultiplier",
-        subcategory="Basic Effect",
-        name="Damage boost 1.5x (standard)",
-        summary="Verify test_damage_boost(1.5) multiplies beam damage from 1 to 1.5",
+        subcategory="DamageMultiplier",
+        name="Stat gate — damage boosted (1->1.5)",
+        summary=f"Verify test_damage_boost({DAMAGE_BOOST_PARAM}) sets beam damage to {BOOSTED_DAMAGE}; weapon fires and hits",
         conditions=[
-            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}",
-            f"Damage multiplier param: {DAMAGE_BOOST_PARAM}",
-            f"Expected modified damage: {MOD_EXPECTED_DAMAGE}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Attacker: {BOOST_SHIP} (test_beam_med_acc_1dmg + test_damage_boost({DAMAGE_BOOST_PARAM}), dmg {BASE_DAMAGE}->{BOOSTED_DAMAGE})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
         ],
-        edge_cases=[],
-        expected_outcome=f"beam.damage == {MOD_EXPECTED_DAMAGE}, damage dealt to target",
-        pass_criteria=f"beam.damage == {MOD_EXPECTED_DAMAGE} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Multiplicative modifier on damage attribute"],
+        expected_outcome=f"beam.damage == {BOOSTED_DAMAGE}, substantial damage dealt",
+        pass_criteria=f"damage == {BOOSTED_DAMAGE} AND damage_dealt > 10",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["modifier", "damage_mult", "beam"],
+        tags=["modifier", "damage_mult", "stat_gate"],
     )
 
-    attacker_ship = DAMAGE_BOOST_ATTACKER_SHIP
-    target_ship = STANDARD_TARGET
+    attacker_ship = BOOST_SHIP
+    target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def custom_setup(self, battle_engine):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_beam_damage = beam.damage
-        else:
-            self.actual_beam_damage = None
+        self.actual_damage = beam.damage if beam else None
 
     def _collect_extra_results(self, battle_engine):
-        self.results['base_damage'] = MOD_BASE_BEAM_DAMAGE
-        self.results['damage_multiplier'] = DAMAGE_BOOST_PARAM
-        self.results['expected_beam_damage'] = MOD_EXPECTED_DAMAGE
-        self.results['actual_beam_damage'] = self.actual_beam_damage
+        self.results['expected_damage'] = BOOSTED_DAMAGE
+        self.results['actual_damage'] = self.actual_damage
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: beam weapon loaded
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
+        checks.append(check_true("Beam Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
 
-        # Data: base damage and modified damage
-        checks.append(check_exact(
-            "Base Beam Damage (from JSON)", MOD_BASE_BEAM_DAMAGE,
-            self.results.get('base_damage', 0), phase="data",
-        ))
+        # Data: damage modifier applied
         checks.append(check_approx(
-            "Modified Beam Damage", MOD_EXPECTED_DAMAGE,
-            self.actual_beam_damage or 0.0, tolerance=0.001,
-            phase="data",
+            "Boosted Beam Damage", BOOSTED_DAMAGE,
+            self.actual_damage or 0.0, tolerance=0.001, phase="data",
         ))
 
-        # Outcome: damage was dealt
+        # Outcome: substantial damage dealt (not just "damage > 0")
         checks.append(check_true(
-            "Damage Dealt", self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
+            "Substantial Damage Dealt", self.damage_dealt > 10,
+            detail=f"damage={self.damage_dealt}", phase="outcome",
         ))
+
         return checks
 
 
-# ============================================================================
-# MOD-DMG-002: Damage Boost 1.0x (identity / minimum)
-# ============================================================================
+# =============================================================================
+# MOD-DMG-002: Damage Ratio — 1.5x Boost
+# =============================================================================
 
-class ModDmg002_IdentityBoostScenario(StaticTargetScenario):
+class ModDmg002_BoostRatioScenario(ComparisonScenario):
     """
-    MOD-DMG-002: Verify test_damage_boost(1.0) leaves beam damage unchanged.
+    MOD-DMG-002: Prove 1.5x damage boost produces exactly 1.5x total damage.
 
-    Setup: Medium accuracy beam with damage_mult=1.0 at point-blank vs standard target.
-    Data check: beam.damage == 1.0 (base 1 * 1.0 = identity)
-    Outcome check: damage_dealt > 0
+    Both ships fire at the same rate (reload=0) and have the same accuracy.
+    The ONLY difference is damage per hit (1.0 vs 1.5). So the total damage
+    ratio should be exactly 1.5x, independent of how many hits occurred.
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-002",
         category="DamageMultiplier",
-        subcategory="Boundary",
-        name="Damage boost 1.0x (identity)",
-        summary="Verify test_damage_boost(1.0) leaves beam damage at base value of 1.0",
+        subcategory="DamageMultiplier",
+        name="Damage ratio — 1.5x boost produces 1.5x total damage",
+        summary=f"Baseline (dmg={BASE_DAMAGE}) vs boosted (dmg={BOOSTED_DAMAGE}) at point-blank; ratio ≈ {DAMAGE_BOOST_PARAM}x",
         conditions=[
-            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}",
-            "Damage multiplier param: 1.0 (identity)",
-            f"Expected modified damage: {DMGBOOST_MIN_EXPECTED}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Baseline: {BASELINE_SHIP} (test_beam_med_acc_1dmg, no modifier, dmg={BASE_DAMAGE})",
+            f"Variant: {BOOST_SHIP} (test_beam_med_acc_1dmg + test_damage_boost({DAMAGE_BOOST_PARAM}), dmg={BOOSTED_DAMAGE})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
+            f"Same seed, same hit rate → damage ratio = damage_per_hit ratio = {DAMAGE_BOOST_PARAM}x",
         ],
-        edge_cases=["Identity multiplier should not alter damage at all"],
-        expected_outcome=f"beam.damage == {DMGBOOST_MIN_EXPECTED}, damage dealt to target",
-        pass_criteria=f"beam.damage == {DMGBOOST_MIN_EXPECTED} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=[
+            "Damage ratio is deterministic (same hits, scaled damage)",
+            "Both ships use reload=0 (fire every tick) with identical accuracy",
+        ],
+        expected_outcome=f"Damage ratio ≈ {DAMAGE_BOOST_PARAM}x",
+        pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {DAMAGE_BOOST_PARAM}",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["modifier", "damage_mult", "beam", "identity"],
+        tags=["modifier", "damage_mult", "ratio", "behavioral"],
     )
 
-    attacker_ship = DMGBOOST_MIN_SHIP
-    target_ship = STANDARD_TARGET
-    distance = POINT_BLANK_DISTANCE
-
-    def custom_setup(self, battle_engine):
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_beam_damage = beam.damage
-        else:
-            self.actual_beam_damage = None
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['base_damage'] = MOD_BASE_BEAM_DAMAGE
-        self.results['damage_multiplier'] = 1.0
-        self.results['expected_beam_damage'] = DMGBOOST_MIN_EXPECTED
-        self.results['actual_beam_damage'] = self.actual_beam_damage
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-
-        # Precondition: beam weapon loaded
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
-        if beam is None:
-            return checks
-
-        # Data: damage unchanged by identity multiplier
-        checks.append(check_exact(
-            "Base Beam Damage (from JSON)", MOD_BASE_BEAM_DAMAGE,
-            self.results.get('base_damage', 0), phase="data",
-        ))
-        checks.append(check_approx(
-            "Modified Beam Damage (identity)", DMGBOOST_MIN_EXPECTED,
-            self.actual_beam_damage or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        # Outcome: damage was dealt
-        checks.append(check_true(
-            "Damage Dealt", self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
-        ))
-        return checks
-
-
-# ============================================================================
-# MOD-DMG-003: Damage Boost 10.0x (maximum)
-# ============================================================================
-
-class ModDmg003_MaxBoostScenario(StaticTargetScenario):
-    """
-    MOD-DMG-003: Verify test_damage_boost(10.0) multiplies beam damage to 10.0.
-
-    Setup: Medium accuracy beam with damage_mult=10.0 at point-blank vs standard target.
-    Data check: beam.damage == 10.0 (base 1 * 10.0)
-    Outcome check: damage_dealt > 0
-    """
-    metadata = TestMetadata(
-        test_id="MOD-DMG-003",
-        category="DamageMultiplier",
-        subcategory="Boundary",
-        name="Damage boost 10.0x (maximum)",
-        summary="Verify test_damage_boost(10.0) multiplies beam damage from 1 to 10.0",
-        conditions=[
-            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}",
-            "Damage multiplier param: 10.0",
-            f"Expected modified damage: {DMGBOOST_MAX_EXPECTED}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
-        ],
-        edge_cases=["High multiplier should scale linearly"],
-        expected_outcome=f"beam.damage == {DMGBOOST_MAX_EXPECTED}, damage dealt to target",
-        pass_criteria=f"beam.damage == {DMGBOOST_MAX_EXPECTED} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",
-        tags=["modifier", "damage_mult", "beam", "max"],
-    )
-
-    attacker_ship = DMGBOOST_MAX_SHIP
-    target_ship = STANDARD_TARGET
-    distance = POINT_BLANK_DISTANCE
-
-    def custom_setup(self, battle_engine):
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_beam_damage = beam.damage
-        else:
-            self.actual_beam_damage = None
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['base_damage'] = MOD_BASE_BEAM_DAMAGE
-        self.results['damage_multiplier'] = 10.0
-        self.results['expected_beam_damage'] = DMGBOOST_MAX_EXPECTED
-        self.results['actual_beam_damage'] = self.actual_beam_damage
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-
-        # Precondition: beam weapon loaded
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
-        if beam is None:
-            return checks
-
-        # Data: damage scaled to maximum
-        checks.append(check_exact(
-            "Base Beam Damage (from JSON)", MOD_BASE_BEAM_DAMAGE,
-            self.results.get('base_damage', 0), phase="data",
-        ))
-        checks.append(check_approx(
-            "Modified Beam Damage (max)", DMGBOOST_MAX_EXPECTED,
-            self.actual_beam_damage or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        # Outcome: damage was dealt
-        checks.append(check_true(
-            "Damage Dealt", self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
-        ))
-        return checks
-
-
-# ============================================================================
-# MOD-DMG-004: Boosted (1.5x) vs Unboosted Baseline
-# ============================================================================
-
-class ModDmg004_BoostVsBaselineScenario(ComparisonScenario):
-    """
-    MOD-DMG-004: Compare damage output of a 1.5x boosted beam vs unboosted beam.
-
-    Baseline: Standard medium-accuracy beam (no modifier), damage=1.
-    Variant: Same beam with test_damage_boost(1.5), damage=1.5.
-    Both fire at point-blank against stationary targets for same duration.
-    Outcome: variant deals approximately 1.5x more total damage.
-    """
-    metadata = TestMetadata(
-        test_id="MOD-DMG-004",
-        category="DamageMultiplier",
-        subcategory="Combat Outcome",
-        name="1.5x boost vs unboosted baseline",
-        summary="Verify 1.5x damage modifier produces ~1.5x more total damage than baseline",
-        conditions=[
-            "Baseline: medium-accuracy beam, damage=1 (no modifier)",
-            f"Variant: same beam with test_damage_boost({DAMAGE_BOOST_PARAM}), damage={MOD_EXPECTED_DAMAGE}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
-            f"Duration: {MODIFIER_TEST_TICKS} ticks",
-            "Same seed for both battles",
-        ],
-        edge_cases=[],
-        expected_outcome=f"Variant deals ~{DAMAGE_BOOST_PARAM}x more damage than baseline",
-        pass_criteria="variant_damage / baseline_damage within 10% of 1.5",
-        max_ticks=MODIFIER_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",
-        tags=["modifier", "damage_mult", "beam", "comparison"],
-    )
-
-    baseline_attacker_ship = BASELINE_BEAM_SHIP
-    baseline_target_ship = STATIONARY_TARGET
-    variant_attacker_ship = DAMAGE_BOOST_ATTACKER_SHIP
-    variant_target_ship = STATIONARY_TARGET
+    baseline_attacker_ship = BASELINE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = BOOST_SHIP
+    variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: both battles dealt damage
+        # Precondition: both dealt substantial damage
         checks.append(check_true(
-            "Baseline Dealt Damage",
-            self.baseline_damage_dealt > 0,
-            detail=f"baseline_damage={self.baseline_damage_dealt}",
-            phase="precondition",
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
         ))
         checks.append(check_true(
-            "Variant Dealt Damage",
-            self.variant_damage_dealt > 0,
-            detail=f"variant_damage={self.variant_damage_dealt}",
-            phase="precondition",
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
         ))
 
-        # Outcome: variant deals more damage than baseline
-        checks.append(check_true(
-            "Boosted Beam Deals More Damage",
-            self.variant_damage_dealt > self.baseline_damage_dealt,
-            detail=f"baseline={self.baseline_damage_dealt}, "
-                   f"variant={self.variant_damage_dealt}",
-            phase="outcome",
-        ))
-
-        # Outcome: damage ratio is approximately 1.5x
+        # Outcome: damage ratio matches modifier value
         if self.baseline_damage_dealt > 0:
             ratio = self.variant_damage_dealt / self.baseline_damage_dealt
             checks.append(check_approx(
-                "Damage Ratio ~1.5x", DAMAGE_BOOST_PARAM,
-                ratio, tolerance=0.15,
-                phase="outcome",
+                f"Damage Ratio ≈ {DAMAGE_BOOST_PARAM}x", DAMAGE_BOOST_PARAM,
+                ratio, tolerance=RATIO_TOLERANCE, phase="outcome",
             ))
 
         return checks
 
 
-# ============================================================================
-# MOD-DMG-005: Max (10.0x) vs Min (1.0x)
-# ============================================================================
+# =============================================================================
+# MOD-DMG-003: Extreme Ratio — 10x vs 1x
+# =============================================================================
 
-class ModDmg005_MaxVsMinScenario(ComparisonScenario):
+class ModDmg003_ExtremeRatioScenario(ComparisonScenario):
     """
-    MOD-DMG-005: Compare damage output of 10.0x boost vs 1.0x (identity) boost.
+    MOD-DMG-003: Prove 10.0x vs 1.0x produces exactly 10.0x total damage.
 
-    Baseline: Beam with test_damage_boost(1.0), damage=1.0.
-    Variant: Beam with test_damage_boost(10.0), damage=10.0.
-    Both fire at point-blank against stationary targets for same duration.
-    Outcome: variant deals approximately 10x more total damage.
+    Tests linearity at extremes. Both beams have identical hit rates;
+    damage ratio should precisely match the multiplier ratio.
     """
     metadata = TestMetadata(
-        test_id="MOD-DMG-005",
+        test_id="MOD-DMG-003",
         category="DamageMultiplier",
-        subcategory="Combat Outcome",
-        name="10.0x boost vs 1.0x identity",
-        summary="Verify 10.0x damage modifier produces ~10x more total damage than 1.0x identity",
+        subcategory="DamageMultiplier",
+        name="Extreme ratio — 10.0x vs 1.0x = 10.0x damage ratio",
+        summary=f"Identity (dmg={IDENTITY_DAMAGE}) vs max (dmg={MAX_DAMAGE}); ratio ≈ 10.0x",
         conditions=[
-            f"Baseline: beam with test_damage_boost(1.0), damage={DMGBOOST_MIN_EXPECTED}",
-            f"Variant: beam with test_damage_boost(10.0), damage={DMGBOOST_MAX_EXPECTED}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
-            f"Duration: {MODIFIER_TEST_TICKS} ticks",
-            "Same seed for both battles",
+            f"Baseline: {IDENTITY_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(1.0), dmg={IDENTITY_DAMAGE})",
+            f"Variant: {MAX_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(10.0), dmg={MAX_DAMAGE})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
         ],
-        edge_cases=["Large multiplier ratio should hold precisely at point-blank"],
-        expected_outcome="Variant deals ~10x more damage than baseline",
-        pass_criteria="variant_damage / baseline_damage within 10% of 10.0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Tests linearity at modifier max value"],
+        expected_outcome="Damage ratio ≈ 10.0x",
+        pass_criteria="ratio within ±0.5 of 10.0",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["modifier", "damage_mult", "beam", "comparison", "extreme"],
+        tags=["modifier", "damage_mult", "extreme", "behavioral"],
     )
 
-    baseline_attacker_ship = DMGBOOST_MIN_SHIP
-    baseline_target_ship = STATIONARY_TARGET
-    variant_attacker_ship = DMGBOOST_MAX_SHIP
-    variant_target_ship = STATIONARY_TARGET
+    baseline_attacker_ship = IDENTITY_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = MAX_SHIP
+    variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: both battles dealt damage
+        # Precondition: both dealt damage
         checks.append(check_true(
-            "Baseline (1.0x) Dealt Damage",
-            self.baseline_damage_dealt > 0,
-            detail=f"baseline_damage={self.baseline_damage_dealt}",
-            phase="precondition",
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
         ))
         checks.append(check_true(
-            "Variant (10.0x) Dealt Damage",
-            self.variant_damage_dealt > 0,
-            detail=f"variant_damage={self.variant_damage_dealt}",
-            phase="precondition",
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
         ))
 
-        # Outcome: variant deals more damage
-        checks.append(check_true(
-            "Max Boost Deals More Damage Than Min",
-            self.variant_damage_dealt > self.baseline_damage_dealt,
-            detail=f"min={self.baseline_damage_dealt}, "
-                   f"max={self.variant_damage_dealt}",
-            phase="outcome",
-        ))
-
-        # Outcome: damage ratio is approximately 10x
-        expected_ratio = DMGBOOST_MAX_EXPECTED / DMGBOOST_MIN_EXPECTED  # 10.0
+        # Outcome: damage ratio ≈ 10.0x
+        expected_ratio = MAX_DAMAGE / IDENTITY_DAMAGE  # 10.0
         if self.baseline_damage_dealt > 0:
             ratio = self.variant_damage_dealt / self.baseline_damage_dealt
             checks.append(check_approx(
-                "Damage Ratio ~10x", expected_ratio,
-                ratio, tolerance=1.0,
-                phase="outcome",
+                "Damage Ratio ≈ 10.0x", expected_ratio,
+                ratio, tolerance=0.5, phase="outcome",
+            ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-DMG-004: Negative Penalty — 0.5x Damage
+# =============================================================================
+
+class ModDmg004_PenaltyScenario(ComparisonScenario):
+    """
+    MOD-DMG-004: Prove damage penalty reduces total damage by half.
+
+    Baseline (dmg=1.0) vs penalized (dmg=0.5). Same hit rate, half the
+    damage per hit → total damage ratio ≈ 0.5x. Tests modifier bidirectionality.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-DMG-004",
+        category="DamageMultiplier",
+        subcategory="DamageMultiplier",
+        name="Negative penalty — 0.5x damage halves total damage",
+        summary=f"Baseline (dmg={BASE_DAMAGE}) vs penalized (dmg={PENALIZED_DAMAGE}); ratio ≈ {PENALTY_PARAM}x",
+        conditions=[
+            f"Baseline: {BASELINE_SHIP} (test_beam_med_acc_1dmg, no modifier, dmg={BASE_DAMAGE})",
+            f"Variant: {PENALTY_SHIP} (test_beam_med_acc_1dmg + test_damage_penalty({PENALTY_PARAM}), dmg={PENALIZED_DAMAGE})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
+        ],
+        edge_cases=[
+            "Penalty modifier uses damage_mult with value < 1.0",
+            "Tests bidirectionality: modifier works for reduction, not just boost",
+        ],
+        expected_outcome=f"Penalized damage ≈ {PENALTY_PARAM}x of baseline",
+        pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {PENALTY_PARAM}",
+        max_ticks=TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "damage_mult", "penalty", "behavioral"],
+    )
+
+    baseline_attacker_ship = BASELINE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = PENALTY_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify penalty applied
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        if beam:
+            checks.append(check_approx(
+                "Penalized Beam Damage", PENALIZED_DAMAGE,
+                beam.damage, tolerance=0.001, phase="data",
+            ))
+
+        # Precondition: both dealt damage
+        checks.append(check_true(
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Penalized Dealt Damage", self.variant_damage_dealt > 5,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
+        ))
+
+        # Outcome: damage ratio ≈ 0.5x (penalty halves damage)
+        if self.baseline_damage_dealt > 0:
+            ratio = self.variant_damage_dealt / self.baseline_damage_dealt
+            checks.append(check_approx(
+                f"Damage Ratio ≈ {PENALTY_PARAM}x", PENALTY_PARAM,
+                ratio, tolerance=RATIO_TOLERANCE, phase="outcome",
+            ))
+
+        # Outcome: penalty deals LESS damage
+        checks.append(check_true(
+            "Penalty Reduces Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=(
+                f"baseline={self.baseline_damage_dealt}, "
+                f"penalized={self.variant_damage_dealt}"
+            ),
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-DMG-005: Range-Independent — Ratio Holds at Mid-Range
+# =============================================================================
+
+class ModDmg005_RangeIndependentScenario(ComparisonScenario):
+    """
+    MOD-DMG-005: Prove damage ratio is range-independent.
+
+    At mid-range (400px), both beams have lower hit rates than at point-blank
+    (same accuracy penalty from distance). But the RATIO of total damage
+    should still be ~1.5x because damage per hit is the only difference.
+
+    This distinguishes damage_mult from accuracy_add — accuracy affects the
+    sigmoid curve differently at different ranges, but damage_mult scales
+    linearly regardless of range.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-DMG-005",
+        category="DamageMultiplier",
+        subcategory="DamageMultiplier",
+        name=f"Range-independent — ratio holds at {MID_RANGE_DISTANCE}px",
+        summary=(
+            f"Damage ratio ≈ {DAMAGE_BOOST_PARAM}x at mid-range ({MID_RANGE_DISTANCE}px), "
+            f"proving damage_mult is range-independent"
+        ),
+        conditions=[
+            f"Baseline: {BASELINE_SHIP} (test_beam_med_acc_1dmg, no modifier, dmg={BASE_DAMAGE})",
+            f"Variant: {BOOST_SHIP} (test_beam_med_acc_1dmg + test_damage_boost({DAMAGE_BOOST_PARAM}), dmg={BOOSTED_DAMAGE})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {MID_RANGE_DISTANCE}px (mid-range, reduced hit rate but same ratio)",
+        ],
+        edge_cases=[
+            "At mid-range, fewer hits occur but ratio is unchanged",
+            "Distinguishes damage_mult from accuracy_add (which IS range-dependent)",
+        ],
+        expected_outcome=f"Damage ratio ≈ {DAMAGE_BOOST_PARAM}x even at mid-range",
+        pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {DAMAGE_BOOST_PARAM}",
+        max_ticks=TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "damage_mult", "range_independent", "behavioral"],
+    )
+
+    baseline_attacker_ship = BASELINE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = BOOST_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = MID_RANGE_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: both dealt substantial damage at mid-range
+        checks.append(check_true(
+            "Baseline Dealt Damage at Range", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Dealt Damage at Range", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
+        ))
+
+        # Outcome: ratio still matches modifier value at mid-range
+        if self.baseline_damage_dealt > 0:
+            ratio = self.variant_damage_dealt / self.baseline_damage_dealt
+            checks.append(check_approx(
+                f"Mid-Range Damage Ratio ≈ {DAMAGE_BOOST_PARAM}x",
+                DAMAGE_BOOST_PARAM,
+                ratio, tolerance=RATIO_TOLERANCE, phase="outcome",
             ))
 
         return checks

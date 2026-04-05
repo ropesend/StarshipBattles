@@ -4,6 +4,13 @@ Multi-Modifier Stacking Scenarios (MOD-STACK-001 through MOD-STACK-004)
 Dedicated test scenarios for verifying interactions when multiple modifiers
 are applied to the same component.
 
+Ship Files:
+- Test_Attacker_Beam_DualModifier.json — test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_damage_boost_b (value=2.0), dmg 1*1.5*2.0=3.0
+- Test_Attacker_Beam_DmgAndAcc.json — test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_accuracy_boost (value=2), dmg→1.5 + acc→3.0
+- Test_Attacker_Beam_DamageBoost.json — test_beam_med_acc_1dmg + test_damage_boost (value=1.5), dmg 1→1.5
+- Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg (no modifier, baseline)
+- Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
+
 Test Coverage:
 - MOD-STACK-001: Two damage multipliers compound (1.5 * 2.0 = 3.0)
 - MOD-STACK-002: Independent modifiers on different stats (damage + accuracy)
@@ -24,10 +31,15 @@ from simulation_tests.test_constants import (
 )
 
 # Ship filenames
+# test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_damage_boost_b (value=2.0), dmg 1*1.5*2.0=3.0
 DUAL_MODIFIER_SHIP = "Test_Attacker_Beam_DualModifier.json"
+# test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_accuracy_boost (value=2), dmg→1.5 + acc→3.0
 DMG_AND_ACC_SHIP = "Test_Attacker_Beam_DmgAndAcc.json"
-SINGLE_BOOST_SHIP = DAMAGE_BOOST_ATTACKER_SHIP  # test_damage_boost(1.5)
+# test_beam_med_acc_1dmg + test_damage_boost (value=1.5), dmg 1→1.5
+SINGLE_BOOST_SHIP = DAMAGE_BOOST_ATTACKER_SHIP
+# test_beam_med_acc_1dmg (no modifier, baseline)
 BASELINE_BEAM_SHIP = "Test_Attacker_Beam360_Med.json"
+# test_armor_extreme_hp (1B HP, stationary)
 STATIONARY_TARGET = "Test_Target_Stationary.json"
 
 # Expected compounded damage: base 1 * 1.5 * 2.0 = 3.0
@@ -59,15 +71,14 @@ class ModStack001_DualDamageCompoundScenario(StaticTargetScenario):
     metadata = TestMetadata(
         test_id="MOD-STACK-001",
         category="ModifierStacking",
-        subcategory="Same Stat",
+        subcategory="ModifierStacking",
         name="Dual damage multipliers compound (1.5 * 2.0 = 3.0)",
         summary="Verify two multiplicative damage modifiers on the same component compound to 3.0x",
         conditions=[
-            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}",
-            "Modifier A: test_damage_boost(1.5) — damage_mult 1.5x",
-            "Modifier B: test_damage_boost_b(2.0) — damage_mult 2.0x",
-            f"Expected compounded damage: {DUAL_EXPECTED_DAMAGE}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Attacker: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_damage_boost_b 2.0x)",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}, expected compounded: {DUAL_EXPECTED_DAMAGE} ({MOD_BASE_BEAM_DAMAGE} * 1.5 * 2.0)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point blank)",
         ],
         edge_cases=["Multiplicative stacking must compound, not add"],
         expected_outcome=f"beam.damage == {DUAL_EXPECTED_DAMAGE}, damage dealt to target",
@@ -141,17 +152,15 @@ class ModStack002_IndependentStatsScenario(StaticTargetScenario):
     metadata = TestMetadata(
         test_id="MOD-STACK-002",
         category="ModifierStacking",
-        subcategory="Cross Stat",
+        subcategory="ModifierStacking",
         name="Independent modifiers on different stats",
         summary="Verify damage_mult and accuracy_add modifiers on the same component apply independently",
         conditions=[
-            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}",
-            f"Base beam accuracy: {MOD_BASE_BEAM_ACCURACY}",
-            "Modifier A: test_damage_boost(1.5) — damage_mult 1.5x",
-            "Modifier B: test_accuracy_boost(2) — accuracy_add +1.0",
-            f"Expected damage: {DMGACC_EXPECTED_DAMAGE}",
-            f"Expected accuracy: {EXPECTED_ACCURACY_WITH_BOOST}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
+            f"Attacker: {DMG_AND_ACC_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_accuracy_boost value=2)",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Expected damage: {DMGACC_EXPECTED_DAMAGE} ({MOD_BASE_BEAM_DAMAGE} * 1.5)",
+            f"Expected accuracy: {EXPECTED_ACCURACY_WITH_BOOST} ({MOD_BASE_BEAM_ACCURACY} + 2*0.5)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point blank)",
         ],
         edge_cases=["Modifiers on different stats must not interfere"],
         expected_outcome=(
@@ -233,15 +242,14 @@ class ModStack003_DualVsSingleScenario(ComparisonScenario):
     metadata = TestMetadata(
         test_id="MOD-STACK-003",
         category="ModifierStacking",
-        subcategory="Combat Outcome",
+        subcategory="ModifierStacking",
         name="Dual modifier (3.0x) vs single modifier (1.5x)",
         summary="Verify dual damage modifier produces ~2x more damage than single modifier",
         conditions=[
-            f"Baseline: beam with test_damage_boost(1.5), damage={SINGLE_EXPECTED_DAMAGE}",
-            f"Variant: beam with dual modifiers (1.5 * 2.0), damage={DUAL_EXPECTED_DAMAGE}",
-            f"Distance: {POINT_BLANK_DISTANCE} (point-blank)",
-            f"Duration: {MODIFIER_TEST_TICKS} ticks",
-            "Same seed for both battles",
+            f"Baseline: {SINGLE_BOOST_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x, damage={SINGLE_EXPECTED_DAMAGE})",
+            f"Variant: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_damage_boost_b 2.0x, damage={DUAL_EXPECTED_DAMAGE})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point blank)",
         ],
         edge_cases=[],
         expected_outcome="Variant deals ~2x more damage than baseline (3.0 / 1.5)",
@@ -313,18 +321,17 @@ class ModStack004_DmgAccVsBaselineScenario(ComparisonScenario):
     metadata = TestMetadata(
         test_id="MOD-STACK-004",
         category="ModifierStacking",
-        subcategory="Combat Outcome",
+        subcategory="ModifierStacking",
         name="Damage + accuracy modifiers vs unmodified at mid-range",
         summary=(
             "Verify combined damage and accuracy modifiers produce more damage "
             "than unmodified beam at mid-range where accuracy matters"
         ),
         conditions=[
-            "Baseline: medium-accuracy beam, damage=1, accuracy=2.0 (no modifiers)",
-            f"Variant: same beam with damage=1.5, accuracy={EXPECTED_ACCURACY_WITH_BOOST}",
-            f"Distance: {MID_RANGE_DISTANCE} (mid-range, accuracy matters)",
-            f"Duration: {MODIFIER_TEST_TICKS} ticks",
-            "Same seed for both battles",
+            f"Baseline: {BASELINE_BEAM_SHIP} (test_beam_med_acc_1dmg, damage={MOD_BASE_BEAM_DAMAGE}, accuracy={MOD_BASE_BEAM_ACCURACY}, no modifiers)",
+            f"Variant: {DMG_AND_ACC_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_accuracy_boost value=2, damage={DMGACC_EXPECTED_DAMAGE}, accuracy={EXPECTED_ACCURACY_WITH_BOOST})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {MID_RANGE_DISTANCE}px (mid-range, accuracy matters)",
         ],
         edge_cases=["Mid-range makes accuracy impactful, not just damage"],
         expected_outcome="Variant deals more total damage (higher hit rate + higher damage per hit)",
