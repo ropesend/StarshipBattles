@@ -42,3 +42,4 @@ MagicMock/
 .agent_reports/
 .test_durations.json
 .test_durations.json
+.test_durations.json
