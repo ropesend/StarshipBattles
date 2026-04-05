@@ -128,3 +128,86 @@ class TestComponentStatsCalculatorStandalone:
 
         assert railgun.mass == pytest.approx(railgun.base_mass * 2.0, abs=0.01)
         assert railgun.max_hp == pytest.approx(old_max_hp * 1.5, abs=1)
+
+
+class TestParseFormulas:
+    """Test ComponentStatsCalculator.parse_formulas (PROJ-241)."""
+
+    def test_extracts_formulas_from_equals_prefix(self):
+        """parse_formulas should extract formulas from '='-prefixed string values."""
+        data = {'mass': '=ship_class_mass * 0.1', 'hp': 100, 'name': 'test'}
+
+        result = ComponentStatsCalculator.parse_formulas(data)
+
+        assert result == {'mass': 'ship_class_mass * 0.1'}
+
+    def test_skips_underscore_prefixed_keys(self):
+        """parse_formulas should skip keys starting with '_'."""
+        data = {'_comment': '=this is not a formula', 'mass': '=10'}
+
+        result = ComponentStatsCalculator.parse_formulas(data)
+
+        assert '_comment' not in result
+        assert result == {'mass': '10'}
+
+    def test_strips_leading_equals(self):
+        """parse_formulas should strip the leading '=' from formula strings."""
+        data = {'mass': '=ship_class_mass * 0.05'}
+
+        result = ComponentStatsCalculator.parse_formulas(data)
+
+        assert result['mass'] == 'ship_class_mass * 0.05'
+
+    def test_returns_empty_for_no_formulas(self):
+        """parse_formulas should return empty dict when no formulas present."""
+        data = {'mass': 100, 'hp': 200, 'name': 'test'}
+
+        result = ComponentStatsCalculator.parse_formulas(data)
+
+        assert result == {}
+
+
+class TestApplyFormulaDefaults:
+    """Test ComponentStatsCalculator.apply_formula_defaults (PROJ-241)."""
+
+    def test_mass_formula_sets_defaults(self, fresh_registries):
+        """apply_formula_defaults should set base_mass=0, mass=0 for mass formula."""
+        comp = create_component('railgun', registries=fresh_registries)
+        formulas = {'mass': 'ship_class_mass * 0.1'}
+
+        ComponentStatsCalculator.apply_formula_defaults(comp, formulas)
+
+        assert comp.base_mass == 0
+        assert comp.mass == 0
+
+    def test_hp_formula_sets_defaults(self, fresh_registries):
+        """apply_formula_defaults should set base_max_hp=0, max_hp=0, current_hp=0 for hp formula."""
+        comp = create_component('railgun', registries=fresh_registries)
+        formulas = {'hp': 'ship_class_mass * 0.5'}
+
+        ComponentStatsCalculator.apply_formula_defaults(comp, formulas)
+
+        assert comp.base_max_hp == 0
+        assert comp.max_hp == 0
+        assert comp.current_hp == 0
+
+    def test_cost_formula_sets_defaults(self, fresh_registries):
+        """apply_formula_defaults should set cost=0 for cost formula."""
+        comp = create_component('railgun', registries=fresh_registries)
+        formulas = {'cost': '100 * 2'}
+
+        ComponentStatsCalculator.apply_formula_defaults(comp, formulas)
+
+        assert comp.cost == 0
+
+    def test_no_op_for_non_special_formulas(self, fresh_registries):
+        """apply_formula_defaults should be no-op for non-mass/hp/cost formulas."""
+        comp = create_component('railgun', registries=fresh_registries)
+        original_mass = comp.mass
+        original_hp = comp.max_hp
+        formulas = {'damage': '10 * 2'}
+
+        ComponentStatsCalculator.apply_formula_defaults(comp, formulas)
+
+        assert comp.mass == original_mass
+        assert comp.max_hp == original_hp

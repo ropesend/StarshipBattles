@@ -1,172 +1,217 @@
 """
-AbilityManager - Centralized ability handling for components.
+AbilityManager - Stateful delegate for component ability management.
 
 PROJ-44 Phase 4: Extracted from Component god class to reduce complexity.
 PROJ-190: Updated to use IAbility protocol for type-safe checks.
+PROJ-241: Converted from static namespace to proper stateful delegate
+         matching ComponentHealthManager/ComponentResourceManager pattern.
 
-This module provides utility functions for:
+This module manages:
+- Ability state (owns the instances list and MRO-based index)
 - Instantiating abilities from component data
-- Querying abilities by type (with polymorphic support)
+- Querying abilities by type (with polymorphic support via index)
+- Tag-based ability queries (generalized from has_pdc_ability)
 - Aggregating UI information from abilities
 
 Usage:
-    The Component class delegates ability operations to this manager.
-    Methods are implemented as static/class methods for flexibility.
+    The Component class creates an AbilityManager delegate that owns the
+    component's ability instances and index. Component facade properties
+    provide backward compatibility for external callers.
 """
+import logging
 from typing import List, Optional, Any, Dict, TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.components.abilities import Ability
+    from game.simulation.components.component import Component
 
 
 class AbilityManager:
+    """Manages abilities for a Component as a stateful delegate.
+
+    PROJ-241: Converted from static namespace to proper delegate.
+    Follows the ComponentHealthManager/ComponentResourceManager pattern:
+    - __slots__ for memory efficiency
+    - __init__(component) takes component reference
+    - Instance methods own and operate on internal state
+    - Component provides facade properties for backward compatibility
+
+    The manager owns the _instances list and _index dict, and handles
+    ability instantiation, index building, and all querying.
     """
-    Utility class for ability operations.
 
-    All methods are static - this is a namespace for ability-related functions,
-    not a stateful manager. Component instances own their ability_instances list.
-    """
+    __slots__ = ('_component', '_instances', '_index')
 
-    @staticmethod
-    def get_abilities(ability_name: str, instances: List['Ability']) -> List['Ability']:
-        """
-        Get all abilities of a specific type from an instance list.
-
-        Supports polymorphic matching - asking for 'WeaponAbility' will return
-        ProjectileWeaponAbility, BeamWeaponAbility, etc.
+    def __init__(self, component: 'Component'):
+        """Initialize with a component reference, instantiate abilities, build index.
 
         Args:
-            ability_name: The ability class name to search for (e.g., 'WeaponAbility')
-            instances: List of ability instances to search
-
-        Returns:
-            List of matching ability instances (may be empty)
+            component: The Component instance to manage abilities for.
         """
-        from game.simulation.components.abilities import ABILITY_REGISTRY
+        self._component = component
+        self._instances: List['Ability'] = []
+        self._index: Dict[str, List['Ability']] = {}
+        self.instantiate_and_index()
 
-        target_class = None
-        if ability_name in ABILITY_REGISTRY:
-            val = ABILITY_REGISTRY[ability_name]
-            if isinstance(val, type):
-                target_class = val
+    def instantiate_and_index(self) -> None:
+        """Instantiate abilities from component data and build MRO-based index.
 
-        found = []
-        for ab in instances:
-            # 1. Polymorphic check (preferred)
-            if target_class and isinstance(ab, target_class):
-                found.append(ab)
-            elif target_class is not None:
-                # [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
-                # When test modules reload ability classes, isinstance() fails due to
-                # different class objects. This __name__ check provides test isolation.
-                # Ref: Phase 2 Task 2.5 audit - documented as intentional tech debt.
-                for cls in ab.__class__.mro():
-                    if cls.__name__ == ability_name:
-                        found.append(ab)
-                        break
-
-        return found
-
-    @staticmethod
-    def get_ability(ability_name: str, instances: List['Ability']) -> Optional['Ability']:
+        Called during construction and also by ComponentStatsCalculator
+        during recalculate_stats() to sync abilities after data changes.
         """
-        Get first ability of a specific type.
+        self._instances = self._instantiate(
+            self._component.abilities,
+            self._instances,
+            self._component
+        )
+        self._build_index()
+
+    def _build_index(self) -> None:
+        """Build MRO-based index for O(1) lookup by class name.
+
+        Moved from Component._instantiate_abilities.
+        Indexes each ability instance by its class name and all parent
+        class names (for polymorphic queries), stopping at 'object'.
+        """
+        self._index = {}
+        for ab in self._instances:
+            for cls in ab.__class__.mro():
+                cls_name = cls.__name__
+                if cls_name == 'object':
+                    break
+                if cls_name not in self._index:
+                    self._index[cls_name] = []
+                self._index[cls_name].append(ab)
+
+    @property
+    def ability_instances(self) -> List['Ability']:
+        """The current list of ability instances."""
+        return self._instances
+
+    def get_abilities(self, ability_name: str) -> List['Ability']:
+        """Get all abilities of a specific type.
+
+        Uses pre-built MRO index for O(1) lookup. Falls back to
+        registry-based polymorphic search for edge cases.
 
         Args:
-            ability_name: The ability class name to search for
-            instances: List of ability instances to search
+            ability_name: The ability class name to search for.
 
         Returns:
-            First matching ability instance, or None if not found
+            List of matching ability instances (copy).
         """
-        abilities = AbilityManager.get_abilities(ability_name, instances)
+        # Fast path: use pre-built index (includes MRO for polymorphism)
+        if ability_name in self._index:
+            return list(self._index[ability_name])  # Return copy
+
+        # Fallback: delegate to static method for edge cases
+        return AbilityManager._get_abilities_polymorphic(
+            ability_name, self._instances
+        )
+
+    def get_ability(self, ability_name: str) -> Optional['Ability']:
+        """Get first ability of a specific type.
+
+        Args:
+            ability_name: The ability class name to search for.
+
+        Returns:
+            First matching ability instance, or None if not found.
+        """
+        # Fast path: use pre-built index
+        if ability_name in self._index:
+            abilities = self._index[ability_name]
+            return abilities[0] if abilities else None
+
+        # Fallback
+        abilities = AbilityManager._get_abilities_polymorphic(
+            ability_name, self._instances
+        )
         return abilities[0] if abilities else None
 
-    @staticmethod
-    def has_ability(ability_name: str, instances: List['Ability'], abilities_dict: Dict = None) -> bool:
-        """
-        Check if any ability of the specified type exists.
-
-        Supports both direct dict lookup (fast) and polymorphic search (thorough).
+    def has_ability(self, ability_name: str) -> bool:
+        """Check if any ability of the specified type exists.
 
         Args:
-            ability_name: The ability class name to check for
-            instances: List of ability instances to search
-            abilities_dict: Optional dict for fast direct lookup
+            ability_name: The ability class name to check for.
 
         Returns:
-            True if ability exists, False otherwise
+            True if ability exists, False otherwise.
         """
-        # 1. Direct check in abilities dict (fast path)
-        if abilities_dict and ability_name in abilities_dict:
+        # Fast path: use pre-built index
+        if ability_name in self._index:
+            return len(self._index[ability_name]) > 0
+
+        # Fallback: check abilities dict then polymorphic search
+        if self._component.abilities and ability_name in self._component.abilities:
             return True
 
-        # 2. Polymorphic check via instances
-        return len(AbilityManager.get_abilities(ability_name, instances)) > 0
+        return len(AbilityManager._get_abilities_polymorphic(
+            ability_name, self._instances
+        )) > 0
 
-    @staticmethod
-    def has_pdc_ability(instances: List['Ability']) -> bool:
-        """
-        Check if any ability is a Point Defense weapon.
+    def has_ability_with_tag(self, tag: str) -> bool:
+        """Check if any ability has a specific tag.
 
-        Returns True if any ability has 'pdc' in its tags.
+        Generalized replacement for the old has_pdc_ability.
 
         Args:
-            instances: List of ability instances to search
+            tag: The tag to search for (e.g., 'pdc').
 
         Returns:
-            True if PDC ability found, False otherwise
+            True if any ability has the tag, False otherwise.
         """
-        for ab in instances:
-            # All ability instances have tags (set attribute in Ability base class)
-            if ab.tags and 'pdc' in ab.tags:
+        for ab in self._instances:
+            if ab.tags and tag in ab.tags:
                 return True
         return False
 
-    @staticmethod
-    def get_ui_rows(instances: List['Ability']) -> List[Dict[str, Any]]:
+    def has_pdc_ability(self) -> bool:
+        """Check if component has a Point Defense weapon ability.
+
+        Returns True if any ability has 'pdc' in its tags.
+        Thin wrapper around has_ability_with_tag.
         """
-        Aggregate UI rows from all ability instances.
+        return self.has_ability_with_tag('pdc')
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        """Aggregate UI rows from all ability instances.
 
         Each ability can provide display rows for detail panels.
         Format: [{'label': 'Thrust', 'value': '1500 N'}, ...]
 
-        Args:
-            instances: List of ability instances
-
         Returns:
-            Aggregated list of UI row dicts
+            Aggregated list of UI row dicts.
         """
         rows = []
-        for ab in instances:
-            # All ability instances have get_ui_rows (defined in Ability base class)
+        for ab in self._instances:
             rows.extend(ab.get_ui_rows())
         return rows
 
+    # ---- Private helpers ----
+
     @staticmethod
-    def instantiate_abilities(
+    def _instantiate(
         abilities_dict: Dict[str, Any],
         existing_instances: List['Ability'],
         component_ref: Any
     ) -> List['Ability']:
-        """
-        Instantiate or sync ability objects from an abilities dict.
+        """Instantiate or sync ability objects from an abilities dict.
 
         Preserves existing instances to maintain runtime state (cooldowns, energy).
-        Adds new abilities, removes obsolete ones.
 
         Args:
-            abilities_dict: Dict of ability definitions from component data
-            existing_instances: Current ability instances (may be empty)
-            component_ref: Reference to the owning Component
+            abilities_dict: Dict of ability definitions from component data.
+            existing_instances: Current ability instances (may be empty).
+            component_ref: Reference to the owning Component.
 
         Returns:
-            New list of ability instances
+            New list of ability instances.
         """
         from game.simulation.components.abilities import ABILITY_REGISTRY, create_ability
 
-        # 1. Map existing instances for quick lookup
-        # Key: (ability_type_name, index_in_that_type)
         existing_map: Dict[str, List['Ability']] = {}
         for ab in existing_instances:
             cls_name = ab.__class__.__name__
@@ -182,18 +227,15 @@ class AbilityManager:
 
             items = data if isinstance(data, list) else [data]
 
-            # Get the target class for this registry entry
             target = ABILITY_REGISTRY[name]
             target_cls_name = target.__name__ if isinstance(target, type) else None
 
             for item in items:
-                # Heuristic: Match by Target Class Name if known
                 match_name = target_cls_name or name
 
                 found_existing = False
                 if match_name in existing_map and existing_map[match_name]:
                     ab = existing_map[match_name].pop(0)
-                    # All ability instances have sync_data (defined in Ability base class)
                     ab.sync_data(item)
                     new_instances.append(ab)
                     found_existing = True
@@ -204,3 +246,94 @@ class AbilityManager:
                         new_instances.append(ab)
 
         return new_instances
+
+    @staticmethod
+    def _get_abilities_polymorphic(
+        ability_name: str, instances: List['Ability']
+    ) -> List['Ability']:
+        """Polymorphic ability search using the ABILITY_REGISTRY.
+
+        Used as fallback when the MRO index doesn't contain the requested name.
+
+        Args:
+            ability_name: The ability class name to search for.
+            instances: List of ability instances to search.
+
+        Returns:
+            List of matching ability instances.
+        """
+        from game.simulation.components.abilities import ABILITY_REGISTRY
+
+        target_class = None
+        if ability_name in ABILITY_REGISTRY:
+            val = ABILITY_REGISTRY[ability_name]
+            if isinstance(val, type):
+                target_class = val
+
+        found = []
+        for ab in instances:
+            if target_class and isinstance(ab, target_class):
+                found.append(ab)
+            elif target_class is not None:
+                # [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
+                for cls in ab.__class__.mro():
+                    if cls.__name__ == ability_name:
+                        found.append(ab)
+                        break
+
+        return found
+
+    # ---- DEPRECATED static methods (kept for transition) ----
+
+    @staticmethod
+    def get_abilities_static(
+        ability_name: str, instances: List['Ability']
+    ) -> List['Ability']:
+        """DEPRECATED: Use instance get_abilities() instead."""
+        return AbilityManager._get_abilities_polymorphic(ability_name, instances)
+
+    @staticmethod
+    def get_ability_static(
+        ability_name: str, instances: List['Ability']
+    ) -> Optional['Ability']:
+        """DEPRECATED: Use instance get_ability() instead."""
+        abilities = AbilityManager._get_abilities_polymorphic(ability_name, instances)
+        return abilities[0] if abilities else None
+
+    @staticmethod
+    def has_ability_static(
+        ability_name: str,
+        instances: List['Ability'],
+        abilities_dict: Dict = None
+    ) -> bool:
+        """DEPRECATED: Use instance has_ability() instead."""
+        if abilities_dict and ability_name in abilities_dict:
+            return True
+        return len(AbilityManager._get_abilities_polymorphic(ability_name, instances)) > 0
+
+    @staticmethod
+    def has_pdc_ability_static(instances: List['Ability']) -> bool:
+        """DEPRECATED: Use instance has_pdc_ability() instead."""
+        for ab in instances:
+            if ab.tags and 'pdc' in ab.tags:
+                return True
+        return False
+
+    @staticmethod
+    def get_ui_rows_static(instances: List['Ability']) -> List[Dict[str, Any]]:
+        """DEPRECATED: Use instance get_ui_rows() instead."""
+        rows = []
+        for ab in instances:
+            rows.extend(ab.get_ui_rows())
+        return rows
+
+    @staticmethod
+    def instantiate_abilities_static(
+        abilities_dict: Dict[str, Any],
+        existing_instances: List['Ability'],
+        component_ref: Any
+    ) -> List['Ability']:
+        """DEPRECATED: Use instance instantiate_and_index() instead."""
+        return AbilityManager._instantiate(
+            abilities_dict, existing_instances, component_ref
+        )
