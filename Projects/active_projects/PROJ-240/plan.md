@@ -24,7 +24,12 @@
 **Active Phase:** Planning
 **Last Action:** Phase B swarm analysis complete, plan written with line numbers and code snippets
 **Next Action:** Begin Phase 1 -- write tests for ShipComponentManager
-**Blockers:** None
+**Blockers:** PROJ-241 (Component Decomposition) and PROJ-243 (Mid-Battle Fix) should complete first.
+**Cross-project notes:**
+- PROJ-243 adds `fleet_attack_bonus`/`fleet_defense_bonus` to Ship.__init__ — Phase 4 must incorporate these
+- PROJ-241 stabilizes Component internal structure before ShipComponentManager wraps it
+- After Phase 2, run simulation tests as performance checkpoint (9 delegates is a lot)
+- Phase 2 should add `ship.set_event_bus(bus)` facade method to avoid 3-level delegation chain
 
 ## Overview
 `game/simulation/entities/ship.py` is 850 lines with 9+ distinct responsibilities spread across __init__, component lifecycle, combat orchestration, caching, resource tracking, AI state, and serialization. Several responsibilities have already been partially extracted (ShipStatsCalculator, ShipCombatEngine, ShipSerializer, ShipPhysicsMixin, ShipStatQuerier, ShipValidatorHelper, ShipFormation) but the core class still owns component lifecycle management and combat orchestration directly. This project extracts ShipComponentManager and ShipCombatManager as proper delegates, fixes cache safety bugs, and reduces Ship to ~300 lines acting as a pure facade.

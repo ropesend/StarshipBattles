@@ -1,48 +1,35 @@
-# Phase 2 Checklist: Rename All Call Sites
+# Phase 2 Checklist: Update Test Fixtures and Verify Full Suite
 **Status:** Not Started
 
-## Task 2.1: Update BattleService._start_battle() call site [Simple]
-**File:** `game/simulation/services/battle_service.py`
-**Tests:** `pytest tests/unit/simulation/services/test_battle_service.py -v`
-- [ ] Lines 207-209: Change keyword args in `self._engine.start()` call:
-  ```python
-  # Old:
-  self._engine.start(
-      team1_ships=self._team0_ships,
-      team2_ships=self._team1_ships,
-  # New:
-  self._engine.start(
-      team0_ships=self._team0_ships,
-      team1_ships=self._team1_ships,
-  ```
-- [ ] Run `pytest tests/unit/simulation/services/test_battle_service.py -v`
+## Task 2.1: Update tests/fixtures/battle.py [Simple]
+**File:** `tests/fixtures/battle.py`
+**Tests:** `pytest tests/unit/simulation/ tests/integration/fleet_combat/ -v`
+- [ ] Lines 62-63: `team1_count` -> `team0_count`, `team2_count` -> `team1_count`
+- [ ] Lines 74-75: Update docstrings
+- [ ] Lines 84-97: Rename team 0 ship creation block (`team1_ships` -> `team0_ships`, `Team1Ship` -> `Team0Ship`)
+- [ ] Lines 99-112: Rename team 1 ship creation block (`team2_ships` -> `team1_ships`, `Team2Ship` -> `Team1Ship`)
+- [ ] Line 115: `engine.start(team1_ships, team2_ships)` -> `engine.start(team0_ships, team1_ships)`
+- [ ] Run `pytest tests/unit/simulation/systems/ -v`
+**Notes:** Ship names change from `Team1Ship0` to `Team0Ship0`. Any tests asserting on ship names will need updating.
+
+## Task 2.2: Update test callers [Simple]
+**File:** `tests/integration/fleet_combat/test_service_integration.py`
+**Tests:** `pytest tests/integration/fleet_combat/ -v`
+- [ ] Line 143: `team1_count=2, team2_count=2` -> `team0_count=2, team1_count=2`
+- [ ] Lines 146-147: Verify local vars already correct (filter by `team_id`)
 **Notes:**
 
-## Task 2.2: Update BattleScreen.start() signature and body [Simple]
-**File:** `game/ui/screens/battle_screen.py`
+## Task 2.3: Update test docstrings [Simple]
+**File:** `tests/unit/ui/test_battle_screen_simulation.py`
 **Tests:** `pytest tests/unit/ui/test_battle_screen_simulation.py -v`
-- [ ] Line 226: Rename parameter `team1_ships` -> `team0_ships` and `team2_ships` -> `team1_ships` in signature
-- [ ] Line 234: Update docstring `team1_ships: List of ships for team 0` -> `team0_ships: List of ships for team 0`
-- [ ] Line 235: Update docstring `team2_ships: List of ships for team 1` -> `team1_ships: List of ships for team 1`
-- [ ] Line 260: `for ship in team1_ships:` -> `for ship in team0_ships:`
-- [ ] Line 262: `for ship in team2_ships:` -> `for ship in team1_ships:`
-- [ ] Run `pytest tests/unit/ui/test_battle_screen_simulation.py -v`
-**Notes:** BattleScreen.start() is called with positional args from test, so rename is safe.
-
-## Task 2.3: Update create_manual_battle() signature and body [Simple]
-**File:** `game/ui/services/battle_factories.py`
-**Tests:** `pytest tests/unit/ui/ -v`
-- [ ] Line 81: `team1_ships: List['Ship']` -> `team0_ships: List['Ship']`
-- [ ] Line 82: `team2_ships: List['Ship']` -> `team1_ships: List['Ship']`
-- [ ] Line 90: Update docstring `team1_ships: Ships for team 0` -> `team0_ships: Ships for team 0`
-- [ ] Line 91: Update docstring `team2_ships: Ships for team 1` -> `team1_ships: Ships for team 1`
-- [ ] Line 105: `controller.add_ships(team1_ships, 0)` -> `controller.add_ships(team0_ships, 0)`
-- [ ] Line 106: `controller.add_ships(team2_ships, 1)` -> `controller.add_ships(team1_ships, 1)`
+- [ ] Line 90: Update docstring `"team1 and team2"` -> `"team0 and team1"`
 **Notes:**
 
-## Task 2.4: Update App.start_battle() signature and call [Simple]
-**File:** `game/app.py`
-**Tests:** Manual verification (App is top-level entry point)
-- [ ] Line 511: `def start_battle(self, team1_ships, team2_ships, headless=False):` -> `def start_battle(self, team0_ships, team1_ships, headless=False):`
-- [ ] Line 516: `controller = create_manual_battle(team1_ships, team2_ships, headless=headless)` -> `controller = create_manual_battle(team0_ships, team1_ships, headless=headless)`
-**Notes:** Check all callers of `App.start_battle()` -- should be called from setup_screen with positional args.
+## Task 2.4: Search for any remaining occurrences [Simple]
+**Tests:** `python scripts/test_sharded.py`
+- [ ] `grep -r "team2_ships" game/ tests/` -- must return zero results
+- [ ] `grep -rn "team1_ships" game/` -- verify every remaining occurrence maps to `team_id == 1`
+- [ ] `grep -rn "team1_count" tests/` -- verify every remaining occurrence maps to team 1
+- [ ] `grep -rn "team1.*team 0\|team2.*team 1" game/ tests/` -- must return zero results
+- [ ] Run full test suite: `python scripts/test_sharded.py` -- all tests pass
+**Notes:**
