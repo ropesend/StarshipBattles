@@ -167,11 +167,12 @@ range heading upward, ensuring they reach full speed before engagement.
 Hit rates are computed from *resolved* shots only — projectiles still in
 flight when the test ends are excluded from the hit/miss count.
 
-#### Modifier Tests (6 tests)
+#### Stat Modifier Tests
 
-| Subcategory | Tests | Description |
-|-------------|-------|-------------|
-| **Stat Modifiers** | 6 tests | Damage/range/reload/thrust/accuracy/arc multipliers |
+Each modifier has its own category under the "Modifiers" group. See the File Structure
+section for the full list of `mod_*_scenarios.py` files (DamageMultiplier, RangeMultiplier,
+ReloadMultiplier, ThrustMultiplier, AccuracyAdditive, ArcSet, EnduranceMultiplier,
+ConsumptionMultiplier, ModifierStacking).
 
 #### Propulsion Tests (9 tests)
 
@@ -559,6 +560,7 @@ Starship Battles/
         │
         │   # Ability-specific categories (one file per ability)
         ├── tohit_attack_scenarios.py        # ToHitAttackModifier (TOHIT-ATK-001 to 005)
+        ├── tohit_attack_fleet_scenarios.py  # ToHitAttackModifier fleet-level (TOHIT-ATK-FLEET-*)
         ├── tohit_defense_scenarios.py       # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
         ├── shield_projection_scenarios.py   # ShieldProjection (SHIELD-PROJ-001 to 007, 005B, METALS)
         ├── shield_regen_scenarios.py        # ShieldRegeneration (SHIELD-REGEN-001 to 007)
@@ -572,7 +574,17 @@ Starship Battles/
         ├── beam_scenarios.py                # BeamWeapon (BEAMWEAPON-*, BEAMWEAPON-RES-*)
         ├── projectile_scenarios.py          # Projectile (PROJECTILE-*, PROJECTILE-RES-*)
         ├── seeker_scenarios.py              # Seeker (SEEKER-*)
-        ├── modifier_scenarios.py            # Stat modifiers (MOD-*)
+        │
+        │   # Stat Modifier Categories (one file per modifier type)
+        ├── mod_damage_scenarios.py          # DamageMultiplier (MOD-DMG-*)
+        ├── mod_range_scenarios.py           # RangeMultiplier (MOD-RANGE-*)
+        ├── mod_reload_scenarios.py          # ReloadMultiplier (MOD-RELOAD-*)
+        ├── mod_thrust_scenarios.py          # ThrustMultiplier (MOD-THRUST-*)
+        ├── mod_accuracy_scenarios.py        # AccuracyAdditive (MOD-ACC-*)
+        ├── mod_arc_scenarios.py             # ArcSet (MOD-ARC-*)
+        ├── mod_endurance_scenarios.py       # EnduranceMultiplier (MOD-ENDUR-*)
+        ├── mod_consumption_scenarios.py     # ConsumptionMultiplier (MOD-CONSUME-*)
+        ├── mod_stacking_scenarios.py        # ModifierStacking (MOD-STACK-*)
         ├── propulsion_scenarios.py          # Movement (PROP-*)
         └── resource_scenarios.py            # Resources (RESOURCE-*)
 ```

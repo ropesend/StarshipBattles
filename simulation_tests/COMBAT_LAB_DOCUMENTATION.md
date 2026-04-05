@@ -88,11 +88,20 @@ Starship Battles/
 │       ├── beam_scenarios.py           # Beam weapon tests
 │       ├── projectile_scenarios.py     # Projectile weapon tests
 │       ├── seeker_scenarios.py         # Seeker/missile tests
-│       ├── modifier_scenarios.py       # Stat modifier tests
+│       ├── mod_damage_scenarios.py      # DamageMultiplier (MOD-DMG-*)
+│       ├── mod_range_scenarios.py      # RangeMultiplier (MOD-RANGE-*)
+│       ├── mod_reload_scenarios.py     # ReloadMultiplier (MOD-RELOAD-*)
+│       ├── mod_thrust_scenarios.py     # ThrustMultiplier (MOD-THRUST-*)
+│       ├── mod_accuracy_scenarios.py   # AccuracyAdditive (MOD-ACC-*)
+│       ├── mod_arc_scenarios.py        # ArcSet (MOD-ARC-*)
+│       ├── mod_endurance_scenarios.py  # EnduranceMultiplier (MOD-ENDUR-*)
+│       ├── mod_consumption_scenarios.py # ConsumptionMultiplier (MOD-CONSUME-*)
+│       ├── mod_stacking_scenarios.py   # ModifierStacking (MOD-STACK-*)
 │       ├── propulsion_scenarios.py     # Movement/physics tests
 │       ├── resource_scenarios.py       # Energy/ammo tests
 │       │   # Ability-specific categories (one file per ability)
 │       ├── tohit_attack_scenarios.py   # ToHitAttackModifier (TOHIT-ATK-001 to 005)
+│       ├── tohit_attack_fleet_scenarios.py # ToHitAttackModifier fleet-wide (TOHIT-ATK-FLEET-*)
 │       ├── tohit_defense_scenarios.py  # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
 │       ├── shield_projection_scenarios.py # ShieldProjection (SHIELD-PROJ-001 to 007+)
 │       ├── shield_regen_scenarios.py   # ShieldRegeneration (SHIELD-REGEN-001 to 007)
@@ -864,6 +873,7 @@ Test IDs follow the pattern: `RESOURCE-XXX`.
 | **RESOURCE-006** | Projectile Ammo Consumption | 100 shots, ammo consumed = 100 |
 | **RESOURCE-007** | Ammo Depletion Stops Projectile | 10 shots, ammo = 0 |
 | **RESOURCE-008** | Seeker Ammo Consumption | 100 launches (hits not tracked) |
+| **RESOURCE-009** | Energy Contention (Beam + Shield Regen) | shared pool depletion |
 
 ### Resource System Mechanics
 
@@ -1274,7 +1284,7 @@ The margin is chosen to be ≥3× the standard error for the sample size.
 ## Credits & Version History
 
 **Created**: January 2026
-**Last Updated**: March 2026
+**Last Updated**: April 2026
 
 **Combat Lab System Design**: Claude + User collaboration
 **Key Components**:

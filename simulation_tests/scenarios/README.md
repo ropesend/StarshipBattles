@@ -10,16 +10,18 @@ Scenario files are auto-discovered by `run_tests.py` — any file matching
 
 ### Ability-Specific Categories (ComparisonScenario pattern)
 
-| File | Ability | Tests | Description |
-|------|---------|-------|-------------|
-| `tohit_attack_scenarios.py` | ToHitAttackModifier | 4 | Sensor accuracy: basic, stacking, negative |
-| `tohit_defense_scenarios.py` | ToHitDefenseModifier | 4 | ECM defense: basic, stacking, negative |
-| `shield_projection_scenarios.py` | ShieldProjection | 10 | Shield absorption, overflow, stacking, energy/metals |
-| `shield_regen_scenarios.py` | ShieldRegeneration | 6 | Regen rate, regen > damage, stacking, energy resource |
-| `armor_layer_scenarios.py` | ArmorLayer | 3 | Layer damage flow, overflow to CORE, stacking |
-| `emissive_armor_scenarios.py` | EmissiveArmor | 5 | Damage reduction, stacking (same/diff group), negative |
-| `cnc_scenarios.py` | CommandAndControl | 5 | Beam/proj/shield/engine disabled without C&C, bridge destruction |
-| `sra_scenarios.py` | ShieldRegeneratingArmor | 5 | Shield recharge, cap, destruction, stacking |
+| File | Ability | Test IDs | Description |
+|------|---------|----------|-------------|
+| `tohit_attack_scenarios.py` | ToHitAttackModifier | TOHIT-ATK-001 to 005 | Sensor accuracy: basic, stacking, negative |
+| `tohit_attack_fleet_scenarios.py` | ToHitAttackModifier (fleet) | TOHIT-ATK-FLEET-* | Fleet-level sensor accuracy |
+| `tohit_defense_scenarios.py` | ToHitDefenseModifier | TOHIT-DEF-001 to 004 | ECM defense: basic, stacking, negative |
+| `shield_projection_scenarios.py` | ShieldProjection | SHIELD-PROJ-* | Shield absorption, overflow, stacking, energy/metals |
+| `shield_regen_scenarios.py` | ShieldRegeneration | SHIELD-REGEN-001 to 007 | Regen rate, regen > damage, stacking, energy resource |
+| `armor_layer_scenarios.py` | ArmorLayer | ARMOR-* | Layer damage flow, overflow to CORE, stacking |
+| `emissive_armor_scenarios.py` | EmissiveArmor | EMISSIVE-001 to 007 | Damage reduction, stacking (same/diff group), negative |
+| `cnc_scenarios.py` | CommandAndControl | CNC-001 to 006 | Beam/proj/shield/engine disabled without C&C, bridge destruction |
+| `sra_scenarios.py` | ShieldRegeneratingArmor | SRA-* | Shield recharge, cap, destruction, stacking |
+| `damage_pipeline_scenarios.py` | DamagePipeline | PIPELINE-* | Multi-defense stacking integration tests |
 
 ### Weapon & System Tests
 
@@ -28,9 +30,22 @@ Scenario files are auto-discovered by `run_tests.py` — any file matching
 | `beam_scenarios.py` | BeamWeapon | 23 | Accuracy at ranges, moving targets, HT precision, resource |
 | `projectile_scenarios.py` | Projectile | 14 | Stationary/moving targets, damage consistency, resource |
 | `seeker_scenarios.py` | Seeker | 11 | Speed, endurance, turn rate (×2), damage, HP, resource, PDC |
-| `modifier_scenarios.py` | Modifiers | 6 | Damage, range, reload, thrust, accuracy, arc |
 | `propulsion_scenarios.py` | Propulsion | 9 | Engine physics, thruster rotation, mass effects |
 | `resource_scenarios.py` | Resources | 9 | Fuel, energy, ammo consumption/depletion |
+
+### Stat Modifier Categories
+
+| File | Category | Test ID Prefix |
+|------|----------|---------------|
+| `mod_damage_scenarios.py` | DamageMultiplier | MOD-DMG-* |
+| `mod_range_scenarios.py` | RangeMultiplier | MOD-RANGE-* |
+| `mod_reload_scenarios.py` | ReloadMultiplier | MOD-RELOAD-* |
+| `mod_thrust_scenarios.py` | ThrustMultiplier | MOD-THRUST-* |
+| `mod_accuracy_scenarios.py` | AccuracyAdditive | MOD-ACC-* |
+| `mod_arc_scenarios.py` | ArcSet | MOD-ARC-* |
+| `mod_endurance_scenarios.py` | EnduranceMultiplier | MOD-ENDUR-* |
+| `mod_consumption_scenarios.py` | ConsumptionMultiplier | MOD-CONSUME-* |
+| `mod_stacking_scenarios.py` | ModifierStacking | MOD-STACK-* |
 
 ### Framework Files
 
@@ -43,7 +58,7 @@ Scenario files are auto-discovered by `run_tests.py` — any file matching
 
 ## Beam Weapon Tests
 
-### Test Suite Overview (18 Total Tests)
+### Test Suite Overview
 
 #### Standard Tests (11 tests, 500 ticks, ±10% margin)
 

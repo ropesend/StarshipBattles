@@ -131,13 +131,6 @@ from simulation_tests.scenarios.mod_thrust_scenarios import (
     ModThrustDynamicVelocityScenario,
     ModThrustAccelerationScenario,
 )
-from simulation_tests.scenarios.mod_damage_scenarios import (
-    ModDmg001_StandardBoostScenario,
-    ModDmg002_IdentityBoostScenario,
-    ModDmg003_MaxBoostScenario,
-    ModDmg004_BoostVsBaselineScenario,
-    ModDmg005_MaxVsMinScenario,
-)
 from simulation_tests.scenarios.propulsion_scenarios import (
     PropEngineAccelerationScenario,
     PropDualEngineScenario,
@@ -183,11 +176,6 @@ __all__ = [
     'RangeBoostComparisonScenario',
     'RangeBoostOutOfRangeScenario',
     # Modifier - Damage Multiplier scenarios
-    'ModDmg001_StandardBoostScenario',
-    'ModDmg002_IdentityBoostScenario',
-    'ModDmg003_MaxBoostScenario',
-    'ModDmg004_BoostVsBaselineScenario',
-    'ModDmg005_MaxVsMinScenario',
     # Propulsion scenarios
     'PropEngineAccelerationScenario',
     'PropDualEngineScenario',

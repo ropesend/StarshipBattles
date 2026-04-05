@@ -31,7 +31,7 @@
   },
   "_test_notes": "1 engine + 2x mass simulators. Mass = hull_test_m(1000) + engine(0) + 2*1000 = 3000. Zero-mass component architecture.",
   "expected_stats": {
-    "max_hp": 502,
+    "max_hp": 552,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,

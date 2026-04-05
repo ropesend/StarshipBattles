@@ -11,6 +11,11 @@ Test Coverage:
 - MOD-RANGE-003: Range boost param=1 (2x), target at 900px (beyond base, within modified)
 - MOD-RANGE-004: Comparison: unmodified (out of range at 1200) vs boosted (in range at 1200)
 - MOD-RANGE-005: Range boost param=1 (2x), target at 1700px (beyond modified range) — no damage
+
+Ship Files:
+- Test_Attacker_Beam_RangeBoost.json — test_beam_med_acc_1dmg + test_range_boost(1), range 800->1600 (2^1=2x)
+- Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg (no modifier, range=800)
+- Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 """
 
 from simulation_tests.scenarios.base import TestMetadata
@@ -26,9 +31,11 @@ from simulation_tests.test_constants import (
 )
 
 
-# Unmodified beam ship (no modifiers, range=800)
+# COMMON SHIP REFERENCES
+# Test_Attacker_Beam_RangeBoost.json — test_beam_med_acc_1dmg + test_range_boost(1), range 800->1600 (2^1=2x)
+# Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg (no modifier, range=800)
+# Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 UNMODIFIED_BEAM_SHIP = "Test_Attacker_Beam360_Med.json"
-# Standard stationary target with extreme HP
 STATIONARY_TARGET = "Test_Target_Stationary.json"
 
 
@@ -47,15 +54,15 @@ class RangeBoostInRangeScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-001",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="RangeMultiplier",
         name="Range boost 2x — target at 1200px (in range)",
         summary="Verify test_range_boost(1) doubles beam range to 1600; target at 1200px takes damage",
         conditions=[
-            f"Base beam range: {MOD_BASE_BEAM_RANGE}",
-            f"Range multiplier: 2^{RANGE_BOOST_PARAM} = 2x",
-            f"Expected modified range: {MOD_EXPECTED_RANGE}",
-            "Target at 1200px (beyond base 800, within modified 1600)",
+            f"Attacker: {RANGE_BOOST_ATTACKER_SHIP} (test_beam_med_acc_1dmg + test_range_boost({RANGE_BOOST_PARAM}), range {MOD_BASE_BEAM_RANGE}->{MOD_EXPECTED_RANGE})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            "Distance: 1200 pixels (beyond base 800, within modified 1600)",
+            f"Test Duration: {MODIFIER_TEST_TICKS} ticks",
         ],
         edge_cases=[],
         expected_outcome=f"Beam range = {MOD_EXPECTED_RANGE}, damage is dealt at 1200px",
@@ -134,14 +141,15 @@ class RangeIdentityScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-002",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="RangeMultiplier",
         name="Unmodified beam — range identity (800px)",
         summary="Verify unmodified beam retains base range of 800px; target at 400px takes damage",
         conditions=[
-            f"Base beam range: {MOD_BASE_BEAM_RANGE}",
-            "No range modifier applied",
-            "Target at 400px (well within base range)",
+            f"Attacker: {UNMODIFIED_BEAM_SHIP} (test_beam_med_acc_1dmg, no modifier, range={MOD_BASE_BEAM_RANGE})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            "Distance: 400 pixels (well within base range)",
+            f"Test Duration: {MODIFIER_TEST_TICKS} ticks",
         ],
         edge_cases=["2^0 = 1x would be identity; here we verify no modifier at all"],
         expected_outcome=f"Beam range = {MOD_BASE_BEAM_RANGE}, damage dealt at 400px",
@@ -215,14 +223,15 @@ class RangeBoostBeyondBaseScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-003",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="RangeMultiplier",
         name="Range boost 2x — target at 900px (beyond base range)",
         summary="Verify range-boosted beam hits at 900px, confirming extended range beyond base 800",
         conditions=[
-            f"Base beam range: {MOD_BASE_BEAM_RANGE}",
-            f"Modified range: {MOD_EXPECTED_RANGE} (2^{RANGE_BOOST_PARAM} = 2x)",
-            "Target at 900px (beyond base 800, within modified 1600)",
+            f"Attacker: {RANGE_BOOST_ATTACKER_SHIP} (test_beam_med_acc_1dmg + test_range_boost({RANGE_BOOST_PARAM}), range {MOD_BASE_BEAM_RANGE}->{MOD_EXPECTED_RANGE})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            "Distance: 900 pixels (beyond base 800, within modified 1600)",
+            f"Test Duration: {MODIFIER_TEST_TICKS} ticks",
         ],
         edge_cases=["900px is just beyond the base 800px cutoff"],
         expected_outcome="Beam hits target at 900px thanks to range modifier",
@@ -297,14 +306,16 @@ class RangeBoostComparisonScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-004",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="RangeMultiplier",
         name="Comparison: unmodified vs range-boosted at 1200px",
         summary="Unmodified beam deals 0 damage at 1200px (out of range); boosted beam deals damage",
         conditions=[
-            f"Baseline: unmodified beam (range={MOD_BASE_BEAM_RANGE}) at 1200px",
-            f"Variant: range-boosted beam (range={MOD_EXPECTED_RANGE}) at 1200px",
-            "1200px is beyond base range but within modified range",
+            f"Baseline attacker: {UNMODIFIED_BEAM_SHIP} (test_beam_med_acc_1dmg, no modifier, range={MOD_BASE_BEAM_RANGE})",
+            f"Variant attacker: {RANGE_BOOST_ATTACKER_SHIP} (test_beam_med_acc_1dmg + test_range_boost({RANGE_BOOST_PARAM}), range={MOD_EXPECTED_RANGE})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            "Distance: 1200 pixels (beyond base range, within modified range)",
+            f"Test Duration: {MODIFIER_TEST_TICKS} ticks",
         ],
         edge_cases=[],
         expected_outcome="Baseline deals 0 damage, variant deals > 0 damage",
@@ -374,13 +385,15 @@ class RangeBoostOutOfRangeScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-005",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="RangeMultiplier",
         name="Range boost 2x — target at 1700px (out of range)",
         summary="Verify range-boosted beam (1600px range) cannot hit target at 1700px",
         conditions=[
-            f"Modified range: {MOD_EXPECTED_RANGE} (2^{RANGE_BOOST_PARAM} = 2x)",
-            "Target at 1700px (beyond modified range of 1600)",
+            f"Attacker: {RANGE_BOOST_ATTACKER_SHIP} (test_beam_med_acc_1dmg + test_range_boost({RANGE_BOOST_PARAM}), range {MOD_BASE_BEAM_RANGE}->{MOD_EXPECTED_RANGE})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            "Distance: 1700 pixels (beyond modified range of 1600)",
+            f"Test Duration: {MODIFIER_TEST_TICKS} ticks",
         ],
         edge_cases=["Target just beyond modified max range"],
         expected_outcome="No damage dealt, no shots fired",

@@ -1,294 +1,413 @@
 """
-Endurance Multiplier Modifier Test Scenarios (MOD-ENDUR-001 through MOD-ENDUR-003)
+Endurance Multiplier Modifier Test Scenarios (MOD-ENDUR-001 through MOD-ENDUR-005)
 
-Test scenarios that validate the endurance_mult modifier's effect on seeker weapon
-endurance. The test_endurance_boost modifier multiplies endurance with formula param.
-Base component test_seeker_slow has endurance=10.0 seconds.
+Behavioral simulation tests for the endurance_mult modifier. Endurance controls
+how long a seeker missile stays alive after launch. At distances beyond the
+missile's max travel (speed * endurance), the missile self-destructs mid-flight
+and deals zero damage. The endurance modifier directly gates effective range.
+
+Test component: test_seeker_endurance_test
+  - projectile_speed=1000 (10 px/tick), endurance=3.0s (300 ticks)
+  - Max travel: 1000 * 3.0 = 3000px (base)
+  - reload=999.0 (single fire), damage=100
+
+Ship Files:
+- Test_Attacker_Seeker_EndurTest_Base.json — test_seeker_endurance_test (no modifier)
+  + test_storage_ammo_100k, endurance=3.0s, max travel=3000px
+- Test_Attacker_Seeker_EndurTest_Boost.json — test_seeker_endurance_test
+  + test_endurance_boost(2) + test_storage_ammo_100k, endurance=6.0s, max travel=6000px
+- Test_Attacker_Seeker_EndurTest_Penalty.json — test_seeker_endurance_test
+  + test_endurance_penalty(0.5) + test_storage_ammo_100k, endurance=1.5s, max travel=1500px
+- Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, mass=400, stationary)
 
 Test Coverage:
-- MOD-ENDUR-001: Endurance boost value=2 (2x) — seeker.endurance == 20.0, damage dealt
-- MOD-ENDUR-002: Unmodified seeker (identity) — seeker.endurance == 10.0, damage dealt
-- MOD-ENDUR-003: Comparison: unmodified vs boosted at point blank — both deal damage,
-                 endurance stats differ
+- MOD-ENDUR-001: Stat gate — boost doubles endurance (3.0->6.0s), missile hits at point-blank
+- MOD-ENDUR-002: Boost extends range — base expires at 4000px, boosted reaches (binary)
+- MOD-ENDUR-003: Near-limit reach — base barely reaches at 2500px, boosted comfortable
+- MOD-ENDUR-004: Penalty shortens range — base reaches at 2000px, penalized expires (binary)
+- MOD-ENDUR-005: Stat gate — penalty halves endurance (3.0->1.5s), missile hits at point-blank
 """
 
 from simulation_tests.scenarios.base import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
-from simulation_tests.scenarios.validation import check_approx, check_true
+from simulation_tests.scenarios.validation import check_approx, check_exact, check_true
 from simulation_tests.test_constants import (
     POINT_BLANK_DISTANCE,
     STANDARD_SEED,
-    MODIFIER_TEST_TICKS,
 )
 
+# =============================================================================
+# COMMON SHIP REFERENCES
+# =============================================================================
 
-# Ship references
-ENDURANCE_BOOST_ATTACKER = "Test_Attacker_Seeker_EndurBoost.json"
-ENDURANCE_BASE_ATTACKER = "Test_Attacker_Seeker_EndurBase.json"
-STATIONARY_TARGET = "Test_Target_Stationary.json"
+# test_seeker_endurance_test (speed=1000, endurance=3.0s, max=3000px) + test_storage_ammo_100k
+BASE_SHIP = "Test_Attacker_Seeker_EndurTest_Base.json"
+# test_seeker_endurance_test + test_endurance_boost(2), endurance=6.0s, max=6000px
+BOOST_SHIP = "Test_Attacker_Seeker_EndurTest_Boost.json"
+# test_seeker_endurance_test + test_endurance_penalty(0.5), endurance=1.5s, max=1500px
+PENALTY_SHIP = "Test_Attacker_Seeker_EndurTest_Penalty.json"
+# test_armor_extreme_hp (1B HP, mass=400, stationary)
+TARGET_SHIP = "Test_Target_Stationary.json"
 
-# Constants
-BASE_ENDURANCE = 10.0       # test_seeker_slow base endurance (seconds)
-ENDURANCE_BOOST_VALUE = 2   # modifier value=2 → multiplier of 2x
-EXPECTED_ENDURANCE = 20.0   # 10.0 * 2 = 20.0
+# =============================================================================
+# SEEKER CONSTANTS (from test_seeker_endurance_test component)
+# =============================================================================
+
+BASE_ENDURANCE = 3.0          # seconds
+PROJECTILE_SPEED = 1000       # raw speed (10 px/tick after /100)
+SEEKER_DAMAGE = 100           # damage per hit
+MAX_TRAVEL_BASE = PROJECTILE_SPEED * BASE_ENDURANCE     # 3000px
+
+BOOST_PARAM = 2               # test_endurance_boost value
+BOOSTED_ENDURANCE = BASE_ENDURANCE * BOOST_PARAM         # 6.0s
+MAX_TRAVEL_BOOSTED = PROJECTILE_SPEED * BOOSTED_ENDURANCE  # 6000px
+
+PENALTY_PARAM = 0.5           # test_endurance_penalty value
+PENALIZED_ENDURANCE = BASE_ENDURANCE * PENALTY_PARAM     # 1.5s
+MAX_TRAVEL_PENALIZED = PROJECTILE_SPEED * PENALIZED_ENDURANCE  # 1500px
+
+# Test distances chosen so binary outcomes depend on endurance
+BOOST_TEST_DISTANCE = 4000    # Base (3000px max) fails, Boosted (6000px max) reaches
+NEAR_LIMIT_DISTANCE = 2500    # Base (3000px max) barely reaches, Boosted comfortable
+PENALTY_TEST_DISTANCE = 2000  # Base (3000px max) reaches, Penalized (1500px max) fails
+
+# Tick budget: at 10 px/tick, 4000px takes 400 ticks. 500 ticks is sufficient.
+ENDURANCE_TEST_TICKS = 500
 
 
-# ============================================================================
-# MOD-ENDUR-001: Endurance Boost — seeker.endurance == 20.0
-# ============================================================================
+# =============================================================================
+# MOD-ENDUR-001: Stat Gate — Boost Doubles Endurance
+# =============================================================================
 
-class EnduranceBoostScenario(StaticTargetScenario):
+class ModEndur001_StatGateScenario(StaticTargetScenario):
     """
-    MOD-ENDUR-001: Verify endurance_mult modifier doubles seeker endurance.
+    MOD-ENDUR-001: Quick sanity — endurance modifier applied correctly.
 
-    Setup: Seeker with test_endurance_boost(value=2), target at point blank.
-    Data check: seeker.endurance == 20.0 (10.0 * 2)
-    Outcome check: damage_dealt > 0
+    Boosted seeker at point-blank: endurance==6.0s (3.0*2), missile hits,
+    damage==100. Confirms modifier loaded before behavioral tests run.
     """
     metadata = TestMetadata(
         test_id="MOD-ENDUR-001",
-        category="Modifiers",
-        subcategory="Endurance Multiplier",
-        name="Endurance boost 2x — seeker.endurance == 20.0",
-        summary="Verify test_endurance_boost(2) doubles seeker endurance to 20.0; target takes damage",
+        category="EnduranceMultiplier",
+        subcategory="EnduranceMultiplier",
+        name="Stat gate — boost doubles endurance (3.0->6.0s)",
+        summary=f"Verify test_endurance_boost(2) sets endurance to {BOOSTED_ENDURANCE}s; missile hits at point-blank",
         conditions=[
-            f"Base seeker endurance: {BASE_ENDURANCE}s",
-            f"Endurance multiplier: {ENDURANCE_BOOST_VALUE}x",
-            f"Expected modified endurance: {EXPECTED_ENDURANCE}s",
-            f"Target at {POINT_BLANK_DISTANCE}px (point blank)",
+            f"Attacker: {BOOST_SHIP} (test_seeker_endurance_test + test_endurance_boost({BOOST_PARAM}), endurance {BASE_ENDURANCE}->{BOOSTED_ENDURANCE}s)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
         ],
-        edge_cases=[],
-        expected_outcome=f"Seeker endurance = {EXPECTED_ENDURANCE}, damage is dealt",
-        pass_criteria=f"seeker.endurance == {EXPECTED_ENDURANCE} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Multiplicative modifier on endurance attribute"],
+        expected_outcome=f"seeker.endurance == {BOOSTED_ENDURANCE}, damage == {SEEKER_DAMAGE}",
+        pass_criteria=f"endurance == {BOOSTED_ENDURANCE} AND damage == {SEEKER_DAMAGE}",
+        max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        ui_priority=30,
-        tags=["modifier", "endurance_mult"],
+        tags=["modifier", "endurance_mult", "stat_gate"],
     )
 
-    attacker_ship = ENDURANCE_BOOST_ATTACKER
-    target_ship = STATIONARY_TARGET
+    attacker_ship = BOOST_SHIP
+    target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def custom_setup(self, battle_engine):
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            self.actual_endurance = seeker.endurance
-        else:
-            self.actual_endurance = None
+        self.actual_endurance = seeker.endurance if seeker else None
 
     def _collect_extra_results(self, battle_engine):
-        self.results['base_endurance'] = BASE_ENDURANCE
-        self.results['expected_endurance'] = EXPECTED_ENDURANCE
+        self.results['expected_endurance'] = BOOSTED_ENDURANCE
         self.results['actual_endurance'] = self.actual_endurance
-        self.results['distance'] = self.distance
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: seeker weapon exists
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        checks.append(check_true(
-            "Seeker Weapon Loaded", seeker is not None, phase="precondition",
-        ))
+        checks.append(check_true("Seeker Loaded", seeker is not None, phase="precondition"))
         if seeker is None:
             return checks
 
-        # Precondition: distance is correct
-        center_distance = (self.target.position - self.attacker.position).length()
+        # Data: endurance modifier applied
         checks.append(check_approx(
-            "Center Distance", float(POINT_BLANK_DISTANCE), center_distance,
-            tolerance=0.01, phase="precondition",
+            "Boosted Endurance", BOOSTED_ENDURANCE,
+            self.actual_endurance or 0.0, tolerance=0.001, phase="data",
         ))
 
-        # Data: seeker endurance is modified correctly
-        checks.append(check_approx(
-            "Modified Seeker Endurance", EXPECTED_ENDURANCE,
-            self.actual_endurance or 0.0, tolerance=0.001,
-            phase="data",
+        # Outcome: missile hit at point-blank
+        checks.append(check_exact(
+            "Missile Hit (100 damage)", float(SEEKER_DAMAGE),
+            float(self.damage_dealt), phase="outcome",
         ))
 
-        # Outcome: damage dealt (seeker reaches target at point blank)
-        checks.append(check_true(
-            "Damage Dealt",
-            self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
-        ))
         return checks
 
 
-# ============================================================================
-# MOD-ENDUR-002: Unmodified Seeker — Identity Check (endurance=10.0)
-# ============================================================================
+# =============================================================================
+# MOD-ENDUR-002: Boost Extends Range (Binary)
+# =============================================================================
 
-class EnduranceIdentityScenario(StaticTargetScenario):
+class ModEndur002_BoostExtendsRangeScenario(ComparisonScenario):
     """
-    MOD-ENDUR-002: Verify unmodified seeker has base endurance of 10.0s.
+    MOD-ENDUR-002: Prove endurance boost extends effective range.
 
-    Setup: Standard seeker (no modifier) at point blank.
-    Data check: seeker.endurance == 10.0 (identity, no modifier applied)
-    Outcome check: damage_dealt > 0
+    At 4000px, the base seeker (max 3000px) expires mid-flight and deals
+    zero damage. The boosted seeker (max 6000px) reaches the target and
+    deals 100 damage. This is the core behavioral test — endurance directly
+    determines whether the missile reaches its target.
     """
     metadata = TestMetadata(
         test_id="MOD-ENDUR-002",
-        category="Modifiers",
-        subcategory="Endurance Multiplier",
-        name="Unmodified seeker — endurance identity (10.0s)",
-        summary="Verify unmodified seeker retains base endurance of 10.0s; target takes damage",
+        category="EnduranceMultiplier",
+        subcategory="EnduranceMultiplier",
+        name=f"Boost extends range — base expires at {BOOST_TEST_DISTANCE}px, boosted reaches",
+        summary=(
+            f"Base (endurance={BASE_ENDURANCE}s, max={MAX_TRAVEL_BASE}px) expires at {BOOST_TEST_DISTANCE}px. "
+            f"Boosted (endurance={BOOSTED_ENDURANCE}s, max={MAX_TRAVEL_BOOSTED}px) reaches and hits."
+        ),
         conditions=[
-            f"Base seeker endurance: {BASE_ENDURANCE}s",
-            "No endurance modifier applied",
-            f"Target at {POINT_BLANK_DISTANCE}px (point blank)",
+            f"Baseline: {BASE_SHIP} (test_seeker_endurance_test, no modifier, endurance={BASE_ENDURANCE}s, max travel={MAX_TRAVEL_BASE}px)",
+            f"Variant: {BOOST_SHIP} (test_seeker_endurance_test + test_endurance_boost({BOOST_PARAM}), endurance={BOOSTED_ENDURANCE}s, max travel={MAX_TRAVEL_BOOSTED}px)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {BOOST_TEST_DISTANCE}px (beyond base max {MAX_TRAVEL_BASE}px, within boosted max {MAX_TRAVEL_BOOSTED}px)",
         ],
-        edge_cases=["Verifies no modifier at all — pure base value"],
-        expected_outcome=f"Seeker endurance = {BASE_ENDURANCE}, damage dealt",
-        pass_criteria=f"seeker.endurance == {BASE_ENDURANCE} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=[
+            f"Base missile self-destructs after {BASE_ENDURANCE}s ({int(BASE_ENDURANCE * 100)} ticks) having traveled {MAX_TRAVEL_BASE}px",
+            f"Boosted missile reaches target in {BOOST_TEST_DISTANCE // 10} ticks (well within {BOOSTED_ENDURANCE}s budget)",
+        ],
+        expected_outcome=f"Baseline: 0 damage (expired). Variant: {SEEKER_DAMAGE} damage (hit).",
+        pass_criteria=f"baseline_damage == 0 AND variant_damage == {SEEKER_DAMAGE}",
+        max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        ui_priority=31,
-        tags=["modifier", "endurance_mult"],
+        tags=["modifier", "endurance_mult", "range_gate", "binary"],
     )
 
-    attacker_ship = ENDURANCE_BASE_ATTACKER
-    target_ship = STATIONARY_TARGET
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = BOOST_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = BOOST_TEST_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify endurance values on variant
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_approx(
+                "Variant Endurance", BOOSTED_ENDURANCE,
+                seeker.endurance, tolerance=0.001, phase="data",
+            ))
+
+        # Outcome: base seeker expired (0 damage)
+        checks.append(check_exact(
+            "Base Seeker Expired (0 damage)", 0.0,
+            float(self.baseline_damage_dealt), phase="outcome",
+        ))
+
+        # Outcome: boosted seeker reached target
+        checks.append(check_exact(
+            f"Boosted Seeker Hit ({SEEKER_DAMAGE} damage)", float(SEEKER_DAMAGE),
+            float(self.variant_damage_dealt), phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-ENDUR-003: Near-Limit Reach (Both Hit)
+# =============================================================================
+
+class ModEndur003_NearLimitReachScenario(ComparisonScenario):
+    """
+    MOD-ENDUR-003: Both seekers reach target at 2500px, but base is near limit.
+
+    At 2500px, the base seeker (max 3000px) barely reaches with 500px margin.
+    The boosted seeker (max 6000px) reaches comfortably with 3500px margin.
+    Both deal 100 damage — this test verifies both work at moderate distance
+    and that endurance stat values differ even when outcomes match.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-ENDUR-003",
+        category="EnduranceMultiplier",
+        subcategory="EnduranceMultiplier",
+        name=f"Near-limit reach — both hit at {NEAR_LIMIT_DISTANCE}px",
+        summary=(
+            f"Both reach target at {NEAR_LIMIT_DISTANCE}px. "
+            f"Base margin: {MAX_TRAVEL_BASE - NEAR_LIMIT_DISTANCE}px. "
+            f"Boosted margin: {MAX_TRAVEL_BOOSTED - NEAR_LIMIT_DISTANCE}px."
+        ),
+        conditions=[
+            f"Baseline: {BASE_SHIP} (endurance={BASE_ENDURANCE}s, max={MAX_TRAVEL_BASE}px, margin={MAX_TRAVEL_BASE - NEAR_LIMIT_DISTANCE}px)",
+            f"Variant: {BOOST_SHIP} (endurance={BOOSTED_ENDURANCE}s, max={MAX_TRAVEL_BOOSTED}px, margin={MAX_TRAVEL_BOOSTED - NEAR_LIMIT_DISTANCE}px)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {NEAR_LIMIT_DISTANCE}px",
+        ],
+        edge_cases=[
+            f"Base seeker has only {MAX_TRAVEL_BASE - NEAR_LIMIT_DISTANCE}px margin — tests near-limit behavior",
+        ],
+        expected_outcome=f"Both: {SEEKER_DAMAGE} damage each",
+        pass_criteria=f"baseline_damage == {SEEKER_DAMAGE} AND variant_damage == {SEEKER_DAMAGE}",
+        max_ticks=ENDURANCE_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "endurance_mult", "near_limit"],
+    )
+
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = BOOST_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = NEAR_LIMIT_DISTANCE
+    expect_different_damage = False  # Both hit — same damage expected
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Outcome: both seekers reached target
+        checks.append(check_exact(
+            f"Base Seeker Hit ({SEEKER_DAMAGE} damage)", float(SEEKER_DAMAGE),
+            float(self.baseline_damage_dealt), phase="outcome",
+        ))
+        checks.append(check_exact(
+            f"Boosted Seeker Hit ({SEEKER_DAMAGE} damage)", float(SEEKER_DAMAGE),
+            float(self.variant_damage_dealt), phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-ENDUR-004: Penalty Shortens Range (Binary)
+# =============================================================================
+
+class ModEndur004_PenaltyShortensRangeScenario(ComparisonScenario):
+    """
+    MOD-ENDUR-004: Prove endurance penalty shortens effective range.
+
+    At 2000px, the base seeker (max 3000px) reaches the target and deals
+    100 damage. The penalized seeker (max 1500px) expires mid-flight and
+    deals zero damage. This tests the negative modifier bidirectionally.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-ENDUR-004",
+        category="EnduranceMultiplier",
+        subcategory="EnduranceMultiplier",
+        name=f"Penalty shortens range — penalized expires at {PENALTY_TEST_DISTANCE}px, base reaches",
+        summary=(
+            f"Base (endurance={BASE_ENDURANCE}s, max={MAX_TRAVEL_BASE}px) reaches at {PENALTY_TEST_DISTANCE}px. "
+            f"Penalized (endurance={PENALIZED_ENDURANCE}s, max={MAX_TRAVEL_PENALIZED}px) expires."
+        ),
+        conditions=[
+            f"Baseline: {BASE_SHIP} (test_seeker_endurance_test, no modifier, endurance={BASE_ENDURANCE}s, max travel={MAX_TRAVEL_BASE}px)",
+            f"Variant: {PENALTY_SHIP} (test_seeker_endurance_test + test_endurance_penalty({PENALTY_PARAM}), endurance={PENALIZED_ENDURANCE}s, max travel={MAX_TRAVEL_PENALIZED}px)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {PENALTY_TEST_DISTANCE}px (within base max {MAX_TRAVEL_BASE}px, beyond penalized max {MAX_TRAVEL_PENALIZED}px)",
+        ],
+        edge_cases=[
+            f"Penalized missile self-destructs after {PENALIZED_ENDURANCE}s ({int(PENALIZED_ENDURANCE * 100)} ticks) having traveled {MAX_TRAVEL_PENALIZED}px",
+            "Tests negative modifier bidirectionality (penalty reduces capability)",
+        ],
+        expected_outcome=f"Baseline: {SEEKER_DAMAGE} damage (hit). Variant: 0 damage (expired).",
+        pass_criteria=f"baseline_damage == {SEEKER_DAMAGE} AND variant_damage == 0",
+        max_ticks=ENDURANCE_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "endurance_mult", "penalty", "binary"],
+    )
+
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = PENALTY_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = PENALTY_TEST_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify penalty was applied
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_approx(
+                "Penalized Endurance", PENALIZED_ENDURANCE,
+                seeker.endurance, tolerance=0.001, phase="data",
+            ))
+
+        # Outcome: base seeker reached target
+        checks.append(check_exact(
+            f"Base Seeker Hit ({SEEKER_DAMAGE} damage)", float(SEEKER_DAMAGE),
+            float(self.baseline_damage_dealt), phase="outcome",
+        ))
+
+        # Outcome: penalized seeker expired
+        checks.append(check_exact(
+            "Penalized Seeker Expired (0 damage)", 0.0,
+            float(self.variant_damage_dealt), phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-ENDUR-005: Stat Gate — Penalty Halves Endurance
+# =============================================================================
+
+class ModEndur005_PenaltyStatGateScenario(StaticTargetScenario):
+    """
+    MOD-ENDUR-005: Quick sanity — penalty modifier halves endurance.
+
+    Penalized seeker at point-blank: endurance==1.5s (3.0*0.5), missile hits.
+    Confirms negative modifier value loaded correctly.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-ENDUR-005",
+        category="EnduranceMultiplier",
+        subcategory="EnduranceMultiplier",
+        name="Stat gate — penalty halves endurance (3.0->1.5s)",
+        summary=f"Verify test_endurance_penalty(0.5) sets endurance to {PENALIZED_ENDURANCE}s; missile hits at point-blank",
+        conditions=[
+            f"Attacker: {PENALTY_SHIP} (test_seeker_endurance_test + test_endurance_penalty({PENALTY_PARAM}), endurance {BASE_ENDURANCE}->{PENALIZED_ENDURANCE}s)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (point-blank)",
+        ],
+        edge_cases=["Penalty modifier uses endurance_mult with value < 1.0"],
+        expected_outcome=f"seeker.endurance == {PENALIZED_ENDURANCE}, damage == {SEEKER_DAMAGE}",
+        pass_criteria=f"endurance == {PENALIZED_ENDURANCE} AND damage == {SEEKER_DAMAGE}",
+        max_ticks=ENDURANCE_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "endurance_mult", "penalty", "stat_gate"],
+    )
+
+    attacker_ship = PENALTY_SHIP
+    target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def custom_setup(self, battle_engine):
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            self.actual_endurance = seeker.endurance
-        else:
-            self.actual_endurance = None
+        self.actual_endurance = seeker.endurance if seeker else None
 
     def _collect_extra_results(self, battle_engine):
-        self.results['base_endurance'] = BASE_ENDURANCE
+        self.results['expected_endurance'] = PENALIZED_ENDURANCE
         self.results['actual_endurance'] = self.actual_endurance
-        self.results['distance'] = self.distance
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: seeker weapon exists
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        checks.append(check_true(
-            "Seeker Weapon Loaded", seeker is not None, phase="precondition",
-        ))
+        checks.append(check_true("Seeker Loaded", seeker is not None, phase="precondition"))
         if seeker is None:
             return checks
 
-        # Precondition: distance is correct
-        center_distance = (self.target.position - self.attacker.position).length()
+        # Data: penalty applied
         checks.append(check_approx(
-            "Center Distance", float(POINT_BLANK_DISTANCE), center_distance,
-            tolerance=0.01, phase="precondition",
+            "Penalized Endurance", PENALIZED_ENDURANCE,
+            self.actual_endurance or 0.0, tolerance=0.001, phase="data",
         ))
 
-        # Data: seeker endurance is unmodified (base value)
-        checks.append(check_approx(
-            "Unmodified Seeker Endurance", BASE_ENDURANCE,
-            self.actual_endurance or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        # Outcome: damage dealt (target at point blank)
-        checks.append(check_true(
-            "Damage Dealt",
-            self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
-        ))
-        return checks
-
-
-# ============================================================================
-# MOD-ENDUR-003: Comparison — Unmodified vs Boosted at Point Blank
-# ============================================================================
-
-class EnduranceBoostComparisonScenario(ComparisonScenario):
-    """
-    MOD-ENDUR-003: Compare unmodified seeker (endurance=10.0s) vs endurance-boosted
-    seeker (endurance=20.0s) at point blank.
-
-    Both seekers should reach and damage the target at point blank distance.
-    The key validation is that the endurance stat differs between baseline and
-    variant, confirming the modifier is applied.
-
-    Baseline: Unmodified seeker (endurance=10.0s) at point blank — deals damage.
-    Variant: Endurance-boosted seeker (endurance=20.0s) at point blank — deals damage.
-    """
-    metadata = TestMetadata(
-        test_id="MOD-ENDUR-003",
-        category="Modifiers",
-        subcategory="Endurance Multiplier",
-        name="Comparison: unmodified vs endurance-boosted seeker",
-        summary="Both seekers deal damage at point blank; variant has 2x endurance stat",
-        conditions=[
-            f"Baseline: unmodified seeker (endurance={BASE_ENDURANCE}s) at {POINT_BLANK_DISTANCE}px",
-            f"Variant: endurance-boosted seeker (endurance={EXPECTED_ENDURANCE}s) at {POINT_BLANK_DISTANCE}px",
-            "Both targets are stationary at point blank range",
-        ],
-        edge_cases=[],
-        expected_outcome="Both deal damage; variant seeker has doubled endurance stat",
-        pass_criteria=(
-            f"baseline_damage > 0 AND variant_damage > 0 AND "
-            f"variant_endurance == {EXPECTED_ENDURANCE} AND "
-            f"baseline_endurance == {BASE_ENDURANCE}"
-        ),
-        max_ticks=MODIFIER_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",
-        ui_priority=32,
-        tags=["modifier", "endurance_mult", "comparison"],
-    )
-
-    baseline_attacker_ship = ENDURANCE_BASE_ATTACKER
-    baseline_target_ship = STATIONARY_TARGET
-    variant_attacker_ship = ENDURANCE_BOOST_ATTACKER
-    variant_target_ship = STATIONARY_TARGET
-    distance = POINT_BLANK_DISTANCE
-    # Both seekers deal damage at point blank — total damage may be similar
-    expect_different_damage = False
-
-    def configure_baseline(self, engine):
-        """Capture baseline seeker endurance after ship is loaded."""
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        self.baseline_endurance = seeker.endurance if seeker else None
-
-    def configure_variant(self, engine):
-        """Capture variant seeker endurance after ship is loaded."""
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        self.variant_endurance = seeker.endurance if seeker else None
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-
-        # Data: baseline endurance is base value
-        checks.append(check_approx(
-            "Baseline Seeker Endurance", BASE_ENDURANCE,
-            self.baseline_endurance or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        # Data: variant endurance is boosted value
-        checks.append(check_approx(
-            "Variant Seeker Endurance", EXPECTED_ENDURANCE,
-            self.variant_endurance or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        # Outcome: baseline deals damage (seeker reaches at point blank)
-        checks.append(check_true(
-            "Baseline Damage Dealt",
-            self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt, phase="outcome",
-        ))
-
-        # Outcome: variant deals damage (seeker reaches at point blank)
-        checks.append(check_true(
-            "Variant Damage Dealt",
-            self.variant_damage_dealt > 0,
-            actual=self.variant_damage_dealt, phase="outcome",
+        # Outcome: missile hit at point-blank (penalty doesn't prevent close-range hits)
+        checks.append(check_exact(
+            "Missile Hit (100 damage)", float(SEEKER_DAMAGE),
+            float(self.damage_dealt), phase="outcome",
         ))
 
         return checks

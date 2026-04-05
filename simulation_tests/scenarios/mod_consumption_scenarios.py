@@ -14,9 +14,10 @@ Key Mechanics:
 - Base: 250 / 10 = 25 shots before depletion
 - Modified (0.5x): 250 / 5 = 50 shots before depletion
 
-Ships:
-- Test_Attacker_Beam_ConsumptionBase.json: beam (no modifier) + 250 energy
-- Test_Attacker_Beam_ConsumptionReduction.json: beam + 0.5x consumption modifier + 250 energy
+Ship Files:
+- Test_Attacker_Beam_ConsumptionReduction.json — test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_consumption_reduction (value=0.5) + test_storage_energy_250
+- Test_Attacker_Beam_ConsumptionBase.json — test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_storage_energy_250 (no modifier)
+- Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 """
 
 from simulation_tests.scenarios import TestMetadata
@@ -46,7 +47,9 @@ MODIFIED_ENERGY_PER_SHOT = BASE_ENERGY_PER_SHOT * MODIFIER_PARAM  # 5.0
 MODIFIED_EXPECTED_SHOTS = int(INITIAL_ENERGY / MODIFIED_ENERGY_PER_SHOT)  # 50
 
 # Ship files
+# test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_storage_energy_250 (no modifier)
 BASE_SHIP = "Test_Attacker_Beam_ConsumptionBase.json"
+# test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_consumption_reduction (value=0.5) + test_storage_energy_250
 MODIFIED_SHIP = "Test_Attacker_Beam_ConsumptionReduction.json"
 
 
@@ -65,16 +68,15 @@ class ConsumptionModifierSmokeScenario(StaticTargetScenario):
 
     metadata = TestMetadata(
         test_id="MOD-CONSUME-001",
-        category="Modifiers",
-        subcategory="Consumption Multiplier",
+        category="ConsumptionMultiplier",
+        subcategory="ConsumptionMultiplier",
         name="Consumption Modifier Smoke Test",
         summary="Weapon with 0.5x consumption modifier fires and deals damage beyond unmodified limit",
         conditions=[
-            f"Attacker: {MODIFIED_SHIP} (beam + 0.5x consumption modifier + 250 energy)",
-            f"Target: {TARGET_SHIP} (stationary, extreme HP)",
-            f"Base energy cost: {BASE_ENERGY_PER_SHOT}/shot, modified: {MODIFIED_ENERGY_PER_SHOT}/shot",
-            f"Distance: {DISTANCE} pixels (point blank)",
-            f"Test Duration: {MAX_TICKS} ticks",
+            f"Attacker: {MODIFIED_SHIP} (test_beam_rapid_1dmg_energy_consumption {BASE_ENERGY_PER_SHOT} energy/shot + test_consumption_reduction value={MODIFIER_PARAM} + test_storage_energy_250)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Modified energy cost: {MODIFIED_ENERGY_PER_SHOT}/shot ({BASE_ENERGY_PER_SHOT} * {MODIFIER_PARAM})",
+            f"Distance: {DISTANCE}px (point blank)",
         ],
         edge_cases=[
             f"Unmodified weapon would fire {BASE_EXPECTED_SHOTS} shots",
@@ -146,16 +148,16 @@ class ConsumptionModifierDamageComparisonScenario(ComparisonScenario):
 
     metadata = TestMetadata(
         test_id="MOD-CONSUME-002",
-        category="Modifiers",
-        subcategory="Consumption Multiplier",
+        category="ConsumptionMultiplier",
+        subcategory="ConsumptionMultiplier",
         name="Consumption Modifier Doubles Damage",
         summary="0.5x consumption modifier allows weapon to fire longer, dealing ~2x damage",
         conditions=[
-            f"Baseline: {BASE_SHIP} (10 energy/shot, 250 energy → ~25 shots)",
-            f"Variant: {MODIFIED_SHIP} (5 energy/shot, 250 energy → ~50 shots)",
-            f"Target: {TARGET_SHIP} (stationary, extreme HP)",
-            f"Distance: {DISTANCE} pixels (point blank)",
-            f"Test Duration: {MAX_TICKS} ticks",
+            f"Baseline: {BASE_SHIP} (test_beam_rapid_1dmg_energy_consumption {BASE_ENERGY_PER_SHOT} energy/shot + test_storage_energy_250, no modifier)",
+            f"Variant: {MODIFIED_SHIP} (test_beam_rapid_1dmg_energy_consumption + test_consumption_reduction value={MODIFIER_PARAM} + test_storage_energy_250)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Baseline: {INITIAL_ENERGY} / {BASE_ENERGY_PER_SHOT} = ~{BASE_EXPECTED_SHOTS} shots; Variant: {INITIAL_ENERGY} / {MODIFIED_ENERGY_PER_SHOT} = ~{MODIFIED_EXPECTED_SHOTS} shots",
+            f"Distance: {DISTANCE}px (point blank)",
         ],
         edge_cases=[
             "Both ships identical except for consumption modifier",
@@ -229,16 +231,16 @@ class ConsumptionModifierShotsComparisonScenario(ComparisonScenario):
 
     metadata = TestMetadata(
         test_id="MOD-CONSUME-003",
-        category="Modifiers",
-        subcategory="Consumption Multiplier",
+        category="ConsumptionMultiplier",
+        subcategory="ConsumptionMultiplier",
         name="Consumption Modifier Doubles Shots Fired",
         summary="0.5x consumption modifier allows weapon to fire ~2x more shots before energy depletion",
         conditions=[
-            f"Baseline: {BASE_SHIP} (10 energy/shot, 250 energy → ~25 shots)",
-            f"Variant: {MODIFIED_SHIP} (5 energy/shot, 250 energy → ~50 shots)",
-            f"Target: {TARGET_SHIP} (stationary, extreme HP)",
-            f"Distance: {DISTANCE} pixels (point blank)",
-            f"Test Duration: {MAX_TICKS} ticks",
+            f"Baseline: {BASE_SHIP} (test_beam_rapid_1dmg_energy_consumption {BASE_ENERGY_PER_SHOT} energy/shot + test_storage_energy_250, no modifier)",
+            f"Variant: {MODIFIED_SHIP} (test_beam_rapid_1dmg_energy_consumption + test_consumption_reduction value={MODIFIER_PARAM} + test_storage_energy_250)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Baseline: {INITIAL_ENERGY} / {BASE_ENERGY_PER_SHOT} = ~{BASE_EXPECTED_SHOTS} shots; Variant: {INITIAL_ENERGY} / {MODIFIED_ENERGY_PER_SHOT} = ~{MODIFIED_EXPECTED_SHOTS} shots",
+            f"Distance: {DISTANCE}px (point blank)",
         ],
         edge_cases=[
             "Shot count measured via per-weapon stats (shots_fired)",
