@@ -24,11 +24,11 @@ to the `CommandHandlerRegistry`.
 All queries return **immutable DTOs**, never domain objects.
 
 DTO types (defined in `game/strategy/facade/dto/` package, with submodules `fleet_dto.py`, `system_dto.py`, `planet_dto.py`, `empire_dto.py`, re-exported via `__init__.py`):
-- `FleetInfo` -- fleet state snapshot
+- `FleetInfo` -- fleet state snapshot (includes `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`)
 - `FleetSummary` -- lightweight fleet overview
 - `StarInfo` -- star data with system context (PROJ-231)
 - `SystemInfo` -- star system data
-- `PlanetInfo` -- planet details
+- `PlanetInfo` -- planet details (includes `staging_yard_summary`; `shield_active` is now populated from `active_abilities['PlanetaryShield']`)
 - `EmpireInfo` -- empire state
 - `ColonySummary` -- colony overview
 
@@ -88,8 +88,8 @@ Factory: `create_default_registry()` registers all handlers.
 | Command | Handler | Purpose |
 |---------|---------|---------|
 | `IssueMoveCommand` | `MoveCommandHandler` | Queue MOVE order with pathfinding |
-| `IssueColonizeCommand` | `ColonizeCommandHandler` | Direct colonize with auto-load population |
-| `QueueColonizeMissionCommand` | `ColonizeMissionCommandHandler` | Chain: LOAD_POPULATION + MOVE + COLONIZE |
+| `IssueColonizeCommand` | `ColonizeCommandHandler` | Direct colonize (deploy pod, claim planet) |
+| `QueueColonizeMissionCommand` | `ColonizeMissionCommandHandler` | Chain: MOVE + COLONIZE (population/cargo transferred via explicit TRANSFER orders) |
 | `IssueInterceptCommand` | `InterceptCommandHandler` | MOVE_TO_FLEET order |
 | `IssueJoinFleetCommand` | `JoinCommandHandler` | MOVE_TO_FLEET + JOIN_FLEET |
 | `IssueTransferCommand` | `TransferCommandHandler` | Cargo transfer with auto-MOVE |
@@ -111,7 +111,6 @@ Factory: `create_default_registry()` registers all handlers.
 ### Shared Helpers
 
 - `add_move_order_if_needed(session, fleet, target_hex, start_hex?)` -- chain-aware MOVE queuing
-- `create_auto_load_population_order()` -- LOAD_POPULATION order factory (no params; colony resolved at execution time)
 
 ---
 
@@ -258,7 +257,7 @@ Bridges strategy Fleet with simulation Ship for combat:
 Order types defined in `game/strategy/data/order_types.py`:
 - Movement: `MOVE`, `MOVE_TO_FLEET`, `WARP` (fleet-only)
 - Actions: `COLONIZE`, `TRANSFER`, `LOAD_POPULATION`, superweapons (fleet)
-- Planet actions: `ACTIVATE_SHIELD`, `DEACTIVATE_SHIELD` (planet)
+- Planet actions: `ACTIVATE_ABILITY`, `DEACTIVATE_ABILITY` (planet; generic ability toggles)
 - Fleet: `JOIN_FLEET`, `BUILD`
 
 Both Fleet and Planet implement the `IOrderable` protocol (`game/core/protocols.py`),

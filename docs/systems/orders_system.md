@@ -90,9 +90,9 @@ Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` rea
 
 | OrderType | Target | action_time Source |
 |-----------|--------|-------------------|
-| `COLONIZE` | Planet | Default (1). Drop pod deployed from `ship.carried_items`; full design becomes `PlanetaryFacility`. Ship stays in fleet. |
+| `COLONIZE` | Planet | Default (1). Only deploys pod and claims planet. Population/cargo transferred via explicit TRANSFER orders. Drop pod deployed from `ship.carried_items`; full design becomes `PlanetaryFacility`. Ship stays in fleet. |
 | `TRANSFER` | params dict | Default (1) |
-| `LOAD_POPULATION` | params dict | Default (1) |
+| `LOAD_POPULATION` | params dict | Default (1). Explicit order issued by the player via the transfer dialog (not auto-inserted). |
 | `UNLOAD_POPULATION` | params dict | Default (1) |
 | `IMPLODE_PLANET` | Planet | DestroyPlanet ability |
 | `STELLERATE_STAR` | (none) | DestroyStar ability |
@@ -225,7 +225,7 @@ When a MOVE order's path reaches a warp point, the movement engine:
 ```
 Turn 1:
   Tick  0: Turn starts
-  Tick 20: LOAD_POPULATION (progress 0→1, action_time=1) → COMPLETE
+  Tick 20: TRANSFER (load population/cargo from colony) → COMPLETE
   Tick 40: MOVE (move 1 hex)
   Tick 60: MOVE (move 1 hex)
   Tick 80: MOVE (move 1 hex)
@@ -234,7 +234,10 @@ Turn 1:
 Turn 2:
   Tick 20: MOVE (arrive at planet)
   Tick 40: COLONIZE (progress 0→1, action_time=1) → COMPLETE → Colony founded!
+  Tick 60: TRANSFER (unload population/cargo to new colony) → COMPLETE
 ```
+
+**Typical colonization order chain:** `TRANSFER(load)` → `MOVE` → `COLONIZE` → `TRANSFER(unload)`
 
 ### Example: Superweapon with Speed 5 Fleet
 

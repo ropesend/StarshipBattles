@@ -643,6 +643,30 @@ Scalar format: `5000` is interpreted as generic cargo with capacity 5000.
 
 ---
 
+### PodStorage
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `PodStorage` |
+| Class | `PodStorageAbility` |
+| Source | `cargo.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Ship-side mass-based pod storage. Provides capacity for carrying discrete items (drop pods, fighters) as `carried_items`.
+
+**Data Format:** Scalar or Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `capacity_mass` | float | Yes | Mass capacity for carried items |
+
+Scalar format: `5000` is interpreted as `capacity_mass = 5000`.
+
+**Stat Bindings:** None
+
+---
+
 ## Markers / Special
 
 ### VehicleLaunch
@@ -911,7 +935,7 @@ Enables ship construction at colonies.
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Planetary shield protection against superweapons.
+Planetary shield protection against superweapons. Toggled via generic `ACTIVATE_ABILITY`/`DEACTIVATE_ABILITY` orders. The `shield_active` field was removed; shield state is tracked in `planet.active_abilities['PlanetaryShield']`.
 
 **Data Format:** Dict
 
@@ -1214,6 +1238,7 @@ Self-Destruct Device. Schedules ship for destruction.
 | `LifeSupportCapacity` | LifeSupportCapacity | Crew |
 | `CrewRequired` | CrewRequired | Crew |
 | `CargoStorage` | CargoStorage | Cargo |
+| `PodStorage` | PodStorageAbility | Cargo |
 | `VehicleLaunch` | VehicleLaunchAbility | Markers |
 | `CommandAndControl` | CommandAndControl | Markers |
 | `RequiresCommandAndControl` | RequiresCommandAndControl | Markers |

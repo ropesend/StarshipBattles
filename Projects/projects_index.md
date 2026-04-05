@@ -4,6 +4,7 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-239 | Strategy Layer Health Remediation | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-238 | Order System Unification & Planet Orders UI | Planning | 2026-03-29 | 2026-03-29 |
 | PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | Planning | 2026-03-29 | 2026-03-29 |
 | PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | Planning | 2026-03-28 | 2026-03-28 |
