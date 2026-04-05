@@ -47,8 +47,8 @@ class RangeBoostInRangeScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-001",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="Basic Effect",
         name="Range boost 2x — target at 1200px (in range)",
         summary="Verify test_range_boost(1) doubles beam range to 1600; target at 1200px takes damage",
         conditions=[
@@ -134,8 +134,8 @@ class RangeIdentityScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-002",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="Boundary",
         name="Unmodified beam — range identity (800px)",
         summary="Verify unmodified beam retains base range of 800px; target at 400px takes damage",
         conditions=[
@@ -215,8 +215,8 @@ class RangeBoostBeyondBaseScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-003",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="Basic Effect",
         name="Range boost 2x — target at 900px (beyond base range)",
         summary="Verify range-boosted beam hits at 900px, confirming extended range beyond base 800",
         conditions=[
@@ -297,8 +297,8 @@ class RangeBoostComparisonScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-004",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="Combat Outcome",
         name="Comparison: unmodified vs range-boosted at 1200px",
         summary="Unmodified beam deals 0 damage at 1200px (out of range); boosted beam deals damage",
         conditions=[
@@ -374,8 +374,8 @@ class RangeBoostOutOfRangeScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RANGE-005",
-        category="Modifiers",
-        subcategory="Range Multiplier",
+        category="RangeMultiplier",
+        subcategory="Boundary",
         name="Range boost 2x — target at 1700px (out of range)",
         summary="Verify range-boosted beam (1600px range) cannot hit target at 1700px",
         conditions=[

@@ -56,8 +56,8 @@ class ModAcc001_AccuracyBoostAppliedScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ACC-001",
-        category="Modifiers",
-        subcategory="Accuracy Additive",
+        category="AccuracyAdditive",
+        subcategory="Basic Effect",
         name="Accuracy boost applied (param=2)",
         summary="Verify test_accuracy_boost(2) adds 1.0 to base_accuracy (2.0 -> 3.0)",
         conditions=[
@@ -137,8 +137,8 @@ class ModAcc002_BaselineNoModifierScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ACC-002",
-        category="Modifiers",
-        subcategory="Accuracy Additive",
+        category="AccuracyAdditive",
+        subcategory="Boundary",
         name="Baseline without modifier (identity)",
         summary="Verify unmodified beam retains base_accuracy of 2.0",
         conditions=[
@@ -218,8 +218,8 @@ class ModAcc003_FormulaVerificationScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ACC-003",
-        category="Modifiers",
-        subcategory="Accuracy Additive",
+        category="AccuracyAdditive",
+        subcategory="Basic Effect",
         name="Additive formula math verification",
         summary=(
             f"Verify formula: base({MOD_BASE_BEAM_ACCURACY}) + "
@@ -333,8 +333,8 @@ class ModAcc004_BoostVsBaselineScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ACC-004",
-        category="Modifiers",
-        subcategory="Accuracy Additive",
+        category="AccuracyAdditive",
+        subcategory="Combat Outcome",
         name="Boosted accuracy vs baseline at mid-range",
         summary=(
             f"Verify accuracy boost ({ACC_EXPECTED_BASELINE} -> {ACC_EXPECTED_BOOSTED}) "

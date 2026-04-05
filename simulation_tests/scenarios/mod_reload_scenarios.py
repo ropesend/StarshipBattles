@@ -49,8 +49,8 @@ class ReloadBoostAttributeScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-001",
-        category="Modifiers",
-        subcategory="Reload Multiplier",
+        category="ReloadMultiplier",
+        subcategory="Basic Effect",
         name="Reload halved by modifier (10.0 -> 5.0)",
         summary="Verify test_reload_boost(value=2) halves reload from 10.0 to 5.0",
         conditions=[
@@ -125,8 +125,8 @@ class ReloadBaselineAttributeScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-002",
-        category="Modifiers",
-        subcategory="Reload Multiplier",
+        category="ReloadMultiplier",
+        subcategory="Boundary",
         name="Reload unmodified baseline (10.0)",
         summary="Verify beam reload stays at 10.0 with no modifier applied",
         conditions=[
@@ -201,8 +201,8 @@ class ReloadBoostMoreDamageScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-003",
-        category="Modifiers",
-        subcategory="Reload Multiplier",
+        category="ReloadMultiplier",
+        subcategory="Combat Outcome",
         name="Reload boost increases total damage",
         summary="Boosted reload (5.0) deals more damage than base (10.0) over same duration",
         conditions=[
@@ -266,8 +266,8 @@ class ReloadBoostMoreShotsScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-RELOAD-004",
-        category="Modifiers",
-        subcategory="Reload Multiplier",
+        category="ReloadMultiplier",
+        subcategory="Combat Outcome",
         name="Reload boost doubles shot count",
         summary="Boosted reload (5.0) fires ~2x more shots than base (10.0)",
         conditions=[

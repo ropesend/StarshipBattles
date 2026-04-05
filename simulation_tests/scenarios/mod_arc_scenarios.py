@@ -51,8 +51,8 @@ class ArcSet180InArcScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ARC-001",
-        category="Modifiers",
-        subcategory="Arc Set",
+        category="ArcSet",
+        subcategory="Basic Effect",
         name="Arc set 180° — target ahead (in arc)",
         summary="Verify test_turret(180) sets beam firing arc to 180°; target ahead takes damage",
         conditions=[
@@ -139,8 +139,8 @@ class ArcIdentityScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ARC-002",
-        category="Modifiers",
-        subcategory="Arc Set",
+        category="ArcSet",
+        subcategory="Boundary",
         name="Unmodified beam — arc identity (360°)",
         summary="Verify unmodified beam retains base firing arc of 360°; target at 100px takes damage",
         conditions=[
@@ -220,8 +220,8 @@ class ArcSet90InArcScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ARC-003",
-        category="Modifiers",
-        subcategory="Arc Set",
+        category="ArcSet",
+        subcategory="Basic Effect",
         name="Arc set 90° — target ahead (in narrow arc)",
         summary="Verify test_turret(90) sets beam firing arc to 90°; target ahead takes damage",
         conditions=[
@@ -303,8 +303,8 @@ class ArcSetComparisonScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ARC-004",
-        category="Modifiers",
-        subcategory="Arc Set",
+        category="ArcSet",
+        subcategory="Combat Outcome",
         name="Comparison: 360° arc vs 180° arc (target ahead)",
         summary="Both unmodified (360°) and arc-set (180°) beams hit target directly ahead; arcs differ",
         conditions=[
@@ -400,8 +400,8 @@ class ArcSetSemanticsScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ARC-005",
-        category="Modifiers",
-        subcategory="Arc Set",
+        category="ArcSet",
+        subcategory="Boundary",
         name="Set semantics — override, not multiply",
         summary="Confirm arc_set 'set' operation overrides base 360° to exactly 180° (not multiplied/added)",
         conditions=[

@@ -58,8 +58,8 @@ class ModThrustStaticScenario(PropulsionScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-THRUST-001",
-        category="Modifiers",
-        subcategory="Thrust Multiplier",
+        category="ThrustMultiplier",
+        subcategory="Basic Effect",
         name="Thrust modifier doubles thrust and max_speed",
         summary="Verify test_thrust_boost(param=2) doubles engine thrust from 500 to 1000 and max_speed to 62.5",
         conditions=[
@@ -123,8 +123,8 @@ class ModThrustBaselineScenario(PropulsionScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-THRUST-002",
-        category="Modifiers",
-        subcategory="Thrust Multiplier",
+        category="ThrustMultiplier",
+        subcategory="Boundary",
         name="Baseline engine without thrust modifier",
         summary="Verify unmodified engine produces expected thrust (identity baseline for modifier comparison)",
         conditions=[
@@ -188,8 +188,8 @@ class ModThrustDynamicVelocityScenario(PropulsionScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-THRUST-003",
-        category="Modifiers",
-        subcategory="Thrust Multiplier",
+        category="ThrustMultiplier",
+        subcategory="Combat Outcome",
         name="Thrust modifier produces faster movement",
         summary="Verify ship with 2x thrust modifier reaches velocity >= 60.0 within 500 ticks",
         conditions=[
@@ -254,8 +254,8 @@ class ModThrustAccelerationScenario(PropulsionScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-THRUST-004",
-        category="Modifiers",
-        subcategory="Thrust Multiplier",
+        category="ThrustMultiplier",
+        subcategory="Basic Effect",
         name="Thrust modifier produces correct acceleration_rate",
         summary=(
             f"Verify acceleration_rate = (total_thrust * K_THRUST) / mass^2 "

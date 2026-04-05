@@ -47,8 +47,8 @@ class EnduranceBoostScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ENDUR-001",
-        category="Modifiers",
-        subcategory="Endurance Multiplier",
+        category="EnduranceMultiplier",
+        subcategory="Basic Effect",
         name="Endurance boost 2x — seeker.endurance == 20.0",
         summary="Verify test_endurance_boost(2) doubles seeker endurance to 20.0; target takes damage",
         conditions=[
@@ -132,8 +132,8 @@ class EnduranceIdentityScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ENDUR-002",
-        category="Modifiers",
-        subcategory="Endurance Multiplier",
+        category="EnduranceMultiplier",
+        subcategory="Boundary",
         name="Unmodified seeker — endurance identity (10.0s)",
         summary="Verify unmodified seeker retains base endurance of 10.0s; target takes damage",
         conditions=[
@@ -219,8 +219,8 @@ class EnduranceBoostComparisonScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-ENDUR-003",
-        category="Modifiers",
-        subcategory="Endurance Multiplier",
+        category="EnduranceMultiplier",
+        subcategory="Combat Outcome",
         name="Comparison: unmodified vs endurance-boosted seeker",
         summary="Both seekers deal damage at point blank; variant has 2x endurance stat",
         conditions=[

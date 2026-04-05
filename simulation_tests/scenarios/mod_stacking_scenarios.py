@@ -58,8 +58,8 @@ class ModStack001_DualDamageCompoundScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-STACK-001",
-        category="Modifiers",
-        subcategory="Multi-Modifier Stacking",
+        category="ModifierStacking",
+        subcategory="Same Stat",
         name="Dual damage multipliers compound (1.5 * 2.0 = 3.0)",
         summary="Verify two multiplicative damage modifiers on the same component compound to 3.0x",
         conditions=[
@@ -140,8 +140,8 @@ class ModStack002_IndependentStatsScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-STACK-002",
-        category="Modifiers",
-        subcategory="Multi-Modifier Stacking",
+        category="ModifierStacking",
+        subcategory="Cross Stat",
         name="Independent modifiers on different stats",
         summary="Verify damage_mult and accuracy_add modifiers on the same component apply independently",
         conditions=[
@@ -232,8 +232,8 @@ class ModStack003_DualVsSingleScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-STACK-003",
-        category="Modifiers",
-        subcategory="Multi-Modifier Stacking",
+        category="ModifierStacking",
+        subcategory="Combat Outcome",
         name="Dual modifier (3.0x) vs single modifier (1.5x)",
         summary="Verify dual damage modifier produces ~2x more damage than single modifier",
         conditions=[
@@ -312,8 +312,8 @@ class ModStack004_DmgAccVsBaselineScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-STACK-004",
-        category="Modifiers",
-        subcategory="Multi-Modifier Stacking",
+        category="ModifierStacking",
+        subcategory="Combat Outcome",
         name="Damage + accuracy modifiers vs unmodified at mid-range",
         summary=(
             "Verify combined damage and accuracy modifiers produce more damage "

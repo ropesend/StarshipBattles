@@ -65,8 +65,8 @@ class ConsumptionModifierSmokeScenario(StaticTargetScenario):
 
     metadata = TestMetadata(
         test_id="MOD-CONSUME-001",
-        category="Modifiers",
-        subcategory="Consumption Multiplier",
+        category="ConsumptionMultiplier",
+        subcategory="Basic Effect",
         name="Consumption Modifier Smoke Test",
         summary="Weapon with 0.5x consumption modifier fires and deals damage beyond unmodified limit",
         conditions=[
@@ -146,8 +146,8 @@ class ConsumptionModifierDamageComparisonScenario(ComparisonScenario):
 
     metadata = TestMetadata(
         test_id="MOD-CONSUME-002",
-        category="Modifiers",
-        subcategory="Consumption Multiplier",
+        category="ConsumptionMultiplier",
+        subcategory="Combat Outcome",
         name="Consumption Modifier Doubles Damage",
         summary="0.5x consumption modifier allows weapon to fire longer, dealing ~2x damage",
         conditions=[
@@ -229,8 +229,8 @@ class ConsumptionModifierShotsComparisonScenario(ComparisonScenario):
 
     metadata = TestMetadata(
         test_id="MOD-CONSUME-003",
-        category="Modifiers",
-        subcategory="Consumption Multiplier",
+        category="ConsumptionMultiplier",
+        subcategory="Combat Outcome",
         name="Consumption Modifier Doubles Shots Fired",
         summary="0.5x consumption modifier allows weapon to fire ~2x more shots before energy depletion",
         conditions=[

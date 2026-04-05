@@ -52,8 +52,8 @@ class ModDmg001_StandardBoostScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-001",
-        category="Modifiers",
-        subcategory="Damage Multiplier",
+        category="DamageMultiplier",
+        subcategory="Basic Effect",
         name="Damage boost 1.5x (standard)",
         summary="Verify test_damage_boost(1.5) multiplies beam damage from 1 to 1.5",
         conditions=[
@@ -132,8 +132,8 @@ class ModDmg002_IdentityBoostScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-002",
-        category="Modifiers",
-        subcategory="Damage Multiplier",
+        category="DamageMultiplier",
+        subcategory="Boundary",
         name="Damage boost 1.0x (identity)",
         summary="Verify test_damage_boost(1.0) leaves beam damage at base value of 1.0",
         conditions=[
@@ -212,8 +212,8 @@ class ModDmg003_MaxBoostScenario(StaticTargetScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-003",
-        category="Modifiers",
-        subcategory="Damage Multiplier",
+        category="DamageMultiplier",
+        subcategory="Boundary",
         name="Damage boost 10.0x (maximum)",
         summary="Verify test_damage_boost(10.0) multiplies beam damage from 1 to 10.0",
         conditions=[
@@ -293,8 +293,8 @@ class ModDmg004_BoostVsBaselineScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-004",
-        category="Modifiers",
-        subcategory="Damage Multiplier",
+        category="DamageMultiplier",
+        subcategory="Combat Outcome",
         name="1.5x boost vs unboosted baseline",
         summary="Verify 1.5x damage modifier produces ~1.5x more total damage than baseline",
         conditions=[
@@ -372,8 +372,8 @@ class ModDmg005_MaxVsMinScenario(ComparisonScenario):
     """
     metadata = TestMetadata(
         test_id="MOD-DMG-005",
-        category="Modifiers",
-        subcategory="Damage Multiplier",
+        category="DamageMultiplier",
+        subcategory="Combat Outcome",
         name="10.0x boost vs 1.0x identity",
         summary="Verify 10.0x damage modifier produces ~10x more total damage than 1.0x identity",
         conditions=[
