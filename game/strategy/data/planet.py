@@ -118,9 +118,6 @@ class Planet:
     energy_capacity: float = 0.0     # Max (recalculated from batteries each tick)
     energy_generation: float = 0.0   # Rate (recalculated from generators each tick)
 
-    # Shield state (PROJ-237) — backward-compatible property below
-    shield_active: bool = False      # Whether planetary shield is currently active
-
     # Generic activatable abilities state
     active_abilities: Dict[str, bool] = field(default_factory=dict)
 
@@ -403,7 +400,6 @@ class Planet:
             'energy': self.energy,
             'energy_capacity': self.energy_capacity,
             'energy_generation': self.energy_generation,
-            'shield_active': self.shield_active,
             'active_abilities': dict(self.active_abilities),
             'atmosphere_target': dict(self.atmosphere_target),
             'orders': [o.to_dict() for o in self.orders],
@@ -511,7 +507,6 @@ class Planet:
             energy=data.get('energy', 0.0),
             energy_capacity=data.get('energy_capacity', 0.0),
             energy_generation=data.get('energy_generation', 0.0),
-            shield_active=data.get('shield_active', False),
             active_abilities=data.get('active_abilities', {}),
             atmosphere_target=data.get('atmosphere_target', {}),
             orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),

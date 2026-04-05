@@ -232,8 +232,6 @@ def _get_ability_status_text(planet, ability_name: str) -> str:
 
     active_abilities = getattr(planet, 'active_abilities', {})
     is_active = active_abilities.get(ability_name, False)
-    if ability_name == 'PlanetaryShield':
-        is_active = is_active or getattr(planet, 'shield_active', False)
 
     # Check for pending activation/deactivation orders
     for order in getattr(planet, 'orders', []):
@@ -244,13 +242,6 @@ def _get_ability_status_text(planet, ability_name: str) -> str:
             return f"Activating ({order.execution_progress} ticks)"
         if order.type == OrderType.DEACTIVATE_ABILITY and order_ability == ability_name:
             return f"Deactivating ({order.execution_progress} ticks)"
-
-        # Legacy shield orders
-        if ability_name == 'PlanetaryShield':
-            if order.type == OrderType.ACTIVATE_SHIELD:
-                return f"Activating ({order.execution_progress} ticks)"
-            if order.type == OrderType.DEACTIVATE_SHIELD:
-                return f"Deactivating ({order.execution_progress} ticks)"
 
     return "Active" if is_active else "Inactive"
 

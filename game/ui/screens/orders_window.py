@@ -218,10 +218,12 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                     return "load cargo" if direction == "load" else "drop cargo"
             return "TRANSFER"
         # PROJ-238: Planet order descriptions
-        elif order.type == OrderType.ACTIVATE_SHIELD:
-            return "ACTIVATE SHIELD"
-        elif order.type == OrderType.DEACTIVATE_SHIELD:
-            return "DEACTIVATE SHIELD"
+        elif order.type == OrderType.ACTIVATE_ABILITY:
+            ability = order.target.get('ability_name', 'ability') if isinstance(order.target, dict) else 'ability'
+            return f"ACTIVATE {ability.upper()}"
+        elif order.type == OrderType.DEACTIVATE_ABILITY:
+            ability = order.target.get('ability_name', 'ability') if isinstance(order.target, dict) else 'ability'
+            return f"DEACTIVATE {ability.upper()}"
         else:
             return f"{order.type.name}"
 

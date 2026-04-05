@@ -56,15 +56,7 @@ class IssuePlanetOrderCommandHandler:
         # 4. Validate based on order type
         component_registry = session.registries.components if session.registries else None
 
-        if order_type == OrderType.ACTIVATE_SHIELD:
-            result = PlanetOrderValidator.validate_activate_shield(
-                planet, cmd.facility_instance_id, component_registry
-            )
-        elif order_type == OrderType.DEACTIVATE_SHIELD:
-            result = PlanetOrderValidator.validate_deactivate_shield(
-                planet, cmd.facility_instance_id, component_registry
-            )
-        elif order_type == OrderType.ACTIVATE_ABILITY:
+        if order_type == OrderType.ACTIVATE_ABILITY:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for ACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_activate_ability(
