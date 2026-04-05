@@ -79,7 +79,16 @@ BattleEngine owns the simulation state: ships, AI controllers, projectiles, spat
 - Assigns team IDs (0 and 1)
 - Creates AI controllers via injected `IAIControllerFactory` (or accepts pre-created list)
 - Initializes `SpatialGrid`, `ProjectileManager`, `CollisionSystem`
+- Per-ship initialization via `_initialize_ship()`: event bus wiring, component update, stat recalculation, derelict check
+- Initializes `FleetAuraManager` with all ships
 - Seeds RNG for deterministic replays
+
+**`add_ship_mid_battle()` (reinforcements and fighter launch):**
+- Sets team ID, appends to ships list
+- Creates AI controller (via factory or pre-created)
+- Runs the same per-ship initialization as `start()` via `_initialize_ship()`
+- Registers with `FleetAuraManager` via `register_ship()` (scans new ship's abilities, recalculates bonuses)
+- Fighter launch (`LAUNCH` attack type in `update()`) delegates to `add_ship_mid_battle()`
 
 **`update()` tick sequence (per tick):**
 

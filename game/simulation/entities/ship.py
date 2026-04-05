@@ -163,7 +163,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         # Defaults are additive neutral (0.0) before stats are calculated.
         self.total_defense_score: float = 0.0
         self.baseline_to_hit_offense: float = 0.0  # Sensor strength (attack bonus)
-        
+        self.fleet_attack_bonus: float = 0.0   # Set by FleetAuraManager._recalculate()
+        self.fleet_defense_bonus: float = 0.0  # Set by FleetAuraManager._recalculate()
+
         # Strategic layer stats (computed by ShipStatsCalculator, initialized here for safety)
         self.total_strategic_movement: float = 0.0
         self.warp_max_tonnage: float = 0.0

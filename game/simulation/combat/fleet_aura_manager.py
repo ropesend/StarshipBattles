@@ -112,6 +112,22 @@ class FleetAuraManager:
                         source_name=f"{comp.name} ({ship.name})",
                     ))
 
+    def register_ship(self, ship: Any, all_ships: List[Any]) -> None:
+        """Register a ship added mid-battle.
+
+        Scans the new ship for fleet-scope abilities and recalculates
+        all team bonuses so that:
+        1. The new ship's abilities contribute to teammates
+        2. The new ship receives existing fleet bonuses
+
+        Args:
+            ship: The newly added ship
+            all_ships: All ships currently in battle (including the new one)
+        """
+        if ship.is_alive:
+            self._scan_ship(ship)
+        self._recalculate(all_ships)
+
     def update(self, ships: List[Any]) -> None:
         """Recalculate bonuses based on alive/operational providers."""
         if not self._initialized:
