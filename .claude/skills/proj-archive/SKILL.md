@@ -1,6 +1,6 @@
 ---
 name: proj-archive
-description: Archive accepted projects from the refactor plan
+description: Archive completed projects (from refactor plan and/or active_projects)
 disable-model-invocation: true
 argument-hint: <project-numbers...> (e.g. 42 43 44)
 ---
@@ -15,10 +15,18 @@ Parse the arguments as a space-separated list of project numbers. For each numbe
 
 ## For each project, execute these steps:
 
-### Step 1: Extract project entry from refactor plan
+### Step 1: Read project info (for summary)
+
+1. Read `Projects/active_projects/PROJ-N/plan.md` (or `PROJ-N.md` for flat files)
+   - Extract: title, phase count, key status info
+2. If `Projects/active_projects/PROJ-N/decisions.md` exists, read it for key decisions
+
+If the project folder doesn't exist in `active_projects/`, report "PROJ-N not found in active_projects/" and **skip to the next project**.
+
+### Step 2: Clean refactor plan (conditional)
 
 1. Read `Projects/refactor_loop/refactor_plan.md`
-2. Find the project block for the target PROJ-N. The block starts with `- [` and includes all indented lines below it, up to (and including) the next `---` separator.
+2. Search for a project block for PROJ-N. The block starts with `- [` and includes all indented lines below it, up to (and including) the next `---` separator.
 
    Example block:
    ```markdown
@@ -31,45 +39,56 @@ Parse the arguments as a space-separated list of project numbers. For each numbe
    ---
    ```
 
-3. If the project is NOT found, report "PROJ-N not found in refactor_plan.md" and **skip to the next project**.
-4. If the project checkbox is `[ ]` (not started) or `[/]` (in progress), report "PROJ-N is not marked complete. Only completed projects ([x] or [~]) can be archived." and **skip to the next project**.
+3. **If the project is NOT found in refactor_plan.md:** This is fine — the project was not tracked in the refactor plan. Proceed silently to Step 3.
 
-### Step 2: Move entry to archive
+4. **If found but checkbox is `[ ]` (not started) or `[/]` (in progress):** Report "PROJ-N is in refactor_plan.md but not marked complete. Only completed projects ([x] or [~]) can be archived." and **skip to the next project**.
 
-1. If `Projects/refactor_loop/archive.md` does not exist, create it with this header:
-   ```markdown
-   # Archived Refactor Projects
+5. **If found AND completed (`[x]` or `[~]`):** Execute the following cleanup:
 
-   Projects archived from the master refactor plan after user acceptance.
+   a. If `Projects/refactor_loop/archive.md` does not exist, create it with this header:
+      ```markdown
+      # Archived Refactor Projects
 
-   ---
+      Projects archived from the master refactor plan after user acceptance.
 
-   ```
+      ---
 
-2. Append the extracted project block (including its `---` separator) to the end of `Projects/refactor_loop/archive.md`
-3. Remove the project block (including its `---` separator) from `Projects/refactor_loop/refactor_plan.md`
+      ```
 
-### Step 3: Remove execution log entries
+   b. Append the extracted project block (including its `---` separator) to the end of `Projects/refactor_loop/archive.md`
+   c. Remove the project block (including its `---` separator) from `Projects/refactor_loop/refactor_plan.md`
+   d. In `Projects/refactor_loop/refactor_plan.md`, find the `## Execution Log` table. Remove ALL rows that contain `PROJ-N`. Keep the table header row and separator row intact.
 
-In `Projects/refactor_loop/refactor_plan.md`, find the `## Execution Log` table. Remove ALL rows that contain `PROJ-N` (matching the project being archived). Keep the table header row and separator row intact. This prevents stale log entries from accumulating after archival.
+### Step 3: Archive project folder
 
-### Step 4: Archive project folder
-
-**First check** if the project folder exists in `active_projects/`:
+Run the archive script with `--force` (skips validation since user already accepted):
 
 ```bash
-ls Projects/active_projects/PROJ-N
+python Projects/scripts/archive_project.py PROJ-N --force
 ```
 
-- **If the folder exists:** Run the archive script with `--force` (skips validation since user already accepted):
-  ```bash
-  python Projects/scripts/archive_project.py PROJ-N --force
-  ```
-  This creates a timestamped backup, moves the folder to `archived_projects/`, and updates `projects_index.md`.
+This moves the folder to `archived_projects/`, and updates `projects_index.md`.
 
-- **If the folder does NOT exist** (already closed/archived via another mechanism): This is fine — the plan entry was the remaining artifact. Skip the script and note "folder already archived" in the summary. Continue to the next project.
+If the script fails, report the error and **skip to the next project**.
 
-## After all projects are processed, report a summary:
+### Step 4: Print completion summary
 
-- List each project and its result (archived, skipped with reason, or error)
-- Total projects archived vs skipped
+Print a summary for this project:
+
+```markdown
+## Archived: PROJ-N — [Title]
+**Phases:** [count]
+**Key Decisions:** [brief list from decisions.md, or "None recorded"]
+```
+
+## After all projects are processed:
+
+Print a batch summary:
+
+```markdown
+## Summary: [X] projects archived
+- PROJ-A: [Title] — archived
+- PROJ-B: [Title] — skipped (reason)
+```
+
+**STOP** after reporting.

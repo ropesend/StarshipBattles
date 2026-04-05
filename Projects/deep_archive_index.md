@@ -210,3 +210,11 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-209 | Cyclomatic Complexity Decomposition | 2026-03-14 | PROJ-201-250 |
 | PROJ-210 | Strategy God Class Decomposition | 2026-03-14 | PROJ-201-250 |
 | PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | 2026-03-14 | PROJ-201-250 |
+| PROJ-212 | Deferred Import Cleanup & Coupling Reduction | 2026-03-14 | PROJ-201-250 |
+| PROJ-213 | Build Queue Reversion Bug Fix | 2026-03-14 | PROJ-201-250 |
+| PROJ-214 | Hex Highlights for Objects and Ownership | 2026-03-14 | PROJ-201-250 |
+| PROJ-215 | Fix Event Log Location Display and Navigation | 2026-03-14 | PROJ-201-250 |
+| PROJ-216 | Fix Global Fleet Order Registration Failure | 2026-03-14 | PROJ-201-250 |
+| PROJ-217 | Standardize Star Measurement to Radius | 2026-03-14 | PROJ-201-250 |
+| PROJ-218 | Fix Production Queue Cost and Build Time Defaults | 2026-03-14 | PROJ-201-250 |
+| PROJ-219 | Fleet Registration Consolidation | 2026-03-14 | PROJ-201-250 |

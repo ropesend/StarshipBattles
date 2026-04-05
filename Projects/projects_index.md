@@ -10,19 +10,19 @@ w# Projects Index
 | PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-241 | Component God Class Decomposition | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-240 | Ship God Class Decomposition | Planning | 2026-04-05 | 2026-04-05 |
-| PROJ-239 | Strategy Layer Health Remediation | Planning | 2026-04-05 | 2026-04-05 |
-| PROJ-238 | Order System Unification & Planet Orders UI | Planning | 2026-03-29 | 2026-03-29 |
-| PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | Planning | 2026-03-29 | 2026-03-29 |
-| PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | Planning | 2026-03-28 | 2026-03-28 |
-| PROJ-235 | TurnEngine Phase Timing Cleanup | Planning | 2026-03-28 | 2026-03-28 |
-| PROJ-234 | ShipInstance God Object Decomposition | Awaiting Verification | 2026-03-28 | 2026-03-28 |
-| PROJ-233 | Refactor ProductionEngine - Extract Oversized Methods and Deduplicate Spawn Logic | Planning | 2026-03-28 | 2026-03-28 |
-| PROJ-232 | Command Layer Cleanup - Fix Dataclasses, Eliminate Handler Boilerplate, Add Type Safety | Planning | 2026-03-28 | 2026-03-28 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-239 | Strategy Layer Health Remediation | Archived | 2026-04-05 | 2026-04-05 |
+| PROJ-238 | Order System Unification & Planet Orders UI | Archived | 2026-03-29 | 2026-04-05 |
+| PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | Archived | 2026-03-29 | 2026-04-05 |
+| PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | Archived | 2026-03-28 | 2026-04-05 |
+| PROJ-235 | TurnEngine Phase Timing Cleanup | Archived | 2026-03-28 | 2026-04-05 |
+| PROJ-234 | ShipInstance God Object Decomposition | Archived | 2026-03-28 | 2026-04-05 |
+| PROJ-233 | Refactor ProductionEngine - Extract Oversized Methods and Deduplicate Spawn Logic | Archived | 2026-03-28 | 2026-04-05 |
+| PROJ-232 | Command Layer Cleanup - Fix Dataclasses, Eliminate Handler Boilerplate, Add Type Safety | Archived | 2026-03-28 | 2026-04-05 |
 | PROJ-231 | Star List Panel | Archived | 2026-03-28 | 2026-03-28 |
 | PROJ-230 | Planet Generation Balance Tuning | Archived | 2026-03-27 | 2026-03-28 |
 | PROJ-229 | Galaxy Generation Inspector Tool | Archived | 2026-03-27 | 2026-03-28 |
@@ -35,14 +35,6 @@ w# Projects Index
 | PROJ-222 | Fleet Join Order Redirect and Pursuer Tracking | Archived | 2026-03-24 | 2026-03-24 |
 | PROJ-220 | Tri-State Filter Widget & Filter Unification | Archived | 2026-03-14 | 2026-03-24 |
 | PROJ-221 | Build Queue Configurable Columns & Column Swap Fix | Archived | 2026-03-14 | 2026-03-24 |
-| PROJ-219 | Fleet Registration Consolidation | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-218 | Fix Production Queue Cost and Build Time Defaults | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-217 | Standardize Star Measurement to Radius | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-216 | Fix Global Fleet Order Registration Failure | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-215 | Fix Event Log Location Display and Navigation | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-214 | Hex Highlights for Objects and Ownership | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-213 | Build Queue Reversion Bug Fix | Archived | 2026-02-28 | 2026-03-14 |
-| PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Archived | 2026-02-27 | 2026-03-14 |
 
 ---
 
