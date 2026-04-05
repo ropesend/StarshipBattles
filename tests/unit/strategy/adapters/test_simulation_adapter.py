@@ -48,14 +48,14 @@ class TestSimulationBattleResolverImplementation:
         """SimulationBattleResolver should be instantiable."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
         assert resolver is not None
 
     def test_has_resolve_battle_method(self):
         """SimulationBattleResolver should have resolve_battle method."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
         assert hasattr(resolver, 'resolve_battle')
         assert callable(resolver.resolve_battle)
 
@@ -95,7 +95,7 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.interfaces.battle_resolver import BattleResult
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         # Create another fleet
         fleet2 = MagicMock()
@@ -127,7 +127,7 @@ class TestSimulationBattleResolverBehavior:
         """resolve_battle should pass seed to BattleConfig."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         fleet2 = MagicMock()
         fleet2.id = 2
@@ -158,7 +158,7 @@ class TestSimulationBattleResolverBehavior:
         """Fleet1 should be assigned to team 0."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         fleet2 = MagicMock()
         fleet2.id = 2
@@ -191,7 +191,7 @@ class TestSimulationBattleResolverBehavior:
         """Survivors should be converted using to_ship() method."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         fleet2 = MagicMock()
         fleet2.id = 2
@@ -234,7 +234,7 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.interfaces.battle_resolver import BattleResult
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         # Fleet with no ships should return early with winner being the non-empty fleet
         result = resolver.resolve_battle(mock_fleet_with_ships, mock_fleet_empty)
@@ -248,7 +248,7 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.interfaces.battle_resolver import BattleResult
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         fleet2 = MagicMock()
         fleet2.id = 3
@@ -265,7 +265,7 @@ class TestSimulationBattleResolverBehavior:
         """BattleConfig should be created with headless=True."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         fleet2 = MagicMock()
         fleet2.id = 2
@@ -295,7 +295,7 @@ class TestSimulationBattleResolverBehavior:
         """BattleConfig should be created with mode=STRATEGY."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        resolver = SimulationBattleResolver()
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
 
         fleet2 = MagicMock()
         fleet2.id = 2

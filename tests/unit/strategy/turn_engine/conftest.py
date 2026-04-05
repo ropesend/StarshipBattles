@@ -22,8 +22,8 @@ class MockPlanetType(Enum):
 
 @pytest.fixture
 def turn_engine(fresh_registries):
-    """Create a fresh turn engine with DI registries."""
-    return TurnEngine(registries=fresh_registries)
+    """Create a fresh turn engine with DI registries and mock AI factory."""
+    return TurnEngine(registries=fresh_registries, ai_factory=MagicMock())
 
 
 @pytest.fixture

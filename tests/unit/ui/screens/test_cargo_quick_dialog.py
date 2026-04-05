@@ -149,7 +149,7 @@ class TestCargoQuickDialog:
         dialog.cargo_items[0]['slider'].set_current_value(30)
 
         # Act
-        with patch('game.strategy.services.cargo_transfer_service.IssueTransferCommand') as mock_cmd_class:
+        with patch('game.strategy.engine.commands.IssueTransferCommand') as mock_cmd_class:
             mock_cmd_instance = MagicMock()
             mock_cmd_class.return_value = mock_cmd_instance
             event = pygame.event.Event(
@@ -194,7 +194,7 @@ class TestCargoQuickDialog:
         dialog.cargo_items[0]['slider'].set_current_value(40)
 
         # Act
-        with patch('game.strategy.services.cargo_transfer_service.IssueTransferCommand') as mock_cmd_class:
+        with patch('game.strategy.engine.commands.IssueTransferCommand') as mock_cmd_class:
             mock_cmd_instance = MagicMock()
             mock_cmd_class.return_value = mock_cmd_instance
             event = pygame.event.Event(

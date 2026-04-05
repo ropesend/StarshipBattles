@@ -17,6 +17,7 @@ import logging
 from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+from game.strategy.interfaces.engines import IConsumableEngine
 from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class ResourceDepletion:
     components_disabled: List[str]
 
 
-class ConsumableManagementEngine:
+class ConsumableManagementEngine(IConsumableEngine):
     """
     Engine for processing per-turn resource consumption.
 

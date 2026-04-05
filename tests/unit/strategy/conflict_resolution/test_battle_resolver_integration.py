@@ -195,7 +195,7 @@ class TestResolveAllConflicts:
         """resolve_all_conflicts returns a ConflictResult."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine, ConflictResult
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         empire = MagicMock()
         empire.id = 0
@@ -290,7 +290,7 @@ class TestResolveAllConflicts:
         """No conflicts returns zero combats resolved."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         empire = MagicMock()
         empire.id = 0

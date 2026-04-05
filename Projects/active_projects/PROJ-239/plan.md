@@ -13,17 +13,25 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Architecture Boundary Fixes | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Critical Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Architecture Boundary Fixes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Code Quality & Dead Code Cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Documentation Updates | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-05 11:32
-**Active Phase:** Phase 1
-**Last Action:** Project created from review 2026-04-05_110710_general_strategy-layer-health
-**Next Action:** Begin Phase 1 — critical fixes (turn engine error handling, AI layer violation)
+**Last Updated:** 2026-04-05 13:00
+**Active Phase:** Phase 3
+**Last Action:** Completed Phase 2 — all 3 architecture boundary fixes (AR-003, AR-004, AR-005)
+**Next Action:** Begin Phase 3 — code quality & dead code cleanup (CQ-003, CQ-004, DC-003/4/5)
 **Blockers:** None
+**Context for Next Agent:**
+- Phases 1-2 complete: 5 tasks done, 22 new tests added
+- Phase 2 summary:
+  - AR-003: `_colony_has_planetary_yard` moved from engine to `build_queue_source.py` as public `colony_has_planetary_yard`. `_RegistriesFromProvider` adapter replaces `RegistryManager.instance()`. Note: 19 pre-existing test failures in `test_build_queue_source.py` (not caused by our changes — confirmed by running original code).
+  - AR-004: `IssueTransferCommand` import moved to TYPE_CHECKING + late import in `build_transfer_command()`. Fixed 2 test patches in `test_cargo_quick_dialog.py`.
+  - AR-005: All 8 engines now inherit their interface ABCs. 12 parametrized tests.
+- Full test suite: 14,297 passed, 10 failed (all pre-existing quickstart design mismatches)
+- New test files: `test_data_layer_boundaries.py`, `test_engine_inheritance.py`, `test_no_ai_import.py`, `test_turn_error_handling.py`
 
 ## Overview
 Systematic remediation of the top 10 priority issues found in the strategy layer general health review. 14 findings total (2 Critical, 12 Major) organized into 4 phases by category: critical fixes first, then architecture boundaries, code quality, and documentation.

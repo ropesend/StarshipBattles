@@ -8,7 +8,8 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.planet import PlanetaryFacility
-from game.strategy.engine.production_engine import ProductionEngine, _colony_has_planetary_yard
+from game.strategy.engine.production_engine import ProductionEngine
+from game.strategy.data.build_queue_source import colony_has_planetary_yard as _colony_has_planetary_yard
 
 
 def _make_yard_facility(is_operational=True):

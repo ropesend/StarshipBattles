@@ -76,7 +76,8 @@ class StrategyScreen:
             self.session = session
         else:
             from game.strategy.engine.game_session import GameSession
-            self.session = GameSession()
+            from game.ai.ai_factory import AIControllerFactory
+            self.session = GameSession(ai_factory=AIControllerFactory())
 
         # Create facade for UI-to-engine communication
         self._facade = StrategySessionFacade(self.session)

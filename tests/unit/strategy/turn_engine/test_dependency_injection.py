@@ -348,7 +348,7 @@ class TestTurnEngineFactory:
         """Factory should return a TurnEngine instance."""
         from game.strategy.engine.turn_engine import create_default_turn_engine
 
-        engine = create_default_turn_engine(fresh_registries)
+        engine = create_default_turn_engine(fresh_registries, ai_factory=MagicMock())
 
         assert isinstance(engine, TurnEngine)
 
@@ -361,7 +361,7 @@ class TestTurnEngineFactory:
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = create_default_turn_engine(fresh_registries)
+        engine = create_default_turn_engine(fresh_registries, ai_factory=MagicMock())
 
         assert isinstance(engine.movement_engine, FleetMovementEngine)
         assert isinstance(engine.production_engine, ProductionEngine)

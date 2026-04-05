@@ -17,7 +17,7 @@ class TestConflictResolutionEngineInit:
         """ConflictResolutionEngine can be instantiated."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         assert engine is not None
 
@@ -35,14 +35,14 @@ class TestConflictResolutionEngineInit:
 
         assert engine._battle_resolver is resolver
 
-    def test_engine_defaults_to_simulation_resolver(self):
-        """ConflictResolutionEngine defaults to SimulationBattleResolver."""
+    def test_engine_stores_injected_battle_resolver(self):
+        """ConflictResolutionEngine stores the injected battle resolver."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
-        engine = ConflictResolutionEngine()
+        mock_resolver = MagicMock()
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
 
-        assert isinstance(engine._battle_resolver, SimulationBattleResolver)
+        assert engine._battle_resolver is mock_resolver
 
 
 class TestConflictResult:
@@ -74,7 +74,7 @@ class TestBattleSeedGeneration:
         """Battle seed counter increments each call."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         seed1 = engine._generate_battle_seed()
         seed2 = engine._generate_battle_seed()
@@ -87,7 +87,7 @@ class TestBattleSeedGeneration:
         """First seed is 1."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         seed = engine._generate_battle_seed()
 
@@ -97,8 +97,8 @@ class TestBattleSeedGeneration:
         """Different engine instances have independent counters."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine1 = ConflictResolutionEngine()
-        engine2 = ConflictResolutionEngine()
+        engine1 = ConflictResolutionEngine(battle_resolver=MagicMock())
+        engine2 = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         seed1 = engine1._generate_battle_seed()
         seed2 = engine2._generate_battle_seed()
@@ -160,7 +160,7 @@ class TestConflictDetection:
         """Conflicts are detected when fleets share location."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         empire1 = MagicMock()
         empire1.id = 0
@@ -187,7 +187,7 @@ class TestConflictDetection:
         """No conflict when same empire's fleets share location."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         empire = MagicMock()
         empire.id = 0
@@ -211,7 +211,7 @@ class TestConflictDetection:
         """Three empires at same hex triggers combat."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         empire1 = MagicMock()
         empire1.id = 0
@@ -252,7 +252,7 @@ class TestCombatResolution:
         """RNG fallback for empty fleets."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         fleet1 = MagicMock()
         fleet1.ships = []  # Empty fleet
@@ -271,7 +271,7 @@ class TestCombatResolution:
         """RNG fallback favors fleet1 when random > 0.5."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         fleet1 = MagicMock()
         fleet1.ships = []
@@ -290,7 +290,7 @@ class TestCombatResolution:
         """Full simulation used when both fleets have ships."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         fleet1 = MagicMock()
         fleet1.ships = [MagicMock()]  # Has ships
@@ -310,7 +310,7 @@ class TestCombatResolution:
         """Empty fleet vs fleet with ships uses RNG fallback."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         fleet1 = MagicMock()
         fleet1.ships = []  # Empty
@@ -330,7 +330,7 @@ class TestCombatResolution:
         """Fleet with ships vs empty fleet uses RNG fallback."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         fleet1 = MagicMock()
         fleet1.ships = [MagicMock()]  # Has ships
@@ -355,7 +355,7 @@ class TestBuildingFleetsCombat:
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import FleetOrder, OrderType
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         # Building fleet (has BUILD order)
         building_fleet = MagicMock(spec=Fleet)
@@ -395,7 +395,7 @@ class TestBuildingFleetsCombat:
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.order_types import OrderType
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         # Create building fleet
         building_fleet = MagicMock()

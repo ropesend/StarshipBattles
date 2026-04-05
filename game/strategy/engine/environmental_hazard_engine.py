@@ -15,6 +15,8 @@ Dependencies:
 from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING
 
+from game.strategy.interfaces.engines import IEnvironmentalHazardEngine
+
 if TYPE_CHECKING:
     from game.strategy.services.area_effect_manager import AreaEffectManager
     from game.strategy.data.fleet import Fleet
@@ -39,7 +41,7 @@ class EnvironmentalEvent:
     tick: int
 
 
-class EnvironmentalHazardEngine:
+class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
     """Engine for processing environmental hazard effects during turn loop.
 
     Processes storm effects (damage, fuel drain) for all fleets each tick.
