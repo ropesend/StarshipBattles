@@ -19,24 +19,6 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import PlanetaryFacility
 
 
-class _RegistriesFromProvider:
-    """Thin adapter exposing IRegistryProvider as a registries-like object.
-
-    Downstream functions access registries.components, etc. This adapter
-    translates those attribute accesses to get_components() calls.
-    """
-
-    def __init__(self, provider):
-        self._provider = provider
-
-    @property
-    def components(self):
-        return self._provider.get_components()
-
-    @property
-    def modifiers(self):
-        return self._provider.get_modifiers()
-
 
 # Module-level cache for production rates JSON
 _production_rates_cache: Optional[Dict[str, Dict[str, float]]] = None
@@ -313,7 +295,8 @@ def get_production_rate_for_queue(entity, queue_id: Optional[str]) -> Dict[str, 
     return base_rates
 
 
-def _collect_planet_sources(planet, sources: List[BuildQueueSource], galaxy=None, empire=None) -> None:
+def _collect_planet_sources(planet, sources: List[BuildQueueSource],
+                            galaxy=None, empire=None, registries=None) -> None:
     """Collect build queue sources from a single planet.
 
     Adds the base planetary yard queue and any shipyard facility queues
@@ -324,17 +307,13 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource], galaxy=None
         sources: List to append BuildQueueSource objects to.
         galaxy: Optional Galaxy for booster queries.
         empire: Optional Empire for booster queries.
+        registries: Optional GameRegistries for component lookup.
     """
     # Base queue (complexes only) — only if colony has PlanetaryYard facility
-    # PROJ-239: Use local colony_has_planetary_yard instead of engine import.
-    # Use get_default_registry_provider for DI instead of singleton access.
-    from game.core.registry import get_default_registry_provider
-    _provider = get_default_registry_provider()
-    regs = _RegistriesFromProvider(_provider)
-    if colony_has_planetary_yard(planet, regs):
+    if colony_has_planetary_yard(planet, registries):
         base_rates = get_default_production_rates("planetary_yard")
-        yard_size_mult = _get_planetary_yard_size_multiplier(planet, regs)
-        build_booster = get_build_rate_booster_mult(planet, galaxy, empire, regs)
+        yard_size_mult = _get_planetary_yard_size_multiplier(planet, registries)
+        build_booster = get_build_rate_booster_mult(planet, galaxy, empire, registries)
         scaled_rates = {res: rate * yard_size_mult * build_booster for res, rate in base_rates.items()}
         sources.append(BuildQueueSource(
             queue_id=f"planet_{planet.id}_base",
@@ -350,7 +329,7 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource], galaxy=None
 
     # Shipyard facility queues
     shipyard_index = 0
-    build_booster = get_build_rate_booster_mult(planet, galaxy, empire, regs) if galaxy and empire else 1.0
+    build_booster = get_build_rate_booster_mult(planet, galaxy, empire, registries) if galaxy and empire else 1.0
     for facility in planet.facilities:
         if facility.is_shipyard:
             shipyard_index += 1
@@ -395,7 +374,7 @@ def _collect_fleet_sources(fleet, sources: List[BuildQueueSource]) -> None:
         ))
 
 
-def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSource]:
+def collect_build_queues_at_hex(hex_coord, galaxy, empire, registries=None) -> List[BuildQueueSource]:
     """Gather all build queue sources at a hex for the given empire.
 
     Returns a list of BuildQueueSource objects representing every active
@@ -408,6 +387,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
         hex_coord: The hex coordinate to query.
         galaxy: Galaxy instance for planet lookup.
         empire: Empire instance for ownership check and fleet access.
+        registries: Optional GameRegistries for component lookup.
 
     Returns:
         List of BuildQueueSource objects at the hex.
@@ -418,7 +398,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
     for planet in galaxy.get_planets_at_global_hex(hex_coord):
         if planet.owner_id != empire.id:
             continue
-        _collect_planet_sources(planet, sources, galaxy=galaxy, empire=empire)
+        _collect_planet_sources(planet, sources, galaxy=galaxy, empire=empire, registries=registries)
 
     # Fleet queues (one entry per space yard component)
     for fleet in empire.fleets:
@@ -429,7 +409,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
     return sources
 
 
-def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
+def collect_all_build_queues_for_empire(empire, registries=None) -> List[BuildQueueSource]:
     """Gather all build queue sources across the entire empire.
 
     Iterates all colonies and fleets owned by the empire to produce a
@@ -440,6 +420,7 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
 
     Args:
         empire: Empire instance whose queues to collect.
+        registries: Optional GameRegistries for component lookup.
 
     Returns:
         List of BuildQueueSource objects for the whole empire.
@@ -448,7 +429,7 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
 
     # Planet queues
     for planet in empire.colonies:
-        _collect_planet_sources(planet, sources)
+        _collect_planet_sources(planet, sources, registries=registries)
 
     # Fleet queues (one entry per space yard component)
     for fleet in empire.fleets:

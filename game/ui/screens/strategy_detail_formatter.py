@@ -322,8 +322,7 @@ class StrategyDetailFormatter:
         # Show Build Yard button only if planet has PlanetaryYard or SpaceShipyard
         if obj.owner_id == current_empire_id:
             from game.strategy.data.build_queue_source import colony_has_planetary_yard
-            from game.core.registry import get_default_registry_provider
-            has_yard = colony_has_planetary_yard(obj, get_default_registry_provider()) or obj.has_space_shipyard
+            has_yard = colony_has_planetary_yard(obj, self.scene.session.registries) or obj.has_space_shipyard
             if has_yard:
                 self.btn_build_yard.show()
             if self.btn_planet_orders:

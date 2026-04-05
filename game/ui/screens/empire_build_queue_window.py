@@ -110,7 +110,7 @@ class EmpireBuildQueueWindow(UIWindow):
 
         # --- MVVM components ---
         self._event_bus = EventBus()
-        sources = collect_all_build_queues_for_empire(empire)
+        sources = collect_all_build_queues_for_empire(empire, registries=session.registries)
         self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
 
         # --- Filter Manager (for column definitions) ---
