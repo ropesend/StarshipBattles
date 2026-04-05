@@ -153,8 +153,16 @@ class WorkshopDataLoader:
             # 6. Determine default class
             result.default_class = self._get_default_class()
             
-        except (FileNotFoundError, OSError, JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            logger.error(f"Failed to load data: {e}")
+        except (FileNotFoundError, OSError) as e:
+            logger.error(f"Data file error: {e}")
+            result.success = False
+            result.errors.append(str(e))
+        except (JSONDecodeError, KeyError, TypeError) as e:
+            logger.error(f"Data format error: {e}")
+            result.success = False
+            result.errors.append(str(e))
+        except ValueError as e:
+            logger.error(f"Data validation error: {e}")
             result.success = False
             result.errors.append(str(e))
         

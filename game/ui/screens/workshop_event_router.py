@@ -272,13 +272,9 @@ class WorkshopEventRouter:
 
         if target_comp:
             # Clone
+            from game.ui.screens.builder.modifier_utils import copy_modifiers
             new_comp = target_comp.clone()
-            for m in target_comp.modifiers:
-                new_comp.add_modifier(m.definition.id)
-                nm = new_comp.get_modifier(m.definition.id)
-                if nm:
-                    nm.value = m.value
-            new_comp.recalculate_stats()
+            copy_modifiers(target_comp, new_comp)
 
             if target_layer:
                 success = gui.viewmodel.add_component_instance(new_comp, target_layer)
@@ -402,12 +398,18 @@ class WorkshopEventRouter:
         from game.core.strategy_metadata import StrategyMetadataService
         selected_name = event.text
         service = StrategyMetadataService.instance()
+        matched = False
         for strategy_id, strat in service.strategies.items():
             if strat.get('name', '') == selected_name:
                 gui.viewmodel.set_ship_ai_strategy(strategy_id)
+                matched = True
                 break
-        else:
-            gui.viewmodel.set_ship_ai_strategy(event.text.lower().replace(' ', '_'))
+        if not matched:
+            import logging
+            logging.getLogger(__name__).warning(
+                f"No strategy found for display name '{selected_name}', "
+                f"available: {[s.get('name') for s in service.strategies.values()]}"
+            )
         return True
     
     def _handle_confirmation(self, event) -> bool:

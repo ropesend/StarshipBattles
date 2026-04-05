@@ -86,6 +86,8 @@ class WorkshopContext:
             >>> context = WorkshopContext.standalone(tech_preset_name="early_game")
             >>> workshop = DesignWorkshopScreen(800, 600, context)
         """
+        if registries is None:
+            raise ValueError("registries is required for WorkshopContext.standalone()")
         return cls(
             mode=WorkshopMode.STANDALONE,
             tech_preset_name=tech_preset_name,
@@ -130,6 +132,8 @@ class WorkshopContext:
             ... )
             >>> workshop = DesignWorkshopScreen(800, 600, context)
         """
+        if registries is None:
+            raise ValueError("registries is required for WorkshopContext.integrated()")
         return cls(
             mode=WorkshopMode.INTEGRATED,
             empire_id=empire_id,

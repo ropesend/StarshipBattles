@@ -89,6 +89,16 @@ class WorkshopViewModel:
         self._available_components: List[Component] = []
         self._show_hull_layer: bool = False
         
+    def _require_ship(self, operation: str) -> bool:
+        """Check if a ship is loaded. Logs warning if not.
+
+        Returns True if ship exists, False otherwise.
+        """
+        if not self._ship:
+            logger.warning("Cannot %s: no ship loaded", operation)
+            return False
+        return True
+
     # ─────────────────────────────────────────────────────────────────
     # Ship Property
     # ─────────────────────────────────────────────────────────────────
@@ -298,12 +308,8 @@ class WorkshopViewModel:
             if comp is editing_comp:
                 continue
                 
-            # Copy modifiers
-            comp.modifiers = []
-            for m in editing_comp.modifiers:
-                new_m = m.__class__(m.definition, m.value)
-                comp.modifiers.append(new_m)
-            comp.recalculate_stats()
+            from game.ui.screens.builder.modifier_utils import copy_modifiers
+            copy_modifiers(editing_comp, comp)
             
         editing_comp.recalculate_stats()
         self.notify_ship_changed()
@@ -368,8 +374,7 @@ class WorkshopViewModel:
         Returns:
             True if successful, False otherwise
         """
-        if not self._ship:
-            logger.error("Cannot add component: no ship")
+        if not self._require_ship("add component"):
             return False
 
         result = self._ship_service.add_component(self._ship, component_id, layer)
@@ -394,8 +399,7 @@ class WorkshopViewModel:
         Returns:
             Number of components successfully added
         """
-        if not self._ship:
-            logger.error("Cannot add components: no ship")
+        if not self._require_ship("add components"):
             return 0
 
         result = self._ship_service.add_component_bulk(
@@ -423,8 +427,7 @@ class WorkshopViewModel:
         Returns:
             True if successful, False otherwise
         """
-        if not self._ship:
-            logger.error("Cannot add component: no ship")
+        if not self._require_ship("add component instance"):
             return False
 
         result = self._ship_service.add_component_instance(self._ship, component, layer)
@@ -448,8 +451,7 @@ class WorkshopViewModel:
         Returns:
             The removed component, or None if removal failed
         """
-        if not self._ship:
-            logger.error("Cannot remove component: no ship")
+        if not self._require_ship("remove component"):
             return None
 
         result = self._ship_service.remove_component(self._ship, layer, index)
@@ -494,8 +496,7 @@ class WorkshopViewModel:
         Returns:
             True if successful, False otherwise
         """
-        if not self._ship:
-            logger.error("Cannot change class: no ship")
+        if not self._require_ship("change class"):
             return False
 
         result = self._ship_service.change_class(
@@ -549,7 +550,7 @@ class WorkshopViewModel:
 
     def clear_design(self):
         """Clear the current ship design (keeping hull)."""
-        if not self._ship:
+        if not self._require_ship("clear design"):
             return
 
         logger.info("Clearing ship design")
@@ -571,7 +572,7 @@ class WorkshopViewModel:
         Args:
             name: New name for the ship
         """
-        if not self._ship:
+        if not self._require_ship("set ship name"):
             return
 
         if self._ship.name == name:
@@ -590,7 +591,7 @@ class WorkshopViewModel:
         Args:
             theme_id: Theme identifier (e.g., "Federation", "Klingon")
         """
-        if not self._ship:
+        if not self._require_ship("set ship theme"):
             return
 
         if self._ship.theme_id == theme_id:
@@ -609,7 +610,7 @@ class WorkshopViewModel:
         Args:
             strategy_id: AI strategy identifier (e.g., "standard_ranged", "aggressive_close")
         """
-        if not self._ship:
+        if not self._require_ship("set AI strategy"):
             return
 
         if self._ship.ai_strategy == strategy_id:
