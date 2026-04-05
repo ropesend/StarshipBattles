@@ -232,7 +232,7 @@ class CargoTransferService:
         amount: int,
         max_amount: int,
         species_id: Optional[str] = None
-    ) -> IssueTransferCommand:
+    ) -> 'IssueTransferCommand':
         """Build a transfer command with engine conventions.
 
         Args:

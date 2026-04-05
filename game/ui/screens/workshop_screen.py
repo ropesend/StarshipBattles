@@ -71,6 +71,10 @@ class DesignWorkshopScreen:
         # PROJ-211: Initialize ModifierLogic with registry provider
         ModifierLogic.init_service(context.registries)
 
+        # Instance-based service (used by panels that accept it)
+        from game.ui.screens.builder.modifier_logic import ModifierLogicService
+        self._modifier_logic = ModifierLogicService(context.registries)
+
         # PROJ-43: UI service adapters for ship I/O and design loading
         self._ship_io_adapter = ShipIOAdapter()
         self._design_loader_adapter = DesignLoaderAdapter(registry_provider=context.registries)
@@ -259,7 +263,8 @@ class DesignWorkshopScreen:
                 container=self.modifier_container_panel,
                 width=mod_panel_rect.width,
                 on_change_callback=self._on_modifier_change,
-                registries=self.context.registries
+                registries=self.context.registries,
+                modifier_logic=self._modifier_logic
             )
             self.modifier_panel.set_panel_height(self.modifier_panel_height)
         
@@ -296,7 +301,8 @@ class DesignWorkshopScreen:
                 self.ui_manager,
                 pygame.Rect(detail_x, 0, self.detail_panel_width, avail_height),
                 comp_img_path,
-                event_bus=self.event_bus
+                event_bus=self.event_bus,
+                modifier_logic=self._modifier_logic
             )
         
         # Bottom Bar Buttons

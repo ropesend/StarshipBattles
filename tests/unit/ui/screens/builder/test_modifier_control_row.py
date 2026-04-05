@@ -3,7 +3,7 @@
 PROJ-204 Phase 5: Test the extracted modifier range logic.
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 class TestModifierControlRowGetLocalBounds:
@@ -65,20 +65,21 @@ class TestModifierControlRowGetLocalBounds:
         assert clamped == 100.0
 
     def test_get_local_bounds_with_component_uses_modifier_logic(self, row, mock_mod_def):
-        """With component context, uses ModifierLogic.get_local_min_max."""
+        """With component context, uses modifier logic service for bounds."""
         component = MagicMock()
         row.component_context = component
         row.current_value = 50.0
 
-        with patch('game.ui.screens.builder.modifier_row.ModifierLogic') as mock_logic:
-            mock_logic.get_local_min_max.return_value = (10.0, 90.0)
+        mock_logic = MagicMock()
+        mock_logic.get_local_min_max.return_value = (10.0, 90.0)
+        row._logic = mock_logic
 
-            min_v, max_v, clamped = row._get_local_bounds()
+        min_v, max_v, clamped = row._get_local_bounds()
 
-            mock_logic.get_local_min_max.assert_called_once_with('test_mod', component)
-            assert min_v == 10.0
-            assert max_v == 90.0
-            assert clamped == 50.0
+        mock_logic.get_local_min_max.assert_called_once_with('test_mod', component)
+        assert min_v == 10.0
+        assert max_v == 90.0
+        assert clamped == 50.0
 
     def test_get_local_bounds_with_component_clamps_to_component_bounds(self, row, mock_mod_def):
         """Value is clamped to component-specific bounds."""
@@ -86,12 +87,13 @@ class TestModifierControlRowGetLocalBounds:
         row.component_context = component
         row.current_value = 5.0  # Below component min
 
-        with patch('game.ui.screens.builder.modifier_row.ModifierLogic') as mock_logic:
-            mock_logic.get_local_min_max.return_value = (10.0, 90.0)
+        mock_logic = MagicMock()
+        mock_logic.get_local_min_max.return_value = (10.0, 90.0)
+        row._logic = mock_logic
 
-            min_v, max_v, clamped = row._get_local_bounds()
+        min_v, max_v, clamped = row._get_local_bounds()
 
-            assert clamped == 10.0
+        assert clamped == 10.0
 
     def test_get_local_bounds_value_at_boundary(self, row, mock_mod_def):
         """Value exactly at boundary is not changed."""

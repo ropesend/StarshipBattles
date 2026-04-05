@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
-from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.screens.builder.modifier_logic import ModifierLogic, ModifierLogicService
 from game.ui.screens.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
 from game.ui.screens.builder.modifier_row import ModifierControlRow
 
@@ -28,12 +28,10 @@ class ModifierEditorPanel:
     """
 
     def __init__(self, manager, container, width, on_change_callback,
-                 *, registries: 'GameRegistries'):
+                 *, registries: 'GameRegistries',
+                 modifier_logic: 'ModifierLogicService | None' = None):
         """
         Initialize the ModifierEditorPanel.
-
-        PROJ-38: Added registries parameter for DI.
-        PROJ-50: Made registries mandatory, removed fallback.
 
         Args:
             manager: pygame_gui UIManager
@@ -41,12 +39,17 @@ class ModifierEditorPanel:
             width: Panel width
             on_change_callback: Callback when modifier changes
             registries: GameRegistries instance (required)
+            modifier_logic: ModifierLogicService instance (optional, falls back to static ModifierLogic)
         """
         self.manager = manager
         self.container = container
         self.width = width
         self.on_change_callback = on_change_callback
         self._registries = registries
+        self._modifier_logic = modifier_logic
+
+        # Resolve modifier logic: prefer injected instance, fall back to static
+        self._logic = modifier_logic if modifier_logic is not None else ModifierLogic
 
         # State
         self.editing_component = None
@@ -71,7 +74,7 @@ class ModifierEditorPanel:
 
         if self.editing_component:
             # Ensure mandatory modifiers are present in data model
-            ModifierLogic.ensure_mandatory_modifiers(self.editing_component)
+            self._logic.ensure_mandatory_modifiers(self.editing_component)
 
     def set_panel_height(self, height):
         """Set the available height for the modifier panel."""
@@ -123,7 +126,7 @@ class ModifierEditorPanel:
             content_height = 0
             row_height = 28  # Compact row height
             for mod_id, mod_def in self._get_modifiers().items():
-                if ModifierLogic.is_modifier_allowed(mod_id, self.editing_component):
+                if self._logic.is_modifier_allowed(mod_id, self.editing_component):
                     current_mod_ids.append(mod_id)
                     content_height += row_height + 2  # 2px gap between rows
 
@@ -225,7 +228,8 @@ class ModifierEditorPanel:
             config = MODIFIER_UI_CONFIG.get(mod_id, DEFAULT_CONFIG)
             row = ModifierControlRow(
                 self.manager, target_container, row_width,
-                mod_id, mod_def, config, self._on_row_change
+                mod_id, mod_def, config, self._on_row_change,
+                modifier_logic=self._modifier_logic
             )
             row.build_ui(y)
             self.modifier_rows[mod_id] = row
@@ -253,7 +257,7 @@ class ModifierEditorPanel:
                 # Set initial
                 m = self.editing_component.get_modifier(mod_id)
                 if m:
-                    m.value = ModifierLogic.get_initial_value(mod_id, self.editing_component)
+                    m.value = self._logic.get_initial_value(mod_id, self.editing_component)
             else:
                 self.editing_component.remove_modifier(mod_id)
 
