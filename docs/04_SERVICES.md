@@ -17,9 +17,17 @@ game/simulation/services/
     __init__.py
     battle_service.py           # Battle creation and simulation control
     design_loader.py            # Load ship designs into Ship objects
-    modifier_service.py         # Component modifier handling
+    modifier_service.py         # Low-level component modifier handling
     registry_loader.py          # Load registry data from disk
     vehicle_design_service.py   # Ship creation and modification
+
+game/ui/screens/builder/
+    modifier_logic.py           # ModifierLogicService - builder modifier logic (DI)
+    modifier_utils.py           # copy_modifiers() utility
+    stat_definitions.py         # StatDefinition class
+    stat_getters.py             # Stat value getters, formatters, validators
+    stat_rows_dynamic.py        # Dynamic resource/strategic row generation
+    stats_config.py             # Stats layout loader + re-exports
 
 game/strategy/services/
     __init__.py
@@ -171,20 +179,23 @@ if result.success:
 
 ---
 
-### ModifierService
+### ModifierService (Simulation Layer)
 
 **Location:** `game/simulation/services/modifier_service.py`
 
-**Purpose:** Manages component modifier logic -- which modifiers are allowed, which are mandatory, value constraints, and automatic application of required modifiers.
+**Purpose:** Low-level modifier operations in the simulation layer -- restriction checking, registry access. Used internally by `ComponentService`.
 
-**Dependencies:** Requires `modifier_registry: Dict[str, Any]` via constructor (strict DI, no fallback). Typically pass `registries.modifiers`.
+**Dependencies:** Requires `modifier_registry: Dict[str, Any]` via constructor (strict DI, no fallback).
 
-**Class Constant:**
-```python
-MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
-```
+---
 
-> **Note:** `MANDATORY_MODIFIERS` is currently unused dead code. The `get_mandatory_modifiers()` method returns all allowed modifiers for a component, not just those in this list.
+### ModifierLogicService (UI Layer)
+
+**Location:** `game/ui/screens/builder/modifier_logic.py`
+
+**Purpose:** Builder-specific modifier logic -- validation, mandatory checks, initial value calculation, component-specific constraints (e.g., turret mount arc limits), and snap calculations for step buttons. Acts as a bridge between UI controls and the underlying `ComponentService`.
+
+**Dependencies:** Requires `IRegistryProvider` via constructor injection (strict DI). Creates a `ComponentService` internally.
 
 **Key Methods:**
 
@@ -193,23 +204,20 @@ MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mou
 | `is_modifier_allowed` | `(mod_id: str, component) -> bool` | Check if modifier is valid for this component (type/ability restrictions) |
 | `get_mandatory_modifiers` | `(component) -> list` | Get list of mandatory modifier IDs for this component |
 | `is_modifier_mandatory` | `(mod_id: str, component) -> bool` | Check if a specific modifier is mandatory |
-| `get_initial_value` | `(mod_id: str, component) -> float` | Get the default value for a newly applied modifier |
+| `get_initial_value` | `(mod_id: str, component) -> float` | Get the default value for a newly applied modifier (uses dispatch dict) |
 | `ensure_mandatory_modifiers` | `(component) -> None` | Auto-apply all required modifiers with default values |
 | `get_local_min_max` | `(mod_id: str, component) -> tuple` | Get (min, max) value range, accounting for component constraints |
+| `calculate_snap_value` | `(current, step, direction, min_val, max_val, smart_floor) -> float` | Static. Calculate snap value for step buttons |
 
 **Usage:**
 ```python
-from game.simulation.services.modifier_service import ModifierService
+from game.ui.screens.builder.modifier_logic import ModifierLogicService
 
-service = ModifierService(modifier_registry=registries.modifiers)
+service = ModifierLogicService(registry_provider=context.registries)
 
 # Check allowance and mandatory status
 if service.is_modifier_allowed('turret_mount', weapon):
     print("Turret mount available")
-
-# Get mandatory modifiers for a weapon
-mandatory = service.get_mandatory_modifiers(weapon)
-# e.g. ['simple_size_mount', 'range_mount', 'facing', 'turret_mount', 'rapid_fire']
 
 # Auto-apply all mandatory modifiers
 service.ensure_mandatory_modifiers(weapon)
@@ -218,6 +226,8 @@ service.ensure_mandatory_modifiers(weapon)
 min_val, max_val = service.get_local_min_max('turret_mount', weapon)
 print(f"Turret arc: {min_val} to {max_val} degrees")
 ```
+
+> **Note:** A deprecated `ModifierLogic` static wrapper class remains in the same file for backward compatibility during transition. New code should use `ModifierLogicService` instances.
 
 ---
 
@@ -705,7 +715,7 @@ All services that need registries use **constructor injection with no fallback**
 ```python
 # Correct
 service = VehicleDesignService(registries=game_registries)
-service = ModifierService(modifier_registry=registries.modifiers)
+service = ModifierLogicService(registry_provider=game_registries)
 service = ShipStatsCalculator(registries=game_registries)
 loader = SimulationDesignLoader(registries=game_registries)
 
@@ -828,4 +838,4 @@ class TestVehicleDesignService:
 
 ---
 
-*Last Updated: March 2026*
+*Last Updated: April 2026*

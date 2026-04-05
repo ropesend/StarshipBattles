@@ -295,6 +295,49 @@ via registry lookup). Active planetary shields consume energy per turn.
 **Critical:** Uses `get_default_registry_provider()` for ability lookup on facility
 components. See Pattern 3 in `02_PATTERNS.md` for the registry lookup requirement.
 
+### Build Queue Source DI
+
+**File:** `game/strategy/data/build_queue_source.py`
+
+Functions that collect build queue sources accept an optional `registries` parameter
+(GameRegistries) threaded via DI from callers. This replaces the former pattern of
+calling `get_default_registry_provider()` internally with an adapter shim.
+
+```python
+collect_build_queues_at_hex(hex_coord, galaxy, empire, registries=None)
+collect_all_build_queues_for_empire(empire, registries=None)
+_collect_planet_sources(planet, sources, galaxy, empire, registries=None)
+```
+
+Callers pass `session.registries`:
+- `BuildQueueScreen` passes `self.session.registries`
+- `EmpireBuildQueueWindow` passes `session.registries`
+- `StrategyDetailFormatter` passes `self.scene.session.registries`
+
+`colony_has_planetary_yard(colony, registries)` requires `GameRegistries` for
+registry-based ability lookup (design JSONs don't store abilities inline).
+
+### Strategy UI Widget Architecture
+
+**File:** `game/ui/screens/strategy_ui.py`
+
+`StrategyUI` stores the `StrategyWidgets` dataclass directly and delegates attribute
+access via `__getattr__`. This eliminates manual button unpacking — new buttons added
+to `StrategyWidgets` are automatically accessible on `StrategyUI` without code changes.
+
+```python
+self._widgets = widgets  # StrategyWidgets dataclass from create_strategy_panels()
+
+def __getattr__(self, name):
+    widgets = self.__dict__.get('_widgets')
+    if widgets is not None and hasattr(widgets, name):
+        return getattr(widgets, name)
+    raise AttributeError(...)
+```
+
+`StrategyDetailFormatter` uses the same pattern — accepts `StrategyWidgets` directly
+and delegates lookups via `__getattr__` instead of a manually-curated widget dict.
+
 ---
 
 ## 5. Event System
