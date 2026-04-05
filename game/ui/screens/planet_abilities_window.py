@@ -96,8 +96,6 @@ class PlanetAbilitiesWindow(UIWindow):
             # Toggle button
             active_abilities = getattr(self.planet, 'active_abilities', {})
             is_active = active_abilities.get(ability_name, False)
-            if ability_name == 'PlanetaryShield':
-                is_active = is_active or getattr(self.planet, 'shield_active', False)
 
             btn_text = "Deactivate" if is_active else "Activate"
             btn = UIButton(
@@ -146,8 +144,6 @@ class PlanetAbilitiesWindow(UIWindow):
         """Get display status for an ability including tick progress."""
         active_abilities = getattr(self.planet, 'active_abilities', {})
         is_active = active_abilities.get(ability_name, False)
-        if ability_name == 'PlanetaryShield':
-            is_active = is_active or getattr(self.planet, 'shield_active', False)
 
         # Check for pending activation/deactivation orders
         for order in self.planet.orders:
@@ -161,13 +157,6 @@ class PlanetAbilitiesWindow(UIWindow):
             if order.type == OrderType.DEACTIVATE_ABILITY and order_ability == ability_name:
                 progress = order.execution_progress
                 return f"Deactivating ({progress} ticks)"
-
-            # Legacy shield orders
-            if ability_name == 'PlanetaryShield':
-                if order.type == OrderType.ACTIVATE_SHIELD:
-                    return f"Activating ({order.execution_progress} ticks)"
-                if order.type == OrderType.DEACTIVATE_SHIELD:
-                    return f"Deactivating ({order.execution_progress} ticks)"
 
         return "Active" if is_active else "Inactive"
 

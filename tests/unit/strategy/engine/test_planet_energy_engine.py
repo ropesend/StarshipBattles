@@ -29,7 +29,7 @@ def _make_planet(name="TestPlanet", facilities=None):
     planet.energy = 0.0
     planet.energy_capacity = 0.0
     planet.energy_generation = 0.0
-    planet.shield_active = False
+    planet.active_abilities = {'PlanetaryShield': False}
     return planet
 
 
@@ -145,7 +145,7 @@ class TestPlanetEnergyEngine:
         shield = _make_facility(_shield_design(energy_drain_rate=50.0))
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 100.0
-        planet.shield_active = True
+        planet.active_abilities['PlanetaryShield'] = True
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
@@ -160,27 +160,27 @@ class TestPlanetEnergyEngine:
         shield = _make_facility(_shield_design(energy_drain_rate=50.0))
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 0.3  # Less than drain_per_tick (0.5)
-        planet.shield_active = True
+        planet.active_abilities['PlanetaryShield'] = True
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
 
-        assert planet.shield_active is False
+        assert planet.active_abilities.get('PlanetaryShield', False) is False
         assert planet.energy == 0.0
 
     def test_shield_deactivates_when_facility_destroyed(self, fresh_registries):
         """Shield deactivates if shield facility is removed."""
         engine = PlanetEnergyEngine(registries=fresh_registries)
         battery = _make_facility(_battery_design(capacity=5000.0))
-        # No shield facility — but shield_active is True (facility was destroyed)
+        # No shield facility — but active_abilities has PlanetaryShield=True (facility was destroyed)
         planet = _make_planet(facilities=[battery])
         planet.energy = 100.0
-        planet.shield_active = True
+        planet.active_abilities['PlanetaryShield'] = True
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
 
-        assert planet.shield_active is False
+        assert planet.active_abilities.get('PlanetaryShield', False) is False
 
     def test_multiple_generators_stack(self, fresh_registries):
         """Multiple generators' rates are summed."""
@@ -242,7 +242,7 @@ class TestPlanetEnergyEngine:
         shield = _make_facility(_shield_design(energy_drain_rate=50.0))
         planet = _make_planet(facilities=[gen, battery, shield])
         planet.energy = 100.0
-        planet.shield_active = True
+        planet.active_abilities['PlanetaryShield'] = True
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])

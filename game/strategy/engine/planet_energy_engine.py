@@ -234,7 +234,7 @@ class PlanetEnergyEngine:
                 shield_data = abilities.get('PlanetaryShield')
                 if isinstance(shield_data, dict):
                     has_shield_facility = True
-                    if planet.shield_active:
+                    if getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False):
                         total_drain += shield_data.get('energy_drain_rate', 0.0)
 
                 # Check for other activatable abilities (stabilizers)
@@ -260,8 +260,10 @@ class PlanetEnergyEngine:
             else:
                 # Insufficient energy — auto-deactivate all active energy-draining abilities
                 planet.energy = 0.0
-                if planet.shield_active:
-                    planet.shield_active = False
+                if getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False):
+                    if not hasattr(planet, 'active_abilities'):
+                        planet.active_abilities = {}
+                    planet.active_abilities['PlanetaryShield'] = False
                     self._deactivate_shield_components(planet)
                     logger.info(f"Planet {planet.name}: shield auto-deactivated (energy depleted)")
                 for ability_key in _ACTIVATABLE_ABILITIES:
@@ -271,8 +273,10 @@ class PlanetEnergyEngine:
                         logger.info(f"Planet {planet.name}: {ability_key} auto-deactivated (energy depleted)")
 
         # 4. If shield facility was destroyed while shield was active, deactivate
-        if planet.shield_active and not has_shield_facility:
-            planet.shield_active = False
+        if getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False) and not has_shield_facility:
+            if not hasattr(planet, 'active_abilities'):
+                planet.active_abilities = {}
+            planet.active_abilities['PlanetaryShield'] = False
             logger.info(
                 f"Planet {planet.name}: shield deactivated (facility destroyed)"
             )

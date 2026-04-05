@@ -136,11 +136,7 @@ class PlanetActionEngine:
         empire: 'Empire',
     ) -> None:
         """Execute a completed planet order."""
-        if order.type == OrderType.ACTIVATE_SHIELD:
-            self._execute_activate_ability(planet, order, empire, 'PlanetaryShield')
-        elif order.type == OrderType.DEACTIVATE_SHIELD:
-            self._execute_deactivate_ability(planet, order, empire, 'PlanetaryShield')
-        elif order.type == OrderType.ACTIVATE_ABILITY:
+        if order.type == OrderType.ACTIVATE_ABILITY:
             ability_name = order.target.get('ability_name', '') if isinstance(order.target, dict) else ''
             self._execute_activate_ability(planet, order, empire, ability_name)
         elif order.type == OrderType.DEACTIVATE_ABILITY:
@@ -159,10 +155,6 @@ class PlanetActionEngine:
         if not hasattr(planet, 'active_abilities'):
             planet.active_abilities = {}
         planet.active_abilities[ability_name] = True
-
-        # Legacy: keep shield_active in sync for PlanetaryShield
-        if ability_name == 'PlanetaryShield':
-            planet.shield_active = True
 
         # Set component state on target facility
         facility = self._find_target_facility(planet, order)
@@ -196,10 +188,6 @@ class PlanetActionEngine:
         if not hasattr(planet, 'active_abilities'):
             planet.active_abilities = {}
         planet.active_abilities[ability_name] = False
-
-        # Legacy: keep shield_active in sync for PlanetaryShield
-        if ability_name == 'PlanetaryShield':
-            planet.shield_active = False
 
         # Clear component state on target facility
         facility = self._find_target_facility(planet, order)

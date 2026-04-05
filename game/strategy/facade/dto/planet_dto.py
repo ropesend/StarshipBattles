@@ -104,7 +104,7 @@ class PlanetInfo:
             population_details=pop_details,
             energy=getattr(planet, 'energy', 0.0),
             energy_capacity=getattr(planet, 'energy_capacity', 0.0),
-            shield_active=getattr(planet, 'shield_active', False),
+            shield_active=getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False),
             stockpile=_dict_to_tuple(getattr(planet, 'stockpile', None)),
             max_stockpile=_dict_to_tuple(getattr(planet, 'max_stockpile', None)),
             staging_yard_summary=staging_summary,

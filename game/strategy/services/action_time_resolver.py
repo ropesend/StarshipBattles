@@ -38,16 +38,11 @@ ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = {
     OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
     OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
     OrderType.SELF_DESTRUCT: 'SelfDestruct',
-    # PROJ-238: Planet orders
-    OrderType.ACTIVATE_SHIELD: 'PlanetaryShield',
-    OrderType.DEACTIVATE_SHIELD: 'PlanetaryShield',
 }
 
 # PROJ-238: Order types that use a non-standard time field name.
 # If not listed here, 'action_time' is used (the default).
 ORDER_TO_TIME_FIELD: Dict[OrderType, str] = {
-    OrderType.ACTIVATE_SHIELD: 'activation_time',
-    OrderType.DEACTIVATE_SHIELD: 'deactivation_time',
 }
 
 # Order types that are handled by movement engine, not action engine

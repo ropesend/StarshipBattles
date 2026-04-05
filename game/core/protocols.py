@@ -273,10 +273,6 @@ class IPlanet(Protocol):
         """Maximum energy storage capacity."""
         ...
 
-    @property
-    def shield_active(self) -> bool:
-        """Whether planetary shield is currently active."""
-        ...
 
 
 @runtime_checkable

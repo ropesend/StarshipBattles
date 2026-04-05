@@ -32,10 +32,7 @@ class OrderType(Enum):
     SELF_DESTRUCT = auto()
     LOAD_POPULATION = auto()
     UNLOAD_POPULATION = auto()
-    # Planet orders (PROJ-238: unified from PlanetOrderType)
-    ACTIVATE_SHIELD = auto()
-    DEACTIVATE_SHIELD = auto()
-    # Generic ability toggle (replaces per-ability order types)
+    # Planet orders — generic ability toggle
     ACTIVATE_ABILITY = auto()
     DEACTIVATE_ABILITY = auto()
 
@@ -62,16 +59,12 @@ ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.CLOSE_WARP_POINT,
     OrderType.CREATE_DYSON_SPHERE,
     OrderType.SELF_DESTRUCT,
-    OrderType.ACTIVATE_SHIELD,
-    OrderType.DEACTIVATE_SHIELD,
     OrderType.ACTIVATE_ABILITY,
     OrderType.DEACTIVATE_ABILITY,
 })
 
-# PROJ-238: Planet-specific action orders (subset of ACTION_ORDER_TYPES)
+# Planet-specific action orders (subset of ACTION_ORDER_TYPES)
 PLANET_ACTION_ORDER_TYPES: frozenset = frozenset({
-    OrderType.ACTIVATE_SHIELD,
-    OrderType.DEACTIVATE_SHIELD,
     OrderType.ACTIVATE_ABILITY,
     OrderType.DEACTIVATE_ABILITY,
 })

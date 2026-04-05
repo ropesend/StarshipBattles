@@ -258,9 +258,6 @@ class FleetCommandRouter:
         # Determine order type based on current state
         active_abilities = getattr(planet, 'active_abilities', {})
         is_active = active_abilities.get(ability_name, False)
-        # Legacy shield compat
-        if ability_name == 'PlanetaryShield':
-            is_active = is_active or getattr(planet, 'shield_active', False)
 
         order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
 
