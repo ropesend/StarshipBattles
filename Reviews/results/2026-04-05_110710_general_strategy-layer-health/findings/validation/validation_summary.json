@@ -1,0 +1,46 @@
+{
+  "original_count": 80,
+  "confirmed": 77,
+  "downgraded": 10,
+  "rejected": 3,
+  "no_verdict": 0,
+  "filtered_count": 77,
+  "rejection_rate_pct": 3.8,
+  "by_shard": {
+    "validator_1": {
+      "reviewed": 27,
+      "confirmed": 22,
+      "downgraded": 4,
+      "rejected": 1
+    },
+    "validator_2": {
+      "reviewed": 27,
+      "confirmed": 22,
+      "downgraded": 4,
+      "rejected": 1
+    },
+    "validator_3": {
+      "reviewed": 26,
+      "confirmed": 23,
+      "downgraded": 2,
+      "rejected": 1
+    }
+  },
+  "rejected_ids": [
+    "DOCC-005",
+    "DOCC-018",
+    "AR-012"
+  ],
+  "downgraded_ids": {
+    "CQ-001": "Major",
+    "DOCC-006": "Major",
+    "CQ-005": "Minor",
+    "CQ-008": "Minor",
+    "DC-002": "Minor",
+    "ERR-003": "Minor",
+    "ERR-004": "Minor",
+    "CQ-014": "Info",
+    "DC-006": "Info",
+    "DC-008": "Info"
+  }
+}
