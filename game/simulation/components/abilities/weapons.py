@@ -268,15 +268,27 @@ class BeamWeaponAbility(WeaponAbility):
         AbilityStatBinding(StatKey.ACCURACY_ADD, 'base_accuracy', 'add', '_base_accuracy'),
     ]
 
+    # Default valid target types for PDC weapons
+    _DEFAULT_PDC_VALID_TARGETS = ["MISSILE", "FIGHTER"]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         if isinstance(data, dict):
             self.accuracy_falloff = float(data.get('accuracy_falloff', 0.001))
             self.base_accuracy = float(data.get('base_accuracy', 1.0))
+            self.pdc_valid_targets = list(
+                data.get('pdc_valid_targets', self._DEFAULT_PDC_VALID_TARGETS)
+            )
         else:
             self.accuracy_falloff = float(getattr(self.component, 'accuracy_falloff', 0.001))
             self.base_accuracy = float(getattr(self.component, 'base_accuracy', 1.0))
+            self.pdc_valid_targets = list(self._DEFAULT_PDC_VALID_TARGETS)
         self._base_accuracy = self.base_accuracy
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict) and 'pdc_valid_targets' in data:
+            self.pdc_valid_targets = list(data['pdc_valid_targets'])
 
     def recalculate(self):
         super().recalculate()
