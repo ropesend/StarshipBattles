@@ -137,7 +137,7 @@ class TestBattleControllerModeHandlers:
         controller.start()
 
         # Add ship to tracking
-        controller._ship_id_map[id(mock_ship)] = "ship-id"
+        controller._ship_id_map[mock_ship.id] = "ship-id"
 
         result = controller.request_retreat(mock_ship, method="edge")
 

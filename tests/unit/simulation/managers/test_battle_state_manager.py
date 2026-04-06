@@ -150,6 +150,7 @@ class TestBattleStateManagerExtractShips:
         """extract_ships_from_state converts ShipStates to ships."""
         mock_ship_state = Mock()
         mock_ship = Mock()
+        mock_ship.id = "extracted-ship-uuid"
         mock_ship_state.to_ship.return_value = mock_ship
         mock_ship_state.ship_id = "ship-1"
         mock_ship_state.team_id = 0
@@ -161,7 +162,7 @@ class TestBattleStateManagerExtractShips:
 
         assert len(ships) == 1
         assert mock_ship in ships
-        assert id_map[id(mock_ship)] == "ship-1"
+        assert id_map[mock_ship.id] == "ship-1"
 
     def test_extract_ships_empty_state(self, state_manager):
         """extract_ships_from_state handles empty ship list."""

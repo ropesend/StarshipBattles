@@ -27,6 +27,7 @@ def mock_ship():
     """Create a mock Ship object."""
     ship = Mock()
     ship.name = "Test Ship"
+    ship.id = "mock-ship-uuid-001"
     ship.is_alive = True
     ship.x = 50000
     ship.y = 50000
@@ -48,7 +49,7 @@ def retreat_manager(default_map_bounds):
 @pytest.fixture
 def ship_id_map(mock_ship):
     """Create a ship ID mapping."""
-    return {id(mock_ship): "test-ship-id"}
+    return {mock_ship.id: "test-ship-id"}
 
 
 # === Initialization Tests ===
@@ -98,7 +99,7 @@ class TestRetreatManagerRequestRetreat:
 
     def test_request_retreat_fails_if_already_retreating(self, retreat_manager, mock_ship, ship_id_map):
         """request_retreat fails if ship already retreating."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.EDGE, target=(0, 50000)
         )
@@ -119,7 +120,7 @@ class TestRetreatManagerRequestRetreat:
         assert success is True
         assert error is None
 
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         assert ship_id in retreat_manager.retreating_ships
         state = retreat_manager.retreating_ships[ship_id]
         assert state.method == RetreatMethod.EDGE
@@ -132,7 +133,7 @@ class TestRetreatManagerRequestRetreat:
         )
 
         assert success is True
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         state = retreat_manager.retreating_ships[ship_id]
         assert state.method == RetreatMethod.WARP
         assert state.charge_ticks == 0
@@ -142,10 +143,11 @@ class TestRetreatManagerRequestRetreat:
         """request_retreat calculates target for nearest edge."""
         # Ship close to left edge
         mock_ship = Mock()
+        mock_ship.id = "left-ship-uuid"
         mock_ship.is_alive = True
         mock_ship.x = 100
         mock_ship.y = 50000
-        ship_id_map[id(mock_ship)] = "left-ship"
+        ship_id_map[mock_ship.id] = "left-ship"
 
         retreat_manager.request_retreat(mock_ship, ship_id_map, method=RetreatMethod.EDGE)
 
@@ -160,7 +162,7 @@ class TestRetreatManagerCancelRetreat:
 
     def test_cancel_retreat_removes_state(self, retreat_manager, mock_ship, ship_id_map):
         """cancel_retreat removes retreat state."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.EDGE, target=(0, 50000)
         )
@@ -185,7 +187,7 @@ class TestRetreatManagerUpdateRetreats:
 
     def test_update_increments_warp_charge(self, retreat_manager, mock_ship, ship_id_map):
         """update increments warp charge ticks."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.WARP, charge_ticks=0, required_ticks=500
         )
@@ -199,7 +201,7 @@ class TestRetreatManagerUpdateRetreats:
 
     def test_update_warp_escape_when_charged(self, retreat_manager, mock_ship, ship_id_map):
         """update triggers escape when warp fully charged."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.WARP, charge_ticks=499, required_ticks=500
         )
@@ -217,11 +219,12 @@ class TestRetreatManagerUpdateRetreats:
         """update triggers escape when ship reaches map edge."""
         # Ship at left edge
         mock_ship = Mock()
+        mock_ship.id = "edge-ship-uuid"
         mock_ship.is_alive = True
         mock_ship.x = 100  # Within edge threshold
         mock_ship.y = 50000
         ship_id = "edge-ship"
-        ship_id_map[id(mock_ship)] = ship_id
+        ship_id_map[mock_ship.id] = ship_id
 
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.EDGE, target=(0, 50000)
@@ -236,7 +239,7 @@ class TestRetreatManagerUpdateRetreats:
 
     def test_update_removes_dead_ships_from_retreat(self, retreat_manager, mock_ship, ship_id_map):
         """update removes dead ships from retreat tracking."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.WARP, charge_ticks=0
         )
@@ -253,7 +256,7 @@ class TestRetreatManagerUpdateRetreats:
 
     def test_update_calls_escape_callback(self, retreat_manager, mock_ship, ship_id_map):
         """update calls escape callback when ship escapes."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
             method=RetreatMethod.WARP, charge_ticks=499, required_ticks=500
         )
@@ -361,7 +364,7 @@ class TestRetreatManagerIsRetreating:
 
     def test_is_retreating_true(self, retreat_manager, mock_ship, ship_id_map):
         """is_retreating returns True for retreating ship."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(method=RetreatMethod.EDGE)
 
         assert retreat_manager.is_retreating(mock_ship, ship_id_map) is True
@@ -382,7 +385,7 @@ class TestRetreatManagerGetRetreatState:
 
     def test_get_retreat_state_returns_state(self, retreat_manager, mock_ship, ship_id_map):
         """get_retreat_state returns the retreat state."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         expected_state = RetreatState(method=RetreatMethod.WARP, charge_ticks=100)
         retreat_manager.retreating_ships[ship_id] = expected_state
 
@@ -404,7 +407,7 @@ class TestRetreatManagerReset:
 
     def test_reset_clears_state(self, retreat_manager, mock_ship, ship_id_map):
         """reset clears all tracking state."""
-        ship_id = ship_id_map[id(mock_ship)]
+        ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(method=RetreatMethod.EDGE)
         retreat_manager.escaped_ships.append(ship_id)
 
