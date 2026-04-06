@@ -22,6 +22,9 @@ import logging
 
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
+from game.strategy.data.component_activation_state import (
+    ComponentActivationState,
+)
 from game.strategy.interfaces.engines import IPlanetEnergyEngine
 
 logger = logging.getLogger(__name__)
@@ -154,19 +157,14 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
         # 1. Recalculate capacity and generation from current facilities
         new_capacity = 0.0
         new_generation = 0.0
-        total_drain = 0.0
-        has_shield_facility = False
-        _active_facilities = {}  # ability_key -> True if facility exists
 
         for facility in planet.facilities:
             if not facility.is_operational:
                 continue
             for comp in iter_components(facility.design_data):
-                # Check for resource storage
-                # Extract abilities once per component (optimization)
                 abilities = _extract_abilities(comp, self._registries)
 
-                # Check for resource storage
+                # Resource storage
                 storage_entries = abilities.get('ResourceStorage')
                 if storage_entries:
                     entries = storage_entries if isinstance(storage_entries, list) else [storage_entries]
@@ -174,28 +172,13 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                         if isinstance(entry, dict) and entry.get('resource') == resource:
                             new_capacity += entry.get('amount', 0.0)
 
-                # Check for strategic resource generation
+                # Strategic resource generation
                 gen_entries = abilities.get('StrategicResourceGeneration')
                 if gen_entries:
                     entries = gen_entries if isinstance(gen_entries, list) else [gen_entries]
                     for entry in entries:
                         if isinstance(entry, dict) and entry.get('resource') == resource:
                             new_generation += entry.get('generation_rate', 0.0)
-
-                # Check for shield (to compute drain)
-                shield_data = abilities.get('PlanetaryShield')
-                if isinstance(shield_data, dict):
-                    has_shield_facility = True
-                    if getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False):
-                        total_drain += shield_data.get('energy_drain_rate', 0.0)
-
-                # Check for other activatable abilities (stabilizers)
-                for ability_key in _ACTIVATABLE_ABILITIES:
-                    ability_data = abilities.get(ability_key)
-                    if isinstance(ability_data, dict):
-                        _active_facilities[ability_key] = True
-                        if _is_ability_active(planet, ability_key):
-                            total_drain += ability_data.get('energy_drain_rate', 0.0)
 
         planet.energy_capacity = new_capacity
         planet.energy_generation = new_generation
@@ -204,40 +187,18 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
         if new_generation > 0:
             planet.energy += new_generation / 100.0
 
-        # 3. Consume energy for active abilities (1/100th per tick)
+        # 3. Compute total drain from ComponentActivationState entries
+        total_drain = self._compute_activation_drain(planet)
+
+        # 4. Consume energy for draining components (1/100th per tick)
         if total_drain > 0:
             drain_per_tick = total_drain / 100.0
             if planet.energy >= drain_per_tick:
                 planet.energy -= drain_per_tick
             else:
-                # Insufficient energy — auto-deactivate all active energy-draining abilities
+                # Insufficient energy — cancel all activating/active components
                 planet.energy = 0.0
-                if getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False):
-                    if not hasattr(planet, 'active_abilities'):
-                        planet.active_abilities = {}
-                    planet.active_abilities['PlanetaryShield'] = False
-                    self._deactivate_shield_components(planet)
-                    logger.info(f"Planet {planet.name}: shield auto-deactivated (energy depleted)")
-                for ability_key in _ACTIVATABLE_ABILITIES:
-                    if _is_ability_active(planet, ability_key):
-                        _set_ability_active(planet, ability_key, False)
-                        self._deactivate_ability_components(planet, ability_key)
-                        logger.info(f"Planet {planet.name}: {ability_key} auto-deactivated (energy depleted)")
-
-        # 4. If shield facility was destroyed while shield was active, deactivate
-        if getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False) and not has_shield_facility:
-            if not hasattr(planet, 'active_abilities'):
-                planet.active_abilities = {}
-            planet.active_abilities['PlanetaryShield'] = False
-            logger.info(
-                f"Planet {planet.name}: shield deactivated (facility destroyed)"
-            )
-
-        # 4b. If activatable ability facility destroyed while active, deactivate
-        for ability_key in _ACTIVATABLE_ABILITIES:
-            if _is_ability_active(planet, ability_key) and not _active_facilities.get(ability_key, False):
-                _set_ability_active(planet, ability_key, False)
-                logger.info(f"Planet {planet.name}: {ability_key} deactivated (facility destroyed)")
+                self._cancel_all_draining_components(planet)
 
         # 5. Clamp energy to [0, capacity]
         if new_capacity > 0:
@@ -245,22 +206,38 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
         else:
             planet.energy = 0.0
 
-    def _deactivate_shield_components(self, planet: 'Planet') -> None:
-        """Deactivate all shield component states on a planet's facilities."""
+    def _compute_activation_drain(self, planet: 'Planet') -> float:
+        """Sum energy_drain_rate from all ComponentActivationState entries that are draining."""
+        total = 0.0
         for facility in planet.facilities:
-            for comp in iter_components(facility.design_data):
-                shield_info_data = get_shield_info(comp, self._registries)
-                if shield_info_data is not None:
-                    comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
-                    if comp_id:
-                        facility.set_component_active(comp_id, False)
+            if not facility.is_operational:
+                continue
+            for key, state_data in facility.component_states.items():
+                if not isinstance(state_data, dict) or 'phase' not in state_data:
+                    continue
+                state = ComponentActivationState.from_dict(state_data)
+                if state.is_draining_energy:
+                    total += state.energy_drain_rate
+        return total
 
-    def _deactivate_ability_components(self, planet: 'Planet', ability_key: str) -> None:
-        """Deactivate all components providing a specific ability on a planet."""
+    def _cancel_all_draining_components(self, planet: 'Planet') -> None:
+        """Cancel all activating/active/deactivating components due to energy depletion."""
         for facility in planet.facilities:
-            for comp in iter_components(facility.design_data):
-                info = get_activatable_ability_info(comp, ability_key, self._registries)
-                if info is not None:
-                    comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
-                    if comp_id:
-                        facility.set_component_active(comp_id, False)
+            if not facility.is_operational:
+                continue
+            for key, state_data in list(facility.component_states.items()):
+                if not isinstance(state_data, dict) or 'phase' not in state_data:
+                    continue
+                state = ComponentActivationState.from_dict(state_data)
+                if state.is_draining_energy:
+                    ability_name = state.ability_name
+                    state.cancel()
+                    facility.component_states[key] = state.to_dict()
+                    # Update planet-level ability state
+                    if ability_name:
+                        planet.active_abilities[ability_name] = False
+                    logger.info(
+                        f"Planet {planet.name}: {ability_name} cancelled "
+                        f"(energy depleted, facility {facility.instance_id})"
+                    )
+

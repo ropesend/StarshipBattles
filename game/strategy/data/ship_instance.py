@@ -62,6 +62,7 @@ class ShipInstance:
     component_damage: Dict[str, int] = field(default_factory=dict)  # component_id -> current_hp
     consumable_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
     component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
+    activation_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # component_key -> activation state
 
     # Cargo contents (cargo_type -> current amount)
     cargo_contents: Dict[str, int] = field(default_factory=dict)
@@ -220,6 +221,20 @@ class ShipInstance:
     def is_combat_capable(self) -> bool:
         """Check if ship can participate in combat."""
         return self.is_alive and not self.is_derelict
+
+    def get_activation_state(self, component_key: str) -> 'ComponentActivationState':
+        """Get the activation state for a component."""
+        from game.strategy.data.component_activation_state import ComponentActivationState
+        data = self.activation_states.get(component_key)
+        if data is None:
+            return ComponentActivationState()
+        if isinstance(data, dict):
+            return ComponentActivationState.from_dict(data)
+        return ComponentActivationState()
+
+    def set_activation_state(self, component_key: str, state: 'ComponentActivationState') -> None:
+        """Store the activation state for a component."""
+        self.activation_states[component_key] = state.to_dict()
 
     def get_calculated_stats(self, force_refresh: bool = False) -> Dict[str, Any]:
         """
