@@ -81,6 +81,7 @@ if TYPE_CHECKING:
         IEnvironmentalHazardEngine,
         IPlanetEnergyEngine,
         IPlanetActionEngine,
+        IComponentActivationEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -142,6 +143,7 @@ class TurnEngine:
         environmental_engine: Optional['IEnvironmentalHazardEngine'] = None,
         planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
         planet_action_engine: Optional['IPlanetActionEngine'] = None,
+        component_activation_engine: Optional['IComponentActivationEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -198,6 +200,7 @@ class TurnEngine:
         # PROJ-237: Planet energy and action engines
         self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine
         self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine
+        self._component_activation_engine: Optional['IComponentActivationEngine'] = component_activation_engine
 
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
@@ -211,7 +214,7 @@ class TurnEngine:
             'harvesting': 0.0, 'resources': 0.0,
             'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
             'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
-            'planet_energy': 0.0, 'planet_actions': 0.0,
+            'planet_energy': 0.0, 'planet_actions': 0.0, 'activation_timers': 0.0,
             'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
         }
 
@@ -381,6 +384,14 @@ class TurnEngine:
             )
         return self._planet_action_engine
 
+    @property
+    def component_activation_engine(self) -> 'IComponentActivationEngine':
+        """Return component activation engine, lazily creating default if not injected."""
+        if self._component_activation_engine is None:
+            from game.strategy.engine.component_activation_engine import ComponentActivationEngine
+            self._component_activation_engine = ComponentActivationEngine()
+        return self._component_activation_engine
+
     def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
@@ -433,6 +444,7 @@ class TurnEngine:
             "TURN PERF: total=%.3fs | harvesting=%.3fs "
             "resources=%.3fs fuel_gen=%.3fs planet_energy=%.3fs resupply=%.3fs production=%.3fs "
             "environmental=%.3fs orders=%.3fs actions=%.3fs planet_actions=%.3fs "
+            "activation_timers=%.3fs "
             "move_calc=%.3fs move_apply=%.3fs combat=%.3fs population=%.3fs",
             total_time, self._phase_times['harvesting'],
             self._phase_times['resources'], self._phase_times['fuel_gen'],
@@ -440,6 +452,7 @@ class TurnEngine:
             self._phase_times['production'],
             self._phase_times['environmental'], self._phase_times['instant_orders'],
             self._phase_times['actions'], self._phase_times['planet_actions'],
+            self._phase_times['activation_timers'],
             self._phase_times['movement_calc'],
             self._phase_times['movement_apply'], self._phase_times['combat'],
             pop_time,
@@ -529,6 +542,11 @@ class TurnEngine:
         self._time_phase('planet_actions', self.planet_action_engine.process_planet_actions_tick,
                          tick, empires,
                          component_registry=self._registries.components)
+
+        # --- Phase 1.7: Component Activation Timers ---
+        self._time_phase('activation_timers',
+                         self.component_activation_engine.process_activation_tick,
+                         tick, empires)
 
         # --- Phase 2: Calculate Moves ---
         move_queue = self._time_phase('movement_calc', self.movement_engine.collect_movements, empires, galaxy, tick)

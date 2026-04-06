@@ -10,6 +10,10 @@ from typing import Dict, List, Any
 from game.core.patterns.layer_iterator import iter_components, get_component_id
 from game.core.validation_helpers import require_keys
 from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.data.component_activation_state import (
+    ActivationPhase,
+    ComponentActivationState,
+)
 
 
 @dataclass
@@ -65,27 +69,63 @@ class PlanetaryFacility:
         )
 
     def is_component_active(self, component_id: str) -> bool:
-        """Check if a component is in active state.
+        """Check if a component is functionally active.
+
+        Uses ComponentActivationState if available, falls back to legacy
+        {'active': bool} format for backward compatibility.
 
         Args:
-            component_id: Component identifier to check.
+            component_id: Component identifier (composite key or legacy ID).
 
         Returns:
-            True if the component is marked as active.
+            True if the component is fully active (ACTIVE phase).
         """
-        state = self.component_states.get(component_id, {})
-        return state.get('active', False)
+        state = self.get_activation_state(component_id)
+        return state.is_functionally_active
 
     def set_component_active(self, component_id: str, active: bool) -> None:
-        """Set a component's active state.
+        """Set a component's active state (legacy interface).
+
+        Creates a ComponentActivationState in ACTIVE or INACTIVE phase.
+        For new code, prefer set_activation_state() directly.
 
         Args:
             component_id: Component identifier to update.
             active: Whether the component should be active.
         """
-        if component_id not in self.component_states:
-            self.component_states[component_id] = {}
-        self.component_states[component_id]['active'] = active
+        phase = ActivationPhase.ACTIVE if active else ActivationPhase.INACTIVE
+        state = ComponentActivationState(phase=phase)
+        self.set_activation_state(component_id, state)
+
+    def get_activation_state(self, component_key: str) -> ComponentActivationState:
+        """Get the activation state for a component.
+
+        Returns INACTIVE state if the component has no stored state.
+        Handles backward compatibility with old {'active': bool} format.
+
+        Args:
+            component_key: Composite component key or legacy component ID.
+
+        Returns:
+            ComponentActivationState for this component.
+        """
+        data = self.component_states.get(component_key)
+        if data is None:
+            return ComponentActivationState()
+        if isinstance(data, dict):
+            return ComponentActivationState.from_dict(data)
+        return ComponentActivationState()
+
+    def set_activation_state(
+        self, component_key: str, state: ComponentActivationState
+    ) -> None:
+        """Store the activation state for a component.
+
+        Args:
+            component_key: Composite component key.
+            state: The activation state to store.
+        """
+        self.component_states[component_key] = state.to_dict()
 
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""

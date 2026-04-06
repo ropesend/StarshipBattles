@@ -13,9 +13,12 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
-from game.core.event_logging import log_event
-from game.core.patterns.layer_iterator import iter_components
+from game.core.patterns.layer_iterator import iter_components, iter_keyed_components
 from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
+from game.strategy.data.component_activation_state import (
+    ActivationPhase,
+    ComponentActivationState,
+)
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 from game.strategy.engine.planet_energy_engine import get_shield_info
 from game.strategy.interfaces.engines import IPlanetActionEngine
@@ -74,8 +77,9 @@ class PlanetActionEngine(IPlanetActionEngine):
         results = []
         for empire in empires:
             for planet in empire.colonies:
-                tick_results = self._process_planet_tick(planet, empire, component_registry)
-                results.extend(tick_results)
+                result = self._process_planet_tick(planet, empire, component_registry)
+                if result is not None:
+                    results.append(result)
         return results
 
     def _process_planet_tick(
@@ -83,142 +87,201 @@ class PlanetActionEngine(IPlanetActionEngine):
         planet: 'Planet',
         empire: 'Empire',
         component_registry: Optional[Dict[str, Any]] = None,
-    ) -> List[PlanetActionTickResult]:
-        """Process all planet action orders for one tick in parallel.
+    ) -> Optional[PlanetActionTickResult]:
+        """Process a single planet's current order.
 
-        Unlike fleet orders which are sequential, planet action orders
-        (activate/deactivate) all tick simultaneously. This means issuing
-        three activation orders causes all three timers to run in parallel.
+        ACTIVATE_ABILITY and DEACTIVATE_ABILITY are instant — they set the
+        ComponentActivationState on the target facility and pop immediately.
+        The actual timer is ticked by ComponentActivationEngine (Phase 1.7).
         """
-        results = []
-        completed_indices = []
+        order = planet.get_current_order()
+        if order is None:
+            return None
 
-        for i, order in enumerate(planet.orders):
-            if order.type not in PLANET_ACTION_ORDER_TYPES:
-                continue
+        if order.type not in PLANET_ACTION_ORDER_TYPES:
+            return None
 
-            # Validate target facility still exists
-            if not self._target_facility_exists(planet, order):
-                logger.warning(
-                    f"Planet {planet.name}: target facility for {order.type.name} "
-                    f"no longer exists, canceling order"
-                )
-                completed_indices.append(i)
-                continue
-
-            # Increment progress
-            order.execution_progress += 1
-
-            # Resolve action_time
-            action_time = self._action_time_resolver.resolve_action_time(
-                planet, order, component_registry
+        # Validate target facility still exists
+        if not self._target_facility_exists(planet, order):
+            logger.warning(
+                f"Planet {planet.name}: target facility for {order.type.name} "
+                f"no longer exists, canceling order"
             )
+            planet.pop_order()
+            return None
 
-            if order.execution_progress >= action_time:
-                self._execute_order(planet, order, empire)
-                completed_indices.append(i)
-                results.append(PlanetActionTickResult(
-                    planet_name=planet.name,
-                    order_type=order.type,
-                    action_completed=True,
-                    execution_progress=order.execution_progress,
-                    action_time=action_time,
-                ))
-            else:
-                results.append(PlanetActionTickResult(
-                    planet_name=planet.name,
-                    order_type=order.type,
-                    action_completed=False,
-                    execution_progress=order.execution_progress,
-                    action_time=action_time,
-                ))
-
-        # Remove completed orders in reverse index order to avoid shifting
-        for i in reversed(completed_indices):
-            planet.orders.pop(i)
-
-        return results
+        # Instant dispatch — set activation state and pop order
+        self._execute_order(planet, order, empire, component_registry)
+        planet.pop_order()
+        return PlanetActionTickResult(
+            planet_name=planet.name,
+            order_type=order.type,
+            action_completed=True,
+            execution_progress=0,
+            action_time=0,
+        )
 
     def _execute_order(
         self,
         planet: 'Planet',
         order: 'PlanetOrder',
         empire: 'Empire',
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Execute a completed planet order."""
+        """Execute a planet action order instantly.
+
+        Sets ComponentActivationState on the target facility. The actual
+        timer is managed by ComponentActivationEngine.
+        """
+        target = order.target if isinstance(order.target, dict) else {}
+        ability_name = target.get('ability_name', '')
+
         if order.type == OrderType.ACTIVATE_ABILITY:
-            ability_name = order.target.get('ability_name', '') if isinstance(order.target, dict) else ''
-            self._execute_activate_ability(planet, order, empire, ability_name)
+            self._initiate_activation(planet, order, empire, ability_name, component_registry)
         elif order.type == OrderType.DEACTIVATE_ABILITY:
-            ability_name = order.target.get('ability_name', '') if isinstance(order.target, dict) else ''
-            self._execute_deactivate_ability(planet, order, empire, ability_name)
+            self._initiate_deactivation(planet, order, empire, ability_name, component_registry)
 
-    def _execute_activate_ability(
+    def _initiate_activation(
         self,
         planet: 'Planet',
         order: 'PlanetOrder',
         empire: 'Empire',
         ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Activate a toggleable ability on a planet."""
-        # Update planet-level ability state
-        if not hasattr(planet, 'active_abilities'):
-            planet.active_abilities = {}
-        planet.active_abilities[ability_name] = True
-
-        # Set component state on target facility
+        """Start activating a component — sets ACTIVATING state with timer."""
         facility = self._find_target_facility(planet, order)
-        if facility:
-            comp_id = self._find_ability_component_id(facility, ability_name)
-            if comp_id:
-                facility.set_component_active(comp_id, True)
+        if not facility:
+            return
 
-        logger.info(f"Planet {planet.name}: {ability_name} activated")
-        try:
-            from game.strategy.events.event_types import EventType, EventCategory
-            log_event(
-                EventType.SHIELD_ACTIVATED,
-                category=EventCategory.PLANET_OPERATIONS,
-                empire_id=empire.id,
-                message=f"{ability_name} activated on {planet.name}",
-                planet_id=planet.id,
-                planet_name=planet.name,
+        comp_key, comp_id = self._resolve_component_key(facility, order, ability_name)
+        if not comp_key:
+            return
+
+        # Get activation time and energy drain from component data
+        activation_time = self._action_time_resolver.resolve_action_time(
+            planet, order, component_registry
+        )
+        energy_drain = self._get_energy_drain_rate(facility, comp_id, ability_name, component_registry)
+
+        # Check current state — only start from INACTIVE
+        current = facility.get_activation_state(comp_key)
+        if current.phase != ActivationPhase.INACTIVE:
+            logger.warning(
+                f"Planet {planet.name}: cannot activate {ability_name} "
+                f"(current phase: {current.phase.value})"
             )
-        except (ImportError, AttributeError):
-            pass
+            return
 
-    def _execute_deactivate_ability(
+        state = ComponentActivationState(
+            phase=ActivationPhase.ACTIVATING,
+            progress_ticks=0,
+            required_ticks=activation_time,
+            ability_name=ability_name,
+            energy_drain_rate=energy_drain,
+        )
+        facility.set_activation_state(comp_key, state)
+
+        logger.info(
+            f"Planet {planet.name}: {ability_name} activation started "
+            f"({activation_time} ticks, drain={energy_drain}/turn)"
+        )
+
+    def _initiate_deactivation(
         self,
         planet: 'Planet',
         order: 'PlanetOrder',
         empire: 'Empire',
         ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Deactivate a toggleable ability on a planet."""
-        if not hasattr(planet, 'active_abilities'):
-            planet.active_abilities = {}
-        planet.active_abilities[ability_name] = False
-
-        # Clear component state on target facility
+        """Start deactivating a component, or cancel if still activating."""
         facility = self._find_target_facility(planet, order)
-        if facility:
-            comp_id = self._find_ability_component_id(facility, ability_name)
-            if comp_id:
-                facility.set_component_active(comp_id, False)
+        if not facility:
+            return
 
-        logger.info(f"Planet {planet.name}: {ability_name} deactivated")
-        try:
-            from game.strategy.events.event_types import EventType, EventCategory
-            log_event(
-                EventType.SHIELD_DEACTIVATED,
-                category=EventCategory.PLANET_OPERATIONS,
-                empire_id=empire.id,
-                message=f"{ability_name} deactivated on {planet.name}",
-                planet_id=planet.id,
-                planet_name=planet.name,
+        comp_key, comp_id = self._resolve_component_key(facility, order, ability_name)
+        if not comp_key:
+            return
+
+        current = facility.get_activation_state(comp_key)
+
+        if current.phase == ActivationPhase.ACTIVATING:
+            # Cancel activation — reset to INACTIVE immediately
+            current.cancel()
+            facility.set_activation_state(comp_key, current)
+            logger.info(f"Planet {planet.name}: {ability_name} activation cancelled")
+        elif current.phase == ActivationPhase.ACTIVE:
+            # Resolve deactivation time
+            deactivation_time = self._get_deactivation_time(
+                facility, comp_id, ability_name, component_registry
             )
-        except (ImportError, AttributeError):
-            pass
+            current.start_deactivating(required_ticks=deactivation_time)
+            facility.set_activation_state(comp_key, current)
+            logger.info(
+                f"Planet {planet.name}: {ability_name} deactivation started "
+                f"({deactivation_time} ticks)"
+            )
+        else:
+            logger.warning(
+                f"Planet {planet.name}: cannot deactivate {ability_name} "
+                f"(current phase: {current.phase.value})"
+            )
+
+    def _resolve_component_key(self, facility, order, ability_name: str):
+        """Resolve the composite component key for an order target.
+
+        Returns (component_key, component_id) or (None, None) if not found.
+        """
+        target = order.target if isinstance(order.target, dict) else {}
+
+        # If order already carries a composite key, use it
+        comp_key = target.get('component_key')
+        if comp_key:
+            # Extract comp_id from key format "LAYER:INDEX:COMP_ID"
+            parts = comp_key.split(':', 2)
+            comp_id = parts[2] if len(parts) == 3 else ''
+            return comp_key, comp_id
+
+        # Fall back: find first component with the ability and build key
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        for key, layer_name, comp in iter_keyed_components(facility.design_data):
+            abilities = extract_abilities_from_component(comp, self._registries)
+            if ability_name in abilities:
+                comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
+                return key, comp_id
+
+        return None, None
+
+    def _get_energy_drain_rate(
+        self, facility, comp_id: str, ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None,
+    ) -> float:
+        """Get energy_drain_rate from the component's ability data."""
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        for comp in iter_components(facility.design_data):
+            cid = comp.get('id', '') if isinstance(comp, dict) else str(comp)
+            if cid == comp_id:
+                abilities = extract_abilities_from_component(comp, self._registries)
+                ability_data = abilities.get(ability_name, {})
+                if isinstance(ability_data, dict):
+                    return float(ability_data.get('energy_drain_rate', 0.0))
+        return 0.0
+
+    def _get_deactivation_time(
+        self, facility, comp_id: str, ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None,
+    ) -> int:
+        """Get deactivation_time from the component's ability data."""
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        for comp in iter_components(facility.design_data):
+            cid = comp.get('id', '') if isinstance(comp, dict) else str(comp)
+            if cid == comp_id:
+                abilities = extract_abilities_from_component(comp, self._registries)
+                ability_data = abilities.get(ability_name, {})
+                if isinstance(ability_data, dict):
+                    return int(ability_data.get('deactivation_time', 1))
+        return 1
 
     def _target_facility_exists(self, planet: 'Planet', order: 'PlanetOrder') -> bool:
         """Check if the target facility still exists on the planet."""
