@@ -39,6 +39,7 @@ __all__ = [
     'IEnvironmentalHazardEngine',
     'IPlanetEnergyEngine',
     'IPlanetActionEngine',
+    'IComponentActivationEngine',
 ]
 
 
@@ -581,5 +582,32 @@ class IPlanetActionEngine(ABC):
 
         Returns:
             List of result records for completed/progressed actions
+        """
+        pass
+
+
+class IComponentActivationEngine(ABC):
+    """
+    Abstract interface for component activation timer processing.
+
+    Ticks ComponentActivationState timers on planet facilities and fleet ships.
+    States in ACTIVATING or DEACTIVATING phase advance by one tick.
+    On phase transitions, updates parent entity's active_abilities.
+    """
+
+    @abstractmethod
+    def process_activation_tick(
+        self,
+        tick: int,
+        empires: List,
+    ) -> List:
+        """Process one tick of activation timers.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+
+        Returns:
+            List of transition event dicts
         """
         pass

@@ -1,4 +1,8 @@
-"""Tests for PlanetActionEngine (PROJ-237)."""
+"""Tests for PlanetActionEngine — instant dispatch of activation orders.
+
+Orders are instant: they set ComponentActivationState on the facility
+and are popped immediately. The timer is managed by ComponentActivationEngine.
+"""
 
 import pytest
 from unittest.mock import MagicMock
@@ -6,21 +10,34 @@ from unittest.mock import MagicMock
 from game.strategy.engine.planet_action_engine import PlanetActionEngine
 from game.strategy.data.order_types import Order as PlanetOrder
 from game.strategy.data.order_types import OrderType
+from game.strategy.data.component_activation_state import (
+    ActivationPhase,
+    ComponentActivationState,
+)
 
 
 def _make_facility(instance_id, design_data, is_operational=True):
-    """Create a mock PlanetaryFacility."""
+    """Create a mock PlanetaryFacility with activation state support."""
     facility = MagicMock()
     facility.instance_id = instance_id
     facility.design_data = design_data
     facility.is_operational = is_operational
     facility.component_states = {}
 
-    def set_component_active(comp_id, active):
-        if comp_id not in facility.component_states:
-            facility.component_states[comp_id] = {}
-        facility.component_states[comp_id]['active'] = active
+    def get_activation_state(key):
+        data = facility.component_states.get(key)
+        if data is None:
+            return ComponentActivationState()
+        return ComponentActivationState.from_dict(data)
 
+    def set_activation_state(key, state):
+        facility.component_states[key] = state.to_dict()
+
+    def set_component_active(comp_id, active):
+        pass  # Legacy — no longer used for activation
+
+    facility.get_activation_state = get_activation_state
+    facility.set_activation_state = set_activation_state
     facility.set_component_active = set_component_active
     return facility
 
@@ -34,8 +51,8 @@ def _shield_design():
                     "abilities": {
                         "PlanetaryShield": {
                             "energy_drain_rate": 25.0,
-                            "activation_time": 5,
-                            "deactivation_time": 2
+                            "activation_time": 250,
+                            "deactivation_time": 150
                         }
                     }
                 }
@@ -61,8 +78,12 @@ def _make_planet(name="TestPlanet", facilities=None, orders=None):
     def pop_order():
         return planet.orders.pop(0) if planet.orders else None
 
+    def add_order(order):
+        planet.orders.append(order)
+
     planet.get_current_order = get_current_order
     planet.pop_order = pop_order
+    planet.add_order = add_order
     return planet
 
 
@@ -74,7 +95,7 @@ def _make_empire(colonies=None):
 
 
 class TestPlanetActionEngine:
-    """Tests for PlanetActionEngine."""
+    """Tests for PlanetActionEngine instant dispatch."""
 
     def test_empty_order_queue_no_action(self):
         """Planet with no orders produces no result."""
@@ -86,28 +107,12 @@ class TestPlanetActionEngine:
 
         assert len(results) == 0
 
-    def test_execution_progress_increments(self):
-        """Order's execution_progress increments each tick."""
+    def test_activate_order_is_instant(self):
+        """ACTIVATE_ABILITY order is popped immediately (no tick progress)."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
         order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
-        planet = _make_planet(facilities=[facility], orders=[order])
-        empire = _make_empire(colonies=[planet])
-
-        results = engine.process_planet_actions_tick(1, [empire])
-
-        assert len(results) == 1
-        assert results[0].execution_progress == 1
-        assert results[0].action_completed is False
-
-    def test_order_completes_at_action_time(self):
-        """Order executes when execution_progress reaches action_time."""
-        engine = PlanetActionEngine()
-        facility = _make_facility("fac-1", _shield_design())
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                           target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
-        order.execution_progress = 4  # One tick away from activation_time=5
         planet = _make_planet(facilities=[facility], orders=[order])
         empire = _make_empire(colonies=[planet])
 
@@ -115,43 +120,86 @@ class TestPlanetActionEngine:
 
         assert len(results) == 1
         assert results[0].action_completed is True
-        assert planet.active_abilities.get('PlanetaryShield') is True
-        assert len(planet.orders) == 0  # Order popped
+        assert len(planet.orders) == 0  # Order popped immediately
 
-    def test_activate_shield_sets_active(self):
-        """ACTIVATE_SHIELD order sets planet.active_abilities = {'PlanetaryShield': True}."""
+    def test_activate_sets_activating_state(self):
+        """ACTIVATE_ABILITY sets ComponentActivationState to ACTIVATING."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
         order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
-        order.execution_progress = 4
         planet = _make_planet(facilities=[facility], orders=[order])
         empire = _make_empire(colonies=[planet])
 
         engine.process_planet_actions_tick(1, [empire])
 
-        assert planet.active_abilities.get('PlanetaryShield') is True
+        # Find the activation state that was set
+        states_with_activating = [
+            ComponentActivationState.from_dict(v)
+            for v in facility.component_states.values()
+            if isinstance(v, dict) and v.get('phase') == 'activating'
+        ]
+        assert len(states_with_activating) == 1
+        state = states_with_activating[0]
+        assert state.phase == ActivationPhase.ACTIVATING
+        assert state.required_ticks == 250
+        assert state.energy_drain_rate == 25.0
+        assert state.ability_name == "PlanetaryShield"
 
-    def test_deactivate_shield_sets_inactive(self):
-        """DEACTIVATE_SHIELD order sets planet.active_abilities = {'PlanetaryShield': False}."""
+    def test_deactivate_from_active_sets_deactivating(self):
+        """DEACTIVATE_ABILITY from ACTIVE sets DEACTIVATING state."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
+        # Pre-set as ACTIVE
+        facility.component_states["OUTER:0:geologic_stabilizer_sector"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=25.0,
+        ).to_dict()
+
         order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
-                           target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
-        order.execution_progress = 1  # deactivation_time=2
+                           target={"facility_instance_id": "fac-1",
+                                   "ability_name": "PlanetaryShield",
+                                   "component_key": "OUTER:0:geologic_stabilizer_sector"})
         planet = _make_planet(facilities=[facility], orders=[order])
         planet.active_abilities = {'PlanetaryShield': True}
         empire = _make_empire(colonies=[planet])
 
         engine.process_planet_actions_tick(1, [empire])
 
-        assert planet.active_abilities.get('PlanetaryShield', False) is False
+        state = facility.get_activation_state("OUTER:0:geologic_stabilizer_sector")
+        assert state.phase == ActivationPhase.DEACTIVATING
+        assert state.required_ticks == 150
         assert len(planet.orders) == 0
+
+    def test_deactivate_from_activating_cancels(self):
+        """DEACTIVATE_ABILITY from ACTIVATING cancels to INACTIVE."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", _shield_design())
+        facility.component_states["OUTER:0:geologic_stabilizer_sector"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVATING,
+            progress_ticks=100,
+            required_ticks=250,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=25.0,
+        ).to_dict()
+
+        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+                           target={"facility_instance_id": "fac-1",
+                                   "ability_name": "PlanetaryShield",
+                                   "component_key": "OUTER:0:geologic_stabilizer_sector"})
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        engine.process_planet_actions_tick(1, [empire])
+
+        state = facility.get_activation_state("OUTER:0:geologic_stabilizer_sector")
+        assert state.phase == ActivationPhase.INACTIVE
+        assert state.progress_ticks == 0
 
     def test_destroyed_facility_cancels_order(self):
         """Order is canceled if target facility no longer exists."""
         engine = PlanetActionEngine()
-        # No facilities on planet, but order targets "fac-1"
         order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
         planet = _make_planet(facilities=[], orders=[order])
@@ -160,80 +208,40 @@ class TestPlanetActionEngine:
         results = engine.process_planet_actions_tick(1, [empire])
 
         assert len(results) == 0
-        assert len(planet.orders) == 0  # Order was popped
+        assert len(planet.orders) == 0
 
-    def test_multiple_orders_processed_in_parallel(self):
-        """All planet action orders are processed simultaneously each tick."""
+    def test_multiple_instant_orders_process_sequentially(self):
+        """Multiple instant orders process FIFO — each popped before next starts."""
         engine = PlanetActionEngine()
-        facility = _make_facility("fac-1", _shield_design())
+        design = {
+            "layers": {
+                "OUTER": [
+                    {"id": "comp_a", "abilities": {"AbilityA": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
+                    {"id": "comp_b", "abilities": {"AbilityB": {"activation_time": 200, "deactivation_time": 75, "energy_drain_rate": 20}}},
+                ]
+            }
+        }
+        facility = _make_facility("fac-1", design)
         order1 = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
+                            target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
         order2 = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                            target={"facility_instance_id": "fac-1", "ability_name": "StellarStabilizer"})
+                            target={"facility_instance_id": "fac-1", "ability_name": "AbilityB"})
         planet = _make_planet(facilities=[facility], orders=[order1, order2])
         empire = _make_empire(colonies=[planet])
 
+        # First tick processes order1
         results = engine.process_planet_actions_tick(1, [empire])
+        assert len(results) == 1
+        assert len(planet.orders) == 1  # order2 still in queue
 
-        # Both orders get ticked simultaneously
-        assert len(results) == 2
-        assert order1.execution_progress == 1
-        assert order2.execution_progress == 1
-
-    def test_three_activations_complete_on_same_tick(self):
-        """Three activation orders issued together should all complete on the same tick."""
-        engine = PlanetActionEngine()
-        facility = _make_facility("fac-1", {
-            "layers": {
-                "OUTER": [
-                    {"id": "comp_a", "abilities": {"AbilityA": {"activation_time": 3, "deactivation_time": 1}}},
-                    {"id": "comp_b", "abilities": {"AbilityB": {"activation_time": 3, "deactivation_time": 1}}},
-                    {"id": "comp_c", "abilities": {"AbilityC": {"activation_time": 3, "deactivation_time": 1}}},
-                ]
-            }
-        })
-        order_a = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
-        order_b = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityB"})
-        order_c = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityC"})
-        planet = _make_planet(facilities=[facility],
-                             orders=[order_a, order_b, order_c])
-        empire = _make_empire(colonies=[planet])
-
-        # Process 2 ticks — not complete yet
-        for tick in range(1, 3):
-            engine.process_planet_actions_tick(tick, [empire])
-        assert order_a.execution_progress == 2
-        assert order_b.execution_progress == 2
-        assert order_c.execution_progress == 2
-        assert len(planet.orders) == 3  # All still pending
-
-        # Tick 3 — all complete simultaneously
-        results = engine.process_planet_actions_tick(3, [empire])
-        completed = [r for r in results if r.action_completed]
-        assert len(completed) == 3
-        assert len(planet.orders) == 0  # All popped
-
-    def test_multi_turn_order_persists(self):
-        """Orders with action_time > 100 persist across multiple ticks."""
-        engine = PlanetActionEngine()
-        facility = _make_facility("fac-1", _shield_design())
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
-                           target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
-        planet = _make_planet(facilities=[facility], orders=[order])
-        empire = _make_empire(colonies=[planet])
-
-        # Process 4 ticks (activation_time=5)
-        for tick in range(1, 5):
-            engine.process_planet_actions_tick(tick, [empire])
-
-        assert order.execution_progress == 4
-        assert planet.active_abilities.get('PlanetaryShield', False) is False  # Not yet complete
-        assert len(planet.orders) == 1  # Still in queue
-
-        # 5th tick completes it
-        engine.process_planet_actions_tick(5, [empire])
-        assert planet.active_abilities.get('PlanetaryShield') is True
+        # Second tick processes order2
+        results = engine.process_planet_actions_tick(2, [empire])
+        assert len(results) == 1
         assert len(planet.orders) == 0
+
+        # Both components should be ACTIVATING
+        activating_count = sum(
+            1 for v in facility.component_states.values()
+            if isinstance(v, dict) and v.get('phase') == 'activating'
+        )
+        assert activating_count == 2

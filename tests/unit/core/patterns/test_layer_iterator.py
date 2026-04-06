@@ -10,6 +10,8 @@ from game.core.patterns.layer_iterator import (
     iter_layers_and_components,
     get_component_id,
     iter_components_with_ids,
+    generate_component_key,
+    iter_keyed_components,
 )
 
 
@@ -226,3 +228,74 @@ class TestIterComponentsWithIds:
         result = list(iter_components_with_ids(design_data))
         assert len(result) == 1
         assert result[0] == ({"abilities": {}}, "")
+
+
+class TestGenerateComponentKey:
+    """Tests for generate_component_key."""
+
+    def test_basic_key(self):
+        assert generate_component_key("OUTER", 0, "reactor") == "OUTER:0:reactor"
+
+    def test_duplicate_components_get_different_keys(self):
+        key1 = generate_component_key("OUTER", 0, "stabilizer")
+        key2 = generate_component_key("OUTER", 1, "stabilizer")
+        assert key1 != key2
+        assert key1 == "OUTER:0:stabilizer"
+        assert key2 == "OUTER:1:stabilizer"
+
+    def test_different_layers_different_keys(self):
+        key1 = generate_component_key("CORE", 0, "reactor")
+        key2 = generate_component_key("OUTER", 0, "reactor")
+        assert key1 != key2
+
+
+class TestIterKeyedComponents:
+    """Tests for iter_keyed_components."""
+
+    def test_single_component(self):
+        design_data = {
+            "layers": {"CORE": [{"id": "bridge"}]}
+        }
+        result = list(iter_keyed_components(design_data))
+        assert len(result) == 1
+        key, layer, comp = result[0]
+        assert key == "CORE:0:bridge"
+        assert layer == "CORE"
+        assert comp == {"id": "bridge"}
+
+    def test_duplicate_components_get_unique_keys(self):
+        design_data = {
+            "layers": {
+                "OUTER": [
+                    {"id": "geologic_stabilizer_system"},
+                    {"id": "geologic_stabilizer_system"},
+                ]
+            }
+        }
+        result = list(iter_keyed_components(design_data))
+        assert len(result) == 2
+        assert result[0][0] == "OUTER:0:geologic_stabilizer_system"
+        assert result[1][0] == "OUTER:1:geologic_stabilizer_system"
+
+    def test_multiple_layers(self):
+        design_data = {
+            "layers": {
+                "CORE": [{"id": "bridge"}],
+                "OUTER": [{"id": "shield"}],
+            }
+        }
+        result = list(iter_keyed_components(design_data))
+        assert len(result) == 2
+        assert result[0][0] == "CORE:0:bridge"
+        assert result[1][0] == "OUTER:0:shield"
+
+    def test_empty_layers(self):
+        design_data = {"layers": {}}
+        result = list(iter_keyed_components(design_data))
+        assert result == []
+
+    def test_string_components(self):
+        design_data = {"layers": {"CORE": ["bridge", "reactor"]}}
+        result = list(iter_keyed_components(design_data))
+        assert result[0][0] == "CORE:0:bridge"
+        assert result[1][0] == "CORE:1:reactor"

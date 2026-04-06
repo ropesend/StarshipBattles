@@ -108,3 +108,55 @@ def iter_components_with_ids(
     """
     for comp in iter_components(design_data):
         yield (comp, get_component_id(comp))
+
+
+def generate_component_key(layer_name: str, index: int, comp_id: str) -> str:
+    """Generate a unique composite key for a component within a design.
+
+    Format: "{layer_name}:{index}:{comp_id}"
+    Example: "OUTER:0:geologic_stabilizer_system"
+
+    This key is deterministic from design_data (which is immutable after
+    construction) and uniquely identifies each component instance, even
+    when the same component ID appears multiple times in the same layer.
+
+    Args:
+        layer_name: Layer name (e.g., "CORE", "OUTER")
+        index: Component index within the layer (0-based)
+        comp_id: Component ID string
+
+    Returns:
+        Composite key string
+    """
+    return f"{layer_name}:{index}:{comp_id}"
+
+
+def iter_keyed_components(
+    design_data: Dict[str, Any]
+) -> Generator[Tuple[str, str, Any], None, None]:
+    """Iterate over (component_key, layer_name, component_entry) triples.
+
+    Each component gets a unique composite key even if the same component
+    ID appears multiple times in a layer.
+
+    Args:
+        design_data: Design data dict with 'layers' key
+
+    Yields:
+        Tuples of (component_key, layer_name, component_entry)
+    """
+    layers = design_data.get('layers', {})
+
+    for layer_name, layer_data in layers.items():
+        components = []
+        if isinstance(layer_data, list):
+            components = layer_data
+        elif isinstance(layer_data, dict):
+            components = layer_data.get('components', [])
+            if not isinstance(components, list):
+                components = []
+
+        for index, comp in enumerate(components):
+            comp_id = get_component_id(comp)
+            key = generate_component_key(layer_name, index, comp_id)
+            yield (key, layer_name, comp)
