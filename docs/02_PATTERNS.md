@@ -247,6 +247,40 @@ if 'PlanetaryShield' in comp.get('abilities', {}):
 
 **In UI code:** Use `get_default_registry_provider()` (factory function pattern #2 above) to get the registry. Do NOT try to access registries via `scene.facade` — the facade does not expose registries.
 
+### Critical: Unified Stat Calculation (Single Source of Truth)
+
+**All ship/design stat calculations MUST go through the simulation `Ship` object.**
+
+The canonical path is `calculate_design_stats()` in `game/simulation/entities/ship_design_stats.py`, which calls `Ship.from_dict()` + `recalculate_stats()`. This is the ONLY code path for computing stats from design JSON.
+
+**DO NOT:**
+- Write new stat calculation code that iterates components and sums abilities manually
+- Compute mass, HP, crew, resource storage, or movement by reading component definitions directly
+- Create "lightweight" stat calculators that skip Ship instantiation
+- Duplicate formula evaluation logic from `ShipStatsCalculator`
+
+**DO:**
+- Use `calculate_design_stats(design_data, registries)` for design JSON → stats dict
+- Use `ship_instance.get_calculated_stats()` for ShipInstance → stats dict (delegates to above)
+- Use `component_inspector.has_warp_capability(ship)` for warp capability checks
+- Use `component_inspector.get_ability_list(abilities, name)` for ability data normalization
+
+**Why:** The project previously had two parallel stat calculators (simulation and strategy) that diverged, producing different mass/HP values for the same design. The strategy calculator is now deprecated. One code path prevents future drift.
+
+```python
+# Correct: use the canonical function
+from game.simulation.entities.ship_design_stats import calculate_design_stats
+stats = calculate_design_stats(design_data, registries)
+
+# Correct: use ShipInstance's cached wrapper
+stats = ship_instance.get_calculated_stats()
+
+# WRONG: manual component iteration for stat calculation
+total_mass = 0
+for comp in iter_components(design_data):
+    total_mass += comp_registry[comp['id']].mass  # DO NOT DO THIS
+```
+
 ---
 
 ## 4. Registry Pattern
