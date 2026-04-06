@@ -14,7 +14,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
-from game.core.registry import GameRegistries, get_default_registry_provider
+from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -345,20 +345,14 @@ class VehicleDesignService:
         """
         Validate the complete ship design.
 
-        Note: This method always uses the singleton-backed validator via
-        get_or_create_validator(), regardless of the registry passed to the
-        constructor. Full registry injection into the validator is out of
-        scope for PROJ-27. For isolated testing of validation, mock the
-        validator directly.
-
         Args:
             ship: The ship to validate
 
         Returns:
             ValidationResult from the ship validator
         """
-        # PROJ-211: Pass registry_provider explicitly
-        validator = get_or_create_validator(registry_provider=get_default_registry_provider())
+        # PROJ-246/250: Use injected registries (GameRegistries implements IRegistryProvider)
+        validator = get_or_create_validator(registry_provider=self._registries)
         return validator.validate_design(ship)
 
     def get_available_components(
@@ -377,8 +371,8 @@ class VehicleDesignService:
             List of valid component IDs
         """
         available = []
-        # PROJ-211: Pass registry_provider explicitly
-        validator = get_or_create_validator(registry_provider=get_default_registry_provider())
+        # Use injected registries (GameRegistries implements IRegistryProvider)
+        validator = get_or_create_validator(registry_provider=self._registries)
 
         for comp_id in self._registries.components.keys():
             # PROJ-50: Pass registries for DI
