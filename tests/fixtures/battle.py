@@ -59,8 +59,8 @@ def create_battle_engine(enable_logging: bool = False, log_filename: str = None)
 
 
 def create_battle_engine_with_ships(
+    team0_count: int = 1,
     team1_count: int = 1,
-    team2_count: int = 1,
     enable_logging: bool = False,
     *,
     registries: 'GameRegistries',
@@ -71,8 +71,8 @@ def create_battle_engine_with_ships(
     PROJ-50: Strict DI - registries is required keyword-only argument.
 
     Args:
-        team1_count: Number of ships for team 0
-        team2_count: Number of ships for team 1
+        team0_count: Number of ships for team 0
+        team1_count: Number of ships for team 1
         enable_logging: If True, enable battle logging
         registries: GameRegistries for DI (required keyword-only)
 
@@ -81,11 +81,11 @@ def create_battle_engine_with_ships(
     """
     engine = create_battle_engine(enable_logging=enable_logging)
 
-    # Create team 1 ships (left side)
-    team1_ships = []
-    for i in range(team1_count):
+    # Create team 0 ships (left side)
+    team0_ships = []
+    for i in range(team0_count):
         ship = create_test_ship(
-            name=f"Team1Ship{i}",
+            name=f"Team0Ship{i}",
             x=100 + (i * 50),
             y=400,
             team_id=0,
@@ -94,13 +94,13 @@ def create_battle_engine_with_ships(
             add_weapons=1,
             registries=registries,
         )
-        team1_ships.append(ship)
+        team0_ships.append(ship)
 
-    # Create team 2 ships (right side)
-    team2_ships = []
-    for i in range(team2_count):
+    # Create team 1 ships (right side)
+    team1_ships = []
+    for i in range(team1_count):
         ship = create_test_ship(
-            name=f"Team2Ship{i}",
+            name=f"Team1Ship{i}",
             x=700 + (i * 50),
             y=400,
             team_id=1,
@@ -109,10 +109,10 @@ def create_battle_engine_with_ships(
             add_weapons=1,
             registries=registries,
         )
-        team2_ships.append(ship)
+        team1_ships.append(ship)
 
     # Start the battle
-    engine.start(team1_ships, team2_ships)
+    engine.start(team0_ships, team1_ships)
 
     return engine
 

@@ -322,18 +322,25 @@ class StrategySessionFacade:
         return FleetInfo.from_fleet(fleet)
 ```
 
-**Ship -> ShipCombatEngine delegation:** Ship lazily creates a `ShipCombatEngine`
-and delegates all combat operations to it.
+**Ship -> ShipComponentManager delegation:** Ship lazily creates a
+`ShipComponentManager` and delegates all component lifecycle operations
+(add, remove, bulk add, cache, iteration, layer queries) to it.
+
+**Ship -> ShipCombatManager delegation:** Ship lazily creates a
+`ShipCombatManager` and delegates combat orchestration (update loop, derelict
+status, death, firing state) to it. The combat manager also owns the
+`ShipCombatEngine` as a sub-delegate.
+
+**Ship -> ShipCombatEngine delegation:** Ship's `combat_engine` property
+delegates through `ShipCombatManager` which lazily creates a `ShipCombatEngine`.
 
 ```python
 # game/simulation/entities/ship.py (actual code)
-class Ship(PhysicsBody, ShipPhysicsMixin):   # NOTE: No ShipCombatMixin
+class Ship(PhysicsBody, ShipPhysicsMixin):
 
     @property
     def combat_engine(self):
-        if self._combat_engine is None:
-            self._combat_engine = ShipCombatEngine(self)
-        return self._combat_engine
+        return self.combat_manager.combat_engine
 ```
 
 **Fleet delegates:** Fleet also uses the delegate pattern to decompose responsibilities:
@@ -347,6 +354,40 @@ class Ship(PhysicsBody, ShipPhysicsMixin):   # NOTE: No ShipCombatMixin
 - `ShipConsumableManager` -- consumable tracking (fuel, energy, ammo)
 - `ShipCargoManager` -- cargo loading/unloading
 - `ShipDisplayFormatter` -- display string formatting
+
+**Component delegates (PROJ-241):** Component uses 4 delegates with a consistent pattern:
+- `ComponentHealthManager` -- HP tracking, damage processing, status updates
+- `ComponentResourceManager` -- resource activation costs (check, consume, try_activate)
+- `ModifierManager` -- modifier state ownership, add/remove/query, effects aggregation
+- `AbilityManager` -- ability instances + MRO index, instantiation, querying, tag-based lookups
+
+All 4 delegates follow the same pattern:
+```python
+# game/simulation/components/modifier_manager.py (actual code)
+class ModifierManager:
+    __slots__ = ('_component', '_modifiers')
+
+    def __init__(self, component: 'Component'):
+        self._component = component
+        self._modifiers: list = []
+        self._load_initial_modifiers()
+```
+
+Component provides facade properties for backward compatibility:
+```python
+# game/simulation/components/component.py (actual code)
+@property
+def modifiers(self):
+    """Facade: access modifier list through delegate."""
+    return self.modifier_manager.modifiers
+
+@property
+def ability_instances(self):
+    """Facade: access ability instances through delegate."""
+    return self._ability_mgr.ability_instances
+```
+
+Note: `ComponentStatsCalculator` remains a static namespace (no state to own).
 
 ### When to Use
 
@@ -987,6 +1028,10 @@ class ISerializable(Protocol):
 | Registry | `game/core/registry.py` | `RegistryManager`, `GameRegistries` |
 | Facade | `game/strategy/facade/strategy_session_facade.py` | `StrategySessionFacade` |
 | Delegate | `game/simulation/entities/ship_combat_engine.py` | `ShipCombatEngine` |
+| Delegate | `game/simulation/components/modifier_manager.py` | `ModifierManager` |
+| Delegate | `game/simulation/components/ability_manager.py` | `AbilityManager` |
+| Delegate | `game/simulation/components/component_health_manager.py` | `ComponentHealthManager` |
+| Delegate | `game/simulation/components/component_resource_manager.py` | `ComponentResourceManager` |
 | CQRS-lite | `game/strategy/facade/` | Commands + DTOs |
 | CommandHandler | `game/strategy/engine/command_handlers.py` | `CommandHandlerRegistry` |
 | MVVM | `game/ui/screens/workshop_viewmodel.py` | `WorkshopViewModel` |

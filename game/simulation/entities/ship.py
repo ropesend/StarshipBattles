@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
+from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Iterator
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -8,8 +8,7 @@ from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.simulation.entities.layer_data import LayerData
-from game.core.math import Vector2
-from game.core.registry import GameRegistries, get_default_registry_provider
+from game.core.registry import GameRegistries
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +23,28 @@ from .ship_stat_querier import ShipStatQuerier
 from .ship_validator_helper import ShipValidatorHelper
 from game.simulation.systems.resource_manager import ResourceRegistry
 
-# Internal import (no longer re-exported)
-from .ship_loader import get_or_create_validator
-from .ship_combat_engine import ShipCombatEngine
+# Internal imports
 from .ship_serialization import ShipSerializer
 
 class Ship(PhysicsBody, ShipPhysicsMixin):
+    """Ship entity -- facade over extracted subsystem delegates.
+
+    Inheritance:
+        PhysicsBody: Provides position, velocity, angle, forward_vector().
+            __init__(x, y) called via super() in Ship.__init__.
+        ShipPhysicsMixin: Provides update_physics_movement(), thrust_forward(),
+            rotate(). No __init__ -- relies on Ship attributes being set first.
+
+    Delegates:
+        ShipComponentManager: Component lifecycle, caching, queries (PROJ-240)
+        ShipCombatManager: Combat orchestration, derelict, death, firing (PROJ-240)
+        ShipCombatEngine: Weapon firing, targeting, damage, shield regen
+        ShipStatsCalculator: 5-phase stat aggregation
+        ShipSerializer: to_dict / from_dict
+        ShipStatQuerier: Ability totals, sensor/ECM scores
+        ShipValidatorHelper: Design validation
+        ShipFormation: Formation data
+    """
 
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
                  team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation",
@@ -58,121 +73,70 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 context={"class": "Ship", "parameter": "registries"}
             )
         super().__init__(x, y)
+
+        # === Identity ===
         self.id: str = str(id(self))
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
         self.team_id: int = team_id
-        self.current_target: Optional[Any] = None
-        self.secondary_targets: List[Any] = []  # List of additional targets
-        self.max_targets: int = CombatConstants.DEFAULT_MAX_TARGETS  # Primary target only by default
         self.ship_class: str = ship_class
         self.theme_id: str = theme_id
 
-        # PROJ-50: Store registries (strict DI)
+        # === Registries (DI) ===
         self._registries = registries
-
-        # Get class definition using registries
         class_def = self._registries.vehicle_classes.get(self.ship_class, {})
 
-        # Initialize Layers dynamically from class definition
+        # === Layers & Hull ===
         self._initialize_layers()
-        
-        # Auto-equip default Hull component if defined for this class
         self._equip_default_hull(class_def)
 
-        # Stats - Cached values (populated by ShipStatsCalculator.calculate())
+        # === Stats (populated by ShipStatsCalculator) ===
         self._cached_mass: float = 0.0
         self._cached_max_hp: int = 0
         self._cached_hp: int = 0
-        # base_mass is always 0.0 - Hull component provides all base mass via ShipStatsCalculator
         self.base_mass: float = 0.0
         self.vehicle_type: str = class_def.get('type', "Ship")
         self.total_thrust: float = 0.0
         self.max_speed: float = 0.0
         self.turn_speed: float = 0.0
-        self.target_speed: float = 0.0 # New Target Speed Control
-        
-        # Budget
+        self.target_speed: float = 0.0
+        self.current_mass: float = 0.0
+        self.radius: float = 0.0
+
+        # === Budget & Validation ===
         self.max_mass_budget: float = class_def.get('max_mass', DEFAULT_MAX_MASS)
-        
-        # Stats initialized to 0.0 - Recalculate will populate these
-        self.current_mass: float = 0.0 
-        self.radius: float = 0.0 
-        
-        # Resources (New System)
+        self.mass_limits_ok: bool = True
+        self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
+        self.construction_cost: Dict[str, int] = {}
+        self._cached_summary = {}
+        self._loading_warnings: List[str] = []
+
+        # === Resources ===
         self.resources = ResourceRegistry()
-        
-        # Resource initialization tracking
         self._resources_initialized: bool = False
-        self._prev_max_resources: dict = {}  # {resource_name: prev_max_value}
+        self._prev_max_resources: dict = {}
         self._prev_max_shields: int = 0
-        
-        # To-Hit stats (total_defense_score initialized below with other combat stats)
+
+        # === Combat Stats (populated by ShipStatsCalculator) ===
         self.emissive_armor = 0
         self.shield_regenerating_armor = 0
-        
-        # Shield Stats (Still specific for now)
         self.max_shields: int = 0
         self.current_shields: float = 0.0
         self.shield_regen_rate: float = 0.0
         self.shield_regen_cost: float = 0.0
         self.repair_rate: float = 0.0
-        
-        # New Stats
-        self.mass_limits_ok: bool = True
-        self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
-        self.construction_cost: Dict[str, int] = {}
-        self._cached_summary = {}  # Performance optimization for UI
-        self._loading_warnings: List[str] = []
-
-        # PROJ-49 Phase 3: Component list caching
-        self._components_cache: Optional[List[Component]] = None
-        self._components_dirty: bool = True
-
-        # PROJ-49 Phase 3: Per-tick weapon cache for AI hot path
-        self._weapons_cache: Optional[List[Component]] = None
-        self._weapons_cache_tick: int = -1
-
-        self.is_alive: bool = True
-        self.is_derelict: bool = False
-        self.bridge_destroyed: bool = False
-        self.retreat_status: Optional[str] = None  # Set by RetreatManager: "escaped", etc.
-
-        # AI Strategy
-        self.ai_strategy: str = "standard_ranged"
-        self.source_file: Optional[str] = None
-        
-        # Formation (Composition - delegates to ShipFormation)
-        self.formation = ShipFormation(self)
-        self.turn_throttle: float = 1.0          # Multiplier for max speed (0.0 to 1.0)
-        self.engine_throttle: float = 1.0        # Multiplier for max speed (0.0 to 1.0)
-        
-        # Arcade Physics
-        self.current_speed: float = 0.0
-        self.acceleration_rate: float = 0.0
-        self.is_thrusting: bool = False
-        self.comp_trigger_pulled: bool = False
-        
-        # Aiming
-        self.aim_point: Optional[Any] = None
-        self.just_fired_projectiles: List[Any] = []
-        self.total_shots_fired: int = 0
-        
-        # To-Hit Calculation Stats (additive bonuses in sigmoid formula)
-        # ShipStatsCalculator computes these from component abilities.
-        # Defaults are additive neutral (0.0) before stats are calculated.
         self.total_defense_score: float = 0.0
-        self.baseline_to_hit_offense: float = 0.0  # Sensor strength (attack bonus)
-        
-        # Strategic layer stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.baseline_to_hit_offense: float = 0.0
+        self.fleet_attack_bonus: float = 0.0   # Set by FleetAuraManager._recalculate()
+        self.fleet_defense_bonus: float = 0.0  # Set by FleetAuraManager._recalculate()
+        self.total_maneuver_points: int = 0
+
+        # === Strategic Stats (populated by ShipStatsCalculator) ===
         self.total_strategic_movement: float = 0.0
         self.warp_max_tonnage: float = 0.0
         self.warp_energy_cost: float = 0.0
 
-        # Combat stats (computed by ShipStatsCalculator, initialized here for safety)
-        self.total_maneuver_points: int = 0  # Raw turning/thrust capability
-
-        # Resource consumption (computed by combat_endurance.py, initialized here for safety)
+        # === Resource Consumption (populated by combat_endurance.py) ===
         self.fuel_consumption: float = 0.0
         self.ammo_consumption: float = 0.0
         self.energy_consumption: float = 0.0
@@ -180,15 +144,37 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.potential_ammo_consumption: float = 0.0
         self.potential_energy_consumption: float = 0.0
 
-        # Crew stats (computed by ShipStatsCalculator, initialized here for safety)
+        # === Crew Stats (populated by ShipStatsCalculator) ===
         self.crew_onboard: int = 0
         self.crew_required: int = 0
 
-        # Initialize helpers (lazy)
+        # === Combat State ===
+        self.is_alive: bool = True
+        self.is_derelict: bool = False
+        self.bridge_destroyed: bool = False
+        self.retreat_status: Optional[str] = None
+
+        # === AI & Targeting ===
+        self.ai_strategy: str = "standard_ranged"
+        self.source_file: Optional[str] = None
+        self.current_target: Optional[Any] = None
+        self.secondary_targets: List[Any] = []
+        self.max_targets: int = CombatConstants.DEFAULT_MAX_TARGETS
+
+        # === Formation & Physics ===
+        self.formation = ShipFormation(self)
+        self.turn_throttle: float = 1.0
+        self.engine_throttle: float = 1.0
+        self.current_speed: float = 0.0
+        self.acceleration_rate: float = 0.0
+        self.is_thrusting: bool = False
+
+        # === Delegates (lazy init) ===
+        self._component_manager = None
+        self._combat_manager = None
         self.stats_calculator: Optional[ShipStatsCalculator] = None
         self._stat_querier: Optional[ShipStatQuerier] = None
         self._validator_helper: Optional[ShipValidatorHelper] = None
-        self._combat_engine: Optional[ShipCombatEngine] = None
 
 
 
@@ -247,26 +233,89 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self._cached_hp = value
 
     # =========================================================================
-    # Combat Engine (PROJ-58: moved from ShipCombatMixin)
+    # Component Manager (PROJ-240: extracted component lifecycle delegate)
     # =========================================================================
 
     @property
-    def combat_engine(self):
-        """
-        Get or create the ShipCombatEngine for this ship.
+    def component_manager(self):
+        """Get or create the ShipComponentManager for this ship.
 
-        Lazy initialization ensures ship is fully initialized before engine creation.
+        Lazy initialization avoids circular import issues.
         """
-        if self._combat_engine is None:
-            self._combat_engine = ShipCombatEngine(self)
-        return self._combat_engine
+        if self._component_manager is None:
+            from .ship_component_manager import ShipComponentManager
+            self._component_manager = ShipComponentManager(self)
+        return self._component_manager
+
+    # =========================================================================
+    # Combat Manager (PROJ-240: extracted combat orchestration delegate)
+    # =========================================================================
+
+    @property
+    def combat_manager(self):
+        """Get or create the ShipCombatManager for this ship.
+
+        Lazy initialization avoids circular import issues.
+        """
+        if self._combat_manager is None:
+            from .ship_combat_manager import ShipCombatManager
+            self._combat_manager = ShipCombatManager(self)
+        return self._combat_manager
+
+    @property
+    def combat_engine(self):
+        """Get or create the ShipCombatEngine for this ship.
+
+        Delegates to ShipCombatManager for lazy initialization.
+        """
+        return self.combat_manager.combat_engine
+
+    def set_event_bus(self, bus: Any) -> None:
+        """Set the event bus on the combat engine.
+
+        PROJ-240: Facade to avoid 3-level delegation chain.
+        """
+        self.combat_manager.set_event_bus(bus)
+
+    @property
+    def just_fired_projectiles(self) -> List[Any]:
+        """Firing results from last update tick."""
+        return self.combat_manager.just_fired_projectiles
+
+    @just_fired_projectiles.setter
+    def just_fired_projectiles(self, value: List[Any]) -> None:
+        self.combat_manager.just_fired_projectiles = value
+
+    @property
+    def comp_trigger_pulled(self) -> bool:
+        """Whether the AI/player is requesting weapons fire."""
+        return self.combat_manager.comp_trigger_pulled
+
+    @comp_trigger_pulled.setter
+    def comp_trigger_pulled(self, value: bool) -> None:
+        self.combat_manager.comp_trigger_pulled = value
+
+    @property
+    def aim_point(self) -> Optional[Any]:
+        """Current aiming point for weapons."""
+        return self.combat_manager.aim_point
+
+    @aim_point.setter
+    def aim_point(self, value: Optional[Any]) -> None:
+        self.combat_manager.aim_point = value
+
+    @property
+    def total_shots_fired(self) -> int:
+        """Total shots fired across all weapons."""
+        return self.combat_manager.total_shots_fired
+
+    @total_shots_fired.setter
+    def total_shots_fired(self, value: int) -> None:
+        self.combat_manager.total_shots_fired = value
 
     def die(self) -> None:
-        """Handle ship destruction. Sets ship to dead state and resets velocity."""
-        logger.info(f"{self.name} EXPLODED!")
-        self.is_alive = False
-        self.velocity = Vector2(0, 0)
-        self.recalculate_stats()
+        """Handle ship destruction."""
+        self.combat_manager.die()
 
     # =========================================================================
     # Component Cache Management (PROJ-49 Phase 3)
@@ -274,8 +323,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def _invalidate_components_cache(self) -> None:
         """Mark component cache as dirty for lazy recalculation."""
-        self._components_dirty = True
-        self._components_cache = None
+        self.component_manager._invalidate_components_cache()
 
     @property
     def stat_querier(self) -> ShipStatQuerier:
@@ -297,80 +345,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         return self.stat_querier.max_weapon_range
 
     def update(self, dt: float = 0.01, context: Optional[dict] = None) -> None:
-        """
-        Update ship state (physics, combat, resources).
-        """
-        if not self.is_alive:
-            return
-
-        # 1. Update Resources (Regeneration) - Tick-based
-        if self.resources:
-             self.resources.update()
-
-        # 2. Update Components (Consumption, Cooldowns) - Tick-based
-        for comp in self.get_all_components():
-            if comp.is_active:
-                comp.update()
-
-        # 2b. Recalculate stats after component updates so that operational
-        # status changes (e.g., shield losing energy) are reflected in ship
-        # stats (max_shields, current_shields) before damage is processed.
-        self.recalculate_stats()
-
-        # 3. Physics (Thrust calc handling operational engines)
-        # Note: update_physics_movement() handles all arcade physics:
-        # - Acceleration/deceleration toward target speed
-        # - Setting velocity from current_speed and heading
-        # - Updating position
-        # We don't call super().update() because it would apply drag and
-        # update position a second time, which breaks arcade physics.
-        self.update_physics_movement()
-
-        # 4. Combat Cooldowns (Shields/Repair/Custom Logic)
-        self.combat_engine.update_combat_cooldowns()
-
-        # 5. Firing Logic (Link AI trigger to Combat System)
-        if self.comp_trigger_pulled:
-            new_attacks = self.combat_engine.fire_weapons(context)
-            if new_attacks:
-                self.just_fired_projectiles.extend(new_attacks)
+        """Update ship state (physics, combat, resources)."""
+        self.combat_manager.update(dt, context)
 
     def update_derelict_status(self) -> None:
-        """
-        Update derelict status based on functional capability.
-
-        A ship is derelict when it cannot fight: no operational weapons
-        AND no operational engines. This is a derived flag — the actual
-        enforcement happens per-component (e.g., RequiresCommandAndControl
-        marks individual components non-operational when C&C is missing).
-
-        The crew check remains as a ship-level requirement.
-        """
-        # Check 1: Crew capacity requirement (ship-level)
-        crew_required = self.get_total_ability_value('CrewRequired')
-
-        if crew_required > 0:
-            crew_capacity = self.get_total_ability_value('CrewCapacity')
-
-            if crew_required > crew_capacity:
-                if not self.is_derelict:
-                    logger.info(f"{self.name} has become DERELICT (Insufficient crew capacity)")
-                self.is_derelict = True
-                return
-
-        # Check 2: Functional capability — can the ship fight?
-        has_weapons = len(self.get_components_by_ability('WeaponAbility', operational_only=True)) > 0
-        has_engines = len(self.get_components_by_ability('CombatPropulsion', operational_only=True)) > 0
-
-        was_derelict = self.is_derelict
-        self.is_derelict = not has_weapons and not has_engines
-
-        if self.is_derelict and not was_derelict:
-            logger.info(f"{self.name} has become DERELICT (no operational weapons or engines)")
-        elif not self.is_derelict and was_derelict:
-            logger.info(f"{self.name} is no longer derelict")
-
-        self.bridge_destroyed = False
+        """Update derelict status based on functional capability."""
+        self.combat_manager.update_derelict_status()
 
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
@@ -461,8 +441,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.ship_class = new_class
         class_def = self._registries.vehicle_classes.get(self.ship_class)
         if class_def is None:
-            logger.error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
-            class_def = {}
+            raise ValidationException(
+                f"Unknown vehicle class '{self.ship_class}'",
+                code=ErrorCode.VALIDATION_ERROR.value,
+                context={"class": "Ship", "method": "change_class",
+                         "ship_class": self.ship_class}
+            )
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
         self.max_mass_budget = class_def.get('max_mass', DEFAULT_MAX_MASS)
@@ -501,46 +485,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     def _attach_component(self, component: Component, layer_type: LayerType, modifier_service=None) -> None:
         """Attach a validated component to a layer and apply mandatory modifiers.
 
-        PROJ-225: Extracted from duplicated logic in add_component and add_components_bulk.
-        Does NOT validate or trigger recalculate_stats - caller is responsible for both.
-
-        Args:
-            component: The component to attach (must already be validated)
-            layer_type: Target layer
-            modifier_service: Optional pre-created ModifierService (for bulk efficiency)
+        Delegates to ShipComponentManager.
         """
-        self.layers[layer_type].components.append(component)
-        component.layer_assigned = layer_type
-        component.ship = self
-        component.recalculate_stats()
-        # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-        if modifier_service is None:
-            # LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
-            from game.simulation.services.modifier_service import ModifierService
-            modifier_service = ModifierService(modifier_registry=self._registries.modifiers)
-        modifier_service.ensure_mandatory_modifiers(component)
+        self.component_manager._attach_component(component, layer_type, modifier_service)
 
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
-        if component is None:
-            logger.error("Attempted to add None component to ship")
-            return False
-
-        # PROJ-211: Pass registry_provider explicitly
-        result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_addition(self, component, layer_type)
-
-        if not result.is_valid:
-            for err in result.errors:
-                logger.error(err)
-            return False
-
-        self._attach_component(component, layer_type)
-        self._cached_summary = {}  # Invalidate cache
-        self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
-
-        # Update Stats
-        self.recalculate_stats()
-        return True
+        return self.component_manager.add_component(component, layer_type)
 
     @property
     def cached_summary(self):
@@ -548,48 +499,15 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         return self._cached_summary
 
     def add_components_bulk(self, component: Component, layer_type: LayerType, count: int) -> int:
-        """
-        Add multiple copies of a component to the specified layer.
-        Performs validation for each addition but defers full ship stat recalculation until the end.
+        """Add multiple copies of a component to the specified layer.
+
         Returns the number of components successfully added.
         """
-        added_count = 0
-
-        # PROJ-225: Create modifier service once for all additions (not per-component)
-        from game.simulation.services.modifier_service import ModifierService
-        modifier_service = ModifierService(modifier_registry=self._registries.modifiers)
-
-        for _ in range(count):
-            # Must clone for each new instance
-            new_comp = component.clone()
-
-            # PROJ-211: Pass registry_provider explicitly
-            result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_addition(self, new_comp, layer_type)
-            if not result.is_valid:
-                # Stop adding if we hit a limit
-                if added_count == 0:
-                    # If the very first one fails, log errors
-                    for err in result.errors:
-                        logger.error(err)
-                break
-
-            self._attach_component(new_comp, layer_type, modifier_service=modifier_service)
-            added_count += 1
-
-        if added_count > 0:
-            self.recalculate_stats()
-
-        return added_count
+        return self.component_manager.add_components_bulk(component, layer_type, count)
 
     def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
         """Remove a component from the specified layer by index."""
-        if 0 <= index < len(self.layers[layer_type].components):
-            comp = self.layers[layer_type].components.pop(index)
-            self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
-            self.recalculate_stats()
-            return comp
-        logger.warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
-        return None
+        return self.component_manager.remove_component(layer_type, index)
 
     def recalculate_stats(self) -> None:
         """
@@ -665,139 +583,53 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         return self.stat_querier.get_total_ecm_score()
 
     # =========================================================================
-    # Component Access Helper Methods (Phase 2 Consolidation)
+    # Component Access Helper Methods (PROJ-240: delegates to ShipComponentManager)
     # =========================================================================
 
     def get_all_components(self) -> List[Component]:
-        """
-        Return a cached list of all components across all layers.
+        """Return a cached list of all components across all layers.
 
-        PROJ-49 Phase 3: Uses dirty-flag caching to avoid repeated iteration.
-        Cache is invalidated when components are added/removed or stats recalculated.
-
-        Returns:
-            List of Component instances from all layers (HULL, CORE, INNER, OUTER, ARMOR).
-            Returns cached list - do not modify the returned list directly.
+        PROJ-240: Returns defensive copy -- callers cannot corrupt internal cache.
         """
-        if self._components_dirty or self._components_cache is None:
-            result = []
-            for layer_data in self.layers.values():
-                result.extend(layer_data.components)
-            self._components_cache = result
-            self._components_dirty = False
-        return self._components_cache
+        return self.component_manager.get_all_components()
 
     def iter_components(self) -> Iterator[Tuple[LayerType, Component]]:
-        """
-        Iterate through (layer_type, component) tuples for all components.
-
-        Yields:
-            Tuple of (LayerType, Component) for each component in the ship.
-            Iterates through layers in dictionary order.
-        """
-        for layer_type, layer_data in self.layers.items():
-            for component in layer_data.components:
-                yield layer_type, component
+        """Iterate through (layer_type, component) tuples for all components."""
+        return self.component_manager.iter_components()
 
     def get_components_by_ability(
         self,
         ability_name: str,
         operational_only: bool = True
     ) -> List[Component]:
+        """Return all components that have a specific ability."""
+        return self.component_manager.get_components_by_ability(ability_name, operational_only)
+
+    def get_weapon_components_cached(self) -> List[Component]:
+        """Get weapon components, cached until invalidated.
+
+        PROJ-240: Uses dirty-flag invalidation instead of tick parameter.
         """
-        Return all components that have a specific ability.
-
-        Args:
-            ability_name: Name of the ability to search for (e.g., 'WeaponAbility').
-            operational_only: If True (default), only return operational components.
-                            If False, return all components with the ability.
-
-        Returns:
-            List of Component instances that have the specified ability.
-        """
-        result = []
-        for layer_data in self.layers.values():
-            for comp in layer_data.components:
-                if operational_only and not comp.is_operational:
-                    continue
-                if comp.has_ability(ability_name):
-                    result.append(comp)
-        return result
-
-    def get_weapon_components_cached(self, current_tick: int) -> List[Component]:
-        """
-        Get weapon components, cached per tick to avoid repeated lookups.
-
-        PROJ-49 Phase 3: Tick-based caching for AI targeting hot path.
-        Cache is invalidated when tick changes, ensuring fresh data each tick.
-
-        Args:
-            current_tick: Current simulation tick number for cache validation.
-
-        Returns:
-            List of operational Component instances with WeaponAbility.
-        """
-        if self._weapons_cache is None or self._weapons_cache_tick != current_tick:
-            self._weapons_cache = self.get_components_by_ability('WeaponAbility', operational_only=True)
-            self._weapons_cache_tick = current_tick
-        return self._weapons_cache
+        return self.component_manager.get_weapon_components_cached()
 
     def get_components_by_layer(self, layer_type: LayerType) -> List[Component]:
-        """
-        Return all components in a specific layer.
-
-        Args:
-            layer_type: The LayerType to get components from.
-
-        Returns:
-            List of Component instances in the specified layer.
-            Returns empty list if layer doesn't exist or has no components.
-            Returns a fresh list each call (not a reference to internal storage).
-        """
-        layer_data = self.layers.get(layer_type)
-        if layer_data is None:
-            return []
-        return list(layer_data.components)
+        """Return all components in a specific layer."""
+        return self.component_manager.get_components_by_layer(layer_type)
 
     def has_components(self) -> bool:
-        """
-        Check if ship has any components.
-
-        Returns:
-            True if ship has at least one component in any layer, False otherwise.
-        """
-        for layer_data in self.layers.values():
-            if layer_data.components:
-                return True
-        return False
+        """Check if ship has any components."""
+        return self.component_manager.has_components()
 
     def find_component_with_index(
         self,
         predicate: Callable[[Component], bool]
     ) -> Optional[Tuple[LayerType, int, Component]]:
-        """Find first component matching predicate, with its location.
-
-        Args:
-            predicate: Function that returns True for matching component
-
-        Returns:
-            Tuple of (layer_type, index, component) or None if not found
-        """
-        for layer_type, layer_data in self.layers.items():
-            for idx, comp in enumerate(layer_data.components):
-                if predicate(comp):
-                    return (layer_type, idx, comp)
-        return None
+        """Find first component matching predicate, with its location."""
+        return self.component_manager.find_component_with_index(predicate)
 
     def clear_non_hull_components(self) -> None:
-        """Remove all components except hull.
-
-        Useful for ship class changes where only the hull is preserved.
-        """
-        for layer_type, layer_data in self.layers.items():
-            if layer_type != LayerType.HULL:
-                layer_data.components.clear()
-        self.recalculate_stats()
+        """Remove all components except hull."""
+        self.component_manager.clear_non_hull_components()
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""
@@ -842,8 +674,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 or component/modifier IDs are invalid.
         """
         return ShipSerializer.from_dict(data, registries=registries)
-
-
 
 
     

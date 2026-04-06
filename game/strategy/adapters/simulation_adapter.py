@@ -82,17 +82,17 @@ class SimulationBattleResolver(IBattleResolver):
         logger.info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
 
         # Convert fleets to battle ships
-        team1_ships = fleet1.battle.to_battle_ships(team_id=0, registries=registries)
-        team2_ships = fleet2.battle.to_battle_ships(team_id=1, registries=registries)
+        team0_ships = fleet1.battle.to_battle_ships(team_id=0, registries=registries)
+        team1_ships = fleet2.battle.to_battle_ships(team_id=1, registries=registries)
 
         # PROJ-189: Apply storm shield interference before combat
         if environmental_effects is not None and environmental_effects.shield_capacity_mult < 1.0:
+            self._apply_shield_interference(team0_ships, environmental_effects.shield_capacity_mult)
             self._apply_shield_interference(team1_ships, environmental_effects.shield_capacity_mult)
-            self._apply_shield_interference(team2_ships, environmental_effects.shield_capacity_mult)
             logger.info(f"Storm shield interference applied: {environmental_effects.shield_capacity_mult}")
 
         # Handle edge cases
-        if not team1_ships and not team2_ships:
+        if not team0_ships and not team1_ships:
             logger.warning("Both fleets have no combat-capable ships")
             return BattleResult(
                 winner=None,
@@ -101,21 +101,21 @@ class SimulationBattleResolver(IBattleResolver):
                 team1_survivors=[]
             )
 
-        if not team1_ships:
+        if not team0_ships:
             logger.warning("Fleet 1 has no combat-capable ships, Fleet 2 wins")
             return BattleResult(
                 winner=1,
                 tick_count=0,
                 team0_survivors=[],
-                team1_survivors=self._convert_ships_to_survivors(team2_ships)
+                team1_survivors=self._convert_ships_to_survivors(team1_ships)
             )
 
-        if not team2_ships:
+        if not team1_ships:
             logger.warning("Fleet 2 has no combat-capable ships, Fleet 1 wins")
             return BattleResult(
                 winner=0,
                 tick_count=0,
-                team0_survivors=self._convert_ships_to_survivors(team1_ships),
+                team0_survivors=self._convert_ships_to_survivors(team0_ships),
                 team1_survivors=[]
             )
 
@@ -133,8 +133,8 @@ class SimulationBattleResolver(IBattleResolver):
         )
 
         controller.configure(config)
-        controller.add_ships(team1_ships, 0)
-        controller.add_ships(team2_ships, 1)
+        controller.add_ships(team0_ships, 0)
+        controller.add_ships(team1_ships, 1)
         controller.start()
 
         # Run headless battle

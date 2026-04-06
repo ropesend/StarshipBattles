@@ -13,7 +13,7 @@ Usage:
     Methods are implemented as static methods for flexibility.
 """
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
-from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.formula_system import FormulaEvaluator
 from game.simulation.components.modifiers import (
     apply_modifier_effects,
     get_default_stat_multipliers
@@ -30,6 +30,52 @@ class ComponentStatsCalculator:
 
     All methods are static - this is a namespace for calculation functions.
     """
+
+    # PROJ-241: Data-driven mapping for formula default values.
+    # When a component has a formula for these keys, the corresponding
+    # attributes are initialized to safe defaults before formula evaluation.
+    FORMULA_DEFAULTS = {
+        'mass': [('base_mass', 0), ('mass', 0)],
+        'hp':   [('base_max_hp', 0), ('max_hp', 0), ('current_hp', 0)],
+        'cost': [('cost', 0)],
+    }
+
+    @staticmethod
+    def parse_formulas(data: dict) -> dict:
+        """Extract formula definitions from component data.
+
+        Scans data dict for string values starting with '=', skipping
+        any keys that start with '_' (metadata like _comment).
+
+        Args:
+            data: Component data dictionary.
+
+        Returns:
+            Dict mapping attribute name to formula string (without '=').
+        """
+        formulas = {}
+        for key, value in data.items():
+            if key.startswith('_'):
+                continue
+            if isinstance(value, str) and value.startswith("="):
+                formulas[key] = value[1:]
+        return formulas
+
+    @staticmethod
+    def apply_formula_defaults(component: 'Component', formulas: dict) -> None:
+        """Set safe default values for formula-driven attributes.
+
+        Uses the FORMULA_DEFAULTS mapping to determine which attributes
+        need default values for each formula key (mass, hp, cost).
+
+        Args:
+            component: The component to set defaults on.
+            formulas: Dict of formula key -> formula string.
+        """
+        for key in formulas:
+            if key in ComponentStatsCalculator.FORMULA_DEFAULTS:
+                for attr, default in ComponentStatsCalculator.FORMULA_DEFAULTS[key]:
+                    setattr(component, attr, default)
 
     @staticmethod
     def calculate_modifier_stats(
@@ -148,7 +194,7 @@ class ComponentStatsCalculator:
 
         # Evaluate Formulas for attributes
         for attr, formula in component.formulas.items():
-            val = safe_evaluate_math_formula(formula, eval_context)
+            val = FormulaEvaluator.safe_evaluate(formula, eval_context)
             if attr == 'mass':
                 component.base_mass = float(val)
                 component.mass = component.base_mass  # Reset to base
@@ -174,7 +220,7 @@ class ComponentStatsCalculator:
         component.evaluated_resource_cost = {}
         for res, amount in raw_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
-                component.evaluated_resource_cost[res] = safe_evaluate_math_formula(
+                component.evaluated_resource_cost[res] = FormulaEvaluator.safe_evaluate(
                     amount[1:], eval_context
                 )
             else:
@@ -195,7 +241,7 @@ class ComponentStatsCalculator:
         def evaluate_recursive(obj, ctx):
             """Recursively evaluate formulas in nested structures."""
             if isinstance(obj, str) and obj.startswith("="):
-                return safe_evaluate_math_formula(obj[1:], ctx)
+                return FormulaEvaluator.safe_evaluate(obj[1:], ctx)
             elif isinstance(obj, dict):
                 for key, sub_val in obj.items():
                     obj[key] = evaluate_recursive(sub_val, ctx)

@@ -858,6 +858,13 @@ class TestFighterLaunchProcessing:
             mock_fighter.position = pygame.math.Vector2(100, 100)
             mock_fighter.just_fired_projectiles = []
             mock_fighter.update = Mock()
+            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
+            mock_fighter.combat_engine = Mock()
+            mock_fighter.get_all_components = Mock(return_value=[])
+            mock_fighter.recalculate_stats = Mock()
+            mock_fighter.update_derelict_status = Mock()
+            mock_fighter.fleet_attack_bonus = 0.0
+            mock_fighter.fleet_defense_bonus = 0.0
             MockShip.return_value = mock_fighter
 
             engine.update()
@@ -904,6 +911,13 @@ class TestFighterLaunchProcessing:
             mock_fighter.position = pygame.math.Vector2(0, 0)
             mock_fighter.just_fired_projectiles = []
             mock_fighter.update = Mock()
+            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
+            mock_fighter.combat_engine = Mock()
+            mock_fighter.get_all_components = Mock(return_value=[])
+            mock_fighter.recalculate_stats = Mock()
+            mock_fighter.update_derelict_status = Mock()
+            mock_fighter.fleet_attack_bonus = 0.0
+            mock_fighter.fleet_defense_bonus = 0.0
             MockShip.return_value = mock_fighter
 
             engine.update()
@@ -950,6 +964,13 @@ class TestFighterLaunchProcessing:
             mock_fighter.position = pygame.math.Vector2(0, 0)
             mock_fighter.just_fired_projectiles = []
             mock_fighter.update = Mock()
+            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
+            mock_fighter.combat_engine = Mock()
+            mock_fighter.get_all_components = Mock(return_value=[])
+            mock_fighter.recalculate_stats = Mock()
+            mock_fighter.update_derelict_status = Mock()
+            mock_fighter.fleet_attack_bonus = 0.0
+            mock_fighter.fleet_defense_bonus = 0.0
             MockShip.return_value = mock_fighter
 
             engine.update()
@@ -1022,6 +1043,13 @@ class TestFighterLaunchProcessing:
             mock_fighter.position = pygame.math.Vector2(0, 0)
             mock_fighter.just_fired_projectiles = []
             mock_fighter.update = Mock()
+            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
+            mock_fighter.combat_engine = Mock()
+            mock_fighter.get_all_components = Mock(return_value=[])
+            mock_fighter.recalculate_stats = Mock()
+            mock_fighter.update_derelict_status = Mock()
+            mock_fighter.fleet_attack_bonus = 0.0
+            mock_fighter.fleet_defense_bonus = 0.0
             MockShip.return_value = mock_fighter
 
             engine.update()
@@ -1174,6 +1202,13 @@ class TestDictBasedAttackProcessing:
             mock_fighter.position = pygame.math.Vector2(0, 0)
             mock_fighter.just_fired_projectiles = []
             mock_fighter.update = Mock()
+            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
+            mock_fighter.combat_engine = Mock()
+            mock_fighter.get_all_components = Mock(return_value=[])
+            mock_fighter.recalculate_stats = Mock()
+            mock_fighter.update_derelict_status = Mock()
+            mock_fighter.fleet_attack_bonus = 0.0
+            mock_fighter.fleet_defense_bonus = 0.0
             MockShip.return_value = mock_fighter
 
             engine.update()
@@ -1264,6 +1299,13 @@ class TestLoggerIntegration:
             mock_fighter.position = pygame.math.Vector2(0, 0)
             mock_fighter.just_fired_projectiles = []
             mock_fighter.update = Mock()
+            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
+            mock_fighter.combat_engine = Mock()
+            mock_fighter.get_all_components = Mock(return_value=[])
+            mock_fighter.recalculate_stats = Mock()
+            mock_fighter.update_derelict_status = Mock()
+            mock_fighter.fleet_attack_bonus = 0.0
+            mock_fighter.fleet_defense_bonus = 0.0
             MockShip.return_value = mock_fighter
 
             engine.update()

@@ -78,8 +78,8 @@ def _clone_ships(ships: List['Ship']) -> List['Ship']:
 
 
 def create_manual_battle(
+    team0_ships: List['Ship'],
     team1_ships: List['Ship'],
-    team2_ships: List['Ship'],
     seed: Optional[int] = None,
     headless: bool = False,
 ) -> BattleController:
@@ -87,8 +87,8 @@ def create_manual_battle(
     Create a controller for a manual battle (Battle Setup screen).
 
     Args:
-        team1_ships: Ships for team 0
-        team2_ships: Ships for team 1
+        team0_ships: Ships for team 0
+        team1_ships: Ships for team 1
         seed: Random seed for determinism
         headless: Run without rendering
 
@@ -102,8 +102,8 @@ def create_manual_battle(
     )
 
     controller = _create_controller_with_config(config)
-    controller.add_ships(team1_ships, 0)
-    controller.add_ships(team2_ships, 1)
+    controller.add_ships(team0_ships, 0)
+    controller.add_ships(team1_ships, 1)
     controller.start()
 
     return controller

@@ -512,12 +512,12 @@ class Game:
         self.race_setup_window = None
         logger.debug("Race setup cancelled")
 
-    def start_battle(self, team1_ships, team2_ships, headless=False):
+    def start_battle(self, team0_ships, team1_ships, headless=False):
         """Start a battle with the given ships using unified controller flow."""
         from game.ui.services.battle_factories import create_manual_battle
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
-        controller = create_manual_battle(team1_ships, team2_ships, headless=headless)
+        controller = create_manual_battle(team0_ships, team1_ships, headless=headless)
         self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)
 

@@ -117,28 +117,28 @@ class ShipStatsPanel(BattlePanel):
         # PROJ-43: Use _get_ships() for DTO-based access
         ships = self._get_ships()
 
-        # Team 1
-        team1_ships = [s for s in ships if s.team_id == 0]
-        team1_alive = sum(1 for s in team1_ships if s.is_alive and not s.is_derelict)
+        # Team 0
+        team0_ships = [s for s in ships if s.team_id == 0]
+        team0_alive = sum(1 for s in team0_ships if s.is_alive and not s.is_derelict)
 
-        title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, TEAM_1_TEXT)
+        title = font_title.render(f"TEAM 1 ({team0_alive}/{len(team0_ships)})", True, TEAM_1_TEXT)
         self.surface.blit(title, (10, y))
         y += 30
 
-        for ship in team1_ships:
+        for ship in team0_ships:
             y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, TEAM_1_BANNER_BG)
 
         y += 15
 
-        # Team 2
-        team2_ships = [s for s in ships if s.team_id == 1]
-        team2_alive = sum(1 for s in team2_ships if s.is_alive and not s.is_derelict)
+        # Team 1
+        team1_ships = [s for s in ships if s.team_id == 1]
+        team1_alive = sum(1 for s in team1_ships if s.is_alive and not s.is_derelict)
 
-        title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, TEAM_2_TEXT)
+        title = font_title.render(f"TEAM 2 ({team1_alive}/{len(team1_ships)})", True, TEAM_2_TEXT)
         self.surface.blit(title, (10, y))
         y += 30
 
-        for ship in team2_ships:
+        for ship in team1_ships:
             y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, TEAM_2_BANNER_BG)
 
         self.content_height = y + self.scroll.offset
@@ -474,17 +474,17 @@ class BattleControlPanel(BattlePanel):
     def draw(self, screen):
         # PROJ-43: Use _get_ships() for DTO-based access
         ships = self._get_ships()
-        team1_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not s.is_derelict)
-        team2_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not s.is_derelict)
+        team0_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not s.is_derelict)
+        team1_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not s.is_derelict)
         sw, sh = screen.get_size()
 
         is_over = self.scene.is_battle_over()
 
         if is_over:
             # Battle Over
-            if team1_alive > 0:
+            if team0_alive > 0:
                 winner_text, winner_color = "TEAM 1 WINS!", TEAM_1_TEXT
-            elif team2_alive > 0:
+            elif team1_alive > 0:
                 winner_text, winner_color = "TEAM 2 WINS!", TEAM_2_TEXT
             else:
                 winner_text, winner_color = "DRAW!", TEXT_ITEM

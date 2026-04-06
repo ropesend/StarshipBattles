@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Declare Fleet Bonus Attributes on Ship | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract `_initialize_ship()` Helper and Add `register_ship()` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Fix `add_ship_mid_battle()` and Fighter Launch | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Declare Fleet Bonus Attributes on Ship | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Extract `_initialize_ship()` Helper and Add `register_ship()` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Fix `add_ship_mid_battle()` and Fighter Launch | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Integration Tests | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-05
-**Current Phase:** Planning
-**Last Action:** Full protocol-compliant plan written with line numbers and code snippets
-**Next Action:** Begin Phase 1 — write failing tests for fleet bonus attribute declaration
+**Current Phase:** Complete
+**Last Action:** All 4 phases complete. Full test suite passes (14370 passed, 2 skipped, 0 failures).
+**Next Action:** None — project complete.
 **Blockers:** None
-**Context for Next Agent:** All line numbers verified against current source. No pre-existing test failures related to this area. The `collision.py` getattr fallback (lines 110, 115) is a defensive workaround for the undeclared attributes — once Phase 1 declares them, the getattr is still safe but no longer necessary (out of scope to change).
+**Context for Next Agent:** N/A — project is finished. All production code changes, unit tests, integration tests, and docs are done.
 
 ## Overview
 `BattleEngine.add_ship_mid_battle()` (lines 320-355 of `battle_engine.py`) is incomplete compared to `start()` (lines 285-300). Ships added mid-battle (reinforcements, launched fighters) are missing five critical initialization steps: combat event bus wiring, initial component updates, stat recalculation, derelict status check, and aura manager registration. Additionally, `fleet_attack_bonus` and `fleet_defense_bonus` are dynamically set on Ship by `FleetAuraManager._recalculate()` (lines 193-194) but never declared in `Ship.__init__`, which is a latent `AttributeError` if any code reads these attributes before the aura manager runs.
@@ -133,245 +133,119 @@ This skips all 5 initialization steps. It should call `add_ship_mid_battle()` in
 
 ### Phase 1: Declare Fleet Bonus Attributes on Ship [Simple]
 **Objective:** Add `fleet_attack_bonus` and `fleet_defense_bonus` to `Ship.__init__` with default `0.0`, eliminating the undeclared attribute risk.
-**Status:** Not Started
+**Status:** Complete
 
 #### Task 1.1: Write failing tests for attribute existence [Simple]
 **File:** `tests/unit/simulation/entities/test_ship_fleet_attrs.py` (new)
 **Tests:** `pytest tests/unit/simulation/entities/test_ship_fleet_attrs.py -v`
-- [ ] Create test file `tests/unit/simulation/entities/test_ship_fleet_attrs.py`
-- [ ] Write test: freshly constructed Ship has `fleet_attack_bonus == 0.0` (use minimal Ship constructor with mock registries)
-- [ ] Write test: freshly constructed Ship has `fleet_defense_bonus == 0.0`
-- [ ] Write test: `fleet_attack_bonus` can be set to a float and read back
-- [ ] Write test: `fleet_defense_bonus` can be set to a float and read back
-- [ ] Run tests — confirm they fail with `AttributeError` (attributes not declared yet)
-**Notes:**
+- [x] Create test file `tests/unit/simulation/entities/test_ship_fleet_attrs.py`
+- [x] Write test: freshly constructed Ship has `fleet_attack_bonus == 0.0` (use minimal Ship constructor with mock registries)
+- [x] Write test: freshly constructed Ship has `fleet_defense_bonus == 0.0`
+- [x] Write test: `fleet_attack_bonus` can be set to a float and read back
+- [x] Write test: `fleet_defense_bonus` can be set to a float and read back
+- [x] Run tests — confirm they fail with `AttributeError` (attributes not declared yet)
+**Notes:** Tests confirmed to fail with AttributeError before implementation.
 
 #### Task 1.2: Declare attributes in Ship.__init__ [Simple]
 **File:** `game/simulation/entities/ship.py`
 **Tests:** `pytest tests/unit/simulation/entities/test_ship_fleet_attrs.py -v`
-- [ ] Add the following two lines after line 165 (`self.baseline_to_hit_offense: float = 0.0`):
+- [x] Add the following two lines after line 165 (`self.baseline_to_hit_offense: float = 0.0`):
   ```python
   self.fleet_attack_bonus: float = 0.0   # Set by FleetAuraManager._recalculate()
   self.fleet_defense_bonus: float = 0.0  # Set by FleetAuraManager._recalculate()
   ```
-- [ ] Run new tests — confirm they pass
-- [ ] Run existing ship tests: `pytest tests/unit/simulation/entities/ -v`
-**Notes:**
+- [x] Run new tests — confirm they pass
+- [x] Run existing ship tests: `pytest tests/unit/simulation/entities/ -v`
+**Notes:** All 458 entity tests pass.
 
 #### Task 1.3: Verify no regressions [Simple]
 **Tests:** `pytest tests/unit/simulation/ -v`
-- [ ] Run: `pytest tests/unit/simulation/ -v` — all pass
-- [ ] Confirm `FleetAuraManager._recalculate()` still sets the attributes correctly (no behavior change — it overwrites declared defaults)
-**Notes:**
+- [x] Run: `pytest tests/unit/simulation/ -v` — all pass
+- [x] Confirm `FleetAuraManager._recalculate()` still sets the attributes correctly (no behavior change — it overwrites declared defaults)
+**Notes:** 2775 tests pass.
 
 ---
 
 ### Phase 2: Extract `_initialize_ship()` Helper and Add `register_ship()` [Medium]
 **Objective:** Create the reusable helper methods that Phase 3 will use to fix `add_ship_mid_battle()`.
-**Status:** Not Started
+**Status:** Complete
 
 #### Task 2.1: Write failing tests for `_initialize_ship()` [Medium]
-**File:** `tests/unit/simulation/systems/test_battle_engine_init_ship.py` (new)
-**Tests:** `pytest tests/unit/simulation/systems/test_battle_engine_init_ship.py -v`
-- [ ] Create test file `tests/unit/simulation/systems/test_battle_engine_init_ship.py`
-- [ ] Write test: `_initialize_ship(ship)` wires `ship.combat_engine._event_bus` to `self.combat_events`
-- [ ] Write test: `_initialize_ship(ship)` calls `comp.update()` for all active components
-- [ ] Write test: `_initialize_ship(ship)` calls `ship.recalculate_stats()`
-- [ ] Write test: `_initialize_ship(ship)` calls `ship.update_derelict_status()`
-- [ ] Run tests — confirm they fail (`_initialize_ship` does not exist yet)
-**Notes:** Use mock ships with mock components. Verify via `assert_called_once` on mocks.
+- [x] All subtasks complete
+**Notes:** 4 tests, all failed with AttributeError before implementation.
 
 #### Task 2.2: Extract `_initialize_ship()` from `start()` [Simple]
-**File:** `game/simulation/systems/battle_engine.py`
-**Tests:** `pytest tests/unit/simulation/systems/test_battle_engine_init_ship.py -v && pytest tests/unit/simulation/battle_controller/ -v`
-- [ ] Add new method after `_log_initial_status()` (after line 318):
-  ```python
-  def _initialize_ship(self, ship: 'Ship') -> None:
-      """Run per-ship initialization: event bus, components, stats, derelict check.
-
-      Called from start() for initial ships and add_ship_mid_battle() for
-      reinforcements. Extracted to ensure parity between both paths.
-      """
-      ship.combat_engine._event_bus = self.combat_events
-      for comp in ship.get_all_components():
-          if comp.is_active:
-              comp.update()
-      ship.recalculate_stats()
-      ship.update_derelict_status()
-  ```
-- [ ] Replace lines 286-297 in `start()` with a call to `_initialize_ship()`:
-  ```python
-  # Was:
-  #   for s in self.ships:
-  #       s.combat_engine._event_bus = self.combat_events
-  #   for s in self.ships:
-  #       for comp in s.get_all_components():
-  #           if comp.is_active:
-  #               comp.update()
-  #       s.recalculate_stats()
-  #       s.update_derelict_status()
-  # Now:
-  for s in self.ships:
-      self._initialize_ship(s)
-  ```
-- [ ] Run new tests from Task 2.1 — confirm they pass
-- [ ] Run existing battle controller tests: `pytest tests/unit/simulation/battle_controller/ -v`
-**Notes:** The two separate `for s in self.ships` loops (lines 286-287 and 292-297) collapse into one loop calling `_initialize_ship(s)`. This is safe because event bus wiring has no dependency on other ships' event buses.
+- [x] All subtasks complete
+**Notes:** Collapsed two for-loops into one calling _initialize_ship(). 374 tests pass.
 
 #### Task 2.3: Write failing test for `FleetAuraManager.register_ship()` [Simple]
-**File:** `tests/unit/simulation/combat/test_fleet_aura_register.py` (new)
-**Tests:** `pytest tests/unit/simulation/combat/test_fleet_aura_register.py -v`
-- [ ] Create test file `tests/unit/simulation/combat/test_fleet_aura_register.py`
-- [ ] Write test: `register_ship(ship, all_ships)` calls `_scan_ship(ship)` (new ship's abilities scanned)
-- [ ] Write test: `register_ship(ship, all_ships)` calls `_recalculate(all_ships)` (bonuses updated)
-- [ ] Write test: after `register_ship()`, the new ship has correct `fleet_attack_bonus`
-- [ ] Write test: after `register_ship()`, existing ships receive bonuses from the new ship's fleet-scope abilities
-- [ ] Run tests — confirm they fail (`register_ship` does not exist yet)
-**Notes:** Use mock ships with mock abilities for unit tests. Integration test in Phase 4 covers real components.
+- [x] All subtasks complete
+**Notes:** 5 tests (incl. dead ship edge case), all failed before implementation.
 
 #### Task 2.4: Add `register_ship()` to FleetAuraManager [Simple]
-**File:** `game/simulation/combat/fleet_aura_manager.py`
-**Tests:** `pytest tests/unit/simulation/combat/test_fleet_aura_register.py -v`
-- [ ] Add new method after `_scan_ship()` (after line 113):
-  ```python
-  def register_ship(self, ship: Any, all_ships: List[Any]) -> None:
-      """Register a ship added mid-battle.
-
-      Scans the new ship for fleet-scope abilities and recalculates
-      all team bonuses so that:
-      1. The new ship's abilities contribute to teammates
-      2. The new ship receives existing fleet bonuses
-
-      Args:
-          ship: The newly added ship
-          all_ships: All ships currently in battle (including the new one)
-      """
-      if ship.is_alive:
-          self._scan_ship(ship)
-      self._recalculate(all_ships)
-  ```
-- [ ] Run new tests from Task 2.3 — confirm they pass
-- [ ] Run existing aura tests (if any): `pytest tests/unit/simulation/combat/ -v`
-**Notes:**
+- [x] All subtasks complete
+**Notes:** All 173 combat tests pass.
 
 ---
 
 ### Phase 3: Fix `add_ship_mid_battle()` and Fighter Launch [Medium]
 **Objective:** Apply the helpers from Phase 2 to fix both the reinforcement path and the fighter launch path.
-**Status:** Not Started
+**Status:** Complete
 
 #### Task 3.1: Write failing tests for mid-battle ship initialization [Medium]
-**File:** `tests/unit/simulation/systems/test_add_ship_mid_battle.py` (new)
-**Tests:** `pytest tests/unit/simulation/systems/test_add_ship_mid_battle.py -v`
-- [ ] Create test file `tests/unit/simulation/systems/test_add_ship_mid_battle.py`
-- [ ] Write test: ship added via `add_ship_mid_battle()` has `combat_engine._event_bus` set to `engine.combat_events`
-- [ ] Write test: ship added via `add_ship_mid_battle()` has had `recalculate_stats()` called
-- [ ] Write test: ship added via `add_ship_mid_battle()` has had `update_derelict_status()` called
-- [ ] Write test: ship added via `add_ship_mid_battle()` is registered with aura manager (`aura_manager.register_ship` called)
-- [ ] Write test: ship added via `add_ship_mid_battle()` receives existing fleet bonuses (check `fleet_attack_bonus`)
-- [ ] Run tests — confirm they fail (missing init steps)
-**Notes:** These tests use a real or minimally-mocked `BattleEngine` with mock ships. Verify `_initialize_ship` is called by checking its side effects.
+- [x] All subtasks complete
+**Notes:** 5 tests, all failed before implementation. Mock components needed is_operational and ability_instances for _scan_ship compatibility.
 
 #### Task 3.2: Fix `add_ship_mid_battle()` [Simple]
-**File:** `game/simulation/systems/battle_engine.py`
-**Tests:** `pytest tests/unit/simulation/systems/test_add_ship_mid_battle.py -v && pytest tests/unit/simulation/battle_controller/ -v`
-- [ ] Add two lines after the AI controller setup block (after line 352, before the logger.log call at line 354):
-  ```python
-  # Initialize ship (event bus, components, stats, derelict check)
-  self._initialize_ship(ship)
-  # Register with aura manager (scan abilities, recalculate bonuses)
-  self.aura_manager.register_ship(ship, self.ships)
-  ```
-- [ ] Run new tests from Task 3.1 — confirm they pass
-- [ ] Run existing battle controller tests: `pytest tests/unit/simulation/battle_controller/ -v`
-**Notes:** The `self.ships.append(ship)` at line 337 happens before the AI block, so `self.ships` already contains the new ship when `register_ship(ship, self.ships)` is called.
+- [x] All subtasks complete
+**Notes:** Added _initialize_ship() + aura_manager.register_ship() after AI controller setup.
 
 #### Task 3.3: Write failing test for fighter launch using `add_ship_mid_battle()` [Medium]
-**File:** `tests/unit/simulation/systems/test_fighter_launch_init.py` (new)
-**Tests:** `pytest tests/unit/simulation/systems/test_fighter_launch_init.py -v`
-- [ ] Create test file `tests/unit/simulation/systems/test_fighter_launch_init.py`
-- [ ] Write test: fighter launched via LAUNCH attack type has `combat_engine._event_bus` set
-- [ ] Write test: fighter launched via LAUNCH attack type is in `engine.ships`
-- [ ] Write test: fighter launched via LAUNCH attack type has an AI controller in `engine.ai_controllers`
-- [ ] Run tests — confirm event bus test fails (fighter launch skips init)
-**Notes:** This requires setting up a LAUNCH attack in `just_fired_projectiles` and calling `engine.update()`.
+- [x] All subtasks complete
+**Notes:** 3 tests, event bus test failed before implementation as expected.
 
 #### Task 3.4: Refactor fighter launch to use `add_ship_mid_battle()` [Medium]
-**File:** `game/simulation/systems/battle_engine.py`
-**Tests:** `pytest tests/unit/simulation/systems/test_fighter_launch_init.py -v && pytest tests/unit/simulation/battle_controller/ -v`
-- [ ] Replace lines 497-509 (direct append + AI creation) with a call to `add_ship_mid_battle()`:
-  ```python
-  # Was:
-  #   self.ships.append(new_ship)
-  #   enemy_team = 1 - new_ship.team_id
-  #   if self._ai_factory is not None:
-  #       ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
-  #       self.ai_controllers.append(ai)
-  #   else:
-  #       raise ValidationException(...)
-  # Now:
-  enemy_team = 1 - new_ship.team_id
-  self.add_ship_mid_battle(new_ship, new_ship.team_id)
-  ```
-  Note: `add_ship_mid_battle()` already sets `team_id`, appends to `self.ships`, creates AI controller, and (after Phase 3.2) runs full initialization.
-- [ ] Remove the now-dead `else: raise ValidationException(...)` block for fighter launch (was lines 504-509)
-- [ ] Run new tests from Task 3.3 — confirm they pass
-- [ ] Run all battle engine tests: `pytest tests/unit/simulation/systems/ -v && pytest tests/unit/simulation/battle_controller/ -v`
-**Notes:** The `new_ship.team_id` is already set to `source_ship.team_id` via the Ship constructor (line 483: `team_id=source_ship.team_id`). `add_ship_mid_battle()` will overwrite it with the same value. The `new_ship.velocity` and `new_ship.angle` assignments (lines 490-494) must remain BEFORE the `add_ship_mid_battle()` call since `_initialize_ship` may use position/velocity for stats.
+- [x] All subtasks complete
+**Notes:** Replaced direct ships.append + AI block with add_ship_mid_battle(). Updated 6 existing mock fighters in test_battle_engine_tick.py.
 
 ---
 
 ### Phase 4: Integration Tests [Simple]
 **Objective:** End-to-end test proving reinforcement ships and fighters work correctly in a running battle with real (not mocked) components.
-**Status:** Not Started
+**Status:** Complete
 
 #### Task 4.1: Write integration test for reinforcements [Medium]
-**File:** `tests/integration/simulation/test_mid_battle_reinforcement.py` (new)
-**Tests:** `pytest tests/integration/simulation/test_mid_battle_reinforcement.py -v`
-- [ ] Create test file `tests/integration/simulation/test_mid_battle_reinforcement.py`
-- [ ] Set up a minimal battle with real Ship objects and a real BattleEngine (use test ship data from `simulation_tests/data/ships/`)
-- [ ] Run N ticks to establish baseline
-- [ ] Add reinforcement ship via `engine.add_ship_mid_battle()`
-- [ ] Assert: reinforcement ship's `combat_engine._event_bus is engine.combat_events`
-- [ ] Assert: reinforcement ship's stats are populated (e.g., `ship.mass > 0`, `ship.max_hp > 0`)
-- [ ] Assert: if reinforcement has a fleet-scope ability, teammates' `fleet_attack_bonus` or `fleet_defense_bonus` reflects it
-- [ ] Assert: reinforcement receives existing fleet bonuses from teammates
-- [ ] Run more ticks and assert: reinforcement fires weapons (check `total_shots_fired > 0` or events in combat bus)
-**Notes:** This is the key test proving the entire fix works end-to-end with real objects.
+- [x] All subtasks complete
+**Notes:** 4 integration tests: full initialization, fleet bonus propagation, combat participation, derelict detection. All pass with real objects.
 
 #### Task 4.2: Final verification [Simple]
-**Tests:** `python scripts/test_sharded.py`
-- [ ] Run full test suite: `python scripts/test_sharded.py` — all pass
-- [ ] Grep for any other callers of `add_ship_mid_battle`: `grep -rn "add_ship_mid_battle" game/` — verify all callers benefit
-- [ ] Grep for any other direct `self.ships.append` in `battle_engine.py` — verify no other uninitialized additions remain
-- [ ] Verify `start()` still calls `self.aura_manager.initialize(self.ships)` (line 300) — this is correct for battle start (full init), not `register_ship()`
-- [ ] Update docs if battle engine lifecycle is documented in `docs/`
-**Notes:**
+- [x] All subtasks complete
+**Notes:** 14370 passed, 2 skipped, 0 failures. Docs updated. No uninitialized ship additions remain.
 
 ---
 
 ## Verification Checklist
 
 ### Project Start (REQUIRED)
-- [ ] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
-- [ ] Run full test suite: `python scripts/test_sharded.py` — establish baseline
+- [x] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
+- [x] Run full test suite: `python scripts/test_sharded.py` — establish baseline
 
 ### After Each Phase
-- [ ] Run targeted tests for changed files
-- [ ] Run `pytest tests/unit/simulation/battle_controller/ -v` — existing battle tests pass
-- [ ] Run `pytest tests/unit/simulation/systems/ -v` — battle engine tests pass
+- [x] Run targeted tests for changed files
+- [x] Run `pytest tests/unit/simulation/battle_controller/ -v` — existing battle tests pass
+- [x] Run `pytest tests/unit/simulation/systems/ -v` — battle engine tests pass
 
 ### Final Verification
-- [ ] `pytest tests/unit/simulation/ -v` — all pass
-- [ ] `pytest tests/integration/simulation/ -v` — all pass
-- [ ] `python scripts/test_sharded.py` — full suite green
-- [ ] `add_ship_mid_battle()` calls `_initialize_ship()` and `aura_manager.register_ship()`
-- [ ] `start()` uses `_initialize_ship()` in its per-ship loop (DRY)
-- [ ] Fighter launch calls `add_ship_mid_battle()` instead of duplicating logic
-- [ ] `Ship.__init__` declares `fleet_attack_bonus` and `fleet_defense_bonus` with `0.0` default
-- [ ] `FleetAuraManager.register_ship()` exists and is called for mid-battle additions
-- [ ] No direct `self.ships.append()` in fighter launch path (uses `add_ship_mid_battle()` instead)
-- [ ] Docs updated if battle engine lifecycle is documented
+- [x] `pytest tests/unit/simulation/ -v` — all pass
+- [x] `pytest tests/integration/simulation/ -v` — all pass
+- [x] `python scripts/test_sharded.py` — full suite green (14370 passed)
+- [x] `add_ship_mid_battle()` calls `_initialize_ship()` and `aura_manager.register_ship()`
+- [x] `start()` uses `_initialize_ship()` in its per-ship loop (DRY)
+- [x] Fighter launch calls `add_ship_mid_battle()` instead of duplicating logic
+- [x] `Ship.__init__` declares `fleet_attack_bonus` and `fleet_defense_bonus` with `0.0` default
+- [x] `FleetAuraManager.register_ship()` exists and is called for mid-battle additions
+- [x] No direct `self.ships.append()` in fighter launch path (uses `add_ship_mid_battle()` instead)
+- [x] Docs updated if battle engine lifecycle is documented
 
 ---
 
@@ -381,12 +255,12 @@ This skips all 5 initialization steps. It should call `add_ship_mid_battle()` in
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] All Phase 1 tasks checked off
-- [ ] All Phase 2 tasks checked off
-- [ ] All Phase 3 tasks checked off
-- [ ] All Phase 4 tasks checked off
-- [ ] All tests passing (`python scripts/test_sharded.py`)
-- [ ] No regressions in existing battle controller tests
+- [x] All Phase 1 tasks checked off
+- [x] All Phase 2 tasks checked off
+- [x] All Phase 3 tasks checked off
+- [x] All Phase 4 tasks checked off
+- [x] All tests passing (14370 passed, 2 skipped, 0 failures)
+- [x] No regressions in existing battle controller tests (125 pass)
 - [ ] Audit passed (no significant issues)
 - [ ] User verified
 

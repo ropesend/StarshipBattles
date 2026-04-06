@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
-from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.formula_system import FormulaEvaluator
 from game.simulation.components.modifiers import calculate_stat_multipliers
 
 
@@ -656,7 +656,7 @@ class ShipStatsCalculator:
             return default
         if isinstance(val, str):
             if val.startswith("=") and context:
-                result = safe_evaluate_math_formula(val[1:], context, default=default)
+                result = FormulaEvaluator.safe_evaluate(val[1:], context, default=default)
                 return float(result)
             return default  # Formula but no context
         return float(val)

@@ -223,7 +223,7 @@ class BattleScreen:
     def ai_controllers(self):
         return self.engine.ai_controllers
 
-    def start(self, team1_ships, team2_ships, seed=None, headless=False, start_paused=False, test_mode=False, test_scenario=None):
+    def start(self, team0_ships, team1_ships, seed=None, headless=False, start_paused=False, test_mode=False, test_scenario=None):
         """Start a battle between two teams.
 
         Convenience method that creates a BattleController internally and
@@ -231,8 +231,8 @@ class BattleScreen:
         start_battle(controller) directly for full control.
 
         Args:
-            team1_ships: List of ships for team 0
-            team2_ships: List of ships for team 1
+            team0_ships: List of ships for team 0
+            team1_ships: List of ships for team 1
             seed: Random seed for deterministic battles
             headless: Run without rendering
             start_paused: Start with simulation paused
@@ -257,9 +257,9 @@ class BattleScreen:
         controller = BattleController(ai_factory=self._ai_factory)
         controller.configure(config)
 
-        for ship in team1_ships:
+        for ship in team0_ships:
             controller.add_ships([ship], team_id=0)
-        for ship in team2_ships:
+        for ship in team1_ships:
             controller.add_ships([ship], team_id=1)
 
         controller.start()

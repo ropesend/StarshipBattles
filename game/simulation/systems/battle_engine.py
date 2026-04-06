@@ -9,7 +9,7 @@ Battle Lifecycle:
        engine = BattleEngine()
 
     2. START: Initialize battle with ships
-       engine.start(team1_ships, team2_ships, seed=42)
+       engine.start(team0_ships, team1_ships, seed=42)
        - Assigns team IDs (0 and 1)
        - Creates AI controller for each ship via injected factory
        - Initializes spatial grid and projectile manager
@@ -220,8 +220,8 @@ class BattleEngine:
 
     def start(
         self,
+        team0_ships: List['Ship'],
         team1_ships: List['Ship'],
-        team2_ships: List['Ship'],
         seed: Optional[int] = None,
         end_condition: Optional[IEndCondition] = None,
         absolute_max_ticks: Optional[int] = None,
@@ -231,8 +231,8 @@ class BattleEngine:
         Initialize battle state with configurable end condition.
 
         Args:
-            team1_ships: List of ships for team 0
-            team2_ships: List of ships for team 1
+            team0_ships: List of ships for team 0
+            team1_ships: List of ships for team 1
             seed: Random seed for deterministic battles
             end_condition: Battle end condition (default: TeamEliminatedCondition)
             absolute_max_ticks: Safety ceiling (default: SimulationConstants.ABSOLUTE_MAX_TICKS)
@@ -256,14 +256,14 @@ class BattleEngine:
             self._absolute_max_ticks = absolute_max_ticks
 
         # Handle single ship args (though type hint implies lists)
+        if not isinstance(team0_ships, list): team0_ships = [team0_ships]
         if not isinstance(team1_ships, list): team1_ships = [team1_ships]
-        if not isinstance(team2_ships, list): team2_ships = [team2_ships]
 
         # Add ships to teams (common to all paths)
-        for s in team1_ships:
+        for s in team0_ships:
             s.team_id = 0
             self.ships.append(s)
-        for s in team2_ships:
+        for s in team1_ships:
             s.team_id = 1
             self.ships.append(s)
 
@@ -272,9 +272,9 @@ class BattleEngine:
             self.ai_controllers = list(ai_controllers)
         elif self._ai_factory is not None:
             # PROJ-43: Use injected factory to create AI controllers
-            team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=1)
-            team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
-            self.ai_controllers = team1_controllers + team2_controllers
+            team0_controllers = self._ai_factory.create_for_ships(team0_ships, enemy_team_id=1)
+            team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=0)
+            self.ai_controllers = team0_controllers + team1_controllers
         else:
             raise ValidationException(
                 "BattleEngine requires AI configuration",
@@ -282,26 +282,16 @@ class BattleEngine:
                 context={"missing": "ai_controllers and ai_factory", "operation": "start"}
             )
 
-        # Wire combat event bus to each ship's combat engine
+        # Per-ship initialization: event bus, components, stats, derelict check
         for s in self.ships:
-            s.combat_engine._event_bus = self.combat_events
-
-        # Run initial component update cycle so requirement-based abilities
-        # (like RequiresCommandAndControl) can mark components non-operational
-        # before the first tick. Then recalculate stats to reflect this.
-        for s in self.ships:
-            for comp in s.get_all_components():
-                if comp.is_active:
-                    comp.update()
-            s.recalculate_stats()
-            s.update_derelict_status()
+            self._initialize_ship(s)
 
         # Initialize fleet aura manager (scoped ability bonuses)
         self.aura_manager.initialize(self.ships)
 
         # Logging
         self.logger.start_session()
-        self.logger.log(f"Battle started: {len(team1_ships)} vs {len(team2_ships)} ships")
+        self.logger.log(f"Battle started: {len(team0_ships)} vs {len(team1_ships)} ships")
 
         self._log_initial_status()
 
@@ -316,6 +306,19 @@ class BattleEngine:
                 self.logger.log(f"WARNING: {s.name} has NO THRUST!")
             if s.turn_speed <= 0.01:
                 self.logger.log(f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})!")
+
+    def _initialize_ship(self, ship: 'Ship') -> None:
+        """Run per-ship initialization: event bus, components, stats, derelict check.
+
+        Called from start() for initial ships and add_ship_mid_battle() for
+        reinforcements. Extracted to ensure parity between both paths.
+        """
+        ship.set_event_bus(self.combat_events)
+        for comp in ship.get_all_components():
+            if comp.is_active:
+                comp.update()
+        ship.recalculate_stats()
+        ship.update_derelict_status()
 
     def add_ship_mid_battle(
         self,
@@ -350,6 +353,11 @@ class BattleEngine:
                 code=ErrorCode.MISSING_DEPENDENCY.value,
                 context={"missing": "ai_controller and ai_factory", "operation": "add_ship_mid_battle"}
             )
+
+        # Initialize ship (event bus, components, stats, derelict check)
+        self._initialize_ship(ship)
+        # Register with aura manager (scan abilities, recalculate bonuses)
+        self.aura_manager.register_ship(ship, self.ships)
 
         self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
         logger.info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
@@ -493,20 +501,8 @@ class BattleEngine:
                 new_ship.velocity += launch_dir * BattleTuning.FIGHTER_LAUNCH_SPEED
                 new_ship.angle = source_ship.angle
                 
-                # Add to battle
-                self.ships.append(new_ship)
-                # Create AI for fighter
-                enemy_team = 1 - new_ship.team_id
-                if self._ai_factory is not None:
-                    # PROJ-43: Use injected factory to create AI controller
-                    ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
-                    self.ai_controllers.append(ai)
-                else:
-                    raise ValidationException(
-                        "BattleEngine requires AI configuration",
-                        code=ErrorCode.MISSING_DEPENDENCY.value,
-                        context={"missing": "ai_factory", "operation": "fighter_launch"}
-                    )
+                # Add to battle via add_ship_mid_battle (full initialization)
+                self.add_ship_mid_battle(new_ship, new_ship.team_id)
 
                 self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
 
