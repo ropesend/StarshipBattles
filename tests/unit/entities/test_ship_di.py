@@ -9,10 +9,12 @@ These tests verify that Ship:
 PROJ-181: Removed _default_registries cleanup - no longer exists.
 """
 import pytest
+from unittest.mock import patch
 
 from game.core.exceptions import ValidationException
 from game.simulation.entities.ship import Ship
 from game.core.registry import GameRegistries
+from game.core.resources import ResourceCatalog
 
 
 @pytest.fixture
@@ -27,7 +29,8 @@ def mock_registries():
         components=load_components_data(registries=minimal_registries),
         modifiers=load_modifiers_data(),
         vehicle_classes=load_vehicle_classes_data(),
-        resources={}
+        resources={},
+        resource_catalog=ResourceCatalog.from_data([]),
     )
 
 
@@ -159,3 +162,26 @@ class TestStrictDIEnforcement:
 
         # Component should have the same registries
         assert component._registries is mock_registries
+
+    def test_recalculate_stats_passes_resource_catalog_to_stats_calculator(self, mock_registries):
+        """Ship.recalculate_stats should inject the registry resource catalog."""
+        ship = Ship(
+            name="Test Ship",
+            x=0, y=0,
+            color=(255, 0, 0),
+            team_id=0,
+            ship_class="frigate",
+            registries=mock_registries
+        )
+
+        with patch('game.simulation.entities.ship.ShipStatsCalculator') as mock_calc_cls:
+            mock_calc = mock_calc_cls.return_value
+            ship.stats_calculator = None
+
+            ship.recalculate_stats()
+
+        mock_calc_cls.assert_called_once_with(
+            mock_registries.vehicle_classes,
+            resource_catalog=mock_registries.resource_catalog,
+        )
+        mock_calc.calculate.assert_called_once_with(ship)

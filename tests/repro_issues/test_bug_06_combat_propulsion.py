@@ -52,7 +52,7 @@ class TestBug06CombatPropulsion:
         # Add test class to our registries
         fresh_registries.vehicle_classes["TestClass"] = self.vehicle_classes["TestClass"]
 
-        self.calculator = ShipStatsCalculator(fresh_registries.vehicle_classes)
+        self.calculator = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
         self.validator = ShipDesignValidator(registries=fresh_registries)
 
     def _create_ship_with_layers(self, ship_class="TestClass"):

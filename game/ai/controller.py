@@ -65,7 +65,12 @@ from game.ai.protocols import is_projectile, IGridEntity
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
 from game.ai.strategy_manager import StrategyManager
-from game.ai.combat_utils import get_entity_id, get_hp_percent, is_in_pdc_arc
+from game.ai.combat_utils import (
+    get_capability_cache_key,
+    get_entity_id,
+    get_hp_percent,
+    is_in_pdc_arc,
+)
 
 # Behaviors that can execute without an enemy target
 _NO_TARGET_BEHAVIORS = frozenset({
@@ -161,8 +166,7 @@ class AIController:
         """
         cache = {}
         for ship in ships:
-            # Ships have .name; getattr for defensive handling of malformed entities
-            ship_id = getattr(ship, 'name', None)  # INTENTIONAL: defensive for cache building
+            ship_id = get_capability_cache_key(ship)
             if ship_id is None:
                 continue
 

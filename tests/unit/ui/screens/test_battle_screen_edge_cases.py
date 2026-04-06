@@ -76,6 +76,32 @@ class TestHandleEventEdgeCases:
         # Right click should NOT clear target (only left click clears)
         assert scene.camera.target is existing_target
 
+    def test_handle_focus_ship_ignores_unknown_ship_id(self):
+        """Focus events do not assign raw ship IDs to the camera target."""
+        from game.ui.screens.battle_screen import BattleScreen
+
+        with patch.object(BattleScreen, '__init__', lambda self, *a, **kw: None):
+            scene = BattleScreen.__new__(BattleScreen)
+
+        existing_target = MagicMock()
+        scene.ui = MagicMock()
+        scene.ui.handle_click.return_value = ("focus_ship", "missing-ship-id")
+        scene.camera = MagicMock()
+        scene.camera.target = existing_target
+        scene._battle_service = MagicMock()
+        scene._battle_service.get_engine.return_value = MagicMock(ships=[])
+        scene._ui_service = MagicMock()
+        scene._ui_service.get_ships.return_value = []
+
+        event = MagicMock()
+        event.type = pygame.MOUSEBUTTONDOWN
+        event.pos = (400, 300)
+        event.button = 1
+
+        scene.handle_event(event)
+
+        assert scene.camera.target is existing_target
+
 
 # --- Keyboard Shortcut Edge Cases ---
 

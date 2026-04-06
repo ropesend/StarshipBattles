@@ -45,6 +45,7 @@ def _get_registries() -> 'GameRegistries':
             modifiers=provider.get_modifiers(),
             vehicle_classes=provider.get_vehicle_classes(),
             resources=provider.get_resources(),
+            resource_catalog=provider.get_resource_catalog(),
         )
     return _cached_registries
 

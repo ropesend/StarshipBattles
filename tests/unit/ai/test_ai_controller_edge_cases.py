@@ -288,8 +288,9 @@ class TestAIControllerCapabilitiesCache:
         """Cache correctly identifies ships with weapons."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # Ship with weapons (PROJ-192: Ship uses .name as identifier)
+        # Ship with weapons
         armed_ship = MagicMock()
+        armed_ship.id = 'armed_1'
         armed_ship.name = 'armed_1'
         weapon = MagicMock()
         weapon.has_ability = MagicMock(return_value=False)  # Not PDC
@@ -305,8 +306,9 @@ class TestAIControllerCapabilitiesCache:
         """Cache correctly identifies ships with PDC."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # Ship with PDC weapon (PROJ-192: Ship uses .name as identifier)
+        # Ship with PDC weapon
         pdc_ship = MagicMock()
+        pdc_ship.id = 'pdc_ship'
         pdc_ship.name = 'pdc_ship'
         pdc_weapon = MagicMock()
         pdc_weapon.has_ability = MagicMock(return_value=True)  # Is PDC

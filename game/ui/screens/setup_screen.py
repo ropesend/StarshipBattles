@@ -48,6 +48,7 @@ def _get_ship_factory() -> ShipFactory:
             modifiers=provider.get_modifiers(),
             vehicle_classes=provider.get_vehicle_classes(),
             resources=provider.get_resources(),
+            resource_catalog=provider.get_resource_catalog(),
         )
         _ship_factory = ShipFactory(registry_provider=registries)
     return _ship_factory

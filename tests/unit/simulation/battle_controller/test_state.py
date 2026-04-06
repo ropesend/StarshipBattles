@@ -50,18 +50,36 @@ class TestBattleControllerStateSaveLoad:
         mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
-        mock_state.ships = {}
+        mock_state.ships = {"state-ship-id": Mock(team_id=0)}
         mock_state.tick_count = 500
         mock_state.projectiles = []  # Added for projectile restoration (NEW-SIM-007)
+        controller._registries = Mock(name="registries")
 
         mock_engine = Mock()
+        mock_engine.ships = []
+        mock_engine.projectiles = []
         mock_service.get_engine.return_value = mock_engine
+
+        restored_ship = Mock()
+        restored_ship.id = "runtime-ship-id"
+        mock_state_manager = Mock()
+        mock_state_manager.restore_config_from_state.return_value = BattleConfig(mode=BattleMode.MANUAL)
+        mock_state_manager.extract_ships_from_state.return_value = (
+            [restored_ship],
+            {restored_ship.id: "state-ship-id"},
+        )
+        controller._state_manager = mock_state_manager
 
         result = controller.load_state(mock_state)
 
         assert result.success is True
         assert controller._is_configured is True
         assert controller._is_started is True
+        mock_state_manager.extract_ships_from_state.assert_called_once_with(
+            mock_state,
+            registries=controller._registries,
+        )
+        mock_service.add_ship.assert_called_with(restored_ship, 0)
 
     def test_load_state_handles_error(self, controller, mock_service):
         """load_state handles errors gracefully."""

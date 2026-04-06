@@ -304,7 +304,10 @@ class ClassRequirementsRule(DesignValidationRule):
         if component:
             all_components = all_components + [component]
 
-        stats_calculator = ShipStatsCalculator(classes)
+        stats_calculator = ShipStatsCalculator(
+            classes,
+            resource_catalog=self._registries.resource_catalog,
+        )
         ability_totals = stats_calculator.calculate_ability_totals(all_components)
 
         # Ability-Based Requirements (Dynamic)

@@ -1,7 +1,7 @@
 """Tests for ShipStatQuerier - ship stat aggregation logic extracted from Ship."""
 
 import pytest
-from unittest.mock import Mock, MagicMock, PropertyMock
+from unittest.mock import Mock, MagicMock, PropertyMock, patch
 
 from game.simulation.entities.ship_stat_querier import ShipStatQuerier
 
@@ -46,12 +46,21 @@ class TestShipStatQuerierGetAbilityTotal:
         mock_ship.stats_calculator = None  # No calculator yet
         mock_ship._registries = Mock()
         mock_ship._registries.vehicle_classes = {}
+        mock_ship._registries.resource_catalog = Mock()
 
-        querier = ShipStatQuerier(mock_ship)
-        # This should not raise - it should create a calculator internally
-        result = querier.get_ability_total('SomeAbility')
+        with patch('game.simulation.entities.ship_stats.ShipStatsCalculator') as mock_calc_cls:
+            mock_calc = Mock()
+            mock_calc.calculate_ability_totals.return_value = {}
+            mock_calc_cls.return_value = mock_calc
+
+            querier = ShipStatQuerier(mock_ship)
+            result = querier.get_ability_total('SomeAbility')
 
         assert result == 0  # Empty components = 0 total
+        mock_calc_cls.assert_called_once_with(
+            mock_ship._registries.vehicle_classes,
+            resource_catalog=mock_ship._registries.resource_catalog,
+        )
 
 
 class TestShipStatQuerierGetTotalAbilityValue:

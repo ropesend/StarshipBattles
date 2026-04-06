@@ -46,7 +46,8 @@ class ShipStatQuerier:
             # Lazy create stats calculator if needed
             from game.simulation.entities.ship_stats import ShipStatsCalculator
             self._ship.stats_calculator = ShipStatsCalculator(
-                self._ship._registries.vehicle_classes
+                self._ship._registries.vehicle_classes,
+                resource_catalog=self._ship._registries.resource_catalog,
             )
 
         totals = self._ship.stats_calculator.calculate_ability_totals(all_components)

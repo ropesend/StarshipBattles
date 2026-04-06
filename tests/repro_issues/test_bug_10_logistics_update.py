@@ -63,7 +63,7 @@ def test_ammo_usage_triggers_logistics_row(fresh_registries):
     railgun.ship = ship
 
     # 3. Calculate Stats
-    calc = ShipStatsCalculator(test_vehicle_classes)
+    calc = ShipStatsCalculator(test_vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     # Debug: Check if consumption was calculated

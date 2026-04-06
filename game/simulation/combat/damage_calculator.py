@@ -58,99 +58,107 @@ class DamageCalculator:
             context: Attacker identity for event emission
             event_bus: Event bus for combat events
         """
-        if not ship.is_alive:
+        if not ship.is_alive or damage_amount <= 0:
             return
 
-        if damage_amount <= 0:
-            return
-
-        remaining_damage = damage_amount
         was_derelict = ship.is_derelict
+        remaining = damage_amount
 
-        # 1. Shield Absorption (first line of defense)
-        if ship.current_shields > 0:
-            absorbed = min(ship.current_shields, remaining_damage)
-            ship.current_shields -= absorbed
-            remaining_damage -= absorbed
+        remaining = self._absorb_shields(ship, remaining, context, event_bus)
+        if remaining <= 0:
+            return
+        remaining = self._reduce_emissive_armor(ship, remaining, context, event_bus)
+        if remaining <= 0:
+            return
+        remaining = self._absorb_regenerating_armor(ship, remaining, context, event_bus)
+        if remaining <= 0:
+            return
+        remaining = self._distribute_hull_damage(ship, remaining, context, event_bus)
 
-            if event_bus and absorbed > 0:
-                event_bus.emit(CombatEvent(
-                    event_type=CombatEventType.SHIELD_HIT,
-                    target_ship=ship,
-                    damage_amount=absorbed,
-                    context=context,
-                    shield_remaining=ship.current_shields,
-                ))
+        self._finalize_damage(ship, damage_amount, remaining, was_derelict, context, event_bus)
 
-            if remaining_damage <= 0:
-                return
+    # -- pipeline stages --------------------------------------------------
 
-        # 2. Emissive Armor (flat reduction on shield overflow)
+    @staticmethod
+    def _absorb_shields(ship, damage, context, event_bus):
+        """Stage 1: Absorb damage from shield pool."""
+        if ship.current_shields <= 0:
+            return damage
+        absorbed = min(ship.current_shields, damage)
+        ship.current_shields -= absorbed
+        damage -= absorbed
+        if event_bus and absorbed > 0:
+            event_bus.emit(CombatEvent(
+                event_type=CombatEventType.SHIELD_HIT,
+                target_ship=ship,
+                damage_amount=absorbed,
+                context=context,
+                shield_remaining=ship.current_shields,
+            ))
+        return damage
+
+    @staticmethod
+    def _reduce_emissive_armor(ship, damage, context, event_bus):
+        """Stage 2: Flat damage reduction from emissive armor."""
         ea = ship.emissive_armor
-        if ea > 0:
-            ea_absorbed = min(ea, remaining_damage)
-            remaining_damage = max(0, remaining_damage - ea)
+        if ea <= 0:
+            return damage
+        ea_absorbed = min(ea, damage)
+        damage = max(0, damage - ea)
+        if event_bus and ea_absorbed > 0:
+            event_bus.emit(CombatEvent(
+                event_type=CombatEventType.ARMOR_ABSORBED,
+                target_ship=ship,
+                damage_amount=ea_absorbed,
+                context=context,
+            ))
+        return damage
 
-            if event_bus and ea_absorbed > 0:
-                event_bus.emit(CombatEvent(
-                    event_type=CombatEventType.ARMOR_ABSORBED,
-                    target_ship=ship,
-                    damage_amount=ea_absorbed,
-                    context=context,
-                ))
-
-            if remaining_damage <= 0:
-                return
-
-        # 3. Shield Regenerating Armor (absorb overflow + recharge shields)
+    @staticmethod
+    def _absorb_regenerating_armor(ship, damage, context, event_bus):
+        """Stage 3: SRA absorbs overflow and recharges shields."""
         sra = ship.shield_regenerating_armor
-        if sra > 0 and remaining_damage > 0:
-            absorption = min(sra, remaining_damage)
-            remaining_damage -= absorption
+        if sra <= 0:
+            return damage
+        absorption = min(sra, damage)
+        damage -= absorption
+        if ship.max_shields > 0:
+            ship.current_shields = min(ship.max_shields, ship.current_shields + absorption)
+        if event_bus and absorption > 0:
+            event_bus.emit(CombatEvent(
+                event_type=CombatEventType.ARMOR_ABSORBED,
+                target_ship=ship,
+                damage_amount=absorption,
+                context=context,
+            ))
+        return damage
 
-            # Recharge shields by absorbed amount (capped at max)
-            if ship.max_shields > 0:
-                ship.current_shields = min(
-                    ship.max_shields,
-                    ship.current_shields + absorption
-                )
-
-            if event_bus and absorption > 0:
-                event_bus.emit(CombatEvent(
-                    event_type=CombatEventType.ARMOR_ABSORBED,
-                    target_ship=ship,
-                    damage_amount=absorption,
-                    context=context,
-                ))
-
-            if remaining_damage <= 0:
-                return
-
-        # Dynamic Layer Order: Sort by radius_pct descending (Outermost first)
+    def _distribute_hull_damage(self, ship, damage, context, event_bus):
+        """Stage 4: Distribute remaining damage across hull layers (outer first)."""
         sorted_layers = sorted(
             ship.layers.items(),
             key=lambda x: x[1].radius_pct,
-            reverse=True
+            reverse=True,
         )
-
         for ltype, layer_data in sorted_layers:
-            if remaining_damage <= 0:
+            if damage <= 0:
                 break
-            remaining_damage = self._damage_layer(
-                ship, ltype, remaining_damage, context, event_bus
-            )
+            damage = self._damage_layer(ship, ltype, damage, context, event_bus)
+        return damage
 
-        if remaining_damage < damage_amount:
-            ship.recalculate_stats()
-            ship.update_derelict_status()
-
-            # Emit derelict event if status changed
-            if event_bus and not was_derelict and ship.is_derelict:
-                event_bus.emit(CombatEvent(
-                    event_type=CombatEventType.SHIP_DERELICT,
-                    target_ship=ship,
-                    context=context,
-                ))
+    @staticmethod
+    def _finalize_damage(ship, original_damage, remaining, was_derelict, context, event_bus):
+        """Stage 5: Recalculate stats and emit derelict event if needed."""
+        if remaining >= original_damage:
+            return  # No damage was actually applied
+        ship.recalculate_stats()
+        ship.update_derelict_status()
+        if event_bus and not was_derelict and ship.is_derelict:
+            event_bus.emit(CombatEvent(
+                event_type=CombatEventType.SHIP_DERELICT,
+                target_ship=ship,
+                context=context,
+            ))
 
     def _damage_layer(
         self,

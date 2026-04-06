@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "is_vector2_like",
+    "get_capability_cache_key",
     "get_entity_id",
     "get_position",
     "get_rotation",
@@ -67,6 +68,23 @@ def get_entity_id(entity: Any) -> str:
     if hasattr(entity, 'name'):
         return entity.name
     return str(id(entity))
+
+
+def get_capability_cache_key(entity: Any) -> Optional[str]:
+    """Get a stable key for capability caching.
+
+    Ships should use their unique runtime ``id``. We fall back to ``name`` only
+    for older tests/mocks that don't expose ``id`` yet.
+    """
+    entity_id = getattr(entity, 'id', None)
+    if entity_id is not None:
+        return entity_id
+
+    entity_name = getattr(entity, 'name', None)
+    if entity_name is not None:
+        return entity_name
+
+    return None
 
 
 def get_position(entity: Any) -> Optional[Vector2]:

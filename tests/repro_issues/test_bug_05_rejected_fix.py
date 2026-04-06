@@ -30,12 +30,12 @@ def test_usage_only_visibility(fresh_registries):
     ship.layers[LayerType.INNER].components.append(weapon)
 
     # Calc stats
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     rows = get_logistics_rows(ship)
     row_keys = [r.key for r in rows]
-    
+
     # BUG: If logic skips when storage/gen/const=0 and max_use not calc'd correctly, these will be missing.
     assert "energy_max_usage" in row_keys, f"Energy rows missing for usage-only component. Keys: {row_keys}"
     assert "energy_endurance" in row_keys
@@ -73,11 +73,11 @@ def test_max_usage_calculation(fresh_registries):
 
     # Total Expected: 2.0 + 5.0 + 5.0 = 12.0
 
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     rows = get_logistics_rows(ship)
-    
+
     # Find the max usage row
     max_usage_val = 0
     found = False

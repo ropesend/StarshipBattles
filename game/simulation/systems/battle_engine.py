@@ -236,9 +236,8 @@ class BattleEngine:
             seed: Random seed for deterministic battles
             end_condition: Battle end condition (default: TeamEliminatedCondition)
             absolute_max_ticks: Safety ceiling (default: SimulationConstants.ABSOLUTE_MAX_TICKS)
-            ai_controllers: Pre-created AI controllers from BattleOrchestrator.
-                If provided, uses these instead of creating controllers internally.
-                This supports proper layer boundaries (PROJ-17).
+            ai_controllers: Pre-created AI controllers (optional).
+                If provided, uses these instead of creating controllers via factory.
         """
         if seed is not None:
             random.seed(seed)
@@ -268,7 +267,7 @@ class BattleEngine:
             self.ships.append(s)
 
         if ai_controllers is not None:
-            # PROJ-17: Use pre-created controllers from BattleOrchestrator (proper layer usage)
+            # Use pre-created controllers if provided
             self.ai_controllers = list(ai_controllers)
         elif self._ai_factory is not None:
             # PROJ-43: Use injected factory to create AI controllers
@@ -332,15 +331,14 @@ class BattleEngine:
         Args:
             ship: Ship to add
             team_id: Team identifier (0 or 1)
-            ai_controller: Pre-created AI controller from BattleOrchestrator.
-                If provided, uses this instead of creating one internally.
-                This supports proper layer boundaries (PROJ-17).
+            ai_controller: Pre-created AI controller (optional).
+                If provided, uses this instead of creating one via factory.
         """
         ship.team_id = team_id
         self.ships.append(ship)
 
         if ai_controller is not None:
-            # PROJ-17: Use pre-created controller from BattleOrchestrator
+            # Use pre-created controller if provided
             self.ai_controllers.append(ai_controller)
         elif self._ai_factory is not None:
             # PROJ-43: Use injected factory to create AI controller
@@ -419,98 +417,108 @@ class BattleEngine:
             
         self.tick_counter += 1
         self.recent_beams = [] # Clear previous beams
-        
-        # 1. Update Grid
-        self.grid.clear()
-        alive_ships = [s for s in self.ships if s.is_alive]
-        for s in alive_ships:
-            self.grid.insert(s)
-            
-        for p in self.projectiles:
-            if p.is_alive:
-                self.grid.insert(p)
-                
-        # 2. Update AI & Ships
-        combat_context = {
-            'projectiles': self.projectiles,
-            'grid': self.grid
-        }
-        
-        for ai in self.ai_controllers:
-            ai.update()
-        for s in self.ships:
-            s.update(context=combat_context)
-            
-        # 2.5. Update fleet auras (scoped ability bonuses)
-        self.aura_manager.update(self.ships)
 
-        # 3. Process Attacks
-        new_attacks = []
-        for s in alive_ships:
-            if s.just_fired_projectiles:
-                new_attacks.extend(s.just_fired_projectiles)
-                s.just_fired_projectiles = []
-        
-        for attack in new_attacks:
-            # Normalize access to type
-            is_dict = isinstance(attack, dict)
-            attack_type = attack.get('type') if is_dict else attack.type
-
-            if attack_type == AttackType.PROJECTILE or attack_type == AttackType.MISSILE:
-                if not is_dict:
-                    self.projectile_manager.add_projectile(attack)
-                    if attack_type == AttackType.PROJECTILE:
-                        self.logger.log(f"Projectile fired at {attack.position}")
-                    else:
-                        # Projectile.target is always initialized (None by default)
-                        target_name = attack.target.name if attack.target else 'unknown'
-                        self.logger.log(f"Missile fired at {target_name}")
-            elif attack_type == AttackType.BEAM:
-                self.collision_system.process_beam_attack(attack, self.recent_beams)
-            elif attack_type == AttackType.LAUNCH:
-                # Handle Fighter Launch
-                source_ship = attack.get('source')
-                hangar = attack.get('hangar')
-                fighter_class = attack.get('fighter_class', 'Fighter (Small)')
-                origin = attack.get('origin', Vector2(0,0))
-                
-                # Create the new ship
-                # We need a unique name
-                count = len([s for s in self.ships if s.team_id == source_ship.team_id])
-                new_name = f"{source_ship.name} Wing {count+1}"
-                
-                # Offset position slightly
-                offset = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
-                spawn_pos = origin + offset
-                
-                new_ship = Ship(
-                    name=new_name,
-                    x=spawn_pos.x,
-                    y=spawn_pos.y,
-                    color=source_ship.color,
-                    team_id=source_ship.team_id,
-                    ship_class=fighter_class,
-                    theme_id=source_ship.theme_id,
-                    registries=source_ship.registries,
-                )
-                
-                # Inherit some properties or init velocity
-                new_ship.velocity = Vector2(source_ship.velocity)
-                # Boost fighter forward at launch speed
-                launch_dir = Vector2(1, 0).rotate(source_ship.angle)
-                new_ship.velocity += launch_dir * BattleTuning.FIGHTER_LAUNCH_SPEED
-                new_ship.angle = source_ship.angle
-                
-                # Add to battle via add_ship_mid_battle (full initialization)
-                self.add_ship_mid_battle(new_ship, new_ship.team_id)
-
-                self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
+        alive_ships = self._rebuild_grid()
+        self._update_ai_and_ships()
+        self._process_attacks(self._collect_new_attacks(alive_ships))
 
         # 4. Ship-to-Ship Collisions
         self.collision_system.process_ramming(self.ships, self.logger)
         
         # 5. Update Projectiles
         self.projectile_manager.update(self.grid)
+
+    def _rebuild_grid(self) -> List['Ship']:
+        """Rebuild the spatial grid and return ships alive at tick start."""
+        self.grid.clear()
+        alive_ships = [s for s in self.ships if s.is_alive]
+        for ship in alive_ships:
+            self.grid.insert(ship)
+
+        for projectile in self.projectiles:
+            if projectile.is_alive:
+                self.grid.insert(projectile)
+
+        return alive_ships
+
+    def _update_ai_and_ships(self) -> None:
+        """Run controller, ship, and aura updates for the current tick."""
+        combat_context = {
+            'projectiles': self.projectiles,
+            'grid': self.grid
+        }
+
+        for ai in self.ai_controllers:
+            ai.update()
+        for ship in self.ships:
+            ship.update(context=combat_context)
+
+        self.aura_manager.update(self.ships)
+
+    def _collect_new_attacks(self, alive_ships: List['Ship']) -> List[Any]:
+        """Collect and clear attacks emitted by ships this tick."""
+        new_attacks = []
+        for ship in alive_ships:
+            if ship.just_fired_projectiles:
+                new_attacks.extend(ship.just_fired_projectiles)
+                ship.just_fired_projectiles = []
+        return new_attacks
+
+    def _process_attacks(self, attacks: List[Any]) -> None:
+        """Process projectile, beam, and launch attacks."""
+        for attack in attacks:
+            is_dict = isinstance(attack, dict)
+            attack_type = attack.get('type') if is_dict else attack.type
+
+            if attack_type in (AttackType.PROJECTILE, AttackType.MISSILE):
+                self._process_projectile_attack(attack, attack_type, is_dict)
+            elif attack_type == AttackType.BEAM:
+                self.collision_system.process_beam_attack(attack, self.recent_beams)
+            elif attack_type == AttackType.LAUNCH:
+                self._process_launch_attack(attack)
+
+    def _process_projectile_attack(self, attack: Any, attack_type: AttackType, is_dict: bool) -> None:
+        """Register a projectile or missile attack with logging."""
+        if is_dict:
+            return
+
+        self.projectile_manager.add_projectile(attack)
+        if attack_type == AttackType.PROJECTILE:
+            self.logger.log(f"Projectile fired at {attack.position}")
+        else:
+            target_name = attack.target.name if attack.target else 'unknown'
+            self.logger.log(f"Missile fired at {target_name}")
+
+    def _process_launch_attack(self, attack: Dict[str, Any]) -> None:
+        """Spawn a launched fighter and add it to the battle."""
+        source_ship = attack.get('source')
+        fighter_class = attack.get('fighter_class', 'Fighter (Small)')
+        origin = attack.get('origin', Vector2(0, 0))
+
+        count = len([ship for ship in self.ships if ship.team_id == source_ship.team_id])
+        new_name = f"{source_ship.name} Wing {count+1}"
+
+        offset = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
+        spawn_pos = origin + offset
+
+        new_ship = Ship(
+            name=new_name,
+            x=spawn_pos.x,
+            y=spawn_pos.y,
+            color=source_ship.color,
+            team_id=source_ship.team_id,
+            ship_class=fighter_class,
+            theme_id=source_ship.theme_id,
+            registries=source_ship.registries,
+        )
+
+        new_ship.velocity = Vector2(source_ship.velocity)
+        launch_dir = Vector2(1, 0).rotate(source_ship.angle)
+        new_ship.velocity += launch_dir * BattleTuning.FIGHTER_LAUNCH_SPEED
+        new_ship.angle = source_ship.angle
+
+        self.add_ship_mid_battle(new_ship, new_ship.team_id)
+        self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
 
     def is_battle_over(self) -> bool:
         """

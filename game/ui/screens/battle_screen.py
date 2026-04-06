@@ -23,6 +23,7 @@ from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_ui import BattleUI
 from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
+from game.ui.services.battle_factories import create_started_battle_controller
 # PROJ-126: Import AI factory from AI layer (UI can depend on AI)
 from game.ai.ai_factory import AIControllerFactory
 from game.ui.effects.hit_effects import (
@@ -240,7 +241,6 @@ class BattleScreen:
             test_scenario: The TestScenario instance (if running from Combat Lab)
         """
         from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
-        from game.simulation.battle_controller import BattleController
 
         mode = BattleMode.TEST if test_mode else BattleMode.MANUAL
         dest = ReturnDestination.TEST_LAB if test_mode else ReturnDestination.BATTLE_SETUP
@@ -254,16 +254,12 @@ class BattleScreen:
             test_scenario=test_scenario,
         )
 
-        controller = BattleController(ai_factory=self._ai_factory)
-        controller.configure(config)
-
-        for ship in team0_ships:
-            controller.add_ships([ship], team_id=0)
-        for ship in team1_ships:
-            controller.add_ships([ship], team_id=1)
-
-        controller.start()
-
+        controller = create_started_battle_controller(
+            config,
+            team0_ships,
+            team1_ships,
+            ai_factory=self._ai_factory,
+        )
         self.start_battle(controller)
 
     def handle_event(self, event):
@@ -274,13 +270,40 @@ class BattleScreen:
             mx, my = event.pos
             result = self.ui.handle_click(mx, my, event.button)
             if isinstance(result, tuple) and result[0] == "focus_ship":
-                self.camera.target = result[1]
+                focus_target = self._resolve_focus_target(result[1])
+                if focus_target is not None:
+                    self.camera.target = focus_target
             elif result == "end_battle":
                 self._on_battle_ended()
             elif not result and event.button == 1:
                 self.camera.target = None
         elif event.type == pygame.MOUSEWHEEL:
             self.camera.update_input(0, [event], allow_wasd=False)
+
+    def _resolve_focus_target(self, focus_target):
+        """Resolve a panel focus result into something the camera can follow."""
+        if focus_target is None:
+            return None
+
+        if hasattr(focus_target, 'position'):
+            return focus_target
+
+        engine = self.engine
+        if engine is not None:
+            for ship in engine.ships:
+                if getattr(ship, 'id', None) == focus_target:
+                    return ship
+
+        ui_service = self.ui_service
+        if ui_service is not None:
+            try:
+                for ship in ui_service.get_ships():
+                    if getattr(ship, 'id', None) == focus_target:
+                        return ship
+            except (AttributeError, TypeError):
+                pass
+
+        return None
 
     def _handle_keydown(self, event):
         """Handle keyboard shortcuts during battle."""

@@ -44,14 +44,15 @@ Physics Constants:
     These control how ship stats convert to gameplay behavior.
 
 Example:
-    from game.core.registry import get_default_registry_provider
-    calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
+    calculator = ShipStatsCalculator(
+        registries.vehicle_classes,
+        resource_catalog=registries.resource_catalog,
+    )
     calculator.calculate(ship)
     # ship.max_speed, ship.turn_speed, etc. are now updated
 """
 from game.simulation.components.component_constants import ComponentStatus
 from game.core.constants import LayerType
-from game.core.resources import ResourceCatalog
 from game.simulation.physics_constants import K_TURN, compute_acceleration, compute_max_speed, DEFAULT_MAX_MASS
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
@@ -70,17 +71,34 @@ from game.simulation.interfaces import (
 import math
 
 
-def _get_planetary_resource_ids():
-    """Get planetary resource IDs from the ResourceCatalog."""
-    return [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
+def _get_planetary_resource_ids(resource_catalog):
+    """Get planetary resource IDs from the injected catalog."""
+    return [d.id for d in resource_catalog.by_display_group("planetary")]
 
 
 class ShipStatsCalculator:
     """
     Encapsulates the logic for calculating ship statistics from its components.
     """
-    def __init__(self, vehicle_classes):
+    def __init__(self, vehicle_classes, *, resource_catalog=None, planetary_resource_ids=None):
         self.vehicle_classes = vehicle_classes
+        self._resource_catalog = resource_catalog
+        if planetary_resource_ids is not None:
+            self._planetary_resource_ids = list(planetary_resource_ids)
+        else:
+            self._planetary_resource_ids = None  # Lazy: resolved on first calculate()
+
+    def _get_or_resolve_planetary_ids(self):
+        """Return cached planetary resource IDs, resolving lazily from catalog."""
+        if self._planetary_resource_ids is not None:
+            return self._planetary_resource_ids
+        if self._resource_catalog is None:
+            raise TypeError(
+                "ShipStatsCalculator requires either resource_catalog or "
+                "planetary_resource_ids to call calculate()"
+            )
+        self._planetary_resource_ids = _get_planetary_resource_ids(self._resource_catalog)
+        return self._planetary_resource_ids
 
     def calculate(self, ship) -> None:
         """
@@ -110,7 +128,7 @@ class ShipStatsCalculator:
 
         # Resource Costs Aggregation
         ship.construction_cost = {}
-        for res in _get_planetary_resource_ids():
+        for res in self._get_or_resolve_planetary_ids():
             ship.construction_cost[res] = 0
             
         for comp in all_components:

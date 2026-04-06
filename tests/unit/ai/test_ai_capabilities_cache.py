@@ -59,7 +59,7 @@ def ai_controller(mock_ship, mock_grid):
 def create_mock_enemy(enemy_id, has_weapons=True, has_pdc=False):
     """Helper to create mock enemy ships."""
     enemy = MagicMock()
-    # PROJ-192: Ship uses .name as identifier, not .id
+    enemy.id = enemy_id
     enemy.name = enemy_id
     enemy.position = pygame.math.Vector2(100, 0)
     enemy.is_alive = True
@@ -151,6 +151,19 @@ class TestBuildCapabilitiesCache:
         assert isinstance(entry['weapon_components'], list)
         assert isinstance(entry['has_pdc'], bool)
         assert isinstance(entry['pdc_components'], list)
+
+    def test_build_capabilities_cache_uses_unique_ids_for_duplicate_names(self, ai_controller):
+        """Duplicate ship names should not collide in the cache."""
+        armed_enemy = create_mock_enemy('enemy_a', has_weapons=True)
+        armed_enemy.name = "Duplicate Name"
+
+        unarmed_enemy = create_mock_enemy('enemy_b', has_weapons=False)
+        unarmed_enemy.name = "Duplicate Name"
+
+        cache = ai_controller._build_capabilities_cache([armed_enemy, unarmed_enemy])
+
+        assert cache['enemy_a']['has_weapons'] is True
+        assert cache['enemy_b']['has_weapons'] is False
 
 
 class TestScoreAndSortEnemiesWithCache:

@@ -67,7 +67,7 @@ def test_missing_logistics_details(fresh_registries):
     ship.layers[LayerType.INNER].components.append(weapon)
 
     # 3. Calculate Stats
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     # 4. Get Logistics Rows (The function being tested)

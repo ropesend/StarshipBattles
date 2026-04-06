@@ -72,6 +72,34 @@ class TestHelperFunctions:
 
         assert len(result) == 3
 
+    def test_create_started_battle_controller_uses_injected_ai_factory(self):
+        """create_started_battle_controller reuses the provided AI factory."""
+        from game.ui.services.battle_factories import create_started_battle_controller
+        from game.simulation.battle_config import BattleConfig, BattleMode
+
+        config = BattleConfig(mode=BattleMode.MANUAL)
+        ai_factory = Mock()
+        team0 = [Mock()]
+        team1 = [Mock()]
+
+        with patch('game.ui.services.battle_factories.BattleController') as mock_bc:
+            mock_controller = Mock()
+            mock_bc.return_value = mock_controller
+
+            result = create_started_battle_controller(
+                config,
+                team0,
+                team1,
+                ai_factory=ai_factory,
+            )
+
+        mock_bc.assert_called_once_with(ai_factory=ai_factory)
+        mock_controller.configure.assert_called_once_with(config)
+        mock_controller.add_ships.assert_any_call(team0, 0)
+        mock_controller.add_ships.assert_any_call(team1, 1)
+        mock_controller.start.assert_called_once()
+        assert result is mock_controller
+
 
 class TestCreateControllerWithConfig:
     """Tests for _create_controller_with_config helper."""

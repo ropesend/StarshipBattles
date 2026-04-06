@@ -101,13 +101,18 @@ def session_registries() -> 'GameRegistries':
     cache = SessionRegistryCache.instance()
     cache.load_all_data()
 
+    # Load resource catalog once for the session
+    from game.core.resources import ResourceCatalog
+    resource_catalog = ResourceCatalog.from_json()
+
     # Create and return GameRegistries instance
     # Note: We use the cache's deep-copied data for the session fixture
     return GameRegistries(
         components=cache.components_data,
         modifiers=cache.modifiers_data,
         vehicle_classes=cache.vehicle_classes_data,
-        resources={}  # Resources not yet in cache, use empty dict
+        resources={},  # Resources not yet in cache, use empty dict
+        resource_catalog=resource_catalog,
     )
 
 
@@ -144,7 +149,8 @@ def fresh_registries(session_registries) -> 'GameRegistries':
         components=copy.deepcopy(session_registries.components),
         modifiers=copy.deepcopy(session_registries.modifiers),
         vehicle_classes=copy.deepcopy(session_registries.vehicle_classes),
-        resources=copy.deepcopy(session_registries.resources)
+        resources=copy.deepcopy(session_registries.resources),
+        resource_catalog=session_registries.resource_catalog,  # Immutable, shared
     )
 
 
@@ -171,7 +177,7 @@ def minimal_registries() -> 'GameRegistries':
         components={},
         modifiers={},
         vehicle_classes={},
-        resources={}
+        resources={},
     )
 
 

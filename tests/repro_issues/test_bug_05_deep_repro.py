@@ -69,7 +69,7 @@ def test_shield_regen_consumption(fresh_registries):
     comp = Component(MOCK_SHIELD_REGEN_DATA, registries=fresh_registries)
     ship.layers[LayerType.INNER].components.append(comp)
 
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     # Check 1: Energy Registered?
@@ -129,7 +129,7 @@ def test_laser_cannon_consumption(fresh_registries):
     crew_comp = Component(crew_data, registries=fresh_registries)
     ship.layers[LayerType.CORE].components.append(crew_comp)
 
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     # Check 1: Energy

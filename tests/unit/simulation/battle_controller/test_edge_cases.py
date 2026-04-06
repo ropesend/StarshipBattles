@@ -209,6 +209,7 @@ class TestLoadStateEdgeCases:
         mock_ship = Mock()
         mock_ship.id = "restored-ship-uuid"
         mock_ship_state.to_ship.return_value = mock_ship
+        controller._registries = Mock(name="registries")
 
         mock_state = Mock()
         mock_state.mode = "manual"

@@ -21,6 +21,7 @@ from game.core.math import Vector2
 from game.core.constants import AttackType, LayerType
 from game.ai.protocols import is_projectile
 from game.ai.combat_utils import (
+    get_capability_cache_key,
     get_position,
     get_rotation,
     get_all_components,
@@ -168,8 +169,7 @@ class TargetEvaluator:
         required = rule.get('required', False)
 
         # PERF: Use cached capability check if available
-        # Ships have .name; Projectiles don't - safe access required
-        candidate_id = getattr(candidate, 'name', None)  # INTENTIONAL: Projectiles lack .name
+        candidate_id = get_capability_cache_key(candidate)
         if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
             has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
         else:

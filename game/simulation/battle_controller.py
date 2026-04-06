@@ -36,6 +36,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
     from game.simulation.entities.ship import Ship
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
 
@@ -55,7 +56,8 @@ class BattleController:
     def __init__(
         self,
         service: Optional[BattleService] = None,
-        ai_factory: Optional['IAIControllerFactory'] = None
+        ai_factory: Optional['IAIControllerFactory'] = None,
+        registries: Optional['GameRegistries'] = None,
     ):
         """
         Initialize BattleController.
@@ -66,9 +68,12 @@ class BattleController:
                        PROJ-126: Must be injected from higher layers (UI/strategy)
                        to maintain proper layer dependencies (AI depends on simulation,
                        not vice versa).
+            registries: Optional GameRegistries used when rebuilding ships from
+                       serialized battle state. Required for load/resume flows.
         """
         self._service = service or BattleService()
         self._ai_factory = ai_factory
+        self._registries = registries
         self._config: Optional[BattleConfig] = None
         self._initial_state: Optional[BattleState] = None
         self._is_configured: bool = False
@@ -158,10 +163,15 @@ class BattleController:
         if not self._is_configured:
             return BattleServiceResult(success=False, errors=["Controller not configured"])
 
+        try:
+            registries = self._require_registries_for_state_restore(state_count=len(states))
+        except ValidationException as e:
+            return BattleServiceResult(success=False, errors=[str(e)])
+
         errors = []
         for state in states:
             try:
-                ship = state.to_ship()
+                ship = state.to_ship(registries=registries)
                 result = self._service.add_ship(ship, team_id)
                 if result.success:
                     # Track the ship ID mapping
@@ -469,11 +479,18 @@ class BattleController:
             self._service.create_battle(seed=state.seed, ai_factory=self._ai_factory)
 
             # Restore ships from state
-            for ship_id, ship_state in state.ships.items():
-                ship = ship_state.to_ship()
-                team_id = ship_state.team_id
+            registries = self._require_registries_for_state_restore(
+                state_count=len(state.ships)
+            )
+            ships, id_map = self._state_manager.extract_ships_from_state(
+                state,
+                registries=registries
+            )
+            for ship in ships:
+                ship_id = id_map[ship.id]
+                team_id = state.ships[ship_id].team_id
                 self._service.add_ship(ship, team_id)
-                self._ship_id_map[ship.id] = ship_id
+            self._ship_id_map.update(id_map)
 
             # Start battle
             self._service.start_battle(
@@ -513,6 +530,29 @@ class BattleController:
         except (TypeError, ValueError, KeyError, AttributeError, ValidationException, StateException) as e:
             logger.warning(f"Failed to load battle state: {e}")
             return BattleServiceResult(success=False, errors=[str(e)])
+
+    def _require_registries_for_state_restore(
+        self,
+        *,
+        state_count: int
+    ) -> Optional['GameRegistries']:
+        """
+        Return registries for state restoration.
+
+        Empty states can be restored without registries, but any state that
+        contains ships must have registries injected into the controller.
+        """
+        if self._registries is not None:
+            return self._registries
+
+        if state_count == 0:
+            return None
+
+        raise ValidationException(
+            "registries is required for restoring ships from battle state",
+            code=ErrorCode.MISSING_DEPENDENCY.value,
+            context={"class": "BattleController", "parameter": "registries"}
+        )
 
     # === Query Methods ===
 

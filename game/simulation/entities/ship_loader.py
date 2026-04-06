@@ -39,7 +39,8 @@ def get_or_create_validator(*, registry_provider):
             components=registry_provider.get_components(),
             modifiers=registry_provider.get_modifiers(),
             vehicle_classes=registry_provider.get_vehicle_classes(),
-            resources=registry_provider.get_resources()
+            resources=registry_provider.get_resources(),
+            resource_catalog=registry_provider.get_resource_catalog(),
         )
         val = ShipDesignValidator(registries=registries)
         set_validator(val)

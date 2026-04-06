@@ -60,7 +60,25 @@ class BattlePanel:
         # Fallback to direct ships access (for test mocks)
         return getattr(self.scene, 'ships', [])
 
-class ShipStatsPanel(BattlePanel):
+
+class ExpandableIdPanel(BattlePanel):
+    """Base panel with ID-keyed expansion state helpers."""
+
+    def __init__(self, scene, x, y, w, h):
+        super().__init__(scene, x, y, w, h)
+        self._expanded_ids = set()
+
+    def _is_id_expanded(self, item_id: str) -> bool:
+        return item_id in self._expanded_ids
+
+    def _toggle_id_expanded(self, item_id: str) -> None:
+        if item_id in self._expanded_ids:
+            self._expanded_ids.discard(item_id)
+        else:
+            self._expanded_ids.add(item_id)
+
+
+class ShipStatsPanel(ExpandableIdPanel):
     """Panel for displaying ship statistics (Right side).
 
     PROJ-43: Uses ui_service.get_ships() to access ship data through DTOs
@@ -69,7 +87,7 @@ class ShipStatsPanel(BattlePanel):
     """
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
-        self.expanded_ships = set()  # Set of ship IDs (strings)
+        self.expanded_ships = self._expanded_ids  # Backward-compatible alias
         self.scroll = ScrollState()
         self.content_height = 0
         self._ship_banner_rects = {}  # ship_id -> (y_start, y_end) recorded during draw
@@ -83,15 +101,11 @@ class ShipStatsPanel(BattlePanel):
 
     def _is_expanded(self, ship):
         """Check if a ship is expanded by its ID."""
-        return self._get_ship_id(ship) in self.expanded_ships
+        return self._is_id_expanded(self._get_ship_id(ship))
 
     def _toggle_expanded(self, ship):
         """Toggle expansion state for a ship by its ID."""
-        ship_id = self._get_ship_id(ship)
-        if ship_id in self.expanded_ships:
-            self.expanded_ships.discard(ship_id)
-        else:
-            self.expanded_ships.add(ship_id)
+        self._toggle_id_expanded(self._get_ship_id(ship))
 
     def draw(self, screen):
         # Validate cache size
@@ -244,7 +258,7 @@ class ShipStatsPanel(BattlePanel):
         return False
 
 
-class SeekerMonitorPanel(BattlePanel):
+class SeekerMonitorPanel(ExpandableIdPanel):
     """Panel for monitoring missiles and seekers (Left side).
 
     PROJ-43: Expansion state is tracked by projectile ID (string) instead
@@ -253,7 +267,7 @@ class SeekerMonitorPanel(BattlePanel):
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
         self.tracked_seekers = []
-        self.expanded_seekers = set()  # Set of projectile IDs (strings)
+        self.expanded_seekers = self._expanded_ids  # Backward-compatible alias
         self.scroll = ScrollState()
         self.clear_btn_rect = None
         self.content_height = 0
@@ -267,15 +281,11 @@ class SeekerMonitorPanel(BattlePanel):
 
     def _is_seeker_expanded(self, proj):
         """Check if a projectile is expanded by its ID."""
-        return self._get_projectile_id(proj) in self.expanded_seekers
+        return self._is_id_expanded(self._get_projectile_id(proj))
 
     def _toggle_seeker_expanded(self, proj):
         """Toggle expansion state for a projectile by its ID."""
-        proj_id = self._get_projectile_id(proj)
-        if proj_id in self.expanded_seekers:
-            self.expanded_seekers.discard(proj_id)
-        else:
-            self.expanded_seekers.add(proj_id)
+        self._toggle_id_expanded(self._get_projectile_id(proj))
 
     def add_seeker(self, proj):
         self.tracked_seekers.append(proj)

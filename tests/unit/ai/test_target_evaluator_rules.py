@@ -503,11 +503,12 @@ class TestCapabilityRules:
         # Target has no weapons according to get_components_by_ability
         mock_target.get_components_by_ability = MagicMock(return_value=[])
 
-        # Give target a .name attribute (Ships use .name as identifier, not .id)
+        # Cache should prefer stable ship IDs over display names
+        mock_target.id = 'target_ship_id'
         mock_target.name = 'target_ship'
 
-        # But cache says it has weapons (keyed by .name)
-        cache = {mock_target.name: {'has_weapons': True}}
+        # But cache says it has weapons
+        cache = {mock_target.id: {'has_weapons': True}}
 
         rules = [{'type': 'has_weapons', 'weight': 100}]
 

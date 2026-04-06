@@ -50,6 +50,27 @@ def _create_controller_with_config(config: BattleConfig) -> BattleController:
     return controller
 
 
+def create_started_battle_controller(
+    config: BattleConfig,
+    team0_ships: List['Ship'],
+    team1_ships: List['Ship'],
+    *,
+    ai_factory: Optional[AIControllerFactory] = None,
+) -> BattleController:
+    """
+    Create, configure, populate, and start a battle controller.
+
+    This centralizes the common battle bootstrap flow shared by UI entry
+    points so startup behavior stays consistent.
+    """
+    controller = BattleController(ai_factory=ai_factory or _create_default_ai_factory())
+    controller.configure(config)
+    controller.add_ships(team0_ships, 0)
+    controller.add_ships(team1_ships, 1)
+    controller.start()
+    return controller
+
+
 def _clone_ships(ships: List['Ship']) -> List['Ship']:
     """
     Create deep copies of ships via serialization.
@@ -101,12 +122,7 @@ def create_manual_battle(
         headless=headless,
     )
 
-    controller = _create_controller_with_config(config)
-    controller.add_ships(team0_ships, 0)
-    controller.add_ships(team1_ships, 1)
-    controller.start()
-
-    return controller
+    return create_started_battle_controller(config, team0_ships, team1_ships)
 
 
 def create_test_battle(
@@ -187,11 +203,9 @@ def create_hypothetical_battle(
         headless=True,
     )
 
-    controller = _create_controller_with_config(config)
-
     # Clone ships to ensure isolation (PROJ-141: DUP-UI2-006)
-    controller.add_ships(_clone_ships(ships1), 0)
-    controller.add_ships(_clone_ships(ships2), 1)
-    controller.start()
-
-    return controller
+    return create_started_battle_controller(
+        config,
+        _clone_ships(ships1),
+        _clone_ships(ships2),
+    )

@@ -84,6 +84,7 @@ class TestBattleControllerAddShipsFromState:
     def test_add_ships_from_state_converts_state_to_ship(self, controller, basic_config, mock_service):
         """add_ships_from_state converts ShipState to Ship."""
         controller.configure(basic_config)
+        controller._registries = Mock(name="registries")
 
         mock_state = Mock()
         mock_state.ship_id = "test-ship-id"
@@ -92,12 +93,13 @@ class TestBattleControllerAddShipsFromState:
 
         controller.add_ships_from_state([mock_state], team_id=0)
 
-        mock_state.to_ship.assert_called_once()
+        mock_state.to_ship.assert_called_once_with(registries=controller._registries)
         mock_service.add_ship.assert_called_with(mock_ship, 0)
 
     def test_add_ships_from_state_tracks_ship_id(self, controller, basic_config, mock_service):
         """add_ships_from_state tracks the ship ID mapping."""
         controller.configure(basic_config)
+        controller._registries = Mock(name="registries")
 
         mock_state = Mock()
         mock_state.ship_id = "unique-ship-id"
@@ -111,6 +113,7 @@ class TestBattleControllerAddShipsFromState:
     def test_add_ships_from_state_handles_conversion_error(self, controller, basic_config, mock_service):
         """add_ships_from_state handles errors during state conversion."""
         controller.configure(basic_config)
+        controller._registries = Mock(name="registries")
 
         mock_state = Mock()
         mock_state.to_ship.side_effect = ValueError("Conversion failed")

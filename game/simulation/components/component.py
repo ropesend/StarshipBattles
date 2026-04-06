@@ -501,7 +501,8 @@ def load_components(file_path="data/components.json", *, registry_provider=None)
         components=comps,
         modifiers=registry_provider.get_modifiers(),
         vehicle_classes=registry_provider.get_vehicle_classes(),
-        resources={}
+        resources={},
+        resource_catalog=registry_provider.get_resource_catalog(),
     )
     result = load_components_data(file_path, registries=registries)
     if not result:

@@ -53,7 +53,7 @@ def test_generator_without_crew_is_inactive(fresh_registries):
     ship.layers[layer_key].components.append(generator)
     generator.ship = ship
 
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     # Generator should be INACTIVE due to missing crew
@@ -94,7 +94,7 @@ def test_generator_with_crew_is_active(fresh_registries):
     ship.layers[layer_key].components.append(generator)
     generator.ship = ship
 
-    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes, resource_catalog=fresh_registries.resource_catalog)
     calc.calculate(ship)
 
     # Generator should be ACTIVE with crew available

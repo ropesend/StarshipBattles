@@ -203,7 +203,8 @@ class TestEvaluateCapabilitiesCache:
         mock_target.name = 'target_1'
 
         # Provide cached has_weapons = True
-        capabilities_cache = {mock_target.name: {'has_weapons': True}}
+        mock_target.id = 'target_ship_id'
+        capabilities_cache = {mock_target.id: {'has_weapons': True}}
 
         score = TargetEvaluator.evaluate(
             mock_ship, mock_target, rules,

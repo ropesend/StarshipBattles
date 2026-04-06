@@ -24,7 +24,7 @@ class TestBug09Endurance:
         load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
         self.registries = fresh_registries
         ship = Ship("EnduranceRepro", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
-        calculator = ShipStatsCalculator(ship.vehicle_classes if hasattr(ship, 'vehicle_classes') else {})
+        calculator = ShipStatsCalculator(ship.vehicle_classes if hasattr(ship, 'vehicle_classes') else {}, resource_catalog=fresh_registries.resource_catalog)
         print(f"[DEBUG] Ship Layers keys: {list(ship.layers.keys())}")
         yield ship, calculator
 

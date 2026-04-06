@@ -427,7 +427,8 @@ class TestGetOrCreateValidator:
                             components={"comp1": {}},
                             modifiers={"mod1": {}},
                             vehicle_classes={"class1": {}},
-                            resources={"res1": {}}
+                            resources={"res1": {}},
+                            resource_catalog=mock_provider.get_resource_catalog(),
                         )
 
 

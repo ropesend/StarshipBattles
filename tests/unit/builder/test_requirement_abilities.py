@@ -64,7 +64,7 @@ def test_marker_abilities_tallied_as_boolean(registry_setup):
     registries = registry_setup
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass", registries=registries)
 
-    stats_calculator = ShipStatsCalculator(registries.vehicle_classes)
+    stats_calculator = ShipStatsCalculator(registries.vehicle_classes, resource_catalog=registries.resource_catalog)
     # Use helper method for iteration
     totals = stats_calculator.calculate_ability_totals(ship.get_all_components())
 
@@ -161,7 +161,7 @@ def test_stats_calculator_direct_marker_check(registry_setup):
     registries = registry_setup
     hull = create_component("test_hull", registries=registries)
 
-    stats_calculator = ShipStatsCalculator(registries.vehicle_classes)
+    stats_calculator = ShipStatsCalculator(registries.vehicle_classes, resource_catalog=registries.resource_catalog)
     totals = stats_calculator.calculate_ability_totals([hull])
 
     # Marker abilities (Requires...) should be True

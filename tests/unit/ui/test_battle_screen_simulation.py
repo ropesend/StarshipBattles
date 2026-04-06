@@ -111,6 +111,22 @@ class TestBattleScreenSimulationLifecycle:
         assert self.scene._ui_service is not None
         assert isinstance(self.scene._ui_service, BattleUIService)
 
+    def test_start_delegates_controller_bootstrap_to_factory_helper(self):
+        """start() should use the shared controller bootstrap helper."""
+        mock_controller = MagicMock()
+        mock_controller.config = MagicMock(headless=False, start_paused=False)
+        mock_controller.service = self.scene._battle_service
+
+        with patch(
+            'game.ui.screens.battle_screen.create_started_battle_controller',
+            return_value=mock_controller,
+        ) as mock_create_controller:
+            with patch.object(self.scene, 'start_battle') as mock_start_battle:
+                self.scene.start([self.ship1], [self.ship2], headless=False)
+
+        mock_create_controller.assert_called_once()
+        mock_start_battle.assert_called_once_with(mock_controller)
+
     def test_pause_unpause_toggle(self):
         """Test pause/unpause via sim_paused toggle."""
         self.scene.start([self.ship1], [self.ship2], headless=False)
@@ -324,7 +340,7 @@ class TestBattleScreenEventHandling:
     def test_handle_event_focus_ship_from_ui_click(self):
         """Test handle_event() sets camera target from UI focus_ship result."""
         self.scene.start([self.ship1], [self.ship2], headless=False)
-        self.scene.ui.handle_click.return_value = ("focus_ship", self.ship1)
+        self.scene.ui.handle_click.return_value = ("focus_ship", self.ship1.id)
 
         event = MagicMock()
         event.type = pygame.MOUSEBUTTONDOWN

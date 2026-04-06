@@ -82,6 +82,12 @@ class GameRegistries:
     resources: Dict[str, Any]
     resource_catalog: Optional['ResourceCatalog'] = field(default=None)
 
+    def __post_init__(self):
+        """Ensure resource_catalog is never None — default to empty catalog."""
+        if self.resource_catalog is None:
+            from game.core.resources import ResourceCatalog
+            object.__setattr__(self, 'resource_catalog', ResourceCatalog.from_data([]))
+
     # PROJ-211: IRegistryProvider interface methods
     def get_components(self) -> Dict[str, Any]:
         """Get the component registry dictionary."""
@@ -394,6 +400,10 @@ class TestRegistryProvider:
     def get_resources(self) -> Dict[str, Any]:
         """Get the isolated resources registry dictionary."""
         return self._resources
+
+    def get_resource_catalog(self) -> Optional['ResourceCatalog']:
+        """Get resource catalog. Returns None for test providers."""
+        return None
 
 
 # Singleton instance of DefaultRegistryProvider

@@ -275,130 +275,86 @@ class FormationBehavior(AIBehavior):
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         ship = self.controller.ship
-        # formation_master returns a raw Ship, not adapter
-        master = ship.get_formation_master()
+        formation_master: Optional[IFormationMaster] = ship.get_formation_master()
 
-        # Type narrow: master implements IFormationMaster protocol
-        formation_master: Optional[IFormationMaster] = master
         if not formation_master or not formation_master.is_alive or formation_master.is_derelict:
             ship.set_in_formation(False)
             return
 
-        # Calculate target position
         formation_offset = ship.get_formation_offset()
         rotation_mode = ship.get_formation_rotation_mode()
-        if rotation_mode == 'fixed':
-            current_rel_offset = formation_offset
-        else:
-            current_rel_offset = formation_offset.rotate(formation_master.angle)
+        target_pos = self._compute_offset_position(formation_master, formation_offset, rotation_mode)
 
-        target_pos = formation_master.position + current_rel_offset
-
-        ship_pos = ship.get_position()
-        dist = ship_pos.distance_to(target_pos)
+        dist = ship.get_position().distance_to(target_pos)
         diameter = ship.get_radius() * 2
+        drift_threshold = max(
+            diameter * self.DRIFT_THRESHOLD_DIAMETER_MULT,
+            ship.get_acceleration_rate() * self.DRIFT_THRESHOLD_FACTOR,
+        )
 
-        # Match Master's rotation
-        angle_diff = calc_angle_diff(ship.get_rotation(), formation_master.angle)
-
-        # Decision: Drift or Turn
-        # Use a larger threshold for drift to allow agile ships to snap into position
-        # Using acceleration_rate ensures we can cover the gap in one tick if needed
-        drift_threshold = max(diameter * self.DRIFT_THRESHOLD_DIAMETER_MULT, ship.get_acceleration_rate() * self.DRIFT_THRESHOLD_FACTOR)
-        
         if dist <= drift_threshold:
-            # Drift / Fudge Factor Zone
-
-            # 1. Rotation: Feed-Forward + Correction
-            # Feed-Forward: Match Master's angle exactly if we are already close
-            # Correction: Close the gap
-
-            turn_speed_per_tick = (ship.get_turn_speed() * 1.0) / self.TURN_SPEED_FACTOR
-
-            # Snap to master's future angle?
-            # If master is rotating, we should be too (Feed Forward)
-            # We don't have explicit 'master.is_turning' flag easily accessible,
-            # but we can infer from master.current_speed/angle change or just match angle.
-
-            if abs(angle_diff) < turn_speed_per_tick * self.TURN_PREDICT_FACTOR:
-                ship.set_rotation(formation_master.angle)
-            else:
-                direction = 1 if angle_diff > 0 else -1
-                ship.rotate(direction)
-
-            # 2. Translation Logic
-            # Goal: Match Velocity + Correct Position Error
-
-            # A) Velocity Sync (Physics Feed-Forward)
-            # Match master's target speed setting so Physics updates us by the same amount.
-            # formation_master implements IFormationMaster - access attributes directly
-            master_target_speed = 0
-            if formation_master.is_thrusting:
-                # Calculate what speed the master is trying to reach
-                master_target_speed = formation_master.max_speed * formation_master.engine_throttle
-
-            # Apply to self
-            ship_max_speed = ship.get_max_speed()
-            if ship_max_speed > 0:
-                # Calculate required throttle to match master speed
-                req_throttle = master_target_speed / ship_max_speed
-                ship.set_throttle(min(req_throttle, 1.0))
-
-                # Activate Engines if needed
-                if req_throttle > 0:
-                    ship.thrust_forward()  # Consumes fuel, sets is_thrusting=True
-                    # Physics will now result in velocity ~= master.velocity
-            
-            # B) Positional Correction (Drift)
-            # Since velocity handles the bulk movement, Drift only needs to correct the current offset error.
-            # Prediction Factor = 0.0 (Target current master position)
-
-            # Calculate where we SHOULD be right now
-            # formation_master implements IFormationMaster - access position directly
-            future_master_pos = formation_master.position  # No prediction needed if velocity matched
-
-            if rotation_mode == 'fixed':
-                future_offset = formation_offset
-            else:
-                future_offset = formation_offset.rotate(formation_master.angle)
-
-            future_target_pos = future_master_pos + future_offset
-
-            vec_to_spot = future_target_pos - ship.get_position()
-            dist_error = vec_to_spot.length()
-
-            # DEADBAND & SMOOTHING:
-            # - Ignore micro-errors (< 2.0) to prevent jitter/oscillation.
-            # - Smooth correction (0.2 factor) to act as a spring rather than a hard snap.
-            # - Velocity Sync already handles 99% of the movement.
-
-            if dist_error > self.DEADBAND_ERROR:
-                # Spring force: Correct 20% of error per tick
-                # This eliminates bi-stable oscillation while ensuring convergence.
-                correction = vec_to_spot * self.CORRECTION_FACTOR
-
-                # Cap correction to avoid wild jumps if something goes wrong (e.g. 500px limit)
-                if correction.length() > self.MAX_CORRECTION_FORCE:
-                    correction.scale_to_length(self.MAX_CORRECTION_FORCE)
-
-                ship.adjust_position(correction)
-                
+            angle_diff = calc_angle_diff(ship.get_rotation(), formation_master.angle)
+            self._sync_rotation(ship, formation_master, angle_diff)
+            self._sync_velocity(ship, formation_master)
+            self._correct_position(ship, formation_master, formation_offset, rotation_mode)
         else:
-            # Out of position > Threshold
-            # Navigate to FUTURE spot (Anticipation)
-            # Predict where master will be in X ticks based on current speed
-            # formation_master implements IFormationMaster - access attributes directly
-            prediction_ticks = self.PREDICTION_TICKS
-            predicted_master_pos = formation_master.position + (Vector2(0, -1).rotate(-formation_master.angle) * formation_master.current_speed * prediction_ticks * PhysicsConfig.TICK_RATE)
-            # Re-calculate offset based on formation_master's current angle
-            if rotation_mode == 'fixed':
-                pred_offset = formation_offset
-            else:
-                pred_offset = formation_offset.rotate(formation_master.angle)
+            self._navigate_to_predicted(formation_master, formation_offset, rotation_mode)
 
-            target_pos = predicted_master_pos + pred_offset
+    # -- helpers ----------------------------------------------------------
 
-            self.controller.navigate_to(target_pos, stop_dist=self.NAVIGATE_STOP_DIST)
+    @staticmethod
+    def _compute_offset_position(master, offset, rotation_mode):
+        """Compute world-space target position from master + offset."""
+        rel = offset if rotation_mode == 'fixed' else offset.rotate(master.angle)
+        return master.position + rel
+
+    def _sync_rotation(self, ship, master, angle_diff):
+        """Snap or rotate toward master's heading."""
+        turn_speed_per_tick = ship.get_turn_speed() / self.TURN_SPEED_FACTOR
+        if abs(angle_diff) < turn_speed_per_tick * self.TURN_PREDICT_FACTOR:
+            ship.set_rotation(master.angle)
+        else:
+            ship.rotate(1 if angle_diff > 0 else -1)
+
+    @staticmethod
+    def _sync_velocity(ship, master):
+        """Match master's throttle and thrust state."""
+        master_target_speed = 0
+        if master.is_thrusting:
+            master_target_speed = master.max_speed * master.engine_throttle
+
+        ship_max_speed = ship.get_max_speed()
+        if ship_max_speed > 0:
+            req_throttle = master_target_speed / ship_max_speed
+            ship.set_throttle(min(req_throttle, 1.0))
+            if req_throttle > 0:
+                ship.thrust_forward()
+
+    def _correct_position(self, ship, master, offset, rotation_mode):
+        """Spring-based positional correction within drift zone."""
+        target_pos = self._compute_offset_position(master, offset, rotation_mode)
+        vec_to_spot = target_pos - ship.get_position()
+        dist_error = vec_to_spot.length()
+
+        if dist_error > self.DEADBAND_ERROR:
+            correction = vec_to_spot * self.CORRECTION_FACTOR
+            if correction.length() > self.MAX_CORRECTION_FORCE:
+                correction.scale_to_length(self.MAX_CORRECTION_FORCE)
+            ship.adjust_position(correction)
+
+    def _navigate_to_predicted(self, master, offset, rotation_mode):
+        """Navigate toward master's predicted future position."""
+        predicted_master_pos = master.position + (
+            Vector2(0, -1).rotate(-master.angle)
+            * master.current_speed
+            * self.PREDICTION_TICKS
+            * PhysicsConfig.TICK_RATE
+        )
+        pred_offset = offset if rotation_mode == 'fixed' else offset.rotate(master.angle)
+        self.controller.navigate_to(
+            predicted_master_pos + pred_offset,
+            stop_dist=self.NAVIGATE_STOP_DIST,
+        )
 
 
 # =============================================================================

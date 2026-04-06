@@ -70,7 +70,8 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
         components={k: v for k, v in fresh_registries.components.items()},
         modifiers={},
         vehicle_classes=classes,
-        resources={}
+        resources={},
+        resource_catalog=fresh_registries.resource_catalog,
     )
     context = WorkshopContext(
         mode=WorkshopMode.STANDALONE,

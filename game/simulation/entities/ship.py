@@ -530,7 +530,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         if not self.stats_calculator:
             # PROJ-42: Use registries instead of provider
-            self.stats_calculator = ShipStatsCalculator(self._registries.vehicle_classes)
+            self.stats_calculator = ShipStatsCalculator(
+                self._registries.vehicle_classes,
+                resource_catalog=self._registries.resource_catalog,
+            )
 
         self.stats_calculator.calculate(self)
 

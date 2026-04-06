@@ -85,11 +85,40 @@ class TestShipStatsCalculatorPhases:
         comp.current_hp = 40  # 40% HP - below 50% threshold
 
         ship = self._create_mock_ship([comp])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert comp.is_active is False
         assert comp.status == ComponentStatus.DAMAGED
+
+    def test_calculate_uses_injected_planetary_resource_ids(self):
+        """Injected planetary resource IDs should be used for construction_cost keys."""
+        ship = self._create_mock_ship([])
+        calculator = ShipStatsCalculator(
+            self.vehicle_classes,
+            planetary_resource_ids=['metals', 'organics'],
+        )
+        calculator.calculate(ship)
+        assert ship.construction_cost == {'metals': 0, 'organics': 0}
+
+    def test_resource_catalog_injection_populates_planetary_ids(self):
+        """Passing resource_catalog= should derive planetary resource IDs from it."""
+        from game.core.resources import ResourceCatalog
+        real_catalog = ResourceCatalog.from_json()
+
+        calculator = ShipStatsCalculator(
+            self.vehicle_classes,
+            resource_catalog=real_catalog,
+        )
+        # Lazy — resolve via accessor
+        assert len(calculator._get_or_resolve_planetary_ids()) > 0
+
+    def test_no_resource_catalog_raises_on_calculate(self):
+        """Omitting resource_catalog and planetary_resource_ids should raise on calculate()."""
+        calculator = ShipStatsCalculator(self.vehicle_classes)
+        ship = self._create_mock_ship([])
+        with pytest.raises(TypeError):
+            calculator.calculate(ship)
 
     def test_damage_check_phase_keeps_healthy_components_active(self):
         """Verify Phase 1 keeps components above 50% HP active."""
@@ -105,7 +134,7 @@ class TestShipStatsCalculatorPhases:
         comp.current_hp = 60  # 60% HP - above 50% threshold
 
         ship = self._create_mock_ship([comp])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert comp.is_active is True
@@ -131,7 +160,7 @@ class TestShipStatsCalculatorPhases:
         weapon = Component(weapon_data, registries=self.registries)
 
         ship = self._create_mock_ship([weapon])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert weapon.is_active is False
@@ -169,7 +198,7 @@ class TestShipStatsCalculatorPhases:
         weapon = Component(weapon_data, registries=self.registries)
 
         ship = self._create_mock_ship([quarters, weapon])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert weapon.is_active is True
@@ -201,7 +230,7 @@ class TestShipStatsCalculatorPhases:
         engine2 = Component(engine2_data, registries=self.registries)
 
         ship = self._create_mock_ship([engine1, engine2])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert ship.total_thrust == 2500
@@ -232,7 +261,7 @@ class TestShipStatsCalculatorPhases:
         shield2 = Component(shield2_data, registries=self.registries)
 
         ship = self._create_mock_ship([shield1, shield2])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert ship.max_shields == 500.0
@@ -252,7 +281,7 @@ class TestShipStatsCalculatorPhases:
         engine = Component(engine_data, registries=self.registries)
 
         ship = self._create_mock_ship([engine])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert ship.acceleration_rate > 0
@@ -284,7 +313,7 @@ class TestShipStatsCalculatorPhases:
         thruster = Component(thruster_data, registries=self.registries)
 
         ship = self._create_mock_ship([engine, thruster])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         assert hasattr(ship, 'total_defense_score')
@@ -329,7 +358,7 @@ class TestShipStatsCalculatorPhases:
         quarters = Component(quarters_data, registries=self.registries)
 
         ship = self._create_mock_ship([engine, shield, quarters])
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         calculator.calculate(ship)
 
         # Verify all phases ran
@@ -351,25 +380,25 @@ class TestPhaseHelperMethods:
 
     def test_priority_sort_key_exists(self):
         """Verify _priority_sort_key method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         assert hasattr(calculator, '_priority_sort_key')
 
     def test_check_mass_limits_exists(self):
         """Verify _check_mass_limits method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         assert hasattr(calculator, '_check_mass_limits')
 
     def test_initialize_resources_exists(self):
         """Verify _initialize_resources method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         assert hasattr(calculator, '_initialize_resources')
 
     def test_get_ability_total_exists(self):
         """Verify _get_ability_total method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         assert hasattr(calculator, '_get_ability_total')
 
     def test_calculate_ability_totals_exists(self):
         """Verify calculate_ability_totals method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes)
+        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
         assert hasattr(calculator, 'calculate_ability_totals')
