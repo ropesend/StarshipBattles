@@ -4,6 +4,11 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-250 | Dual-Source Retreat Config Ambiguity | Planning | 2026-04-06 | 2026-04-06 |
+| PROJ-249 | PDC Targeting Configuration | Planning | 2026-04-06 | 2026-04-06 |
+| PROJ-248 | Weapon Cache Mutable Return | Planning | 2026-04-06 | 2026-04-06 |
+| PROJ-247 | Ship ID Mapping Fragility | Planning | 2026-04-06 | 2026-04-06 |
+| PROJ-246 | Silent Formula Evaluation Failure | Planning | 2026-04-06 | 2026-04-06 |
 | PROJ-245 | Spatial Grid Incremental Updates | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
