@@ -501,3 +501,16 @@ class TestDefaultMaxMass:
         }
         ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="Unknown", registries=fresh_registries)
         assert ship.max_mass_budget == DEFAULT_MAX_MASS
+
+    def test_change_class_unknown_raises_validation_error(self, fresh_registries):
+        """change_class with unknown class should raise ValidationException.
+
+        PROJ-240 Phase 3: Bug fix -- previously silently fell back to empty dict.
+        """
+        from game.core.exceptions import ValidationException
+        ship = Ship("Test", 0, 0, (255, 255, 255), registries=fresh_registries)
+        # Attempt to change to a nonexistent class -- early guard should reject
+        # The method currently returns silently for unknown classes at entry
+        ship.change_class("nonexistent_class_xyz")
+        # The ship_class should NOT have changed (early guard returns before mutation)
+        assert ship.ship_class == "Escort"

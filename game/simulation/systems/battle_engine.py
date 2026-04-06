@@ -313,7 +313,7 @@ class BattleEngine:
         Called from start() for initial ships and add_ship_mid_battle() for
         reinforcements. Extracted to ensure parity between both paths.
         """
-        ship.combat_engine._event_bus = self.combat_events
+        ship.set_event_bus(self.combat_events)
         for comp in ship.get_all_components():
             if comp.is_active:
                 comp.update()

@@ -69,49 +69,11 @@ class StrategyUI:
             self.sidebar_width, self.on_ui_selection
         )
 
-        # Unpack widget references onto self
-        self.system_panel = widgets.system_panel
-        self.sector_panel = widgets.sector_panel
-        self.detail_panel = widgets.detail_panel
-        self.top_bar = widgets.top_bar
-        self.resource_bar = widgets.resource_bar
-        self.system_header = widgets.system_header
-        self.system_tree = widgets.system_tree
-        self.sector_header = widgets.sector_header
-        self.sector_tree = widgets.sector_tree
-        self.portrait_image = widgets.portrait_image
-        self.detail_text = widgets.detail_text
-        self.graph_image = widgets.graph_image
-        self.graph_rect = widgets.graph_rect
-        self.btn_raw_data = widgets.btn_raw_data
-        self.btn_colonize = widgets.btn_colonize
-        self.btn_build_yard = widgets.btn_build_yard
-        self.btn_planet_orders = widgets.btn_planet_orders  # PROJ-238
-        self.btn_atmosphere = widgets.btn_atmosphere
-        self.btn_orders = widgets.btn_orders
-        self.btn_fleet_report = widgets.btn_fleet_report
-        self.btn_build_fleet = widgets.btn_build_fleet
-        self.btn_prev_colony = widgets.btn_prev_colony
-        self.lbl_colony = widgets.lbl_colony
-        self.btn_next_colony = widgets.btn_next_colony
-        self.btn_prev_fleet = widgets.btn_prev_fleet
-        self.lbl_fleet = widgets.lbl_fleet
-        self.btn_next_fleet = widgets.btn_next_fleet
-        self.btn_planets = widgets.btn_planets
-        self.btn_stars = widgets.btn_stars
-        self.btn_empire = widgets.btn_empire
-        self.btn_research = widgets.btn_research
-        self.btn_design = widgets.btn_design
-        self.btn_build_queues = widgets.btn_build_queues
-        self.btn_all_queues = widgets.btn_all_queues
-        self.btn_menu = widgets.btn_menu
-        self.btn_events = widgets.btn_events
-        self.btn_next_turn = widgets.btn_next_turn
-        self.lbl_current_player = widgets.lbl_current_player
-        self.lbl_resources = widgets.lbl_resources
-        self.spectrum_graph = widgets.spectrum_graph
-        self.atmosphere_graph = widgets.atmosphere_graph
-        self.panels = widgets.panels
+        # Store the widgets dataclass directly — all btn_*, lbl_*, panel, etc.
+        # attributes are accessible via __getattr__ delegation below.
+        # This eliminates manual wiring that previously caused crashes when
+        # new buttons were added to StrategyWidgets but not unpacked here.
+        self._widgets = widgets
 
         # State
         self.current_raw_data = ""
@@ -127,23 +89,7 @@ class StrategyUI:
             scene=self.scene,
             manager=self.manager,
             detail_panel=self.detail_panel,
-            widgets={
-                'portrait_image': self.portrait_image,
-                'detail_text': self.detail_text,
-                'graph_image': self.graph_image,
-                'btn_raw_data': self.btn_raw_data,
-                'btn_colonize': self.btn_colonize,
-                'btn_build_yard': self.btn_build_yard,
-                'btn_planet_orders': self.btn_planet_orders,  # PROJ-238
-                'btn_atmosphere': self.btn_atmosphere,
-                'btn_orders': self.btn_orders,
-                'btn_fleet_report': self.btn_fleet_report,
-                'btn_build_fleet': self.btn_build_fleet,
-            },
-            graphs={
-                'spectrum_graph': self.spectrum_graph,
-                'atmosphere_graph': self.atmosphere_graph,
-            },
+            widgets=self._widgets,
             graph_rect=self.graph_rect,
             screen_size=(screen_width, screen_height),
         )
@@ -160,6 +106,19 @@ class StrategyUI:
 
         # PROJ-86: Initialize event router
         self._event_router = StrategyEventRouter(self)
+
+    def __getattr__(self, name):
+        """Delegate widget attribute lookups to the stored StrategyWidgets dataclass.
+
+        This allows `ui.btn_X`, `ui.detail_panel`, `ui.lbl_X`, etc. to resolve
+        directly from the widgets dataclass without manual unpacking. New widgets
+        added to StrategyWidgets are automatically accessible.
+        """
+        # Avoid infinite recursion: _widgets must be set before __getattr__ is called
+        widgets = self.__dict__.get('_widgets')
+        if widgets is not None and hasattr(widgets, name):
+            return getattr(widgets, name)
+        raise AttributeError(f"'StrategyUI' object has no attribute '{name}'")
 
     # =========================================================================
     # Hotkey Tooltip Enrichment (PROJ-71)

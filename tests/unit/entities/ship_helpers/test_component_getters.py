@@ -57,16 +57,16 @@ class TestGetAllComponents:
         # 2 lasers + armor
         assert len(outer_comps) == 3
 
-    def test_returns_cached_list(self, basic_ship):
-        """Each call returns the same cached list for performance (PROJ-49).
+    def test_returns_defensive_copy(self, basic_ship):
+        """Each call returns a defensive copy for safety (PROJ-240).
 
-        PROJ-49 Phase 3: get_all_components() now returns cached list.
-        Callers should not modify the returned list directly.
+        PROJ-240: get_all_components() now returns a defensive copy so callers
+        cannot corrupt the internal cache.
         """
         result1 = basic_ship.get_all_components()
         result2 = basic_ship.get_all_components()
-        # PROJ-49: Now returns cached list for performance
-        assert result1 is result2
+        # PROJ-240: Returns defensive copy (different list objects)
+        assert result1 is not result2
         assert result1 == result2  # Same contents
 
 
