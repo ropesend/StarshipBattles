@@ -283,8 +283,9 @@ class BattleEngine:
             )
 
         # Wire combat event bus to each ship's combat engine
+        # PROJ-240: Uses facade method to avoid deep delegation chain
         for s in self.ships:
-            s.combat_engine._event_bus = self.combat_events
+            s.set_event_bus(self.combat_events)
 
         # Run initial component update cycle so requirement-based abilities
         # (like RequiresCommandAndControl) can mark components non-operational

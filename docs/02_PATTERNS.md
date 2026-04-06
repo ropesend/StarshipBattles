@@ -322,18 +322,25 @@ class StrategySessionFacade:
         return FleetInfo.from_fleet(fleet)
 ```
 
-**Ship -> ShipCombatEngine delegation:** Ship lazily creates a `ShipCombatEngine`
-and delegates all combat operations to it.
+**Ship -> ShipComponentManager delegation:** Ship lazily creates a
+`ShipComponentManager` and delegates all component lifecycle operations
+(add, remove, bulk add, cache, iteration, layer queries) to it.
+
+**Ship -> ShipCombatManager delegation:** Ship lazily creates a
+`ShipCombatManager` and delegates combat orchestration (update loop, derelict
+status, death, firing state) to it. The combat manager also owns the
+`ShipCombatEngine` as a sub-delegate.
+
+**Ship -> ShipCombatEngine delegation:** Ship's `combat_engine` property
+delegates through `ShipCombatManager` which lazily creates a `ShipCombatEngine`.
 
 ```python
 # game/simulation/entities/ship.py (actual code)
-class Ship(PhysicsBody, ShipPhysicsMixin):   # NOTE: No ShipCombatMixin
+class Ship(PhysicsBody, ShipPhysicsMixin):
 
     @property
     def combat_engine(self):
-        if self._combat_engine is None:
-            self._combat_engine = ShipCombatEngine(self)
-        return self._combat_engine
+        return self.combat_manager.combat_engine
 ```
 
 **Fleet delegates:** Fleet also uses the delegate pattern to decompose responsibilities:
