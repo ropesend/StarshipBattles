@@ -914,6 +914,7 @@ class TestFormatStarSystemInfo:
         planet = Mock()
         planet.name = "Earth"
         planet.active_abilities = {'StellarStabilizer': True}
+        planet.orders = []
 
         facility = Mock()
         facility.design_data = {
@@ -936,6 +937,7 @@ class TestFormatStarSystemInfo:
         planet = Mock()
         planet.name = "Mars"
         planet.active_abilities = {'WarpFieldStabilizer': False}
+        planet.orders = []
 
         facility = Mock()
         facility.design_data = {
@@ -952,6 +954,35 @@ class TestFormatStarSystemInfo:
 
         assert "Warp Field Stabilizer" in result
         assert "Inactive" in result
+
+    def test_system_shows_activation_progress(self, mock_star_system):
+        """System panel should show tick progress for activating abilities."""
+        from game.strategy.data.order_types import Order, OrderType
+
+        planet = Mock()
+        planet.name = "Venus"
+        planet.active_abilities = {'StellarStabilizer': False}
+        order = Order(OrderType.ACTIVATE_ABILITY,
+                     target={'ability_name': 'StellarStabilizer', 'facility_instance_id': 'fac-1'})
+        order.execution_progress = 50
+        planet.orders = [order]
+
+        facility = Mock()
+        facility.design_data = {
+            'layers': {
+                'OUTER': [{'id': 'stellar_stabilizer', 'abilities': {
+                    'StellarStabilizer': {'scope': 'system'}
+                }}]
+            }
+        }
+        planet.facilities = [facility]
+        mock_star_system.planets = [planet]
+
+        result = format_star_system_info(mock_star_system)
+
+        assert "Stellar Stabilizer" in result
+        assert "Activating" in result
+        assert "50 ticks" in result
 
     def test_system_without_stabilizers_shows_none(self, mock_star_system):
         """System without stabilizer facilities should not show ability lines."""

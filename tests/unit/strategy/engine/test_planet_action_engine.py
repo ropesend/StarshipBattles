@@ -162,23 +162,59 @@ class TestPlanetActionEngine:
         assert len(results) == 0
         assert len(planet.orders) == 0  # Order was popped
 
-    def test_multiple_orders_fifo(self):
-        """Orders are processed FIFO — first in queue gets ticked."""
+    def test_multiple_orders_processed_in_parallel(self):
+        """All planet action orders are processed simultaneously each tick."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
         order1 = PlanetOrder(OrderType.ACTIVATE_ABILITY,
                             target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
-        order2 = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
-                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
+        order2 = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+                            target={"facility_instance_id": "fac-1", "ability_name": "StellarStabilizer"})
         planet = _make_planet(facilities=[facility], orders=[order1, order2])
         empire = _make_empire(colonies=[planet])
 
         results = engine.process_planet_actions_tick(1, [empire])
 
-        # Only order1 gets ticked
-        assert results[0].order_type == OrderType.ACTIVATE_ABILITY
+        # Both orders get ticked simultaneously
+        assert len(results) == 2
         assert order1.execution_progress == 1
-        assert order2.execution_progress == 0
+        assert order2.execution_progress == 1
+
+    def test_three_activations_complete_on_same_tick(self):
+        """Three activation orders issued together should all complete on the same tick."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", {
+            "layers": {
+                "OUTER": [
+                    {"id": "comp_a", "abilities": {"AbilityA": {"activation_time": 3, "deactivation_time": 1}}},
+                    {"id": "comp_b", "abilities": {"AbilityB": {"activation_time": 3, "deactivation_time": 1}}},
+                    {"id": "comp_c", "abilities": {"AbilityC": {"activation_time": 3, "deactivation_time": 1}}},
+                ]
+            }
+        })
+        order_a = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
+        order_b = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityB"})
+        order_c = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityC"})
+        planet = _make_planet(facilities=[facility],
+                             orders=[order_a, order_b, order_c])
+        empire = _make_empire(colonies=[planet])
+
+        # Process 2 ticks — not complete yet
+        for tick in range(1, 3):
+            engine.process_planet_actions_tick(tick, [empire])
+        assert order_a.execution_progress == 2
+        assert order_b.execution_progress == 2
+        assert order_c.execution_progress == 2
+        assert len(planet.orders) == 3  # All still pending
+
+        # Tick 3 — all complete simultaneously
+        results = engine.process_planet_actions_tick(3, [empire])
+        completed = [r for r in results if r.action_completed]
+        assert len(completed) == 3
+        assert len(planet.orders) == 0  # All popped
 
     def test_multi_turn_order_persists(self):
         """Orders with action_time > 100 persist across multiple ticks."""

@@ -200,8 +200,9 @@ def _planet_has_shield_facility(planet) -> bool:
 def _get_system_ability_status(system) -> dict:
     """Scan all planets in a system for activatable abilities and their status.
 
-    Returns dict mapping ability_key -> dict with 'active' bool and 'planet_name' str.
-    Only includes abilities that have facilities present.
+    Returns dict mapping ability_key -> dict with 'status_text' str and 'planet_name' str.
+    Only includes abilities that have facilities present. Status text includes
+    tick progress for activating/deactivating abilities.
     """
     result = {}
     planets = getattr(system, 'planets', [])
@@ -210,11 +211,12 @@ def _get_system_ability_status(system) -> dict:
     for planet in planets:
         for ability_key in _ACTIVATABLE_DISPLAY_NAMES:
             if _planet_has_ability_facility(planet, ability_key):
-                active = getattr(planet, 'active_abilities', {}).get(ability_key, False)
+                status_text = _get_ability_status_text(planet, ability_key)
                 if ability_key not in result:
-                    result[ability_key] = {'active': active, 'planet_name': planet.name}
-                elif active:
-                    result[ability_key] = {'active': True, 'planet_name': planet.name}
+                    result[ability_key] = {'status_text': status_text, 'planet_name': planet.name}
+                elif 'Active' == status_text:
+                    # Prefer showing "Active" over "Inactive" if multiple planets have it
+                    result[ability_key] = {'status_text': status_text, 'planet_name': planet.name}
     return result
 
 
@@ -294,7 +296,7 @@ def format_star_system_info(system) -> str:
     for ability_key, display_name in _ACTIVATABLE_DISPLAY_NAMES.items():
         if ability_key in _system_abilities:
             info = _system_abilities[ability_key]
-            status = "Active" if info['active'] else "Inactive"
+            status = info.get('status_text', 'Inactive')
             planet_name = info.get('planet_name', '')
             text += f"<br><b>{display_name}:</b> {status} ({planet_name})"
 

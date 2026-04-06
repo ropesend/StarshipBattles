@@ -2657,8 +2657,8 @@
             "abilities": {
                 "GeologicStabilizer": {
                     "energy_drain_rate": 50.0,
-                    "activation_time": 75,
-                    "deactivation_time": 15,
+                    "activation_time": 250,
+                    "deactivation_time": 150,
                     "scope": "system"
                 }
             },
@@ -2683,8 +2683,8 @@
             "abilities": {
                 "StellarStabilizer": {
                     "energy_drain_rate": 250.0,
-                    "activation_time": 100,
-                    "deactivation_time": 20,
+                    "activation_time": 250,
+                    "deactivation_time": 150,
                     "scope": "system"
                 }
             },
@@ -2709,8 +2709,8 @@
             "abilities": {
                 "WarpFieldStabilizer": {
                     "energy_drain_rate": 150.0,
-                    "activation_time": 75,
-                    "deactivation_time": 15,
+                    "activation_time": 250,
+                    "deactivation_time": 150,
                     "scope": "system"
                 }
             },
@@ -3241,8 +3241,8 @@
                 "GeologicStabilizer": {
                     "scope": "system",
                     "energy_drain_rate": 100.0,
-                    "activation_time": 100,
-                    "deactivation_time": 20
+                    "activation_time": 250,
+                    "deactivation_time": 150
                 },
                 "CrewRequired": 60
             },

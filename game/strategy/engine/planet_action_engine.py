@@ -74,9 +74,8 @@ class PlanetActionEngine(IPlanetActionEngine):
         results = []
         for empire in empires:
             for planet in empire.colonies:
-                result = self._process_planet_tick(planet, empire, component_registry)
-                if result is not None:
-                    results.append(result)
+                tick_results = self._process_planet_tick(planet, empire, component_registry)
+                results.extend(tick_results)
         return results
 
     def _process_planet_tick(
@@ -84,51 +83,61 @@ class PlanetActionEngine(IPlanetActionEngine):
         planet: 'Planet',
         empire: 'Empire',
         component_registry: Optional[Dict[str, Any]] = None,
-    ) -> Optional[PlanetActionTickResult]:
-        """Process a single planet's current order for one tick."""
-        order = planet.get_current_order()
-        if order is None:
-            return None
+    ) -> List[PlanetActionTickResult]:
+        """Process all planet action orders for one tick in parallel.
 
-        if order.type not in PLANET_ACTION_ORDER_TYPES:
-            return None
+        Unlike fleet orders which are sequential, planet action orders
+        (activate/deactivate) all tick simultaneously. This means issuing
+        three activation orders causes all three timers to run in parallel.
+        """
+        results = []
+        completed_indices = []
 
-        # Validate target facility still exists
-        if not self._target_facility_exists(planet, order):
-            logger.warning(
-                f"Planet {planet.name}: target facility for {order.type.name} "
-                f"no longer exists, canceling order"
+        for i, order in enumerate(planet.orders):
+            if order.type not in PLANET_ACTION_ORDER_TYPES:
+                continue
+
+            # Validate target facility still exists
+            if not self._target_facility_exists(planet, order):
+                logger.warning(
+                    f"Planet {planet.name}: target facility for {order.type.name} "
+                    f"no longer exists, canceling order"
+                )
+                completed_indices.append(i)
+                continue
+
+            # Increment progress
+            order.execution_progress += 1
+
+            # Resolve action_time
+            action_time = self._action_time_resolver.resolve_action_time(
+                planet, order, component_registry
             )
-            planet.pop_order()
-            return None
 
-        # Increment progress
-        order.execution_progress += 1
+            if order.execution_progress >= action_time:
+                self._execute_order(planet, order, empire)
+                completed_indices.append(i)
+                results.append(PlanetActionTickResult(
+                    planet_name=planet.name,
+                    order_type=order.type,
+                    action_completed=True,
+                    execution_progress=order.execution_progress,
+                    action_time=action_time,
+                ))
+            else:
+                results.append(PlanetActionTickResult(
+                    planet_name=planet.name,
+                    order_type=order.type,
+                    action_completed=False,
+                    execution_progress=order.execution_progress,
+                    action_time=action_time,
+                ))
 
-        # Resolve action_time
-        action_time = self._action_time_resolver.resolve_action_time(
-            planet, order, component_registry
-        )
+        # Remove completed orders in reverse index order to avoid shifting
+        for i in reversed(completed_indices):
+            planet.orders.pop(i)
 
-        if order.execution_progress >= action_time:
-            # Execute the order
-            self._execute_order(planet, order, empire)
-            planet.pop_order()
-            return PlanetActionTickResult(
-                planet_name=planet.name,
-                order_type=order.type,
-                action_completed=True,
-                execution_progress=order.execution_progress,
-                action_time=action_time,
-            )
-        else:
-            return PlanetActionTickResult(
-                planet_name=planet.name,
-                order_type=order.type,
-                action_completed=False,
-                execution_progress=order.execution_progress,
-                action_time=action_time,
-            )
+        return results
 
     def _execute_order(
         self,
