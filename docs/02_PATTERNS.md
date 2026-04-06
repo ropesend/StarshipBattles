@@ -209,6 +209,38 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             raise ValidationException("registries is required ...")
 ```
 
+**GameRegistries defaults `resource_catalog`:**
+
+`GameRegistries.__post_init__()` automatically provides an empty `ResourceCatalog` when
+`resource_catalog=None`. This means callers that don't need resource data (tests, validators)
+can omit it without crashing. Production code should always pass the real catalog explicitly:
+
+```python
+registries = GameRegistries(
+    components=provider.get_components(),
+    modifiers=provider.get_modifiers(),
+    vehicle_classes=provider.get_vehicle_classes(),
+    resources=provider.get_resources(),
+    resource_catalog=provider.get_resource_catalog(),  # explicit in production
+)
+```
+
+**ShipStatsCalculator requires `resource_catalog` for `calculate()`:**
+
+`ShipStatsCalculator` uses lazy resolution — it accepts `resource_catalog` at construction
+and resolves planetary resource IDs on first `calculate()` call. Omitting both
+`resource_catalog` and `planetary_resource_ids` raises `TypeError` at `calculate()` time.
+The `calculate_ability_totals()` method does not require a catalog.
+
+```python
+# game/simulation/entities/ship_stats.py
+calculator = ShipStatsCalculator(
+    registries.vehicle_classes,
+    resource_catalog=registries.resource_catalog,
+)
+calculator.calculate(ship)
+```
+
 ### When to Use
 
 - All services and domain objects that need component/modifier/vehicle-class data.

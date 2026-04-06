@@ -35,6 +35,10 @@ controller.start()
 battle_screen.start_battle(controller)  # ONE entry point
 ```
 
+**Convenience factory** — `create_started_battle_controller()` (`game/ui/services/battle_factories.py`)
+centralizes the configure→add_ships→start sequence. `BattleScreen.start()`, `create_manual_battle()`,
+and `create_hypothetical_battle()` all delegate to it.
+
 **Unified exit** — all modes use ONE path:
 - Battle ends → `BattleScreen._on_battle_ended()` 
 - If `show_results=True`: extracts results → `BattleResultsScreen` → user clicks Return
@@ -92,15 +96,16 @@ BattleEngine owns the simulation state: ships, AI controllers, projectiles, spat
 
 **`update()` tick sequence (per tick):**
 
-| Phase | Description |
-|-------|-------------|
-| 1 | Rebuild spatial grid with alive ships + active projectiles |
-| 2 | Update AI controllers (target selection, behavior) |
-| 2.5 | Update fleet auras (recalculate scoped ability bonuses from alive providers) |
-| 3 | Update ships (physics, weapons, abilities, resources) |
-| 4 | Process new attacks: PROJECTILE/MISSILE -> ProjectileManager; BEAM -> CollisionSystem raycast; LAUNCH -> spawn fighter Ship |
-| 5 | Process ramming collisions (kamikaze ships) |
-| 6 | Update projectiles (movement, hit detection, expiration) |
+The `update()` method is a concise coordinator that delegates to focused helpers:
+
+| Phase | Helper Method | Description |
+|-------|---------------|-------------|
+| 1 | `_rebuild_grid()` | Clear and rebuild spatial grid with alive ships + active projectiles |
+| 2 | `_update_ai_and_ships()` | Update AI controllers, ship physics/weapons/abilities, fleet auras |
+| 3 | `_collect_new_attacks()` | Gather and clear attacks emitted by ships this tick |
+| 4 | `_process_attacks()` | Dispatch by type: PROJECTILE/MISSILE via `_process_projectile_attack()`; BEAM via CollisionSystem; LAUNCH via `_process_launch_attack()` (spawns fighter Ship) |
+| 5 | (inline) | Process ramming collisions (kamikaze ships) |
+| 6 | (inline) | Update projectiles (movement, hit detection, expiration) |
 
 **Fleet Aura System** (`game/simulation/combat/fleet_aura_manager.py`):
 
@@ -253,24 +258,31 @@ DamageCalculator, WeaponFiringSystem) are class-level shared instances since the
 
 **File:** `game/simulation/combat/damage_calculator.py` -- `DamageCalculator`
 
-Damage flows through 4 layers in order:
+Damage flows through 5 stages, each extracted as a focused method:
 
 ```
 Incoming Damage
     │
     ▼
-[1] Shields ─────────── Absorbs from shield pool (ship.current_shields)
-    │                   First line of defense
+[1] _absorb_shields() ──────── Absorbs from shield pool (ship.current_shields)
+    │                          Early return if fully absorbed
     ▼
-[2] Emissive Armor ─── Flat reduction on overflow (ship.emissive_armor)
-    │                   damage = max(0, remaining - ea)
+[2] _reduce_emissive_armor() ─ Flat reduction on overflow (ship.emissive_armor)
+    │                          Early return if fully absorbed
     ▼
-[3] Shield Regenerating Armor ─ Absorbs overflow, recharges shields
-    │                   by absorbed amount (capped at max_shields)
+[3] _absorb_regenerating_armor() ─ Absorbs overflow, recharges shields
+    │                          by absorbed amount (capped at max_shields)
+    │                          Early return if fully absorbed
     ▼
-[4] Hull Layers ─────── Distributes to components sorted by radius_pct
-                        (outermost first: ARMOR → OUTER → INNER → CORE → HULL)
+[4] _distribute_hull_damage() ─ Distributes to components sorted by radius_pct
+    │                          (outermost first: ARMOR → OUTER → INNER → CORE → HULL)
+    ▼
+[5] _finalize_damage() ─────── Recalculate stats, check derelict status, emit events
 ```
+
+The `apply_damage()` coordinator calls these stages in sequence with early returns
+preserving the original behavior: if shields or armor fully absorb the hit,
+hull layers are never touched and stats are not recalculated.
 
 ### Hull Layer Damage Distribution
 
@@ -281,9 +293,10 @@ Components with more HP are more likely to be hit.
 **Note:** `apply_damage()` returns immediately for zero or negative damage
 values to prevent invalid state changes (e.g., negative damage healing shields).
 
-After damage is applied:
+After damage reaches hull layers, `_finalize_damage()` runs:
 - `ship.recalculate_stats()` -- updates derived stats (skips non-operational components)
 - `ship.update_derelict_status()` -- functional check: ship is derelict when it has no operational weapons AND no operational engines
+- Emits `SHIP_DERELICT` event if derelict status changed
 
 ### Pipeline Validation
 

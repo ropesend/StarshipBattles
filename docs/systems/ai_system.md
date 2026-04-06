@@ -76,7 +76,7 @@ All behaviors extend `AIBehavior(controller)` with `enter()` and `update(target,
 | **AttackRunBehavior** | `attack_run` | Two-phase state machine: APPROACH until within range, then RETREAT for `retreat_duration` seconds. Cycles automatically. |
 | **RamBehavior** | `ram` | Navigate straight to target position, no collision avoidance. |
 | **FleeBehavior** | `flee` | Move away from target. `fire_while_retreating` controls whether weapons fire. |
-| **FormationBehavior** | `formation` | Follow formation master maintaining offset. In-formation: velocity sync + spring-based position correction. Out-of-formation: navigate to predicted master position. |
+| **FormationBehavior** | `formation` | Follow formation master maintaining offset. Decomposed into helpers: `_compute_offset_position()` (target pos), `_sync_rotation()` (heading match), `_sync_velocity()` (throttle match), `_correct_position()` (spring-based drift correction), `_navigate_to_predicted()` (out-of-formation navigation to predicted master position). |
 | **OrbitBehavior** | `orbit` | Circle target at fixed distance using tangent + radial correction vectors. |
 
 ### Utility/Test Behaviors (5)

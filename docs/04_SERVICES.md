@@ -442,7 +442,7 @@ FleetSpeedCalculator.update_fleet_speed(fleet)
 
 **Purpose:** Single source of truth for computing ship stats from design JSON. Uses `Ship.from_dict()` + `recalculate_stats()` so all stat calculations go through one code path (the simulation `ShipStatsCalculator` in `game/simulation/entities/ship_stats.py`).
 
-**Dependencies:** Requires `GameRegistries` parameter (strict DI).
+**Dependencies:** Requires `GameRegistries` parameter (strict DI). The underlying `ShipStatsCalculator` requires `resource_catalog` for its `calculate()` method (lazy resolution — raises `TypeError` if omitted). `GameRegistries.__post_init__()` defaults to an empty catalog when not provided, so test code that only calls `calculate_ability_totals()` works without explicit catalog injection.
 
 **Key Function:**
 
