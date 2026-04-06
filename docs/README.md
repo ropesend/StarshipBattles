@@ -89,5 +89,4 @@ docs/
 - **Test command (simulation):** `python -m simulation_tests.run_tests`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist
-- **Test baseline:** 14280 tests (approximate)
 - **Historical/archived docs:** `Projects/_archive/` (not in docs/ — do not read for current info)
