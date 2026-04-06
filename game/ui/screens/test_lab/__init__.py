@@ -9,7 +9,6 @@ Modules:
     screen.py           - TestLabScreen main orchestrator class
     data_extractor.py   - TestLabDataExtractor for loading ships/components
     dialogs.py          - JSONPopup and ConfirmationDialog
-    json_viewer.py      - ScrollableJSONViewer for JSON display
     component_dropdown.py - ComponentDropdown for component selection
     ship_panels.py      - ShipPanel, TabbedShipPanel, ComponentPanel
     test_run_card.py    - TestRunCard for test history display
