@@ -236,7 +236,7 @@ class ShipComponentManager:
                 'WeaponAbility', operational_only=True
             )
             self._weapons_cache_dirty = False
-        return self._weapons_cache
+        return list(self._weapons_cache)  # Defensive copy (see get_all_components)
 
     def get_components_by_layer(self, layer_type: LayerType) -> List[Component]:
         """Return all components in a specific layer.

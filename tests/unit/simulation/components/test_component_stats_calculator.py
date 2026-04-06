@@ -1,10 +1,12 @@
 """Tests for ComponentStatsCalculator - extracted from Component god class.
 
 PROJ-44 Phase 4: Tests stats calculation and formula evaluation.
+PROJ-246: Added strict formula evaluation tests.
 """
 import pytest
 from game.simulation.components.component import create_component
 from game.simulation.components.component_stats_calculator import ComponentStatsCalculator
+from game.core.exceptions import FormulaException
 
 
 class TestComponentStatsCalculatorRecalculate:
@@ -211,3 +213,38 @@ class TestApplyFormulaDefaults:
 
         assert comp.mass == original_mass
         assert comp.max_hp == original_hp
+
+
+class TestStrictFormulaEvaluation:
+    """PROJ-246: Verify strict formula evaluation catches bad formulas at load time."""
+
+    def test_bad_attribute_formula_raises_on_recalculate(self, fresh_registries):
+        """Component with invalid attribute formula raises FormulaException."""
+        comp = create_component('railgun', registries=fresh_registries)
+
+        # Inject a bad formula into the component's formulas dict
+        comp.formulas['mass'] = 'undefined_variable * 2'
+
+        with pytest.raises(FormulaException, match="railgun.*mass"):
+            ComponentStatsCalculator.reset_and_evaluate_formulas(comp)
+
+    def test_bad_resource_cost_formula_raises_on_recalculate(self, fresh_registries):
+        """Component with invalid resource_cost formula raises FormulaException."""
+        comp = create_component('railgun', registries=fresh_registries)
+
+        # Inject a bad formula into the component's raw data
+        comp.data['resource_cost'] = {'metals': '=bad_var + 10'}
+
+        with pytest.raises(FormulaException, match="railgun.*resource_cost.*metals"):
+            ComponentStatsCalculator.reset_and_evaluate_formulas(comp)
+
+    def test_valid_formulas_load_successfully(self, fresh_registries):
+        """Component with valid formulas loads without error (regression check)."""
+        bridge = create_component('bridge', registries=fresh_registries)
+
+        # Bridge has formula-based mass -- should evaluate without error
+        ComponentStatsCalculator.reset_and_evaluate_formulas(
+            bridge, context={'ship_class_mass': 2000}
+        )
+
+        assert bridge.mass > 0

@@ -57,12 +57,13 @@ class TestBattleControllerStart:
     def test_start_assigns_ids_to_ships(self, controller, basic_config, mock_service):
         """start assigns UUIDs to ships without IDs."""
         mock_ship = Mock()
+        mock_ship.id = "mock-start-ship-uuid"
         mock_service.get_all_ships.return_value = [mock_ship]
         controller.configure(basic_config)
 
         controller.start()
 
-        assert id(mock_ship) in controller._ship_id_map
+        assert mock_ship.id in controller._ship_id_map
 
     def test_start_captures_initial_state(self, controller, basic_config, mock_service):
         """start captures the initial battle state via BattleStateManager."""
