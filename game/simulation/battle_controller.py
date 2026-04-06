@@ -394,7 +394,20 @@ class BattleController:
         """
         Check if retreat is allowed in current battle.
 
-        Mode handler provides defaults per mode; config.allow_retreat can override to enable.
+        Uses OR logic between mode handler and config:
+        - Mode handler provides the default per battle mode (e.g. Strategy
+          allows retreat, Manual/Test/Hypothetical deny it).
+        - BattleConfig.allow_retreat=True can OVERRIDE to enable retreat in
+          modes that normally deny it.
+        - Config cannot DISABLE retreat when mode handler allows it.
+
+        Truth table:
+            handler  | config  | result
+            ---------+---------+-------
+            False    | False   | False
+            False    | True    | True   (config override)
+            True     | False   | True   (handler default)
+            True     | True    | True
         """
         if self._mode_handler:
             return self._mode_handler.can_retreat() or (self._config and self._config.allow_retreat)
@@ -404,7 +417,13 @@ class BattleController:
         """
         Check if reinforcements are allowed in current battle.
 
-        Mode handler provides defaults per mode; config.allow_reinforcements can override to enable.
+        Uses OR logic between mode handler and config (same pattern as
+        _retreat_allowed):
+        - Mode handler provides the default per battle mode (e.g. Strategy
+          allows reinforcements, Manual/Test/Hypothetical deny them).
+        - BattleConfig.allow_reinforcements=True can OVERRIDE to enable
+          reinforcements in modes that normally deny them.
+        - Config cannot DISABLE reinforcements when mode handler allows them.
         """
         if self._mode_handler:
             return self._mode_handler.can_reinforce() or (self._config and self._config.allow_reinforcements)
