@@ -207,6 +207,7 @@ class TestLoadStateEdgeCases:
         mock_ship_state = Mock()
         mock_ship_state.team_id = 0
         mock_ship = Mock()
+        mock_ship.id = "restored-ship-uuid"
         mock_ship_state.to_ship.return_value = mock_ship
 
         mock_state = Mock()
@@ -226,7 +227,7 @@ class TestLoadStateEdgeCases:
         result = controller.load_state(mock_state)
 
         assert result.success is True
-        assert controller._ship_id_map[id(mock_ship)] == "ship-uuid-123"
+        assert controller._ship_id_map[mock_ship.id] == "ship-uuid-123"
 
     def test_load_state_sets_tick_counter(self, controller, mock_service):
         """load_state restores the tick counter from saved state."""
@@ -433,7 +434,8 @@ class TestUpdateRetreats:
 
         mock_ship = Mock()
         mock_ship.name = "Test Ship"
-        controller._ship_id_map[id(mock_ship)] = "ship-uuid"
+        mock_ship.id = "retreat-ship-uuid"
+        controller._ship_id_map[mock_ship.id] = "ship-uuid"
 
         mock_engine = Mock()
         mock_engine.ships = [mock_ship]

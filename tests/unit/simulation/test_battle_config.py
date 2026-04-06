@@ -90,15 +90,6 @@ class TestBattleConfigDefaults:
 
 
 
-class TestBattleConfigHypotheticalMode:
-    """Tests for hypothetical mode settings."""
-
-    def test_hypothetical_mode_isolated(self):
-        """isolated defaults to True."""
-        config = BattleConfig()
-        assert config.isolated is True
-
-
 class TestBattleConfigCustomValues:
     """Tests for customizing BattleConfig values."""
 

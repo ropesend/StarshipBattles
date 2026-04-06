@@ -75,7 +75,7 @@ class BattleController:
         self._is_started: bool = False
 
         # Ship ID tracking (for state capture/restore)
-        self._ship_id_map: Dict[int, str] = {}  # object id -> string id
+        self._ship_id_map: Dict[str, str] = {}  # ship.id -> battle state ship_id
 
         # Extracted managers (initialized in configure when map_bounds are known)
         self._retreat_manager: Optional[RetreatManager] = None
@@ -165,7 +165,7 @@ class BattleController:
                 result = self._service.add_ship(ship, team_id)
                 if result.success:
                     # Track the ship ID mapping
-                    self._ship_id_map[id(ship)] = state.ship_id
+                    self._ship_id_map[ship.id] = state.ship_id
                 else:
                     errors.extend(result.errors)
             except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
@@ -196,9 +196,8 @@ class BattleController:
 
             # Assign ship IDs to any ships that don't have them yet
             for ship in self._service.get_all_ships():
-                if id(ship) not in self._ship_id_map:
-                    import uuid
-                    self._ship_id_map[id(ship)] = str(uuid.uuid4())
+                if ship.id not in self._ship_id_map:
+                    self._ship_id_map[ship.id] = ship.id
 
             # Capture initial state (routed through BattleStateManager)
             self._initial_state = self._state_manager.capture_state(
@@ -362,8 +361,7 @@ class BattleController:
                 engine.add_ship_mid_battle(ship, team_id)
 
                 # Track ship ID
-                import uuid
-                self._ship_id_map[id(ship)] = str(uuid.uuid4())
+                self._ship_id_map[ship.id] = ship.id
 
                 logger.info(f"Reinforcement arrived: {ship.name} for team {team_id}")
             except ValidationException as e:
@@ -380,7 +378,7 @@ class BattleController:
         def get_ship_by_id(ship_id: str) -> Optional['Ship']:
             """Find ship by ID in current engine ships."""
             for s in engine.ships:
-                if self._ship_id_map.get(id(s)) == ship_id:
+                if self._ship_id_map.get(s.id) == ship_id:
                     return s
             return None
 
@@ -394,7 +392,20 @@ class BattleController:
         """
         Check if retreat is allowed in current battle.
 
-        Mode handler provides defaults per mode; config.allow_retreat can override to enable.
+        Uses OR logic between mode handler and config:
+        - Mode handler provides the default per battle mode (e.g. Strategy
+          allows retreat, Manual/Test/Hypothetical deny it).
+        - BattleConfig.allow_retreat=True can OVERRIDE to enable retreat in
+          modes that normally deny it.
+        - Config cannot DISABLE retreat when mode handler allows it.
+
+        Truth table:
+            handler  | config  | result
+            ---------+---------+-------
+            False    | False   | False
+            False    | True    | True   (config override)
+            True     | False   | True   (handler default)
+            True     | True    | True
         """
         if self._mode_handler:
             return self._mode_handler.can_retreat() or (self._config and self._config.allow_retreat)
@@ -404,7 +415,13 @@ class BattleController:
         """
         Check if reinforcements are allowed in current battle.
 
-        Mode handler provides defaults per mode; config.allow_reinforcements can override to enable.
+        Uses OR logic between mode handler and config (same pattern as
+        _retreat_allowed):
+        - Mode handler provides the default per battle mode (e.g. Strategy
+          allows reinforcements, Manual/Test/Hypothetical deny them).
+        - BattleConfig.allow_reinforcements=True can OVERRIDE to enable
+          reinforcements in modes that normally deny them.
+        - Config cannot DISABLE reinforcements when mode handler allows them.
         """
         if self._mode_handler:
             return self._mode_handler.can_reinforce() or (self._config and self._config.allow_reinforcements)
@@ -456,7 +473,7 @@ class BattleController:
                 ship = ship_state.to_ship()
                 team_id = ship_state.team_id
                 self._service.add_ship(ship, team_id)
-                self._ship_id_map[id(ship)] = ship_id
+                self._ship_id_map[ship.id] = ship_id
 
             # Start battle
             self._service.start_battle(
@@ -477,7 +494,7 @@ class BattleController:
                 # Build ship_id -> Ship lookup for owner/target resolution
                 ship_lookup: Dict[str, 'Ship'] = {}
                 for ship in engine.ships:
-                    ship_id = self._ship_id_map.get(id(ship))
+                    ship_id = self._ship_id_map.get(ship.id)
                     if ship_id:
                         ship_lookup[ship_id] = ship
 
