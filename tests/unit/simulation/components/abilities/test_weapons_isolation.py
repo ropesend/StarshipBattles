@@ -348,6 +348,27 @@ class TestWeaponAbilityGetDamage:
 
         assert ability.get_damage() == ability.get_damage(0)
 
+    def test_get_damage_with_broken_formula_returns_zero(self, mock_component):
+        """PROJ-246: Runtime get_damage() with broken formula returns 0, not crash.
+
+        The runtime path uses safe_evaluate so combat doesn't crash mid-tick.
+        A broken formula injected at runtime (e.g. corrupted by a mod) should
+        degrade gracefully to 0, not crash the battle engine.
+        """
+        data = {
+            'damage': '=range_to_target * 0.1',
+            'range': 1000,
+            'reload': 1.0,
+        }
+        ability = WeaponAbility(mock_component, data)
+
+        # Simulate a broken formula being set at runtime
+        ability.damage_formula = 'undefined_var + 10'
+
+        # Runtime evaluation with broken formula should return 0 (safe fallback)
+        result = ability.get_damage(500)
+        assert result == 0.0
+
 
 class TestWeaponAbilityRecalculate:
     """Test modifier application via recalculate."""
