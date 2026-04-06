@@ -301,7 +301,7 @@ class PlanetReportPanel:
 
             # Create label
             complex_label = UILabel(
-                relative_rect=pygame.Rect(5, y_offset, 190, 25),
+                relative_rect=pygame.Rect(5, y_offset, 350, 25),
                 text=display_text,
                 manager=self.manager,
                 container=self.complexes_container
@@ -329,11 +329,11 @@ class PlanetReportPanel:
 
         # Row labels column (left side)
         row_labels = ["Qty", "Qual", "Prod", "Stor", "Cap"]
-        row_y_offsets = [28, 44, 60, 76, 92]
+        row_y_offsets = [28, 48, 68, 88, 108]
 
         for label_text, y_offset in zip(row_labels, row_y_offsets):
             label = UILabel(
-                relative_rect=pygame.Rect(5, y_offset, label_col_width, 16),
+                relative_rect=pygame.Rect(5, y_offset, label_col_width, 20),
                 text=label_text,
                 manager=self.manager,
                 container=self.resource_panel
@@ -370,7 +370,7 @@ class PlanetReportPanel:
 
             # Quantity label (deposit)
             qty_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 28, col_w, 16),
+                relative_rect=pygame.Rect(col_x, 28, col_w, 20),
                 text=format_compact_number(quantity) if quantity else "-",
                 manager=self.manager,
                 container=self.resource_panel
@@ -379,7 +379,7 @@ class PlanetReportPanel:
 
             # Quality label (deposit)
             qual_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 44, col_w, 16),
+                relative_rect=pygame.Rect(col_x, 48, col_w, 20),
                 text=f"{quality:.0f}" if quality else "-",
                 manager=self.manager,
                 container=self.resource_panel
@@ -388,7 +388,7 @@ class PlanetReportPanel:
 
             # Production label (harvest rate)
             prod_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 60, col_w, 16),
+                relative_rect=pygame.Rect(col_x, 68, col_w, 20),
                 text=format_compact_number(production) if production else "0",
                 manager=self.manager,
                 container=self.resource_panel
@@ -397,7 +397,7 @@ class PlanetReportPanel:
 
             # Stored label (current stockpile)
             stored_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 76, col_w, 16),
+                relative_rect=pygame.Rect(col_x, 88, col_w, 20),
                 text=format_compact_number(stored) if stored else "0",
                 manager=self.manager,
                 container=self.resource_panel
@@ -406,7 +406,7 @@ class PlanetReportPanel:
 
             # Capacity label (max stockpile)
             cap_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 92, col_w, 16),
+                relative_rect=pygame.Rect(col_x, 108, col_w, 20),
                 text=format_compact_number(capacity) if capacity else "0",
                 manager=self.manager,
                 container=self.resource_panel
@@ -426,7 +426,7 @@ class PlanetReportPanel:
             staging_text = "Staging: " + ", ".join(parts)
 
             staging_label = UILabel(
-                relative_rect=pygame.Rect(5, 112, self.resource_panel.relative_rect.width - 10, 16),
+                relative_rect=pygame.Rect(5, 132, self.resource_panel.relative_rect.width - 10, 20),
                 text=staging_text,
                 manager=self.manager,
                 container=self.resource_panel

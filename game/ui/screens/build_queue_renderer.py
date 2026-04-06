@@ -101,7 +101,7 @@ class BuildQueueRenderer:
             if cost:
                 cost_str = format_resource_cost(cost)
                 ui.UILabel(
-                    relative_rect=pygame.Rect(icon_size + 4, btn_height, 260 - icon_size - 8, 16),
+                    relative_rect=pygame.Rect(icon_size + 4, btn_height, 260 - icon_size - 8, 20),
                     text=cost_str,
                     manager=self.manager,
                     container=row_panel
