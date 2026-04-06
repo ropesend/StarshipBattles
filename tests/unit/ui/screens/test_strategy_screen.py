@@ -309,8 +309,8 @@ class TestOnColonizeClick:
 
         mocks['ui'].open_transfer_dialog.assert_called_once()
 
-    def test_on_colonize_click_skips_load_when_no_colony(self):
-        """Skips load dialog when fleet is not at a colony."""
+    def test_on_colonize_click_opens_dialog_even_without_colony(self):
+        """Always opens transfer dialog regardless of fleet location."""
         screen, mocks = _make_strategy_screen()
         fleet = MagicMock()
         fleet.owner_id = 0
@@ -321,7 +321,7 @@ class TestOnColonizeClick:
 
         screen.on_colonize_click()
 
-        mocks['ui'].open_transfer_dialog.assert_not_called()
+        mocks['ui'].open_transfer_dialog.assert_called_once()
 
 
 # ===========================================================================
