@@ -18,6 +18,7 @@ from game.strategy.facade.dto import (
     EmpireInfo,
     ColonySummary,
     FleetSummary,
+    BuildQueueSourceDTO,
 )
 
 if TYPE_CHECKING:
@@ -73,6 +74,162 @@ class StrategySessionFacade:
         orders, resolving movement, and processing AI actions.
         """
         self._session.process_turn()
+
+    # --- Command Dispatch Helpers ---
+    def dispatch_issue_colonize(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueColonizeCommand."""
+        from game.strategy.engine.commands import IssueColonizeCommand
+        return self.handle_command(IssueColonizeCommand(**kwargs))
+
+    def dispatch_issue_move(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueMoveCommand."""
+        from game.strategy.engine.commands import IssueMoveCommand
+        return self.handle_command(IssueMoveCommand(**kwargs))
+
+    def dispatch_issue_intercept(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueInterceptCommand."""
+        from game.strategy.engine.commands import IssueInterceptCommand
+        return self.handle_command(IssueInterceptCommand(**kwargs))
+
+    def dispatch_issue_join_fleet(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueJoinFleetCommand."""
+        from game.strategy.engine.commands import IssueJoinFleetCommand
+        return self.handle_command(IssueJoinFleetCommand(**kwargs))
+
+    def dispatch_queue_colonize_mission(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch QueueColonizeMissionCommand."""
+        from game.strategy.engine.commands import QueueColonizeMissionCommand
+        return self.handle_command(QueueColonizeMissionCommand(**kwargs))
+
+    def dispatch_clear_orders(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch ClearOrdersCommand."""
+        from game.strategy.engine.commands import ClearOrdersCommand
+        return self.handle_command(ClearOrdersCommand(**kwargs))
+
+    def dispatch_issue_transfer(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueTransferCommand."""
+        from game.strategy.engine.commands import IssueTransferCommand
+        return self.handle_command(IssueTransferCommand(**kwargs))
+
+    def dispatch_issue_implode_planet(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueImplodePlanetCommand."""
+        from game.strategy.engine.commands import IssueImplodePlanetCommand
+        return self.handle_command(IssueImplodePlanetCommand(**kwargs))
+
+    def dispatch_issue_stellerate_star(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueStellerateStarCommand."""
+        from game.strategy.engine.commands import IssueStellerateStarCommand
+        return self.handle_command(IssueStellerateStarCommand(**kwargs))
+
+    def dispatch_issue_open_warp_point(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueOpenWarpPointCommand."""
+        from game.strategy.engine.commands import IssueOpenWarpPointCommand
+        return self.handle_command(IssueOpenWarpPointCommand(**kwargs))
+
+    def dispatch_issue_close_warp_point(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueCloseWarpPointCommand."""
+        from game.strategy.engine.commands import IssueCloseWarpPointCommand
+        return self.handle_command(IssueCloseWarpPointCommand(**kwargs))
+
+    def dispatch_issue_create_dyson_sphere(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueCreateDysonSphereCommand."""
+        from game.strategy.engine.commands import IssueCreateDysonSphereCommand
+        return self.handle_command(IssueCreateDysonSphereCommand(**kwargs))
+
+    def dispatch_issue_self_destruct(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueSelfDestructCommand."""
+        from game.strategy.engine.commands import IssueSelfDestructCommand
+        return self.handle_command(IssueSelfDestructCommand(**kwargs))
+
+    def dispatch_queue_implode_planet_mission(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch QueueImplodePlanetMissionCommand."""
+        from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
+        return self.handle_command(QueueImplodePlanetMissionCommand(**kwargs))
+
+    def dispatch_queue_stellerate_star_mission(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch QueueStellerateStarMissionCommand."""
+        from game.strategy.engine.commands import QueueStellerateStarMissionCommand
+        return self.handle_command(QueueStellerateStarMissionCommand(**kwargs))
+
+    def dispatch_queue_open_warp_point_mission(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch QueueOpenWarpPointMissionCommand."""
+        from game.strategy.engine.commands import QueueOpenWarpPointMissionCommand
+        return self.handle_command(QueueOpenWarpPointMissionCommand(**kwargs))
+
+    def dispatch_queue_close_warp_point_mission(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch QueueCloseWarpPointMissionCommand."""
+        from game.strategy.engine.commands import QueueCloseWarpPointMissionCommand
+        return self.handle_command(QueueCloseWarpPointMissionCommand(**kwargs))
+
+    def dispatch_queue_create_dyson_sphere_mission(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch QueueCreateDysonSphereMissionCommand."""
+        from game.strategy.engine.commands import QueueCreateDysonSphereMissionCommand
+        return self.handle_command(QueueCreateDysonSphereMissionCommand(**kwargs))
+
+    def dispatch_issue_warp(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueWarpCommand."""
+        from game.strategy.engine.commands import IssueWarpCommand
+        return self.handle_command(IssueWarpCommand(**kwargs))
+
+    def dispatch_issue_build_order(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssueBuildOrderCommand."""
+        from game.strategy.engine.commands import IssueBuildOrderCommand
+        return self.handle_command(IssueBuildOrderCommand(**kwargs))
+
+    def dispatch_remove_build_order(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch RemoveBuildOrderCommand."""
+        from game.strategy.engine.commands import RemoveBuildOrderCommand
+        return self.handle_command(RemoveBuildOrderCommand(**kwargs))
+
+    def dispatch_split_fleet(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch SplitFleetCommand."""
+        from game.strategy.engine.commands import SplitFleetCommand
+        return self.handle_command(SplitFleetCommand(**kwargs))
+
+    def dispatch_delete_order(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch DeleteOrderCommand."""
+        from game.strategy.engine.commands import DeleteOrderCommand
+        return self.handle_command(DeleteOrderCommand(**kwargs))
+
+    def dispatch_reorder_order(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch ReorderOrderCommand."""
+        from game.strategy.engine.commands import ReorderOrderCommand
+        return self.handle_command(ReorderOrderCommand(**kwargs))
+
+    def dispatch_add_to_construction_queue(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch AddToConstructionQueueCommand."""
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        return self.handle_command(AddToConstructionQueueCommand(**kwargs))
+
+    def dispatch_remove_from_construction_queue(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch RemoveFromConstructionQueueCommand."""
+        from game.strategy.engine.commands import RemoveFromConstructionQueueCommand
+        return self.handle_command(RemoveFromConstructionQueueCommand(**kwargs))
+
+    def dispatch_reorder_construction_queue(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch ReorderConstructionQueueCommand."""
+        from game.strategy.engine.commands import ReorderConstructionQueueCommand
+        return self.handle_command(ReorderConstructionQueueCommand(**kwargs))
+
+    def dispatch_issue_planet_order(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch IssuePlanetOrderCommand."""
+        from game.strategy.engine.commands import IssuePlanetOrderCommand
+        return self.handle_command(IssuePlanetOrderCommand(**kwargs))
+
+    def dispatch_clear_planet_orders(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch ClearPlanetOrdersCommand."""
+        from game.strategy.engine.commands import ClearPlanetOrdersCommand
+        return self.handle_command(ClearPlanetOrdersCommand(**kwargs))
+
+    def dispatch_delete_planet_order(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch DeletePlanetOrderCommand."""
+        from game.strategy.engine.commands import DeletePlanetOrderCommand
+        return self.handle_command(DeletePlanetOrderCommand(**kwargs))
+
+    def dispatch_set_atmosphere_target(self, **kwargs) -> 'ValidationResult':
+        """Helper to dispatch SetAtmosphereTargetCommand."""
+        from game.strategy.engine.commands import SetAtmosphereTargetCommand
+        return self.handle_command(SetAtmosphereTargetCommand(**kwargs))
 
     # =========================================================================
     # QUERIES (Read Path) - Return DTOs only, never domain objects
@@ -392,6 +549,39 @@ class StrategySessionFacade:
         if empire is None:
             return []
         return [FleetSummary.from_fleet(fleet) for fleet in empire.fleets]
+
+    def get_empire_build_queues(self, empire_id: int) -> List[BuildQueueSourceDTO]:
+        \"\"\"Get all build queue sources for an empire.
+
+        Args:
+            empire_id: The unique empire identifier
+
+        Returns:
+            List of BuildQueueSourceDTOs for the empire
+        \"\"\"
+        from game.strategy.data.build_queue_source import collect_all_build_queues_for_empire
+        empire = self._get_empire_by_id(empire_id)
+        if empire is None:
+            return []
+        sources = collect_all_build_queues_for_empire(empire, registries=self._session.registries)
+        return [BuildQueueSourceDTO.from_domain(source) for source in sources]
+
+    def get_hex_build_queues(self, empire_id: int, hex_coord: HexCoord) -> List[BuildQueueSourceDTO]:
+        \"\"\"Get all build queue sources at a hex for a specific empire.
+
+        Args:
+            empire_id: The unique empire identifier
+            hex_coord: The target coordinate to search
+
+        Returns:
+            List of BuildQueueSourceDTOs at that hex.
+        \"\"\"
+        from game.strategy.data.build_queue_source import collect_build_queues_at_hex
+        empire = self._get_empire_by_id(empire_id)
+        if empire is None:
+            return []
+        sources = collect_build_queues_at_hex(hex_coord, self._session.galaxy, empire, registries=self._session.registries)
+        return [BuildQueueSourceDTO.from_domain(source) for source in sources]
 
     # --- Game State Queries ---
 

@@ -7,8 +7,9 @@ import pygame
 
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
-from .json_viewer import ScrollableJSONViewer
+from game.ui.widgets.scrollable_json_panel import ScrollableJsonPanel
 from .component_dropdown import ComponentDropdown
+import json
 
 
 class ShipPanel:
@@ -30,18 +31,18 @@ class ShipPanel:
         self.ship_info = ship_info
 
         # Ship JSON viewer (full height)
-        self.ship_viewer = ScrollableJSONViewer(
+        self.ship_viewer = ScrollableJsonPanel(
             x=x,
             y=y,
             width=width,
             height=height,
-            title=f"Ship: {ship_info['role']}",
-            json_data=ship_info['ship_data']
+            title=f"Ship: {ship_info['role']}"
         )
+        self.ship_viewer.set_json_with_diff(json.dumps(ship_info['ship_data']), {})
 
     def handle_event(self, event):
         """Handle input events (scrolling)."""
-        return self.ship_viewer.handle_scroll(event)
+        return self.ship_viewer.handle_event(event)
 
     def update(self):
         """No-op; reserved for interface consistency."""
@@ -94,14 +95,14 @@ class TabbedShipPanel:
         viewer_height = height - self.header_height - self.tab_height - 10
         self.viewers = []
         for ship_info in ships_info:
-            viewer = ScrollableJSONViewer(
+            viewer = ScrollableJsonPanel(
                 x=x,
                 y=viewer_y,
                 width=width,
                 height=viewer_height,
-                title=f"Ship: {ship_info['role']}",
-                json_data=ship_info['ship_data']
+                title=f"Ship: {ship_info['role']}"
             )
+            viewer.set_json_with_diff(json.dumps(ship_info['ship_data']), {})
             self.viewers.append(viewer)
 
         # Calculate tab widths
@@ -129,7 +130,7 @@ class TabbedShipPanel:
 
         # Forward scroll events to the selected viewer
         if self.selected_tab < len(self.viewers):
-            return self.viewers[self.selected_tab].handle_scroll(event)
+            return self.viewers[self.selected_tab].handle_event(event)
         return False
 
     def update(self):
@@ -219,14 +220,14 @@ class ComponentPanel:
         selected_comp_id = self.component_dropdown.get_selected_component_id()
         component_data = load_component_callback(selected_comp_id) if selected_comp_id else {}
 
-        self.component_viewer = ScrollableJSONViewer(
+        self.component_viewer = ScrollableJsonPanel(
             x=x,
             y=component_viewer_y,
             width=width,
             height=component_viewer_height,
-            title="Component JSON",
-            json_data=component_data
+            title="Component JSON"
         )
+        self.component_viewer.set_json_with_diff(json.dumps(component_data) if component_data else None, {})
 
     def handle_event(self, event):
         """Handle input events (scrolling, dropdown clicks)."""
@@ -237,11 +238,11 @@ class ComponentPanel:
             if selected_comp_id:
                 component_data = self.load_component_callback(selected_comp_id)
                 if component_data:
-                    self.component_viewer.update_json(component_data)
+                    self.component_viewer.set_json_with_diff(json.dumps(component_data), {})
             return True
 
         # Try scrolling on component viewer
-        if self.component_viewer.handle_scroll(event):
+        if self.component_viewer.handle_event(event):
             return True
 
         return False

@@ -910,7 +910,9 @@ class TestFormatStarSystemInfo:
 
     def test_system_shows_active_stellar_stabilizer(self, mock_star_system):
         """System with active stellar stabilizer should show it in output."""
-        # Create a planet with a facility that has StellarStabilizer ability
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase, ComponentActivationState,
+        )
         planet = Mock()
         planet.name = "Earth"
         planet.active_abilities = {'StellarStabilizer': True}
@@ -923,6 +925,12 @@ class TestFormatStarSystemInfo:
                     'StellarStabilizer': {'scope': 'system'}
                 }}]
             }
+        }
+        facility.component_states = {
+            "OUTER:0:stellar_stabilizer": ComponentActivationState(
+                phase=ActivationPhase.ACTIVE,
+                ability_name="StellarStabilizer",
+            ).to_dict()
         }
         planet.facilities = [facility]
         mock_star_system.planets = [planet]
@@ -947,6 +955,7 @@ class TestFormatStarSystemInfo:
                 }}]
             }
         }
+        facility.component_states = {}
         planet.facilities = [facility]
         mock_star_system.planets = [planet]
 
@@ -957,15 +966,14 @@ class TestFormatStarSystemInfo:
 
     def test_system_shows_activation_progress(self, mock_star_system):
         """System panel should show tick progress for activating abilities."""
-        from game.strategy.data.order_types import Order, OrderType
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase, ComponentActivationState,
+        )
 
         planet = Mock()
         planet.name = "Venus"
         planet.active_abilities = {'StellarStabilizer': False}
-        order = Order(OrderType.ACTIVATE_ABILITY,
-                     target={'ability_name': 'StellarStabilizer', 'facility_instance_id': 'fac-1'})
-        order.execution_progress = 50
-        planet.orders = [order]
+        planet.orders = []
 
         facility = Mock()
         facility.design_data = {
@@ -975,6 +983,15 @@ class TestFormatStarSystemInfo:
                 }}]
             }
         }
+        facility.component_states = {
+            "OUTER:0:stellar_stabilizer": ComponentActivationState(
+                phase=ActivationPhase.ACTIVATING,
+                progress_ticks=50,
+                required_ticks=250,
+                ability_name="StellarStabilizer",
+                energy_drain_rate=250.0,
+            ).to_dict()
+        }
         planet.facilities = [facility]
         mock_star_system.planets = [planet]
 
@@ -982,7 +999,7 @@ class TestFormatStarSystemInfo:
 
         assert "Stellar Stabilizer" in result
         assert "Activating" in result
-        assert "50 ticks" in result
+        assert "50/250 ticks" in result
 
     def test_system_without_stabilizers_shows_none(self, mock_star_system):
         """System without stabilizer facilities should not show ability lines."""

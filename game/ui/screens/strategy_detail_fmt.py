@@ -228,23 +228,37 @@ _ACTIVATABLE_DISPLAY_NAMES = {
 
 
 def _get_ability_status_text(planet, ability_name: str) -> str:
-    """Get display status for a toggleable ability including tick progress."""
-    from game.strategy.data.order_types import OrderType
+    """Get display status for a toggleable ability including tick progress.
 
+    Reads from ComponentActivationState on facilities to show:
+    - "Activating (100/250 ticks)" during activation
+    - "Active" when fully active
+    - "Deactivating (50/150 ticks)" during deactivation
+    - "Inactive" when inactive
+    """
+    from game.strategy.data.component_activation_state import (
+        ActivationPhase,
+        ComponentActivationState,
+    )
+
+    # Scan facility component_states for this ability
+    for facility in getattr(planet, 'facilities', []):
+        for key, state_data in getattr(facility, 'component_states', {}).items():
+            if not isinstance(state_data, dict):
+                continue
+            if state_data.get('ability_name') != ability_name:
+                continue
+            state = ComponentActivationState.from_dict(state_data)
+            if state.phase == ActivationPhase.ACTIVATING:
+                return f"Activating ({state.progress_ticks}/{state.required_ticks} ticks)"
+            elif state.phase == ActivationPhase.ACTIVE:
+                return "Active"
+            elif state.phase == ActivationPhase.DEACTIVATING:
+                return f"Deactivating ({state.progress_ticks}/{state.required_ticks} ticks)"
+
+    # Fallback to planet-level active_abilities
     active_abilities = getattr(planet, 'active_abilities', {})
-    is_active = active_abilities.get(ability_name, False)
-
-    # Check for pending activation/deactivation orders
-    for order in getattr(planet, 'orders', []):
-        target = order.target if isinstance(order.target, dict) else {}
-        order_ability = target.get('ability_name', '')
-
-        if order.type == OrderType.ACTIVATE_ABILITY and order_ability == ability_name:
-            return f"Activating ({order.execution_progress} ticks)"
-        if order.type == OrderType.DEACTIVATE_ABILITY and order_ability == ability_name:
-            return f"Deactivating ({order.execution_progress} ticks)"
-
-    return "Active" if is_active else "Inactive"
+    return "Active" if active_abilities.get(ability_name, False) else "Inactive"
 
 
 def _planet_has_ability_facility(planet, ability_key: str) -> bool:
