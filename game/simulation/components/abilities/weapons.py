@@ -30,7 +30,7 @@ def _parse_formula_field(raw, default: float = 0.0, formula_context: dict = None
 
     if isinstance(raw, str) and raw.startswith('='):
         formula_str = raw[1:]
-        value = float(max(0, FormulaEvaluator.safe_evaluate(formula_str, formula_context)))
+        value = float(max(0, FormulaEvaluator.evaluate(formula_str, formula_context)))
         return value, formula_str
     elif raw is not None:
         return float(raw), None
@@ -138,14 +138,23 @@ class WeaponAbility(Ability):
         # Damage/Range/Reload might be formulas, but usually they are base values in data
         # which recalculate() then uses to apply multipliers.
         # PROJ-225: Use shared _parse_formula_field for all three fields.
+        # PROJ-246: Provide default formula context so range_to_target formulas
+        # don't crash during data loading (same context as __init__).
+        default_ctx = {'range_to_target': 0}
         if 'damage' in data:
-            self._base_damage, _ = _parse_formula_field(data['damage'])
+            self._base_damage, _ = _parse_formula_field(
+                data['damage'], formula_context=default_ctx
+            )
             self.damage = self._base_damage
         if 'range' in data:
-            self._base_range, _ = _parse_formula_field(data['range'])
+            self._base_range, _ = _parse_formula_field(
+                data['range'], formula_context=default_ctx
+            )
             self.range = self._base_range
         if 'reload' in data:
-            self._base_reload, _ = _parse_formula_field(data['reload'], default=1.0)
+            self._base_reload, _ = _parse_formula_field(
+                data['reload'], default=1.0, formula_context=default_ctx
+            )
             self.reload_time = self._base_reload
 
     def recalculate(self):

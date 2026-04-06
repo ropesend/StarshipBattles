@@ -66,7 +66,7 @@ class RetreatManager:
     def request_retreat(
         self,
         ship: 'Ship',
-        ship_id_map: Dict[int, str],
+        ship_id_map: Dict[str, str],
         method: RetreatMethod = RetreatMethod.EDGE
     ) -> Tuple[bool, Optional[str]]:
         """
@@ -74,7 +74,7 @@ class RetreatManager:
 
         Args:
             ship: Ship to retreat
-            ship_id_map: Mapping of object id(ship) to string ship_id
+            ship_id_map: Mapping of ship.id to battle state ship_id
             method: Retreat method (EDGE or WARP)
 
         Returns:
@@ -83,7 +83,7 @@ class RetreatManager:
         if not ship.is_alive:
             return False, "Ship is not alive"
 
-        ship_id = ship_id_map.get(id(ship))
+        ship_id = ship_id_map.get(ship.id)
         if not ship_id:
             return False, "Ship not found in battle"
 
@@ -119,12 +119,12 @@ class RetreatManager:
 
         Args:
             ship: Ship to cancel retreat for
-            ship_id_map: Mapping of object id(ship) to string ship_id
+            ship_id_map: Mapping of ship.id to battle state ship_id
 
         Returns:
             Tuple of (success, error_message)
         """
-        ship_id = ship_id_map.get(id(ship))
+        ship_id = ship_id_map.get(ship.id)
         if ship_id and ship_id in self.retreating_ships:
             del self.retreating_ships[ship_id]
             logger.debug(f"Ship {ship.name} retreat cancelled")
@@ -239,12 +239,12 @@ class RetreatManager:
 
         Args:
             ship: Ship to check
-            ship_id_map: Mapping of object id(ship) to string ship_id
+            ship_id_map: Mapping of ship.id to battle state ship_id
 
         Returns:
             True if ship is retreating
         """
-        ship_id = ship_id_map.get(id(ship))
+        ship_id = ship_id_map.get(ship.id)
         return ship_id is not None and ship_id in self.retreating_ships
 
     def get_retreat_state(
@@ -257,12 +257,12 @@ class RetreatManager:
 
         Args:
             ship: Ship to get state for
-            ship_id_map: Mapping of object id(ship) to string ship_id
+            ship_id_map: Mapping of ship.id to battle state ship_id
 
         Returns:
             RetreatState if retreating, None otherwise
         """
-        ship_id = ship_id_map.get(id(ship))
+        ship_id = ship_id_map.get(ship.id)
         if ship_id:
             return self.retreating_ships.get(ship_id)
         return None

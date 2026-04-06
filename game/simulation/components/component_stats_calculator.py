@@ -14,6 +14,7 @@ Usage:
 """
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
 from game.simulation.formula_system import FormulaEvaluator
+from game.core.exceptions import FormulaException
 from game.simulation.components.modifiers import (
     apply_modifier_effects,
     get_default_stat_multipliers
@@ -194,7 +195,15 @@ class ComponentStatsCalculator:
 
         # Evaluate Formulas for attributes
         for attr, formula in component.formulas.items():
-            val = FormulaEvaluator.safe_evaluate(formula, eval_context)
+            try:
+                val = FormulaEvaluator.evaluate(formula, eval_context)
+            except FormulaException as e:
+                raise FormulaException(
+                    f"Component '{getattr(component, 'id', '?')}' has invalid "
+                    f"formula in field '{attr}': {e}",
+                    code=getattr(e, 'code', None),
+                    context=getattr(e, 'context', {}),
+                ) from e
             if attr == 'mass':
                 component.base_mass = float(val)
                 component.mass = component.base_mass  # Reset to base
@@ -210,6 +219,11 @@ class ComponentStatsCalculator:
                     setattr(component, attr, val)
 
         # Evaluate formulas in abilities
+        # NOTE: Abilities may contain runtime formulas (e.g. damage formulas
+        # referencing range_to_target) that cannot be resolved at load time.
+        # These are intentionally evaluated with safe_evaluate so they degrade
+        # to 0; the weapon ability will re-parse the raw formula string from
+        # component.data at init time and evaluate it at runtime.
         ComponentStatsCalculator._evaluate_formulas_in_abilities(
             component.abilities,
             eval_context
@@ -220,9 +234,18 @@ class ComponentStatsCalculator:
         component.evaluated_resource_cost = {}
         for res, amount in raw_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
-                component.evaluated_resource_cost[res] = FormulaEvaluator.safe_evaluate(
-                    amount[1:], eval_context
-                )
+                formula_str = amount[1:]
+                try:
+                    component.evaluated_resource_cost[res] = FormulaEvaluator.evaluate(
+                        formula_str, eval_context
+                    )
+                except FormulaException as e:
+                    raise FormulaException(
+                        f"Component '{getattr(component, 'id', '?')}' has invalid "
+                        f"formula in resource_cost '{res}': {e}",
+                        code=getattr(e, 'code', None),
+                        context=getattr(e, 'context', {}),
+                    ) from e
             else:
                 component.evaluated_resource_cost[res] = amount
 

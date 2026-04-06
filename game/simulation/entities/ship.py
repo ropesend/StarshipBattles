@@ -1,5 +1,6 @@
 import logging
 import math
+import uuid
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Iterator
 
 from game.core.exceptions import ValidationException
@@ -75,7 +76,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         super().__init__(x, y)
 
         # === Identity ===
-        self.id: str = str(id(self))
+        self.id: str = str(uuid.uuid4())
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
         self.team_id: int = team_id

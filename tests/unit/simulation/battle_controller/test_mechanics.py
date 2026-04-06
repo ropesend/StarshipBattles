@@ -106,7 +106,7 @@ class TestBattleControllerAddShipsFromState:
 
         controller.add_ships_from_state([mock_state], team_id=0)
 
-        assert controller._ship_id_map[id(mock_ship)] == "unique-ship-id"
+        assert controller._ship_id_map[mock_ship.id] == "unique-ship-id"
 
     def test_add_ships_from_state_handles_conversion_error(self, controller, basic_config, mock_service):
         """add_ships_from_state handles errors during state conversion."""
@@ -141,7 +141,7 @@ class TestBattleControllerRetreat:
         controller.start()
 
         mock_ship.is_alive = False
-        controller._ship_id_map[id(mock_ship)] = "ship-id"
+        controller._ship_id_map[mock_ship.id] = "ship-id"
 
         result = controller.request_retreat(mock_ship)
 
@@ -166,7 +166,7 @@ class TestBattleControllerRetreat:
         controller.start()
 
         ship_id = "ship-id"
-        controller._ship_id_map[id(mock_ship)] = ship_id
+        controller._ship_id_map[mock_ship.id] = ship_id
         controller._retreat_manager.retreating_ships[ship_id] = RetreatState(method="edge")
 
         result = controller.request_retreat(mock_ship)
@@ -181,7 +181,7 @@ class TestBattleControllerRetreat:
         controller.start()
 
         ship_id = "ship-id"
-        controller._ship_id_map[id(mock_ship)] = ship_id
+        controller._ship_id_map[mock_ship.id] = ship_id
 
         result = controller.request_retreat(mock_ship, method="edge")
 
@@ -196,7 +196,7 @@ class TestBattleControllerRetreat:
         controller.start()
 
         ship_id = "ship-id"
-        controller._ship_id_map[id(mock_ship)] = ship_id
+        controller._ship_id_map[mock_ship.id] = ship_id
 
         result = controller.request_retreat(mock_ship, method="warp")
 
@@ -213,7 +213,7 @@ class TestBattleControllerRetreat:
         controller.configure(config)
         controller.start()
 
-        controller._ship_id_map[id(mock_ship)] = "ship-id"
+        controller._ship_id_map[mock_ship.id] = "ship-id"
 
         result = controller.request_retreat(mock_ship, method="teleport")
 
@@ -227,7 +227,7 @@ class TestBattleControllerRetreat:
         controller.start()
 
         ship_id = "ship-id"
-        controller._ship_id_map[id(mock_ship)] = ship_id
+        controller._ship_id_map[mock_ship.id] = ship_id
         controller._retreat_manager.retreating_ships[ship_id] = RetreatState(method="edge")
 
         result = controller.cancel_retreat(mock_ship)
@@ -241,7 +241,7 @@ class TestBattleControllerRetreat:
         controller.configure(config)
         controller.start()
 
-        controller._ship_id_map[id(mock_ship)] = "ship-id"
+        controller._ship_id_map[mock_ship.id] = "ship-id"
 
         result = controller.cancel_retreat(mock_ship)
 
@@ -310,4 +310,4 @@ class TestBattleControllerReinforcements:
 
         controller.add_reinforcements([mock_ship], team_id=0, entry_point=(0, 0))
 
-        assert id(mock_ship) in controller._ship_id_map
+        assert mock_ship.id in controller._ship_id_map

@@ -61,7 +61,10 @@ class BattleConfig:
     start_paused: bool = False
     enable_logging: bool = True
 
-    # Battle features — available to ALL modes
+    # Battle features — available to ALL modes.
+    # These are OR'd with the mode handler defaults: setting True here enables
+    # the feature even in modes that deny it by default.  Setting False does NOT
+    # disable the feature when the mode handler allows it.
     allow_retreat: bool = False
     allow_reinforcements: bool = False
     environmental_effects: Optional[Any] = None
@@ -70,9 +73,6 @@ class BattleConfig:
     # Each modifier: {"ability": "ToHitAttackModifier", "value": 2.0, "source": "Sensor Array"}
     team_modifiers: Any = field(default_factory=dict)    # {team_id: [modifier_dicts]}
     global_modifiers: Any = field(default_factory=list)  # [modifier_dicts] applied to all teams
-
-    # Ship isolation (clone ships to prevent mutation of originals)
-    isolated: bool = True
 
     # Caller metadata — stored on config for callers to read back after battle.
     # The simulator does NOT use these fields.

@@ -487,22 +487,22 @@ class ProjectileState:
         )
 
     @classmethod
-    def from_projectile(cls, proj: 'Projectile', ship_id_map: Dict[int, str]) -> 'ProjectileState':
+    def from_projectile(cls, proj: 'Projectile', ship_id_map: Dict[str, str]) -> 'ProjectileState':
         """
         Create ProjectileState from a live Projectile object.
 
         Args:
             proj: The projectile to capture
-            ship_id_map: Mapping from ship object id() to ship_id string
+            ship_id_map: Mapping from ship.id to battle state ship_id string
         """
         owner_ship_id = None
         if proj.owner:
-            owner_ship_id = ship_id_map.get(id(proj.owner))
+            owner_ship_id = ship_id_map.get(proj.owner.id)
 
         # Projectile.target is always initialized (None by default)
         target_ship_id = None
         if proj.target is not None:
-            target_ship_id = ship_id_map.get(id(proj.target))
+            target_ship_id = ship_id_map.get(proj.target.id)
 
         # Get projectile type as string - AttackType is always an Enum
         proj_type = proj.type
@@ -657,7 +657,7 @@ class BattleState:
         allow_retreat: bool = False,
         allow_reinforcements: bool = False,
         battle_id: Optional[str] = None,
-        ship_id_map: Optional[Dict[int, str]] = None,
+        ship_id_map: Optional[Dict[str, str]] = None,
     ) -> 'BattleState':
         """
         Capture complete state from a running BattleEngine.
@@ -669,23 +669,23 @@ class BattleState:
             allow_retreat: Whether retreat is enabled
             allow_reinforcements: Whether reinforcements are enabled
             battle_id: Optional battle ID (generates new UUID if not provided)
-            ship_id_map: Optional mapping of ship object id -> string id (for consistent IDs across captures)
+            ship_id_map: Optional mapping of ship.id -> battle state id (for consistent IDs across captures)
         """
         if battle_id is None:
             battle_id = str(uuid.uuid4())
 
-        # Build ship ID mapping (object id -> string id)
+        # Build ship ID mapping (ship.id -> battle state id)
         if ship_id_map is None:
             ship_id_map = {}
         ships: Dict[str, ShipState] = {}
 
         for ship in engine.ships:
             # Use existing mapping or create new ID
-            if id(ship) in ship_id_map:
-                ship_id = ship_id_map[id(ship)]
+            if ship.id in ship_id_map:
+                ship_id = ship_id_map[ship.id]
             else:
-                ship_id = str(uuid.uuid4())
-                ship_id_map[id(ship)] = ship_id
+                ship_id = ship.id
+                ship_id_map[ship.id] = ship_id
             ships[ship_id] = ShipState.from_ship(ship, ship_id)
 
         # Capture projectiles with ship references
