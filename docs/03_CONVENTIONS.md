@@ -329,8 +329,26 @@ Test-specific data lives in `simulation_tests/data/`:
 | Dependency injection | Singletons |
 | Extract abstraction | Copy-paste |
 | Clean-sheet design | Design compromise |
+| Data-driven lookups | Hardcoded type/class name lists |
 
-### 6.4 System Migration
+### 6.4 No Hardcoded Type Lists
+
+**Never hardcode lists of ability names, component types, or class names** to control behavior. Instead, search data structures generically or use registry lookups.
+
+```python
+# WRONG — breaks when a new weapon type is added:
+_WEAPON_NAMES = ['BeamWeaponAbility', 'ProjectileWeaponAbility', 'SeekerWeaponAbility']
+for name in _WEAPON_NAMES:
+    if name in abilities: ...
+
+# RIGHT — searches all abilities for the relevant property:
+for ab_data in abilities.values():
+    if isinstance(ab_data, dict) and 'firing_arc' in ab_data: ...
+```
+
+If code needs to distinguish types, use a shared property or protocol — not a list of class name strings.
+
+### 6.5 System Migration
 
 When a new system replaces an old one, **eradicate the old system completely**. Delete old code, update all call sites, remove old data files. No fallback paths, no backward compatibility layers. Save files are disposable -- never write migration code for save data.
 
