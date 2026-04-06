@@ -24,9 +24,9 @@ sys.path.insert(0, str(project_root))
 
 from game.core.registry import GameRegistries
 from game.simulation.components.component import load_components_data, load_modifiers_data
+from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import load_vehicle_classes_data
 from game.strategy.services.design_validator import DesignValidator
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
 
 def load_registries() -> GameRegistries:
@@ -55,14 +55,14 @@ def validate_design_file(filepath: Path, registries: GameRegistries) -> tuple:
     validator = DesignValidator(registries)
     result = validator.validate(design_data)
 
-    # Check mass consistency
+    # Check mass consistency using Ship (same as test suite)
     mass_mismatch = None
     expected_stats = design_data.get('expected_stats', {})
     expected_mass = expected_stats.get('mass')
     if expected_mass is not None:
-        calc = ShipStatsCalculator(registries=registries)
-        stats = calc.calculate_stats(design_data)
-        actual_mass = stats.get('mass', 0)
+        ship = Ship.from_dict(design_data, registries=registries)
+        ship.recalculate_stats()
+        actual_mass = ship.mass
         if abs(actual_mass - expected_mass) > 0.5:
             mass_mismatch = (actual_mass, expected_mass)
 

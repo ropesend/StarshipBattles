@@ -40,7 +40,7 @@ game/strategy/services/
     fleet_navigation_service.py # Fleet pathfinding and movement
     fleet_speed_calculator.py   # Strategic movement speed calculation
     modifier_resolver.py        # Resolve size_mount modifiers from design_data
-    ship_stats_calculator.py    # Ship stats from component definitions
+    ship_stats_calculator.py    # DEPRECATED — stat calculation moved to simulation layer
     strategic_ability_scanner.py # Find strategic abilities across spatial scopes
 ```
 
@@ -436,71 +436,65 @@ FleetSpeedCalculator.update_fleet_speed(fleet)
 
 ---
 
-### ShipStatsCalculator
+### Ship Design Stats (Unified Stat Calculation)
 
-**Location:** `game/strategy/services/ship_stats_calculator.py`
+**Location:** `game/simulation/entities/ship_design_stats.py`
 
-**Purpose:** Calculates ship statistics dynamically from component definitions and damage state. Replaces reading from cached `expected_stats` to ensure stats accurately reflect component damage, toggles, and modifier effects.
+**Purpose:** Single source of truth for computing ship stats from design JSON. Uses `Ship.from_dict()` + `recalculate_stats()` so all stat calculations go through one code path (the simulation `ShipStatsCalculator` in `game/simulation/entities/ship_stats.py`).
 
-**Dependencies:** Requires `GameRegistries` via constructor (strict DI, no fallback).
+**Dependencies:** Requires `GameRegistries` parameter (strict DI).
 
-**Constants:**
-```python
-DEFAULT_DAMAGE_THRESHOLD = 0.5    # Components become inactive below 50% HP
-NON_DEGRADING_TYPES = {'Armor'}   # Always 100% effective
-FULL_HP_REQUIRED_ABILITIES = {'WarpJump'}  # Must be undamaged to function
-```
+**Key Function:**
 
-**Key Methods:**
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `calculate_design_stats` | `(design_data, registries, component_damage=None, component_toggles=None) -> Dict` | Calculate all ship stats from design JSON, respecting damage and toggles |
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `calculate_stats` | `(design_data: Dict[str, Any], component_damage: Optional[Dict[str, int]] = None, component_toggles: Optional[Dict[str, bool]] = None) -> Dict[str, Any]` | Calculate all ship stats from design data, respecting damage and toggles |
-| `get_component_effectiveness` | `(comp_id: str, comp_def: Any, component_damage: Optional[Dict[str, int]] = None) -> float` | Static. Calculate component effectiveness (0.0-1.0) based on damage |
-| `has_warp_capability` | `(ship: Any) -> bool` | Static. Check if a ship has functional warp (tonnage, storage, undamaged drive) |
-
-**`calculate_stats` return dict:**
+**Return dict:**
 ```python
 {
     'max_hp': int,                            # Total HP from all components
-    'mass': float,                            # Total mass (never degrades with damage)
+    'mass': float,                            # Total mass (includes hull base mass)
     'resource_storage': Dict[str, float],     # resource_type -> capacity
-    'pod_storage_mass': float,                # Mass capacity of cargo/drop pods
-    'resource_consumption_per_hex': Dict[str, float],   # per-hex costs
-    'resource_consumption_per_turn': Dict[str, float],  # per-turn costs
+    'cargo_storage': Dict[str, float],        # cargo_type -> capacity
+    'pod_storage_mass': float,                # Mass capacity for drop pods
+    'resource_consumption_per_hex': Dict[str, float],   # per-hex movement costs
+    'resource_consumption_per_turn': Dict[str, float],  # per-turn maintenance costs
     'warp_resource_costs': Dict[str, float],  # per-warp-jump costs
     'strategic_movement': float,              # Movement points for strategic map
-    'cargo_storage': Dict[str, float],         # cargo_type -> capacity
     'warp_max_tonnage': int,                  # Max ship mass for warp (0 if damaged)
 }
 ```
 
-**Damage model:**
-- Above threshold (50% HP): gradual linear degradation
-- At or below threshold: component inactive (0% effectiveness)
-- Armor: never degrades (always 100%)
-- Warp drives: binary -- 100% HP required, any damage disables
+**Component toggles:** Toggled-off components are excluded from the design before Ship creation, so their stats don't contribute.
+
+**Component damage:** Damaged components have their `current_hp` set before `recalculate_stats()`, which applies the simulation's 5-phase damage model (threshold-based deactivation, crew reallocation, etc.).
 
 **Usage:**
 ```python
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-from game.core.registry import GameRegistries
-
-registries = GameRegistries.from_data_files()
-calculator = ShipStatsCalculator(registries=registries)
+from game.simulation.entities.ship_design_stats import calculate_design_stats
 
 # Calculate stats for undamaged ship
-stats = calculator.calculate_stats(design_data)
+stats = calculate_design_stats(design_data, registries)
 print(f"HP: {stats['max_hp']}, Mass: {stats['mass']}")
 
 # Calculate with damage
 damage = {'bridge_0': 50, 'engine_0': 30}
-stats = calculator.calculate_stats(design_data, component_damage=damage)
+stats = calculate_design_stats(design_data, registries, component_damage=damage)
 
-# Check warp capability
-if ShipStatsCalculator.has_warp_capability(ship_instance):
+# Check warp capability (now in component_inspector)
+from game.strategy.services.component_inspector import has_warp_capability
+if has_warp_capability(ship_instance):
     print("Ship can use warp points")
 ```
+
+**Callers:**
+- `ShipInstance.get_calculated_stats()` — primary consumer, caches results
+- `ProductionSpawner._spawn_to_staging_yard()` — mass calculation for staging
+- `scripts/validate_designs.py` — mass consistency checks
+- `scripts/fix_designs.py` — expected_stats recalculation
+
+> **Note:** The strategy layer's `ShipStatsCalculator` (`game/strategy/services/ship_stats_calculator.py`) is deprecated. No production code imports it. Its utility methods `has_warp_capability()` and `get_ability_list()` have been moved to `component_inspector`.
 
 ---
 
@@ -716,7 +710,6 @@ All services that need registries use **constructor injection with no fallback**
 # Correct
 service = VehicleDesignService(registries=game_registries)
 service = ModifierLogicService(registry_provider=game_registries)
-service = ShipStatsCalculator(registries=game_registries)
 loader = SimulationDesignLoader(registries=game_registries)
 
 # Raises TypeError or ValidationException
@@ -764,7 +757,7 @@ for warning in result.warnings:
 
 ### 4. Static Methods for Stateless Logic
 
-`FleetSpeedCalculator`, `ActionTimeResolver`, `DesignCostCalculator`, `CargoTransferService`, and `FleetCargoProjector` are entirely static -- no instance state needed. `ShipStatsCalculator.get_component_effectiveness` and `has_warp_capability` are also static. `ComponentInspector` uses module-level functions rather than a class.
+`FleetSpeedCalculator`, `ActionTimeResolver`, `DesignCostCalculator`, `CargoTransferService`, and `FleetCargoProjector` are entirely static -- no instance state needed. `ComponentInspector` uses module-level functions rather than a class — including `has_warp_capability()` and `get_ability_list()`. `calculate_design_stats()` is a standalone function in `game/simulation/entities/ship_design_stats.py`.
 
 ---
 
@@ -783,10 +776,10 @@ for warning in result.warnings:
 |              ModifierService, SimulationDesignLoader,    |
 |              reload_registries_from_directory            |
 |  Strategy:   FleetNavigationService,                    |
-|              FleetSpeedCalculator, ShipStatsCalculator,  |
+|              FleetSpeedCalculator, ComponentInspector,   |
 |              ActionTimeResolver, CargoTransferService,   |
 |              DesignCostCalculator, FleetCargoProjector,  |
-|              AreaEffectManager, ComponentInspector       |
+|              AreaEffectManager                           |
 +----------------------------+----------------------------+
                              | Uses
                              v

@@ -84,6 +84,8 @@ def create_transport_ship(
         }
     }
     ship = ShipInstance.create(design, owner_id=owner_id, name=name, registries=registries)
+    # Pre-cache stats for designs with no real component layers
+    ship._cached_stats = design["expected_stats"]
     if current_cargo > 0:
         ship.cargo_contents["passengers"] = current_cargo
     return ship

@@ -54,6 +54,32 @@
             "value": 1.0
           }
         ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "life_support",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
       }
     ],
     "OUTER": [
@@ -91,17 +117,30 @@
     "ammo": 0.0
   },
   "expected_stats": {
-    "max_hp": 1780,
-    "max_fuel": 50000.0,
-    "max_energy": 0.0,
-    "max_ammo": 0.0,
-    "max_speed": 3.68,
-    "acceleration_rate": 0.36,
+    "max_hp": 1880,
+    "mass": 1070.0,
+    "resource_storage": {
+      "fuel": 50000.0
+    },
+    "cargo_storage": {
+      "metals": 20000.0,
+      "organics": 20000.0,
+      "vapors": 20000.0,
+      "radioactives": 20000.0,
+      "exotics": 20000.0
+    },
+    "pod_storage_mass": 0.0,
+    "resource_consumption_per_hex": {
+      "fuel": 100.0
+    },
+    "resource_consumption_per_turn": {},
+    "warp_resource_costs": {},
+    "strategic_movement": 100.0,
+    "warp_max_tonnage": 0,
+    "max_speed": 3.5046728971962615,
+    "acceleration_rate": 0.3275395231024544,
     "turn_speed": 0.0,
-    "total_thrust": 150.0,
-    "mass": 1020.0,
-    "armor_hp_pool": 0,
-    "strategic_movement": 100.0
+    "total_thrust": 150.0
   },
   "_metadata": {
     "is_obsolete": false,

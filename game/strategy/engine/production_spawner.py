@@ -244,12 +244,11 @@ class ProductionSpawner:
             logger.warning(f"Cannot spawn to staging yard: design '{design_id}' not found")
             return
 
-        # Calculate mass from design using ShipStatsCalculator (single source of truth)
+        # Calculate mass from design using simulation Ship (single source of truth)
         total_mass = 0.0
         if self._registries:
-            from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-            calc = ShipStatsCalculator(registries=self._registries)
-            stats = calc.calculate_stats(design_data)
+            from game.simulation.entities.ship_design_stats import calculate_design_stats
+            stats = calculate_design_stats(design_data, self._registries)
             total_mass = stats.get('mass', 0.0)
 
         staging_item = {

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Any, List
 
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+from game.strategy.services.component_inspector import has_warp_capability
 from game.ui.filters.filter_state import FilterState
 from game.ui.screens.fleet_data_source import SPECIAL_CAPABILITY_COLUMNS
 
@@ -109,7 +109,7 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         total_cargo_generic += ship.get_current_cargo('generic')
 
     # Warp capability counts
-    warp_capable_count = sum(1 for s in ships if ShipStatsCalculator.has_warp_capability(s))
+    warp_capable_count = sum(1 for s in ships if has_warp_capability(s))
 
     return {
         'ship_count': ship_count,
@@ -149,7 +149,7 @@ def _should_exclude_by_warp(ship: 'ShipInstance', filter_state: Dict[str, Any]) 
     state = filter_state.get('warp_capable', FilterState.IGNORE)
     if state is FilterState.IGNORE:
         return False
-    is_warp_capable = ShipStatsCalculator.has_warp_capability(ship)
+    is_warp_capable = has_warp_capability(ship)
     return _check_tri_state(state, is_warp_capable)
 
 
@@ -294,7 +294,7 @@ def sort_ships(
         elif sort_column == 'tonnage':
             return ship.get_calculated_stats().get('mass', 0)
         elif sort_column == 'warp':
-            return 1 if ShipStatsCalculator.has_warp_capability(ship) else 0
+            return 1 if has_warp_capability(ship) else 0
         elif sort_column == 'spaceyard':
             # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
             from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator

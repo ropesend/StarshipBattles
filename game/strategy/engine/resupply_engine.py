@@ -24,7 +24,7 @@ from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IResupplyEngine
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+from game.strategy.services.component_inspector import get_ability_list
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import PlanetaryFacility
@@ -156,7 +156,7 @@ class ResupplyEngine(IResupplyEngine):
                 if not comp_def:
                     continue
                 abilities = get_component_abilities(comp_def)
-                for gen_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceGeneration'):
+                for gen_data in get_ability_list(abilities, 'ResourceGeneration'):
                     if gen_data.get('resource') == "fuel":
                         total_rate += gen_data.get('amount', 0.0)
 

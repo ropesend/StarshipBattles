@@ -77,7 +77,7 @@ class DesignValidator:
 
     def _check_crew_and_life_support(self, design_data: Dict, result: DesignValidationResult):
         """Check crew housing and life support requirements."""
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.simulation.formula_system import FormulaEvaluator
 
         total_crew_required = 0.0
         total_crew_capacity = 0.0
@@ -109,7 +109,7 @@ class DesignValidator:
             if isinstance(crew_req, (int, float)):
                 total_crew_required += crew_req * crew_req_mult
             elif isinstance(crew_req, str) and crew_req.startswith('='):
-                val = ShipStatsCalculator._evaluate_value(crew_req, 0, {})
+                val = float(FormulaEvaluator.safe_evaluate(crew_req[1:], {}, default=0))
                 total_crew_required += val * crew_req_mult
 
             # CrewCapacity — scaled by crew_capacity_mult
@@ -134,7 +134,6 @@ class DesignValidator:
 
     def _check_layer_mass(self, design_data: Dict, result: DesignValidationResult):
         """Check that each layer's component mass is within budget."""
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.simulation.components.modifiers import calculate_stat_multipliers
 
         ship_class = design_data.get('ship_class', '')
@@ -182,7 +181,8 @@ class DesignValidator:
                 if comp_def is None:
                     continue
 
-                base_mass = ShipStatsCalculator._get_numeric_value(comp_def, 'mass', 0, {})
+                raw_mass = comp_def.get('mass', 0) if isinstance(comp_def, dict) else getattr(comp_def, 'mass', 0)
+                base_mass = float(raw_mass) if isinstance(raw_mass, (int, float)) else 0
                 modifier_entries = comp.get('modifiers', [])
                 multipliers = calculate_stat_multipliers(modifier_entries, modifier_registry)
                 comp_mass = (base_mass + multipliers.get('mass_add', 0.0)) * multipliers.get('mass_mult', 1.0)

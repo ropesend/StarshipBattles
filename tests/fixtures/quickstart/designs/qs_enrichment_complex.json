@@ -132,6 +132,201 @@
             "value": 1.0
           }
         ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "crew_quarters",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "life_support",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "life_support",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "life_support",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
+      },
+      {
+        "id": "life_support",
+        "modifiers": [
+          {
+            "id": "simple_size_mount",
+            "value": 1.0
+          },
+          {
+            "id": "hardened_mount",
+            "value": 1.0
+          }
+        ]
       }
     ],
     "INNER": [],
@@ -214,15 +409,19 @@
     "times_built": 0
   },
   "expected_stats": {
-    "max_hp": 2677,
-    "max_fuel": 0.0,
-    "max_energy": 0.0,
-    "max_ammo": 0.0,
+    "max_hp": 3497,
+    "mass": 2790.710678118655,
+    "resource_storage": {},
+    "cargo_storage": {},
+    "pod_storage_mass": 0.0,
+    "resource_consumption_per_hex": {},
+    "resource_consumption_per_turn": {},
+    "warp_resource_costs": {},
+    "strategic_movement": 0.0,
+    "warp_max_tonnage": 0,
     "max_speed": 0,
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
-    "total_thrust": 0,
-    "mass": 2380.7,
-    "armor_hp_pool": 0
+    "total_thrust": 0
   }
 }

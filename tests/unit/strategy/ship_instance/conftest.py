@@ -39,5 +39,9 @@ def make_ship_with_stats(fresh_registries, make_design_data_with_stats):
             design_data=design_data
         )
         ship.set_registries(fresh_registries)
+        # Pre-set cached stats so tests that need known stat values
+        # don't depend on the stat calculator (which needs real components).
+        if expected_stats:
+            ship._cached_stats = expected_stats
         return ship
     return _make

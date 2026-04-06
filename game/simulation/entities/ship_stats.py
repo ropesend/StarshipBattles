@@ -274,6 +274,9 @@ class ShipStatsCalculator:
             'maneuver_points': 0,
             'max_shields': 0, 'shield_regen': 0, 'shield_cost': 0,
             'warp_max_tonnage': 0, 'warp_energy_cost': 0,
+            'warp_resource_costs': {},
+            'cargo_storage': {},
+            'pod_storage_mass': 0.0,
         }
 
         for comp in component_pool:
@@ -283,6 +286,7 @@ class ShipStatsCalculator:
             # Resource storage is always aggregated (batteries provide capacity
             # even if their own consumption isn't met — they have no consumption).
             self._aggregate_resource_abilities(comp, acc)
+            self._aggregate_cargo_and_pod_abilities(comp, acc)
 
             # All other stats require the component to be operational
             # (has resources to function).  A shield that can't afford its
@@ -323,6 +327,29 @@ class ShipStatsCalculator:
                 key = f'max_{ability.resource_type}'
                 if key not in acc:
                     acc[key] = 0
+                # Accumulate warp jump costs into warp_resource_costs
+                if getattr(ability, 'trigger', '') == 'warp_jump':
+                    rt = ability.resource_type
+                    acc['warp_resource_costs'][rt] = (
+                        acc['warp_resource_costs'].get(rt, 0) + ability.amount
+                    )
+
+    def _aggregate_cargo_and_pod_abilities(self, comp, acc) -> None:
+        """Aggregate CargoStorage and PodStorage abilities."""
+        for ab in comp.get_abilities('CargoStorage'):
+            cargo_type = getattr(ab, 'cargo_type', 'generic')
+            capacity = getattr(ab, 'capacity', 0.0)
+            if capacity > 0:
+                acc['cargo_storage'][cargo_type] = (
+                    acc['cargo_storage'].get(cargo_type, 0) + capacity
+                )
+
+        # PodStorage has no ability class — read from raw abilities dict
+        pod_data = comp.abilities.get('PodStorage')
+        if isinstance(pod_data, dict):
+            capacity = pod_data.get('capacity_mass', 0.0)
+            if capacity > 0:
+                acc['pod_storage_mass'] += capacity
 
     def _aggregate_propulsion_abilities(self, comp, acc) -> None:
         """Aggregate CombatPropulsion, StrategicMovement, WarpJump, ManeuveringThruster."""
@@ -401,6 +428,9 @@ class ShipStatsCalculator:
         ship.shield_regen_cost = acc['shield_cost']
         ship.warp_max_tonnage = acc['warp_max_tonnage']
         ship.warp_energy_cost = acc['warp_energy_cost']
+        ship.cargo_storage = acc['cargo_storage']
+        ship.pod_storage_mass = acc['pod_storage_mass']
+        ship.warp_resource_costs = acc.get('warp_resource_costs', {})
 
     def _phase_resource_allocation(self, ship, component_pool, available_crew, available_life_support) -> None:
         """Phase 2: Allocate crew and life support to components.

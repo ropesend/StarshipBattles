@@ -243,7 +243,8 @@ Queries about what the fleet can do:
 - `has_ability(ability_name)` / `ships_with_ability(ability_name)` -- generic ability checks
 - `list_abilities()` -- all unique ability names across fleet
 
-Uses `component_inspector` service for ship-level ability lookups.
+Uses `component_inspector` service for ship-level ability lookups (including
+`has_warp_capability()` and `get_ability_list()`).
 Requires component registry via DI (constructor or ship's `_registries`).
 
 #### FleetBattleAdapter (`fleet.battle`)

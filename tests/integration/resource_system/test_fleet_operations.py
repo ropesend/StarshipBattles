@@ -76,7 +76,8 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
                 {'id': 'test_plasma_warp'},
                 {'id': 'test_plasma_storage'},
                 {'id': 'test_energy_storage'}
-            ]
+            ],
+            registries=singleton_registries,
         )
 
         # PROJ-211: pass registries for DI
@@ -168,7 +169,8 @@ class TestMovementWithMultiResourceConsumption:
                 {'id': 'test_hybrid_engine'},
                 {'id': 'test_fuel_tank'},
                 {'id': 'test_coolant_tank'}
-            ]
+            ],
+            registries=singleton_registries,
         )
 
         # PROJ-211: pass registries for DI
@@ -270,7 +272,8 @@ class TestComponentToggleAffectsMovementAndWarp:
                 {'id': 'test_toggle_warp'},
                 {'id': 'test_toggle_fuel'},
                 {'id': 'test_toggle_energy'}
-            ]
+            ],
+            registries=singleton_registries,
         )
 
         # PROJ-211: pass registries for DI

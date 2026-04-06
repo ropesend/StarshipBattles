@@ -254,19 +254,21 @@ class TestStatsIntegration:
     """Tests for component toggle integration with stats calculation."""
 
     def test_component_toggles_passed_to_stats_calculation(self, make_ship_with_stats):
-        """component_toggles are passed to ShipStatsCalculator.calculate_stats."""
+        """component_toggles are passed to calculate_design_stats."""
         ship = make_ship_with_stats(expected_stats={'max_hp': 100})
         ship.set_component_enabled('engine', False)
 
-        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator.calculate_stats') as mock_calc:
+        with patch('game.simulation.entities.ship_design_stats.calculate_design_stats') as mock_calc:
             mock_calc.return_value = {'max_hp': 100}
 
             _ = ship.get_calculated_stats(force_refresh=True)
 
-            # Verify component_toggles was passed
+            # Verify component_toggles was passed as keyword arg
             mock_calc.assert_called_once()
-            call_args = mock_calc.call_args
-            assert call_args[0][2] == {'engine': False}  # Third positional arg
+            call_kwargs = mock_calc.call_args[1] if mock_calc.call_args[1] else {}
+            call_args = mock_calc.call_args[0]
+            toggles = call_kwargs.get('component_toggles', call_args[3] if len(call_args) > 3 else None)
+            assert toggles == {'engine': False}
 
     def test_disabled_component_affects_stats(self, make_ship_with_stats):
         """Disabled component should affect calculated stats."""

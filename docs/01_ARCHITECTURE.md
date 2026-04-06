@@ -110,7 +110,7 @@ Six layers with strict downward-only dependency flow:
 |-----------------|-------------|
 | `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
-| `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, DesignValidator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner |
+| `services/`     | FleetSpeedCalculator, FleetNavigationService, ComponentInspector (includes `has_warp_capability`, `get_ability_list`), DesignCostCalculator, DesignValidator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
 | `facade/dto/`   | Read-only DTOs: FleetInfo (+ `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`), SystemInfo, PlanetInfo (+ `staging_yard_summary`), EmpireInfo |
 | `interfaces/`   | IBattleResolver, BattleResult (strategy-layer battle DTO) |
@@ -292,7 +292,7 @@ Layers communicate through Protocol definitions in `game/core/protocols.py`. Upp
 Intentional late imports exist at specific cross-layer boundaries:
 - `Ship.add_component()` imports ModifierService (real import cycle)
 - `ShipInstanceBridge.to_ship()` imports ShipSerializer (cross-layer boundary)
-- `ShipInstance.get_calculated_stats()` imports ShipStatsCalculator (lazy init)
+- `ShipInstance.get_calculated_stats()` imports `calculate_design_stats` (lazy init)
 - `Fleet.trigger_speed_recalculation()` imports FleetSpeedCalculator (edge operation)
 
 ---
@@ -317,7 +317,7 @@ IRegistryProvider (injected into services)
        │
        ├──► Component / create_component()  (game/simulation/components/)
        ├──► Ship / ShipSerializer           (game/simulation/entities/)
-       ├──► ShipStatsCalculator             (game/strategy/services/)
+       ├──► calculate_design_stats          (game/simulation/entities/ship_design_stats.py)
        └──► VehicleDesignService            (game/simulation/services/)
 ```
 

@@ -21,7 +21,7 @@ from game.strategy.interfaces.engines import IConsumableEngine
 from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+from game.strategy.services.component_inspector import get_ability_list
 
 
 @dataclass
@@ -142,7 +142,7 @@ class ConsumableManagementEngine(IConsumableEngine):
                 if comp_def is None:
                     continue
                 abilities = get_component_abilities(comp_def)
-                for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
+                for ability_data in get_ability_list(abilities, 'ResourceConsumption'):
                     if (ability_data.get('trigger') == 'per_turn' and
                         ability_data.get('resource') == resource_type):
                         ship.set_component_enabled(comp_id, False)

@@ -78,10 +78,8 @@ class TestShipInstanceCreateWithRegistries:
 
     def test_create_uses_stored_registries_for_stats(self, mock_registries, basic_design_data):
         """create() should use stored registries when calling get_calculated_stats()."""
-        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator') as mock_calc_cls:
-            mock_calc = MagicMock()
-            mock_calc.calculate_stats.return_value = {'resource_storage': {'fuel': 100}}
-            mock_calc_cls.return_value = mock_calc
+        with patch('game.simulation.entities.ship_design_stats.calculate_design_stats') as mock_calc:
+            mock_calc.return_value = {'resource_storage': {'fuel': 100}}
 
             ship = ShipInstance.create(
                 design_data=basic_design_data,
@@ -89,8 +87,10 @@ class TestShipInstanceCreateWithRegistries:
                 registries=mock_registries,
             )
 
-            # Verify ShipStatsCalculator was created with our registries
-            mock_calc_cls.assert_called_with(registries=mock_registries)
+            # Verify calculate_design_stats was called with our registries
+            mock_calc.assert_called_once()
+            call_args = mock_calc.call_args
+            assert call_args[0][1] is mock_registries
 
 
 class TestShipInstanceFromDictWithRegistries:
@@ -139,15 +139,14 @@ class TestGetCalculatedStatsWithRegistries:
         )
         ship._registries = mock_registries
 
-        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator') as mock_calc_cls:
-            mock_calc = MagicMock()
-            mock_calc.calculate_stats.return_value = {'max_hp': 100}
-            mock_calc_cls.return_value = mock_calc
+        with patch('game.simulation.entities.ship_design_stats.calculate_design_stats') as mock_calc:
+            mock_calc.return_value = {'max_hp': 100}
 
             ship.get_calculated_stats(force_refresh=True)
 
-            # Verify ShipStatsCalculator was created with stored registries
-            mock_calc_cls.assert_called_with(registries=mock_registries)
+            # Verify calculate_design_stats was called with stored registries
+            mock_calc.assert_called_once()
+            assert mock_calc.call_args[0][1] is mock_registries
 
     def test_raises_when_registries_none(self, basic_design_data):
         """get_calculated_stats() should raise ValueError when _registries is None.

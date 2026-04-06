@@ -231,10 +231,9 @@ class FleetDataSource(ITableDataSource):
 
     def _format_warp(self, ship: "ShipInstance") -> str:
         """Format warp capability for display."""
-        # INTENTIONAL LATE IMPORT: Avoid circular import
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.strategy.services.component_inspector import has_warp_capability
 
-        return "Yes" if ShipStatsCalculator.has_warp_capability(ship) else "No"
+        return "Yes" if has_warp_capability(ship) else "No"
 
     def _format_spaceyard(self, ship: "ShipInstance") -> str:
         """Format spaceyard capability for display."""

@@ -192,7 +192,7 @@ PROJ-233: Spawning logic is in `ProductionSpawner`, a separate class from `Produ
 
 ### Mass Calculation
 
-Mass is calculated by `ShipStatsCalculator` (`game/strategy/services/ship_stats_calculator.py`), which is the single source of truth for ship/design mass. The production spawner uses `ShipStatsCalculator`, not inline calculation.
+Mass is calculated by `calculate_design_stats()` (`game/simulation/entities/ship_design_stats.py`), which uses `Ship.from_dict()` + `recalculate_stats()` as the single source of truth for all ship stats including mass. The production spawner delegates to this function.
 
 ---
 

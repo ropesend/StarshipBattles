@@ -135,6 +135,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.total_strategic_movement: float = 0.0
         self.warp_max_tonnage: float = 0.0
         self.warp_energy_cost: float = 0.0
+        self.warp_resource_costs: Dict[str, float] = {}
+        self.cargo_storage: Dict[str, float] = {}
+        self.pod_storage_mass: float = 0.0
 
         # === Resource Consumption (populated by combat_endurance.py) ===
         self.fuel_consumption: float = 0.0

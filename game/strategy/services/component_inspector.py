@@ -20,6 +20,8 @@ __all__ = [
     "find_ship_with_ability",
     "count_ability",
     "list_ship_abilities",
+    "get_ability_list",
+    "has_warp_capability",
 ]
 
 
@@ -269,3 +271,65 @@ def list_ship_abilities(
         abilities_set.update(abilities.keys())
 
     return list(abilities_set)
+
+
+def get_ability_list(
+    abilities: Dict[str, Any],
+    ability_name: str
+) -> List[Dict[str, Any]]:
+    """Get ability data as a list (handles both single and multiple abilities).
+
+    Normalizes ability data formats: single dicts become one-element lists,
+    scalar values become [{'value': val}], lists pass through unchanged.
+
+    Args:
+        abilities: Dict of all abilities on a component
+        ability_name: Name of the ability to extract
+
+    Returns:
+        List of ability data dicts for the given ability name.
+    """
+    val = abilities.get(ability_name)
+    if val is None:
+        return []
+    if isinstance(val, list):
+        return val
+    if isinstance(val, dict):
+        return [val]
+    return [{'value': val}]
+
+
+def has_warp_capability(ship: Any) -> bool:
+    """Check if a ship has functional warp capability.
+
+    A ship is warp-capable if:
+    1. It has a WarpJump ability with max_tonnage >= ship's mass
+    2. The warp drive is undamaged (warp_max_tonnage will be 0 if damaged)
+    3. The ship has enough resource storage capacity for at least one warp jump
+
+    Args:
+        ship: Object with get_calculated_stats() method (e.g., ShipInstance)
+
+    Returns:
+        True if ship can use warp points, False otherwise
+    """
+    calculated_stats = ship.get_calculated_stats()
+
+    ship_mass = calculated_stats.get('mass', 0)
+    if ship_mass <= 0:
+        return False
+
+    warp_max_tonnage = calculated_stats.get('warp_max_tonnage', 0)
+    if warp_max_tonnage < ship_mass:
+        return False
+
+    warp_resource_costs = calculated_stats.get('warp_resource_costs', {})
+    resource_storage = calculated_stats.get('resource_storage', {})
+
+    for resource_type, cost in warp_resource_costs.items():
+        if cost > 0:
+            capacity = resource_storage.get(resource_type, 0)
+            if capacity < cost:
+                return False
+
+    return True

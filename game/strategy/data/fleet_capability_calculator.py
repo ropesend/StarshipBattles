@@ -181,14 +181,14 @@ class FleetCapabilityCalculator:
         """
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.strategy.services.component_inspector import has_warp_capability
 
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:
             return False
 
         for ship in combat_ships:
-            if not ShipStatsCalculator.has_warp_capability(ship):
+            if not has_warp_capability(ship):
                 return False
         return True
 
@@ -201,10 +201,10 @@ class FleetCapabilityCalculator:
         """
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.strategy.services.component_inspector import has_warp_capability
 
         for ship in self._fleet.get_combat_capable_ships():
-            if not ShipStatsCalculator.has_warp_capability(ship):
+            if not has_warp_capability(ship):
                 return ship
         return None
 

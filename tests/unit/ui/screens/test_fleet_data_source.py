@@ -332,7 +332,7 @@ class TestFleetDataSourceCellValueWarp:
         ds = FleetDataSource(view_model)
 
         with patch(
-            "game.strategy.services.ship_stats_calculator.ShipStatsCalculator.has_warp_capability",
+            "game.strategy.services.component_inspector.has_warp_capability",
             return_value=True,
         ):
             assert ds.get_cell_value(0, "warp") == "Yes"
@@ -347,7 +347,7 @@ class TestFleetDataSourceCellValueWarp:
         ds = FleetDataSource(view_model)
 
         with patch(
-            "game.strategy.services.ship_stats_calculator.ShipStatsCalculator.has_warp_capability",
+            "game.strategy.services.component_inspector.has_warp_capability",
             return_value=False,
         ):
             assert ds.get_cell_value(0, "warp") == "No"

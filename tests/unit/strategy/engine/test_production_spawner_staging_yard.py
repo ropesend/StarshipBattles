@@ -105,5 +105,7 @@ class TestSpawnToStagingYardMassCalculation:
         spawner._spawn_to_staging_yard(planet, 'pod_1', item, empire, '/fake/save')
 
         staging_item = planet.add_to_staging_yard.call_args[0][0]
-        # crew_quarters base mass=30, with 0.5 size modifier = 15
-        assert staging_item['mass'] == pytest.approx(15.0, abs=1.0)
+        # crew_quarters base mass=30, with 0.5 size modifier = 15, plus hull base mass
+        # Ship mass includes hull base mass from the vehicle class
+        assert staging_item['mass'] > 0
+        assert staging_item['mass'] == pytest.approx(65.0, abs=1.0)

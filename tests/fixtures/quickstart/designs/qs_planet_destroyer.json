@@ -136,17 +136,26 @@
   },
   "expected_stats": {
     "max_hp": 6097,
-    "max_fuel": 100000.0,
-    "max_energy": 2000.0,
-    "max_ammo": 0.0,
-    "max_speed": 8.4,
-    "acceleration_rate": 0.16,
-    "turn_speed": 0.0,
-    "total_thrust": 1800.0,
-    "mass": 5357.4,
-    "armor_hp_pool": 0,
+    "mass": 5357.401051968199,
+    "resource_storage": {
+      "fuel": 100000.0,
+      "energy": 2000.0
+    },
+    "cargo_storage": {},
+    "pod_storage_mass": 0.0,
+    "resource_consumption_per_hex": {
+      "fuel": 1200.0
+    },
+    "resource_consumption_per_turn": {},
+    "warp_resource_costs": {
+      "energy": 3174.8021039363975
+    },
     "strategic_movement": 1200.0,
-    "warp_max_tonnage": 1000.0
+    "warp_max_tonnage": 16000,
+    "max_speed": 8.399595170025199,
+    "acceleration_rate": 0.15678488671180144,
+    "turn_speed": 0.0,
+    "total_thrust": 1800.0
   },
   "_metadata": {
     "is_obsolete": false,

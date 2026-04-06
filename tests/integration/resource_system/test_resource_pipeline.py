@@ -65,7 +65,8 @@ class TestCustomResourceTypeFullPipeline:
             name='Plasma Test Ship',
             components=[
                 {'id': 'plasma_tank'}
-            ]
+            ],
+            registries=singleton_registries,
         )
 
         # Step 4: Create ship instance (PROJ-211: pass registries for DI)
@@ -125,7 +126,8 @@ class TestPerTurnConsumptionAcrossFullTurn:
             name='Life Support Ship',
             components=[
                 {'id': 'test_life_support'}
-            ]
+            ],
+            registries=singleton_registries,
         )
 
         # Create ship instance with full energy (PROJ-211: pass registries for DI)
@@ -203,7 +205,8 @@ class TestAutoDisableComponentChainOnResourceDepletion:
             components=[
                 {'id': 'test_plasma_engine'},
                 {'id': 'test_battery'}
-            ]
+            ],
+            registries=singleton_registries,
         )
 
         # PROJ-211: pass registries for DI

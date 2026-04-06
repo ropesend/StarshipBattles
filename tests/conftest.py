@@ -308,7 +308,7 @@ def ship_factory(fresh_registries):
         design_id: str = None,
         empire = None,
     ) -> ShipInstance:
-        return ShipInstance.create(
+        ship = ShipInstance.create(
             design_data=design_data,
             owner_id=owner_id,
             name=name,
@@ -316,6 +316,16 @@ def ship_factory(fresh_registries):
             empire=empire,
             registries=fresh_registries,
         )
+        # Pre-cache stats from expected_stats for test designs without real
+        # component layers. This avoids running the stat calculator on
+        # empty designs and lets tests control the exact stat values.
+        expected = design_data.get('expected_stats')
+        if expected and not any(design_data.get('layers', {}).values()):
+            ship._cached_stats = expected
+            # Re-initialize consumable_levels from the expected storage
+            storage = expected.get('resource_storage', {})
+            ship.consumable_levels = {name: float(val) for name, val in storage.items()}
+        return ship
 
     return _create_ship
 

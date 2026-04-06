@@ -225,24 +225,18 @@ class ShipInstance:
         """
         Get calculated stats from components, respecting damage state.
 
-        Uses ShipStatsCalculator to calculate stats dynamically rather than
-        reading from cached expected_stats. Results are cached and invalidated
-        when component damage changes.
-
-        PROJ-211: Uses _registries if set, otherwise falls back to global
-        registry provider temporarily. The fallback will be removed after
-        all test fixtures are updated to use DI.
+        Uses Ship.from_dict() + recalculate_stats() via calculate_design_stats()
+        as the single source of truth for all stat calculations. Results are
+        cached and invalidated when component damage changes.
 
         Args:
             force_refresh: If True, recalculate even if cached
 
         Returns:
-            Dict with calculated stats (max_hp, mass, max_fuel, etc.)
+            Dict with calculated stats (max_hp, mass, resource_storage, etc.)
         """
         if self._cached_stats is None or force_refresh:
-            # INTENTIONAL LATE IMPORT: Lazy initialization pattern
-            # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-            from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+            from game.simulation.entities.ship_design_stats import calculate_design_stats
 
             registries = self._registries
             if registries is None:
@@ -252,9 +246,9 @@ class ShipInstance:
                     "or set ship._registries after construction."
                 )
 
-            service = ShipStatsCalculator(registries=registries)
-            self._cached_stats = service.calculate_stats(
+            self._cached_stats = calculate_design_stats(
                 self.design_data,
+                registries,
                 self.component_damage,
                 self.component_toggles
             )
