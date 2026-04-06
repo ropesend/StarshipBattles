@@ -348,6 +348,27 @@ class TestWeaponAbilityGetDamage:
 
         assert ability.get_damage() == ability.get_damage(0)
 
+    def test_get_damage_with_broken_formula_returns_zero(self, mock_component):
+        """PROJ-246: Runtime get_damage() with broken formula returns 0, not crash.
+
+        The runtime path uses safe_evaluate so combat doesn't crash mid-tick.
+        A broken formula injected at runtime (e.g. corrupted by a mod) should
+        degrade gracefully to 0, not crash the battle engine.
+        """
+        data = {
+            'damage': '=range_to_target * 0.1',
+            'range': 1000,
+            'reload': 1.0,
+        }
+        ability = WeaponAbility(mock_component, data)
+
+        # Simulate a broken formula being set at runtime
+        ability.damage_formula = 'undefined_var + 10'
+
+        # Runtime evaluation with broken formula should return 0 (safe fallback)
+        result = ability.get_damage(500)
+        assert result == 0.0
+
 
 class TestWeaponAbilityRecalculate:
     """Test modifier application via recalculate."""
@@ -726,6 +747,68 @@ class TestBeamWeaponAbility:
         ability.recalculate()
 
         assert ability.base_accuracy == pytest.approx(0.9, rel=1e-6)
+
+
+class TestBeamWeaponPDCValidTargets:
+    """Test BeamWeaponAbility.pdc_valid_targets configuration."""
+
+    def test_default_pdc_valid_targets(self, mock_component):
+        """BeamWeaponAbility defaults pdc_valid_targets to ["MISSILE", "FIGHTER"]."""
+        data = {'damage': 50, 'range': 500, 'reload': 0.5, 'tags': ['pdc']}
+        ability = BeamWeaponAbility(mock_component, data)
+
+        assert ability.pdc_valid_targets == ["MISSILE", "FIGHTER"]
+
+    def test_custom_pdc_valid_targets_from_data(self, mock_component):
+        """BeamWeaponAbility reads pdc_valid_targets from JSON data."""
+        data = {
+            'damage': 50,
+            'range': 500,
+            'reload': 0.5,
+            'tags': ['pdc'],
+            'pdc_valid_targets': ['MISSILE'],
+        }
+        ability = BeamWeaponAbility(mock_component, data)
+
+        assert ability.pdc_valid_targets == ['MISSILE']
+
+    def test_extended_pdc_valid_targets(self, mock_component):
+        """BeamWeaponAbility supports extended target lists including DRONE."""
+        data = {
+            'damage': 50,
+            'range': 500,
+            'reload': 0.5,
+            'tags': ['pdc'],
+            'pdc_valid_targets': ['MISSILE', 'FIGHTER', 'DRONE'],
+        }
+        ability = BeamWeaponAbility(mock_component, data)
+
+        assert ability.pdc_valid_targets == ['MISSILE', 'FIGHTER', 'DRONE']
+
+    def test_non_pdc_beam_still_has_default_pdc_valid_targets(self, mock_component):
+        """Non-PDC beam weapons still have pdc_valid_targets (unused but present)."""
+        data = {'damage': 100, 'range': 1000, 'reload': 1.0}
+        ability = BeamWeaponAbility(mock_component, data)
+
+        assert ability.pdc_valid_targets == ["MISSILE", "FIGHTER"]
+
+    def test_pdc_valid_targets_synced_on_data_change(self, mock_component):
+        """pdc_valid_targets is updated when sync_data is called with new data."""
+        data = {'damage': 50, 'range': 500, 'reload': 0.5, 'tags': ['pdc']}
+        ability = BeamWeaponAbility(mock_component, data)
+
+        assert ability.pdc_valid_targets == ["MISSILE", "FIGHTER"]
+
+        new_data = {
+            'damage': 50,
+            'range': 500,
+            'reload': 0.5,
+            'tags': ['pdc'],
+            'pdc_valid_targets': ['MISSILE', 'DRONE'],
+        }
+        ability.sync_data(new_data)
+
+        assert ability.pdc_valid_targets == ['MISSILE', 'DRONE']
 
 
 class TestBeamWeaponHitChance:

@@ -162,15 +162,22 @@ class TargetingSystem:
 
             # PDC targeting restrictions:
             # - Non-PDC weapons cannot fire at missiles
-            # - PDC weapons can only fire at missiles and fighters
+            # - PDC weapons can only fire at target types listed in pdc_valid_targets
             is_pdc = comp.has_pdc_ability()
             is_missile = is_projectile(candidate) and candidate.type == AttackType.MISSILE
-            is_fighter = getattr(candidate, 'vehicle_type', '') == 'Fighter'
 
             if is_missile and not is_pdc:
                 continue  # Non-PDC cannot target missiles
-            if is_pdc and not is_missile and not is_fighter:
-                continue  # PDC can only target missiles and fighters
+
+            if is_pdc:
+                # Determine candidate's target type for PDC matching
+                candidate_type = self._get_pdc_target_type(candidate, is_missile)
+
+                # Get valid targets from the beam ability on the component
+                pdc_valid_targets = self._get_pdc_valid_targets(comp, weapon_ab)
+
+                if candidate_type not in pdc_valid_targets:
+                    continue  # PDC can only target types in its valid targets list
 
             # Validate firing solution
             if comp.has_ability('SeekerWeaponAbility'):
@@ -185,6 +192,66 @@ class TargetingSystem:
                     return candidate
 
         return None
+
+    @staticmethod
+    def _get_pdc_valid_targets(comp: 'Component', weapon_ab: Any) -> list:
+        """
+        Get the list of valid PDC target types from the weapon's beam ability.
+
+        Checks the component's BeamWeaponAbility for pdc_valid_targets first,
+        then falls back to the passed weapon_ab, and finally to the default
+        ["MISSILE", "FIGHTER"].
+
+        Args:
+            comp: The weapon component
+            weapon_ab: The weapon ability instance passed to find_valid_target
+
+        Returns:
+            List of uppercase target type strings (e.g. ["MISSILE", "FIGHTER"])
+        """
+        _DEFAULT = ["MISSILE", "FIGHTER"]
+
+        # Try to get from the component's BeamWeaponAbility
+        beam_ab = comp.get_ability('BeamWeaponAbility') if comp.has_ability('BeamWeaponAbility') else None
+        if beam_ab is not None:
+            targets = getattr(beam_ab, 'pdc_valid_targets', None)
+            if isinstance(targets, list):
+                return targets
+
+        # Fall back to the passed weapon ability
+        targets = getattr(weapon_ab, 'pdc_valid_targets', None)
+        if isinstance(targets, list):
+            return targets
+
+        return _DEFAULT
+
+    @staticmethod
+    def _get_pdc_target_type(
+        candidate: Union[ICombatShip, IProjectile],
+        is_missile: bool
+    ) -> str:
+        """
+        Determine the PDC target type string for a candidate.
+
+        Maps candidate properties to uppercase type strings used in
+        BeamWeaponAbility.pdc_valid_targets:
+        - Missiles (projectiles with AttackType.MISSILE) -> "MISSILE"
+        - Ships/entities with vehicle_type -> uppercase vehicle_type (e.g. "FIGHTER", "DRONE")
+        - Everything else -> "UNKNOWN"
+
+        Args:
+            candidate: The target entity
+            is_missile: Whether this candidate was identified as a missile
+
+        Returns:
+            Uppercase target type string
+        """
+        if is_missile:
+            return "MISSILE"
+        vehicle_type = getattr(candidate, 'vehicle_type', '')
+        if vehicle_type:
+            return vehicle_type.upper()
+        return "UNKNOWN"
 
     def calculate_firing_solution(
         self,

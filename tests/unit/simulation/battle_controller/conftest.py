@@ -44,6 +44,7 @@ def mock_ship():
     """Create a mock Ship object."""
     ship = Mock()
     ship.name = "Test Ship"
+    ship.id = "mock-ship-uuid-001"
     ship.is_alive = True
     ship.team_id = 0
     ship.x = 50000

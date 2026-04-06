@@ -244,14 +244,24 @@ class TestShipComponentManagerWeaponCache:
             LayerType.CORE
         )
 
-    def test_weapon_cache_returns_same_list_on_second_call(self):
-        """Second call returns same cached list (cache hit)."""
+    def test_weapon_cache_returns_equal_list_on_second_call(self):
+        """Second call returns equal cached list (cache hit)."""
         railgun = create_component('railgun', registries=self.registries)
         self.ship.add_component(railgun, LayerType.OUTER)
 
         weapons1 = self.ship.get_weapon_components_cached()
         weapons2 = self.ship.get_weapon_components_cached()
-        assert weapons1 is weapons2  # Same object reference = cache hit
+        assert weapons1 == weapons2  # Equal contents = cache hit
+
+    def test_weapon_cache_mutation_does_not_corrupt(self):
+        """Mutating the returned list must not corrupt the internal cache."""
+        railgun = create_component('railgun', registries=self.registries)
+        self.ship.add_component(railgun, LayerType.OUTER)
+
+        weapons = self.ship.get_weapon_components_cached()
+        weapons.clear()  # Mutate the returned list
+        weapons2 = self.ship.get_weapon_components_cached()
+        assert len(weapons2) > 0  # Cache unaffected
 
     def test_weapon_cache_invalidates_on_add(self):
         """Adding a component invalidates the weapons cache.

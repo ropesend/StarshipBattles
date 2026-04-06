@@ -185,7 +185,6 @@ def create_hypothetical_battle(
         mode=BattleMode.HYPOTHETICAL,
         seed=seed,
         headless=True,
-        isolated=True,
     )
 
     controller = _create_controller_with_config(config)
