@@ -960,3 +960,151 @@ class TestPDCFighterDetection:
 
         target = system.find_valid_target(ship, not_a_fighter, [], weapon, weapon_ab)
         assert target is None
+
+
+class TestPDCValidTargetsConfiguration:
+    """Tests for data-driven PDC valid target types via pdc_valid_targets on BeamWeaponAbility."""
+
+    def _make_ship_mock(self, team_id=0, position=None):
+        """Create a basic ship mock for the shooter."""
+        ship = MagicMock()
+        ship.team_id = team_id
+        ship.position = position or Vector2(0, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.angle = 0
+        return ship
+
+    def _make_pdc_weapon(self, pdc_valid_targets=None):
+        """Create a PDC weapon mock with optional custom valid targets.
+
+        When pdc_valid_targets is provided, the beam ability will have that attribute.
+        When None, the beam ability will NOT have the attribute (testing fallback).
+        """
+        weapon = MagicMock()
+        weapon.has_ability = lambda name: name in ['BeamWeaponAbility', 'WeaponAbility']
+        weapon.has_pdc_ability = MagicMock(return_value=True)
+
+        beam_ab = MagicMock()
+        beam_ab.check_firing_solution = MagicMock(return_value=True)
+
+        if pdc_valid_targets is not None:
+            beam_ab.pdc_valid_targets = pdc_valid_targets
+        else:
+            # Simulate ability without the attribute (old-style, for fallback test)
+            beam_ab.pdc_valid_targets = ["MISSILE", "FIGHTER"]
+
+        weapon.get_ability = lambda name: beam_ab
+
+        weapon_ab = beam_ab
+        return weapon, weapon_ab
+
+    def _make_candidate(self, team_id=1, vehicle_type="Ship", attack_type=None):
+        """Create a candidate target mock."""
+        candidate = MagicMock()
+        candidate.is_alive = True
+        candidate.team_id = team_id
+        candidate.position = Vector2(100, 0)
+        candidate.velocity = Vector2(0, 0)
+        candidate.vehicle_type = vehicle_type
+        if attack_type is not None:
+            candidate.type = attack_type
+        else:
+            candidate.type = 'ship'
+        return candidate
+
+    def test_pdc_default_targets_missile(self):
+        """PDC with default pdc_valid_targets targets missiles."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+        from game.core.constants import AttackType
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()  # default targets
+
+        missile = self._make_candidate(attack_type=AttackType.MISSILE)
+
+        target = system.find_valid_target(ship, missile, [], weapon, weapon_ab)
+        assert target is missile
+
+    def test_pdc_default_targets_fighter(self):
+        """PDC with default pdc_valid_targets targets fighters."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()  # default targets
+
+        fighter = self._make_candidate(vehicle_type="Fighter")
+
+        target = system.find_valid_target(ship, fighter, [], weapon, weapon_ab)
+        assert target is fighter
+
+    def test_pdc_default_rejects_regular_ship(self):
+        """PDC with default pdc_valid_targets rejects regular ships."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()  # default targets
+
+        cruiser = self._make_candidate(vehicle_type="Ship")
+
+        target = system.find_valid_target(ship, cruiser, [], weapon, weapon_ab)
+        assert target is None
+
+    def test_pdc_missile_only_targets_missiles(self):
+        """PDC with pdc_valid_targets=["MISSILE"] targets missiles."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+        from game.core.constants import AttackType
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon(pdc_valid_targets=["MISSILE"])
+
+        missile = self._make_candidate(attack_type=AttackType.MISSILE)
+
+        target = system.find_valid_target(ship, missile, [], weapon, weapon_ab)
+        assert target is missile
+
+    def test_pdc_missile_only_rejects_fighters(self):
+        """PDC with pdc_valid_targets=["MISSILE"] does NOT target fighters."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon(pdc_valid_targets=["MISSILE"])
+
+        fighter = self._make_candidate(vehicle_type="Fighter")
+
+        target = system.find_valid_target(ship, fighter, [], weapon, weapon_ab)
+        assert target is None
+
+    def test_pdc_extended_targets_drone(self):
+        """PDC with pdc_valid_targets=["MISSILE", "FIGHTER", "DRONE"] targets drones."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon(
+            pdc_valid_targets=["MISSILE", "FIGHTER", "DRONE"]
+        )
+
+        drone = self._make_candidate(vehicle_type="Drone")
+
+        target = system.find_valid_target(ship, drone, [], weapon, weapon_ab)
+        assert target is drone
+
+    def test_pdc_extended_targets_still_rejects_regular_ship(self):
+        """PDC with extended valid targets still rejects regular ships."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon(
+            pdc_valid_targets=["MISSILE", "FIGHTER", "DRONE"]
+        )
+
+        cruiser = self._make_candidate(vehicle_type="Ship")
+
+        target = system.find_valid_target(ship, cruiser, [], weapon, weapon_ab)
+        assert target is None
