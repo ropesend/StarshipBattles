@@ -37,6 +37,11 @@ def _make_mock_ship(team_id=0):
     ship.combat_engine = Mock()
     ship.combat_engine._event_bus = None
 
+    # set_event_bus facade (PROJ-240): delegates to combat_engine._event_bus
+    def _set_event_bus(bus):
+        ship.combat_engine._event_bus = bus
+    ship.set_event_bus = Mock(side_effect=_set_event_bus)
+
     # Components: one active, one inactive
     active_comp = Mock()
     active_comp.is_active = True
