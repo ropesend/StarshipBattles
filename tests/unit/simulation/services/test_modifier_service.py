@@ -515,6 +515,21 @@ class TestGetInitialValue:
         value = service.get_initial_value('turret_mount', comp)
         assert value == 15.0  # min_val of turret_mount
 
+    def test_turret_mount_finds_firing_arc_in_novel_weapon_ability(self, full_registry):
+        """turret_mount should find firing_arc in ANY ability, not just hardcoded weapon names."""
+        comp = MagicMock()
+        comp.data = {
+            'abilities': {
+                'TorpedoLauncherAbility': {'firing_arc': 90, 'damage': 500}
+            }
+        }
+        service = ModifierService(modifier_registry=full_registry)
+        value = service.get_initial_value('turret_mount', comp)
+        assert value == 90.0, (
+            "_get_base_firing_arc should search ALL abilities for firing_arc, "
+            "not just a hardcoded list of weapon ability names"
+        )
+
     def test_default_modifier_uses_default_val(self, basic_registry, mock_weapon_component):
         """Generic modifier uses its default_val from definition."""
         service = ModifierService(modifier_registry=basic_registry)

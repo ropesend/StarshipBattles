@@ -38,11 +38,6 @@ class ModifierService:
     # Modifiers that cannot be removed by the user
     MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
 
-    # Weapon ability class names to search for base firing_arc
-    _WEAPON_ABILITY_NAMES = [
-        'ProjectileWeaponAbility', 'BeamWeaponAbility',
-        'SeekerWeaponAbility', 'WeaponAbility',
-    ]
 
     def __init__(self, modifier_registry: Dict[str, Any]):
         """
@@ -177,8 +172,7 @@ class ModifierService:
             return float(base_arc)
 
         abilities = component.data.get('abilities', {})
-        for ab_name in ModifierService._WEAPON_ABILITY_NAMES:
-            ab_data = abilities.get(ab_name, {})
+        for ab_data in abilities.values():
             if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
                 return float(ab_data['firing_arc'])
 
