@@ -908,6 +908,61 @@ class TestFormatStarSystemInfo:
         assert "System:" in result
         assert "(Empty System)" in result
 
+    def test_system_shows_active_stellar_stabilizer(self, mock_star_system):
+        """System with active stellar stabilizer should show it in output."""
+        # Create a planet with a facility that has StellarStabilizer ability
+        planet = Mock()
+        planet.name = "Earth"
+        planet.active_abilities = {'StellarStabilizer': True}
+
+        facility = Mock()
+        facility.design_data = {
+            'layers': {
+                'OUTER': [{'id': 'stellar_stabilizer', 'abilities': {
+                    'StellarStabilizer': {'scope': 'system'}
+                }}]
+            }
+        }
+        planet.facilities = [facility]
+        mock_star_system.planets = [planet]
+
+        result = format_star_system_info(mock_star_system)
+
+        assert "Stellar Stabilizer" in result
+        assert "Active" in result
+
+    def test_system_shows_inactive_stabilizer(self, mock_star_system):
+        """System with inactive stabilizer should show Inactive status."""
+        planet = Mock()
+        planet.name = "Mars"
+        planet.active_abilities = {'WarpFieldStabilizer': False}
+
+        facility = Mock()
+        facility.design_data = {
+            'layers': {
+                'OUTER': [{'id': 'warp_field_stabilizer', 'abilities': {
+                    'WarpFieldStabilizer': {'scope': 'system'}
+                }}]
+            }
+        }
+        planet.facilities = [facility]
+        mock_star_system.planets = [planet]
+
+        result = format_star_system_info(mock_star_system)
+
+        assert "Warp Field Stabilizer" in result
+        assert "Inactive" in result
+
+    def test_system_without_stabilizers_shows_none(self, mock_star_system):
+        """System without stabilizer facilities should not show ability lines."""
+        mock_star_system.planets = []
+
+        result = format_star_system_info(mock_star_system)
+
+        assert "Stellar Stabilizer" not in result
+        assert "Warp Field Stabilizer" not in result
+        assert "Geologic Stabilizer" not in result
+
 
 # =============================================================================
 # format_star_info Tests

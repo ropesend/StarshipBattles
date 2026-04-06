@@ -207,26 +207,21 @@ class StrategyDetailFormatter:
         self.detail_text.rebuild()
 
     def _format_star_system(self, obj) -> str:
-        """Format star system details."""
+        """Format star system details, including system-scoped ability status."""
+        from game.ui.screens.strategy_detail_fmt import format_star_system_info
+        text = format_star_system_info(obj)
+
+        # Graph for primary star
         primary = obj.primary_star
         if primary:
-            text = f"<b>System:</b> {obj.name}<br>"
-            text += f"<b>Primary:</b> {primary.name}<br>"
-            text += f"<b>Type:</b> {primary.star_type.name}<br>"
-            text += f"<b>Mass:</b> {primary.mass:.2f} Sol<br>"
-            text += f"<b>Temp:</b> {int(primary.temperature)} K<br>"
-            text += f"<b>Stars:</b> {len(obj.stars)}<br>"
-
-            # Graph
             self.graph_image.show()
             self.btn_raw_data.show()
             surface = self.spectrum_graph.render(primary, vertical=True)
             surface = pygame.transform.rotate(surface, -90)
             self.graph_image.set_image(surface)
             self.current_raw_data = self._format_spectrum(primary)
-            return text
-        else:
-            return f"<b>System:</b> {obj.name}<br>(Empty System)"
+
+        return text
 
     def _format_star(self, obj) -> str:
         """Format star details."""
