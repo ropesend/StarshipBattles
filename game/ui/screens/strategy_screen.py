@@ -250,31 +250,26 @@ class StrategyScreen:
     # =========================================================================
 
     def on_colonize_click(self):
-        """Handle colonize action — opens load dialog if fleet is at a colony.
+        """Handle colonize action — always opens load transfer dialog first.
 
         Flow:
-        1. If at owned colony: open transfer dialog to load cargo/population
-        2. The transfer dialog's confirm queues TRANSFER(load) orders
-        3. After dialog closes, input mode enters COLONIZE_TARGET (handled by fleet_command_router)
-        4. Player clicks destination → drop dialog opens → colonize + TRANSFER(unload) queued
+        1. Open transfer dialog to load cargo/population (queues TRANSFER orders)
+        2. After dialog closes, input mode enters COLONIZE_TARGET (handled by fleet_command_router)
+        3. Player clicks destination → drop dialog opens → colonize + TRANSFER(unload) queued
+
+        The transfer will execute at whatever location the fleet is at when
+        the order reaches the front of the queue. If the fleet is not at a
+        colony when the transfer executes, the transfer will fail gracefully
+        and the fleet continues with remaining orders.
         """
         fleet = self.selected_fleet
         if not fleet:
             return
 
-        # If fleet is at an owned colony, open load dialog first
-        if self._is_fleet_at_owned_colony(fleet):
-            self.ui.open_transfer_dialog(fleet, fleet.location)
+        # Always open load dialog — player manages logistics
+        self.ui.open_transfer_dialog(fleet, fleet.location)
         # Input mode is set to COLONIZE_TARGET by the fleet_command_router
         # regardless of whether the load dialog was opened
-
-    def _is_fleet_at_owned_colony(self, fleet) -> bool:
-        """Check if fleet is at a hex with an owned colony."""
-        planets = self._facade.get_planets_at_hex(fleet.location)
-        if not planets:
-            return False
-        empire_id = fleet.owner_id
-        return any(p.owner_id == empire_id for p in planets)
 
     def _on_colonize_planet_selected(self, planet):
         """Handle planet selection — issue colonize command, then open drop dialog.
