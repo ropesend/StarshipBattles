@@ -31,7 +31,7 @@ Provides DI registry fixtures and shared test helpers:
 
 - **Registry fixtures**: `session_registries`, `fresh_registries`, `minimal_registries`, `mock_registries`
 - **Data loading fixtures**: `global_ship_data`, `global_ship_data_with_modifiers`
-- **Factory fixtures**: `ship_factory`
+- **Factory fixtures**: `ship_factory` — creates `ShipInstance` with DI. For designs without real component layers, pre-caches `expected_stats` as `_cached_stats` and initializes `consumable_levels` from `resource_storage` to avoid running `calculate_design_stats()` on empty designs.
 - **Helper functions**: `make_mock_ship_instance()`, `make_colony_ship_for_planet()`, `assert_success()`, `assert_list_length()`
 
 ### `tests/unit/conftest.py`

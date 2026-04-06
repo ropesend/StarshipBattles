@@ -259,6 +259,30 @@ Bridges strategy Fleet with simulation Ship for combat:
 - `update_from_battle_results(surviving_ships)` -- updates fleet from
   `IPostBattleShip` protocol; ships not in survivors are removed (destroyed)
 
+### ShipInstance Stat Calculation
+
+**File:** `game/strategy/data/ship_instance.py`
+
+`ShipInstance.get_calculated_stats()` returns a cached stats dict computed by
+`calculate_design_stats()` from `game/simulation/entities/ship_design_stats.py`.
+This delegates to `Ship.from_dict()` + `recalculate_stats()` — the simulation
+layer is the single source of truth for all stats.
+
+**Stats dict keys:** `max_hp`, `mass`, `resource_storage`, `cargo_storage`,
+`pod_storage_mass`, `strategic_movement`, `warp_max_tonnage`, `warp_resource_costs`,
+`resource_consumption_per_hex`, `resource_consumption_per_turn`.
+
+**Cache invalidation:** Call `ship.invalidate_stats_cache()` after damage, repair,
+or component toggle changes. The next `get_calculated_stats()` call recomputes.
+
+**Component toggles:** Toggled-off components are excluded from the design before
+Ship creation, so their stats don't contribute. Component damage is applied to
+the Ship's components before recalculation.
+
+**Anti-pattern:** Do NOT compute stats by iterating design components manually —
+use `get_calculated_stats()` or `calculate_design_stats()`. See Pattern 3 in
+`02_PATTERNS.md` ("Unified Stat Calculation") for details.
+
 ### Order System (PROJ-238: Unified)
 
 Order types defined in `game/strategy/data/order_types.py`:

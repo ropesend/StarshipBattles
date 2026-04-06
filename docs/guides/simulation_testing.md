@@ -649,11 +649,12 @@ These engine behaviors affect how tests should be designed:
 
 ### Issue: Ship JSON expected_stats mismatch warnings
 
-**Root Cause:** The `expected_stats` values in ship JSON were calculated incorrectly.
+**Root Cause:** The `expected_stats` values in ship JSON don't match what `Ship.from_dict()` + `recalculate_stats()` computes.
 
 **Fix:**
-1. Recalculate using physics formulas with K constants from `physics_constants.py`.
-2. Update the `expected_stats` section with exact (not rounded) values.
+1. Run `python scripts/fix_designs.py [directory]` to recalculate `expected_stats` for all designs using `Ship.from_dict()` + `recalculate_stats()` (the single source of truth).
+2. Or run `python scripts/validate_designs.py [directory]` to identify which designs have mismatches.
+3. The `expected_stats.mass` includes hull base mass from the vehicle class — it will be higher than the sum of component masses alone.
 
 ### Issue: Ship file not found
 

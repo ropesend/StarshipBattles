@@ -343,6 +343,22 @@ and `ResourceConsumption` abilities. Any resource defined in `data/resources.jso
 including planetary resources like metals, organics, vapors, radioactives, and exotics.
 No hardcoded fuel/energy/ammo assumptions in the combat simulation layer.
 
+### Strategy-Relevant Attributes on Ship
+
+`ShipStatsCalculator` also populates these attributes used by the strategy layer
+(via `calculate_design_stats()` in `game/simulation/entities/ship_design_stats.py`):
+
+| Attribute | Type | Source | Description |
+|-----------|------|--------|-------------|
+| `cargo_storage` | `Dict[str, float]` | `CargoStorage` abilities | Cargo capacity by type (passengers, generic) |
+| `pod_storage_mass` | `float` | `PodStorage` abilities (raw dict) | Drop pod mass capacity |
+| `warp_resource_costs` | `Dict[str, float]` | `ResourceConsumption` with `trigger='warp_jump'` | Full warp cost breakdown per resource |
+
+These are aggregated in `_aggregate_cargo_and_pod_abilities()` and
+`_aggregate_resource_abilities()` (warp costs), and applied in `_apply_aggregated_stats()`.
+The strategy layer reads them through `calculate_design_stats()` — do NOT compute
+these independently.
+
 ---
 
 ## 5. Targeting and Firing

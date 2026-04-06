@@ -679,11 +679,18 @@ if effects.in_storm:
 | `find_ship_with_ability` | `(fleet_ships, ability_name, component_registry) -> Optional[ShipInstance]` | Find first ship in a list with a specific ability |
 | `count_ability` | `(ship, ability_name, component_registry) -> int` | Count components on a ship with a specific ability |
 | `list_ship_abilities` | `(ship, component_registry) -> List[str]` | Get all unique ability names from a ship's components |
+| `get_ability_list` | `(abilities, ability_name) -> List[Dict]` | Normalize ability data to list of dicts (handles single/list/scalar formats) |
+| `has_warp_capability` | `(ship) -> bool` | Check if a ship has functional warp (tonnage, storage, undamaged drive) |
+
+**`get_ability_list`** is the canonical way to extract ability data from component ability dicts. Always use this instead of manually checking `isinstance(val, list)` — it handles all formats: single dicts, lists, and scalar values.
+
+**`has_warp_capability`** checks warp tonnage >= ship mass, and that the ship has enough resource storage for at least one warp jump. Uses `get_calculated_stats()` so it respects damage state.
 
 **Usage:**
 ```python
 from game.strategy.services.component_inspector import (
-    ship_has_ability, find_ship_with_ability, iterate_design_components
+    ship_has_ability, find_ship_with_ability, iterate_design_components,
+    get_ability_list, has_warp_capability,
 )
 
 # Check if ship can colonize
@@ -696,6 +703,14 @@ colonizer = find_ship_with_ability(fleet.ships, 'ColonizePlanet', component_regi
 # Iterate all components
 for entry, comp_def, abilities in iterate_design_components(design_data, registry):
     print(f"Component {entry.get('id')}: {list(abilities.keys())}")
+
+# Normalize ability data (handles single dict, list, or scalar)
+for ability_data in get_ability_list(abilities, 'ResourceConsumption'):
+    print(f"Consumes {ability_data.get('resource')}: {ability_data.get('amount')}")
+
+# Check warp capability
+if has_warp_capability(ship_instance):
+    print("Ship can use warp points")
 ```
 
 ---
