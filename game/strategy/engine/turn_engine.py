@@ -398,7 +398,7 @@ class TurnEngine:
         """Return planet energy engine, lazily creating default if not injected."""
         if self._planet_energy_engine is None:
             from game.strategy.engine.planet_energy_engine import PlanetEnergyEngine
-            self._planet_energy_engine = PlanetEnergyEngine(registries=self._registries)
+            self._planet_energy_engine = PlanetEnergyEngine(registries=self._registries, event_bus=self._event_bus)
         return self._planet_energy_engine
 
     @property
@@ -410,6 +410,7 @@ class TurnEngine:
             self._planet_action_engine = PlanetActionEngine(
                 registries=self._registries,
                 action_time_resolver=ActionTimeResolver(),
+                event_bus=self._event_bus,
             )
         return self._planet_action_engine
 

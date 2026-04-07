@@ -22,6 +22,7 @@ from game.strategy.data.component_activation_state import (
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 from game.strategy.engine.planet_energy_engine import get_shield_info
 from game.strategy.interfaces.engines import IPlanetActionEngine
+from game.strategy.events.event_types import EventType, EventCategory
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,11 @@ class PlanetActionEngine(IPlanetActionEngine):
         *,
         registries: Optional[GameRegistries] = None,
         action_time_resolver: Optional[ActionTimeResolver] = None,
+        event_bus=None,
     ):
         self._registries = registries
         self._action_time_resolver = action_time_resolver or ActionTimeResolver()
+        self._event_bus = event_bus
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -199,6 +202,17 @@ class PlanetActionEngine(IPlanetActionEngine):
             f"({activation_time} ticks, drain={energy_drain}/turn)"
         )
 
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.SHIELD_ACTIVATED,
+                category=EventCategory.PLANET_OPERATIONS,
+                empire_id=empire.id,
+                message=f"{ability_name} activation started on {planet.name}",
+                planet_name=planet.name,
+                planet_id=planet.id,
+                ability_name=ability_name,
+            )
+
     def _initiate_deactivation(
         self,
         planet: 'Planet',
@@ -223,6 +237,16 @@ class PlanetActionEngine(IPlanetActionEngine):
             current.cancel()
             facility.set_activation_state(comp_key, current)
             logger.info(f"Planet {planet.name}: {ability_name} activation cancelled")
+            if self._event_bus:
+                self._event_bus.log_event(
+                    EventType.SHIELD_DEACTIVATED,
+                    category=EventCategory.PLANET_OPERATIONS,
+                    empire_id=empire.id,
+                    message=f"{ability_name} activation cancelled on {planet.name}",
+                    planet_name=planet.name,
+                    planet_id=planet.id,
+                    ability_name=ability_name,
+                )
         elif current.phase == ActivationPhase.ACTIVE:
             # Resolve deactivation time
             deactivation_time = self._get_deactivation_time(
@@ -234,6 +258,16 @@ class PlanetActionEngine(IPlanetActionEngine):
                 f"Planet {planet.name}: {ability_name} deactivation started "
                 f"({deactivation_time} ticks)"
             )
+            if self._event_bus:
+                self._event_bus.log_event(
+                    EventType.SHIELD_DEACTIVATED,
+                    category=EventCategory.PLANET_OPERATIONS,
+                    empire_id=empire.id,
+                    message=f"{ability_name} deactivation started on {planet.name}",
+                    planet_name=planet.name,
+                    planet_id=planet.id,
+                    ability_name=ability_name,
+                )
         else:
             logger.warning(
                 f"Planet {planet.name}: cannot deactivate {ability_name} "

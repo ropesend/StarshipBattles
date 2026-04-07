@@ -168,33 +168,31 @@ All other Fleet public methods (`remove_ship`, `trigger_speed_recalculation`,
 
 Items where the Skeptical Subagent could not reach a definitive verdict.
 
-### 3.1 Shield Events Defined But Never Generated
+### 3.1 Shield Events Defined But Never Generated -- RESOLVED
 
-**Files:** `game/strategy/events/event_types.py` (lines 24-26)
+**Status:** RESOLVED via implementation (TDD).
 
-**Issue:** Three EventType enum values are defined but no engine ever generates them:
-- `SHIELD_ACTIVATED`
-- `SHIELD_DEACTIVATED`
-- `SHIELD_AUTO_DEACTIVATED`
+**Original Issue:** Three EventType enum values (`SHIELD_ACTIVATED`, `SHIELD_DEACTIVATED`,
+`SHIELD_AUTO_DEACTIVATED`) were defined but no engine ever generated them.
 
-**Where they should be logged:**
-- `PlanetActionEngine._initiate_activation()` / `_initiate_deactivation()` -- handles
-  shield toggle but doesn't log events
-- `PlanetEnergyEngine` -- auto-deactivates shields on energy depletion but doesn't log
+**Resolution:** Implemented event logging following existing patterns:
 
-All 14 other EventType values ARE generated in their respective engines.
+| Event | Engine | Hook |
+|-------|--------|------|
+| `SHIELD_ACTIVATED` | `PlanetActionEngine._initiate_activation()` | On activation start |
+| `SHIELD_DEACTIVATED` | `PlanetActionEngine._initiate_deactivation()` | On deactivation start or activation cancel |
+| `SHIELD_AUTO_DEACTIVATED` | `PlanetEnergyEngine._cancel_all_draining_components()` | On energy depletion |
 
-**Skeptical Challenge:** Are these planned for future implementation?
-**Verdict:** AMBIGUOUS. They were likely added as part of PROJ-238 (planet actions) with the
-intention of logging shield state changes, but the logging code was never written.
-Two valid resolutions:
-1. **Implement the logging** in PlanetActionEngine and PlanetEnergyEngine (matches the
-   apparent design intent)
-2. **Remove the enum values** if shield events are not needed by the UI event log
+**Files modified:**
+- `game/strategy/engine/planet_action_engine.py` -- added `event_bus` parameter, logging in activation/deactivation
+- `game/strategy/engine/planet_energy_engine.py` -- added `event_bus` parameter, logging in auto-deactivation
+- `game/strategy/engine/turn_engine.py` -- wired `event_bus` to both engines in lazy init
 
-**Recommendation:** Implement the logging -- the enum values, category mapping, and event
-infrastructure are all in place. The PlanetActionEngine already has the exact activation/
-deactivation hooks where events should be appended.
+**Tests added (TDD):**
+- `tests/unit/strategy/engine/test_planet_action_engine.py::TestPlanetActionEngineEvents` (4 tests)
+- `tests/unit/strategy/engine/test_planet_energy_engine.py::TestPlanetEnergyEngineEvents` (3 tests)
+
+**Full suite result:** 14731 passed, 0 failed.
 
 ### 3.2 Services Package Sparse Exports
 
@@ -280,12 +278,12 @@ is purely at the type annotation level.
 | 2.3 | Code Fix | facade/__init__.py | Added __all__ with StrategySessionFacade |
 | 2.4 | Code Fix | design_validator.py | Added 6 missing type hints + TYPE_CHECKING import |
 | 2.5 | Code Fix | fleet.py | Added `-> None` to `add_ship()` |
+| 3.1 | Resolved | planet_action_engine.py, planet_energy_engine.py, turn_engine.py | Implemented shield event logging (TDD, +7 tests) |
 
 ### Items Verified - No Action Taken
 
 | # | Category | Reason |
 |---|----------|--------|
-| 3.1 | Ambiguity | Shield events: user decision needed (implement logging vs remove enums) |
 | 3.2 | Ambiguity | Services exports: circular import risk, current pattern works |
 | 4.1 | Suboptimal | BuildQueueSourceDTO: shallow copy sufficient, fix would break consumers |
 | 4.2 | Suboptimal | Event type hints: cosmetic, serialization is correct |

@@ -14,6 +14,7 @@ from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
 )
+from game.strategy.events.event_types import EventType, EventCategory
 
 
 def _make_facility(instance_id, design_data, is_operational=True):
@@ -245,3 +246,108 @@ class TestPlanetActionEngine:
             if isinstance(v, dict) and v.get('phase') == 'activating'
         )
         assert activating_count == 2
+
+
+class TestPlanetActionEngineEvents:
+    """Tests for shield event logging in PlanetActionEngine."""
+
+    def _make_event_bus(self):
+        """Create a mock EventBus that records log_event calls."""
+        bus = MagicMock()
+        bus.logged = []
+
+        def log_event(event_type, **kwargs):
+            bus.logged.append((event_type, kwargs))
+
+        bus.log_event = log_event
+        return bus
+
+    def test_activate_logs_shield_activated_event(self):
+        """ACTIVATE_ABILITY logs SHIELD_ACTIVATED event via event_bus."""
+        event_bus = self._make_event_bus()
+        engine = PlanetActionEngine(event_bus=event_bus)
+        facility = _make_facility("fac-1", _shield_design())
+        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+                           target={"facility_instance_id": "fac-1",
+                                   "ability_name": "PlanetaryShield"})
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        engine.process_planet_actions_tick(1, [empire])
+
+        assert len(event_bus.logged) == 1
+        event_type, kwargs = event_bus.logged[0]
+        assert event_type == EventType.SHIELD_ACTIVATED
+        assert kwargs['category'] == EventCategory.PLANET_OPERATIONS
+        assert kwargs['empire_id'] == 1
+        assert 'PlanetaryShield' in kwargs['message']
+        assert kwargs['planet_name'] == 'TestPlanet'
+
+    def test_deactivate_from_active_logs_shield_deactivated_event(self):
+        """DEACTIVATE_ABILITY from ACTIVE logs SHIELD_DEACTIVATED event."""
+        event_bus = self._make_event_bus()
+        engine = PlanetActionEngine(event_bus=event_bus)
+        facility = _make_facility("fac-1", _shield_design())
+        facility.component_states["OUTER:0:geologic_stabilizer_sector"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=25.0,
+        ).to_dict()
+
+        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+                           target={"facility_instance_id": "fac-1",
+                                   "ability_name": "PlanetaryShield",
+                                   "component_key": "OUTER:0:geologic_stabilizer_sector"})
+        planet = _make_planet(facilities=[facility], orders=[order])
+        planet.active_abilities = {'PlanetaryShield': True}
+        empire = _make_empire(colonies=[planet])
+
+        engine.process_planet_actions_tick(1, [empire])
+
+        assert len(event_bus.logged) == 1
+        event_type, kwargs = event_bus.logged[0]
+        assert event_type == EventType.SHIELD_DEACTIVATED
+        assert kwargs['category'] == EventCategory.PLANET_OPERATIONS
+        assert kwargs['empire_id'] == 1
+        assert 'PlanetaryShield' in kwargs['message']
+
+    def test_deactivate_from_activating_logs_shield_deactivated_event(self):
+        """DEACTIVATE_ABILITY canceling activation also logs SHIELD_DEACTIVATED."""
+        event_bus = self._make_event_bus()
+        engine = PlanetActionEngine(event_bus=event_bus)
+        facility = _make_facility("fac-1", _shield_design())
+        facility.component_states["OUTER:0:geologic_stabilizer_sector"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVATING,
+            progress_ticks=50,
+            required_ticks=250,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=25.0,
+        ).to_dict()
+
+        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+                           target={"facility_instance_id": "fac-1",
+                                   "ability_name": "PlanetaryShield",
+                                   "component_key": "OUTER:0:geologic_stabilizer_sector"})
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        engine.process_planet_actions_tick(1, [empire])
+
+        assert len(event_bus.logged) == 1
+        event_type, kwargs = event_bus.logged[0]
+        assert event_type == EventType.SHIELD_DEACTIVATED
+        assert kwargs['category'] == EventCategory.PLANET_OPERATIONS
+
+    def test_no_event_without_event_bus(self):
+        """No crash when event_bus is not provided."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", _shield_design())
+        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+                           target={"facility_instance_id": "fac-1",
+                                   "ability_name": "PlanetaryShield"})
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        # Should not raise
+        results = engine.process_planet_actions_tick(1, [empire])
+        assert len(results) == 1
