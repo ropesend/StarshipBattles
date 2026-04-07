@@ -23,11 +23,15 @@ class ComponentUpdate(BaseModel):
     component_id: str
     sprite_index: int
 
-class TagUpdate(BaseModel):
-    sprite_index: int
-    tags: List[str]
+class TagBulkUpdate(BaseModel):
+    sprite_indices: List[int]
+    tag: str
+    action: str  # "add" or "remove"
 
 class NewTag(BaseModel):
+    tag: str
+
+class TagDelete(BaseModel):
     tag: str
 
 def load_json(path):
@@ -77,14 +81,47 @@ async def update_component_image(update: ComponentUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/image/tags")
-async def update_image_tags(update: TagUpdate):
+@app.post("/api/image/bulk-tags")
+async def update_image_tags_bulk(update: TagBulkUpdate):
     try:
         data = load_json(METADATA_JSON)
-        idx_str = str(update.sprite_index)
-        data["assignments"][idx_str] = update.tags
+        for idx in update.sprite_indices:
+            idx_str = str(idx)
+            if idx_str not in data["assignments"]:
+                data["assignments"][idx_str] = []
+            
+            tags = data["assignments"][idx_str]
+            if update.action == "add":
+                if update.tag not in tags:
+                    tags.append(update.tag)
+            elif update.action == "remove":
+                if update.tag in tags:
+                    tags.remove(update.tag)
+        
         save_json(METADATA_JSON, data)
         return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/tags/delete")
+async def delete_tag(update: TagDelete):
+    try:
+        data = load_json(METADATA_JSON)
+        tag = update.tag.lower().strip()
+        
+        # Remove from global tags
+        if tag in data["tags"]:
+            data["tags"].remove(tag)
+        
+        # Remove from all assignments
+        count = 0
+        for idx_str in data["assignments"]:
+            if tag in data["assignments"][idx_str]:
+                data["assignments"][idx_str].remove(tag)
+                count += 1
+        
+        save_json(METADATA_JSON, data)
+        return {"status": "success", "count": count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

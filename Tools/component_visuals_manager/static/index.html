@@ -77,6 +77,17 @@
         </div>
     </div>
 
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>Confirm Tag Deletion</h3>
+            <p id="deleteTagWarning"></p>
+            <div class="modal-buttons">
+                <button onclick="closeDeleteModal()" class="btn-secondary">Cancel</button>
+                <button onclick="performDeleteTag(state.tagToDelete)" class="btn-primary" style="background: var(--accent-red)">Delete Permanently</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/app.js"></script>
 </body>
 </html>

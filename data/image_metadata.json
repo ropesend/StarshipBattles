@@ -14,7 +14,13 @@
         "colony",
         "medical",
         "organic",
-        "crystaline"
+        "crystaline",
+        "stellar manipulation",
+        "sensors",
+        "resource",
+        "shields",
+        "cargo",
+        "mines"
     ],
     "assignments": {
         "1": [
@@ -25,6 +31,671 @@
         ],
         "3": [
             "colony"
+        ],
+        "21": [
+            "engines"
+        ],
+        "4": [
+            "colony",
+            "crewsupport",
+            "engines",
+            "stellar manipulation",
+            "sensors",
+            "fighter",
+            "cargo",
+            "mines",
+            "combat"
+        ],
+        "5": [
+            "crewsupport"
+        ],
+        "6": [
+            "crewsupport"
+        ],
+        "7": [],
+        "8": [],
+        "11": [
+            "engines"
+        ],
+        "12": [
+            "engines"
+        ],
+        "13": [
+            "engines"
+        ],
+        "14": [
+            "engines"
+        ],
+        "59": [
+            "engines",
+            "stellar manipulation"
+        ],
+        "60": [
+            "engines",
+            "stellar manipulation"
+        ],
+        "61": [
+            "engines",
+            "stellar manipulation"
+        ],
+        "62": [
+            "engines",
+            "stellar manipulation"
+        ],
+        "15": [
+            "armor",
+            "combat"
+        ],
+        "16": [
+            "armor",
+            "combat"
+        ],
+        "42": [
+            "armor",
+            "combat"
+        ],
+        "43": [
+            "armor",
+            "combat"
+        ],
+        "63": [
+            "armor",
+            "combat"
+        ],
+        "64": [
+            "armor",
+            "combat"
+        ],
+        "50": [
+            "armor",
+            "combat"
+        ],
+        "51": [
+            "armor",
+            "combat"
+        ],
+        "86": [
+            "weapons",
+            "combat"
+        ],
+        "87": [
+            "weapons",
+            "combat"
+        ],
+        "88": [
+            "weapons",
+            "combat"
+        ],
+        "89": [
+            "weapons",
+            "combat"
+        ],
+        "90": [
+            "weapons",
+            "combat"
+        ],
+        "91": [
+            "weapons",
+            "combat"
+        ],
+        "92": [
+            "weapons",
+            "combat"
+        ],
+        "93": [
+            "weapons",
+            "combat"
+        ],
+        "94": [
+            "weapons",
+            "combat"
+        ],
+        "95": [
+            "weapons",
+            "combat"
+        ],
+        "96": [
+            "weapons",
+            "combat"
+        ],
+        "97": [
+            "weapons",
+            "combat"
+        ],
+        "98": [
+            "weapons",
+            "combat"
+        ],
+        "99": [
+            "weapons",
+            "combat"
+        ],
+        "100": [
+            "weapons",
+            "combat"
+        ],
+        "101": [
+            "weapons",
+            "combat"
+        ],
+        "102": [
+            "weapons",
+            "combat"
+        ],
+        "103": [
+            "weapons",
+            "combat"
+        ],
+        "104": [
+            "weapons",
+            "combat"
+        ],
+        "107": [
+            "weapons",
+            "combat"
+        ],
+        "108": [
+            "weapons",
+            "combat"
+        ],
+        "109": [
+            "weapons",
+            "combat"
+        ],
+        "110": [
+            "weapons",
+            "combat"
+        ],
+        "114": [
+            "weapons",
+            "combat"
+        ],
+        "115": [
+            "weapons",
+            "combat"
+        ],
+        "116": [
+            "weapons",
+            "combat"
+        ],
+        "117": [
+            "weapons",
+            "combat"
+        ],
+        "118": [
+            "weapons",
+            "combat"
+        ],
+        "119": [
+            "weapons",
+            "combat"
+        ],
+        "120": [
+            "weapons",
+            "combat"
+        ],
+        "121": [
+            "weapons",
+            "combat"
+        ],
+        "122": [
+            "weapons",
+            "combat"
+        ],
+        "123": [
+            "weapons",
+            "combat"
+        ],
+        "124": [
+            "weapons",
+            "combat"
+        ],
+        "126": [
+            "weapons",
+            "combat"
+        ],
+        "131": [
+            "weapons",
+            "combat"
+        ],
+        "132": [
+            "weapons",
+            "combat"
+        ],
+        "133": [
+            "weapons",
+            "combat"
+        ],
+        "134": [
+            "weapons",
+            "combat"
+        ],
+        "135": [
+            "weapons",
+            "combat"
+        ],
+        "136": [
+            "weapons",
+            "combat"
+        ],
+        "137": [
+            "weapons",
+            "combat"
+        ],
+        "138": [
+            "weapons",
+            "combat"
+        ],
+        "139": [
+            "weapons",
+            "combat"
+        ],
+        "140": [
+            "weapons",
+            "combat"
+        ],
+        "141": [
+            "weapons",
+            "combat"
+        ],
+        "142": [
+            "weapons",
+            "combat"
+        ],
+        "143": [
+            "weapons",
+            "combat"
+        ],
+        "144": [
+            "weapons",
+            "combat"
+        ],
+        "146": [
+            "weapons",
+            "combat"
+        ],
+        "147": [
+            "weapons",
+            "combat"
+        ],
+        "148": [
+            "weapons",
+            "combat"
+        ],
+        "149": [
+            "weapons",
+            "combat"
+        ],
+        "150": [
+            "weapons",
+            "combat"
+        ],
+        "151": [
+            "weapons",
+            "combat"
+        ],
+        "152": [
+            "weapons",
+            "combat"
+        ],
+        "153": [
+            "weapons",
+            "combat"
+        ],
+        "154": [
+            "weapons",
+            "combat"
+        ],
+        "155": [
+            "weapons",
+            "combat"
+        ],
+        "214": [
+            "weapons",
+            "combat"
+        ],
+        "215": [
+            "weapons",
+            "combat"
+        ],
+        "217": [
+            "weapons",
+            "combat"
+        ],
+        "218": [
+            "weapons",
+            "combat"
+        ],
+        "219": [
+            "weapons",
+            "combat"
+        ],
+        "220": [
+            "weapons",
+            "combat"
+        ],
+        "221": [
+            "weapons",
+            "combat"
+        ],
+        "222": [
+            "weapons",
+            "combat"
+        ],
+        "223": [
+            "weapons",
+            "combat"
+        ],
+        "224": [
+            "weapons",
+            "combat"
+        ],
+        "225": [
+            "weapons",
+            "combat"
+        ],
+        "226": [
+            "weapons",
+            "combat"
+        ],
+        "227": [
+            "weapons",
+            "combat"
+        ],
+        "228": [
+            "weapons",
+            "combat"
+        ],
+        "229": [
+            "weapons",
+            "combat"
+        ],
+        "230": [
+            "weapons",
+            "combat"
+        ],
+        "231": [
+            "weapons",
+            "combat"
+        ],
+        "233": [
+            "weapons",
+            "combat"
+        ],
+        "239": [
+            "weapons",
+            "combat"
+        ],
+        "240": [
+            "weapons",
+            "combat"
+        ],
+        "196": [
+            "weapons",
+            "combat"
+        ],
+        "197": [
+            "weapons",
+            "combat"
+        ],
+        "201": [
+            "weapons",
+            "combat"
+        ],
+        "202": [
+            "weapons",
+            "combat"
+        ],
+        "203": [
+            "weapons",
+            "combat"
+        ],
+        "204": [
+            "weapons",
+            "combat"
+        ],
+        "205": [
+            "weapons",
+            "combat"
+        ],
+        "206": [
+            "weapons",
+            "combat"
+        ],
+        "207": [
+            "weapons",
+            "combat"
+        ],
+        "208": [
+            "weapons",
+            "combat"
+        ],
+        "209": [
+            "weapons",
+            "combat"
+        ],
+        "210": [
+            "weapons",
+            "combat"
+        ],
+        "211": [
+            "weapons",
+            "combat"
+        ],
+        "212": [
+            "weapons",
+            "combat"
+        ],
+        "213": [
+            "weapons",
+            "combat"
+        ],
+        "168": [
+            "weapons",
+            "combat"
+        ],
+        "165": [
+            "weapons",
+            "combat"
+        ],
+        "164": [
+            "weapons",
+            "combat"
+        ],
+        "187": [
+            "weapons",
+            "combat"
+        ],
+        "186": [
+            "weapons",
+            "combat"
+        ],
+        "184": [
+            "weapons",
+            "combat"
+        ],
+        "179": [
+            "weapons",
+            "combat"
+        ],
+        "49": [
+            "engines",
+            "stellar manipulation"
+        ],
+        "70": [
+            "stellar manipulation"
+        ],
+        "71": [
+            "stellar manipulation"
+        ],
+        "72": [
+            "stellar manipulation"
+        ],
+        "73": [
+            "stellar manipulation"
+        ],
+        "74": [
+            "stellar manipulation"
+        ],
+        "75": [
+            "stellar manipulation"
+        ],
+        "76": [
+            "stellar manipulation"
+        ],
+        "77": [
+            "stellar manipulation"
+        ],
+        "78": [
+            "stellar manipulation"
+        ],
+        "79": [
+            "stellar manipulation"
+        ],
+        "80": [
+            "stellar manipulation"
+        ],
+        "81": [
+            "stellar manipulation"
+        ],
+        "83": [
+            "stellar manipulation"
+        ],
+        "25": [
+            "sensors",
+            "weapons",
+            "combat"
+        ],
+        "26": [
+            "sensors",
+            "weapons",
+            "combat"
+        ],
+        "27": [
+            "sensors",
+            "weapons",
+            "combat"
+        ],
+        "28": [
+            "sensors",
+            "weapons",
+            "combat"
+        ],
+        "29": [
+            "sensors",
+            "weapons",
+            "combat"
+        ],
+        "166": [
+            "weapons",
+            "combat"
+        ],
+        "167": [
+            "weapons",
+            "combat"
+        ],
+        "169": [
+            "weapons",
+            "combat"
+        ],
+        "162": [
+            "weapons",
+            "combat"
+        ],
+        "163": [
+            "weapons",
+            "combat"
+        ],
+        "84": [
+            "stellar manipulation"
+        ],
+        "85": [
+            "stellar manipulation"
+        ],
+        "54": [
+            "fighter"
+        ],
+        "55": [
+            "fighter"
+        ],
+        "56": [
+            "fighter"
+        ],
+        "68": [
+            "sensors"
+        ],
+        "19": [],
+        "20": [
+            "resource"
+        ],
+        "24": [
+            "resource"
+        ],
+        "34": [
+            "resource"
+        ],
+        "33": [
+            "resource"
+        ],
+        "48": [
+            "resource"
+        ],
+        "175": [
+            "resource"
+        ],
+        "198": [
+            "resource"
+        ],
+        "199": [
+            "resource"
+        ],
+        "17": [
+            "shields",
+            "combat"
+        ],
+        "18": [
+            "shields",
+            "combat"
+        ],
+        "65": [
+            "shields",
+            "combat"
+        ],
+        "82": [
+            "resource"
+        ],
+        "9": [
+            "cargo"
+        ],
+        "23": [
+            "cargo"
+        ],
+        "38": [
+            "cargo"
+        ],
+        "180": [
+            "cargo"
+        ],
+        "67": [
+            "engines"
+        ],
+        "31": [
+            "mines"
+        ],
+        "32": [
+            "crewsupport"
+        ],
+        "111": [
+            "crewsupport"
+        ],
+        "112": [
+            "crewsupport"
+        ],
+        "181": [
+            "resource"
+        ],
+        "185": [
+            "resource"
         ]
     }
 }
