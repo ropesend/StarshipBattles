@@ -11,6 +11,7 @@ Also tests round-trip serialization (Order.to_dict -> OrderSerializer.deserializ
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import PersistenceException
 from game.core.hex_math import HexCoord
 from game.strategy.data.order_types import OrderType, Order
 from game.strategy.data.order_serializer import OrderSerializer
@@ -45,23 +46,22 @@ class TestDeserializeOrdersBasic:
         assert result[1].type == OrderType.WARP
         assert result[2].type == OrderType.BUILD
 
-    def test_corrupt_order_skipped_with_warning(self, caplog):
-        """A corrupt entry (missing 'type' key) is skipped, valid ones kept."""
+    def test_corrupt_order_raises_persistence_exception(self):
+        """PROJ-251: A corrupt entry (missing 'type' key) raises PersistenceException."""
         data = [
             {'type': 'MOVE', 'target': {'q': 1, 'r': 0}},
             {'INVALID_KEY': 'garbage'},  # corrupt
             {'type': 'BUILD', 'target': None},
         ]
-        result = OrderSerializer.deserialize_orders(data, fleet_id="f99")
-        assert len(result) == 2
-        assert result[0].type == OrderType.MOVE
-        assert result[1].type == OrderType.BUILD
+        with pytest.raises(PersistenceException) as exc_info:
+            OrderSerializer.deserialize_orders(data, fleet_id="f99")
+        assert exc_info.value.context.get('order_index') == 1
 
-    def test_unknown_order_type_skipped(self):
-        """An order with an unrecognized type string is skipped."""
+    def test_unknown_order_type_raises_persistence_exception(self):
+        """PROJ-251: An order with an unrecognized type string raises PersistenceException."""
         data = [{'type': 'NONEXISTENT_TYPE', 'target': None}]
-        result = OrderSerializer.deserialize_orders(data, fleet_id="f1")
-        assert len(result) == 0
+        with pytest.raises(PersistenceException):
+            OrderSerializer.deserialize_orders(data, fleet_id="f1")
 
 
 # ---------------------------------------------------------------------------

@@ -20,6 +20,8 @@ from game.core.exceptions import (
     SimulationException,
     ComponentException,
     FormulaException,
+    StrategyException,
+    EnginePhaseError,
 )
 
 
@@ -213,6 +215,76 @@ class TestSimulationExceptions:
             raise FormulaException("Formula error")
 
 
+class TestStrategyExceptions:
+    """Tests for strategy-layer exceptions (PROJ-251)."""
+
+    def test_strategy_exception_inherits_from_game_exception(self):
+        """StrategyException is a GameException."""
+        assert issubclass(StrategyException, GameException)
+
+    def test_strategy_exception_instantiation(self):
+        """StrategyException can be created with code and context."""
+        exc = StrategyException(
+            "Turn processing failed",
+            code="T001",
+            context={"turn": 5}
+        )
+        assert str(exc) == "Turn processing failed"
+        assert exc.code == "T001"
+        assert exc.context["turn"] == 5
+
+    def test_strategy_exception_not_simulation_exception(self):
+        """StrategyException is NOT a SimulationException (separate domains)."""
+        assert not issubclass(StrategyException, SimulationException)
+
+    def test_engine_phase_error_inherits_from_strategy_exception(self):
+        """EnginePhaseError is a StrategyException."""
+        assert issubclass(EnginePhaseError, StrategyException)
+        assert issubclass(EnginePhaseError, GameException)
+
+    def test_engine_phase_error_instantiation(self):
+        """EnginePhaseError can store phase failure details."""
+        exc = EnginePhaseError(
+            "Phase 'harvesting' failed",
+            code="T001",
+            context={
+                "phase_name": "harvesting",
+                "tick": 37,
+                "turn": 5,
+                "original_error": "KeyError: 'deposits'",
+            }
+        )
+        assert str(exc) == "Phase 'harvesting' failed"
+        assert exc.code == "T001"
+        assert exc.context["phase_name"] == "harvesting"
+        assert exc.context["tick"] == 37
+        assert exc.context["turn"] == 5
+
+    def test_engine_phase_error_not_caught_by_simulation_exception(self):
+        """EnginePhaseError is NOT caught by except SimulationException."""
+        with pytest.raises(EnginePhaseError):
+            raise EnginePhaseError("Phase failed")
+        # Verify it does NOT match SimulationException
+        caught = False
+        try:
+            raise EnginePhaseError("Phase failed")
+        except SimulationException:
+            caught = True
+        except EnginePhaseError:
+            pass
+        assert not caught, "EnginePhaseError should not be caught by SimulationException"
+
+    def test_catching_strategy_exception_catches_engine_phase_error(self):
+        """Catching StrategyException catches EnginePhaseError."""
+        with pytest.raises(StrategyException):
+            raise EnginePhaseError("Phase failed")
+
+    def test_catching_game_exception_catches_engine_phase_error(self):
+        """Catching GameException catches EnginePhaseError."""
+        with pytest.raises(GameException):
+            raise EnginePhaseError("Phase failed")
+
+
 class TestExceptionChaining:
     """Tests for exception chaining with raise from."""
 
@@ -260,6 +332,8 @@ class TestExceptionAll:
             SimulationException,
             ComponentException,
             FormulaException,
+            StrategyException,
+            EnginePhaseError,
         ]
         for exc_class in exceptions:
             assert issubclass(exc_class, Exception)

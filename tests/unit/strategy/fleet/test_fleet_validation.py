@@ -75,8 +75,8 @@ class TestFleetValidation:
         assert len(fleet.orders) == 1
         assert fleet.orders[0].type == OrderType.MOVE
 
-    def test_bad_ship_skipped_fleet_loads(self):
-        """Corrupt ship in list is skipped, fleet loads with remaining ships."""
+    def test_bad_ship_raises_persistence_exception(self):
+        """PROJ-251: Corrupt ship in list raises PersistenceException (strict deserialization)."""
         data = make_valid_fleet_data()
         data['ships'] = [
             make_valid_ship_data('ship-001'),
@@ -84,37 +84,31 @@ class TestFleetValidation:
             make_valid_ship_data('ship-002'),
         ]
 
-        fleet = Fleet.from_dict(data)
-        # Bad ship skipped, 2 good ships loaded
-        assert len(fleet.ships) == 2
-        assert fleet.ships[0].instance_id == 'ship-001'
-        assert fleet.ships[1].instance_id == 'ship-002'
+        with pytest.raises(PersistenceException) as exc_info:
+            Fleet.from_dict(data)
+        assert 'ship' in str(exc_info.value).lower() or exc_info.value.context.get('ship_index') == 1
 
-    def test_bad_order_skipped_fleet_loads(self):
-        """Corrupt order in list is skipped, fleet loads with remaining orders."""
+    def test_bad_order_raises_persistence_exception(self):
+        """PROJ-251: Corrupt order in list raises PersistenceException (strict deserialization)."""
         data = make_valid_fleet_data()
         data['orders'] = [
             {'type': 'MOVE', 'target': {'q': 1, 'r': 2}},
-            {'type': 'INVALID_ORDER_TYPE'},  # Invalid order type
+            {'INVALID_KEY': 'garbage'},  # Missing 'type' key
             {'type': 'COLONIZE', 'target': None},
         ]
 
-        fleet = Fleet.from_dict(data)
-        # Bad order skipped, 2 good orders loaded
-        assert len(fleet.orders) == 2
-        assert fleet.orders[0].type == OrderType.MOVE
-        assert fleet.orders[1].type == OrderType.COLONIZE
+        with pytest.raises(PersistenceException):
+            Fleet.from_dict(data)
 
-    def test_invalid_order_type_skipped(self):
-        """Invalid OrderType enum value causes order to be skipped."""
+    def test_invalid_order_type_raises_persistence_exception(self):
+        """PROJ-251: Invalid OrderType enum value raises PersistenceException."""
         data = make_valid_fleet_data()
         data['orders'] = [
             {'type': 'TOTALLY_FAKE_ORDER_TYPE'},
         ]
 
-        fleet = Fleet.from_dict(data)
-        # Invalid order skipped
-        assert len(fleet.orders) == 0
+        with pytest.raises(PersistenceException):
+            Fleet.from_dict(data)
 
     def test_all_order_types_valid(self):
         """All valid OrderType enum values work."""

@@ -122,9 +122,9 @@ class StarSystem:
         require_keys(data, ['name', 'global_location'], 'StarSystem')
         parent_name = f"StarSystem '{data['name']}'"
 
-        # Deserialize stars with error isolation
+        # PROJ-251: strict=True — corrupt entries fail the load
         stars = deserialize_list(
-            data.get('stars', []), Star.from_dict, 'star', parent_name
+            data.get('stars', []), Star.from_dict, 'star', parent_name, strict=True
         )
 
         system = cls(
@@ -134,19 +134,17 @@ class StarSystem:
             region_id=data.get('region_id')
         )
 
-        # Deserialize warp points with error isolation
         system.warp_points = deserialize_list(
-            data.get('warp_points', []), WarpPoint.from_dict, 'warp point', parent_name
+            data.get('warp_points', []), WarpPoint.from_dict, 'warp point', parent_name, strict=True
         )
 
-        # Deserialize planets with error isolation
         system.planets = deserialize_list(
-            data.get('planets', []), Planet.from_dict, 'planet', parent_name
+            data.get('planets', []), Planet.from_dict, 'planet', parent_name, strict=True
         )
 
-        # Deserialize storms with error isolation (PROJ-189)
+        # PROJ-189: Storm deserialization
         system.storms = deserialize_list(
-            data.get('storms', []), Storm.from_dict, 'storm', parent_name
+            data.get('storms', []), Storm.from_dict, 'storm', parent_name, strict=True
         )
 
         return system
@@ -635,8 +633,12 @@ class Galaxy:
                 coord = hex_from_dict(sys_entry['coord'])
                 system = StarSystem.from_dict(sys_entry['system'])
             except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                logger.warning(f"Galaxy: skipping invalid system at index {i}: {e}")
-                continue
+                # PROJ-251: Strict deserialization — corrupt systems fail the load
+                raise PersistenceException(
+                    f"Corrupt system data at index {i} in galaxy",
+                    code=ErrorCode.CORRUPT_DATA.value,
+                    context={"system_index": i, "original_error": str(e)}
+                ) from e
 
             # Add to galaxy maps
             galaxy.systems[coord] = system

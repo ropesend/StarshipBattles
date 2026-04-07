@@ -445,6 +445,52 @@ class TestDeserializeList:
         assert result == []
 
 
+class TestDeserializeListStrict:
+    """PROJ-251: Tests for strict mode in deserialize_list."""
+
+    def test_strict_raises_on_first_invalid_item(self):
+        """strict=True raises PersistenceException on first bad item."""
+        from game.core.exceptions import PersistenceException
+        from game.core.json_utils import deserialize_list
+
+        items = [{"value": 1}, {"bad": "item"}, {"value": 3}]
+        def deserializer(x):
+            return x["value"]
+
+        with pytest.raises(PersistenceException) as exc_info:
+            deserialize_list(items, deserializer, "TestEntity", "Test", strict=True)
+        assert exc_info.value.context.get("index") == 1
+
+    def test_strict_all_valid_succeeds(self):
+        """strict=True with all valid items works normally."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"value": 1}, {"value": 2}]
+        result = deserialize_list(items, lambda x: x["value"], "TestEntity", "Test", strict=True)
+        assert result == [1, 2]
+
+    def test_strict_preserves_exception_chain(self):
+        """strict=True preserves original exception as __cause__."""
+        from game.core.exceptions import PersistenceException
+        from game.core.json_utils import deserialize_list
+
+        items = [{"bad": "data"}]
+        def deserializer(x):
+            return x["value"]
+
+        with pytest.raises(PersistenceException) as exc_info:
+            deserialize_list(items, deserializer, "TestEntity", "Parent", strict=True)
+        assert exc_info.value.__cause__ is not None
+
+    def test_default_is_not_strict(self):
+        """Default behavior (no strict arg) still skips invalid items."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"value": 1}, {"bad": "item"}, {"value": 3}]
+        result = deserialize_list(items, lambda x: x["value"], "TestEntity", "Test")
+        assert result == [1, 3]
+
+
 # =============================================================================
 # Test: @register_serializable decorator - PROJ-223
 # =============================================================================

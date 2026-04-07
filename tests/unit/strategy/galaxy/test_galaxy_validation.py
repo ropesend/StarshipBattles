@@ -62,8 +62,8 @@ class TestGalaxyFromDictValidation:
         assert 'Galaxy' in str(exc_info.value)
         assert 'positive' in str(exc_info.value)
 
-    def test_system_missing_coord_skipped(self, caplog):
-        """System entry missing 'coord' should be skipped with warning."""
+    def test_system_missing_coord_raises(self):
+        """PROJ-251: System entry missing 'coord' raises PersistenceException."""
         data = {
             'radius': 100,
             'systems': [
@@ -72,15 +72,11 @@ class TestGalaxyFromDictValidation:
             ]
         }
 
-        import logging
-        with caplog.at_level(logging.WARNING):
-            galaxy = Galaxy.from_dict(data)
+        with pytest.raises(PersistenceException):
+            Galaxy.from_dict(data)
 
-        # System should be skipped
-        assert len(galaxy.systems) == 0
-
-    def test_system_missing_system_key_skipped(self, caplog):
-        """System entry missing 'system' should be skipped with warning."""
+    def test_system_missing_system_key_raises(self):
+        """PROJ-251: System entry missing 'system' raises PersistenceException."""
         data = {
             'radius': 100,
             'systems': [
@@ -89,15 +85,11 @@ class TestGalaxyFromDictValidation:
             ]
         }
 
-        import logging
-        with caplog.at_level(logging.WARNING):
-            galaxy = Galaxy.from_dict(data)
+        with pytest.raises(PersistenceException):
+            Galaxy.from_dict(data)
 
-        # System should be skipped
-        assert len(galaxy.systems) == 0
-
-    def test_bad_system_data_skipped_galaxy_loads(self, caplog):
-        """Bad system data should be skipped, galaxy still loads."""
+    def test_bad_system_data_raises(self):
+        """PROJ-251: Bad system data raises PersistenceException (strict deserialization)."""
         data = {
             'radius': 100,
             'systems': [
@@ -112,14 +104,8 @@ class TestGalaxyFromDictValidation:
             ]
         }
 
-        import logging
-        with caplog.at_level(logging.WARNING):
-            galaxy = Galaxy.from_dict(data)
-
-        # Should have 1 valid system
-        assert len(galaxy.systems) == 1
-        assert HexCoord(0, 0) in galaxy.systems
-        assert galaxy.systems[HexCoord(0, 0)].name == 'Valid'
+        with pytest.raises(PersistenceException):
+            Galaxy.from_dict(data)
 
     def test_empty_systems_loads_successfully(self):
         """Empty systems list should load successfully."""

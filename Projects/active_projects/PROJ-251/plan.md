@@ -45,10 +45,10 @@ This project replaces these broad catches with a formalized error boundary proto
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Current Phase:** Planning Complete
-**Next Action:** Phase 1 implementation
+**Current Phase:** Phase 2 Complete, starting Phase 3
+**Next Action:** Phase 3 — DesignLibrary Error Discrimination (add `DesignLoadResult` dataclass, update `load_design_data()` to distinguish failure modes)
 **Blockers:** None
-**Context for Next Agent:** The existing exception hierarchy in `game/core/exceptions.py` already has `SimulationException`, `PersistenceException`, `ValidationException`, etc. with error codes. Build on this — do not create a parallel hierarchy. The project has 12 dedicated error handling tests for the turn engine in `tests/unit/strategy/turn_engine/test_turn_error_handling.py` that currently verify the "continue on failure" behavior — these must be rewritten to verify the new "halt and rollback" behavior. Breaking saves is fine (pre-production).
+**Context for Next Agent:** Phases 1 and 2 complete. The entire serialization chain now fails loudly on corrupt data instead of silently skipping. Changed files: `fleet.py`, `empire.py`, `order_serializer.py`, `galaxy.py`, `planet.py`, `json_utils.py` (added `strict=True` param). 12 old "skip" tests rewritten to expect `PersistenceException`. Full suite: 14615/14616 passed (1 flaky test ordering issue, passes in isolation). Also fixed pre-existing syntax error in `strategy_session_facade.py`. Pre-existing import error in `test_build_order_command_handler.py` (unrelated). Phase 3 is independent of Phase 4-5 and can proceed now.
 
 ## Key Files Reference
 
@@ -112,13 +112,13 @@ Phase 1 (Exceptions)
 
 ### Phase 1: Exception Hierarchy & Error Codes [Simple]
 **Objective:** Extend the existing exception hierarchy with strategy-layer error types
-**Status:** Not Started
+**Status:** Complete
 **Estimated Size:** ~50 lines code, ~30 lines tests
 See `phase_1_checklist.md`
 
 ### Phase 2: Strict Deserialization [Medium]
 **Objective:** Remove all `except Exception` from the save/load chain; fail loudly on corrupt data
-**Status:** Not Started
+**Status:** Complete
 **Estimated Size:** ~80 lines changed, ~120 lines tests
 **Depends On:** Phase 1
 See `phase_2_checklist.md`

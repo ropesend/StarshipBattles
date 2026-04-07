@@ -48,22 +48,24 @@ This is a new category. Update the module docstring and any category documentati
 ## Checklist
 
 ### Tests First (TDD)
-- [ ] Write tests for `StrategyException` construction (message, code, context)
-- [ ] Write tests for `EnginePhaseError` construction with phase_name, tick, turn in context
-- [ ] Write tests for `EnginePhaseError` inherits from both `StrategyException` and `GameException`
-- [ ] Write tests for new error codes exist and have correct string values
-- [ ] Write test that `EnginePhaseError` can be caught as `StrategyException`
-- [ ] Write test that `EnginePhaseError` can be caught as `GameException`
-- [ ] Write test that `EnginePhaseError` is NOT caught by `except SimulationException`
-- [ ] Run tests — confirm they all fail
+- [x] Write tests for `StrategyException` construction (message, code, context)
+- [x] Write tests for `EnginePhaseError` construction with phase_name, tick, turn in context
+- [x] Write tests for `EnginePhaseError` inherits from both `StrategyException` and `GameException`
+- [x] Write tests for new error codes exist and have correct string values
+- [x] Write test that `EnginePhaseError` can be caught as `StrategyException`
+- [x] Write test that `EnginePhaseError` can be caught as `GameException`
+- [x] Write test that `EnginePhaseError` is NOT caught by `except SimulationException`
+- [x] Run tests — confirm they all fail
 
 ### Implementation
-- [ ] Add `StrategyException` to `game/core/exceptions.py`
-- [ ] Add `EnginePhaseError` to `game/core/exceptions.py`
-- [ ] Add both to `__all__` exports
-- [ ] Add `PHASE_FAILED`, `TURN_ROLLBACK`, `SNAPSHOT_FAILED` to `game/core/error_codes.py`
-- [ ] Run tests — confirm they all pass
+- [x] Add `StrategyException` to `game/core/exceptions.py`
+- [x] Add `EnginePhaseError` to `game/core/exceptions.py`
+- [x] Add both to `__all__` exports
+- [x] Add `PHASE_FAILED`, `TURN_ROLLBACK`, `SNAPSHOT_FAILED` to `game/core/error_codes.py`
+- [x] Run tests — confirm they all pass
 
 ### Verification
-- [ ] Run full test suite — no regressions
-- [ ] Verify no circular imports introduced
+- [x] Run full test suite — no regressions (14599 passed, 0 failed; 3 pre-existing failures in test_protocols.py from syntax error in strategy_session_facade.py — unrelated)
+- [x] Verify no circular imports introduced
+
+**Notes:** Tests added to existing files `tests/unit/core/test_exceptions.py` (9 new tests in `TestStrategyExceptions` class, 2 entries in `TestExceptionAll`) and `tests/unit/core/test_error_codes.py` (4 new tests). Implementation in `game/core/exceptions.py` (StrategyException, EnginePhaseError) and `game/core/error_codes.py` (T001-T003). Also updated module docstring hierarchy diagram in exceptions.py.

@@ -9,6 +9,8 @@ from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
 from game.core.hex_math import HexCoord
 from game.core.protocols import IPostBattleShip
+from game.core.exceptions import PersistenceException
+from game.core.error_codes import ErrorCode
 from game.core.validation_helpers import require_keys
 from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
@@ -386,13 +388,17 @@ class Fleet:
             component_registry=component_registry,
         )
 
-        # Restore ships (skip corrupt entries with warning)
+        # PROJ-251: Strict deserialization — corrupt ships fail the load
         for i, ship_data in enumerate(data.get('ships', [])):
             try:
                 ship = ShipInstance.from_dict(ship_data, registries=registries)
                 fleet.ships.append(ship)
-            except Exception as e:
-                logger.warning(f"Fleet {data['id']}: skipping corrupt ship[{i}]: {e}")
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                raise PersistenceException(
+                    f"Corrupt ship data at index {i} in fleet '{data.get('id', '?')}'",
+                    code=ErrorCode.CORRUPT_DATA.value,
+                    context={"fleet_id": data.get('id'), "ship_index": i, "original_error": str(e)}
+                ) from e
 
         # Restore path
         for p in data.get('path', []):

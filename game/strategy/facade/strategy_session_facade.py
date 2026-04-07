@@ -551,14 +551,14 @@ class StrategySessionFacade:
         return [FleetSummary.from_fleet(fleet) for fleet in empire.fleets]
 
     def get_empire_build_queues(self, empire_id: int) -> List[BuildQueueSourceDTO]:
-        \"\"\"Get all build queue sources for an empire.
+        """Get all build queue sources for an empire.
 
         Args:
             empire_id: The unique empire identifier
 
         Returns:
             List of BuildQueueSourceDTOs for the empire
-        \"\"\"
+        """
         from game.strategy.data.build_queue_source import collect_all_build_queues_for_empire
         empire = self._get_empire_by_id(empire_id)
         if empire is None:
@@ -567,7 +567,7 @@ class StrategySessionFacade:
         return [BuildQueueSourceDTO.from_domain(source) for source in sources]
 
     def get_hex_build_queues(self, empire_id: int, hex_coord: HexCoord) -> List[BuildQueueSourceDTO]:
-        \"\"\"Get all build queue sources at a hex for a specific empire.
+        """Get all build queue sources at a hex for a specific empire.
 
         Args:
             empire_id: The unique empire identifier
@@ -575,7 +575,7 @@ class StrategySessionFacade:
 
         Returns:
             List of BuildQueueSourceDTOs at that hex.
-        \"\"\"
+        """
         from game.strategy.data.build_queue_source import collect_build_queues_at_hex
         empire = self._get_empire_by_id(empire_id)
         if empire is None:

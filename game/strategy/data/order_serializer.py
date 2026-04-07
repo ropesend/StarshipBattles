@@ -9,6 +9,8 @@ Handles 7 distinct target formats for Order persistence.
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
+from game.core.exceptions import PersistenceException
+from game.core.error_codes import ErrorCode
 from game.core.hex_math import HexCoord
 from game.core.validation_helpers import validate_enum
 from game.strategy.data.order_types import OrderType, Order
@@ -47,15 +49,22 @@ class OrderSerializer:
             fleet_id: Fleet ID for logging purposes
 
         Returns:
-            List of Order objects. Corrupt entries are skipped with warning.
+            List of Order objects.
+
+        Raises:
+            PersistenceException: If any order entry is corrupt (PROJ-251: strict deserialization).
         """
         orders = []
         for i, order_data in enumerate(orders_data):
             try:
                 order = FleetOrderSerializer._deserialize_single_order(order_data, i)
                 orders.append(order)
-            except Exception as e:
-                logger.warning(f"Fleet {fleet_id}: skipping corrupt order[{i}]: {e}")
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                raise PersistenceException(
+                    f"Corrupt order data at index {i} in fleet '{fleet_id}'",
+                    code=ErrorCode.CORRUPT_DATA.value,
+                    context={"fleet_id": fleet_id, "order_index": i, "original_error": str(e)}
+                ) from e
         return orders
 
     @staticmethod

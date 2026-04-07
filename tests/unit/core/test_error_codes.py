@@ -74,6 +74,12 @@ class TestErrorCodeNamingConvention:
         for code in component_codes:
             assert code.value.startswith('C'), f"{code.name} should start with C"
 
+    def test_turn_processing_codes_start_with_t(self):
+        """Turn processing category codes start with 'T' (PROJ-251)."""
+        turn_codes = [c for c in ErrorCode if c.name in ('PHASE_FAILED', 'TURN_ROLLBACK', 'SNAPSHOT_FAILED')]
+        for code in turn_codes:
+            assert code.value.startswith('T'), f"{code.name} should start with T"
+
 
 class TestErrorCodeCategories:
     """Tests for error code category organization."""
@@ -107,6 +113,11 @@ class TestErrorCodeCategories:
         """At least one component code exists."""
         c_codes = [c for c in ErrorCode if c.value.startswith('C')]
         assert len(c_codes) > 0, "No component codes found"
+
+    def test_has_turn_processing_codes(self):
+        """At least one turn processing code exists (PROJ-251)."""
+        t_codes = [c for c in ErrorCode if c.value.startswith('T')]
+        assert len(t_codes) > 0, "No turn processing codes found"
 
 
 class TestErrorCodeAccess:
@@ -152,4 +163,16 @@ class TestErrorCodeMinimumSet:
     def test_save_failed_exists(self):
         """SAVE_FAILED code exists."""
         assert ErrorCode.SAVE_FAILED.value == "P001"
+
+    def test_phase_failed_exists(self):
+        """PHASE_FAILED code exists (PROJ-251)."""
+        assert ErrorCode.PHASE_FAILED.value == "T001"
+
+    def test_turn_rollback_exists(self):
+        """TURN_ROLLBACK code exists (PROJ-251)."""
+        assert ErrorCode.TURN_ROLLBACK.value == "T002"
+
+    def test_snapshot_failed_exists(self):
+        """SNAPSHOT_FAILED code exists (PROJ-251)."""
+        assert ErrorCode.SNAPSHOT_FAILED.value == "T003"
 

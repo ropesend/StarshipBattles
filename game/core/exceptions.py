@@ -54,6 +54,8 @@ GameException (base)
     ResourceException      - Resource loading errors
         MissingResourceException - Resource not found
     PersistenceException   - Save/load failures
+    StrategyException      - Strategy-layer errors
+        EnginePhaseError       - Turn engine phase failures
     SimulationException    - Combat engine errors
         ComponentException     - Component operation errors
         FormulaException       - Formula evaluation errors
@@ -177,6 +179,34 @@ class PersistenceException(GameException):
 
 
 # =============================================================================
+# Strategy Exceptions
+# =============================================================================
+
+class StrategyException(GameException):
+    """Exception for strategy-layer errors.
+
+    Base class for errors that occur during turn processing,
+    fleet management, and empire operations in the strategy layer.
+    """
+    pass
+
+
+class EnginePhaseError(StrategyException):
+    """Exception for sub-engine phase failures during turn processing.
+
+    Raised when a sub-engine phase fails during tick processing.
+    Caught by TurnEngine.process_turn() to trigger snapshot rollback.
+
+    Context should include:
+        phase_name (str): Which phase failed (e.g., "harvesting", "production")
+        tick (int): Which tick (1-100) the failure occurred on
+        turn (int): Which turn number
+        original_error (str): String representation of the original exception
+    """
+    pass
+
+
+# =============================================================================
 # Simulation Exceptions
 # =============================================================================
 
@@ -224,6 +254,9 @@ __all__ = [
     'MissingResourceException',
     # Persistence
     'PersistenceException',
+    # Strategy
+    'StrategyException',
+    'EnginePhaseError',
     # Simulation
     'SimulationException',
     'ComponentException',

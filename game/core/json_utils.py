@@ -210,35 +210,40 @@ def deserialize_list(
     items: Optional[List[dict]],
     deserializer: Callable[[dict], T],
     entity_name: str,
-    parent_name: str
+    parent_name: str,
+    strict: bool = False
 ) -> List[T]:
     """
-    Deserialize a list of items with resilient error handling.
+    Deserialize a list of items with configurable error handling.
 
     PROJ-204 Phase 4: Consolidates 11+ identical error-handling loops (CQ-22).
-
-    Invalid items are skipped with a warning log, allowing resilient degradation
-    when loading saved game data. This ensures partial save files can still be
-    loaded rather than failing entirely.
+    PROJ-251: Added strict mode for strategy-layer data integrity.
 
     Args:
         items: List of dicts to deserialize (None treated as empty list)
         deserializer: Function that converts a dict to the target type
         entity_name: Name of entity type for logging (e.g., 'planet', 'star')
         parent_name: Name of parent object for logging context (e.g., "StarSystem 'Alpha'")
+        strict: If True, raise PersistenceException on first invalid item.
+            If False (default), skip invalid items with warning log.
 
     Returns:
-        List of successfully deserialized items (invalid items omitted)
+        List of successfully deserialized items (invalid items omitted in non-strict mode)
+
+    Raises:
+        PersistenceException: If strict=True and any item fails to deserialize.
 
     Example:
         planets = deserialize_list(
             data.get('planets', []),
             Planet.from_dict,
             entity_name='planet',
-            parent_name=f"StarSystem '{system.name}'"
+            parent_name=f"StarSystem '{system.name}'",
+            strict=True
         )
     """
     from game.core.exceptions import PersistenceException
+    from game.core.error_codes import ErrorCode
 
     if items is None:
         return []
@@ -248,6 +253,14 @@ def deserialize_list(
         try:
             result.append(deserializer(item))
         except (PersistenceException, KeyError, TypeError, ValueError) as e:
+            if strict:
+                raise PersistenceException(
+                    f"{parent_name}: corrupt {entity_name} at index {i} - "
+                    f"{type(e).__name__}: {e}",
+                    code=ErrorCode.CORRUPT_DATA.value,
+                    context={"parent": parent_name, "entity": entity_name, "index": i,
+                             "original_error": str(e)}
+                ) from e
             logger.warning(
                 f"{parent_name}: skipping invalid {entity_name} at index {i} - "
                 f"{type(e).__name__}: {e}"

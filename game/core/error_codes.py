@@ -15,6 +15,7 @@ Categories
 - P: Persistence (P001-P099)
 - F: Formula (F001-F099)
 - C: Component (C001-C099)
+- T: Turn Processing (T001-T099)
 
 Usage
 =====
@@ -147,6 +148,19 @@ class ErrorCode(Enum):
 
     INCOMPATIBLE_COMPONENT = "C005"
     """Component is not compatible with target."""
+
+    # =========================================================================
+    # Turn Processing Codes (T001-T099)
+    # =========================================================================
+
+    PHASE_FAILED = "T001"
+    """Sub-engine phase failed during turn processing."""
+
+    TURN_ROLLBACK = "T002"
+    """Turn was rolled back due to phase failure."""
+
+    SNAPSHOT_FAILED = "T003"
+    """Failed to create pre-turn state snapshot."""
 
 
 # =============================================================================

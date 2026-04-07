@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
+from game.core.exceptions import PersistenceException
+from game.core.error_codes import ErrorCode
 from game.core.validation_helpers import require_keys, safe_from_dict
 
 if TYPE_CHECKING:
@@ -313,7 +315,7 @@ class Empire:
         empire._fleet_resource_pool = data.get('resource_pool', {})
         empire.max_storage = data.get('max_storage', {})
 
-        # Restore fleets (skip corrupt entries with warning)
+        # PROJ-251: Strict deserialization — corrupt fleets fail the load
         # PROJ-211: Pass registries for DI
         empire.fleets = []
         for i, fleet_data in enumerate(data.get('fleets', [])):
@@ -321,8 +323,12 @@ class Empire:
                 fleet = Fleet.from_dict(fleet_data, registries=registries)
                 fleet.owner_id = empire.id
                 empire.fleets.append(fleet)
-            except Exception as e:
-                logger.warning(f"Empire {data['id']}: skipping corrupt fleet[{i}]: {e}")
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                raise PersistenceException(
+                    f"Corrupt fleet data at index {i} in empire '{data.get('id', '?')}'",
+                    code=ErrorCode.CORRUPT_DATA.value,
+                    context={"empire_id": data.get('id'), "fleet_index": i, "original_error": str(e)}
+                ) from e
 
         # Resolve colony references via galaxy
         if galaxy is not None:

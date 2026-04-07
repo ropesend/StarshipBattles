@@ -460,17 +460,16 @@ class Planet:
                 }
             ) from e
 
-        # Deserialize facilities with resilient error handling (skip bad, log warning)
+        # PROJ-251: strict=True — corrupt entries fail the load
         from game.core.json_utils import deserialize_list
         parent_name = f"Planet '{data['name']}'"
 
         facilities = deserialize_list(
-            data.get('facilities', []), PlanetaryFacility.from_dict, 'facility', parent_name
+            data.get('facilities', []), PlanetaryFacility.from_dict, 'facility', parent_name, strict=True
         )
 
-        # Deserialize populations with resilient error handling (skip bad, log warning)
         populations = deserialize_list(
-            data.get('populations', []), SpeciesPopulation.from_dict, 'population', parent_name
+            data.get('populations', []), SpeciesPopulation.from_dict, 'population', parent_name, strict=True
         )
 
         return cls(

@@ -57,9 +57,8 @@ class TestStarSystemFromDictValidation:
         assert 'StarSystem' in str(exc_info.value)
         assert 'global_location' in str(exc_info.value)
 
-    def test_bad_star_skipped_system_loads(self, caplog):
-        """One bad star in list should be skipped, system still loads."""
-        # Valid star followed by invalid star (missing required fields)
+    def test_bad_star_raises_persistence_exception(self):
+        """PROJ-251: Bad star in list raises PersistenceException (strict deserialization)."""
         data = {
             'name': 'Sol',
             'global_location': {'q': 10, 'r': -5},
@@ -75,7 +74,7 @@ class TestStarSystemFromDictValidation:
                         'blue': 0.2, 'green': 0.3, 'red': 0.25,
                         'infrared': 0.1, 'microwave': 0.05, 'radio': 0
                     },
-                    'star_type': 'MAIN_SEQUENCE',  # Valid StarType enum
+                    'star_type': 'MAIN_SEQUENCE',
                     'color': [255, 255, 0],
                     'age': 4.6,
                     'location': {'q': 0, 'r': 0}
@@ -86,16 +85,11 @@ class TestStarSystemFromDictValidation:
             'planets': []
         }
 
-        import logging
-        with caplog.at_level(logging.WARNING):
-            system = StarSystem.from_dict(data)
+        with pytest.raises(PersistenceException):
+            StarSystem.from_dict(data)
 
-        # Should have 1 valid star, bad one skipped
-        assert len(system.stars) == 1
-        assert system.stars[0].name == 'Sol'
-
-    def test_bad_planet_skipped_system_loads(self, caplog):
-        """One bad planet in list should be skipped, system still loads."""
+    def test_bad_planet_raises_persistence_exception(self):
+        """PROJ-251: Bad planet in list raises PersistenceException (strict deserialization)."""
         data = {
             'name': 'Sol',
             'global_location': {'q': 10, 'r': -5},
@@ -106,15 +100,11 @@ class TestStarSystemFromDictValidation:
             ]
         }
 
-        import logging
-        with caplog.at_level(logging.WARNING):
-            system = StarSystem.from_dict(data)
+        with pytest.raises(PersistenceException):
+            StarSystem.from_dict(data)
 
-        # Bad planet skipped
-        assert len(system.planets) == 0
-
-    def test_bad_warp_point_skipped_system_loads(self, caplog):
-        """One bad warp point in list should be skipped, system still loads."""
+    def test_bad_warp_point_raises_persistence_exception(self):
+        """PROJ-251: Bad warp point in list raises PersistenceException (strict deserialization)."""
         data = {
             'name': 'Sol',
             'global_location': {'q': 10, 'r': -5},
@@ -126,13 +116,8 @@ class TestStarSystemFromDictValidation:
             'planets': []
         }
 
-        import logging
-        with caplog.at_level(logging.WARNING):
-            system = StarSystem.from_dict(data)
-
-        # Should have 1 valid warp point, bad one skipped
-        assert len(system.warp_points) == 1
-        assert system.warp_points[0].destination_id == 'valid'
+        with pytest.raises(PersistenceException):
+            StarSystem.from_dict(data)
 
     def test_empty_children_lists_loads_successfully(self):
         """Empty children lists should load successfully."""

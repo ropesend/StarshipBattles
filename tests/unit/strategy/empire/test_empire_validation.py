@@ -87,8 +87,8 @@ class TestEmpireValidation:
         # Owner ID should be set to empire ID
         assert empire.fleets[0].owner_id == 'empire-001'
 
-    def test_bad_fleet_skipped_empire_loads(self):
-        """Corrupt fleet in list is skipped, empire loads with remaining fleets."""
+    def test_bad_fleet_raises_persistence_exception(self):
+        """PROJ-251: Corrupt fleet in list raises PersistenceException (strict deserialization)."""
         data = make_valid_empire_data()
         data['fleets'] = [
             make_valid_fleet_data('fleet-001'),
@@ -96,11 +96,9 @@ class TestEmpireValidation:
             make_valid_fleet_data('fleet-002'),
         ]
 
-        empire = Empire.from_dict(data)
-        # Bad fleet skipped, 2 good fleets loaded
-        assert len(empire.fleets) == 2
-        assert empire.fleets[0].id == 'fleet-001'
-        assert empire.fleets[1].id == 'fleet-002'
+        with pytest.raises(PersistenceException) as exc_info:
+            Empire.from_dict(data)
+        assert exc_info.value.context.get('fleet_index') == 1
 
     def test_race_config_loads_with_defaults(self):
         """Race config loads with .get() defaults (fully defensive)."""

@@ -115,43 +115,27 @@ class TestPlanetFromDictValidation:
         assert 'Planet' in str(exc_info.value)
         assert field in str(exc_info.value)
 
-    def test_bad_facility_skipped_with_warning(self, caplog):
-        """Bad facility in list should be skipped, planet loads."""
-        import logging
+    def test_bad_facility_raises_persistence_exception(self):
+        """PROJ-251: Bad facility in list raises PersistenceException (strict deserialization)."""
         data = _valid_planet_data()
-        # Add one valid and one invalid facility
         data['facilities'] = [
             _valid_facility_data(),
             {'broken': 'data'},  # Missing required fields
         ]
 
-        with caplog.at_level(logging.WARNING):
-            planet = Planet.from_dict(data)
+        with pytest.raises(PersistenceException):
+            Planet.from_dict(data)
 
-        # Planet should load with only the valid facility
-        assert len(planet.facilities) == 1
-        assert planet.facilities[0].instance_id == 'facility-001'
-        # Warning should be logged
-        assert any('facility' in record.message.lower() for record in caplog.records)
-
-    def test_bad_population_skipped_with_warning(self, caplog):
-        """Bad population in list should be skipped, planet loads."""
-        import logging
+    def test_bad_population_raises_persistence_exception(self):
+        """PROJ-251: Bad population in list raises PersistenceException (strict deserialization)."""
         data = _valid_planet_data()
-        # Add one valid and one invalid population
         data['populations'] = [
             _valid_population_data(),
             {'broken': 'data'},  # Missing required fields
         ]
 
-        with caplog.at_level(logging.WARNING):
-            planet = Planet.from_dict(data)
-
-        # Planet should load with only the valid population
-        assert len(planet.populations) == 1
-        assert planet.populations[0].race_id == 'humans'
-        # Warning should be logged
-        assert any('population' in record.message.lower() for record in caplog.records)
+        with pytest.raises(PersistenceException):
+            Planet.from_dict(data)
 
     def test_corrupt_location_raises_persistence_exception(self):
         """Corrupt location should raise PersistenceException."""
