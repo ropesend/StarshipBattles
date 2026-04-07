@@ -6,6 +6,7 @@ from game.strategy.data.planet import Planet, PlanetType
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.ui.screens.build_queue_screen import BuildQueueScreen
+from game.strategy.systems.design_library import DesignLoadResult
 
 class MockGalaxy:
     """Minimal mock Galaxy for BuildQueueScreen tests."""
@@ -112,7 +113,7 @@ def mock_design_library():
 
     mock_instance.scan_designs.return_value = [design]
     mock_instance.designs_folder = "test_designs"
-    mock_instance.load_design_data.return_value = None
+    mock_instance.load_design_data.return_value = DesignLoadResult.not_found("test")
 
     return mock_instance
 

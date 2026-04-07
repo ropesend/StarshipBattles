@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch, call
 
 from game.strategy.events import EventType, EventCategory
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +95,7 @@ class TestShipBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Scout Ship"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout Ship"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
@@ -131,7 +132,7 @@ class TestShipBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Cruiser"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Cruiser"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
@@ -180,7 +181,7 @@ class TestShipBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = None
+            mock_lib.load_design_data.return_value = DesignLoadResult.not_found("bad_design")
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.log_event', fake):
@@ -212,7 +213,7 @@ class TestFleetShipBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Fighter"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Fighter"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
@@ -271,7 +272,7 @@ class TestComplexBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Mining Complex"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Mining Complex"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.log_event', fake):
@@ -297,7 +298,7 @@ class TestComplexBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Shipyard"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Shipyard"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.log_event', fake):
@@ -354,7 +355,7 @@ class TestFleetComplexBuiltEvent:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Orbital Refinery"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Orbital Refinery"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.log_event', fake):
@@ -780,7 +781,7 @@ class TestProductionEventLocationEnrichment:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Scout"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
@@ -816,7 +817,7 @@ class TestProductionEventLocationEnrichment:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Scout"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
@@ -876,7 +877,7 @@ class TestProductionEventLocationEnrichment:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = {"name": "Fighter"}
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Fighter"})
             mock_lib_cls.return_value = mock_lib
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:

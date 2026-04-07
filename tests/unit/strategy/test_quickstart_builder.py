@@ -23,6 +23,7 @@ from game.strategy.quickstart_builder import (
 )
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.race_config import RaceConfig
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 class TestFixturePathFunctions:
@@ -263,7 +264,7 @@ class TestQuickstartBuilderSpawnComplexes:
             "game.strategy.quickstart_builder.DesignLibrary"
         ) as MockLibrary:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = mock_design_data
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
             MockLibrary.return_value = mock_lib
 
             result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
@@ -284,12 +285,12 @@ class TestQuickstartBuilderSpawnComplexes:
         session = MagicMock()
         session.empires = [empire]
 
-        # Mock DesignLibrary to return None (design not found)
+        # Mock DesignLibrary to return not_found (design not found)
         with patch(
             "game.strategy.quickstart_builder.DesignLibrary"
         ) as MockLibrary:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = None
+            mock_lib.load_design_data.return_value = DesignLoadResult.not_found("test")
             MockLibrary.return_value = mock_lib
 
             result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
@@ -317,7 +318,7 @@ class TestQuickstartBuilderSpawnComplexes:
             "game.strategy.quickstart_builder.DesignLibrary"
         ) as MockLibrary:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = mock_design_data
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
             MockLibrary.return_value = mock_lib
 
             QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
@@ -346,7 +347,7 @@ class TestQuickstartBuilderSpawnComplexes:
             "game.strategy.quickstart_builder.DesignLibrary"
         ) as MockLibrary:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = mock_design_data
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
             MockLibrary.return_value = mock_lib
 
             QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
@@ -380,7 +381,7 @@ class TestQuickstartBuilderSpawnComplexes:
             "game.strategy.quickstart_builder.DesignLibrary"
         ) as MockLibrary:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = mock_design_data
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
             MockLibrary.return_value = mock_lib
 
             result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
@@ -407,7 +408,7 @@ class TestQuickstartBuilderSpawnComplexes:
             "game.strategy.quickstart_builder.DesignLibrary"
         ) as MockLibrary:
             mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = mock_design_data
+            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
             MockLibrary.return_value = mock_lib
 
             QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)

@@ -104,7 +104,7 @@ class TestDesignLibraryErrorLogging:
         with caplog.at_level(logging.WARNING):
             result = library.load_design_data("Bad_Design")
 
-        assert result is None
+        assert not result.success
         # Should have logged a warning
         warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
         assert len(warning_logs) > 0, "Should log warning for corrupted design"
@@ -119,7 +119,8 @@ class TestDesignLibraryErrorLogging:
         with caplog.at_level(logging.WARNING):
             result = library.load_design_data("Nonexistent_Design")
 
-        assert result is None
+        assert not result.success
+        assert result.error_type == "not_found"
         # Should NOT log warning for simply missing files
         design_warnings = [r for r in caplog.records
                           if 'Nonexistent_Design' in r.message]
@@ -142,8 +143,8 @@ class TestDesignLibraryErrorLogging:
         with caplog.at_level(logging.WARNING):
             result = library.load_design_data("Good_Design")
 
-        assert result is not None
-        assert result["name"] == "Good Design"
+        assert result.success
+        assert result.data["name"] == "Good Design"
         # No warnings for successful load
         design_warnings = [r for r in caplog.records
                           if 'Good_Design' in r.message]

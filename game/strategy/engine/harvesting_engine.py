@@ -120,6 +120,21 @@ class HarvestingEngine(IHarvestingEngine):
         self._registries = registries
         self._galaxy = None
 
+    def _validate_tick_inputs(self, empires: List) -> None:
+        """PROJ-251: Validate preconditions before mutating state.
+
+        Raises:
+            ValidationException: If any empire has invalid colony references.
+        """
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for i, colony in enumerate(empire.colonies):
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony at index {i} is None",
+                        context={"empire_id": empire.id, "colony_index": i}
+                    )
+
     def process_harvesting_tick(self, tick: int, empires: List, galaxy=None) -> None:
         """
         Process resource harvesting for one tick (1/100th of turn).
@@ -135,6 +150,7 @@ class HarvestingEngine(IHarvestingEngine):
             empires: List of Empire objects to process
             galaxy: Optional Galaxy for scoped ability queries (harvest boosters)
         """
+        self._validate_tick_inputs(empires)
         self._galaxy = galaxy
         self.recalculate_storage(empires)
         for empire in empires:

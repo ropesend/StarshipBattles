@@ -867,14 +867,14 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
         try:
             empire_id = getattr(entity, 'owner_id', 0)
             library = DesignLibrary(session.save_path, empire_id)
-            design_data = library.load_design_data(design_id)
-            if design_data is None:
+            load_result = library.load_design_data(design_id)
+            if not load_result.success:
                 return True  # Can't validate, allow by default
 
             if session.registries:
                 from game.strategy.services.design_validator import DesignValidator
                 validator = DesignValidator(session.registries)
-                result = validator.validate(design_data)
+                result = validator.validate(load_result.data)
                 if not result.is_valid:
                     logger.warning(
                         f"Design '{design_id}' failed validation: {'; '.join(result.errors)}"
@@ -902,12 +902,12 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
         try:
             empire_id = getattr(entity, 'owner_id', 0)
             library = DesignLibrary(session.save_path, empire_id)
-            design_data = library.load_design_data(design_id)
-            if design_data is None:
-                logger.warning(f"Could not load design data for {design_id}")
+            load_result = library.load_design_data(design_id)
+            if not load_result.success:
+                logger.warning(f"Could not load design data for {design_id}: {load_result.error}")
                 return {}
             # PROJ-218: Pass registries for Ship-loading cost calculation
-            return DesignCostCalculator.calculate_total_cost(design_data, session.registries)
+            return DesignCostCalculator.calculate_total_cost(load_result.data, session.registries)
         except (OSError, ValueError, KeyError) as e:
             logger.warning(f"Failed to calculate design cost for {design_id}: {e}")
             return {}

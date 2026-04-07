@@ -45,10 +45,10 @@ This project replaces these broad catches with a formalized error boundary proto
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Current Phase:** Phase 2 Complete, starting Phase 3
-**Next Action:** Phase 3 — DesignLibrary Error Discrimination (add `DesignLoadResult` dataclass, update `load_design_data()` to distinguish failure modes)
+**Current Phase:** Phase 6 In Progress (3/14 engines done)
+**Next Action:** Phase 6 — Complete remaining 11 sub-engine validations
 **Blockers:** None
-**Context for Next Agent:** Phases 1 and 2 complete. The entire serialization chain now fails loudly on corrupt data instead of silently skipping. Changed files: `fleet.py`, `empire.py`, `order_serializer.py`, `galaxy.py`, `planet.py`, `json_utils.py` (added `strict=True` param). 12 old "skip" tests rewritten to expect `PersistenceException`. Full suite: 14615/14616 passed (1 flaky test ordering issue, passes in isolation). Also fixed pre-existing syntax error in `strategy_session_facade.py`. Pre-existing import error in `test_build_order_command_handler.py` (unrelated). Phase 3 is independent of Phase 4-5 and can proceed now.
+**Context for Next Agent:** Phases 1-5 complete, Phase 6 partial (3/14 engines), Phase 7 docs updated. The core error boundary is fully functional: `_time_phase()` wraps exceptions in `EnginePhaseError`, `process_turn()` captures snapshots and rolls back on failure, `GameSession.process_turn()` re-raises for UI. Serialization is strict (no silent drops). DesignLibrary uses `DesignLoadResult`. 3 engines have `_validate_tick_inputs()`: HarvestingEngine, FleetMovementEngine, ConflictResolutionEngine. Remaining 11 engines need the same pattern (see phase_6_checklist.md for the list). Full suite: 14640/14641 passed (1 flaky test-ordering issue). Pre-existing issues: syntax error in strategy_session_facade.py (fixed), import error in test_build_order_command_handler.py (not fixed, unrelated).
 
 ## Key Files Reference
 
@@ -125,34 +125,34 @@ See `phase_2_checklist.md`
 
 ### Phase 3: DesignLibrary Error Discrimination [Simple]
 **Objective:** Distinguish file-not-found, file-corrupt, and schema-invalid in DesignLibrary
-**Status:** Not Started
+**Status:** Complete
 **Estimated Size:** ~60 lines changed, ~80 lines tests
 **Depends On:** Phase 1
 See `phase_3_checklist.md`
 
 ### Phase 4: Turn State Snapshot & Rollback [Medium]
 **Objective:** Capture pre-turn state and restore it if the turn fails
-**Status:** Not Started
+**Status:** Complete
 **Estimated Size:** ~150 lines code, ~200 lines tests
 **Depends On:** Phase 2 (snapshot uses serialization, must be reliable)
 See `phase_4_checklist.md`
 
 ### Phase 5: Turn Engine Error Boundary [Medium]
 **Objective:** Replace `_time_phase()` broad catch with halt-and-rollback behavior
-**Status:** Not Started
+**Status:** Complete
 **Estimated Size:** ~100 lines changed, ~150 lines tests
 **Depends On:** Phase 4 (needs snapshot to rollback)
 See `phase_5_checklist.md`
 
 ### Phase 6: Sub-Engine Per-Tick Validation [Large]
 **Objective:** Add input validation to all 14 sub-engines before they mutate state
-**Status:** Not Started
+**Status:** In Progress (3/14 engines done: Harvesting, FleetMovement, ConflictResolution)
 **Estimated Size:** ~300 lines code, ~400 lines tests
 **Depends On:** Phase 5 (error boundary catches validation failures)
 See `phase_6_checklist.md`
 
 ### Phase 7: Documentation Update [Simple]
 **Objective:** Update error handling docs, architecture docs, and pattern docs
-**Status:** Not Started
+**Status:** In Progress (05_ERROR_HANDLING.md updated, 01_ARCHITECTURE.md and 02_PATTERNS.md pending)
 **Depends On:** All previous phases
 See `phase_7_checklist.md`

@@ -13,6 +13,7 @@ from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import BuildQueueSource
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 def _make_add_callback(entity_registry: dict, design_data_registry: dict = None):
@@ -113,7 +114,7 @@ class TestBuildQueueReproduction:
     @pytest.fixture
     def mock_design_library(self):
         lib = MagicMock()
-        lib.load_design_data.return_value = _TEST_DESIGN_DATA
+        lib.load_design_data.return_value = DesignLoadResult.ok(_TEST_DESIGN_DATA)
         return lib
 
     @pytest.fixture

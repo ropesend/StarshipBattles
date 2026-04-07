@@ -175,10 +175,10 @@ def test_design_save_load_complex(test_savegame_dir):
     assert "Space Shipyard Mk1" in design_names
 
     # Load specific design data
-    complex_data = library.load_design_data("mining_complex_mk1")
-    assert complex_data is not None
-    assert complex_data["name"] == "Mining Complex Mk1"
-    assert complex_data["vehicle_type"] == "Planetary Complex"
+    result = library.load_design_data("mining_complex_mk1")
+    assert result.success
+    assert result.data["name"] == "Mining Complex Mk1"
+    assert result.data["vehicle_type"] == "Planetary Complex"
 
 
 def test_complex_design_in_build_queue(empire_with_colony):

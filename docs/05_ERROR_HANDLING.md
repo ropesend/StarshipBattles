@@ -37,6 +37,9 @@ GameException (base - don't raise directly)
     |
     +-- PersistenceException
     |
+    +-- StrategyException
+    |       +-- EnginePhaseError
+    |
     +-- SimulationException
             +-- ComponentException
             +-- FormulaException
@@ -53,6 +56,8 @@ GameException (base - don't raise directly)
 | **ResourceException** | Resource-related errors (images, sounds, data files) |
 | **MissingResourceException** | Required resource cannot be found |
 | **PersistenceException** | Save/load failures, file I/O errors, data corruption |
+| **StrategyException** | Strategy-layer errors (turn processing, fleet management, empire operations) |
+| **EnginePhaseError** | Sub-engine phase failed during turn tick processing — triggers rollback |
 | **SimulationException** | Combat simulation engine errors (currently used as catch target and base class only -- not directly raised) |
 | **ComponentException** | Component operations failures, invalid configurations (currently used as catch target and base class only -- not directly raised) |
 | **FormulaException** | Formula parsing/evaluation errors |
@@ -113,6 +118,14 @@ Error codes are defined in `game/core/error_codes.py` using the `ErrorCode` enum
 | F002 | `FORMULA_UNDEFINED_VAR` | Undefined variable in formula |
 | F003 | `EVAL_ERROR` | Formula runtime evaluation error |
 | F004 | `FORMULA_GENERAL_ERROR` | General formula evaluation failure |
+
+### Turn Processing Codes (T001-T099)
+
+| Code | Name | Description |
+|------|------|-------------|
+| T001 | `PHASE_FAILED` | Sub-engine phase failed during turn processing |
+| T002 | `TURN_ROLLBACK` | Turn was rolled back due to phase failure |
+| T003 | `SNAPSHOT_FAILED` | Failed to create pre-turn state snapshot |
 
 ### Component Codes (C001-C099)
 
@@ -485,6 +498,36 @@ except Exception as e:
 ```
 
 This annotation signals to reviewers (and to automated audits) that the broad catch was deliberate, not accidental. Always include a brief reason explaining why a broad catch is appropriate at that call site.
+
+**PROJ-251 Changes:** The turn engine's `_time_phase()` no longer swallows exceptions. It wraps them in `EnginePhaseError` and re-raises to halt the turn. The serialization chain (`Fleet.from_dict()`, `Empire.from_dict()`, `OrderSerializer.deserialize_orders()`, `Galaxy.from_dict()`) no longer silently skips corrupt entries — it raises `PersistenceException`. The `_log_empire_state()` debug logging method retains its broad catch (acceptable — logging must not crash the turn).
+
+---
+
+## Turn Engine Error Boundary (PROJ-251)
+
+The turn engine uses a snapshot-and-rollback pattern to ensure game state integrity:
+
+1. **Before turn:** `TurnStateSnapshot.capture()` serializes all empires and galaxy via `to_dict()`
+2. **During turn:** 100 ticks processed normally via `_time_phase()` wrappers
+3. **On phase failure:** `_time_phase()` wraps the exception in `EnginePhaseError` and re-raises
+4. **In `process_turn()`:** Catches `EnginePhaseError`, restores state from snapshot, dumps crash file, re-raises
+5. **In `GameSession.process_turn()`:** Catches `EnginePhaseError`, logs, re-raises for UI
+
+```python
+# Turn engine _time_phase wraps and re-raises
+try:
+    result = fn(*args, **kwargs)
+except EnginePhaseError:
+    raise  # Already wrapped
+except Exception as e:
+    raise EnginePhaseError(
+        f"Phase '{key}' failed: {e}",
+        code=ErrorCode.PHASE_FAILED.value,
+        context={"phase_name": key, "tick": self._current_tick}
+    ) from e
+```
+
+Sub-engines should add `_validate_tick_inputs()` methods that raise `ValidationException` with descriptive messages before mutating state. The error boundary will catch and wrap these.
 
 ---
 

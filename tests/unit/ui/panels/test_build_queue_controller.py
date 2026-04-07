@@ -13,6 +13,7 @@ from typing import Optional
 
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource, get_default_production_rates
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 # PROJ-208: Registry for tracking entities by ID for callback resolution
@@ -392,11 +393,11 @@ class TestBuildTimeCalculation:
         for d in designs:
             design_costs[d.design_id] = d.construction_cost
 
-        # Mock load_design_data to return a dict with design_id
+        # Mock load_design_data to return DesignLoadResult
         def mock_load_design_data(design_id):
             if design_id in design_costs:
-                return {"design_id": design_id}
-            return None
+                return DesignLoadResult.ok({"design_id": design_id})
+            return DesignLoadResult.not_found(design_id)
         mock_library.load_design_data.side_effect = mock_load_design_data
 
         # Mock load_ship_from_design_data to return a ship with construction_cost
@@ -590,7 +591,7 @@ class TestBuildTimeCalculation:
 
         mock_library = MagicMock()
         mock_library.scan_designs.return_value = [design]
-        mock_library.load_design_data.return_value = {"design_id": "factory"}
+        mock_library.load_design_data.return_value = DesignLoadResult.ok({"design_id": "factory"})
 
         # Mock loader to return ship with construction_cost
         mock_loader = MagicMock()
@@ -878,8 +879,8 @@ class TestPerResourceBuildRates:
 
         def mock_load_design_data(design_id):
             if design_id in design_costs:
-                return {"design_id": design_id}
-            return None
+                return DesignLoadResult.ok({"design_id": design_id})
+            return DesignLoadResult.not_found(design_id)
         mock_library.load_design_data.side_effect = mock_load_design_data
 
         mock_loader = MagicMock()

@@ -157,10 +157,27 @@ class GameSession:
         return handler
 
     def process_turn(self) -> None:
-        """Advance the game simulation by one full turn."""
+        """Advance the game simulation by one full turn.
+
+        PROJ-251: On failure, state is rolled back via snapshot and
+        EnginePhaseError is re-raised for UI layer to handle.
+        turn_number is only incremented on success.
+
+        Raises:
+            EnginePhaseError: If any sub-engine phase fails.
+        """
+        from game.core.exceptions import EnginePhaseError
+
         logger.info(f"GameSession: Processing Turn {self.turn_number}...")
-        self.turn_engine.process_turn(self.empires, self.galaxy, self.save_path)
-        self.turn_number += 1
+        try:
+            self.turn_engine.process_turn(
+                self.empires, self.galaxy, self.save_path, session=self
+            )
+            self.turn_number += 1
+        except EnginePhaseError as e:
+            # State already rolled back by TurnEngine
+            logger.error(f"Turn {self.turn_number} failed: {e}")
+            raise
 
     def preview_fleet_path(self, fleet: 'Fleet', target_hex: 'HexCoord') -> Optional[List['HexCoord']]:
         """

@@ -297,13 +297,14 @@ class QuickstartBuilder:
             library = DesignLibrary(save_path, empire.id)
 
             for design_id in INITIAL_COMPLEXES:
-                design_data = library.load_design_data(design_id)
+                load_result = library.load_design_data(design_id)
 
-                if not design_data:
-                    logger.warning(f"Could not load design {design_id} for empire {empire.id}")
+                if not load_result.success:
+                    logger.warning(f"Could not load design {design_id} for empire {empire.id}: {load_result.error}")
                     success = False
                     continue
 
+                design_data = load_result.data
                 facility = PlanetaryFacility(
                     instance_id=str(uuid.uuid4()),
                     design_id=design_id,

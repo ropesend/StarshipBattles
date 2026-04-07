@@ -16,6 +16,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.build_queue_source import BuildQueueSource
 from game.core.validation import ValidationResult
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 class MockGalaxy:
@@ -55,7 +56,7 @@ def mock_design_library():
     design.vehicle_type = "Planetary Complex"
     mock_instance.scan_designs.return_value = [design]
     mock_instance.designs_folder = "test_designs"
-    mock_instance.load_design_data.return_value = None
+    mock_instance.load_design_data.return_value = DesignLoadResult.not_found("test")
     return mock_instance
 
 
@@ -236,7 +237,7 @@ def test_multiple_queue_sources_create_buttons(ui_manager):
     mock_lib = MagicMock()
     mock_lib.scan_designs.return_value = []
     mock_lib.designs_folder = "test"
-    mock_lib.load_design_data.return_value = None
+    mock_lib.load_design_data.return_value = DesignLoadResult.not_found("test")
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
@@ -290,7 +291,7 @@ def test_multi_select_sets_active_to_none(ui_manager):
     mock_lib = MagicMock()
     mock_lib.scan_designs.return_value = []
     mock_lib.designs_folder = "test"
-    mock_lib.load_design_data.return_value = None
+    mock_lib.load_design_data.return_value = DesignLoadResult.not_found("test")
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
@@ -365,7 +366,7 @@ def test_queue_display_shows_active_source_items(ui_manager):
     mock_lib = MagicMock()
     mock_lib.scan_designs.return_value = []
     mock_lib.designs_folder = "test"
-    mock_lib.load_design_data.return_value = None
+    mock_lib.load_design_data.return_value = DesignLoadResult.not_found("test")
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(

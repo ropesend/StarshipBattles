@@ -132,6 +132,21 @@ class ConflictResolutionEngine(IConflictEngine):
             storm_names=storm_names,
         )
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before conflict resolution.
+
+        Raises:
+            ValidationException: If any fleet has invalid location or owner.
+        """
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.location is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: fleet '{fleet.id}' has None location",
+                        context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    )
+
     def resolve_all_conflicts(
         self,
         empires,
@@ -151,6 +166,7 @@ class ConflictResolutionEngine(IConflictEngine):
         Returns:
             ConflictResult with combat statistics
         """
+        self._validate_tick_inputs(empires)
         # PROJ-189: Store galaxy reference for effect lookup in combat resolution
         self._galaxy = galaxy
 

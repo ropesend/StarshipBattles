@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 import pygame
 
 from game.ui.services.screenshot_manager import ScreenshotManager
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 class TestScreenshotStrategyLayerSupport:
@@ -314,7 +315,7 @@ class TestBuildQueueScreenshotSupport:
         mock_design_library = MagicMock()
         mock_design_library.scan_designs.return_value = []
         mock_design_library.designs_folder = "test"
-        mock_design_library.load_design_data.return_value = None
+        mock_design_library.load_design_data.return_value = DesignLoadResult.not_found("test")
 
         mock_design_loader = MagicMock()
 

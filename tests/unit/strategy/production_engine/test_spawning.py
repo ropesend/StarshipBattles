@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.systems.design_library import DesignLoadResult
 
 
 def _make_shipyard(instance_id: str = "yard_1") -> PlanetaryFacility:
@@ -51,7 +52,7 @@ class TestShipSpawning:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
-            mock_library.load_design_data.return_value = {"name": "Scout Ship"}
+            mock_library.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout Ship"})
             mock_lib_class.return_value = mock_library
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
@@ -73,7 +74,7 @@ class TestShipSpawning:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
-            mock_library.load_design_data.return_value = {"name": "Scout"}
+            mock_library.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
             mock_lib_class.return_value = mock_library
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
@@ -109,7 +110,7 @@ class TestComplexSpawning:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
-            mock_library.load_design_data.return_value = {"name": "Advanced Factory"}
+            mock_library.load_design_data.return_value = DesignLoadResult.ok({"name": "Advanced Factory"})
             mock_lib_class.return_value = mock_library
 
             engine._spawner._create_and_place_facility(mock_planet, "Factory", mock_empire, save_path="/test")
@@ -131,7 +132,7 @@ class TestSpawnLocation:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
-            mock_library.load_design_data.return_value = {"name": "Scout"}
+            mock_library.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
             mock_lib_class.return_value = mock_library
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
@@ -162,7 +163,7 @@ class TestSpawnLocation:
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
-            mock_library.load_design_data.return_value = {"name": "Scout"}
+            mock_library.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
             mock_lib_class.return_value = mock_library
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:

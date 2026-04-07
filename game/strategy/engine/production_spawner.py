@@ -122,10 +122,10 @@ class ProductionSpawner:
             logger.warning(f"No savegame path - creating empty data for {design_id}")
             return {}
         library = DesignLibrary(save_path, empire.id)
-        loaded = library.load_design_data(design_id)
-        if loaded:
-            return loaded
-        logger.warning(f"Could not load design: {design_id}")
+        result = library.load_design_data(design_id)
+        if result.success:
+            return result.data
+        logger.warning(f"Could not load design: {design_id} ({result.error})")
         return {}
 
     def _load_and_create_ship(
@@ -150,17 +150,17 @@ class ProductionSpawner:
             return None
 
         design_library = DesignLibrary(save_path, empire.id)
-        design_data = design_library.load_design_data(design_id)
+        load_result = design_library.load_design_data(design_id)
 
-        if not design_data:
-            logger.warning(f"Cannot spawn {design_id}: design data not found")
+        if not load_result.success:
+            logger.warning(f"Cannot spawn {design_id}: {load_result.error}")
             return None
 
         ship_instance = ShipInstance.create(
             design_id=design_id,
-            design_data=design_data,
+            design_data=load_result.data,
             owner_id=empire.id,
-            name=design_data.get("name", design_id),
+            name=load_result.data.get("name", design_id),
             empire=empire,
             registries=self._registries,
         )

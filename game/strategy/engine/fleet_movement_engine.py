@@ -194,6 +194,21 @@ class FleetMovementEngine(IMovementEngine):
             new_location=next_hex
         )
 
+    def _validate_tick_inputs(self, empires: List) -> None:
+        """PROJ-251: Validate preconditions before movement calculations.
+
+        Raises:
+            ValidationException: If any fleet has invalid location.
+        """
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.location is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: fleet '{fleet.id}' has None location",
+                        context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    )
+
     def collect_movements(
         self,
         empires: List,
@@ -218,6 +233,7 @@ class FleetMovementEngine(IMovementEngine):
         Returns:
             List of (fleet, next_hex) tuples for fleets that should move
         """
+        self._validate_tick_inputs(empires)
         move_queue = []
 
         for empire in empires:

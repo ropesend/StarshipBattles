@@ -205,6 +205,9 @@ class TurnEngine:
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
 
+        # PROJ-251: Track current tick for error context
+        self._current_tick: int = 0
+
         # Performance timing accumulators (reset each turn in process_turn)
         self._reset_phase_times()
 
@@ -221,9 +224,8 @@ class TurnEngine:
     def _time_phase(self, key: str, fn, *args, **kwargs):
         """Execute a phase function and accumulate its duration to _phase_times.
 
-        Catches and logs exceptions from sub-engines so that a failure in one
-        phase does not crash the entire turn. The failed phase is skipped and
-        processing continues with the next phase.
+        PROJ-251: On failure, wraps the exception in EnginePhaseError and
+        re-raises. The caller (process_turn) catches this and triggers rollback.
 
         Args:
             key: Phase timing key (must exist in _phase_times dict).
@@ -233,18 +235,36 @@ class TurnEngine:
 
         Returns:
             Whatever fn returns (used by phases that return event lists or move queues).
-            Returns None if the phase raised an exception.
+
+        Raises:
+            EnginePhaseError: If the phase function raises any exception.
         """
+        from game.core.exceptions import EnginePhaseError
+        from game.core.error_codes import ErrorCode
+
         t0 = time.perf_counter()
         try:
             result = fn(*args, **kwargs)
-        except Exception:
+        except EnginePhaseError:
+            # Already wrapped — re-raise as-is
+            self._phase_times[key] += time.perf_counter() - t0
+            raise
+        except Exception as e:
             self._phase_times[key] += time.perf_counter() - t0
             logger.error(
                 "Sub-engine phase '%s' failed during tick processing",
                 key, exc_info=True,
             )
-            return None
+            raise EnginePhaseError(
+                f"Phase '{key}' failed: {e}",
+                code=ErrorCode.PHASE_FAILED.value,
+                context={
+                    "phase_name": key,
+                    "tick": self._current_tick,
+                    "original_error": str(e),
+                    "original_type": type(e).__name__,
+                }
+            ) from e
         self._phase_times[key] += time.perf_counter() - t0
         return result
 
@@ -392,19 +412,30 @@ class TurnEngine:
             self._component_activation_engine = ComponentActivationEngine()
         return self._component_activation_engine
 
-    def process_turn(self, empires, galaxy, save_path=None):
+    def process_turn(self, empires, galaxy, save_path=None, *, session=None):
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
+
+        PROJ-251: Captures pre-turn state snapshot. If any phase fails,
+        rolls back state and raises EnginePhaseError.
 
         Args:
             empires: List of Empire objects to process
             galaxy: Galaxy object for spatial calculations
             save_path: Path to savegame folder for loading designs during production
+            session: Optional GameSession for snapshot rollback on failure.
+                If provided, state is restored from snapshot on EnginePhaseError.
+
+        Raises:
+            EnginePhaseError: If any sub-engine phase fails during processing.
 
         Side Effects:
             Populates self.last_environmental_events (List[EnvironmentalEvent]) from storms.
             This list is cleared at turn start and readable after this method returns.
         """
+        from game.core.exceptions import EnginePhaseError
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+
         # Store save_path for tick processing (PROJ-79)
         self._current_save_path = save_path
 
@@ -414,30 +445,58 @@ class TurnEngine:
         # Performance timing accumulators
         self._reset_phase_times()
 
+        # PROJ-251: Capture pre-turn state for rollback
+        snapshot = None
+        if session is not None:
+            try:
+                snapshot = TurnStateSnapshot.capture(
+                    turn_number=getattr(session, 'turn_number', 0),
+                    empires=empires,
+                    galaxy=galaxy,
+                )
+            except Exception as e:
+                logger.error(f"Failed to capture pre-turn snapshot: {e}")
+                # Continue without snapshot — better to process the turn than abort
+
         turn_start = time.perf_counter()
 
         # [BUG-109] Log resource state before turn processing
         self._log_empire_state(empires, "=== TURN START ===")
 
-        # 1. Subturn Loop (Movement, Actions & Combat)
-        # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) now processed
-        # in Phase 1.5 of each tick via ActionExecutionEngine
-        for tick in range(1, TICKS_PER_TURN + 1):
-            self._process_tick(tick, empires, galaxy, save_path)
+        try:
+            # 1. Subturn Loop (Movement, Actions & Combat)
+            for tick in range(1, TICKS_PER_TURN + 1):
+                self._process_tick(tick, empires, galaxy, save_path)
 
-        # [BUG-109] Log resource state after all ticks
-        self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
+            # [BUG-109] Log resource state after all ticks
+            self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
 
-        # 2. Population Growth Phase (PROJ-68)
-        t0 = time.perf_counter()
-        self.population_engine.process_population_growth(empires)
-        pop_time = time.perf_counter() - t0
+            # 2. Population Growth Phase (PROJ-68)
+            t0 = time.perf_counter()
+            self.population_engine.process_population_growth(empires)
+            pop_time = time.perf_counter() - t0
 
-        # 3. Quality Improvement + Atmosphere Modification (once per turn)
-        from game.strategy.engine.quality_engine import QualityEngine
-        from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-        QualityEngine(registries=self._registries).process_quality_improvement(empires)
-        AtmosphereEngine(registries=self._registries).process_atmosphere(empires)
+            # 3. Quality Improvement + Atmosphere Modification (once per turn)
+            from game.strategy.engine.quality_engine import QualityEngine
+            from game.strategy.engine.atmosphere_engine import AtmosphereEngine
+            QualityEngine(registries=self._registries).process_quality_improvement(empires)
+            AtmosphereEngine(registries=self._registries).process_atmosphere(empires)
+
+        except EnginePhaseError as e:
+            # PROJ-251: Rollback state and re-raise
+            logger.error(
+                f"Turn failed at tick {e.context.get('tick', '?')}, "
+                f"phase '{e.context.get('phase_name', '?')}'. "
+                f"{'Rolling back.' if snapshot and session else 'No snapshot available.'}"
+            )
+
+            if snapshot and save_path:
+                snapshot.dump_crash_snapshot(save_path, e.context)
+
+            if snapshot and session:
+                snapshot.restore(session)
+
+            raise
 
         total_time = time.perf_counter() - turn_start
         logger.warning(
@@ -486,6 +545,7 @@ class TurnEngine:
         PROJ-75 Phase 4: Added per-tick construction resource consumption.
         PROJ-79 Phase 2: Added save_path for mid-turn spawning.
         PROJ-161: Added per-tick harvesting.
+        PROJ-251: Sets _current_tick for error context in EnginePhaseError.
 
         Eleven-phase processing:
         Phase 0:   Harvesting (1/100th of per-turn extraction)
@@ -500,6 +560,9 @@ class TurnEngine:
         Phase 3:   Apply all movements simultaneously
         Phase 4:   Combat
         """
+
+        # PROJ-251: Track current tick for error context
+        self._current_tick = tick
 
         # --- Phase 0: Harvesting (1/100th per tick) ---
         if tick == 1:

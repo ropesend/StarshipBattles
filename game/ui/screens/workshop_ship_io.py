@@ -157,11 +157,11 @@ class WorkshopShipIO:
 
             def on_design_selected(design_id: str):
                 logger.info(f"Workshop: User selected design_id='{design_id}'")
-                design_data = library.load_design_data(design_id)
-                if design_data:
+                load_result = library.load_design_data(design_id)
+                if load_result.success:
                     # Use adapter to create ship from design data
                     ship = self._design_loader_adapter.load_ship_from_design_data(
-                        design_data, self.width // 2, self.height // 2
+                        load_result.data, self.width // 2, self.height // 2
                     )
                     if ship:
                         logger.info(f"Workshop: Successfully loaded design '{ship.name}'")
@@ -170,7 +170,7 @@ class WorkshopShipIO:
                         logger.error(f"Workshop: Failed to create ship from design '{design_id}'")
                         self._show_error("Failed to create ship from design data")
                 else:
-                    logger.error(f"Workshop: Failed to load design '{design_id}'")
+                    logger.error(f"Workshop: Failed to load design '{design_id}': {load_result.error}")
                     self._show_error(f"Design not found: {design_id}")
 
             # Open design selector window
@@ -201,11 +201,11 @@ class WorkshopShipIO:
             )
 
             def on_target_selected(design_id: str):
-                design_data = library.load_design_data(design_id)
-                if design_data:
+                load_result = library.load_design_data(design_id)
+                if load_result.success:
                     # Use adapter to create ship from design data
                     ship = self._design_loader_adapter.load_ship_from_design_data(
-                        design_data, self.width // 2, self.height // 2
+                        load_result.data, self.width // 2, self.height // 2
                     )
                     if ship:
                         self._weapons_report_panel_ref.set_target(ship)

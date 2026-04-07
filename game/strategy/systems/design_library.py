@@ -6,6 +6,7 @@ integrated mode, including saving, loading, filtering, and marking designs
 as obsolete. Designs are stored in the savegame's designs folder.
 """
 import logging
+from dataclasses import dataclass
 from json import JSONDecodeError
 import os
 import glob
@@ -17,6 +18,78 @@ from game.core.string_utils import slugify
 from game.core.exceptions import ValidationException
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class DesignLoadResult:
+    """Result of attempting to load a ship design.
+
+    PROJ-251: Replaces bare Optional[dict] return so callers can distinguish
+    between not-found, corrupt JSON, invalid schema, and permission errors.
+
+    Usage:
+        result = library.load_design_data(design_id)
+        if result.success:
+            data = result.data
+        else:
+            if result.error_type == "not_found":
+                pass  # Normal — design hasn't been saved yet
+            else:
+                logger.warning(f"Design load failed: {result.error}")
+    """
+    data: Optional[dict] = None
+    error: Optional[str] = None
+    error_type: Optional[str] = None
+
+    @property
+    def success(self) -> bool:
+        """True if design was loaded successfully."""
+        return self.data is not None
+
+    @staticmethod
+    def ok(data: dict) -> 'DesignLoadResult':
+        """Create a successful result."""
+        return DesignLoadResult(data=data)
+
+    @staticmethod
+    def not_found(design_id: str) -> 'DesignLoadResult':
+        """Design file does not exist."""
+        return DesignLoadResult(
+            error=f"Design '{design_id}' not found",
+            error_type="not_found"
+        )
+
+    @staticmethod
+    def corrupt(design_id: str, detail: str) -> 'DesignLoadResult':
+        """Design file exists but contains invalid JSON."""
+        return DesignLoadResult(
+            error=f"Design '{design_id}' has corrupt JSON: {detail}",
+            error_type="corrupt_json"
+        )
+
+    @staticmethod
+    def invalid_schema(design_id: str, detail: str) -> 'DesignLoadResult':
+        """Design file has valid JSON but missing/invalid schema."""
+        return DesignLoadResult(
+            error=f"Design '{design_id}' has invalid schema: {detail}",
+            error_type="invalid_schema"
+        )
+
+    @staticmethod
+    def permission_denied(design_id: str, detail: str) -> 'DesignLoadResult':
+        """Cannot read design file due to permissions."""
+        return DesignLoadResult(
+            error=f"Design '{design_id}' permission denied: {detail}",
+            error_type="permission_denied"
+        )
+
+    @staticmethod
+    def io_error(design_id: str, detail: str) -> 'DesignLoadResult':
+        """Cannot read design file due to OS/IO error."""
+        return DesignLoadResult(
+            error=f"Design '{design_id}' IO error: {detail}",
+            error_type="io_error"
+        )
 
 
 class DesignLibrary:
@@ -188,38 +261,39 @@ class DesignLibrary:
             logger.exception(f"Unexpected error saving design '{design_name}': {e}")
             return False, f"Failed to save design: {str(e)}"
 
-    def load_design_data(self, design_id: str) -> Optional[dict]:
+    def load_design_data(self, design_id: str) -> DesignLoadResult:
         """
         Load raw design data without creating Ship instance.
 
-        Useful for strategy layer when creating ShipInstances.
+        PROJ-251: Returns DesignLoadResult instead of Optional[dict] so callers
+        can distinguish failure modes.
 
         Args:
             design_id: Design ID to load
 
         Returns:
-            Design data dict or None if not found
+            DesignLoadResult with data on success, or error info on failure.
         """
-        # Return None if no designs folder
         if self.designs_folder is None:
-            return None
+            return DesignLoadResult.not_found(design_id)
 
         filepath = os.path.join(self.designs_folder, f"{design_id}.json")
 
         if not os.path.exists(filepath):
-            return None
+            return DesignLoadResult.not_found(design_id)
 
         try:
-            return load_json_required(filepath)
+            data = load_json_required(filepath)
+            return DesignLoadResult.ok(data)
         except JSONDecodeError as e:
             logger.warning(f"DesignLibrary: Corrupt JSON in design '{design_id}' at '{filepath}': {e}")
-            return None
-        except (PermissionError, OSError) as e:
-            logger.warning(f"DesignLibrary: Cannot read design '{design_id}' from '{filepath}': {e}")
-            return None
-        except (KeyError, TypeError, ValueError, AttributeError) as e:
-            logger.warning(f"DesignLibrary: Unexpected error loading design '{design_id}' from '{filepath}': {e}")
-            return None
+            return DesignLoadResult.corrupt(design_id, str(e))
+        except PermissionError as e:
+            logger.error(f"DesignLibrary: Permission denied reading design '{design_id}' from '{filepath}': {e}")
+            return DesignLoadResult.permission_denied(design_id, str(e))
+        except OSError as e:
+            logger.error(f"DesignLibrary: IO error reading design '{design_id}' from '{filepath}': {e}")
+            return DesignLoadResult.io_error(design_id, str(e))
 
     def mark_obsolete(self, design_id: str, is_obsolete: bool) -> Tuple[bool, str]:
         """

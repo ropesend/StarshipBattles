@@ -189,10 +189,10 @@ class BuildQueueController:
             Dict of resource type -> amount, empty dict on error.
         """
         try:
-            design_data = self.design_library.load_design_data(design_id)
-            if design_data is None:
+            load_result = self.design_library.load_design_data(design_id)
+            if not load_result.success:
                 return {}
-            ship = self.design_loader.load_ship_from_design_data(design_data, 0, 0)
+            ship = self.design_loader.load_ship_from_design_data(load_result.data, 0, 0)
             if ship is None:
                 return {}
             return dict(ship.construction_cost) if ship.construction_cost else {}
@@ -558,16 +558,16 @@ class BuildQueueController:
         """
         try:
             # Load design data using DesignLibrary (strategy layer)
-            design_data = self.design_library.load_design_data(design_id)
+            load_result = self.design_library.load_design_data(design_id)
 
-            if design_data is None:
-                logger.warning(f"Could not load design {design_id}: Design not found")
+            if not load_result.success:
+                logger.warning(f"Could not load design {design_id}: {load_result.error}")
                 self.design_report.show_placeholder()
                 return
 
             # Use injected design_loader instead of creating new instance
             ship = self.design_loader.load_ship_from_design_data(
-                design_data,
+                load_result.data,
                 center_x=1920 // 2,
                 center_y=1080 // 2
             )
