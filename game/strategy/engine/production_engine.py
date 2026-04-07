@@ -20,7 +20,6 @@ import logging
 from enum import Enum, auto
 from typing import Optional, List, Dict, Any, NamedTuple, TYPE_CHECKING
 
-from game.core.event_logging import log_event
 from game.strategy.data.build_queue_source import get_default_production_rates, _get_facility_production_rates
 from game.strategy.engine.production_math import find_limiting_resource_ticks
 from game.strategy.engine.production_spawner import ProductionSpawner
@@ -90,11 +89,12 @@ class ProductionEngine(IProductionEngine):
     - ticks_in_current_turn: int - Tick counter within current turn
     """
 
-    def __init__(self, *, registries: 'GameRegistries'):
+    def __init__(self, *, registries: 'GameRegistries', event_bus=None):
         """Initialize the production engine.
 
         Args:
             registries: GameRegistries for ship creation. Required.
+            event_bus: Optional EventBus for structured event logging.
 
         Raises:
             ValidationException: If registries is None.
@@ -108,7 +108,8 @@ class ProductionEngine(IProductionEngine):
                 context={"class": "ProductionEngine", "parameter": "registries"}
             )
         self._registries = registries
-        self._spawner = ProductionSpawner(registries=registries)
+        self._event_bus = event_bus
+        self._spawner = ProductionSpawner(registries=registries, event_bus=event_bus)
 
     # --- Resource Cost Methods (PROJ-75 Phase 4) ---
 
@@ -502,18 +503,19 @@ class ProductionEngine(IProductionEngine):
             if hasattr(loc, 'q') and hasattr(loc, 'r'):
                 location_hex = [loc.q, loc.r]
 
-        log_event(
-            EventType.RESOURCE_SHORTAGE,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Production paused: insufficient {limiting_resource} for {design_id}",
-            design_id=design_id,
-            vehicle_type=vehicle_type,
-            limiting_resource=limiting_resource,
-            available=limiting_available,
-            needed=limiting_needed,
-            location_hex=location_hex,
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.RESOURCE_SHORTAGE,
+                category=EventCategory.PRODUCTION,
+                empire_id=empire.id,
+                message=f"Production paused: insufficient {limiting_resource} for {design_id}",
+                design_id=design_id,
+                vehicle_type=vehicle_type,
+                limiting_resource=limiting_resource,
+                available=limiting_available,
+                needed=limiting_needed,
+                location_hex=location_hex,
+            )
 
     def _apply_resource_consumption(
         self,

@@ -35,110 +35,77 @@ class TestGameSessionEventLog:
         log = session.event_log
         assert log is session.event_log  # Same object
 
-    def test_session_registers_event_handler(self):
-        """GameSession registers a global event handler via set_event_handler."""
-        import game.core.event_logging as event_logging_mod
+    def test_session_creates_event_bus(self):
+        """GameSession creates a session-scoped EventBus."""
+        from game.core.event_logging import EventBus
 
-        old_handler = event_logging_mod._event_handler
-        try:
-            session = GameSession(config=_make_minimal_config())
-            # A handler should now be registered
-            assert event_logging_mod._event_handler is not None
-        finally:
-            event_logging_mod._event_handler = old_handler
+        session = GameSession(config=_make_minimal_config())
+        assert isinstance(session._event_bus, EventBus)
 
-    def test_event_handler_creates_events(self):
-        """log_event() calls route through to the session's EventLog."""
-        from game.core.event_logging import log_event, set_event_handler
-        import game.core.event_logging as event_logging_mod
+    def test_event_bus_creates_events(self):
+        """EventBus.log_event() calls route through to the session's EventLog."""
+        session = GameSession(config=_make_minimal_config())
 
-        old_handler = event_logging_mod._event_handler
-        try:
-            session = GameSession(config=_make_minimal_config())
+        # Use the session's EventBus to simulate engine emission
+        session._event_bus.log_event(
+            EventType.SHIP_BUILT,
+            category=EventCategory.PRODUCTION,
+            message="Scout built at Alpha",
+            empire_id=0,
+            ship_name="Scout",
+        )
 
-            # Use the global log_event to simulate engine emission
-            log_event(
-                EventType.SHIP_BUILT,
-                category=EventCategory.PRODUCTION,
-                message="Scout built at Alpha",
-                empire_id=0,
-                ship_name="Scout",
-            )
+        events = session.event_log.get_all_events()
+        assert len(events) == 1
+        assert events[0].event_type == EventType.SHIP_BUILT
+        assert events[0].category == EventCategory.PRODUCTION
+        assert events[0].message == "Scout built at Alpha"
+        assert events[0].empire_id == 0
+        assert events[0].details == {"ship_name": "Scout"}
 
-            events = session.event_log.get_all_events()
-            assert len(events) == 1
-            assert events[0].event_type == EventType.SHIP_BUILT
-            assert events[0].category == EventCategory.PRODUCTION
-            assert events[0].message == "Scout built at Alpha"
-            assert events[0].empire_id == 0
-            assert events[0].details == {"ship_name": "Scout"}
-        finally:
-            event_logging_mod._event_handler = old_handler
+    def test_event_bus_uses_current_turn_number(self):
+        """Events created by the EventBus use the session's current turn number."""
+        session = GameSession(config=_make_minimal_config())
+        session.turn_number = 5
 
-    def test_event_handler_uses_current_turn_number(self):
-        """Events created by the handler use the session's current turn number."""
-        import game.core.event_logging as event_logging_mod
-        from game.core.event_logging import log_event
+        session._event_bus.log_event(
+            EventType.COLONY_FOUNDED,
+            category=EventCategory.COLONIES,
+            message="Colony founded",
+            empire_id=0,
+        )
 
-        old_handler = event_logging_mod._event_handler
-        try:
-            session = GameSession(config=_make_minimal_config())
-            session.turn_number = 5
+        events = session.event_log.get_all_events()
+        assert len(events) == 1
+        assert events[0].turn == 5
 
-            log_event(
-                EventType.COLONY_FOUNDED,
-                category=EventCategory.COLONIES,
-                message="Colony founded",
-                empire_id=0,
-            )
+    def test_event_bus_defaults_for_missing_kwargs(self):
+        """EventBus handler provides defaults when optional kwargs are missing."""
+        session = GameSession(config=_make_minimal_config())
 
-            events = session.event_log.get_all_events()
-            assert len(events) == 1
-            assert events[0].turn == 5
-        finally:
-            event_logging_mod._event_handler = old_handler
+        # Call with minimal kwargs
+        session._event_bus.log_event("custom_event")
 
-    def test_event_handler_defaults_for_missing_kwargs(self):
-        """Handler provides defaults when optional kwargs are missing."""
-        import game.core.event_logging as event_logging_mod
-        from game.core.event_logging import log_event
-
-        old_handler = event_logging_mod._event_handler
-        try:
-            session = GameSession(config=_make_minimal_config())
-
-            # Call with minimal kwargs
-            log_event("custom_event")
-
-            events = session.event_log.get_all_events()
-            assert len(events) == 1
-            assert events[0].event_type == "custom_event"
-            assert events[0].category == "other"
-            assert events[0].message == ""
-            assert events[0].empire_id == -1
-        finally:
-            event_logging_mod._event_handler = old_handler
+        events = session.event_log.get_all_events()
+        assert len(events) == 1
+        assert events[0].event_type == "custom_event"
+        assert events[0].category == "other"
+        assert events[0].message == ""
+        assert events[0].empire_id == -1
 
     def test_multiple_events_accumulate(self):
         """Multiple log_event calls accumulate in the EventLog."""
-        import game.core.event_logging as event_logging_mod
-        from game.core.event_logging import log_event
+        session = GameSession(config=_make_minimal_config())
 
-        old_handler = event_logging_mod._event_handler
-        try:
-            session = GameSession(config=_make_minimal_config())
-
-            log_event(EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
+        session._event_bus.log_event(EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
                       message="Ship 1", empire_id=0)
-            log_event(EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
+        session._event_bus.log_event(EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
                       message="Ship 2", empire_id=0)
-            log_event(EventType.COMBAT_RESOLVED, category=EventCategory.COMBAT,
+        session._event_bus.log_event(EventType.COMBAT_RESOLVED, category=EventCategory.COMBAT,
                       message="Battle", empire_id=1)
 
-            events = session.event_log.get_all_events()
-            assert len(events) == 3
-        finally:
-            event_logging_mod._event_handler = old_handler
+        events = session.event_log.get_all_events()
+        assert len(events) == 3
 
 
 class TestGameSessionEventPersistence:

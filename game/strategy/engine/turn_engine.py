@@ -147,6 +147,7 @@ class TurnEngine:
         planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
         planet_action_engine: Optional['IPlanetActionEngine'] = None,
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
+        event_bus=None,
     ):
         """
         Initialize the turn engine.
@@ -188,6 +189,9 @@ class TurnEngine:
 
         # PROJ-211: Store registries for passing to sub-engines (required)
         self._registries = registries
+
+        # PROJ-252: Session-scoped EventBus for structured event logging
+        self._event_bus = event_bus
 
         # PROJ-43 Phase 4: Store injected engines or None for lazy init
         self._movement_engine: Optional['IMovementEngine'] = movement_engine
@@ -296,7 +300,7 @@ class TurnEngine:
         if self._production_engine is None:
             from game.strategy.engine.production_engine import ProductionEngine
             # PROJ-211: Pass registries for ship creation DI compliance
-            self._production_engine = ProductionEngine(registries=self._registries)
+            self._production_engine = ProductionEngine(registries=self._registries, event_bus=self._event_bus)
         return self._production_engine
 
     @property
@@ -304,7 +308,7 @@ class TurnEngine:
         """Return order processor, lazily creating default if not injected."""
         if self._order_processor is None:
             from game.strategy.engine.order_processor import OrderProcessor
-            self._order_processor = OrderProcessor()
+            self._order_processor = OrderProcessor(event_bus=self._event_bus)
         return self._order_processor
 
     @property
@@ -330,7 +334,8 @@ class TurnEngine:
             self._conflict_engine = ConflictResolutionEngine(
                 battle_resolver,
                 registries=self._registries,
-                area_effect_manager=AreaEffectManager()
+                area_effect_manager=AreaEffectManager(),
+                event_bus=self._event_bus,
             )
         return self._conflict_engine
 

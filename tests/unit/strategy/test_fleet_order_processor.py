@@ -94,8 +94,8 @@ class TestJoinFleetProcessing:
         result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.merged is True
-        mock_fleet.merge_with.assert_called_with(target_fleet)
-        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+        mock_fleet.merge_with.assert_called_with(target_fleet, event_bus=None)
+        mock_empire.remove_fleet.assert_called_with(mock_fleet, event_bus=None)
 
     def test_process_join_fleet_fails_at_different_location(self, mock_fleet, mock_empire, mock_galaxy):
         """JOIN_FLEET fails when not at same location."""
@@ -378,7 +378,7 @@ class TestInstantOrderProcessing:
         removed = processor.process_instant_orders([mock_empire])
 
         assert len(removed) > 0
-        joining_fleet.merge_with.assert_called_with(target_fleet)
+        joining_fleet.merge_with.assert_called_with(target_fleet, event_bus=None)
 
     def test_process_instant_join_fleet_not_at_location(self, mock_empire, mock_galaxy):
         """Instant JOIN_FLEET doesn't merge when not co-located."""

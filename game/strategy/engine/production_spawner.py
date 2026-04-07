@@ -9,7 +9,6 @@ import logging
 import uuid
 from typing import Optional, Any, Dict, List, Tuple, TYPE_CHECKING
 
-from game.core.event_logging import log_event
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
@@ -32,13 +31,15 @@ class ProductionSpawner:
     design loading, and event logging for completed construction items.
     """
 
-    def __init__(self, registries: Optional['GameRegistries'] = None):
+    def __init__(self, registries: Optional['GameRegistries'] = None, event_bus=None):
         """Initialize the spawner.
 
         Args:
             registries: Optional GameRegistries for ship creation (DI).
+            event_bus: Optional EventBus for structured event logging.
         """
         self._registries = registries
+        self._event_bus = event_bus
 
     def spawn_completed_item(self, item: Dict, empire: 'Empire',
                              colony_or_fleet: Any, galaxy: Optional['Galaxy'],
@@ -207,18 +208,19 @@ class ProductionSpawner:
         )
 
         suffix = " (fleet yard)" if log_prefix else ""
-        log_event(
-            EventType.COMPLEX_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Built {facility.name} on {planet.name}{suffix}",
-            design_id=design_id,
-            planet_id=planet.id,
-            location_name=planet.name,
-            location_hex=location_hex,
-            system_name=system_name,
-            local_hex=local_hex,
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.COMPLEX_BUILT,
+                category=EventCategory.PRODUCTION,
+                empire_id=empire.id,
+                message=f"Built {facility.name} on {planet.name}{suffix}",
+                design_id=design_id,
+                planet_id=planet.id,
+                location_name=planet.name,
+                location_hex=location_hex,
+                system_name=system_name,
+                local_hex=local_hex,
+            )
 
     def _spawn_to_staging_yard(
         self,
@@ -310,19 +312,20 @@ class ProductionSpawner:
         empire.add_fleet(new_fleet)  # PROJ-219: Auto-registers via empire._galaxy
 
         logger.info(f"Spawned {ship_instance.name} at {spawn_loc} (Fleet {new_fleet.id})")
-        log_event(
-            EventType.SHIP_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Built {ship_instance.name} at {planet.name}",
-            design_id=design_id,
-            planet_id=planet.id,
-            fleet_id=new_fleet.id,
-            location_name=planet.name,
-            location_hex=[spawn_loc.q, spawn_loc.r],
-            system_name=system_name,
-            local_hex=local_hex,
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.SHIP_BUILT,
+                category=EventCategory.PRODUCTION,
+                empire_id=empire.id,
+                message=f"Built {ship_instance.name} at {planet.name}",
+                design_id=design_id,
+                planet_id=planet.id,
+                fleet_id=new_fleet.id,
+                location_name=planet.name,
+                location_hex=[spawn_loc.q, spawn_loc.r],
+                system_name=system_name,
+                local_hex=local_hex,
+            )
 
     def _spawn_fleet_ship(
         self,
@@ -348,18 +351,19 @@ class ProductionSpawner:
         fleet.add_ship(ship_instance)
 
         logger.info(f"Fleet {fleet.id} built {ship_instance.name}")
-        log_event(
-            EventType.SHIP_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Fleet {fleet.id} built {ship_instance.name}",
-            design_id=design_id,
-            fleet_id=fleet.id,
-            is_fleet_production=True,
-            location_hex=[fleet.location.q, fleet.location.r],
-            system_name="",
-            local_hex=None,
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.SHIP_BUILT,
+                category=EventCategory.PRODUCTION,
+                empire_id=empire.id,
+                message=f"Fleet {fleet.id} built {ship_instance.name}",
+                design_id=design_id,
+                fleet_id=fleet.id,
+                is_fleet_production=True,
+                location_hex=[fleet.location.q, fleet.location.r],
+                system_name="",
+                local_hex=None,
+            )
 
     def _spawn_fleet_complex(
         self,

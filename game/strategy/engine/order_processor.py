@@ -22,7 +22,6 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
 import logging
 
-from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.interfaces.engines import IOrderProcessor
 
@@ -73,11 +72,16 @@ class OrderProcessor(IOrderProcessor):
     - execute_action_order() - execute action orders (COLONIZE, TRANSFER, superweapons)
     """
 
-    def __init__(self):
-        """Initialize the fleet order processor."""
+    def __init__(self, event_bus=None):
+        """Initialize the fleet order processor.
+
+        Args:
+            event_bus: Optional EventBus for structured event logging.
+        """
+        self._event_bus = event_bus
         # Lazy import to avoid circular dependency
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-        self._superweapon_processor = SuperweaponOrderProcessor()
+        self._superweapon_processor = SuperweaponOrderProcessor(event_bus=event_bus)
 
     def _execute_fleet_merge(self, fleet: Fleet, target_fleet: Fleet, empire: 'Empire') -> None:
         """Merge fleet into target and log the event.
@@ -90,19 +94,18 @@ class OrderProcessor(IOrderProcessor):
             target_fleet: Fleet receiving the merged ships.
             empire: Empire that owns both fleets.
         """
-        fleet.merge_with(target_fleet)
-        empire.remove_fleet(fleet)
-        from game.core.event_logging import log_event
-        from game.strategy.events.event_types import EventType, EventCategory
-        log_event(
-            EventType.FLEET_JOINED,
-            category=EventCategory.FLEET_OPERATIONS,
-            empire_id=empire.id,
-            message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
-            fleet_id=fleet.id,
-            target_fleet_id=target_fleet.id,
-            ship_count=len(target_fleet.ships),
-        )
+        fleet.merge_with(target_fleet, event_bus=self._event_bus)
+        empire.remove_fleet(fleet, event_bus=self._event_bus)
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.FLEET_JOINED,
+                category=EventCategory.FLEET_OPERATIONS,
+                empire_id=empire.id,
+                message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
+                fleet_id=fleet.id,
+                target_fleet_id=target_fleet.id,
+                ship_count=len(target_fleet.ships),
+            )
 
     def process_join_fleet(
         self,
@@ -229,19 +232,20 @@ class OrderProcessor(IOrderProcessor):
                 if hasattr(final_planet, 'location') and final_planet.location is not None:
                     local_hex = [final_planet.location.q, final_planet.location.r]
 
-        log_event(
-            EventType.COLONY_FOUNDED,
-            category=EventCategory.COLONIES,
-            empire_id=empire.id,
-            message=f"Founded colony on {final_planet.name}",
-            planet_id=final_planet.id,
-            planet_name=final_planet.name,
-            fleet_id=fleet.id,
-            location_name=final_planet.name,
-            location_hex=[fleet.location.q, fleet.location.r],
-            system_name=system_name,
-            local_hex=local_hex,
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.COLONY_FOUNDED,
+                category=EventCategory.COLONIES,
+                empire_id=empire.id,
+                message=f"Founded colony on {final_planet.name}",
+                planet_id=final_planet.id,
+                planet_name=final_planet.name,
+                fleet_id=fleet.id,
+                location_name=final_planet.name,
+                location_hex=[fleet.location.q, fleet.location.r],
+                system_name=system_name,
+                local_hex=local_hex,
+            )
         return ColonizeResult(colonized=True, planet_name=final_planet.name)
 
     def process_transfer(
