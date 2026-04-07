@@ -16,15 +16,15 @@
 | 1. Spatial Narrow-Phase Distance Check | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Thread Ship Instance ID Through Battle | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Single Stat Path / Remove expected_stats Fallback | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Strategy Facade Indexed Reads | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Documentation Update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 4. Strategy Facade Indexed Reads | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Documentation Update | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Phase 3 — Single Stat Path
-**Next Action:** Begin Phase 3 — Remove redundant stat scans and expected_stats fallback
+**Active Phase:** Complete
+**Next Action:** Project complete — all 5 phases done
 **Blockers:** None
-**Context for Next Agent:** Phases 1-2 complete. `SpatialGrid.query_radius_exact()` added and used by `_find_enemies_in_radius()`. Ship `instance_id` threaded through battle — `IPostBattleShip` has `instance_id` property, `FleetBattleAdapter` matches by `instance_id`. Full suite: 14681 passed.
+**Context for Next Agent:** All phases complete. Spatial `query_radius_exact()`, ship `instance_id` through battle, expected_stats fallback removed, facade planet index + star cache. Full suite: 14691+ passed.
 
 ## Overview
 

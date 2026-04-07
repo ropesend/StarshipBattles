@@ -48,6 +48,10 @@ class StrategySessionFacade:
             session: The GameSession instance to wrap
         """
         self._session = session
+        # PROJ-254: Lazy index caches for O(1) lookups
+        self._planet_index: Optional[dict] = None  # id -> Planet
+        self._all_stars_cache: Optional[List[StarInfo]] = None
+        self._all_stars_cache_turn: int = -1
 
     # =========================================================================
     # COMMANDS (Write Path)
@@ -350,9 +354,15 @@ class StrategySessionFacade:
         Returns enriched StarInfo DTOs with system context (system name,
         global location, planet count, companion star count).
 
+        PROJ-254: Cached per turn — galaxy structure doesn't change mid-turn.
+
         Returns:
             List of StarInfo DTOs for all stars across all systems
         """
+        current_turn = getattr(self._session, 'turn_number', 0)
+        if self._all_stars_cache is not None and self._all_stars_cache_turn == current_turn:
+            return self._all_stars_cache
+
         results = []
         for system in self._session.galaxy.systems.values():
             for star in system.stars:
@@ -363,6 +373,8 @@ class StrategySessionFacade:
                     planet_count=len(system.planets),
                     total_star_count=len(system.stars),
                 ))
+        self._all_stars_cache = results
+        self._all_stars_cache_turn = current_turn
         return results
 
     def get_system_at_hex(self, hex_coord: HexCoord) -> Optional[SystemInfo]:
@@ -433,8 +445,16 @@ class StrategySessionFacade:
 
     # --- Planet Queries ---
 
+    def _build_planet_index(self) -> dict:
+        """Build planet ID -> Planet lookup dict (PROJ-254)."""
+        index = {}
+        for system in self._session.galaxy.systems.values():
+            for planet in system.planets:
+                index[planet.id] = planet
+        return index
+
     def _get_planet_by_id(self, planet_id: int):
-        """Internal helper to get a planet by ID across all systems.
+        """Internal helper to get a planet by ID using index (PROJ-254).
 
         Args:
             planet_id: The planet ID to find
@@ -442,11 +462,9 @@ class StrategySessionFacade:
         Returns:
             The Planet domain object if found, None otherwise
         """
-        for system in self._session.galaxy.systems.values():
-            for planet in system.planets:
-                if planet.id == planet_id:
-                    return planet
-        return None
+        if self._planet_index is None:
+            self._planet_index = self._build_planet_index()
+        return self._planet_index.get(planet_id)
 
     def get_planet(self, planet_id: int) -> Optional[PlanetInfo]:
         """Get planet information by ID.

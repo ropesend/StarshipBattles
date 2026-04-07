@@ -1010,6 +1010,7 @@ def _aggregate_ability_groups(ability_groups):
 - All numeric abilities use SUM across groups by default.
   Add to `MARKER_ABILITIES` for boolean presence checks.
 - Stack groups are defined in component JSON via the `stack_group` field.
+- **PROJ-253:** `FleetAuraManager._recalculate()` now delegates to `_aggregate_ability_groups()` instead of reimplementing the two-phase logic. Any new aggregation code must use the shared function.
 
 ---
 

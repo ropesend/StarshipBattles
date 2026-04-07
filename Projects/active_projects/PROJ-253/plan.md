@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Dirty-Flagged Ship Stat Invalidation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Planet Energy Caching | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Fleet Aura Aggregation Reuse & Caching | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Performance Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Documentation Update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 2. Planet Energy Caching | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Fleet Aura Aggregation Reuse & Caching | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Performance Verification | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Documentation Update | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Phase 2 — Planet Energy Caching
-**Next Action:** Begin Phase 2 — Planet Energy Caching
+**Active Phase:** Complete
+**Next Action:** Project complete — all 5 phases done
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Ship now has `_stats_dirty` flag and `mark_stats_dirty()` / `recalculate_stats_if_dirty()` methods. Combat manager uses `recalculate_stats_if_dirty()` in tick loop, tracking operational status changes. `component_health_manager.take_damage()` calls `mark_stats_dirty()`. External callers still use `recalculate_stats()` (always runs). 6 new tests. Full suite: 14670 passed (4 flaky pre-existing). Simulation: 162/162 passed.
+**Context for Next Agent:** All phases complete. Ship dirty-flag optimization (recalculate_stats_if_dirty), planet energy caching (fingerprint-based), fleet aura shared aggregator + dirty flag, performance verification (100 ticks stable = 0 recalcs). Full suite: 14691+ passed. Simulation: 162/162.
 
 ## Overview
 

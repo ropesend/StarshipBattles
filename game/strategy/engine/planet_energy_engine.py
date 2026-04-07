@@ -138,6 +138,21 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                 context={"class": "PlanetEnergyEngine", "parameter": "registries"}
             )
         self._registries = registries
+        # PROJ-253: Cache for facility scan results per planet
+        self._energy_cache: dict = {}  # planet_id -> {capacity, generation, fingerprint}
+
+    def invalidate_energy_cache(self, planet_id: str) -> None:
+        """Remove cached energy metadata for a planet (PROJ-253).
+
+        Call when facilities are built, destroyed, toggled, or damaged.
+        """
+        self._energy_cache.pop(planet_id, None)
+
+    def _get_facility_fingerprint(self, planet: 'Planet') -> tuple:
+        """Build a fingerprint of facility state for cache invalidation."""
+        return tuple(
+            (f.instance_id, f.is_operational) for f in planet.facilities
+        )
 
     def process_energy_tick(self, tick: int, empires: List) -> None:
         """Process energy generation/consumption for one tick (1/100th of turn).
@@ -154,31 +169,45 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
         """Process energy for a single planet."""
         resource = self.ENERGY_RESOURCE
 
-        # 1. Recalculate capacity and generation from current facilities
-        new_capacity = 0.0
-        new_generation = 0.0
+        # PROJ-253: Use cached capacity/generation if facility state unchanged
+        fingerprint = self._get_facility_fingerprint(planet)
+        cached = self._energy_cache.get(planet.id)
 
-        for facility in planet.facilities:
-            if not facility.is_operational:
-                continue
-            for comp in iter_components(facility.design_data):
-                abilities = _extract_abilities(comp, self._registries)
+        if cached and cached['fingerprint'] == fingerprint:
+            new_capacity = cached['capacity']
+            new_generation = cached['generation']
+        else:
+            # Rebuild: scan facilities for energy abilities
+            new_capacity = 0.0
+            new_generation = 0.0
 
-                # Resource storage
-                storage_entries = abilities.get('ResourceStorage')
-                if storage_entries:
-                    entries = storage_entries if isinstance(storage_entries, list) else [storage_entries]
-                    for entry in entries:
-                        if isinstance(entry, dict) and entry.get('resource') == resource:
-                            new_capacity += entry.get('amount', 0.0)
+            for facility in planet.facilities:
+                if not facility.is_operational:
+                    continue
+                for comp in iter_components(facility.design_data):
+                    abilities = _extract_abilities(comp, self._registries)
 
-                # Strategic resource generation
-                gen_entries = abilities.get('StrategicResourceGeneration')
-                if gen_entries:
-                    entries = gen_entries if isinstance(gen_entries, list) else [gen_entries]
-                    for entry in entries:
-                        if isinstance(entry, dict) and entry.get('resource') == resource:
-                            new_generation += entry.get('generation_rate', 0.0)
+                    # Resource storage
+                    storage_entries = abilities.get('ResourceStorage')
+                    if storage_entries:
+                        entries = storage_entries if isinstance(storage_entries, list) else [storage_entries]
+                        for entry in entries:
+                            if isinstance(entry, dict) and entry.get('resource') == resource:
+                                new_capacity += entry.get('amount', 0.0)
+
+                    # Strategic resource generation
+                    gen_entries = abilities.get('StrategicResourceGeneration')
+                    if gen_entries:
+                        entries = gen_entries if isinstance(gen_entries, list) else [gen_entries]
+                        for entry in entries:
+                            if isinstance(entry, dict) and entry.get('resource') == resource:
+                                new_generation += entry.get('generation_rate', 0.0)
+
+            self._energy_cache[planet.id] = {
+                'capacity': new_capacity,
+                'generation': new_generation,
+                'fingerprint': fingerprint,
+            }
 
         planet.energy_capacity = new_capacity
         planet.energy_generation = new_generation

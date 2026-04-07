@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Split AIController.update Into Stages | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Type Hints on Critical Paths | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Component Definition Flyweight (Conditional) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Documentation Update | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Component Definition Flyweight (Conditional) | Skipped (no memory pressure) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Documentation Update | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Phase 3 (Conditional) or Phase 4 (Docs)
-**Next Action:** Phase 3 (Component flyweight) is conditional on memory profiling. If skipping, proceed to Phase 4 (documentation).
+**Active Phase:** Complete
+**Next Action:** Project complete — all phases done (Phase 3 skipped, no memory pressure)
 **Blockers:** None
-**Context for Next Agent:** Phases 1-2 complete. `AIController.update()` decomposed into `_update_formation()`, `_acquire_targets()`, `_select_behavior()`, `_execute_behavior()`. Type hints added to AIController, ShipStatsCalculator, TurnEngine, GameSession constructors and key methods. Full suite: 14681 passed.
+**Context for Next Agent:** All phases complete. AIController decomposed into 4 stages, type hints on 4 critical files, Phase 3 (flyweight) skipped. Full suite: 14691+ passed.
 
 ## Overview
 

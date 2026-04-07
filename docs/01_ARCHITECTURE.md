@@ -125,7 +125,7 @@ Six layers with strict downward-only dependency flow:
 
 | Module               | Description |
 |----------------------|-------------|
-| `controller.py`      | AIController -- main decision loop per ship |
+| `controller.py`      | AIController -- main decision loop per ship. **PROJ-255:** `update()` decomposed into `_update_formation()`, `_acquire_targets()`, `_select_behavior()`, `_execute_behavior()` stages. |
 | `behaviors.py`       | 12 behavior classes (Kite, AttackRun, Ram, Flee, Formation, Orbit, StationaryFire, DoNothing, StraightLine, RotateOnly, Erratic + base AIBehavior) |
 | `strategy_manager.py`| StrategyManager -- resolves AI strategy names to definitions |
 | `target_evaluator.py`| TargetEvaluator -- scores and prioritizes targets |

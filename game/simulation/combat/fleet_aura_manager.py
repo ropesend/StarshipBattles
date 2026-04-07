@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from game.simulation.components.abilities.base import AbilityScope
+from game.simulation.entities.ability_aggregator import _aggregate_ability_groups
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,9 @@ class FleetAuraManager:
         self._external: List[ExternalModifier] = []
         self._team_bonuses: Dict[int, Dict[str, float]] = {}  # team -> ability -> total
         self._initialized = False
+        # PROJ-253: Dirty flag and fingerprint for provider-state caching
+        self._providers_dirty: bool = True
+        self._last_fingerprint: Optional[tuple] = None
 
     def initialize(self, ships: List[Any], config: Any = None) -> None:
         """Scan ships for fleet-scope abilities and load config modifiers."""
@@ -89,6 +93,8 @@ class FleetAuraManager:
 
         self._initialized = True
         self._recalculate(ships)
+        self._last_fingerprint = self._get_provider_fingerprint(ships)
+        self._providers_dirty = False
 
     def _scan_ship(self, ship: Any) -> None:
         """Find all non-SELF scoped abilities on a ship."""
@@ -128,19 +134,46 @@ class FleetAuraManager:
             self._scan_ship(ship)
         self._recalculate(all_ships)
 
+    def invalidate_aura_cache(self) -> None:
+        """Mark aura cache as dirty (PROJ-253). Forces recalculation on next update."""
+        self._providers_dirty = True
+
     def update(self, ships: List[Any]) -> None:
         """Recalculate bonuses based on alive/operational providers."""
         if not self._initialized:
             return
+        # PROJ-253: Build a provider fingerprint to detect changes
+        fingerprint = self._get_provider_fingerprint(ships)
+        if not self._providers_dirty and fingerprint == self._last_fingerprint:
+            # Apply cached bonuses to ships (may have new ships)
+            self._apply_bonuses(ships)
+            return
         self._recalculate(ships)
+        self._last_fingerprint = fingerprint
+        self._providers_dirty = False
+
+    def _get_provider_fingerprint(self, ships: List[Any]) -> tuple:
+        """Build a fingerprint of provider state for cache invalidation (PROJ-253)."""
+        # Track alive status and operational component count per provider ship
+        parts = []
+        for provider in self._providers:
+            s = provider.ship
+            parts.append((id(s), s.is_alive, s.is_derelict))
+        # Also track alive ship count per team (new ships would change this)
+        for s in ships:
+            parts.append((s.team_id, s.is_alive))
+        return tuple(parts)
 
     def _recalculate(self, ships: List[Any]) -> None:
-        """Recalculate per-team bonuses from alive providers + externals."""
+        """Recalculate per-team bonuses from alive providers + externals.
+
+        PROJ-253: Uses shared _aggregate_ability_groups for two-phase aggregation.
+        """
         # Collect team IDs
         team_ids = {s.team_id for s in ships}
         self._team_bonuses = {tid: {} for tid in team_ids}
 
-        # Group active provider values by team, ability, stack_group
+        # Build ability groups per team using the shared aggregator's input shape
         # Structure: team -> ability -> stack_group -> [values]
         team_ability_groups: Dict[int, Dict[str, Dict[str, List[float]]]] = {
             tid: {} for tid in team_ids
@@ -148,8 +181,6 @@ class FleetAuraManager:
 
         for provider in self._providers:
             ship = provider.ship
-            # Provider must be alive (derelict ships can still provide aura bonuses
-            # as long as the providing component is operational)
             if not ship.is_alive:
                 continue
 
@@ -169,7 +200,6 @@ class FleetAuraManager:
             if not comp_still_operational:
                 continue
 
-            # Apply to the provider's team
             team_id = ship.team_id
             ability = provider.ability_name
             group = provider.stack_group or f"_default_{id(provider)}"
@@ -181,18 +211,14 @@ class FleetAuraManager:
                 groups[group] = []
             groups[group].append(provider.value)
 
-        # Two-phase aggregation: intra-group MAX, inter-group SUM
-        for team_id, abilities in team_ability_groups.items():
-            for ability_name, groups in abilities.items():
-                group_maxes = [max(vals) for vals in groups.values() if vals]
-                total = sum(group_maxes)
-                if total != 0:
-                    self._team_bonuses[team_id][ability_name] = total
+        # PROJ-253: Delegate two-phase aggregation to shared function
+        for team_id, ability_groups in team_ability_groups.items():
+            totals = _aggregate_ability_groups(ability_groups)
+            self._team_bonuses[team_id] = {k: v for k, v in totals.items() if v}
 
         # Add external modifiers (always active, no stacking groups)
         for ext in self._external:
             if ext.team_id is None:
-                # Global — apply to all teams
                 for team_id in team_ids:
                     current = self._team_bonuses[team_id].get(ext.ability_name, 0.0)
                     self._team_bonuses[team_id][ext.ability_name] = current + ext.value
@@ -202,7 +228,10 @@ class FleetAuraManager:
                     current = self._team_bonuses[team_id].get(ext.ability_name, 0.0)
                     self._team_bonuses[team_id][ext.ability_name] = current + ext.value
 
-        # Apply fleet bonuses to each ship for combat calculations
+        self._apply_bonuses(ships)
+
+    def _apply_bonuses(self, ships: List[Any]) -> None:
+        """Apply cached team bonuses to ship attributes."""
         for ship in ships:
             if ship.is_alive:
                 team = self._team_bonuses.get(ship.team_id, {})

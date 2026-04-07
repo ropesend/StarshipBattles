@@ -312,6 +312,7 @@ Test-specific data lives in `simulation_tests/data/`:
 - **DO:** Add type hints to all function signatures.
 - **DO:** Add docstrings to public APIs.
 - **DON'T:** Add docstrings to trivial getters/setters or test functions.
+- **PRIORITY (PROJ-255):** Constructors and hot-path methods in engine/controller code must have full annotations. Use `TYPE_CHECKING` imports to avoid circular dependencies.
 
 ### 6.2 Function Size and Nesting
 

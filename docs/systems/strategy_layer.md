@@ -23,6 +23,9 @@ to the `CommandHandlerRegistry`.
 
 All queries return **immutable DTOs**, never domain objects.
 
+**PROJ-254 Performance:** `_get_planet_by_id()` uses a lazy-built index dict.
+`get_all_stars()` caches results per turn. These avoid O(n) scans on every call.
+
 DTO types (defined in `game/strategy/facade/dto/` package, with submodules `fleet_dto.py`, `system_dto.py`, `planet_dto.py`, `empire_dto.py`, re-exported via `__init__.py`):
 - `FleetInfo` -- fleet state snapshot (includes `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`)
 - `FleetSummary` -- lightweight fleet overview
@@ -138,7 +141,7 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 | 0 | `HarvestingEngine` | Planetary resource extraction to planet.stockpile (1/100th per tick). Also aggregates `StagingYard` capacity per colony into `colony.max_staging_mass`. |
 | 0b | `ConsumableManagementEngine` | Per-turn resource consumption (1/100th per tick) |
 | 0c | `ResupplyEngine` | Fuel generation at facilities |
-| 0c1 | `PlanetEnergyEngine` | Planet energy generation, consumption, auto-deactivation |
+| 0c1 | `PlanetEnergyEngine` | Planet energy generation, consumption, auto-deactivation. **PROJ-253:** Caches facility scan results per planet (fingerprint-based invalidation). |
 | 0d | `ResupplyEngine` | Fleet resupply from facilities |
 | 0e | `ProductionEngine` | Construction from local stockpile/fleet cargo + mid-turn completion |
 | 0f | `EnvironmentalHazardEngine` | Storm damage, fuel drain |
