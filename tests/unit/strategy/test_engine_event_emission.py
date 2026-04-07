@@ -703,10 +703,13 @@ class TestCombatResolvedEvent:
 
         calls, fake = _capture_log_event_calls()
 
+        # PROJ-252: Patch the per-instance RNG, not the global module
+        mock_rng = MagicMock()
+        mock_rng.random.return_value = 0.8  # f1 wins
+        engine._rng = mock_rng
+
         with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            with patch('game.strategy.engine.conflict_resolution_engine.random') as mock_rng:
-                mock_rng.random.return_value = 0.8  # f1 wins
-                winner = engine._resolve_combat(f1, f2)
+            winner = engine._resolve_combat(f1, f2)
 
         assert winner == f1
         assert len(calls) == 1

@@ -34,7 +34,12 @@ class DamageCalculator:
 
     Extracted from ShipCombatEngine to focus on single responsibility:
     applying damage to ships through various defensive layers.
+
+    Accepts an optional RNG instance for deterministic damage distribution (PROJ-252).
     """
+
+    def __init__(self, rng: 'random.Random' = None):
+        self.rng: random.Random = rng if rng is not None else random.Random()
 
     def apply_damage(
         self,
@@ -194,7 +199,7 @@ class DamageCalculator:
 
             # Weighted random selection based on current HP
             weights = [c.current_hp for c in targets]
-            target = random.choices(targets, weights=weights, k=1)[0]
+            target = self.rng.choices(targets, weights=weights, k=1)[0]
 
             damage_absorbed = min(target.current_hp, damage)
             target.take_damage(damage_absorbed)

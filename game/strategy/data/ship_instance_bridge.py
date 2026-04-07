@@ -67,9 +67,10 @@ class ShipInstanceBridge:
         # Create ship from design data
         ship = ShipSerializer.from_dict(self._ship.design_data, registries=registries)
 
-        # Set position and team
+        # Set position, team, and strategy-layer identity
         ship.x, ship.y = position
         ship.team_id = team_id
+        ship.instance_id = self._ship.instance_id  # PROJ-254: Thread ID for battle reconciliation
 
         # Apply HP damage if tracked
         if self._ship.current_hp is not None:

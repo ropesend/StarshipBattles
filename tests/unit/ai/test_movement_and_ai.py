@@ -72,6 +72,7 @@ class TestMovementAndAI:
 
         mock_grid = MagicMock()
         mock_grid.query_radius.return_value = [target]
+        mock_grid.query_radius_exact.return_value = [target]
 
         # Use ShipControllableAdapter to match production behavior
         ai = AIController(ShipControllableAdapter(attacker), mock_grid, 1)
@@ -123,6 +124,7 @@ class TestMovementAndAI:
 
         mock_grid = MagicMock()
         mock_grid.query_radius.return_value = [target]
+        mock_grid.query_radius_exact.return_value = [target]
 
         # Use ShipControllableAdapter to match production behavior
         ai = AIController(ShipControllableAdapter(attacker), mock_grid, 1)

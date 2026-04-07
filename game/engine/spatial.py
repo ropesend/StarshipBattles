@@ -33,7 +33,7 @@ class SpatialGrid:
         self.buckets[cell].append(obj)
 
     def query_radius(self, pos: Any, radius: float) -> List[Any]:
-        """Returns a list of objects in cells overlapping the circle."""
+        """Returns a list of objects in cells overlapping the circle (broad-phase)."""
         cx, cy = self._get_cell(pos)
         # Determine range of cells to check
         steps = int(math.ceil(radius / self.cell_size))
@@ -45,3 +45,17 @@ class SpatialGrid:
                 if cell in self.buckets:
                     candidates.extend(self.buckets[cell])
         return candidates
+
+    def query_radius_exact(self, pos: Any, radius: float) -> List[Any]:
+        """Returns objects within exact Euclidean distance (PROJ-254).
+
+        Broad-phase cell query followed by narrow-phase distance check.
+        Uses squared distance to avoid sqrt.
+        """
+        candidates = self.query_radius(pos, radius)
+        r_sq = radius * radius
+        px, py = pos.x, pos.y
+        return [
+            obj for obj in candidates
+            if (obj.position.x - px) ** 2 + (obj.position.y - py) ** 2 <= r_sq
+        ]

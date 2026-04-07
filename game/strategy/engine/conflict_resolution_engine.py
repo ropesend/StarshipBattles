@@ -69,6 +69,8 @@ class ConflictResolutionEngine(IConflictEngine):
         """
         # Battle seed counter for deterministic battles
         self._battle_seed_counter = 0
+        # PROJ-252: Per-engine RNG for strategy-layer randomness
+        self._rng = random.Random()
 
         # PROJ-50: Store registries for passing to battle resolver
         self._registries = registries
@@ -219,7 +221,7 @@ class ConflictResolutionEngine(IConflictEngine):
             emp_ids = list(fleets_by_emp.keys())
 
             # Pick two random opposing fleets
-            id1, id2 = random.sample(emp_ids, 2)
+            id1, id2 = self._rng.sample(emp_ids, 2)
             f1 = fleets_by_emp[id1][0]
             f2 = fleets_by_emp[id2][0]
 
@@ -259,7 +261,7 @@ class ConflictResolutionEngine(IConflictEngine):
 
         # Fallback to simple RNG for empty fleets
         logger.debug("Using RNG combat resolution (empty fleet)")
-        if random.random() > 0.5:
+        if self._rng.random() > 0.5:
             winner, loser = f1, f2
         else:
             winner, loser = f2, f1

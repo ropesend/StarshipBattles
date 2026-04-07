@@ -42,6 +42,7 @@ def mock_grid():
     """Create a mock spatial grid."""
     grid = Mock()
     grid.query_radius.return_value = []
+    grid.query_radius_exact.return_value = []
     return grid
 
 
@@ -214,6 +215,7 @@ class TestFindTarget:
         enemy2.get_components_by_ability = Mock(return_value=[])
 
         mock_grid.query_radius.return_value = [enemy1, enemy2]
+        mock_grid.query_radius_exact.return_value = [enemy1, enemy2]
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -232,6 +234,7 @@ class TestFindTarget:
         from game.ai.controller import AIController
 
         mock_grid.query_radius.return_value = []
+        mock_grid.query_radius_exact.return_value = []
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
         result = controller.find_target()
@@ -256,6 +259,7 @@ class TestFindTarget:
         enemy.get_components_by_ability = Mock(return_value=[])
 
         mock_grid.query_radius.return_value = [ally, enemy]
+        mock_grid.query_radius_exact.return_value = [ally, enemy]
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -283,6 +287,7 @@ class TestFindTarget:
         alive_enemy.get_components_by_ability = Mock(return_value=[])
 
         mock_grid.query_radius.return_value = [dead_enemy, alive_enemy]
+        mock_grid.query_radius_exact.return_value = [dead_enemy, alive_enemy]
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -489,6 +494,7 @@ class TestSecondaryTargetAcquisition:
         secondary2.get_components_by_ability = Mock(return_value=[])
 
         mock_grid.query_radius.return_value = [primary, secondary1, secondary2]
+        mock_grid.query_radius_exact.return_value = [primary, secondary1, secondary2]
         mock_ship.get_current_target.return_value = primary
 
         with patch('game.ai.controller.StrategyManager') as mock_sm:
@@ -790,6 +796,7 @@ class TestCheckAvoidance:
         from game.ai.controller import AIController
 
         mock_grid.query_radius.return_value = []
+        mock_grid.query_radius_exact.return_value = []
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
         result = controller.check_avoidance()
@@ -812,6 +819,7 @@ class TestCheckAvoidance:
         raw_ship.is_alive = True
         raw_ship.position = Vector2(100.0, 100.0)
         mock_grid.query_radius.return_value = [raw_ship]
+        mock_grid.query_radius_exact.return_value = [raw_ship]
 
         controller = AIController(mock_adapter, mock_grid, enemy_team_id=1)
         result = controller.check_avoidance()
@@ -828,6 +836,7 @@ class TestCheckAvoidance:
         dead_ship.position = Vector2(110.0, 100.0)
 
         mock_grid.query_radius.return_value = [dead_ship]
+        mock_grid.query_radius_exact.return_value = [dead_ship]
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
         result = controller.check_avoidance()
@@ -843,6 +852,7 @@ class TestCheckAvoidance:
         non_combatant.position = Vector2(110.0, 100.0)
 
         mock_grid.query_radius.return_value = [non_combatant]
+        mock_grid.query_radius_exact.return_value = [non_combatant]
 
         with patch('game.ai.controller.is_combatant', return_value=False):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
@@ -864,6 +874,7 @@ class TestCheckAvoidance:
         mock_ship.get_radius.return_value = 10.0
 
         mock_grid.query_radius.return_value = [close_ship]
+        mock_grid.query_radius_exact.return_value = [close_ship]
 
         with patch('game.ai.controller.is_combatant', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
@@ -887,6 +898,7 @@ class TestCheckAvoidance:
         mock_ship.get_radius.return_value = 10.0
 
         mock_grid.query_radius.return_value = [threat]
+        mock_grid.query_radius_exact.return_value = [threat]
 
         with patch('game.ai.controller.is_combatant', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
@@ -911,6 +923,7 @@ class TestCheckAvoidance:
         mock_ship.get_radius.return_value = 10.0
 
         mock_grid.query_radius.return_value = [threat]
+        mock_grid.query_radius_exact.return_value = [threat]
 
         with patch('game.ai.controller.is_combatant', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
@@ -938,6 +951,7 @@ class TestCheckAvoidance:
         mock_ship.get_radius.return_value = 10.0
 
         mock_grid.query_radius.return_value = [far_threat, close_threat]
+        mock_grid.query_radius_exact.return_value = [far_threat, close_threat]
 
         with patch('game.ai.controller.is_combatant', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)

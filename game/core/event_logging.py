@@ -30,6 +30,36 @@ from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
+class EventBus:
+    """Session-scoped event bus for structured simulation events (PROJ-252).
+
+    Each GameSession creates its own EventBus instance. Events are routed
+    to the bus's handler without relying on module-level global state.
+    """
+
+    def __init__(self, handler: Optional[Callable[..., Any]] = None):
+        self._handler = handler
+
+    def set_handler(self, handler: Optional[Callable[..., Any]]) -> None:
+        """Replace the handler on this bus."""
+        self._handler = handler
+
+    def log_event(self, event_type: str, **kwargs: Any) -> None:
+        """Fire a structured event through this bus's handler."""
+        if self._handler is None:
+            return
+        try:
+            self._handler(event_type, **kwargs)
+        except Exception:
+            logger.exception(f"Event handler error for {event_type}")
+
+
+# ---------------------------------------------------------------------------
+# Module-level compatibility API
+# ---------------------------------------------------------------------------
+# The functions below maintain backward compatibility while code is migrated
+# to use explicit EventBus instances. New code should prefer EventBus directly.
+
 _event_handler: Optional[Callable[..., Any]] = None
 
 

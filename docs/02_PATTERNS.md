@@ -24,6 +24,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 15. [Factory](#15-factory)
 16. [ScrollState (Scroll Utility)](#16-scrollstate-scroll-utility)
 17. [Serializable Protocol](#17-serializable-protocol)
+18. [Per-Battle RNG](#18-per-battle-rng-proj-252)
 
 ---
 
@@ -240,6 +241,13 @@ calculator = ShipStatsCalculator(
 )
 calculator.calculate(ship)
 ```
+
+### Simulation Code Must NOT Use Global Lookup (PROJ-252)
+
+`get_default_registry_provider()` must **never** be called from `game/simulation/` code.
+Ship already holds `_registries` (`GameRegistries`, which implements `IRegistryProvider`).
+Simulation delegates (ShipComponentManager, ShipValidatorHelper) must use
+`self._ship._registries` instead of calling the global factory function.
 
 ### When to Use
 
@@ -719,6 +727,23 @@ Subscribers receive one argument: `callback(data)`.
 - Always use string constants from `BuilderEvents`, never raw strings.
 - Currently scoped to the Workshop UI; not a general-purpose game event system.
 
+### Strategy-Layer Event Logging (PROJ-252)
+
+`game/core/event_logging.py` provides a separate `EventBus` class for structured
+simulation/strategy events. Each `GameSession` creates its own `EventBus` instance,
+avoiding process-global mutable state.
+
+```python
+# game/core/event_logging.py
+class EventBus:
+    def __init__(self, handler=None):
+        self._handler = handler
+    def log_event(self, event_type, **kwargs): ...
+```
+
+The module-level `log_event()` function is a backward-compatibility shim. New code
+should prefer explicit `EventBus` injection where possible.
+
 ---
 
 ## 11. Surface Caching (SpriteManager)
@@ -1081,6 +1106,39 @@ class ISerializable(Protocol):
 
 - Use as a type annotation when a function accepts any serializable object.
 - Do NOT create a mixin. Each class implements its own `to_dict()`/`from_dict()`.
+
+---
+
+## 18. Per-Battle RNG (PROJ-252)
+
+### Where
+
+`game/simulation/systems/battle_engine.py` -- `BattleEngine.rng`,
+`game/engine/collision.py` -- `CollisionSystem.rng`,
+`game/simulation/combat/damage_calculator.py` -- `DamageCalculator.rng`,
+`game/strategy/engine/conflict_resolution_engine.py` -- `ConflictResolutionEngine._rng`
+
+### How It Works
+
+Each `BattleEngine.start(seed=N)` creates a per-instance `random.Random(seed)`.
+This RNG is propagated to subsystems (`CollisionSystem`, `DamageCalculator`).
+The global `random` module is **never** seeded by simulation code.
+
+```python
+# BattleEngine.start()
+self.rng = random.Random(seed)
+self.collision_system.rng = self.rng
+```
+
+`ConflictResolutionEngine` has its own `self._rng = random.Random()` for
+strategy-layer randomness (empire pairing in multi-empire conflicts).
+
+### When to Use
+
+- All combat randomness (hit rolls, damage distribution, fighter spawn offsets)
+  must use the battle's `self.rng`, never `random.random()`.
+- Strategy-layer randomness uses its own `Random` instance.
+- **Never** call `random.seed()` from simulation or strategy code.
 
 ---
 

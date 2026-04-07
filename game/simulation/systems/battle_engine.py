@@ -71,6 +71,7 @@ from game.simulation.systems.battle_end_conditions import (
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
+from game.simulation.combat.damage_calculator import DamageCalculator
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -185,8 +186,11 @@ class BattleEngine:
         self.ships: List['Ship'] = []
         self.ai_controllers: List['IAIController'] = []
 
+        # PROJ-252: Default unseeded RNG; overridden with seeded instance in start()
+        self.rng: random.Random = random.Random()
+
         self.projectile_manager = ProjectileManager()
-        self.collision_system = CollisionSystem()
+        self.collision_system = CollisionSystem(rng=self.rng)
 
         self.recent_beams: List[Dict[str, Any]] = []
         self.grid = SpatialGrid(cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE)
@@ -239,8 +243,12 @@ class BattleEngine:
             ai_controllers: Pre-created AI controllers (optional).
                 If provided, uses these instead of creating controllers via factory.
         """
-        if seed is not None:
-            random.seed(seed)
+        # PROJ-252: Per-battle RNG — never seed the global random module
+        self.rng = random.Random(seed)
+        # Propagate RNG to subsystems
+        self.collision_system.rng = self.rng
+        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+        ShipCombatEngine._damage_calculator = DamageCalculator(rng=self.rng)
 
         self.ships = []
         self.ai_controllers = []
@@ -498,7 +506,7 @@ class BattleEngine:
         count = len([ship for ship in self.ships if ship.team_id == source_ship.team_id])
         new_name = f"{source_ship.name} Wing {count+1}"
 
-        offset = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
+        offset = Vector2(self.rng.uniform(-10, 10), self.rng.uniform(-10, 10))
         spawn_pos = origin + offset
 
         new_ship = Ship(

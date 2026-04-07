@@ -73,6 +73,7 @@ def mock_grid():
     """Create a mock spatial grid."""
     grid = MagicMock()
     grid.query_radius = MagicMock(return_value=[])
+    grid.query_radius_exact = MagicMock(return_value=[])
     return grid
 
 
@@ -162,6 +163,7 @@ class TestAIControllerShipCapabilities:
         enemy.get_components_by_ability = MagicMock(return_value=[])
         enemy.get_components_by_layer = MagicMock(return_value=[])
         mock_grid.query_radius = MagicMock(return_value=[enemy])
+        mock_grid.query_radius_exact = MagicMock(return_value=[enemy])
 
         with patch.object(StrategyManager, 'instance') as mock_manager:
             mock_instance = MagicMock()
@@ -246,6 +248,7 @@ class TestAIControllerUpdateEdgeCases:
         enemy.team_id = 1
         enemy.position = Vector2(100, 0)
         mock_grid.query_radius = MagicMock(return_value=[enemy])
+        mock_grid.query_radius_exact = MagicMock(return_value=[enemy])
 
         with patch.object(StrategyManager, 'instance') as mock_manager:
             mock_instance = MagicMock()

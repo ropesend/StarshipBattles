@@ -251,6 +251,8 @@ class TestCombatResolution:
     def test_resolve_combat_rng_fallback_for_empty_fleet(self):
         """RNG fallback for empty fleets."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        from unittest.mock import PropertyMock
+        import random
 
         engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
@@ -260,16 +262,19 @@ class TestCombatResolution:
         fleet2 = MagicMock()
         fleet2.ships = []  # Empty fleet
 
-        with patch('game.strategy.engine.conflict_resolution_engine.random.random') as mock_random:
-            mock_random.return_value = 0.3  # < 0.5 means fleet2 wins
+        # PROJ-252: Patch the per-instance RNG, not the global module
+        mock_rng = MagicMock()
+        mock_rng.random.return_value = 0.3  # < 0.5 means fleet2 wins
+        engine._rng = mock_rng
 
-            result = engine._resolve_combat(fleet1, fleet2)
+        result = engine._resolve_combat(fleet1, fleet2)
 
-            assert result == fleet2
+        assert result == fleet2
 
     def test_resolve_combat_rng_favors_fleet1_when_above_threshold(self):
         """RNG fallback favors fleet1 when random > 0.5."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        import random
 
         engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
@@ -279,12 +284,14 @@ class TestCombatResolution:
         fleet2 = MagicMock()
         fleet2.ships = []
 
-        with patch('game.strategy.engine.conflict_resolution_engine.random.random') as mock_random:
-            mock_random.return_value = 0.7  # > 0.5 means fleet1 wins
+        # PROJ-252: Patch the per-instance RNG, not the global module
+        mock_rng = MagicMock()
+        mock_rng.random.return_value = 0.7  # > 0.5 means fleet1 wins
+        engine._rng = mock_rng
 
-            result = engine._resolve_combat(fleet1, fleet2)
+        result = engine._resolve_combat(fleet1, fleet2)
 
-            assert result == fleet1
+        assert result == fleet1
 
     def test_resolve_combat_uses_simulation(self):
         """Full simulation used when both fleets have ships."""
@@ -318,13 +325,15 @@ class TestCombatResolution:
         fleet2 = MagicMock()
         fleet2.ships = [MagicMock()]  # Has ships
 
-        with patch('game.strategy.engine.conflict_resolution_engine.random.random') as mock_random:
-            mock_random.return_value = 0.3  # < 0.5 means fleet2 wins
+        # PROJ-252: Patch the per-instance RNG, not the global module
+        mock_rng = MagicMock()
+        mock_rng.random.return_value = 0.3  # < 0.5 means fleet2 wins
+        engine._rng = mock_rng
 
-            result = engine._resolve_combat(fleet1, fleet2)
+        result = engine._resolve_combat(fleet1, fleet2)
 
-            # RNG fallback should be used
-            assert result == fleet2
+        # RNG fallback should be used
+        assert result == fleet2
 
     def test_fleet_with_ships_vs_empty(self):
         """Fleet with ships vs empty fleet uses RNG fallback."""
@@ -338,12 +347,14 @@ class TestCombatResolution:
         fleet2 = MagicMock()
         fleet2.ships = []  # Empty
 
-        with patch('game.strategy.engine.conflict_resolution_engine.random.random') as mock_random:
-            mock_random.return_value = 0.7  # > 0.5 means fleet1 wins
+        # PROJ-252: Patch the per-instance RNG, not the global module
+        mock_rng = MagicMock()
+        mock_rng.random.return_value = 0.7  # > 0.5 means fleet1 wins
+        engine._rng = mock_rng
 
-            result = engine._resolve_combat(fleet1, fleet2)
+        result = engine._resolve_combat(fleet1, fleet2)
 
-            assert result == fleet1
+        assert result == fleet1
 
 
 class TestBuildingFleetsCombat:

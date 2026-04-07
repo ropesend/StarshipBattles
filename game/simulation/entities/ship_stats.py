@@ -69,9 +69,13 @@ from game.simulation.interfaces import (
     is_warp_jump,
 )
 import math
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.core.resources import ResourceCatalog
 
 
-def _get_planetary_resource_ids(resource_catalog):
+def _get_planetary_resource_ids(resource_catalog: 'ResourceCatalog') -> List[str]:
     """Get planetary resource IDs from the injected catalog."""
     return [d.id for d in resource_catalog.by_display_group("planetary")]
 
@@ -80,7 +84,13 @@ class ShipStatsCalculator:
     """
     Encapsulates the logic for calculating ship statistics from its components.
     """
-    def __init__(self, vehicle_classes, *, resource_catalog=None, planetary_resource_ids=None):
+    def __init__(
+        self,
+        vehicle_classes: dict,
+        *,
+        resource_catalog: Optional['ResourceCatalog'] = None,
+        planetary_resource_ids: Optional[List[str]] = None,
+    ):
         self.vehicle_classes = vehicle_classes
         self._resource_catalog = resource_catalog
         if planetary_resource_ids is not None:

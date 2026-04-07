@@ -50,7 +50,11 @@ This module uses defensive programming for robustness during combat:
 """
 import logging
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.engine.spatial import SpatialGrid
+    from game.simulation.interfaces.ai_controller import IControllableShip
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +82,7 @@ _NO_TARGET_BEHAVIORS = frozenset({
 })
 
 class AIController:
-    def __init__(self, ship, grid, enemy_team_id):
+    def __init__(self, ship: 'IControllableShip', grid: 'SpatialGrid', enemy_team_id: int):
         self.ship = ship
         self.grid = grid
         self.enemy_team_id = enemy_team_id
@@ -126,14 +130,15 @@ class AIController:
         Returns:
             List of enemy entities (ships and optionally missiles)
         """
-        candidates = self.grid.query_radius(self.ship.get_position(), BattleTuning.TARGET_QUERY_RADIUS)
+        # PROJ-254: Use exact-distance query to avoid broad-phase false positives
+        candidates = self.grid.query_radius_exact(self.ship.get_position(), BattleTuning.TARGET_QUERY_RADIUS)
         enemies = [obj for obj in candidates
                    if obj.is_alive and is_combatant(obj)
                    and obj.team_id == self.enemy_team_id
                    and obj != exclude]
 
         if include_missiles:
-            missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), BattleTuning.MISSILE_QUERY_RADIUS)
+            missiles = [obj for obj in self.grid.query_radius_exact(self.ship.get_position(), BattleTuning.MISSILE_QUERY_RADIUS)
                         if is_projectile(obj)
                         and obj.type == AttackType.MISSILE
                         and obj.is_alive
@@ -276,32 +281,64 @@ class AIController:
         return sorted_enemies[:count_needed]
 
     def update(self) -> None:
-        """Execute one AI update cycle: target selection, behavior selection, movement."""
+        """Execute one AI update cycle (PROJ-255: decomposed into stages).
+
+        Stages:
+        1. Formation upkeep (throttle, master, integrity)
+        2. Target acquisition (primary + secondary)
+        3. Behavior selection (retreat threshold, formation override)
+        4. Behavior execution
+        """
         if not self.ship.is_alive():
             return
 
-        # Throttle Reset
-        self.ship.set_turn_throttle(1.0)
-        self.ship.set_throttle(AIConfig.FORMATION_ENGINE_THROTTLE if self.ship.get_formation_members() else 1.0)
-
-        # Formation Logic (Inline for now, could be moved to Behavior)
-        if self.ship.get_formation_members():
-            self._handle_formation_master()
-
-        # Formation Dropout Check
-        if self.ship.is_in_formation() and self.ship.get_formation_master():
-            self._check_formation_integrity()
+        self._update_formation()
 
         resolved = self.get_resolved_strategy()
         movement_policy = resolved['movement']
 
-        # Formation Targeting Sync
+        target = self._acquire_targets()
+
+        # No-target early exit for behaviors that require a target
+        if target is None and not self.ship.is_in_formation():
+            self.ship.set_trigger_pulled(False)
+            behavior_key = movement_policy.get('behavior', 'kite')
+            if behavior_key not in _NO_TARGET_BEHAVIORS:
+                return
+        else:
+            self.ship.set_trigger_pulled(True)
+
+        # Satellites don't execute behaviors
+        if self.ship.get_vehicle_type() == 'Satellite':
+            return
+
+        behavior_key = self._select_behavior(movement_policy)
+        self._execute_behavior(behavior_key, target, resolved, movement_policy)
+
+    # -- Stage 1: Formation upkeep ----------------------------------------
+
+    def _update_formation(self) -> None:
+        """Reset throttle and manage formation state."""
+        self.ship.set_turn_throttle(1.0)
+        self.ship.set_throttle(
+            AIConfig.FORMATION_ENGINE_THROTTLE
+            if self.ship.get_formation_members() else 1.0
+        )
+        if self.ship.get_formation_members():
+            self._handle_formation_master()
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
+            self._check_formation_integrity()
+
+    # -- Stage 2: Target acquisition --------------------------------------
+
+    def _acquire_targets(self) -> Optional[Any]:
+        """Acquire primary and secondary targets. Returns primary target or None."""
+        # Formation targeting sync
         if self.ship.is_in_formation() and self.ship.get_formation_master():
             master_target = self.ship.get_formation_master().current_target
             if master_target and master_target.is_alive:
                 self.ship.set_current_target(master_target)
 
-        # Target Acquisition
         target = self.ship.get_current_target()
         if target and not target.is_alive:
             target = None
@@ -311,40 +348,39 @@ class AIController:
             target = self.find_target()
             self.ship.set_current_target(target)
 
-        # Secondary target acquisition for ships with multiplex tracking
+        # Secondary targets for multiplex tracking
         if self.ship.get_max_targets() > CombatConstants.DEFAULT_MAX_TARGETS:
             self.ship.set_secondary_targets(self.find_secondary_targets())
         else:
             self.ship.set_secondary_targets([])
 
-        # No-target handling: still execute movement-only behaviors
-        if not target and not self.ship.is_in_formation():
-            self.ship.set_trigger_pulled(False)
-            # Check if the behavior can run without a target
-            behavior_key = movement_policy.get('behavior', 'kite')
-            if behavior_key not in _NO_TARGET_BEHAVIORS:
-                return
-        else:
-            self.ship.set_trigger_pulled(True)
+        return target
 
-        # Satellite Exception
-        if self.ship.get_vehicle_type() == 'Satellite':
-            return
+    # -- Stage 3: Behavior selection --------------------------------------
 
-        # Determine Behavior
+    def _select_behavior(self, movement_policy: Dict[str, Any]) -> str:
+        """Select behavior key based on formation status, HP, and policy."""
         if self.ship.is_in_formation() and self.ship.get_formation_master():
-            behavior_key = 'formation'
-        else:
-            # Policy-driven behavior selection
-            hp_pct = get_hp_percent(self.ship)
-            retreat_threshold = movement_policy.get('retreat_hp_threshold', 0.1)
+            return 'formation'
 
-            if hp_pct <= retreat_threshold and retreat_threshold > 0:
-                behavior_key = 'flee'
-            else:
-                behavior_key = movement_policy.get('behavior', 'kite')
+        hp_pct = get_hp_percent(self.ship)
+        retreat_threshold = movement_policy.get('retreat_hp_threshold', 0.1)
 
-        # Execute Behavior
+        if hp_pct <= retreat_threshold and retreat_threshold > 0:
+            return 'flee'
+
+        return movement_policy.get('behavior', 'kite')
+
+    # -- Stage 4: Behavior execution --------------------------------------
+
+    def _execute_behavior(
+        self,
+        behavior_key: str,
+        target: Optional[Any],
+        resolved: Dict[str, Any],
+        movement_policy: Dict[str, Any],
+    ) -> None:
+        """Instantiate and tick the selected behavior."""
         behavior = self.behaviors.get(behavior_key)
         if self.current_behavior != behavior:
             if behavior:
@@ -352,10 +388,8 @@ class AIController:
             self.current_behavior = behavior
 
         if self.current_behavior:
-            # Merge movement policy with strategy definition for fire_while_retreating etc.
             behavior_context = dict(movement_policy)
             behavior_context.update(resolved.get('definition', {}))
-            # Only run behavior if target exists OR behavior doesn't need one
             if target or behavior_key in _NO_TARGET_BEHAVIORS:
                 self.current_behavior.update(target, behavior_context)
 

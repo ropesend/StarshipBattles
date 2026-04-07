@@ -57,8 +57,13 @@ from game.simulation.combat.combat_events import DamageContext
 
 class CollisionSystem:
     """
-    Stateless system for handling collisions and raycasting.
+    System for handling collisions and raycasting.
+
+    Accepts an optional RNG instance for deterministic hit rolls (PROJ-252).
     """
+
+    def __init__(self, rng: 'random.Random' = None):
+        self.rng: random.Random = rng if rng is not None else random.Random()
 
     def process_beam_attack(self, attack: Dict[str, Any], recent_beams: List[Dict[str, Any]]) -> None:
         """
@@ -119,7 +124,7 @@ class CollisionSystem:
                     # Calculate Chance with Sigmoid Logic using ability
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
 
-                    if random.random() < chance:
+                    if self.rng.random() < chance:
                         # Evaluate damage at hit distance using ability
                         damage = beam_ab.get_damage(hit_dist)
                         # Handle both Ship targets (have combat_engine) and

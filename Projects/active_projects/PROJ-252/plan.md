@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Per-Battle RNG Injection | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Session-Scoped Event Bus | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Eliminate Global Registry from Simulation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Determinism Verification Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Documentation Update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Per-Battle RNG Injection | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Session-Scoped Event Bus | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Eliminate Global Registry from Simulation | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Determinism Verification Tests | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Documentation Update | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Not Started
-**Next Action:** Begin Phase 1 — Per-Battle RNG Injection
+**Active Phase:** Complete
+**Next Action:** Project complete — all 5 phases done
 **Blockers:** None
-**Context for Next Agent:** Fresh project. All findings verified against current code. See "Findings Summary" below for exact file locations and line numbers.
+**Context for Next Agent:** All phases complete. 24 new tests added (11 RNG isolation, 5 EventBus, 2 DI compliance, 4 determinism integration, 2 conflict resolution fixes). Full suite: 14668 passed, 1 pre-existing failure. Simulation tests: 162/162 passed.
 
 ## Overview
 

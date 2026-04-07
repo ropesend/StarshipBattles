@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Split AIController.update Into Stages | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Type Hints on Critical Paths | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Split AIController.update Into Stages | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Type Hints on Critical Paths | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Component Definition Flyweight (Conditional) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Documentation Update | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Not Started
-**Next Action:** Begin Phase 1 — Split AIController.update
+**Active Phase:** Phase 3 (Conditional) or Phase 4 (Docs)
+**Next Action:** Phase 3 (Component flyweight) is conditional on memory profiling. If skipping, proceed to Phase 4 (documentation).
 **Blockers:** None
-**Context for Next Agent:** Fresh project. All findings verified against current code. Note: Finding 6 (Component class) was largely addressed by PROJ-241 (Component God Class Decomposition — Complete). Phase 3 of this project is conditional on memory profiling showing pressure.
+**Context for Next Agent:** Phases 1-2 complete. `AIController.update()` decomposed into `_update_formation()`, `_acquire_targets()`, `_select_behavior()`, `_execute_behavior()`. Type hints added to AIController, ShipStatsCalculator, TurnEngine, GameSession constructors and key methods. Full suite: 14681 passed.
 
 ## Overview
 

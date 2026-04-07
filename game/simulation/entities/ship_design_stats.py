@@ -50,23 +50,9 @@ def calculate_design_stats(
                     if component_toggles.get(c.get('id', ''), True)
                 ]
 
-    try:
-        ship = Ship.from_dict(effective_design, registries=registries)
-    except (AttributeError, TypeError, KeyError):
-        # Fallback for mock registries or incomplete design data
-        expected = design_data.get('expected_stats', {})
-        return {
-            'max_hp': expected.get('max_hp', 0),
-            'mass': expected.get('mass', 0),
-            'resource_storage': expected.get('resource_storage', {}),
-            'cargo_storage': expected.get('cargo_storage', {}),
-            'pod_storage_mass': expected.get('pod_storage_mass', 0.0),
-            'strategic_movement': expected.get('strategic_movement', 0),
-            'warp_max_tonnage': expected.get('warp_max_tonnage', 0),
-            'warp_resource_costs': expected.get('warp_resource_costs', {}),
-            'resource_consumption_per_hex': expected.get('resource_consumption_per_hex', {}),
-            'resource_consumption_per_turn': expected.get('resource_consumption_per_turn', {}),
-        }
+    # PROJ-254: No fallback to expected_stats — let errors propagate.
+    # If Ship.from_dict() fails, that's a real error (invalid design data).
+    ship = Ship.from_dict(effective_design, registries=registries)
 
     # Apply damage state if provided
     if component_damage:

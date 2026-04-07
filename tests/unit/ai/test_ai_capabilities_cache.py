@@ -47,6 +47,7 @@ def mock_grid():
     """Create a mock spatial grid."""
     grid = MagicMock(spec=SpatialGrid)
     grid.query_radius = MagicMock(return_value=[])
+    grid.query_radius_exact = MagicMock(return_value=[])
     return grid
 
 

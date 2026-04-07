@@ -19,6 +19,7 @@ def mock_grid():
     """Create a mock spatial grid."""
     grid = MagicMock()
     grid.query_radius.return_value = []
+    grid.query_radius_exact.return_value = []
     return grid
 
 
@@ -207,8 +208,8 @@ class TestAIControllerTargeting:
         controller.find_target()
 
         # Grid should have been queried at the ship's position
-        mock_grid.query_radius.assert_called()
-        call_args = mock_grid.query_radius.call_args[0]
+        mock_grid.query_radius_exact.assert_called()
+        call_args = mock_grid.query_radius_exact.call_args[0]
         assert call_args[0] == Vector2(100, 200)
 
 
@@ -340,6 +341,7 @@ class TestAIControllerAvoidance:
 
         # Grid returns BOTH the ship itself (raw Ship) AND the enemy
         mock_grid.query_radius.return_value = [mock_ship, enemy_ship]
+        mock_grid.query_radius_exact.return_value = [mock_ship, enemy_ship]
 
         adapter = ShipControllableAdapter(mock_ship)
         controller = AIController(adapter, mock_grid, enemy_team_id=2)
@@ -371,6 +373,7 @@ class TestAIControllerAvoidance:
 
         # Grid returns ONLY the ship itself
         mock_grid.query_radius.return_value = [mock_ship]
+        mock_grid.query_radius_exact.return_value = [mock_ship]
 
         adapter = ShipControllableAdapter(mock_ship)
         controller = AIController(adapter, mock_grid, enemy_team_id=2)

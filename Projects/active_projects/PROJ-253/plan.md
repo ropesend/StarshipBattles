@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Dirty-Flagged Ship Stat Invalidation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Dirty-Flagged Ship Stat Invalidation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Planet Energy Caching | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fleet Aura Aggregation Reuse & Caching | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Performance Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,10 +21,10 @@
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Not Started
-**Next Action:** Begin Phase 1 — Dirty-Flagged Ship Stat Invalidation
+**Active Phase:** Phase 2 — Planet Energy Caching
+**Next Action:** Begin Phase 2 — Planet Energy Caching
 **Blockers:** None
-**Context for Next Agent:** Fresh project. All findings verified against current code. See "Findings Summary" below for exact file locations.
+**Context for Next Agent:** Phase 1 complete. Ship now has `_stats_dirty` flag and `mark_stats_dirty()` / `recalculate_stats_if_dirty()` methods. Combat manager uses `recalculate_stats_if_dirty()` in tick loop, tracking operational status changes. `component_health_manager.take_damage()` calls `mark_stats_dirty()`. External callers still use `recalculate_stats()` (always runs). 6 new tests. Full suite: 14670 passed (4 flaky pre-existing). Simulation: 162/162 passed.
 
 ## Overview
 

@@ -88,12 +88,11 @@ class ShipComponentManager:
             logger.error("Attempted to add None component to ship")
             return False
 
-        from game.core.registry import get_default_registry_provider
         from game.simulation.entities.ship_loader import get_or_create_validator
 
-        # PROJ-211: Pass registry_provider explicitly
+        # PROJ-252: Use Ship's registries (GameRegistries implements IRegistryProvider)
         result = get_or_create_validator(
-            registry_provider=get_default_registry_provider()
+            registry_provider=self._ship._registries
         ).validate_addition(self._ship, component, layer_type)
 
         if not result.is_valid:
@@ -125,16 +124,15 @@ class ShipComponentManager:
             modifier_registry=self._ship._registries.modifiers
         )
 
-        from game.core.registry import get_default_registry_provider
         from game.simulation.entities.ship_loader import get_or_create_validator
 
         for _ in range(count):
             # Must clone for each new instance
             new_comp = component.clone()
 
-            # PROJ-211: Pass registry_provider explicitly
+            # PROJ-252: Use Ship's registries (GameRegistries implements IRegistryProvider)
             result = get_or_create_validator(
-                registry_provider=get_default_registry_provider()
+                registry_provider=self._ship._registries
             ).validate_addition(self._ship, new_comp, layer_type)
             if not result.is_valid:
                 # Stop adding if we hit a limit

@@ -99,14 +99,19 @@ class ShipCombatManager:
             self._ship.resources.update()
 
         # 2. Update Components (Consumption, Cooldowns) - Tick-based
+        # PROJ-253: Track operational status changes to set dirty flag
         for comp in self._ship.get_all_components():
             if comp.is_active:
+                was_operational = comp.is_operational
                 comp.update()
+                if comp.is_operational != was_operational:
+                    self._ship.mark_stats_dirty()
 
         # 2b. Recalculate stats after component updates so that operational
         # status changes (e.g., shield losing energy) are reflected in ship
         # stats (max_shields, current_shields) before damage is processed.
-        self._ship.recalculate_stats()
+        # PROJ-253: Only runs if stats are dirty (component state changed).
+        self._ship.recalculate_stats_if_dirty()
 
         # 3. Physics (Thrust calc handling operational engines)
         # Note: update_physics_movement() handles all arcade physics:

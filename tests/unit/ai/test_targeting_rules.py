@@ -201,6 +201,7 @@ class TestTargetingRules:
         ship.max_targets = 2
 
         mock_grid.query_radius.return_value = [ship, t1, t2]
+        mock_grid.query_radius_exact.return_value = [ship, t1, t2]
 
         # Strategy mock logic is complex (get_resolved_strategy).
         # We can mock get_resolved_strategy on the controller instance.

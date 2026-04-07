@@ -77,6 +77,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         # === Identity ===
         self.id: str = str(uuid.uuid4())
+        self.instance_id: Optional[str] = None  # PROJ-254: Set by strategy layer for battle reconciliation
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
         self.team_id: int = team_id
@@ -111,6 +112,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.construction_cost: Dict[str, int] = {}
         self._cached_summary = {}
         self._loading_warnings: List[str] = []
+
+        # === Stat Dirty Flag (PROJ-253) ===
+        self._stats_dirty: bool = True
 
         # === Resources ===
         self.resources = ResourceRegistry()
@@ -328,6 +332,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     def _invalidate_components_cache(self) -> None:
         """Mark component cache as dirty for lazy recalculation."""
         self.component_manager._invalidate_components_cache()
+        self._stats_dirty = True  # PROJ-253: component change implies stat change
 
     @property
     def stat_querier(self) -> ShipStatQuerier:
@@ -513,10 +518,29 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """Remove a component from the specified layer by index."""
         return self.component_manager.remove_component(layer_type, index)
 
+    def mark_stats_dirty(self) -> None:
+        """Mark that ship stats need recalculation (PROJ-253).
+
+        Called when component state changes (HP, operational status, toggle).
+        """
+        self._stats_dirty = True
+
+    def recalculate_stats_if_dirty(self) -> None:
+        """Recalculate stats only if dirty (PROJ-253).
+
+        Used by the combat tick loop to avoid redundant recalculation.
+        External callers should use recalculate_stats() which always runs.
+        """
+        if not self._stats_dirty:
+            return
+        self.recalculate_stats()
+
     def recalculate_stats(self) -> None:
         """
         Recalculates derived stats. Delegates to ShipStatsCalculator.
+        Always runs the full pipeline (use recalculate_stats_if_dirty for conditional).
         """
+
         # PROJ-49: Invalidate component cache when stats recalculated
         self._invalidate_components_cache()
 
@@ -536,6 +560,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             )
 
         self.stats_calculator.calculate(self)
+        self._stats_dirty = False
 
     def get_missing_requirements(self) -> List[str]:
         """Check class requirements and return list of missing items based on abilities."""

@@ -7,7 +7,6 @@ missing requirements.
 from typing import List, TYPE_CHECKING
 
 from .ship_loader import get_or_create_validator
-from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from .ship import Ship
@@ -41,7 +40,8 @@ class ShipValidatorHelper:
             True if the ship design passes all validation checks, False otherwise.
         """
         self._ship.recalculate_stats()
-        result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_design(self._ship)
+        # PROJ-252: Use Ship's registries (GameRegistries implements IRegistryProvider)
+        result = get_or_create_validator(registry_provider=self._ship._registries).validate_design(self._ship)
         # Check for mass errors specifically for UI feedback flag
         self._ship.mass_limits_ok = not any("Mass budget exceeded" in e for e in result.errors)
         return result.is_valid
@@ -52,7 +52,8 @@ class ShipValidatorHelper:
         Returns:
             List of warning strings from the validation result.
         """
-        result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_design(self._ship)
+        # PROJ-252: Use Ship's registries
+        result = get_or_create_validator(registry_provider=self._ship._registries).validate_design(self._ship)
         return result.warnings
 
     def get_missing_requirements(self) -> List[str]:
@@ -61,7 +62,8 @@ class ShipValidatorHelper:
         Returns:
             List of error strings prefixed with warning emoji, or empty list if valid.
         """
-        result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_design(self._ship)
+        # PROJ-252: Use Ship's registries
+        result = get_or_create_validator(registry_provider=self._ship._registries).validate_design(self._ship)
         if result.is_valid:
             return []
         # Return all errors as list of strings

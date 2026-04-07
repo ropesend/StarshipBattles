@@ -188,9 +188,10 @@ class TestFleetBattleAdapter:
         fleet.add_ship(ship2)
         adapter = FleetBattleAdapter(fleet)
 
-        # Only ship1 survives
+        # Only ship1 survives — PROJ-254: match by instance_id
         survivor_sim = MagicMock()
         survivor_sim.name = "Survivor"
+        survivor_sim.instance_id = ship1.instance_id
 
         with patch.object(ship1, 'update_from_ship') as mock_update:
             adapter.update_from_battle_results([survivor_sim])

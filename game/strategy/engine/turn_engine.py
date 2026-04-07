@@ -59,7 +59,7 @@ import logging
 
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,9 @@ if TYPE_CHECKING:
     from game.strategy.engine.order_processor import OrderProcessor
     from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
     from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.engine.game_session import GameSession
 
 
 class _NullBattleResolver:
@@ -412,7 +415,7 @@ class TurnEngine:
             self._component_activation_engine = ComponentActivationEngine()
         return self._component_activation_engine
 
-    def process_turn(self, empires, galaxy, save_path=None, *, session=None):
+    def process_turn(self, empires: List['Empire'], galaxy: 'Galaxy', save_path: Optional[str] = None, *, session: Optional['GameSession'] = None) -> None:
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
 
@@ -537,7 +540,7 @@ class TurnEngine:
         # GameRegistries always has components attribute
         return ColonizeValidator.validate(galaxy, fleet, target_planet, self._registries.components)
 
-    def _process_tick(self, tick, empires, galaxy, save_path=None):
+    def _process_tick(self, tick: int, empires: List['Empire'], galaxy: 'Galaxy', save_path: Optional[str] = None) -> None:
         """Process 1 sub-tick of movement and combat.
 
         PROJ-12 Phase 3: Delegates to specialized engines.

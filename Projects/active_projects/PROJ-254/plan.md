@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Spatial Narrow-Phase Distance Check | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Thread Ship Instance ID Through Battle | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Single Stat Path / Remove expected_stats Fallback | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Spatial Narrow-Phase Distance Check | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Thread Ship Instance ID Through Battle | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Single Stat Path / Remove expected_stats Fallback | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Facade Indexed Reads | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Documentation Update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-06
-**Active Phase:** Not Started
-**Next Action:** Begin Phase 1 — Spatial Narrow-Phase Distance Check
+**Active Phase:** Phase 3 — Single Stat Path
+**Next Action:** Begin Phase 3 — Remove redundant stat scans and expected_stats fallback
 **Blockers:** None
-**Context for Next Agent:** Fresh project. All findings verified against current code. See "Findings Summary" below for exact file locations.
+**Context for Next Agent:** Phases 1-2 complete. `SpatialGrid.query_radius_exact()` added and used by `_find_enemies_in_radius()`. Ship `instance_id` threaded through battle — `IPostBattleShip` has `instance_id` property, `FleetBattleAdapter` matches by `instance_id`. Full suite: 14681 passed.
 
 ## Overview
 

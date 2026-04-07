@@ -876,8 +876,13 @@ class IPostBattleShip(Protocol):
     Defines the Strategy <-> Simulation boundary for post-battle state transfer.
     """
     @property
+    def instance_id(self) -> Optional[str]:
+        """Unique instance ID from strategy layer (PROJ-254). None for sim-only ships."""
+        ...
+
+    @property
     def name(self) -> str:
-        """Ship name for identification."""
+        """Ship name for display."""
         ...
 
     @property

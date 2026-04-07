@@ -108,15 +108,14 @@ class FleetBattleAdapter:
         Args:
             surviving_ships: Ships that survived the battle (IPostBattleShip protocol)
         """
-        # Build lookup for surviving ships by name
-        survivors_by_name = {s.name: s for s in surviving_ships}
+        # PROJ-254: Match by instance_id (unique), not name (may have duplicates)
+        survivors_by_id = {s.instance_id: s for s in surviving_ships if s.instance_id}
 
         # Update each ShipInstance - ships not in survivors were destroyed
         new_ships = []
         for s in self._fleet.ships:
-            if s.name in survivors_by_name:
-                # Update state from battle
-                s.update_from_ship(survivors_by_name[s.name])
+            if s.instance_id in survivors_by_id:
+                s.update_from_ship(survivors_by_id[s.instance_id])
                 new_ships.append(s)
             # else: ship was destroyed, don't include
 

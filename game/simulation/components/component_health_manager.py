@@ -60,6 +60,9 @@ class ComponentHealthManager:
         component = self._component
         component.current_hp -= amount
         component._hp_ratio_dirty = True  # Mark cache dirty
+        # PROJ-253: Notify ship that stats need recalculation
+        if component.ship is not None:
+            component.ship.mark_stats_dirty()
 
         # Update Status
         if component.current_hp <= 0:

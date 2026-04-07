@@ -86,6 +86,7 @@ from game.core.constants import (
 
 # Event Logging (PROJ-175)
 from game.core.event_logging import (
+    EventBus,
     log_event,
     set_event_handler,
     get_event_handler,
