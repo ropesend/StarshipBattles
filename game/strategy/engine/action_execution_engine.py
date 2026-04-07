@@ -67,6 +67,17 @@ class ActionExecutionEngine(IActionExecutionEngine):
         self._order_processor = order_processor
         self._action_time_resolver = action_time_resolver
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.location is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: fleet '{fleet.id}' has None location",
+                        context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    )
+
     def process_action_ticks(
         self,
         empires: List,
@@ -88,6 +99,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
         Returns:
             List of ActionTickResult records
         """
+        self._validate_tick_inputs(empires)
         results: List[ActionTickResult] = []
 
         for empire in empires:

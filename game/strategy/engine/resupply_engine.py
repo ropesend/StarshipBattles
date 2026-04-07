@@ -72,6 +72,17 @@ class ResupplyEngine(IResupplyEngine):
             )
         self._registries = registries
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for colony in empire.colonies:
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony list contains None entry",
+                        context={"empire_id": empire.id}
+                    )
+
     def process_fuel_generation(self, tick: int, empires) -> List[ResupplyEvent]:
         """
         Process fuel generation at all facilities across all empires.
@@ -87,6 +98,7 @@ class ResupplyEngine(IResupplyEngine):
         Returns:
             List of ResupplyEvent records for generation that occurred
         """
+        self._validate_tick_inputs(empires)
         events = []
 
         for empire in empires:
@@ -178,6 +190,7 @@ class ResupplyEngine(IResupplyEngine):
         Returns:
             List of ResupplyEvent records for transfers that occurred
         """
+        self._validate_tick_inputs(empires)
         events: List[ResupplyEvent] = []
 
         for empire in empires:

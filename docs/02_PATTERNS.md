@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase.
+Agent-optimized reference for every core pattern in the codebase (20 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -1143,6 +1143,46 @@ strategy-layer randomness (empire pairing in multi-empire conflicts).
 
 ---
 
+## 19. Error Boundary (Turn Engine — PROJ-251)
+
+**Where:** `game/strategy/engine/turn_engine.py`, `game/strategy/engine/turn_state_snapshot.py`
+
+**How It Works:**
+1. `TurnStateSnapshot.capture()` serializes all empires + galaxy via `to_dict()` before each turn
+2. `_time_phase()` wraps each sub-engine call — any exception becomes `EnginePhaseError`
+3. `process_turn()` catches `EnginePhaseError`, restores from snapshot, dumps crash file, re-raises
+4. `GameSession.process_turn()` catches `EnginePhaseError` for UI notification
+
+**When to Use:** Whenever a complex operation involves multiple sequential mutations that must succeed atomically. The snapshot-and-rollback pattern is more practical than full transactional semantics when the state graph is complex.
+
+**Key Classes:** `TurnStateSnapshot`, `EnginePhaseError`
+
+---
+
+## 20. Precondition Validation (Sub-Engines — PROJ-251)
+
+**Where:** All 14 sub-engines in `game/strategy/engine/`
+
+**How It Works:**
+Each sub-engine has `_validate_tick_inputs(empires)` called at the start of its tick method. Checks for null references, missing attributes, and impossible values. Raises `ValidationException` with context dict identifying the broken entity.
+
+**When to Use:** At the entry point of any method that mutates state based on external inputs. Validates preconditions before any mutations occur, so the error boundary (pattern 19) gets a clear, descriptive exception rather than a cryptic `AttributeError`.
+
+**Key Pattern:**
+```python
+def _validate_tick_inputs(self, empires):
+    from game.core.exceptions import ValidationException
+    for empire in empires:
+        for fleet in empire.fleets:
+            if fleet.location is None:
+                raise ValidationException(
+                    f"Empire {empire.id}: fleet '{fleet.id}' has None location",
+                    context={"empire_id": empire.id, "fleet_id": fleet.id}
+                )
+```
+
+---
+
 ## Quick Reference
 
 | Pattern | Primary File | Key Class/Function |
@@ -1169,6 +1209,8 @@ strategy-layer randomness (empire pairing in multi-empire conflicts).
 | Factory | `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py` | `AIControllerFactory`, `ShipFactory`, `PanelFactory` |
 | ScrollState | `game/ui/widgets/scroll_state.py` | `ScrollState` |
 | Serializable | `game/core/protocols.py` | `ISerializable` |
+| Error Boundary | `game/strategy/engine/turn_state_snapshot.py` | `TurnStateSnapshot`, `EnginePhaseError` |
+| Precondition Validation | `game/strategy/engine/*.py` | `_validate_tick_inputs()` |
 
 ### Critical Naming Reminders
 

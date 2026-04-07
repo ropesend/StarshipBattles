@@ -1,0 +1,30 @@
+{
+    "tags": [
+        "armor",
+        "weapons",
+        "engines",
+        "mini",
+        "complex",
+        "ship",
+        "fighter",
+        "satalite",
+        "crewsupport",
+        "combat",
+        "strategic",
+        "colony",
+        "medical",
+        "organic",
+        "crystaline"
+    ],
+    "assignments": {
+        "1": [
+            "colony"
+        ],
+        "2": [
+            "colony"
+        ],
+        "3": [
+            "colony"
+        ]
+    }
+}

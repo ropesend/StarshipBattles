@@ -66,6 +66,17 @@ class ConsumableManagementEngine(IConsumableEngine):
             )
         self._registries = registries
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.ships is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: fleet '{fleet.id}' has None ships list",
+                        context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    )
+
     def process_per_turn_consumption(self, tick: int, empires) -> List[ResourceDepletion]:
         """
         Process per-turn resource consumption (1/100th per tick).
@@ -83,6 +94,7 @@ class ConsumableManagementEngine(IConsumableEngine):
         Returns:
             List of ResourceDepletion events that occurred this tick
         """
+        self._validate_tick_inputs(empires)
         depletions = []
 
         for empire in empires:

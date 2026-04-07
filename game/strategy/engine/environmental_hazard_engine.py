@@ -64,6 +64,17 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
             from game.strategy.services.area_effect_manager import AreaEffectManager
             self._area_effect_manager = AreaEffectManager()
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.location is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: fleet '{fleet.id}' has None location",
+                        context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    )
+
     def process_environmental_tick(
         self,
         tick: int,
@@ -88,6 +99,7 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
         Returns:
             List of EnvironmentalEvent records for fleets affected this tick.
         """
+        self._validate_tick_inputs(empires)
         events: List[EnvironmentalEvent] = []
 
         for empire in empires:

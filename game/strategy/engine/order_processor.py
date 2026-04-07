@@ -727,6 +727,17 @@ class OrderProcessor(IOrderProcessor):
 
         return False
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.orders is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: fleet '{fleet.id}' has None orders list",
+                        context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    )
+
     def process_instant_orders(
         self,
         empires: List['Empire']
@@ -743,6 +754,7 @@ class OrderProcessor(IOrderProcessor):
         Returns:
             List of (empire, fleet) tuples for removed fleets
         """
+        self._validate_tick_inputs(empires)
         fleets_to_merge = []
 
         for empire in empires:

@@ -133,6 +133,16 @@ class ProductionEngine(IProductionEngine):
         design_data['total_resource_cost'] = total_cost
         return total_cost
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            if not hasattr(empire, 'resource_pool') or empire.resource_pool is None:
+                raise ValidationException(
+                    f"Empire {empire.id}: resource_pool is None",
+                    context={"empire_id": empire.id}
+                )
+
     def process_construction_tick(
         self,
         tick: int,
@@ -152,6 +162,7 @@ class ProductionEngine(IProductionEngine):
             galaxy: Galaxy object for spawning.
             save_path: Path to savegame folder for loading designs.
         """
+        self._validate_tick_inputs(empires)
         for empire in empires:
             for colony in empire.colonies:
                 # 1. Base queue (complexes only) — requires PlanetaryYard facility

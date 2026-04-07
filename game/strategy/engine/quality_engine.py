@@ -25,6 +25,17 @@ class QualityEngine:
     def __init__(self, registries=None):
         self._registries = registries
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for colony in empire.colonies:
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony list contains None entry",
+                        context={"empire_id": empire.id}
+                    )
+
     def process_quality_improvement(self, empires: List) -> None:
         """Process quality improvement for all empires.
 
@@ -33,6 +44,7 @@ class QualityEngine:
         Args:
             empires: List of Empire objects to process.
         """
+        self._validate_tick_inputs(empires)
         for empire in empires:
             for colony in empire.colonies:
                 self._process_colony(colony)

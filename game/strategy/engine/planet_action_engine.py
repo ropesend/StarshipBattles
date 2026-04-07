@@ -58,6 +58,17 @@ class PlanetActionEngine(IPlanetActionEngine):
         self._registries = registries
         self._action_time_resolver = action_time_resolver or ActionTimeResolver()
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for colony in empire.colonies:
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony list contains None entry",
+                        context={"empire_id": empire.id}
+                    )
+
     def process_planet_actions_tick(
         self,
         tick: int,
@@ -74,6 +85,7 @@ class PlanetActionEngine(IPlanetActionEngine):
         Returns:
             List of PlanetActionTickResult records
         """
+        self._validate_tick_inputs(empires)
         results = []
         for empire in empires:
             for planet in empire.colonies:

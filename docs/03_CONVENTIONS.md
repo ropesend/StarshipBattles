@@ -332,7 +332,16 @@ Test-specific data lives in `simulation_tests/data/`:
 | Clean-sheet design | Design compromise |
 | Data-driven lookups | Hardcoded type/class name lists |
 
-### 6.4 No Hardcoded Type Lists
+### 6.4 Error Handling Conventions (PROJ-251)
+
+- **Sub-engines must validate preconditions** before mutating state via `_validate_tick_inputs()`
+- **Serialization `from_dict()` methods propagate errors**, not swallow them — corrupt data raises `PersistenceException`
+- **`except Exception` in strategy layer** must wrap and re-raise via `EnginePhaseError`, not return `None`
+- **Design library** uses `DesignLoadResult` result objects for non-critical file loading (not exceptions)
+
+See `docs/05_ERROR_HANDLING.md` for the full error handling reference.
+
+### 6.5 No Hardcoded Type Lists
 
 **Never hardcode lists of ability names, component types, or class names** to control behavior. Instead, search data structures generically or use registry lookups.
 

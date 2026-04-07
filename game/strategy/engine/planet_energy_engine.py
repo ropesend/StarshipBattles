@@ -154,6 +154,17 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
             (f.instance_id, f.is_operational) for f in planet.facilities
         )
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for colony in empire.colonies:
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony list contains None entry",
+                        context={"empire_id": empire.id}
+                    )
+
     def process_energy_tick(self, tick: int, empires: List) -> None:
         """Process energy generation/consumption for one tick (1/100th of turn).
 
@@ -161,6 +172,7 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
             tick: Current tick number (1-100)
             empires: List of Empire objects to process
         """
+        self._validate_tick_inputs(empires)
         for empire in empires:
             for colony in empire.colonies:
                 self._process_planet(colony, tick)

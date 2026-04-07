@@ -34,6 +34,17 @@ class ComponentActivationEngine:
     active_abilities dict.
     """
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for colony in empire.colonies:
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony list contains None entry",
+                        context={"empire_id": empire.id}
+                    )
+
     def process_activation_tick(
         self,
         tick: int,
@@ -48,6 +59,7 @@ class ComponentActivationEngine:
         Returns:
             List of transition event dicts (for logging/UI).
         """
+        self._validate_tick_inputs(empires)
         results = []
         for empire in empires:
             # Planet facilities

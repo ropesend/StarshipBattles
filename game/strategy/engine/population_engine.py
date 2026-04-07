@@ -32,6 +32,17 @@ class PopulationEngine(IPopulationEngine):
         happiness_modifier = population happiness (0.0 to 1.0)
     """
 
+    def _validate_tick_inputs(self, empires) -> None:
+        """PROJ-251: Validate preconditions before mutating state."""
+        from game.core.exceptions import ValidationException
+        for empire in empires:
+            for colony in empire.colonies:
+                if colony is None:
+                    raise ValidationException(
+                        f"Empire {empire.id}: colony list contains None entry",
+                        context={"empire_id": empire.id}
+                    )
+
     def process_population_growth(self, empires: list) -> None:
         """
         Process population growth for all empires.
@@ -39,6 +50,7 @@ class PopulationEngine(IPopulationEngine):
         Args:
             empires: List of Empire objects to process
         """
+        self._validate_tick_inputs(empires)
         for empire in empires:
             self._process_empire(empire)
 
