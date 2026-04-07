@@ -159,7 +159,8 @@ class TestDamageApplication:
         engine.take_damage(10)
 
         # Damage was processed (5 remaining < 10 original)
-        ship.recalculate_stats.assert_called_once()
+        # PROJ-253: damage_calculator now uses recalculate_stats_if_dirty()
+        ship.recalculate_stats_if_dirty.assert_called_once()
         ship.update_derelict_status.assert_called_once()
 
     def test_take_damage_emissive_armor_blocks_all_when_damage_less_than_armor(self):
@@ -209,7 +210,8 @@ class TestDamageApplication:
         # No hull layers, remaining=5
         # Callbacks called (5 < 20)
         assert ship.current_shields == 10
-        ship.recalculate_stats.assert_called_once()
+        # PROJ-253: damage_calculator now uses recalculate_stats_if_dirty()
+        ship.recalculate_stats_if_dirty.assert_called_once()
         ship.update_derelict_status.assert_called_once()
 
     def test_take_damage_shields_absorb_before_layers(self):

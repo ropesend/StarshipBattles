@@ -153,13 +153,17 @@ class FleetAuraManager:
         self._providers_dirty = False
 
     def _get_provider_fingerprint(self, ships: List[Any]) -> tuple:
-        """Build a fingerprint of provider state for cache invalidation (PROJ-253)."""
-        # Track alive status and operational component count per provider ship
+        """Build a fingerprint of provider state for cache invalidation (PROJ-253).
+
+        Includes per-provider-ship operational component count so that component
+        destruction (without ship death) triggers cache invalidation.
+        """
         parts = []
         for provider in self._providers:
             s = provider.ship
-            parts.append((id(s), s.is_alive, s.is_derelict))
-        # Also track alive ship count per team (new ships would change this)
+            # Count operational components — changes when aura-providing component is destroyed
+            op_count = sum(1 for c in s.get_all_components() if c.is_operational) if s.is_alive else 0
+            parts.append((id(s), s.is_alive, s.is_derelict, op_count))
         for s in ships:
             parts.append((s.team_id, s.is_alive))
         return tuple(parts)

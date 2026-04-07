@@ -204,7 +204,8 @@ class Star:
 
         # Validate positive values
         validate_positive(data['mass'], 'mass', 'Star')
-        validate_positive(data['temperature'], 'temperature', 'Star')
+        # Temperature can be 0 for BLACK_HOLE stars (event horizon has no observable temperature)
+        validate_non_negative(data['temperature'], 'temperature', 'Star')
         validate_positive(data['luminosity'], 'luminosity', 'Star')
 
         # Wrap nested from_dict calls with context
