@@ -127,7 +127,7 @@ Factory: `create_default_registry()` registers all handlers.
 
 ### Overview
 
-TurnEngine is a lightweight orchestrator that delegates to 11 specialized sub-engines.
+TurnEngine is a lightweight orchestrator that delegates to 13 specialized sub-engines.
 All sub-engines are dependency-injected: `registries` is a **required** keyword-only parameter (no default), while other engine parameters are optional with lazy defaults.
 
 `process_turn(empires, galaxy, save_path)` runs one full turn:
@@ -173,6 +173,9 @@ All sub-engines implement interfaces from `game/strategy/interfaces/engines.py`:
 | `IHarvestingEngine` | `HarvestingEngine` |
 | `IActionExecutionEngine` | `ActionExecutionEngine` |
 | `IEnvironmentalHazardEngine` | `EnvironmentalHazardEngine` |
+| `IPlanetEnergyEngine` | `PlanetEnergyEngine` |
+| `IPlanetActionEngine` | `PlanetActionEngine` |
+| `IComponentActivationEngine` | `ComponentActivationEngine` |
 
 ### Dependency Injection
 
@@ -213,7 +216,7 @@ Core state:
 
 ### Fleet Delegates
 
-Fleet uses composition with 3 delegates:
+Fleet uses composition with 4 delegates:
 
 #### FleetConsumableAggregator (`fleet.resources`)
 
@@ -261,6 +264,20 @@ Bridges strategy Fleet with simulation Ship for combat:
   (default: Team 0 at x=20000, Team 1 at x=80000, 2000px vertical spacing)
 - `update_from_battle_results(surviving_ships)` -- updates fleet from
   `IPostBattleShip` protocol; ships not in survivors are removed (destroyed)
+
+#### FleetPursuerTracker (`fleet.pursuer_tracker`)
+
+**File:** `game/strategy/data/fleet_pursuer_tracker.py`
+
+Tracks fleets pursuing this fleet via `MOVE_TO_FLEET`/`JOIN_FLEET` orders (PROJ-222):
+
+- `pursuers` -- read-only `FrozenSet` of all pursuing fleets
+- `pursuer_count` -- number of active pursuers
+- `add_pursuer(fleet)` / `remove_pursuer(fleet)` -- register/unregister
+- `redirect_pursuers(new_target)` -- on merge, redirect all pursuers to new fleet
+- `notify_target_destroyed()` -- on destruction, cancel all pursuit orders
+
+Not serialized — rebuilt from order targets on load.
 
 ### ShipInstance Stat Calculation
 

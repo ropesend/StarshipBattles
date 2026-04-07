@@ -20,6 +20,7 @@ Turn Phases:
        - Phase 1:    Instant orders (via OrderProcessor)
        - Phase 1.5:  Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
        - Phase 1.6:  Planet action orders (via PlanetActionEngine) - shield activation, etc.
+       - Phase 1.7:  Component activation timers (via ComponentActivationEngine)
        - Phase 2:    Calculate moves (via FleetMovementEngine)
        - Phase 3:    Apply moves (via FleetMovementEngine)
        - Phase 4:    Combat (via ConflictResolutionEngine)
@@ -555,18 +556,21 @@ class TurnEngine:
         PROJ-161: Added per-tick harvesting.
         PROJ-251: Sets _current_tick for error context in EnginePhaseError.
 
-        Eleven-phase processing:
-        Phase 0:   Harvesting (1/100th of per-turn extraction)
-        Phase 0b:  Per-turn resource consumption (1/100th of per_turn costs)
-        Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
-        Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
-        Phase 0e:  Construction resource consumption + mid-turn completion (via ProductionEngine)
-        Phase 0f:  Environmental hazards (storm damage, fuel drain) via EnvironmentalHazardEngine
-        Phase 1:   Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
-        Phase 1.5: Execute action orders (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
-        Phase 2:   Calculate paths/next moves for all fleets (based on current positions)
-        Phase 3:   Apply all movements simultaneously
-        Phase 4:   Combat
+        Fourteen-phase processing:
+        Phase 0:    Harvesting (1/100th of per-turn extraction)
+        Phase 0b:   Per-turn resource consumption (1/100th of per_turn costs)
+        Phase 0c:   Fuel generation at facilities (via ResupplyEngine)
+        Phase 0c1:  Planet energy generation/consumption (via PlanetEnergyEngine)
+        Phase 0d:   Fleet resupply from facilities (via ResupplyEngine)
+        Phase 0e:   Construction resource consumption + mid-turn completion (via ProductionEngine)
+        Phase 0f:   Environmental hazards (storm damage, fuel drain) via EnvironmentalHazardEngine
+        Phase 1:    Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
+        Phase 1.5:  Execute action orders (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
+        Phase 1.6:  Planet action orders (shield activation, etc.) via PlanetActionEngine
+        Phase 1.7:  Component activation timers via ComponentActivationEngine
+        Phase 2:    Calculate paths/next moves for all fleets (based on current positions)
+        Phase 3:    Apply all movements simultaneously
+        Phase 4:    Combat
         """
 
         # PROJ-251: Track current tick for error context

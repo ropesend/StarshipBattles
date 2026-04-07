@@ -96,7 +96,7 @@ class Fleet:
         """Return 'fleet' for BuildContext protocol compliance."""
         return "fleet"
 
-    def add_ship(self, ship: ShipInstance):
+    def add_ship(self, ship: ShipInstance) -> None:
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)
         self.trigger_speed_recalculation()

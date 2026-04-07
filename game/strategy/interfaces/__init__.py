@@ -15,6 +15,14 @@ from game.strategy.interfaces.engines import (
     IOrderProcessor,
     IConflictEngine,
     IConsumableEngine,
+    IResupplyEngine,
+    IHarvestingEngine,
+    IPopulationEngine,
+    IActionExecutionEngine,
+    IEnvironmentalHazardEngine,
+    IPlanetEnergyEngine,
+    IPlanetActionEngine,
+    IComponentActivationEngine,
 )
 
 __all__ = [
@@ -25,4 +33,12 @@ __all__ = [
     'IOrderProcessor',
     'IConflictEngine',
     'IConsumableEngine',
+    'IResupplyEngine',
+    'IHarvestingEngine',
+    'IPopulationEngine',
+    'IActionExecutionEngine',
+    'IEnvironmentalHazardEngine',
+    'IPlanetEnergyEngine',
+    'IPlanetActionEngine',
+    'IComponentActivationEngine',
 ]

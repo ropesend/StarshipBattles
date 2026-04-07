@@ -5,10 +5,13 @@ Uses ShipStatsCalculator for stats and the component registry for ability checks
 """
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, TYPE_CHECKING
 
 from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import extract_abilities_from_component
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +23,11 @@ class DesignValidationResult:
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
 
-    def add_error(self, msg: str):
+    def add_error(self, msg: str) -> None:
         self.errors.append(msg)
         self.is_valid = False
 
-    def add_warning(self, msg: str):
+    def add_warning(self, msg: str) -> None:
         self.warnings.append(msg)
 
 
@@ -38,7 +41,7 @@ class DesignValidator:
     - Components exist in registry
     """
 
-    def __init__(self, registries):
+    def __init__(self, registries: 'GameRegistries') -> None:
         self._registries = registries
 
     def validate(self, design_data: Dict[str, Any]) -> DesignValidationResult:
@@ -67,7 +70,7 @@ class DesignValidator:
 
         return result
 
-    def _check_components_exist(self, design_data: Dict, result: DesignValidationResult):
+    def _check_components_exist(self, design_data: Dict, result: DesignValidationResult) -> None:
         """Check that all referenced components exist in the registry."""
         comp_registry = self._registries.components
         for comp in iter_components(design_data):
@@ -75,7 +78,7 @@ class DesignValidator:
             if comp_id and comp_registry.get(comp_id) is None:
                 result.add_error(f"Component '{comp_id}' not found in registry.")
 
-    def _check_crew_and_life_support(self, design_data: Dict, result: DesignValidationResult):
+    def _check_crew_and_life_support(self, design_data: Dict, result: DesignValidationResult) -> None:
         """Check crew housing and life support requirements."""
         from game.simulation.formula_system import FormulaEvaluator
 
@@ -132,7 +135,7 @@ class DesignValidator:
             result.add_error(f"Need {ls_deficit:.0f} more life support "
                            f"(crew: {total_crew_required:.0f}, life support: {total_life_support:.0f}).")
 
-    def _check_layer_mass(self, design_data: Dict, result: DesignValidationResult):
+    def _check_layer_mass(self, design_data: Dict, result: DesignValidationResult) -> None:
         """Check that each layer's component mass is within budget."""
         from game.simulation.components.modifiers import calculate_stat_multipliers
 
