@@ -153,10 +153,15 @@ class DamageCalculator:
 
     @staticmethod
     def _finalize_damage(ship, original_damage, remaining, was_derelict, context, event_bus):
-        """Stage 5: Recalculate stats and emit derelict event if needed."""
+        """Stage 5: Recalculate stats and emit derelict event if needed.
+
+        PROJ-253: Uses recalculate_stats_if_dirty() — the dirty flag is already
+        set by component_health_manager.take_damage() when hull components are hit.
+        Shield-only damage doesn't change component state, so the pipeline is skipped.
+        """
         if remaining >= original_damage:
             return  # No damage was actually applied
-        ship.recalculate_stats()
+        ship.recalculate_stats_if_dirty()
         ship.update_derelict_status()
         if event_bus and not was_derelict and ship.is_derelict:
             event_bus.emit(CombatEvent(

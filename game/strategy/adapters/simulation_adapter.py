@@ -12,7 +12,6 @@ to the simulation layer's BattleController. It handles:
 
 from typing import Optional, List, Any, TYPE_CHECKING
 import logging
-import random
 
 from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
@@ -124,7 +123,14 @@ class SimulationBattleResolver(IBattleResolver):
         controller = BattleController(ai_factory=self._ai_factory)
 
         # Configure battle
-        battle_seed = seed if seed is not None else random.randint(0, 1000000)
+        # PROJ-252: Use per-adapter RNG for fallback seed, not module-level random
+        if seed is not None:
+            battle_seed = seed
+        else:
+            if not hasattr(self, '_seed_rng'):
+                import random as _random_mod
+                self._seed_rng = _random_mod.Random()
+            battle_seed = self._seed_rng.randint(0, 1000000)
         config = BattleConfig(
             mode=BattleMode.STRATEGY,
             seed=battle_seed,

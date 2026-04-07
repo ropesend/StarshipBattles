@@ -88,9 +88,9 @@ class TestStarFromDictValidation:
         assert 'Star' in str(exc_info.value)
         assert field in str(exc_info.value)
 
-    @pytest.mark.parametrize('field', ['mass', 'temperature', 'luminosity'])
+    @pytest.mark.parametrize('field', ['mass', 'luminosity'])
     def test_zero_positive_field_raises_persistence_exception(self, field):
-        """Fields requiring positive values should raise on zero."""
+        """Fields requiring strictly positive values should raise on zero."""
         data = _valid_star_data()
         data[field] = 0.0
 
@@ -99,6 +99,23 @@ class TestStarFromDictValidation:
 
         assert 'Star' in str(exc_info.value)
         assert field in str(exc_info.value)
+
+    def test_zero_temperature_accepted_for_black_holes(self):
+        """temperature=0 is valid (BLACK_HOLE event horizons have no temperature)."""
+        data = _valid_star_data()
+        data['temperature'] = 0.0
+        star = Star.from_dict(data)
+        assert star.temperature == 0.0
+
+    def test_negative_temperature_raises(self):
+        """Negative temperature is always invalid."""
+        data = _valid_star_data()
+        data['temperature'] = -100.0
+
+        with pytest.raises(PersistenceException) as exc_info:
+            Star.from_dict(data)
+
+        assert 'temperature' in str(exc_info.value)
 
     def test_corrupt_spectrum_raises_persistence_exception(self):
         """Corrupt spectrum data should raise PersistenceException with context."""

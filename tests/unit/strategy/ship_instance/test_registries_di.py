@@ -6,7 +6,7 @@ instead of calling get_default_registry_provider().
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.registry import GameRegistries
 
@@ -63,10 +63,10 @@ class TestShipInstanceCreateWithRegistries:
 
     def test_create_stores_registries(self, mock_registries, basic_design_data):
         """create() should store registries on the instance."""
-        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator') as mock_calc_cls:
-            mock_calc = MagicMock()
-            mock_calc.calculate_stats.return_value = {'resource_storage': {}}
-            mock_calc_cls.return_value = mock_calc
+        # PROJ-254: Patch calculate_design_stats at the correct call site.
+        # ShipInstance.create() → get_calculated_stats() → calculate_design_stats()
+        with patch('game.simulation.entities.ship_design_stats.calculate_design_stats') as mock_calc:
+            mock_calc.return_value = {'resource_storage': {}}
 
             ship = ShipInstance.create(
                 design_data=basic_design_data,

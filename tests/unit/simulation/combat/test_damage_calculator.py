@@ -292,7 +292,7 @@ class TestDamageCallbacks:
     """Tests for post-damage callbacks."""
 
     def test_recalculate_stats_called_on_damage(self):
-        """recalculate_stats is called when damage reaches hull layers."""
+        """recalculate_stats_if_dirty is called when damage reaches hull layers."""
         from game.simulation.combat.damage_calculator import DamageCalculator
 
         calculator = DamageCalculator()
@@ -313,12 +313,13 @@ class TestDamageCallbacks:
         ship.layers = {
             LayerType.OUTER: LayerData(radius_pct=0.8, components=[comp])
         }
-        ship.recalculate_stats = MagicMock()
+        ship.recalculate_stats_if_dirty = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         calculator.apply_damage(ship, 50)
 
-        ship.recalculate_stats.assert_called_once()
+        # PROJ-253: damage_calculator now uses recalculate_stats_if_dirty()
+        ship.recalculate_stats_if_dirty.assert_called_once()
         ship.update_derelict_status.assert_called_once()
 
 

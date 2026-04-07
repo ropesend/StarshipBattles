@@ -224,6 +224,7 @@ class TestFleetProductionE2E:
         empire.fleets = [fleet]
 
         mock_galaxy = MagicMock()
+        mock_galaxy.get_zones_at_global_hex.return_value = []
 
         # Collect movements at tick 10 (when fleet would move based on speed)
         movements = movement_engine.collect_movements([empire], mock_galaxy, tick=10)
@@ -246,7 +247,10 @@ class TestFleetProductionE2E:
         empire.id = 0
         empire.fleets = [fleet]
 
+        # Explicit empty zone list — MagicMock iteration is non-deterministic
+        # across xdist workers, causing flaky failures in sharded runs
         mock_galaxy = MagicMock()
+        mock_galaxy.get_zones_at_global_hex.return_value = []
 
         # Collect movements at tick 10
         movements = movement_engine.collect_movements([empire], mock_galaxy, tick=10)

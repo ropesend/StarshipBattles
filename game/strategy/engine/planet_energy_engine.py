@@ -144,7 +144,10 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
     def invalidate_energy_cache(self, planet_id: str) -> None:
         """Remove cached energy metadata for a planet (PROJ-253).
 
-        Call when facilities are built, destroyed, toggled, or damaged.
+        The fingerprint-based cache auto-detects facility additions, removals,
+        and operational status changes. This method exists for explicit invalidation
+        by callers that modify facility internals without changing the fingerprint
+        (e.g., component ability reconfiguration).
         """
         self._energy_cache.pop(planet_id, None)
 
