@@ -35,11 +35,19 @@ cleanup_nul.py
 nul
 
 # QA Observer output
-tools/qa_observer/session_data/
+Tools/qa_observer/session_data/
 
 # Test artifact: MagicMock stringified as directory path
 MagicMock/
 
 # Subagent temporary reports
 .agent_reports/
-.test_durations.json
+
+# Generated analysis output
+dead_code_candidates.txt
+
+# Corrupt backup files
+*.corrupt
+
+# Runtime logs
+combat_lab/battle.log

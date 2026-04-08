@@ -7,7 +7,7 @@ argument-hint: "[bug|feature [numbers...]] (no args = all bugs then features)"
 
 # Parallel Deep Dive: Agent Team Investigation
 
-**Protocol:** `Tickets/protocols/02d_parallel_deep_dive.md`
+**Protocol:** `Tracking/protocols/02d_parallel_deep_dive.md`
 
 Read and follow the full protocol file.
 
@@ -31,8 +31,8 @@ Parse `$ARGUMENTS` using these rules:
 | Variable | Bug | Feature |
 |----------|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
-| DASHBOARD | Debugging/debug_plan.md | Features/feature_plan.md |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
+| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
 | SESSION_DIR | .agent_reports/deep-dive-session |  .agent_reports/deep-dive-session |
 | TEAM_NAME | deep-dive-session | deep-dive-session |
 
@@ -41,8 +41,8 @@ Parse `$ARGUMENTS` using these rules:
 1. **Build the ticket queue** based on arguments:
 
    **No arguments (default):**
-   - Read `Debugging/debug_plan.md` -- collect all `[Pending]` and `[In-Progress]` bugs.
-   - Read `Features/feature_plan.md` -- collect all `[Pending]` and `[In-Progress]` features.
+   - Read `Tracking/debug_plan.md` -- collect all `[Pending]` and `[In-Progress]` bugs.
+   - Read `Tracking/feature_plan.md` -- collect all `[Pending]` and `[In-Progress]` features.
    - Order: **all bugs first, then all features.**
    - Both PREFIX/ACTIVE_DIR/DASHBOARD configs are used (switch per ticket type).
 

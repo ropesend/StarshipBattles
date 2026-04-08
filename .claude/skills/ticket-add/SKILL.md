@@ -7,7 +7,7 @@ argument-hint: bug|feature <descriptions>
 
 # Add Ticket
 
-**Protocol:** `Tickets/protocols/01_ingest_ticket.md`
+**Protocol:** `Tracking/protocols/01_ingest_ticket.md`
 
 Read and follow the full protocol file.
 
@@ -28,8 +28,8 @@ Set these values based on ticket type:
 | | Bug | Feature |
 |--|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
-| DASHBOARD | Debugging/debug_plan.md | Features/feature_plan.md |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
+| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
 
 ## Execution
 

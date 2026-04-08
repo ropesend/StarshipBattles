@@ -69,8 +69,8 @@ After selecting a session (whether auto-selected or specified by argument):
 ### Step 3: Load Dashboards for Duplicate Detection
 
 Read these files and keep them in context:
-- `Debugging/debug_plan.md` — all active bug IDs and descriptions
-- `Features/feature_plan.md` — all active feature IDs and descriptions
+- `Tracking/debug_plan.md` — all active bug IDs and descriptions
+- `Tracking/feature_plan.md` — all active feature IDs and descriptions
 
 Note the next available IDs (highest existing ID + 1 for each system).
 
@@ -107,10 +107,10 @@ This investigation informs whether it's truly a bug, a feature gap, or something
 ### Step C: Duplicate Check
 
 Compare the observation against existing active tickets:
-- Scan bug descriptions in `Debugging/debug_plan.md` for overlap
-- Scan feature descriptions in `Features/feature_plan.md` for overlap
+- Scan bug descriptions in `Tracking/debug_plan.md` for overlap
+- Scan feature descriptions in `Tracking/feature_plan.md` for overlap
 - If a potential match is found:
-  1. Read the full existing ticket file (e.g., `Debugging/active_bugs/BUG-XX.md`) for detailed context
+  1. Read the full existing ticket file (e.g., `Tracking/bugs/active/BUG-XX.md`) for detailed context
   2. Present the match: "This may overlap with BUG-XX: [description]"
   3. **If the matching bug has status `[Awaiting Confirmation]`**, use **AskUserQuestion** with these options:
      - **Approve Fix** — the bug is confirmed fixed during this QA session (proceed to Step E: Approve Bug Fix)
@@ -149,12 +149,12 @@ Based on the confirmed category:
 3. **Determine priority** (Critical/High/Medium/Low) — propose one based on severity, confirm with user
 4. **Copy session logs** into the bug's directory (so they survive session pruning):
    - If `Tools/qa_observer/session_data/<session_id>/logs/` exists:
-     - Create `Debugging/active_bugs/BUG-XX_logs/`
+     - Create `Tracking/bugs/logs/BUG-XX_logs/`
      - Copy all log files from the session `logs/` directory into `BUG-XX_logs/`
    - If `Tools/qa_observer/session_data/<session_id>/word_timestamps.jsonl` exists:
      - Copy it into `BUG-XX_logs/` as well
 
-5. **Create** the ticket file `Debugging/active_bugs/BUG-XX.md`:
+5. **Create** the ticket file `Tracking/bugs/active/BUG-XX.md`:
 
 ```markdown
 # BUG-XX: [Title]
@@ -186,7 +186,7 @@ Full logs: [BUG-XX_logs/](./BUG-XX_logs/)
 
 > **Note:** The "Relevant Logs" section should be omitted entirely if no session logs were captured or no relevant log entries were found for the observation's time window. In that case, also skip step 4 (no `BUG-XX_logs/` directory needed).
 
-6. **Update** `Debugging/debug_plan.md` — append a new row to the Bug Queue table
+6. **Update** `Tracking/debug_plan.md` — append a new row to the Bug Queue table
 7. Report: "Created BUG-XX: [title]"
 
 ---
@@ -199,7 +199,7 @@ Full logs: [BUG-XX_logs/](./BUG-XX_logs/)
    - Include context from code investigation
 2. **Present** the draft to the user for approval or edits
 3. **Determine priority** — propose one, confirm with user
-4. **Create** the ticket file `Features/active_features/FEAT-XX.md`:
+4. **Create** the ticket file `Tracking/features/active/FEAT-XX.md`:
 
 ```markdown
 # FEAT-XX: [Title]
@@ -217,7 +217,7 @@ Pending
 - YYYY-MM-DD: Created from QA Session <session_id>.
 ```
 
-5. **Update** `Features/feature_plan.md` — append a new row to the Feature Queue table
+5. **Update** `Tracking/feature_plan.md` — append a new row to the Feature Queue table
 6. Report: "Created FEAT-XX: [title]"
 
 ---
@@ -256,11 +256,11 @@ Pending
 
 #### For Reject Bug Fix
 
-Follow `Tickets/protocols/05_reject_ticket.md` pattern:
+Follow `Tracking/protocols/05_reject_ticket.md` pattern:
 
 1. **Identify** the matching BUG-XX ticket (from Step C)
 2. **Ask the user** for their rejection explanation — clean up speech-to-text artifacts but preserve meaning
-3. **Append** to the end of `Debugging/active_bugs/BUG-XX.md`:
+3. **Append** to the end of `Tracking/bugs/active/BUG-XX.md`:
 
 ```markdown
 ---
@@ -271,25 +271,25 @@ Follow `Tickets/protocols/05_reject_ticket.md` pattern:
 ```
 
 Include screenshot references from this QA session using the standard relative path pattern:
-`[![Description](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)`
+`[![Description](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)`
 
-4. **Update** `Debugging/debug_plan.md` — change status from `[Awaiting Confirmation]` to `[In-Progress]`
+4. **Update** `Tracking/debug_plan.md` — change status from `[Awaiting Confirmation]` to `[In-Progress]`
 5. Report: "BUG-XX fix rejected and reverted to In-Progress."
 
 ---
 
 #### For Approve Bug Fix
 
-Follow `Tickets/protocols/03_close_ticket.md` pattern:
+Follow `Tracking/protocols/03_close_ticket.md` pattern:
 
 1. **Identify** the matching BUG-XX ticket (from Step C)
 2. **Read** the ticket to extract the title, solution summary, and key test case
-3. **Append** entry to `Debugging/solved_bugs.md`:
+3. **Append** entry to `Tracking/solved_bugs.md`:
    - Format: `## BUG-XX [Title]`
    - Content: Date Solved, Brief Summary of Solution, Key Test Case
-4. **Move** `Debugging/active_bugs/BUG-XX.md` to `Debugging/archived_tickets/BUG-XX.md` (do not modify the ticket content — preserve full logs)
-5. **Move** `Debugging/active_bugs/BUG-XX_logs/` to `Debugging/archived_tickets/BUG-XX_logs/` if it exists
-6. **Remove** the row for BUG-XX from `Debugging/debug_plan.md`
+4. **Move** `Tracking/bugs/active/BUG-XX.md` to `Tracking/bugs/archived/BUG-XX.md` (do not modify the ticket content — preserve full logs)
+5. **Move** `Tracking/bugs/logs/BUG-XX_logs/` to `Tracking/bugs/archived/BUG-XX_logs/` if it exists
+6. **Remove** the row for BUG-XX from `Tracking/debug_plan.md`
 7. Report: "BUG-XX confirmed fixed and archived."
 
 ---
@@ -331,20 +331,20 @@ This file serves as a persistent record that the session has been triaged, and i
 ### Source
 All session images are in: `Tools/qa_observer/session_data/<session_id>/images/`
 
-### For Bug Tickets (`Debugging/active_bugs/BUG-XX.md`)
+### For Bug Tickets (`Tracking/bugs/active/BUG-XX.md`)
 
 Reference images in-place using relative paths from the ticket back to the session directory. **Do NOT copy images.** The session data is the image archive.
 
 Pattern (matching existing BUG-90, BUG-91 convention):
 ```markdown
-[![Screenshot description](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)
+[![Screenshot description](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)
 ```
 
-### For Feature Tickets (`Features/active_features/FEAT-XX.md`)
+### For Feature Tickets (`Tracking/features/active/FEAT-XX.md`)
 
 Same relative path pattern as bugs:
 ```markdown
-[![Screenshot description](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)
+[![Screenshot description](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)
 ```
 
 ### For Project Triage Files (`Projects/Triage/<name>.md`)

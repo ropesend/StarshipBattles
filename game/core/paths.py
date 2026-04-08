@@ -110,7 +110,7 @@ class Paths:
     SYSTEM_BLUEPRINTS_FILE: str = os.path.join(DATA_DIR, "system_blueprints.json")
     ASTROPHYSICS_FILE: str = os.path.join(DATA_DIR, "astrophysics.json")
     GALAXY_LAYOUTS_FILE: str = os.path.join(DATA_DIR, "galaxy_layouts.json")
-    STAR_SYSTEM_NAMES_FILE: str = os.path.join(DATA_DIR, "StarSystemNames.YAML")
+    STAR_SYSTEM_NAMES_FILE: str = os.path.join(DATA_DIR, "star_system_names.yaml")
     STORMS_FILE: str = os.path.join(DATA_DIR, "storms.json")
     STATS_LAYOUT_FILE: str = os.path.join(DATA_DIR, "stats_layout.json")
     HOMEWORLD_PRESETS_FILE: str = os.path.join(GAME_DIR, "data", "homeworld_presets.json")

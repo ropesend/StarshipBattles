@@ -7,7 +7,7 @@ argument-hint: <bug numbers or "all">
 
 # Parallel Bug Resolution
 
-**Protocol:** `Tickets/protocols/02c_parallel_debug.md`
+**Protocol:** `Tracking/protocols/02c_parallel_debug.md`
 
 Read and follow the full protocol file.
 
@@ -28,8 +28,8 @@ Parse `$ARGUMENTS` as either:
 | Variable | Value |
 |----------|-------|
 | PREFIX | BUG |
-| ACTIVE_DIR | Debugging/active_bugs |
-| DASHBOARD | Debugging/debug_plan.md |
+| ACTIVE_DIR | Tracking/bugs/active |
+| DASHBOARD | Tracking/debug_plan.md |
 | SESSION_DIR | .agent_reports/debug-session |
 
 ## Session Setup

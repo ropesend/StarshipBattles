@@ -19,7 +19,7 @@ All skills use category prefixes:
 
 The 10 `debug-*` and 10 `feature-*` skills were consolidated into 10 unified `ticket-*` skills.
 The `debug-triage-qa` agent-only skill was removed (functionality covered by `qa-triage`).
-Protocols moved from `Debugging/protocols/` and `Features/protocols/` to `Tickets/protocols/`.
+Protocols moved from `Debugging/protocols/` and `Features/protocols/` to `Tracking/protocols/`.
 
 ## Skill Detail Tracking
 

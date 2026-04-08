@@ -4,7 +4,6 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-245 | Spatial Grid Incremental Updates | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
@@ -32,6 +31,13 @@ w# Projects Index
 | PROJ-230 | Planet Generation Balance Tuning | Archived | 2026-03-27 | 2026-03-28 |
 | PROJ-229 | Galaxy Generation Inspector Tool | Archived | 2026-03-27 | 2026-03-28 |
 | PROJ-228 | UI Structural Patterns (Dedup Campaign 5/5) | Archived | 2026-03-24 | 2026-03-25 |
+| PROJ-256 | Centralize All File Paths via Paths Class | Archived | 2026-04-08 | 2026-04-08 |
+| PROJ-255 | Code Quality & Decomposition | Archived | 2026-04-08 | 2026-04-08 |
+| PROJ-254 | Identity, Indexing & Correctness | Archived | 2026-04-08 | 2026-04-08 |
+| PROJ-253 | Hot-Loop & Cache Optimization | Archived | 2026-04-08 | 2026-04-08 |
+| PROJ-252 | Determinism & Global State Isolation | Archived | 2026-04-08 | 2026-04-08 |
+| PROJ-251 | Error Boundary Architecture Refactor | Archived | 2026-04-08 | 2026-04-08 |
+| PROJ-245 | Spatial Grid Incremental Updates | Archived | 2026-04-05 | 2026-04-08 |
 | PROJ-227 | UI Formatting, Portraits & Shared Components (Dedup Campaign 4/5) | Archived | 2026-03-24 | 2026-03-25 |
 
 ---

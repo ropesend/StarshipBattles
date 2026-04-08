@@ -7,7 +7,7 @@ argument-hint: bug|feature <number>
 
 # Work Ticket
 
-**Protocol:** `Tickets/protocols/02_work_ticket.md`
+**Protocol:** `Tracking/protocols/02_work_ticket.md`
 
 Read and follow the full protocol file.
 
@@ -28,16 +28,16 @@ Set these values based on ticket type:
 | | Bug | Feature |
 |--|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
-| DASHBOARD | Debugging/debug_plan.md | Features/feature_plan.md |
-| INDEX | Debugging/solved_bugs.md | Features/completed_features.md |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
+| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
+| INDEX | Tracking/solved_bugs.md | Tracking/completed_features.md |
 
 ## Execution
 
 1. **LOAD** the ticket file: `{ACTIVE_DIR}/{PREFIX}-{NUMBER}.md`
 2. **READ** relevant `docs/` files for the areas being modified (see `docs/README.md`).
 3. **UPDATE** DASHBOARD: Set status to `[In-Progress]`.
-4. **FOLLOW** the full protocol in `Tickets/protocols/02_work_ticket.md`, executing:
+4. **FOLLOW** the full protocol in `Tracking/protocols/02_work_ticket.md`, executing:
    - All shared phases (context, test, implementation, documentation)
    - **Bug-only** phases if type is Bug (anti-reversion, integrity check, documentation discrepancy)
    - **Feature-only** phases if type is Feature (ambiguity check, refactor flag)

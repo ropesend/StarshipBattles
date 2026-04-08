@@ -7,7 +7,7 @@ argument-hint: bug|feature <number> <update text>
 
 # Update Ticket
 
-**Protocol:** `Tickets/protocols/04_update_ticket.md`
+**Protocol:** `Tracking/protocols/04_update_ticket.md`
 
 Read and follow the full protocol file.
 
@@ -26,7 +26,7 @@ Parse `$ARGUMENTS` as: first word = ticket type, second word = ticket number, re
 | | Bug | Feature |
 |--|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
 
 ## CRITICAL CONSTRAINTS
 

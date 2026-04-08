@@ -1,10 +1,4 @@
 pygame-ce>=2.5.0
 pygame_gui>=0.6.9
-pytest>=8.0.0
 scipy>=1.15.0
 PyYAML>=6.0
-pytest-testmon
-pyaudio>=0.2.14
-watchdog>=4.0.0
-google-cloud-speech>=2.26.0
-python-dotenv>=1.0.1

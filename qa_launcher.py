@@ -6,7 +6,7 @@ import time
 
 def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
-    observer_script = os.path.join(root_dir, 'tools', 'qa_observer', 'observer.py')
+    observer_script = os.path.join(root_dir, 'Tools', 'qa_observer', 'observer.py')
     game_script = os.path.join(root_dir, 'launcher.py')
     
     python_exe = sys.executable

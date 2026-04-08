@@ -7,7 +7,7 @@ argument-hint: bug|feature <number> <answers>
 
 # Answer Ticket Questions
 
-**Protocol:** `Tickets/protocols/06_answer_questions.md`
+**Protocol:** `Tracking/protocols/06_answer_questions.md`
 
 Read and follow the full protocol file.
 
@@ -26,8 +26,8 @@ Parse `$ARGUMENTS` as: first word = ticket type, second word = ticket number, re
 | | Bug | Feature |
 |--|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
-| DASHBOARD | Debugging/debug_plan.md | Features/feature_plan.md |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
+| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
 
 ## CRITICAL CONSTRAINTS
 

@@ -7,7 +7,7 @@ argument-hint: bug|feature <numbers...>
 
 # Batch Close Tickets
 
-**Protocol:** `Tickets/protocols/03a_batch_close.md`
+**Protocol:** `Tracking/protocols/03a_batch_close.md`
 
 Read and follow the full protocol file.
 
@@ -26,10 +26,10 @@ Parse `$ARGUMENTS` as: first word = ticket type (bug/feature), remaining words =
 | | Bug | Feature |
 |--|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
-| ARCHIVE_DIR | Debugging/archived_tickets | Features/archived_features |
-| DASHBOARD | Debugging/debug_plan.md | Features/feature_plan.md |
-| INDEX | Debugging/solved_bugs.md | Features/completed_features.md |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
+| ARCHIVE_DIR | Tracking/bugs/archived | Tracking/features/archived |
+| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
+| INDEX | Tracking/solved_bugs.md | Tracking/completed_features.md |
 
 ## Execution
 

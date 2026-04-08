@@ -590,7 +590,7 @@ class Galaxy:
 
         Args:
             data: Saved galaxy data
-            naming_data_path: Path to StarSystemNames.YAML (optional)
+            naming_data_path: Path to star_system_names.yaml (optional)
 
         Returns:
             Reconstructed Galaxy with all indexes rebuilt

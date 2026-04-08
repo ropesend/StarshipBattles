@@ -1,0 +1,20 @@
+!EXECUTE_PROTOCOL: Tracking/protocols/02a_batch_work.md
+
+1. LOAD the attached protocol file Tracking/protocols/02a_batch_work.md.
+2. READ Tracking/debug_plan.md to identify all [Pending] and [In-Progress] bugs.
+3. CRITICAL: For each bug, complete Phase 0 (Architectural Context) before attempting
+   any fix. Read relevant `docs/` files (`docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`,
+   `docs/03_CONVENTIONS.md`), check git history, and check active projects. NEVER revert
+   recently refactored code — fix forward or escalate to [Needs Clarification].
+   If code contradicts docs, check git dates to determine which is correct. If unclear,
+   set [Needs Clarification] and skip. Update docs inline when fixing discrepancies.
+4. BEGIN BATCH LOOP:
+   * Select highest priority bug.
+   * LOAD ticket file (e.g., Tracking/bugs/active/BUG-XX.md).
+   * EXECUTE full cycle including Phase 2.5 integrity check:
+     Phase 0 (Context) -> Phase 1 (Red) -> Phase 2 (Green) -> Phase 2.5 (Integrity Check) -> Phase 3 (Doc) -> Phase 4 (Status).
+   * If Phase 2.5 detects reversion of recent refactors, set [Needs Clarification] and move to next bug.
+   * DO NOT wait for input - proceed to next bug.
+5. EXIT when context >= 80% OR no Pending bugs remain.
+
+AUTONOMOUS MODE: Do not stop between bugs. Only stop for context limit or empty queue.

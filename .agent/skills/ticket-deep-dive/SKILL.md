@@ -7,7 +7,7 @@ argument-hint: bug|feature <number>
 
 # Deep Dive: Ticket Investigation
 
-**Protocol:** `Tickets/protocols/02b_deep_dive.md`
+**Protocol:** `Tracking/protocols/02b_deep_dive.md`
 
 Read and follow the full protocol file. Follow the **Bug Deep Dive** section if type is bug, or the **Feature Deep Dive** section if type is feature.
 
@@ -27,8 +27,8 @@ Parse `$ARGUMENTS` as: first word = ticket type, second word = ticket number.
 | | Bug | Feature |
 |--|-----|---------|
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Debugging/active_bugs | Features/active_features |
-| DASHBOARD | Debugging/debug_plan.md | Features/feature_plan.md |
+| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
+| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
 
 ## Execution
 

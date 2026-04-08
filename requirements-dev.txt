@@ -1,0 +1,27 @@
+-r requirements.txt
+
+# Testing
+pytest>=8.0.0
+pytest-testmon
+pytest-xdist
+
+# Image processing (Tools/)
+Pillow>=10.0.0
+numpy>=1.24.0
+opencv-python>=4.8.0
+
+# Charting (Tools/inspect_galaxy)
+matplotlib>=3.7.0
+
+# Web UIs (Tools/background_eraser, component_visuals_manager, image_comparator, star_mask_tool)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Tech tree editor (Tools/techtree_editor)
+dearpygui>=1.9.0
+
+# QA Observer (Tools/qa_observer)
+pyaudio>=0.2.14
+watchdog>=4.0.0
+google-cloud-speech>=2.26.0
+python-dotenv>=1.0.1

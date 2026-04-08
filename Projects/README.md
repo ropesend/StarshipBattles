@@ -51,15 +51,15 @@ proj-close ─────────────► Projects/protocols/05_clos
 proj-revise ────────────► Projects/protocols/06_revise
 proj-extract-phase ─────► Projects/protocols/07_extract
 
-ticket-add ─────────────► Tickets/protocols/01_ingest...     Debugging/active_bugs/BUG-XX.md
-ticket-work ────────────► Tickets/protocols/02_work...       Features/active_features/FEAT-XX.md
-ticket-continue ────────► Tickets/protocols/02a_batch...
-ticket-deep-dive ───────► Tickets/protocols/02b_deep...
-ticket-close ───────────► Tickets/protocols/03_close...
-ticket-batch-close ─────► Tickets/protocols/03a_batch...
-ticket-update ──────────► Tickets/protocols/04_update...
-ticket-reject ──────────► Tickets/protocols/05_reject...
-ticket-answer ──────────► Tickets/protocols/06_answer...
+ticket-add ─────────────► Tracking/protocols/01_ingest...     Tracking/bugs/active/BUG-XX.md
+ticket-work ────────────► Tracking/protocols/02_work...       Tracking/features/active/FEAT-XX.md
+ticket-continue ────────► Tracking/protocols/02a_batch...
+ticket-deep-dive ───────► Tracking/protocols/02b_deep...
+ticket-close ───────────► Tracking/protocols/03_close...
+ticket-batch-close ─────► Tracking/protocols/03a_batch...
+ticket-update ──────────► Tracking/protocols/04_update...
+ticket-reject ──────────► Tracking/protocols/05_reject...
+ticket-answer ──────────► Tracking/protocols/06_answer...
 
 Loop Workers ───────────► Projects/protocols/WORKER_TEMPLATE.md
   refactor_loop/WORKER.md
@@ -107,12 +107,12 @@ The ticket system uses unified skills and protocols that handle both bugs and fe
 - **Deep dive**: Scope assessment and complexity rating (Simple/Moderate/Complex/Project-Scale)
 
 ### Data locations
-- Bug tickets: `Debugging/active_bugs/BUG-XX.md` → `Debugging/archived_tickets/`
-- Bug dashboard: `Debugging/debug_plan.md`
-- Bug index: `Debugging/solved_bugs.md`
-- Feature tickets: `Features/active_features/FEAT-XX.md` → `Features/archived_features/`
-- Feature dashboard: `Features/feature_plan.md`
-- Feature index: `Features/completed_features.md`
+- Bug tickets: `Tracking/bugs/active/BUG-XX.md` → `Tracking/bugs/archived/`
+- Bug dashboard: `Tracking/debug_plan.md`
+- Bug index: `Tracking/solved_bugs.md`
+- Feature tickets: `Tracking/features/active/FEAT-XX.md` → `Tracking/features/archived/`
+- Feature dashboard: `Tracking/feature_plan.md`
+- Feature index: `Tracking/completed_features.md`
 
 ---
 
@@ -160,7 +160,7 @@ Each loop iteration: reads plan → finds next incomplete item → executes one 
 | 10 | `10_manage_refactor_plan.md` | Master refactor plan management |
 | — | `WORKER_TEMPLATE.md` | Shared worker protocol for all loops |
 
-### Ticket Protocols (`Tickets/protocols/`)
+### Ticket Protocols (`Tracking/protocols/`)
 
 | # | File | Purpose |
 |---|------|---------|
@@ -212,14 +212,14 @@ When modifying this system, follow these rules to prevent drift:
 ### File relationships
 ```
 .claude/skills/*/SKILL.md  ──references──►  Projects/protocols/*.md
-                                            Tickets/protocols/*.md
+                                            Tracking/protocols/*.md
 Loop WORKER.md files        ──references──►  Projects/protocols/WORKER_TEMPLATE.md
                                             Projects/protocols/08_automated_loop_protocol.md
 ```
 
 ### Verification checklist
 After any structural change:
-- [ ] `grep -r "old_name" .claude/skills/ Projects/ Tickets/` finds no stale references
+- [ ] `grep -r "old_name" .claude/skills/ Projects/ Tracking/` finds no stale references
 - [ ] All skills in Quick Reference table match actual `.claude/skills/` directories
 - [ ] All protocols in Protocol Reference tables match actual files on disk
 - [ ] README accurately describes the current system
