@@ -494,8 +494,8 @@ if has_warp_capability(ship_instance):
 **Callers:**
 - `ShipInstance.get_calculated_stats()` — primary consumer, caches results
 - `ProductionSpawner._spawn_to_staging_yard()` — mass calculation for staging
-- `scripts/validate_designs.py` — mass consistency checks
-- `scripts/fix_designs.py` — expected_stats recalculation
+- `Tools/validate_designs/validate_designs.py` — mass consistency checks
+- `Tools/fix_designs/fix_designs.py` — expected_stats recalculation
 
 > **Note:** The strategy layer's `ShipStatsCalculator` (`game/strategy/services/ship_stats_calculator.py`) is deprecated. No production code imports it. Its utility methods `has_warp_capability()` and `get_ability_list()` have been moved to `component_inspector`.
 

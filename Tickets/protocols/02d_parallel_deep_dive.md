@@ -245,7 +245,7 @@ When a teammate reports implementation complete:
 2. **Verify branch name** matches expected `fix/{prefix}-{id}` or `feat/{prefix}-{id}` pattern. If the branch name looks wrong (possible worktree failure), warn user before merging.
 3. **If SUCCESS:**
    a. Merge the branch: `git merge <branch> --no-edit`
-   b. Run full test suite: `python scripts/test_sharded.py`
+   b. Run full test suite: `python Tools/test_sharded/test_sharded.py`
    c. **If tests pass:**
       - Update `{ACTIVE_DIR}/{PREFIX}-{ID}.md`: set status to `[Awaiting Confirmation]`, append to Work Log.
       - Update `{DASHBOARD}`: set ticket status to `[Awaiting Confirmation]`.
@@ -499,7 +499,7 @@ Re-read your report at: {SESSION_DIR}/investigations/{PREFIX}-{ID}_investigation
 ### Phase 2: Implementation (Green)
 - Modify code to pass the failing test / implement the feature.
 - Run targeted tests: `pytest tests/path/to/relevant_tests/ -x`
-- Run broader regression: `python scripts/test_sharded.py`
+- Run broader regression: `python Tools/test_sharded/test_sharded.py`
 
 ### Phase 3: Post-Fix Integrity Check (MANDATORY)
 1. **Reversion check:** Does your diff undo any recent refactor from Anti-Reversion Notes? If YES → STOP, message coordinator as BLOCKED.

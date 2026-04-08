@@ -86,7 +86,7 @@ When a worker returns:
 
 **SUCCESS (all phases done):**
 1. Merge branch: `git merge <branch> --no-edit`
-2. Run tests: `python scripts/test_sharded.py`
+2. Run tests: `python Tools/test_sharded/test_sharded.py`
 3. If tests pass:
    - Mark project `done`.
    - Report: "PROJ-XX complete! Tests: {count} passed."
@@ -126,7 +126,7 @@ Present final summary (format from protocol Step 5). Clean up `{SESSION_DIR}/`.
 
 - **NEVER** launch two workers whose manifests share ANY file.
 - **ALWAYS** use `isolation: "worktree"` for workers.
-- **ALWAYS** run `python scripts/test_sharded.py` after each merge (one at a time).
+- **ALWAYS** run `python Tools/test_sharded/test_sharded.py` after each merge (one at a time).
 - **ALWAYS** update `{SESSION_DIR}/dashboard.md` after state changes.
 - **ALWAYS** merge sequentially (one project at a time) to isolate regressions.
 - If context approaches ~80%, follow the Handoff Rule from the protocol.

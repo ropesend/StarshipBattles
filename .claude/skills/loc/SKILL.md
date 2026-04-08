@@ -6,13 +6,13 @@ disable-model-invocation: true
 
 # Lines of Code Report
 
-Count and report lines of code across the Starship Battles project using the `scripts/loc.py` counter.
+Count and report lines of code across the Starship Battles project using the `Tools/loc/loc.py` counter.
 
 ## Steps
 
 1. **Run the counter script** to get per-section, per-file-type breakdowns:
    ```bash
-   python scripts/loc.py --detailed
+   python Tools/loc/loc.py --detailed
    ```
    This outputs JSON with the structure:
    ```json
@@ -47,4 +47,4 @@ Count and report lines of code across the Starship Battles project using the `sc
 
 - The script handles all exclusions (\_\_pycache\_\_, .pyc, test_history.json, output dirs).
 - The script counts all file types accurately using Python's file I/O (no wc -l batching issues).
-- `python scripts/loc.py` (without --detailed) prints the original simple summary if needed.
+- `python Tools/loc/loc.py` (without --detailed) prints the original simple summary if needed.

@@ -28,6 +28,9 @@
 **Working on UI or rendering:**
 - [06_UI_STYLE_GUIDE.md](06_UI_STYLE_GUIDE.md) — Color constants, themes, pygame_gui styling
 
+**Working with development tools (asset processors, editors, test runners):**
+- [Tools/README.md](../Tools/README.md) — Development tool catalog and creation guide
+
 ### Step 3: Domain-specific (read when working in that system)
 
 | System | Document | Covers |
@@ -85,7 +88,7 @@ docs/
 
 ## Quick Reference
 
-- **Test command (pytest):** `python scripts/test_sharded.py`
+- **Test command (pytest):** `python Tools/test_sharded/test_sharded.py`
 - **Test command (simulation):** `python -m combat_lab.run_tests`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist

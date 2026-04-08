@@ -168,7 +168,7 @@ The `combat_lab/` directory has its own `pytest.ini` and is **excluded** from th
 
 ```bash
 # Full suite with sharded parallel runner (auto-detects CPU count)
-python scripts/test_sharded.py
+python Tools/test_sharded/test_sharded.py
 
 # Incremental (only tests affected by changes)
 pytest tests/ --testmon

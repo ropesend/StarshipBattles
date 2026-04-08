@@ -16,7 +16,7 @@
 **Notes:** 4 integration tests: full initialization, fleet bonus propagation, combat participation, derelict detection. Created tests/integration/simulation/ directory. Used _MockAIControllerFactory (minimal IAIControllerFactory implementation) instead of real AI layer. All 4 pass.
 
 ## Task 4.2: Final verification [Simple]
-**Tests:** `python scripts/test_sharded.py`
+**Tests:** `python Tools/test_sharded/test_sharded.py`
 - [x] Run full test suite: `python -m pytest tests/ -q -n 12` -- 14370 passed, 2 skipped, 0 failures
 - [x] Grep for any other callers of `add_ship_mid_battle`: verified 3 call sites (definition, fighter launch, battle_controller)
 - [x] Grep for any other direct `self.ships.append` in `battle_engine.py` -- only in start() (initial setup) and add_ship_mid_battle() (correct)

@@ -26,10 +26,10 @@
 **Notes:**
 
 ## Task 2.4: Search for any remaining occurrences [Simple]
-**Tests:** `python scripts/test_sharded.py`
+**Tests:** `python Tools/test_sharded/test_sharded.py`
 - [ ] `grep -r "team2_ships" game/ tests/` -- must return zero results
 - [ ] `grep -rn "team1_ships" game/` -- verify every remaining occurrence maps to `team_id == 1`
 - [ ] `grep -rn "team1_count" tests/` -- verify every remaining occurrence maps to team 1
 - [ ] `grep -rn "team1.*team 0\|team2.*team 1" game/ tests/` -- must return zero results
-- [ ] Run full test suite: `python scripts/test_sharded.py` -- all tests pass
+- [ ] Run full test suite: `python Tools/test_sharded/test_sharded.py` -- all tests pass
 **Notes:**

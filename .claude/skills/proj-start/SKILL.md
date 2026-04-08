@@ -35,7 +35,7 @@ Adopt the **Project Architect** persona.
    Do NOT create project files manually. The script ensures proper directory structure.
 4. **MANDATORY:** Run full test suite to establish baseline:
    ```bash
-   python scripts/test_sharded.py
+   python Tools/test_sharded/test_sharded.py
    ```
    All tests must pass before proceeding.
 5. Perform deep code review of relevant areas

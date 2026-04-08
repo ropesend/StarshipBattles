@@ -57,7 +57,7 @@ Launch **3 review agents in parallel** to verify the refactoring:
   - Do all tests pass?
   - Were new tests added for extracted helpers?
   - Are there untested code paths in the new functions?
-  - Run `python scripts/test_sharded.py` and report results
+  - Run `python Tools/test_sharded/test_sharded.py` and report results
   - Write findings to `findings/test_coverage_review.md`
 
 ### 4. Verdict Determination

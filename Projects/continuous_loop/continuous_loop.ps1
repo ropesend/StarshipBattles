@@ -533,7 +533,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
 
     # ── Step G: Test gate before merge ──
     Write-Info "Running test gate before merge..."
-    $testOutput = & python scripts/test_sharded.py 2>&1 | Out-String
+    $testOutput = & python Tools/test_sharded/test_sharded.py 2>&1 | Out-String
     $testExitCode = $LASTEXITCODE
     if ($testExitCode -ne 0) {
         Write-ErrorLog "Test gate FAILED (exit code $testExitCode). Refusing to merge broken code."

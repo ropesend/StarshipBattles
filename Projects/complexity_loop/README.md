@@ -28,7 +28,7 @@ CYCLE N:
      - Correctness Reviewer (behavior preservation)
      - Complexity Verifier (CC measurement)
      - Test Coverage Reviewer (full suite verification)
-  8. Test gate (python scripts/test_sharded.py)
+  8. Test gate (python Tools/test_sharded/test_sharded.py)
   9. Merge to main
   10. Record metrics, repeat
 ```
