@@ -36,7 +36,7 @@
 | System | Document | Covers |
 |--------|----------|--------|
 | Combat/Simulation | [combat_simulation.md](systems/combat_simulation.md) | Battle modes, damage pipeline, ship architecture, abilities |
-| Abilities | [ability_reference.md](systems/ability_reference.md) | All 46 component abilities: registry keys, parameters, stat bindings |
+| Abilities | [ability_reference.md](systems/ability_reference.md) | All 44 component abilities: registry keys, parameters, stat bindings |
 | Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, events |
 | AI | [ai_system.md](systems/ai_system.md) | Behaviors, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
@@ -62,7 +62,7 @@
 docs/
 ├── README.md                    <- You are here
 ├── 01_ARCHITECTURE.md           # Layers, packages, APIs, protocols, data flow
-├── 02_PATTERNS.md               # 17 design patterns (Singleton, DI, Facade, CQRS, etc.)
+├── 02_PATTERNS.md               # 20 design patterns (Singleton, DI, Facade, CQRS, etc.)
 ├── 03_CONVENTIONS.md            # Naming, file org, imports, test conventions
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging
@@ -77,7 +77,7 @@ docs/
 │   └── testing_infrastructure.md  DI fixtures, conftest, test helpers
 │
 └── systems/                     # Domain-specific architecture
-    ├── ability_reference.md       All 41 abilities: keys, parameters, stat bindings
+    ├── ability_reference.md       All 44 abilities: keys, parameters, stat bindings
     ├── combat_simulation.md       Battle orchestration, damage pipeline
     ├── strategy_layer.md          Facade, turn engine, commands, events
     ├── ai_system.md               AI behaviors, targeting, adapters
@@ -92,4 +92,4 @@ docs/
 - **Test command (simulation):** `python -m combat_lab.run_tests`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist
-- **Historical/archived docs:** `Projects/_archive/` (not in docs/ — do not read for current info)
+- **Historical/archived docs:** `Projects/deep_archive/` and `Projects/archived_projects/` (not in docs/ — do not read for current info)

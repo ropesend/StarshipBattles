@@ -50,7 +50,7 @@ import random
 from typing import List, Dict, Any
 
 from game.core.config import BattleTuning
-from game.simulation.combat.combat_events import DamageContext
+from game.core.combat_types import DamageContext
 
 # Note: Ship type hint uses Any to avoid tight coupling with simulation entities
 

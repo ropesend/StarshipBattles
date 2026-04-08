@@ -80,7 +80,7 @@ class DesignValidator:
 
     def _check_crew_and_life_support(self, design_data: Dict, result: DesignValidationResult) -> None:
         """Check crew housing and life support requirements."""
-        from game.simulation.formula_system import FormulaEvaluator
+        from game.core.formula_evaluator import FormulaEvaluator
 
         total_crew_required = 0.0
         total_crew_capacity = 0.0

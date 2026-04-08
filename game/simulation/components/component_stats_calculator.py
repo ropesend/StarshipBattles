@@ -13,7 +13,7 @@ Usage:
     Methods are implemented as static methods for flexibility.
 """
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
-from game.simulation.formula_system import FormulaEvaluator
+from game.core.formula_evaluator import FormulaEvaluator
 from game.core.exceptions import FormulaException
 from game.simulation.components.modifiers import (
     apply_modifier_effects,

@@ -1,8 +1,29 @@
 """
-Physics Engine - 2D Space Physics Simulation
+Physics Engine - 2D Space Physics Foundation
 
-This module provides PhysicsBody, the base class for all entities with
-physical properties (position, velocity, rotation).
+Provides PhysicsBody, the base class for all entities with physical
+properties (position, velocity, rotation, mass).
+
+Architecture Note — Two Physics Models:
+    PhysicsBody serves TWO roles in the codebase:
+
+    1. **Property container** (used by ALL subclasses):
+       Position, velocity, angle, mass, forward_vector() — these are the
+       shared spatial properties that Ship, Projectile, and any future
+       entity type need.
+
+    2. **Newtonian force-accumulation model** (apply_force + update):
+       A complete physics model with drag, acceleration, and force
+       integration. Currently NOT used by any subclass at runtime:
+       - Ship uses ShipPhysicsMixin.update_physics_movement() which
+         implements arcade-style physics (velocity always aligned with
+         heading, thrust-based acceleration).
+       - Projectile directly updates self.position += self.velocity
+         without calling super().update().
+
+       The force-accumulation model is retained and unit-tested as the
+       base physics implementation. Subclasses override with their own
+       physics appropriate to their entity type.
 
 Coordinate System:
     - Origin: (0, 0) is the center of the battle space
@@ -11,48 +32,22 @@ Coordinate System:
     - Angles: Measured in DEGREES, 0° = RIGHT (East)
               Positive rotation is clockwise
               90° = DOWN (South), 180° = LEFT (West), 270° = UP (North)
-
-Drag Model:
-    Linear drag reduces velocity each tick:
-        new_velocity = velocity * (1 - drag)
-
-    Angular drag reduces rotation each tick:
-        new_angular_velocity = angular_velocity * (1 - angular_drag)
-
-    Default values from PhysicsConfig:
-        - DEFAULT_LINEAR_DRAG: ~0.02 (2% velocity loss per tick)
-        - DEFAULT_ANGULAR_DRAG: ~0.1 (10% rotation loss per tick)
-
-Update Sequence (per tick):
-    1. Apply accumulated acceleration to velocity
-    2. Reset acceleration to zero
-    3. Apply linear drag to velocity
-    4. Apply angular drag to angular velocity
-    5. Update position from velocity
-    6. Update angle from angular velocity
-
-Force Application:
-    Forces are applied via apply_force(vector):
-        acceleration += force / mass
-
-    This allows multiple forces to accumulate within a tick before
-    being integrated into velocity during update().
-
-Note:
-    Ship class extends PhysicsBody with additional cycle-based mechanics
-    via ShipPhysicsMixin. The base update() is rarely called directly
-    for ships - instead, their mixin's update handles the physics.
-
-Example:
-    body = PhysicsBody(x=100, y=200, angle=45)
-    body.apply_force(Vector2(10, 0))  # Push right
-    body.update()  # Integrate physics
 """
 from game.core.math import Vector2
 from game.core.config import PhysicsConfig
 
 
 class PhysicsBody:
+    """Base class for all entities with physical presence in the game world.
+
+    Provides shared spatial properties (position, velocity, angle, mass) and
+    a default Newtonian physics model (apply_force/update). Subclasses may
+    override the physics model while retaining the property container:
+
+    - Ship: Uses ShipPhysicsMixin for arcade physics (velocity = heading * speed)
+    - Projectile: Direct velocity integration (position += velocity per tick)
+    """
+
     def __init__(self, x, y, angle=0):
         self.position = Vector2(x, y)
         self.velocity = Vector2(0, 0)

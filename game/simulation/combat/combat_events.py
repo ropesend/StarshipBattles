@@ -57,17 +57,9 @@ class EventDetailLevel(Enum):
 # Data Classes
 # ============================================================================
 
-@dataclass(frozen=True, slots=True)
-class DamageContext:
-    """Attacker identity threaded through the damage pipeline.
-
-    Created at the point where damage originates (projectile hit,
-    beam hit, ramming collision) and passed through take_damage()
-    and apply_damage() so events know who caused the damage.
-    """
-    attacker: Optional[Any] = None
-    source_weapon: Optional[Any] = None
-    damage_type: str = "unknown"
+# DamageContext lives in Core so Engine can import it without cross-layer violation.
+# Re-exported here for backward compatibility.
+from game.core.combat_types import DamageContext  # noqa: F401
 
 
 @dataclass(frozen=True, slots=True)

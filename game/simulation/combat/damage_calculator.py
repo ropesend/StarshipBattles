@@ -22,10 +22,8 @@ from game.simulation.combat.combat_events import (
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from game.simulation.combat.combat_events import (
-        CombatEventBus,
-        DamageContext,
-    )
+    from game.simulation.combat.combat_events import CombatEventBus
+    from game.core.combat_types import DamageContext
 
 
 class DamageCalculator:

@@ -143,7 +143,7 @@ class ProjectileManager:
             if weapon_ab is not None:
                 damage = weapon_ab.get_damage(hit_dist)
 
-        from game.simulation.combat.combat_events import DamageContext
+        from game.core.combat_types import DamageContext
         ctx = DamageContext(
             attacker=p.owner,
             source_weapon=p.source_weapon,

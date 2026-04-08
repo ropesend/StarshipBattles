@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
-from game.simulation.formula_system import FormulaEvaluator
+from game.core.formula_evaluator import FormulaEvaluator
 from game.simulation.components.modifiers import calculate_stat_multipliers
 
 

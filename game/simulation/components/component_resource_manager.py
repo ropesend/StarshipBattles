@@ -11,7 +11,7 @@ PROJ-88: God Class Decomposition - Simulation Core Tier
 """
 from typing import TYPE_CHECKING, Optional
 
-from game.simulation.formula_system import FormulaEvaluator
+from game.core.formula_evaluator import FormulaEvaluator
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
