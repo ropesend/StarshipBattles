@@ -218,3 +218,10 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-217 | Standardize Star Measurement to Radius | 2026-03-14 | PROJ-201-250 |
 | PROJ-218 | Fix Production Queue Cost and Build Time Defaults | 2026-03-14 | PROJ-201-250 |
 | PROJ-219 | Fleet Registration Consolidation | 2026-03-14 | PROJ-201-250 |
+| PROJ-220 | Tri-State Filter Widget & Filter Unification | 2026-03-24 | PROJ-201-250 |
+| PROJ-221 | Build Queue Configurable Columns & Column Swap Fix | 2026-03-24 | PROJ-201-250 |
+| PROJ-222 | Fleet Join Order Redirect and Pursuer Tracking | 2026-03-24 | PROJ-201-250 |
+| PROJ-223 | Save/Load Round-Trip Verification Framework | 2026-03-25 | PROJ-201-250 |
+| PROJ-224 | Core Utilities & Shared Helpers (Dedup Campaign 1/5) | 2026-03-25 | PROJ-201-250 |
+| PROJ-225 | Simulation Layer Consolidation (Dedup Campaign 2/5) | 2026-03-25 | PROJ-201-250 |
+| PROJ-226 | Strategy Layer Consolidation (Dedup Campaign 3/5) | 2026-03-25 | PROJ-201-250 |

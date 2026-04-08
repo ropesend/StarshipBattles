@@ -4,22 +4,22 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-250 | Dual-Source Retreat Config Ambiguity | Planning | 2026-04-06 | 2026-04-06 |
-| PROJ-249 | PDC Targeting Configuration | Planning | 2026-04-06 | 2026-04-06 |
-| PROJ-248 | Weapon Cache Mutable Return | Planning | 2026-04-06 | 2026-04-06 |
-| PROJ-247 | Ship ID Mapping Fragility | Planning | 2026-04-06 | 2026-04-06 |
-| PROJ-246 | Silent Formula Evaluation Failure | Planning | 2026-04-06 | 2026-04-06 |
 | PROJ-245 | Spatial Grid Incremental Updates | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
-| PROJ-241 | Component God Class Decomposition | Planning | 2026-04-05 | 2026-04-05 |
-| PROJ-240 | Ship God Class Decomposition | Planning | 2026-04-05 | 2026-04-05 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-250 | Dual-Source Retreat Config Ambiguity | Archived | 2026-04-06 | 2026-04-08 |
+| PROJ-249 | PDC Targeting Configuration | Archived | 2026-04-06 | 2026-04-08 |
+| PROJ-248 | Weapon Cache Mutable Return | Archived | 2026-04-06 | 2026-04-08 |
+| PROJ-247 | Ship ID Mapping Fragility | Archived | 2026-04-06 | 2026-04-08 |
+| PROJ-246 | Silent Formula Evaluation Failure | Archived | 2026-04-06 | 2026-04-08 |
+| PROJ-241 | Component God Class Decomposition | Archived | 2026-04-05 | 2026-04-08 |
+| PROJ-240 | Ship God Class Decomposition | Archived | 2026-04-05 | 2026-04-08 |
 | PROJ-239 | Strategy Layer Health Remediation | Archived | 2026-04-05 | 2026-04-05 |
 | PROJ-238 | Order System Unification & Planet Orders UI | Archived | 2026-03-29 | 2026-04-05 |
 | PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | Archived | 2026-03-29 | 2026-04-05 |
@@ -33,13 +33,6 @@ w# Projects Index
 | PROJ-229 | Galaxy Generation Inspector Tool | Archived | 2026-03-27 | 2026-03-28 |
 | PROJ-228 | UI Structural Patterns (Dedup Campaign 5/5) | Archived | 2026-03-24 | 2026-03-25 |
 | PROJ-227 | UI Formatting, Portraits & Shared Components (Dedup Campaign 4/5) | Archived | 2026-03-24 | 2026-03-25 |
-| PROJ-226 | Strategy Layer Consolidation (Dedup Campaign 3/5) | Archived | 2026-03-24 | 2026-03-25 |
-| PROJ-225 | Simulation Layer Consolidation (Dedup Campaign 2/5) | Archived | 2026-03-24 | 2026-03-25 |
-| PROJ-224 | Core Utilities & Shared Helpers (Dedup Campaign 1/5) | Archived | 2026-03-24 | 2026-03-25 |
-| PROJ-223 | Save/Load Round-Trip Verification Framework | Archived | 2026-03-24 | 2026-03-25 |
-| PROJ-222 | Fleet Join Order Redirect and Pursuer Tracking | Archived | 2026-03-24 | 2026-03-24 |
-| PROJ-220 | Tri-State Filter Widget & Filter Unification | Archived | 2026-03-14 | 2026-03-24 |
-| PROJ-221 | Build Queue Configurable Columns & Column Swap Fix | Archived | 2026-03-14 | 2026-03-24 |
 
 ---
 
