@@ -27,8 +27,17 @@ import statistics
 from pathlib import Path
 from datetime import datetime, timezone
 
-# Add project root to path (scripts/strategy/ -> scripts/ -> project root)
-project_root = Path(__file__).resolve().parent.parent.parent
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+project_root = _find_project_root()
 sys.path.insert(0, str(project_root))
 
 # Must chdir to project root so Galaxy can find data files

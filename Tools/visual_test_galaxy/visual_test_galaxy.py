@@ -1,10 +1,20 @@
 import sys
-import os
 import pygame
 import math
+from pathlib import Path
 
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+sys.path.insert(0, str(_find_project_root()))
 
 from game.strategy.data.galaxy import Galaxy, StarSystem
 from game.strategy.data.hex_math import hex_to_pixel

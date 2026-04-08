@@ -1,7 +1,24 @@
 import os
+import sys
 from pathlib import Path
 from PIL import Image
 import numpy as np
+
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+_PROJECT_ROOT = _find_project_root()
+sys.path.insert(0, str(_PROJECT_ROOT))
+
+from game.core.paths import Paths
 
 def process_nebula(input_path, output_path, gamma_color=0.8, gamma_alpha=0.6):
     """
@@ -34,7 +51,7 @@ def process_nebula(input_path, output_path, gamma_color=0.8, gamma_alpha=0.6):
 
 if __name__ == "__main__":
     # Settings
-    dir_path = Path(r"C:\Developer\StarshipBattles\assets\Images\Stellar Objects\Nebulae")
+    dir_path = Path(Paths.ASSET_DIR) / "Images" / "Stellar Objects" / "Nebulae"
     
     print(f"Processing nebulae in: {dir_path}")
     
@@ -52,7 +69,7 @@ if __name__ == "__main__":
             process_nebula(img_file, output_file, gamma_color=0.7, gamma_alpha=0.5)
     
     # --- Run for System Backgrounds ---
-    sys_dir_path = Path(r"C:\Developer\StarshipBattles\assets\Images\System Backgrounds")
+    sys_dir_path = Path(Paths.ASSET_DIR) / "Images" / "System Backgrounds"
     print(f"\nProcessing system backgrounds in: {sys_dir_path}")
     
     jpg_files = list(sys_dir_path.glob("*.jpg"))
@@ -65,7 +82,7 @@ if __name__ == "__main__":
             process_nebula(img_file, output_file, gamma_color=0.7, gamma_alpha=0.5)
             
     # --- Run for Warp Points ---
-    warp_dir_path = Path(r"C:\Developer\StarshipBattles\assets\Images\Stellar Objects\Warp Points")
+    warp_dir_path = Path(Paths.ASSET_DIR) / "Images" / "Stellar Objects" / "Warp Points"
     print(f"\nProcessing warp points in: {warp_dir_path}")
     
     jpg_files = list(warp_dir_path.glob("*.jpg"))

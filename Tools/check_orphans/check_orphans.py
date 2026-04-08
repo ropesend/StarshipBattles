@@ -1,9 +1,26 @@
 import os
+import sys
 import re
 from pathlib import Path
 from collections import defaultdict
 
-game_dir = Path("game")
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+_PROJECT_ROOT = _find_project_root()
+sys.path.insert(0, str(_PROJECT_ROOT))
+
+from game.core.paths import Paths
+
+game_dir = Path(Paths.GAME_DIR)
 
 # Collect all module files (relative to game/)
 all_modules = {}

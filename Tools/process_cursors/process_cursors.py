@@ -1,9 +1,29 @@
 import os
+import sys
+from pathlib import Path
 from PIL import Image, ImageChops
 
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+_PROJECT_ROOT = _find_project_root()
+sys.path.insert(0, str(_PROJECT_ROOT))
+
+from game.core.paths import Paths
+
+
 def process_cursors():
-    input_path = r'C:\Dev\Starship Battles\assets\Images\Cursor\71wO8.jpg'
-    output_base = r'C:\Dev\Starship Battles\assets\Images\Cursor'
+    cursor_dir = os.path.join(Paths.ASSET_DIR, 'Images', 'Cursor')
+    input_path = os.path.join(cursor_dir, '71wO8.jpg')
+    output_base = cursor_dir
     
     # Ensure directories exist
     os.makedirs(os.path.join(output_base, '64x64'), exist_ok=True)

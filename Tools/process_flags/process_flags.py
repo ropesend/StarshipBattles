@@ -1,11 +1,29 @@
 import os
+import sys
 import glob
 import shutil
+from pathlib import Path
 from PIL import Image, ImageChops
 
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+_PROJECT_ROOT = _find_project_root()
+sys.path.insert(0, str(_PROJECT_ROOT))
+
+from game.core.paths import Paths
+
 # Configuration
-INPUT_DIR = r"assets\Images\Flags\Processed Flags"
-OUTPUT_BASE_DIR = r"assets\Images\Flags\Processed"
+INPUT_DIR = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed Flags")
+OUTPUT_BASE_DIR = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
 SIZES = [1024, 512, 256, 128, 64, 32]
 FLAG_TYPES = ["rectangle", "shield", "triangle"]
 
