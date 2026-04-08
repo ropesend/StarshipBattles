@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
 from game.core.strategy_metadata import StrategyMetadataService
 from game.core.json_utils import load_json_required
+from game.core.paths import Paths
 from game.ui.screens.setup_data_io import (
     get_base_path, scan_ship_designs, scan_formations,
     load_ships_from_entries, save_battle_setup, load_battle_setup
@@ -150,8 +151,7 @@ class BattleSetupScreen:
         root = tk.Tk()
         root.withdraw()
 
-        base_path = get_base_path()
-        ships_dir = os.path.join(base_path, "ships")
+        ships_dir = Paths.SHIPS_DIR
 
         ship_path = filedialog.askopenfilename(
             initialdir=ships_dir,

@@ -7,6 +7,7 @@ import logging
 import os
 from tkinter import filedialog
 
+from game.core.paths import Paths
 from game.core.profiling import profile_block
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
@@ -99,7 +100,7 @@ class WorkshopDataReloader:
             self.show_error("Tkinter not initialized, cannot open dialog")
             return
 
-        initial_dir = os.path.join(os.getcwd(), "data")
+        initial_dir = Paths.DATA_DIR
         directory = filedialog.askdirectory(
             initialdir=initial_dir,
             title="Select Data Directory"
@@ -110,12 +111,12 @@ class WorkshopDataReloader:
                 self.reload_data(directory)
 
     def load_standard_data(self):
-        """Load standard data from 'data/' directory and set ship directory to 'ships/'."""
+        """Load standard data from 'data/' directory and set ship directory."""
         with profile_block("Builder: Load Standard Data"):
-            directory = os.path.join(os.getcwd(), "data")
+            directory = Paths.DATA_DIR
             self.reload_data(directory)
-            self._ship_io_adapter.set_ships_folder("ships")
-            self.show_error("Loaded Standard Data • Ships: ships/")
+            self._ship_io_adapter.set_ships_folder(Paths.SHIPS_DIR)
+            self.show_error(f"Loaded Standard Data • Ships: {Paths.SHIPS_DIR}")
 
     def load_test_data(self):
         """Load test data from 'tests/data/' directory and set ship directory to 'tests/data/ships/'."""
