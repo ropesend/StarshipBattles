@@ -387,12 +387,32 @@ ability_name instead of component_key.
 - `tests/unit/strategy/engine/test_component_activation_engine.py` — updated to check component_states
 - `tests/unit/strategy/engine/test_planet_energy_engine.py` — removed stale active_abilities mock setup
 
-### 6.7 Documentation Updates
+### 6.7 System Effects Display in System Tree Panel
 
-- `docs/systems/strategy_layer.md` — per-component activation architecture section,
-  fleet position projection section, shield event generation note
+**Problem:** Active stabilizers (Stellar, Geologic, Warp Field) and passive system-scope
+abilities (harvest boosters, construction accelerators, quality enrichment) showed no
+indication in the System panel.
+
+**Solution:** New service + UI integration:
+
+**Files created:**
+- `game/strategy/services/system_effects_collector.py` — `collect_system_effects()` scans
+  empire colonies for system-scope abilities, returns grouped effects with aggregate values
+  using two-phase stacking
+- `tests/unit/strategy/services/test_system_effects_collector.py` — +11 tests
+
+**Files modified:**
+- `game/ui/panels/system_tree_panel.py` — `_add_system_effects()` renders collapsible
+  "System Effects (N)" group with per-effect headers showing aggregate status/value,
+  expandable to individual provider facilities with planet location
+- `game/ui/screens/strategy_ui.py` — passes `system_obj` through to tree panel
+
+### 6.8 Documentation Updates
+
+- `docs/systems/strategy_layer.md` — system effects display section, per-component activation
+  architecture section, fleet position projection section, shield event generation note
 - `docs/systems/orders_system.md` — order editing section, key files table updated
 
 ### Test Results
 
-All changes: **14752 tests passed, 0 failed** (full sharded suite).
+All changes: **14758 tests passed, 0 failed** (full sharded suite).

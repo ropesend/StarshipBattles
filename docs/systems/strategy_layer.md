@@ -386,6 +386,30 @@ the same ability name to be activated independently.
 ability name). When multiple instances of the same ability exist, they get numbered
 labels (e.g., "Geologic Stabilizer (Facility #1)", "Geologic Stabilizer (Facility #2)").
 
+### System Effects Display
+
+**File:** `game/strategy/services/system_effects_collector.py`
+
+`collect_system_effects(system, empire_id, registries)` scans all empire-owned
+colonies in a star system for system-scope abilities and returns structured effect
+data for UI display.
+
+**Supported ability types:** GeologicStabilizer, StellarStabilizer, WarpFieldStabilizer,
+ResourceHarvestBooster, BuildRateBooster, QualityImprovement.
+
+**Two categories:**
+- **Activatable** (have activation_time): status from ComponentActivationState
+  (Active/Inactive/Activating N/Deactivating N)
+- **Passive** (no activation_time): always "Active" when facility is operational
+
+**Aggregation:** Values use two-phase stacking (intra-group MAX, inter-group MULTIPLY)
+via `aggregate_multipliers()` from `strategic_ability_scanner.py`.
+
+**UI integration:** `SystemTreePanel._add_system_effects()` renders a collapsible
+"System Effects (N)" group after Warp Points and before Planets in the system tree.
+Each effect type is a group header with aggregate status and value. Expanding shows
+individual provider facilities with their planet location, individual value, and status.
+
 ### Build Queue Source DI
 
 **File:** `game/strategy/data/build_queue_source.py`

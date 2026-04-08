@@ -549,11 +549,17 @@ ticks = ActionTimeResolver.resolve_action_time(fleet, order, component_registry)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `resolve_colonies` | `(facade, hex_coord, fleet) -> List[PlanetInfo]` | Find colonized planets at a hex, with fallback to fleet location |
+| `resolve_colonies` | `(facade, hex_coord, fleet) -> List[PlanetInfo]` | Find colonized planets at a hex, with fallback to fleet location and projected position |
 | `get_unload_items` | `(facade, fleet_id, colonies) -> List[Dict]` | Get items that can be unloaded (dropped) from a fleet |
 | `get_load_items` | `(facade, colonies) -> List[Dict]` | Get items that can be loaded from colonies (population) |
 | `get_inventory_items` | `(obj_info) -> List[Dict]` | Extract inventory items from a FleetInfo or PlanetInfo |
 | `build_transfer_command` | `(fleet_id, planet_id, cargo_type, direction, amount, max_amount, species_id=None) -> IssueTransferCommand` | Build a transfer command (amount=0 means "transfer all") |
+
+**Module-level function:**
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `project_fleet_position` | `(fleet) -> HexCoord` | Walk fleet's order queue to find projected position after all MOVE/WARP orders |
 
 **Usage:**
 ```python
@@ -569,6 +575,24 @@ cmd = CargoTransferService.build_transfer_command(
     amount=500, max_amount=1000
 )
 ```
+
+---
+
+### SystemEffectsCollector
+
+**Location:** `game/strategy/services/system_effects_collector.py`
+
+**Purpose:** Aggregates system-scope abilities from empire-owned colonies in a star system for UI display. Handles both activatable abilities (stabilizers with ComponentActivationState) and passive abilities (harvest boosters, build rate boosters, quality improvers).
+
+**Dependencies:** None (module-level function). Uses `strategic_ability_scanner.aggregate_multipliers()` for two-phase stacking.
+
+**Key Function:**
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `collect_system_effects` | `(system, empire_id, registries=None) -> List[Dict]` | Collect all system-scope effects grouped by ability type with aggregate status and stacked values |
+
+**Return dict keys:** `ability_name`, `display_name`, `group_key`, `status`, `resource_type`, `aggregate_value`, `providers` (list of facility/planet/component info).
 
 ---
 
@@ -796,7 +820,7 @@ for warning in result.warnings:
 |              FleetSpeedCalculator, ComponentInspector,   |
 |              ActionTimeResolver, CargoTransferService,   |
 |              DesignCostCalculator, FleetCargoProjector,  |
-|              AreaEffectManager                           |
+|              AreaEffectManager, SystemEffectsCollector    |
 +----------------------------+----------------------------+
                              | Uses
                              v
