@@ -104,7 +104,7 @@ Six layers with strict downward-only dependency flow:
 | `managers/`      | BattleStateManager, RetreatManager |
 | `interfaces/`    | Simulation-internal protocols: IAIController, IAbility, IWeaponAbility, IComponent, ICombatShip, etc. |
 | `validation/`    | ShipDesignValidator |
-| (root modules)  | BattleState, BattleTuning/BattleMode, BattleController, FormulaSystem (re-export shim → core), ProjectileManager |
+| (root modules)  | BattleState, BattleTuning/BattleMode, BattleController, formula_system.py (re-export shim → game.core.formula_evaluator), ProjectileManager |
 
 ### `game/strategy/` -- 4X strategy layer
 
