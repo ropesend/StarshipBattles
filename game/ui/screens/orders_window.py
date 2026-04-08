@@ -23,10 +23,18 @@ if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
     from typing import Callable
 
+EDITABLE_ORDER_TYPES = frozenset({
+    OrderType.MOVE,
+    OrderType.TRANSFER,
+    OrderType.LOAD_POPULATION,
+    OrderType.UNLOAD_POPULATION,
+})
+
+
 class OrdersWindow(pygame_gui.elements.UIWindow):
     """
     Window to manage an entity's order queue (fleet or planet).
-    Allows re-ordering, deletion, and clearing.
+    Allows re-ordering, deletion, editing, and clearing.
 
     PROJ-238: Generalized from FleetOrdersWindow.
     """
@@ -39,7 +47,8 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
         input_mapper: Optional['InputMapper'] = None,
         clear_orders_callback: Optional['Callable[[int], None]'] = None,
         delete_order_callback: Optional['Callable[[int, int], None]'] = None,
-        reorder_order_callback: Optional['Callable[[int, int, int], None]'] = None
+        reorder_order_callback: Optional['Callable[[int, int, int], None]'] = None,
+        edit_order_callback: Optional['Callable[[int, int, object], None]'] = None,
     ):
         """Initialize the Orders Window.
 
@@ -72,6 +81,7 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
         self._clear_orders_callback = clear_orders_callback
         self._delete_order_callback = delete_order_callback
         self._reorder_order_callback = reorder_order_callback
+        self._edit_order_callback = edit_order_callback
 
         # --- UI Layout ---
         container_rect = pygame.Rect(0, 0, rect.width - 32, rect.height - 100)
@@ -120,14 +130,17 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
         content_width = self.list_container.get_container().get_rect().width
         btn_size = 30
         btn_gap = 5
+        # Layout: [desc] [E] [^] [v] [X]  — E only shown for editable orders
         btn_del_x = content_width - btn_size - btn_gap
         btn_down_x = btn_del_x - btn_size - btn_gap
         btn_up_x = btn_down_x - btn_size - btn_gap
+        btn_edit_x = btn_up_x - btn_size - btn_gap
         desc_x = 40
-        desc_width = btn_up_x - desc_x - btn_gap
+        desc_width = btn_edit_x - desc_x - btn_gap
 
         for i, order in enumerate(orders):
             row_y = y_offset + i * (row_height + gap)
+            is_editable = order.type in EDITABLE_ORDER_TYPES
 
             lbl_idx = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(5, row_y, 30, row_height),
@@ -144,6 +157,23 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                 container=self.list_container
             )
 
+            row_dict = {
+                'idx': lbl_idx,
+                'desc': lbl_desc,
+                'order_ref': order,
+            }
+
+            # Edit button (only for editable order types)
+            if is_editable:
+                btn_edit = pygame_gui.elements.UIButton(
+                    relative_rect=pygame.Rect(btn_edit_x, row_y, btn_size, row_height),
+                    text="E",
+                    manager=self.ui_manager,
+                    container=self.list_container,
+                    object_id=f"#edit_{i}"
+                )
+                row_dict['edit'] = btn_edit
+
             btn_up = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(btn_up_x, row_y, btn_size, row_height),
                 text="^",
@@ -151,7 +181,9 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                 container=self.list_container,
                 object_id=f"#up_{i}"
             )
-            if i == 0: btn_up.disable()
+            if i == 0:
+                btn_up.disable()
+            row_dict['up'] = btn_up
 
             btn_down = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(btn_down_x, row_y, btn_size, row_height),
@@ -160,7 +192,9 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                 container=self.list_container,
                 object_id=f"#down_{i}"
             )
-            if i == len(orders) - 1: btn_down.disable()
+            if i == len(orders) - 1:
+                btn_down.disable()
+            row_dict['down'] = btn_down
 
             btn_del = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(btn_del_x, row_y, btn_size, row_height),
@@ -169,15 +203,9 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                 container=self.list_container,
                 object_id=f"#del_{i}"
             )
+            row_dict['del'] = btn_del
 
-            self.rows.append({
-                'idx': lbl_idx,
-                'desc': lbl_desc,
-                'up': btn_up,
-                'down': btn_down,
-                'del': btn_del,
-                'order_ref': order
-            })
+            self.rows.append(row_dict)
 
     def _get_order_description(self, order):
         """Get human-readable description for an order."""
@@ -265,6 +293,10 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                         idx = int(obj_id.split("_")[1])
                         self.move_order(idx, 1)
                         handled = True
+                    elif obj_id.startswith("#edit_"):
+                        idx = int(obj_id.split("_")[1])
+                        self.edit_order(idx)
+                        handled = True
                     elif obj_id.startswith("#del_"):
                         idx = int(obj_id.split("_")[1])
                         self.delete_order(idx)
@@ -279,6 +311,13 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
         if 0 <= new_index < len(self.entity.orders):
             self._reorder_order_callback(self.entity.id, index, direction)
             self.rebuild_list()
+
+    def edit_order(self, index):
+        if not self._edit_order_callback:
+            return
+        if 0 <= index < len(self.entity.orders):
+            order = self.entity.orders[index]
+            self._edit_order_callback(self.entity.id, index, order)
 
     def delete_order(self, index):
         if not self._delete_order_callback:

@@ -33,11 +33,11 @@ RESOURCE_DISPLAY_NAMES = {
     "fuel": "Fuel", "energy": "Energy", "ammo": "Ammo",
 }
 
-# Arrow button increments
-ARROW_INCREMENTS_LOAD = [1000, 10, 1]    # Load: largest to smallest (left to right)
-ARROW_INCREMENTS_DROP = [1, 10, 1000]    # Drop: smallest to largest (left to right)
-ARROW_LABELS_LOAD = ["<<<<", "<<", "<"]
-ARROW_LABELS_DROP = [">", ">>", ">>>>"]
+# Arrow button increments (5 gradations per direction)
+ARROW_INCREMENTS_LOAD = [100000, 10000, 1000, 10, 1]   # Load: largest to smallest (left to right)
+ARROW_INCREMENTS_DROP = [1, 10, 1000, 10000, 100000]    # Drop: smallest to largest (left to right)
+ARROW_LABELS_LOAD = ["<<<<<", "<<<<", "<<<", "<<", "<"]
+ARROW_LABELS_DROP = [">", ">>", ">>>", ">>>>", ">>>>>"]
 
 
 class TransferDialog(UIWindow):
@@ -50,25 +50,28 @@ class TransferDialog(UIWindow):
     ROW_HEIGHT = 32
 
     # Layout X positions and widths (inside scrolling container)
+    # Total row width ~860px to fit in a 900px window with scroll + chrome
     NAME_X = 5
     NAME_W = 95
     SOURCE_AMT_X = 105
     SOURCE_AMT_W = 60
     MAX_LOAD_X = 170
-    MAX_LOAD_W = 36
-    # 3 load arrow buttons start after Max<
-    LOAD_ARROWS_X = 210
-    ARROW_WIDTHS = [36, 30, 26]  # Widths for 1000, 10, 1
-    # Pending label in center
-    PENDING_X = 310
-    PENDING_W = 60
-    ZERO_BTN_X = 374
-    ZERO_BTN_W = 22
-    # 3 drop arrow buttons
-    DROP_ARROWS_X = 400
-    MAX_DROP_X = 496
-    MAX_DROP_W = 36
-    TARGET_AMT_X = 537
+    MAX_LOAD_W = 42
+    # 5 load arrow buttons start after Max<
+    LOAD_ARROWS_X = 216
+    ARROW_W = 38           # Uniform width for all arrow buttons
+    ARROW_GAP = 2          # Gap between arrow buttons
+    ARROW_COUNT = 5
+    # Pending label in center — wide enough for "Drop 10,000,000"
+    PENDING_X = 420
+    PENDING_W = 120
+    ZERO_BTN_X = 544
+    ZERO_BTN_W = 26
+    # 5 drop arrow buttons
+    DROP_ARROWS_X = 574
+    MAX_DROP_X = 776
+    MAX_DROP_W = 42
+    TARGET_AMT_X = 822
     TARGET_AMT_W = 60
 
     def __init__(self, relative_rect, manager, source_fleet, hex_coord, scene,
@@ -101,6 +104,9 @@ class TransferDialog(UIWindow):
         # Current source/target info
         self._current_source: Optional[dict] = None
         self._current_target: Optional[dict] = None
+
+        # Discover all pod-type design names so rows always appear
+        self._all_pod_names: List[str] = self._discover_pod_designs()
 
         self._setup_ui()
         self._apply_tooltips()
@@ -157,7 +163,7 @@ class TransferDialog(UIWindow):
         curr_y += label_h + 5
 
         # --- Scrolling Grid Container ---
-        grid_bottom_margin = 60  # Space for buttons
+        grid_bottom_margin = 80  # Space for buttons
         grid_h = self.rect.height - curr_y - grid_bottom_margin - 40  # 40 for window chrome
         self.grid_container = UIScrollingContainer(
             relative_rect=pygame.Rect(padding, curr_y, content_w, grid_h),
@@ -167,7 +173,7 @@ class TransferDialog(UIWindow):
         self._grid_top_y = curr_y
 
         # --- Buttons at bottom ---
-        btn_y = self.rect.height - 80
+        btn_y = self.rect.height - 100
         btn_w = 120
         self.btn_confirm = UIButton(
             pygame.Rect(padding, btn_y, btn_w, 40),
@@ -190,9 +196,20 @@ class TransferDialog(UIWindow):
         )
 
     def _populate_initial_data(self):
-        """Find fleets and planets at the hex and populate dropdowns."""
+        """Find fleets and planets at the hex and populate dropdowns.
+
+        Also checks the fleet's projected position (from queued MOVE/WARP orders)
+        so that transfers queued after movement orders find colonies at the destination.
+        """
         fleets = self.facade.get_fleets_at_hex(self.hex_coord)
-        planets = self.facade.get_planets_at_hex(self.hex_coord)
+        planets = list(self.facade.get_planets_at_hex(self.hex_coord))
+
+        # If no planets at primary hex, check fleet's projected position
+        if not planets and self.source_fleet:
+            from game.strategy.services.cargo_transfer_service import project_fleet_position
+            projected = project_fleet_position(self.source_fleet)
+            if projected != self.hex_coord:
+                planets = list(self.facade.get_planets_at_hex(projected))
 
         # Build source options
         self.available_sources = []
@@ -392,41 +409,57 @@ class TransferDialog(UIWindow):
         container_w = self.grid_container.relative_rect.width - 20
         self.grid_container.set_scrollable_area_dimensions((container_w, total_h))
 
+    def _discover_pod_designs(self) -> List[str]:
+        """Discover all pod-type design names from the design library.
+
+        Returns a sorted list of design names with vehicle_type == 'Drop Pod'.
+        These rows are always shown in the transfer grid (even at 0/0 count).
+        """
+        try:
+            from game.strategy.systems.design_library import DesignLibrary
+            session = self.scene.session
+            empire = getattr(session, 'player_empire', None)
+            empire_id = empire.id if empire else 0
+            library = DesignLibrary(session.save_path, empire_id)
+            pod_designs = library.filter_designs(vehicle_type="Drop Pod")
+            return sorted(set(d.name for d in pod_designs))
+        except Exception:
+            logger.debug("Could not discover pod designs, falling back to empty list")
+            return []
+
     def _add_pod_rows(self, source_obj, target_obj):
         """Add rows for staging yard / carried items (drop pods).
 
         Pods are discrete items transferred 1 at a time between
         planet.staging_yard and ship.carried_items via the drop_pod cargo type.
+        Always includes rows for all known pod-type designs, even at 0/0.
         """
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.facade.dto.planet_dto import PlanetInfo
 
-        # Collect pod items from both sides
-        pod_names_seen = set()
-
-        # Source pods
+        # Collect actual pod counts from both sides
         source_pods: Dict[str, int] = {}
         if isinstance(source_obj, PlanetInfo):
             for name, vtype, mass, count in getattr(source_obj, 'staging_yard_summary', ()):
                 source_pods[name] = source_pods.get(name, 0) + count
-                pod_names_seen.add(name)
         elif isinstance(source_obj, FleetInfo):
             for name, vtype, mass, count in getattr(source_obj, 'carried_items_summary', ()):
                 source_pods[name] = source_pods.get(name, 0) + count
-                pod_names_seen.add(name)
 
-        # Target pods
         target_pods: Dict[str, int] = {}
         if isinstance(target_obj, PlanetInfo):
             for name, vtype, mass, count in getattr(target_obj, 'staging_yard_summary', ()):
                 target_pods[name] = target_pods.get(name, 0) + count
-                pod_names_seen.add(name)
         elif isinstance(target_obj, FleetInfo):
             for name, vtype, mass, count in getattr(target_obj, 'carried_items_summary', ()):
                 target_pods[name] = target_pods.get(name, 0) + count
-                pod_names_seen.add(name)
 
-        for pod_name in sorted(pod_names_seen):
+        # Merge known pod designs with any actually-present pod names
+        all_pod_names = set(self._all_pod_names)
+        all_pod_names.update(source_pods.keys())
+        all_pod_names.update(target_pods.keys())
+
+        for pod_name in sorted(all_pod_names):
             self._row_data.append({
                 'cargo_key': f'drop_pod:{pod_name}',
                 'display_name': pod_name,
@@ -456,21 +489,21 @@ class TransferDialog(UIWindow):
         # Max Load button
         btn = UIButton(
             pygame.Rect(self.MAX_LOAD_X, y + 2, self.MAX_LOAD_W, self.ROW_HEIGHT - 4),
-            "Max<", self.ui_manager, container=container
+            "Max", self.ui_manager, container=container
         )
         self._max_buttons[id(btn)] = (cargo_key, 'load')
         self._grid_widgets.append(btn)
 
-        # Load arrow buttons (left: <<<<, <<, <)
+        # Load arrow buttons (left: <<<<<, <<<<, <<<, <<, <)
         x = self.LOAD_ARROWS_X
-        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS_LOAD, ARROW_LABELS_LOAD, self.ARROW_WIDTHS)):
+        for inc, label in zip(ARROW_INCREMENTS_LOAD, ARROW_LABELS_LOAD):
             btn = UIButton(
-                pygame.Rect(x, y + 2, w, self.ROW_HEIGHT - 4),
+                pygame.Rect(x, y + 2, self.ARROW_W, self.ROW_HEIGHT - 4),
                 label, self.ui_manager, container=container
             )
             self._arrow_buttons[id(btn)] = (cargo_key, inc)  # positive = load
             self._grid_widgets.append(btn)
-            x += w + 2
+            x += self.ARROW_W + self.ARROW_GAP
 
         # Pending transfer label (center)
         pending_val = self.pending_transfers.get(cargo_key, 0)
@@ -490,21 +523,21 @@ class TransferDialog(UIWindow):
         self._zero_buttons[id(zero_btn)] = cargo_key
         self._grid_widgets.append(zero_btn)
 
-        # Drop arrow buttons (right: >, >>, >>>>)
+        # Drop arrow buttons (right: >, >>, >>>, >>>>, >>>>>)
         x = self.DROP_ARROWS_X
-        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS_DROP, ARROW_LABELS_DROP, self.ARROW_WIDTHS)):
+        for inc, label in zip(ARROW_INCREMENTS_DROP, ARROW_LABELS_DROP):
             btn = UIButton(
-                pygame.Rect(x, y + 2, w, self.ROW_HEIGHT - 4),
+                pygame.Rect(x, y + 2, self.ARROW_W, self.ROW_HEIGHT - 4),
                 label, self.ui_manager, container=container
             )
             self._arrow_buttons[id(btn)] = (cargo_key, -inc)  # negative = drop
             self._grid_widgets.append(btn)
-            x += w + 2
+            x += self.ARROW_W + self.ARROW_GAP
 
         # Max Drop button
         btn = UIButton(
             pygame.Rect(self.MAX_DROP_X, y + 2, self.MAX_DROP_W, self.ROW_HEIGHT - 4),
-            ">Max", self.ui_manager, container=container
+            "Max", self.ui_manager, container=container
         )
         self._max_buttons[id(btn)] = (cargo_key, 'drop')
         self._grid_widgets.append(btn)

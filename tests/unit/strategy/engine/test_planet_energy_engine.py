@@ -35,7 +35,7 @@ def _make_planet(name="TestPlanet", facilities=None):
     planet.energy = 0.0
     planet.energy_capacity = 0.0
     planet.energy_generation = 0.0
-    planet.active_abilities = {'PlanetaryShield': False}
+    # active_abilities is a derived property on real Planet; not needed on mocks
     return planet
 
 
@@ -157,7 +157,7 @@ class TestPlanetEnergyEngine:
         ).to_dict()
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 100.0
-        planet.active_abilities['PlanetaryShield'] = True
+        # active_abilities is derived from component_states on real Planet
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
@@ -177,14 +177,12 @@ class TestPlanetEnergyEngine:
         ).to_dict()
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 0.3  # Less than drain_per_tick (0.5)
-        planet.active_abilities['PlanetaryShield'] = True
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
 
-        assert planet.active_abilities.get('PlanetaryShield', False) is False
         assert planet.energy == 0.0
-        # Component state should be INACTIVE
+        # Component state should be INACTIVE (source of truth)
         state = ComponentActivationState.from_dict(
             shield.component_states["OUTER:0:planetary_shield"]
         )
@@ -255,7 +253,7 @@ class TestPlanetEnergyEngine:
         ).to_dict()
         planet = _make_planet(facilities=[gen, battery, shield])
         planet.energy = 100.0
-        planet.active_abilities['PlanetaryShield'] = True
+        # active_abilities is derived from component_states on real Planet
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
@@ -302,7 +300,7 @@ class TestPlanetEnergyEngineEvents:
         ).to_dict()
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 0.3  # Less than drain_per_tick (0.5)
-        planet.active_abilities['PlanetaryShield'] = True
+        # active_abilities is derived from component_states on real Planet
         planet.id = 42
         planet.owner_id = 1
         empire = _make_empire(colonies=[planet])
@@ -331,7 +329,7 @@ class TestPlanetEnergyEngineEvents:
         ).to_dict()
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 100.0
-        planet.active_abilities['PlanetaryShield'] = True
+        # active_abilities is derived from component_states on real Planet
         empire = _make_empire(colonies=[planet])
 
         engine.process_energy_tick(1, [empire])
@@ -350,7 +348,7 @@ class TestPlanetEnergyEngineEvents:
         ).to_dict()
         planet = _make_planet(facilities=[battery, shield])
         planet.energy = 0.3
-        planet.active_abilities['PlanetaryShield'] = True
+        # active_abilities is derived from component_states on real Planet
         empire = _make_empire(colonies=[planet])
 
         # Should not raise

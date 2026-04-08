@@ -23,7 +23,8 @@ from game.ui.config import UIConfig
 from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
 
 logger = logging.getLogger(__name__)
-from game.core.hex_math import hex_to_pixel
+from game.core.hex_math import hex_to_pixel, HexCoord
+from game.strategy.data.order_types import OrderType
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_ui import StrategyUI
 
@@ -295,6 +296,85 @@ class StrategyScreen:
         result = self._colonization.request_colonize_order(fleet, planet)
         if result and result.get('type') == 'success':
             self.on_ui_selection(fleet)
+
+    # =========================================================================
+    # Order Editing
+    # =========================================================================
+
+    # State for EDIT_MOVE mode: ghost hex of old destination
+    _edit_move_ghost_hex = None
+    _edit_move_order_index = None
+    _edit_move_fleet = None
+
+    def on_edit_order(self, entity, order_index, order):
+        """Handle edit request for an order in the queue.
+
+        Args:
+            entity: Fleet or planet that owns the order.
+            order_index: Index of the order in the queue.
+            order: The Order object being edited.
+        """
+        if order.type == OrderType.MOVE:
+            self._start_edit_move(entity, order_index, order)
+        elif order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
+            self._start_edit_transfer(entity, order_index, order)
+
+    def _start_edit_move(self, fleet, order_index, order):
+        """Enter EDIT_MOVE mode: pan to old destination, show ghost, wait for new click."""
+        old_hex = order.target
+        if not isinstance(old_hex, HexCoord):
+            return
+
+        self._edit_move_ghost_hex = old_hex
+        self._edit_move_order_index = order_index
+        self._edit_move_fleet = fleet
+        self.selected_fleet = fleet
+
+        # Pan camera to the old destination so the user can see the ghost
+        self._camera_nav.center_on_hex(old_hex)
+        self.input_mode = 'EDIT_MOVE'
+
+    def complete_edit_move(self, new_hex):
+        """Finalize MOVE order edit: update the order target in-place.
+
+        Args:
+            new_hex: The new destination HexCoord selected by the user.
+        """
+        fleet = self._edit_move_fleet
+        idx = self._edit_move_order_index
+        if fleet and idx is not None and 0 <= idx < len(fleet.orders):
+            order = fleet.orders[idx]
+            order.target = new_hex
+            # Invalidate path if editing the active (first) order
+            if idx == 0:
+                fleet.path = []
+        # Clear edit state
+        self._edit_move_ghost_hex = None
+        self._edit_move_order_index = None
+        self._edit_move_fleet = None
+        self.input_mode = 'SELECT'
+        # Refresh the orders window
+        if hasattr(self.ui, 'window_manager') and self.ui.window_manager.fleet_orders_window:
+            self.ui.window_manager.fleet_orders_window.rebuild_list()
+        self.on_ui_selection(fleet)
+
+    def _start_edit_transfer(self, fleet, order_index, order):
+        """Re-open transfer dialog pre-populated with current order amounts."""
+        # Determine the hex where this transfer will occur
+        # Walk orders up to this index to find the last MOVE destination
+        transfer_hex = fleet.location
+        for i in range(order_index):
+            prev = fleet.orders[i]
+            if prev.type == OrderType.MOVE and isinstance(prev.target, HexCoord):
+                transfer_hex = prev.target
+            elif prev.type == OrderType.WARP and isinstance(prev.target, HexCoord):
+                transfer_hex = prev.target
+
+        # Delete the old order, then open transfer dialog at the resolved hex
+        # The new dialog will create replacement order(s)
+        if 0 <= order_index < len(fleet.orders):
+            fleet.orders.pop(order_index)
+        self.ui.open_transfer_dialog(fleet, transfer_hex)
 
     # =========================================================================
     # Turn Management (delegates to GameStateManager)

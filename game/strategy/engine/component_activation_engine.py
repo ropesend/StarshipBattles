@@ -97,13 +97,11 @@ class ComponentActivationEngine:
             if transitioned:
                 ability_name = state.ability_name
                 if state.phase == ActivationPhase.ACTIVE:
-                    planet.active_abilities[ability_name] = True
                     logger.info(
                         f"Planet {planet.name}: {ability_name} activation complete "
                         f"(facility {facility.instance_id})"
                     )
                 elif state.phase == ActivationPhase.INACTIVE:
-                    planet.active_abilities[ability_name] = False
                     logger.info(
                         f"Planet {planet.name}: {ability_name} deactivation complete "
                         f"(facility {facility.instance_id})"

@@ -70,7 +70,7 @@ def _make_planet(name="TestPlanet", facilities=None, orders=None):
     planet.facilities = facilities or []
     planet.energy = 100.0
     planet.energy_capacity = 5000.0
-    planet.active_abilities = {'PlanetaryShield': False}
+    # active_abilities is a derived property on real Planet; not needed on mocks
     planet.orders = orders or []
 
     def get_current_order():
@@ -163,7 +163,7 @@ class TestPlanetActionEngine:
                                    "ability_name": "PlanetaryShield",
                                    "component_key": "OUTER:0:geologic_stabilizer_sector"})
         planet = _make_planet(facilities=[facility], orders=[order])
-        planet.active_abilities = {'PlanetaryShield': True}
+        # active_abilities is derived from component_states on real Planet
         empire = _make_empire(colonies=[planet])
 
         engine.process_planet_actions_tick(1, [empire])
@@ -299,7 +299,7 @@ class TestPlanetActionEngineEvents:
                                    "ability_name": "PlanetaryShield",
                                    "component_key": "OUTER:0:geologic_stabilizer_sector"})
         planet = _make_planet(facilities=[facility], orders=[order])
-        planet.active_abilities = {'PlanetaryShield': True}
+        # active_abilities is derived from component_states on real Planet
         empire = _make_empire(colonies=[planet])
 
         engine.process_planet_actions_tick(1, [empire])

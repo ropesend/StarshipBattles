@@ -7,7 +7,7 @@ including grid, warp lanes, systems, planets, and fleets.
 
 Cross-layer imports (acceptable for UI rendering):
 - hex_to_pixel, pixel_to_hex, HexCoord: Runtime - coordinate conversions for rendering
-- OrderType: Runtime - move preview line styling based on order type
+- project_fleet_position: Runtime - projected fleet position for preview line
 """
 import logging
 import math
@@ -16,7 +16,7 @@ import pygame
 from game.core.paths import Paths
 from game.ui.config import UIConfig
 from game.core.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
-from game.strategy.data.order_types import OrderType
+from game.strategy.services.cargo_transfer_service import project_fleet_position
 from game.strategy.data.planet import PlanetType
 from game.ui.colors import (
     COLORS, WHITE,
@@ -203,9 +203,13 @@ class StrategyRenderer:
         self._draw_systems(screen)
         self._draw_fleets(screen)
 
-        # Move/Warp Line Preview
-        if self.scene.input_mode in ('MOVE', 'WARP_TARGET') and self.scene.selected_fleet:
+        # Move/Warp/Colonize Line Preview
+        if self.scene.input_mode in ('MOVE', 'WARP_TARGET', 'COLONIZE_TARGET', 'EDIT_MOVE') and self.scene.selected_fleet:
             self._draw_move_preview(screen)
+
+        # EDIT_MOVE ghost hex: outline of old destination
+        if self.scene.input_mode == 'EDIT_MOVE' and self.scene._edit_move_ghost_hex:
+            self._draw_ghost_hex(screen, self.scene._edit_move_ghost_hex)
 
         # Hover Highlight
         if self.scene.hover_hex and self.camera.zoom >= 0.5:
@@ -220,13 +224,8 @@ class StrategyRenderer:
             pygame.draw.rect(screen, COLORS['border_normal'], viewport_rect, 2)
 
     def _draw_move_preview(self, screen):
-        """Draw the move preview line from fleet to mouse cursor."""
-        # Determine start point (Fleet Location or Last Order Target)
-        start_hex = self.scene.selected_fleet.location
-        for o in reversed(self.scene.selected_fleet.orders):
-            if o.type == OrderType.MOVE:
-                start_hex = o.target
-                break
+        """Draw the move preview line from fleet's projected position to mouse cursor."""
+        start_hex = project_fleet_position(self.scene.selected_fleet)
 
         fx, fy = hex_to_pixel(start_hex, self.hex_size)
         f_pos = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
@@ -234,6 +233,21 @@ class StrategyRenderer:
         mx, my = pygame.mouse.get_pos()
 
         pygame.draw.line(screen, HP_HEALTHY, f_pos, (mx, my), 2)
+
+    def _draw_ghost_hex(self, screen, ghost_hex):
+        """Draw a dashed-style ghost hex outline for the old MOVE destination."""
+        cx, cy = hex_to_pixel(ghost_hex, self.hex_size)
+        corners_px = []
+        for i in range(6):
+            angle_deg = 60 * i
+            angle_rad = math.radians(angle_deg)
+            px = cx + self.hex_size * math.cos(angle_rad)
+            py = cy + self.hex_size * math.sin(angle_rad)
+            corners_px.append(self.camera.world_to_screen(pygame.math.Vector2(px, py)))
+
+        # Semi-transparent yellow outline for the ghost
+        ghost_color = (255, 255, 100, 180)
+        pygame.draw.lines(screen, ghost_color, True, corners_px, 2)
 
     def _draw_hover_hex(self, screen):
         """Draw highlight around the currently hovered hex."""

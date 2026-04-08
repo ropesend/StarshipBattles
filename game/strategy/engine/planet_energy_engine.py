@@ -84,18 +84,14 @@ _ACTIVATABLE_ABILITIES = [
 
 
 def _is_ability_active(planet, ability_key: str) -> bool:
-    """Check if an activatable ability is active on a planet."""
+    """Check if an activatable ability is active on a planet.
+
+    Uses Planet.active_abilities derived property (scans facility component_states).
+    """
     active_dict = getattr(planet, 'active_abilities', {})
     if isinstance(active_dict, dict):
         return active_dict.get(ability_key, False)
     return False
-
-
-def _set_ability_active(planet, ability_key: str, active: bool):
-    """Set an activatable ability's active state on a planet."""
-    if not hasattr(planet, 'active_abilities'):
-        planet.active_abilities = {}
-    planet.active_abilities[ability_key] = active
 
 
 class PlanetEnergyEngine(IPlanetEnergyEngine):
@@ -280,9 +276,6 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                     ability_name = state.ability_name
                     state.cancel()
                     facility.component_states[key] = state.to_dict()
-                    # Update planet-level ability state
-                    if ability_name:
-                        planet.active_abilities[ability_name] = False
                     logger.info(
                         f"Planet {planet.name}: {ability_name} cancelled "
                         f"(energy depleted, facility {facility.instance_id})"

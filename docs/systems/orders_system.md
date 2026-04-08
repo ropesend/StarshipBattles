@@ -277,6 +277,46 @@ Turn 2:
 
 ---
 
+## Order Editing (UI)
+
+**File:** `game/ui/screens/orders_window.py`
+
+The Orders Window shows an "E" (Edit) button on order rows whose type is in
+`EDITABLE_ORDER_TYPES`:
+
+| Editable Type | Edit Action |
+|---------------|------------|
+| `MOVE` | Enters `EDIT_MOVE` input mode: camera pans to old destination, yellow ghost hex outline shows the original target, player clicks new destination, order target updates in-place |
+| `TRANSFER` | Removes the old order, opens the Transfer Dialog at the resolved transfer location (determined by walking preceding MOVE/WARP orders), player creates replacement order(s) |
+| `LOAD_POPULATION` | Same as TRANSFER |
+| `UNLOAD_POPULATION` | Same as TRANSFER |
+
+### EDIT_MOVE Flow
+
+1. Player clicks "E" on a MOVE order row
+2. `StrategyScreen._start_edit_move()` stores the old hex as ghost state, pans camera
+3. `StrategyRenderer` draws ghost hex outline (yellow) and preview line to cursor
+4. Player clicks new destination → `complete_edit_move()` updates `order.target` in-place
+5. If editing the active order (index 0), `fleet.path` is invalidated
+6. Right-click or ESC cancels edit, restoring SELECT mode
+
+### EDIT_TRANSFER Flow
+
+1. Player clicks "E" on a TRANSFER/LOAD/UNLOAD order row
+2. `StrategyScreen._start_edit_transfer()` walks preceding orders to find the hex
+   where this transfer will execute
+3. Old order is removed from the queue
+4. Transfer Dialog opens at the resolved hex — player creates replacement order(s)
+
+**Key files:**
+- `game/ui/screens/orders_window.py` — E button, `EDITABLE_ORDER_TYPES`
+- `game/ui/screens/strategy_screen.py` — `on_edit_order()`, `_start_edit_move()`, `complete_edit_move()`, `_start_edit_transfer()`
+- `game/ui/screens/strategy_click_dispatcher.py` — `EDIT_MOVE` click handler
+- `game/ui/screens/strategy_renderer.py` — ghost hex rendering
+- `game/ui/screens/strategy_fleet_command_router.py` — ESC cancel for EDIT_MOVE
+
+---
+
 ## Adding a New Order Type
 
 Follow these steps to add a new order type to the system:
@@ -406,6 +446,8 @@ registry.register('YourNewOrderCommand', YourNewOrderCommandHandler())
 | Command Handlers | `game/strategy/engine/command_handlers.py` |
 | Superweapon Handlers | `game/strategy/engine/superweapon_command_handlers.py` |
 | Component abilities | `data/components.json` |
+| Orders Window (UI) | `game/ui/screens/orders_window.py` |
+| Fleet Position Projection | `game/strategy/services/cargo_transfer_service.py` (`project_fleet_position()`) |
 
 ---
 

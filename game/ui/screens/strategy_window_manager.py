@@ -423,13 +423,17 @@ class StrategyWindowManager:
                 cmd = ReorderFleetOrderCommand(fleet_id=entity_id, order_index=order_index, direction=direction)
                 self.scene.facade.handle_command(cmd)
 
+        def edit_order_callback(entity_id: int, order_index: int, order) -> None:
+            self.scene.on_edit_order(entity, order_index, order)
+
         from game.ui.screens.orders_window import OrdersWindow
         self.fleet_orders_window = OrdersWindow(
             rect, self.manager, entity, entity_type=entity_type,
             input_mapper=self._mapper,
             clear_orders_callback=clear_orders_callback,
             delete_order_callback=delete_order_callback,
-            reorder_order_callback=reorder_order_callback
+            reorder_order_callback=reorder_order_callback,
+            edit_order_callback=edit_order_callback,
         )
 
     # =========================================================================
@@ -490,7 +494,7 @@ class StrategyWindowManager:
 
         from game.ui.screens.transfer_dialog import TransferDialog
 
-        win_w, win_h = 900, 700
+        win_w, win_h = 940, 700
         win_rect = pygame.Rect(0, 0, win_w, win_h)
         win_rect.center = (self.width // 2, self.height // 2)
 

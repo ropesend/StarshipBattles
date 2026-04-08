@@ -298,3 +298,101 @@ is purely at the type annotation level.
 | Generation Pipeline | verify-events-gen | DensityMap, placement strategies, storm gen all correct |
 | CQRS Query Methods | verify-facade-dtos | All public facade queries return DTOs, never domain objects |
 | Habitability Formulas | verify-events-gen | All functions have complete type hints and docstrings |
+
+---
+
+## 6. QA Session Changes (Post-Report)
+
+Changes driven by QA session `20260407_145344`, applied after the initial sync report.
+
+### 6.1 Fleet Position Projection and Transfer Colony Resolution
+
+**Problem:** Transfer dialog showed empty Target dropdown when fleet had MOVE orders
+queued to a colony. The system only checked the fleet's current location for colonies.
+
+**Files modified:**
+- `game/strategy/services/cargo_transfer_service.py` — added `project_fleet_position()` utility,
+  updated `resolve_colonies()` with projected position fallback
+- `game/ui/screens/transfer_dialog.py` — `_populate_initial_data()` checks projected position
+- `tests/unit/strategy/services/test_cargo_transfer_service.py` — +9 tests
+
+### 6.2 Transfer Dialog UI Layout Overhaul
+
+**Problem:** Bottom buttons clipped off screen, arrow buttons too narrow, only 3 arrows
+per direction, insufficient space for large transfer amounts.
+
+**Files modified:**
+- `game/ui/screens/transfer_dialog.py` — 5 arrow gradations per direction (1/10/1000/10K/100K),
+  uniform 38px button width, pending area widened to 120px, bottom buttons raised,
+  Max button labels simplified
+- `game/ui/screens/strategy_window_manager.py` — window widened 900→940px
+
+### 6.3 Drop Pod Rows Always Visible
+
+**Problem:** Drop pods only appeared in transfer grid when present on either side.
+Should always show as transferable items.
+
+**Files modified:**
+- `game/ui/screens/transfer_dialog.py` — added `_discover_pod_designs()` using DesignLibrary
+  to find all `vehicle_type == "Drop Pod"` designs; `_add_pod_rows()` merges discovered
+  designs with actual pod counts. Filter Empty toggle still hides 0/0 rows.
+
+### 6.4 Colonize Target Path Preview Line
+
+**Problem:** No preview line drawn from fleet to cursor during colonize target selection.
+
+**Files modified:**
+- `game/ui/screens/strategy_renderer.py` — added `COLONIZE_TARGET` to preview line condition,
+  refactored `_draw_move_preview()` to use `project_fleet_position()` (handles MOVE+WARP chains)
+
+### 6.5 Order Editing (MOVE and TRANSFER)
+
+**Problem:** No way to modify queued orders without delete+re-create.
+
+**Files modified:**
+- `game/ui/screens/orders_window.py` — "E" button for editable order types, `EDITABLE_ORDER_TYPES` set, `edit_order_callback`
+- `game/ui/screens/strategy_screen.py` — `on_edit_order()`, MOVE edit flow (ghost hex + camera pan + in-place update), TRANSFER edit flow (remove + re-open dialog)
+- `game/ui/screens/strategy_click_dispatcher.py` — `EDIT_MOVE` mode handler
+- `game/ui/screens/strategy_renderer.py` — `_draw_ghost_hex()` (yellow outline for old MOVE destination)
+- `game/ui/screens/strategy_fleet_command_router.py` — ESC cancel for EDIT_MOVE
+- `game/ui/screens/strategy_input_handler.py` — EDIT_MOVE in fleet context mode list
+- `game/ui/screens/strategy_window_manager.py` — wired edit_order_callback
+
+### 6.6 Per-Component Activation Architecture (Major Refactor)
+
+**Problem:** `planet.active_abilities` was `Dict[str, bool]` keyed by ability name —
+collapsed multiple component instances into a single boolean. System Geologic Stabilizer
+was invisible in the abilities panel because a lower-tier Geologic Stabilizer was found first
+and the dedup check dropped the second.
+
+**Root cause:** Three levels of the system (planet data, validator, UI panel) all keyed by
+ability_name instead of component_key.
+
+**Solution:** Clean-sheet refactor to per-component granularity:
+
+**Files modified:**
+- `game/strategy/data/planet.py` — `active_abilities` changed from stored field to derived
+  property scanning `facility.component_states`; removed from serialization; deleted `set_ability_active()`
+- `game/strategy/engine/component_activation_engine.py` — removed `planet.active_abilities` writes
+- `game/strategy/engine/planet_energy_engine.py` — removed `planet.active_abilities` writes,
+  deleted `_set_ability_active()` helper
+- `game/strategy/validation/planet_order_validator.py` — validates by `component_key` when
+  provided; allows multiple instances of same ability
+- `game/strategy/engine/commands.py` — added `component_key` field to `IssuePlanetOrderCommand`
+- `game/strategy/engine/planet_command_handlers.py` — passes `component_key` into order target
+- `game/ui/screens/planet_abilities_window.py` — per-component rows (no dedup), numbered labels
+  for multiple instances, status from component_state, commands carry component_key
+- `game/ui/screens/strategy_fleet_command_router.py` — hotkey toggle uses component_key
+- `tests/unit/strategy/data/test_planet_active_abilities.py` — +11 new tests for derived property
+- `tests/unit/strategy/engine/test_component_activation_engine.py` — updated to check component_states
+- `tests/unit/strategy/engine/test_planet_energy_engine.py` — removed stale active_abilities mock setup
+
+### 6.7 Documentation Updates
+
+- `docs/systems/strategy_layer.md` — per-component activation architecture section,
+  fleet position projection section, shield event generation note
+- `docs/systems/orders_system.md` — order editing section, key files table updated
+
+### Test Results
+
+All changes: **14752 tests passed, 0 failed** (full sharded suite).

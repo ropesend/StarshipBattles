@@ -121,7 +121,14 @@ class FleetCommandRouter:
             return True
 
         elif action == InputAction.FLEET_CANCEL_MODE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
+            if self.input_mode == 'EDIT_MOVE':
+                # Cancel move edit — clear ghost state
+                self.scene._edit_move_ghost_hex = None
+                self.scene._edit_move_order_index = None
+                self.scene._edit_move_fleet = None
+                self.input_mode = 'SELECT'
+                logger.debug("Input Mode: SELECT (cancelled EDIT_MOVE)")
+            elif self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
                                    'WARP_TARGET', 'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET',
                                    'OPEN_WARP_TARGET', 'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
                 self.input_mode = 'SELECT'
@@ -231,16 +238,20 @@ class FleetCommandRouter:
     def _handle_ability_toggle(self, ability_name: str) -> None:
         """Toggle a toggleable ability on the selected planet.
 
-        Issues ACTIVATE_ABILITY or DEACTIVATE_ABILITY based on current state.
+        Finds the first component with this ability and issues
+        ACTIVATE_ABILITY or DEACTIVATE_ABILITY based on its current state.
         """
         current_sel = getattr(self.scene.ui, 'current_selection', None)
         if not current_sel or not is_planet(current_sel):
             return
         planet = current_sel
 
-        # Find facility with this ability — MUST use registry lookup
-        from game.strategy.validation.planet_order_validator import _facility_has_ability
+        # Find first facility + component with this ability
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        from game.core.patterns.layer_iterator import iter_keyed_components
         from game.core.registry import get_default_registry_provider
+        from game.strategy.data.component_activation_state import ActivationPhase
+
         component_registry = None
         try:
             provider = get_default_registry_provider()
@@ -249,18 +260,27 @@ class FleetCommandRouter:
             pass
 
         target_facility_id = None
+        target_component_key = None
         for facility in planet.facilities:
-            if _facility_has_ability(facility, ability_name, component_registry):
-                target_facility_id = facility.instance_id
+            if not facility.is_operational:
+                continue
+            for comp_key, layer_name, comp in iter_keyed_components(facility.design_data):
+                abilities = extract_abilities_from_component(comp, component_registry)
+                ability_data = abilities.get(ability_name)
+                if isinstance(ability_data, dict) and 'activation_time' in ability_data:
+                    target_facility_id = facility.instance_id
+                    target_component_key = comp_key
+                    break
+            if target_facility_id:
                 break
 
-        if not target_facility_id:
-            return  # No facility with this ability on this planet
+        if not target_facility_id or not target_component_key:
+            return
 
-        # Determine order type based on current state
-        active_abilities = getattr(planet, 'active_abilities', {})
-        is_active = active_abilities.get(ability_name, False)
-
+        # Determine order type from component state (source of truth)
+        facility = next(f for f in planet.facilities if f.instance_id == target_facility_id)
+        state = facility.get_activation_state(target_component_key)
+        is_active = state.phase in (ActivationPhase.ACTIVE, ActivationPhase.ACTIVATING)
         order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
 
         from game.strategy.engine.commands import IssuePlanetOrderCommand
@@ -269,6 +289,7 @@ class FleetCommandRouter:
             order_type=order_type,
             facility_instance_id=target_facility_id,
             ability_name=ability_name,
+            component_key=target_component_key,
         )
         result = self.scene.facade.handle_command(cmd)
         if result and not result.is_valid:
