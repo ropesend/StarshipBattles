@@ -464,7 +464,18 @@ The `AtmosphereEngine` found no facilities with `AtmosphereModifier` ability, so
 - `tests/unit/strategy/engine/test_atmosphere_engine.py` — +2 tests (no facility no change,
   rate reaches target in ~1000 turns)
 
-### 6.12 Documentation Updates
+### 6.12 Construction Accelerator Facility Designs
+
+**Files created:**
+- `tests/fixtures/quickstart/designs/qs_sector_construction_accelerator_complex.json` — Tier 1
+  complex with `build_rate_booster_sector` (+25% build rate, sector scope)
+- `tests/fixtures/quickstart/designs/qs_system_construction_accelerator_complex.json` — Tier 2
+  complex with `build_rate_booster_system` (+10% build rate, system scope)
+
+Both designs validated clean (crew housing, life support, mass budgets all pass).
+Components already existed in `data/components.json` — only the complex designs were missing.
+
+### 6.13 Documentation Updates
 
 - `docs/01_ARCHITECTURE.md` — removed stale `active_abilities` from IPlanet protocol table
 - `docs/04_SERVICES.md` — added `project_fleet_position()`, `SystemEffectsCollector`
@@ -472,8 +483,8 @@ The `AtmosphereEngine` found no facilities with `AtmosphereModifier` ability, so
   architecture section, fleet position projection section, shield event generation note,
   Phase 1.6 batch dispatch note
 - `docs/systems/orders_system.md` — order editing section, zero-tick dispatch note
-- `CLAUDE.md` — test baseline updated to 14769
+- `CLAUDE.md` — test baseline updated to 14781
 
 ### Test Results
 
-All changes: **14769 tests passed, 0 failed** (full sharded suite).
+All changes: **14781 tests passed, 0 failed** (full sharded suite).
