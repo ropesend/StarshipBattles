@@ -23,17 +23,14 @@ class TestStrategyManagerSingleton:
 
         assert instance1 is instance2, "instance() should return same object"
 
-    def test_direct_init_returns_singleton(self):
-        """Test that direct __init__ returns the singleton (metaclass behavior)."""
+    def test_direct_init_creates_new_instance(self):
+        """PROJ-258: Direct instantiation creates a NEW instance (not singleton)."""
         from game.ai.strategy_manager import StrategyManager
 
-        # Ensure instance exists
         instance1 = StrategyManager.instance()
-
-        # With SingletonMeta, direct construction returns the singleton
         instance2 = StrategyManager()
 
-        assert instance1 is instance2, "Direct instantiation should return the singleton"
+        assert instance1 is not instance2, "Direct instantiation should create new instance"
 
     def test_reset_destroys_instance(self):
         """Test that reset() destroys the singleton instance."""

@@ -272,9 +272,9 @@ When faced with choices, prefer:
 
 ### Key Patterns (see `docs/02_PATTERNS.md` for full list)
 - **Registry Pattern** - Centralized component/ship/planet registration
-- **Singleton via SingletonMeta** - Thread-safe metaclass in `game/core/singleton.py`
+- **ApplicationContext DI** - `game/context.py` manages all 10 services (PROJ-258)
 - **Protocol + TypeGuard** - Duck typing with runtime checks
-- **Dependency Injection** - IRegistryProvider for production/test split
+- **Dependency Injection** - IRegistryProvider for production/test split, ApplicationContext for services
 - **Facade/Delegate** - StrategySessionFacade, Ship→ShipCombatEngine
 - **CQRS-lite** - Command/query separation with frozen DTOs
 - **Two-Phase Ability Aggregation** - Intra-group MAX, inter-group SUM

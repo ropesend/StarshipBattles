@@ -268,8 +268,8 @@ def _planet_has_ability_facility(planet, ability_key: str) -> bool:
 
     registries = None
     try:
-        from game.core.registry import RegistryManager
-        registries = RegistryManager.instance()
+        from game.core.registry import get_default_registry_manager
+        registries = get_default_registry_manager()
     except Exception:
         pass
 

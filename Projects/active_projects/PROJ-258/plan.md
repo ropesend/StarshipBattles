@@ -13,19 +13,20 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Create ApplicationContext (wrapper) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate Core singletons | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate AI + Strategy singletons | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate UI singletons | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Simplify conftest.py and session cache | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Documentation + Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Create ApplicationContext (wrapper) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate Core singletons | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate AI + Strategy singletons | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Migrate UI singletons | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Simplify conftest.py and session cache | Deferred | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Documentation + Verification | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-08
-**Active Phase:** Planning complete, ready for Phase 1
-**Last Action:** Project plan populated with all phases, design, decisions, manifests
-**Next Action:** Begin Phase 1 Task 1.1 - Write tests for ApplicationContext
-**Blockers:** Requires PROJ-257 (Foundation) to be complete first
+**Active Phase:** Project Complete (Phase 5 deferred)
+**Last Action:** All 10 production singletons migrated. Documentation updated (docs/01_ARCHITECTURE.md, docs/02_PATTERNS.md, CLAUDE.md). Phase 5 (conftest simplification) deferred — compatibility shims make current conftest work correctly without changes. 14648 tests pass.
+**Next Action:** Audit and user verification
+**Blockers:** None
+**Note on Phase 5:** The skeptical review confirmed conftest cleanup is "not fragile" with "logical order, documented, defensive try/except". The compatibility shims (.instance()/.reset()) make the existing conftest work without modification. Simplification can be done incrementally as a future improvement.
 
 ## Overview
 

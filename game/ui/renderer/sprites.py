@@ -5,7 +5,6 @@ import re
 import pygame
 from typing import Optional
 from game.core.paths import Paths
-from game.core.singleton import SingletonMeta
 from game.ui.colors import BLACK
 
 logger = logging.getLogger(__name__)
@@ -15,13 +14,12 @@ _PORTRAIT_PATTERN = re.compile(r"(\d+)Portrait_Comp_(\d+)\.\w+$")
 # Matches legacy filenames like "Comp_001.bmp"
 _LEGACY_PATTERN = re.compile(r"Comp_(\d+)\.\w+$")
 
+_default_sprite_manager: Optional['SpriteManager'] = None
 
-class SpriteManager(metaclass=SingletonMeta):
+
+class SpriteManager:
     """
-    Singleton manager for component sprite images.
-
-    Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
+    Manager for component sprite images.
 
     Usage:
         manager = SpriteManager.instance()
@@ -34,6 +32,20 @@ class SpriteManager(metaclass=SingletonMeta):
     def __init__(self):
         self.sprites = []
         self.tile_size = 36
+
+    @classmethod
+    def instance(cls) -> 'SpriteManager':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_sprite_manager
+        if _default_sprite_manager is None:
+            _default_sprite_manager = cls()
+        return _default_sprite_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_sprite_manager
+        _default_sprite_manager = cls()
 
     def load_sprites(self, base_path: str = None) -> None:
         """Load sprites from the 64px component image directory.

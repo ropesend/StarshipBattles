@@ -44,7 +44,6 @@ from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.core.exceptions import StateException, FrozenStateException
 from game.core.error_codes import ErrorCode
-from game.core.singleton import SingletonMeta
 
 if TYPE_CHECKING:
     from game.core.resources import ResourceCatalog
@@ -110,14 +109,13 @@ class GameRegistries:
         return self.resource_catalog
 
 
-class RegistryManager(metaclass=SingletonMeta):
-    """
-    Central singleton for managing global game state registries.
+class RegistryManager:
+    """Central manager for global game state registries.
 
-    Replaces module-level globals to allow for clean state resets in testing.
+    PROJ-258: Migrated from SingletonMeta to DI via ApplicationContext.
+    Create instances directly or via ApplicationContext.create_production().
 
     Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
         - All dictionary operations use the same dict instances (no replacement)
         - Individual dict operations are atomic in CPython (GIL)
         - For cross-registry transactions, external synchronization is required
@@ -128,18 +126,11 @@ class RegistryManager(metaclass=SingletonMeta):
 
         provider = get_default_registry_provider()
         components = provider.get_components()
-        modifiers = provider.get_modifiers()
-        classes = provider.get_vehicle_classes()
 
-        # Alternative: Direct access (when needed for special operations)
-        mgr = RegistryManager.instance()
+        # Direct access via ApplicationContext:
+        mgr = ctx.registry_manager
         mgr.clear()  # For test isolation
         mgr.freeze() # For production initialization
-
-    Testing:
-        - Use conftest.py's reset_game_state fixture (auto-applied)
-        - Fixture calls clear() before/after each test
-        - Never call reset() in production code
 
     Attributes:
         components: Dict of component definitions keyed by ID
@@ -155,6 +146,32 @@ class RegistryManager(metaclass=SingletonMeta):
         self.resources: Dict[str, Any] = {}
         self._validator: Any = None
         self._frozen: bool = False
+
+    @classmethod
+    def instance(cls) -> 'RegistryManager':
+        """Get the module-level RegistryManager instance.
+
+        PROJ-258 compatibility shim: delegates to module-level _default_manager.
+        Existing code calling RegistryManager.instance() continues to work.
+        New code should use ApplicationContext or get_default_registry_manager().
+        """
+        # Can't call get_default_registry_manager() here (defined after class).
+        # Access module global directly — will be set by conftest/app startup.
+        global _default_manager
+        if _default_manager is None:
+            # Auto-create for backward compat (test code that runs before conftest)
+            _default_manager = cls()
+        return _default_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset by replacing the module-level instance with a fresh one.
+
+        PROJ-258 compatibility shim for test teardown code.
+        New code should create fresh RegistryManager instances directly.
+        """
+        global _default_manager
+        _default_manager = cls()
 
     def freeze(self):
         """
@@ -254,20 +271,52 @@ class RegistryManager(metaclass=SingletonMeta):
             )
 
 
-def freeze_registry() -> None:
+# =============================================================================
+# Module-level RegistryManager reference (PROJ-258)
+# =============================================================================
+
+_default_manager: Optional[RegistryManager] = None
+
+
+def set_default_registry_manager(manager: RegistryManager) -> None:
+    """Set the module-level RegistryManager reference.
+
+    Called from ApplicationContext or app.py during startup.
+    Module-level wrapper functions (freeze_registry, etc.) use this reference.
     """
-    Freeze the registry to prevent further modifications.
+    global _default_manager
+    _default_manager = manager
+
+
+def get_default_registry_manager() -> RegistryManager:
+    """Get the module-level RegistryManager reference.
+
+    Returns:
+        The RegistryManager instance set via set_default_registry_manager().
+
+    Raises:
+        StateException: If no RegistryManager has been set.
+    """
+    if _default_manager is None:
+        raise StateException(
+            "No RegistryManager configured. Call set_default_registry_manager() "
+            "or use ApplicationContext.create_production() first.",
+            code=ErrorCode.STATE_FROZEN.value,
+        )
+    return _default_manager
+
+
+def freeze_registry() -> None:
+    """Freeze the registry to prevent further modifications.
 
     Call this after game initialization to catch accidental mutations
-    during gameplay. Thread-safe.
-
-    Note: Use RegistryManager.reset() to unfreeze (destroys instance).
+    during gameplay.
     """
-    RegistryManager.instance().freeze()
+    get_default_registry_manager().freeze()
+
 
 def set_validator(validator) -> None:
-    """
-    Set the ship design validator.
+    """Set the ship design validator.
 
     Args:
         validator: ShipDesignValidator instance
@@ -275,33 +324,27 @@ def set_validator(validator) -> None:
     Raises:
         FrozenStateException: If the registry is frozen
     """
-    RegistryManager.instance().set_validator(validator)
+    get_default_registry_manager().set_validator(validator)
 
 
 def get_validator():
-    """
-    Get the ship design validator.
-
-    PROJ-195: Module-level wrapper for singleton access.
-    Encapsulates the singleton reference so non-root code doesn't need direct access.
+    """Get the ship design validator.
 
     Returns:
         ShipDesignValidator instance or None if not set
     """
-    return RegistryManager.instance().get_validator()
+    return get_default_registry_manager().get_validator()
 
 
 def clear_registry() -> None:
-    """
-    Clear all registries to empty state.
+    """Clear all registries to empty state.
 
     Used by test fixtures to ensure clean state between tests.
-    Preserves dict identity, only empties contents.
 
     Raises:
         FrozenStateException: If the registry is frozen
     """
-    RegistryManager.instance().clear()
+    get_default_registry_manager().clear()
 
 
 # =============================================================================
@@ -309,12 +352,10 @@ def clear_registry() -> None:
 # =============================================================================
 
 class DefaultRegistryProvider:
-    """
-    Default IRegistryProvider implementation backed by the RegistryManager singleton.
+    """Default IRegistryProvider backed by the module-level RegistryManager.
 
-    PROJ-27: This class provides the production implementation of IRegistryProvider.
-    It delegates all registry access to the existing singleton while enabling
-    dependency injection.
+    PROJ-27: Production implementation of IRegistryProvider.
+    PROJ-258: Uses get_default_registry_manager() instead of singleton.
 
     Usage:
         provider = get_default_registry_provider()
@@ -322,20 +363,20 @@ class DefaultRegistryProvider:
     """
 
     def get_components(self) -> Dict[str, Any]:
-        """Get the component registry dictionary from singleton."""
-        return RegistryManager.instance().components
+        """Get the component registry dictionary."""
+        return get_default_registry_manager().components
 
     def get_modifiers(self) -> Dict[str, Any]:
-        """Get the modifier registry dictionary from singleton."""
-        return RegistryManager.instance().modifiers
+        """Get the modifier registry dictionary."""
+        return get_default_registry_manager().modifiers
 
     def get_vehicle_classes(self) -> Dict[str, Any]:
-        """Get the vehicle classes dictionary from singleton."""
-        return RegistryManager.instance().vehicle_classes
+        """Get the vehicle classes dictionary."""
+        return get_default_registry_manager().vehicle_classes
 
     def get_resources(self) -> Dict[str, Any]:
-        """Get the resources registry dictionary from singleton."""
-        return RegistryManager.instance().resources
+        """Get the resources registry dictionary."""
+        return get_default_registry_manager().resources
 
     def get_resource_catalog(self) -> Optional['ResourceCatalog']:
         """Get the unified ResourceCatalog.

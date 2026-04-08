@@ -26,13 +26,9 @@ class TestComponentCacheManager:
 
         assert manager1 is manager2
 
-    def test_cache_manager_uses_singleton_meta(self):
-        """ComponentCacheManager uses SingletonMeta for thread-safe singleton.
-
-        PROJ-225: Migrated from manual _lock pattern to SingletonMeta.
-        """
-        from game.core.singleton import SingletonMeta
-        assert isinstance(ComponentCacheManager, SingletonMeta)
+    def test_cache_manager_is_plain_class(self):
+        """PROJ-258: ComponentCacheManager is a plain class (no SingletonMeta)."""
+        assert type(ComponentCacheManager) is type
 
     def test_cache_manager_initial_state(self):
         """ComponentCacheManager should start with None caches."""

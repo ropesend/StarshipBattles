@@ -16,27 +16,19 @@ from game.core.json_utils import load_json
 
 logger = logging.getLogger(__name__)
 from game.core.strategy_metadata import StrategyMetadataService
-from game.core.singleton import SingletonMeta
+
+# Module-level reference (PROJ-258)
+_default_strategy_manager: Optional['StrategyManager'] = None
 
 
-class StrategyManager(metaclass=SingletonMeta):
-    """
-    Singleton manager for combat strategies, targeting policies, and movement policies.
+class StrategyManager:
+    """Manager for combat strategies, targeting policies, and movement policies.
+
+    PROJ-258: Migrated from SingletonMeta to DI via ApplicationContext.
 
     Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
         - Data loading (load_data/ensure_loaded) is thread-safe via locking
         - Once loaded, all read operations are safe without synchronization
-        - Note: clear() and reset() are NOT thread-safe and should only be used
-          in single-threaded test setup/teardown
-
-    Usage:
-        manager = StrategyManager.instance()
-        strategy = manager.get_strategy('aggressive_ranged')
-
-    Testing:
-        - Use reset() to destroy instance completely
-        - Use clear() to reset data but preserve instance
     """
     _data_lock = threading.Lock()
 
@@ -51,6 +43,20 @@ class StrategyManager(metaclass=SingletonMeta):
             'movement': {'behavior': 'kite', 'engage_distance': 'max_range', 'retreat_hp_threshold': 0.1, 'avoid_collisions': True},
             'strategy': {'name': 'Default', 'targeting_policy': 'standard', 'movement_policy': 'kite_max'}
         }
+
+    @classmethod
+    def instance(cls) -> 'StrategyManager':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_strategy_manager
+        if _default_strategy_manager is None:
+            _default_strategy_manager = cls()
+        return _default_strategy_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_strategy_manager
+        _default_strategy_manager = cls()
 
     def clear(self):
         """

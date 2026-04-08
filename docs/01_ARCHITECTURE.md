@@ -56,6 +56,12 @@ Six layers with strict downward-only dependency flow:
 
 ## Package Directory Map
 
+### `game/context.py` -- DI Container (outside layer hierarchy)
+
+| Module                | Description |
+|-----------------------|-------------|
+| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages all 10 services. |
+
 ### `game/core/` -- Foundation layer, no game-layer dependencies
 
 | Module                | Description |
@@ -76,7 +82,7 @@ Six layers with strict downward-only dependency flow:
 | `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition |
 | `input_actions.py`    | InputAction enum for key bindings |
 | `json_utils.py`       | JSON serialization helpers |
-| `singleton.py`        | SingletonMeta metaclass |
+| `singleton.py`        | SingletonMeta metaclass (deprecated — no production users, kept for reference) |
 | `profiling.py`        | Profiler, profile_action for performance |
 | `strategy_metadata.py`| Strategy-layer metadata types |
 | `string_utils.py`     | String utility functions |

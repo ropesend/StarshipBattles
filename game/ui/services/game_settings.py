@@ -5,11 +5,10 @@ Settings are loaded from a JSON file and saved on change.
 """
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from game.core.json_utils import load_json, save_json
 from game.core.paths import Paths
-from game.core.singleton import SingletonMeta
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +19,11 @@ DEFAULTS: Dict[str, Any] = {
 
 SETTINGS_FILE = os.path.join(Paths.SETTINGS_DIR, 'game_settings.json')
 
+_default_game_settings: Optional['GameSettings'] = None
 
-class GameSettings(metaclass=SingletonMeta):
-    """Singleton service for user-configurable game settings.
+
+class GameSettings:
+    """Service for user-configurable game settings.
 
     Settings persist to output/settings/game_settings.json.
     Access values via get()/set(), changes auto-save.
@@ -31,6 +32,20 @@ class GameSettings(metaclass=SingletonMeta):
     def __init__(self) -> None:
         self._data: Dict[str, Any] = dict(DEFAULTS)
         self._load()
+
+    @classmethod
+    def instance(cls) -> 'GameSettings':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_game_settings
+        if _default_game_settings is None:
+            _default_game_settings = cls()
+        return _default_game_settings
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_game_settings
+        _default_game_settings = cls()
 
     def _load(self) -> None:
         """Load settings from disk, merging with defaults."""

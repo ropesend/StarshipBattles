@@ -2,21 +2,21 @@ import logging
 import os
 import pygame
 import threading
+from typing import Optional
+
 from game.core.json_utils import load_json
 from game.ui.colors import OVERLAY_FALLBACK
 
 logger = logging.getLogger(__name__)
 from game.core.profiling import profile_block
 from game.core.paths import Paths
-from game.core.singleton import SingletonMeta
+
+_default_ship_theme_manager: Optional['ShipThemeManager'] = None
 
 
-class ShipThemeManager(metaclass=SingletonMeta):
+class ShipThemeManager:
     """
-    Singleton manager for ship visual themes.
-
-    Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
+    Manager for ship visual themes.
 
     Usage:
         manager = ShipThemeManager.instance()
@@ -44,6 +44,20 @@ class ShipThemeManager(metaclass=SingletonMeta):
         self.discovery_complete = False
         self._init_lock = threading.Lock()
         self._io_lock = threading.Lock() # For on-demand loading
+
+    @classmethod
+    def instance(cls) -> 'ShipThemeManager':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_ship_theme_manager
+        if _default_ship_theme_manager is None:
+            _default_ship_theme_manager = cls()
+        return _default_ship_theme_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_ship_theme_manager
+        _default_ship_theme_manager = cls()
 
     def clear(self):
         """Reset all caches and state. Used for test isolation."""

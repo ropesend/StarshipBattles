@@ -130,11 +130,11 @@ class TestShipThemeManagerSingletonLifecycle:
         assert mgr.theme_data == {}
         assert mgr.discovery_complete is False
 
-    def test_direct_init_returns_singleton(self):
-        """Test direct __init__() returns singleton when instance exists."""
+    def test_direct_init_creates_new_instance(self):
+        """PROJ-258: Direct ShipThemeManager() creates a new instance."""
         mgr1 = ShipThemeManager.instance()
         mgr2 = ShipThemeManager()
-        assert mgr1 is mgr2, "Direct construction should return same singleton"
+        assert mgr1 is not mgr2, "Direct construction should create new instance"
 
 
 class TestShipThemeManagerErrorPaths:

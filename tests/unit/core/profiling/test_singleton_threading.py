@@ -1,32 +1,32 @@
-"""Tests for Profiler singleton pattern and thread safety."""
+"""Tests for Profiler instance management and thread safety.
+
+PROJ-258: Profiler migrated from SingletonMeta to DI via ApplicationContext.
+"""
 import pytest
 import threading
 
-from game.core.singleton import SingletonMeta
 
-
-class TestSingletonBehavior:
-    """Tests for Profiler singleton pattern."""
+class TestInstanceManagement:
+    """Tests for Profiler instance access via module-level reference."""
 
     def test_instance_returns_same_object(self):
-        """instance() should always return the same object."""
+        """instance() should return the module-level default instance."""
         from game.core.profiling import Profiler
 
         p1 = Profiler.instance()
         p2 = Profiler.instance()
-
         assert p1 is p2
 
-    def test_direct_instantiation_returns_same_object(self, profiler):
-        """Direct instantiation should return the same singleton (metaclass behavior)."""
+    def test_direct_instantiation_creates_new_object(self):
+        """Direct Profiler() creates a NEW instance (not singleton)."""
         from game.core.profiling import Profiler
 
-        # With SingletonMeta, direct construction returns the singleton
+        p1 = Profiler()
         p2 = Profiler()
-        assert p2 is profiler
+        assert p1 is not p2
 
     def test_reset_allows_new_instance(self):
-        """reset() should allow creating a new instance."""
+        """reset() should replace the module-level instance."""
         from game.core.profiling import Profiler
 
         p1 = Profiler.instance()
@@ -37,16 +37,7 @@ class TestSingletonBehavior:
         p2 = Profiler.instance()
         session_id_2 = p2.session_id
 
-        # New instance has new session ID
         assert session_id_1 != session_id_2
-
-    def test_has_thread_lock_via_metaclass(self):
-        """Profiler should have a lock for thread safety via SingletonMeta."""
-        from game.core.profiling import Profiler
-
-        # Lock is stored in SingletonMeta._locks, keyed by class
-        assert Profiler in SingletonMeta._locks
-        assert isinstance(SingletonMeta._locks[Profiler], type(threading.Lock()))
 
 
 class TestThreadSafety:

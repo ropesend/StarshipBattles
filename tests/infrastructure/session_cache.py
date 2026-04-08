@@ -43,11 +43,11 @@ class SessionRegistryCache:
                 # 1. Import Loaders inside method to avoid circular imports at top level
                 from game.simulation.components.component import load_components, load_modifiers
                 from game.simulation.entities.ship_loader import load_vehicle_classes
-                from game.core.registry import RegistryManager
+                from game.core.registry import RegistryManager, set_default_registry_manager
 
-                # 2. Reset Registry to clean state for capture
-                mgr = RegistryManager.instance()
-                mgr.clear()
+                # 2. Create fresh Registry for data capture (PROJ-258)
+                mgr = RegistryManager()
+                set_default_registry_manager(mgr)
 
                 # 3. Trigger Loaders (They populate Registry)
                 # Ensure we use absolute paths from constants
