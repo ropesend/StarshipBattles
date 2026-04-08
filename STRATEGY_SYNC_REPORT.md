@@ -475,7 +475,22 @@ The `AtmosphereEngine` found no facilities with `AtmosphereModifier` ability, so
 Both designs validated clean (crew housing, life support, mass budgets all pass).
 Components already existed in `data/components.json` — only the complex designs were missing.
 
-### 6.13 Documentation Updates
+### 6.13 Cargo Freighter Redesign (Battle Cruiser)
+
+**Problem:** Existing freighter was Destroyer-class (small, no warp capability, slow).
+
+**File modified:**
+- `tests/fixtures/quickstart/designs/qs_cargo_freighter.json` — redesigned as Battle Cruiser
+  class with warp drive, 26 engines, 4 cargo containers, 5 fuel tanks, 5 batteries
+
+**Specs:**
+- Speed: 7.10 hex/turn (meets 7 hex/turn minimum)
+- Cargo: 40,000 per resource type (metals, organics, vapors, radioactives, exotics)
+- Warp: 1 jump per full charge (8,000 energy cost, 10,000 stored)
+- Fuel range: 96 hexes
+- HP: 13,489 | Mass: 9,150
+
+### 6.14 Documentation Updates
 
 - `docs/01_ARCHITECTURE.md` — removed stale `active_abilities` from IPlanet protocol table
 - `docs/04_SERVICES.md` — added `project_fleet_position()`, `SystemEffectsCollector`
@@ -483,8 +498,8 @@ Components already existed in `data/components.json` — only the complex design
   architecture section, fleet position projection section, shield event generation note,
   Phase 1.6 batch dispatch note
 - `docs/systems/orders_system.md` — order editing section, zero-tick dispatch note
-- `CLAUDE.md` — test baseline updated to 14781
+- `CLAUDE.md` — test baseline updated to 14783
 
 ### Test Results
 
-All changes: **14781 tests passed, 0 failed** (full sharded suite).
+All changes: **14783 tests passed, 0 failed** (full sharded suite).

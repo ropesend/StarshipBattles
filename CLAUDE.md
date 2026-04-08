@@ -140,7 +140,7 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 **Tech Stack:**
 - Python 3.x
 - Pygame for rendering
-- Pytest for testing (14781 tests baseline)
+- Pytest for testing (14783 tests baseline)
 - Test parallelization with pytest-xdist
 
 **Display Target:**
@@ -296,7 +296,7 @@ When faced with choices, prefer:
 - **CLI parallel workers:** 12 (`-n 12`)
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 14781 passed, 0 skipped
+- **Baseline:** 14783 passed, 0 skipped
 
 ---
 

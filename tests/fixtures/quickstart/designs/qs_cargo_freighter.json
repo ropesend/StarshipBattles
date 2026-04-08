@@ -1,146 +1,105 @@
 {
-  "name": "Cargo Freighter (QS)",
-  "ship_class": "Destroyer",
+  "name": "QS Cargo Freighter (BC)",
+  "ship_class": "Battle Cruiser",
   "vehicle_type": "Ship",
   "theme_id": "Federation",
   "team_id": 0,
-  "color": [
-    100,
-    100,
-    255
-  ],
+  "color": [100, 100, 255],
   "ai_strategy": "standard_ranged",
   "layers": {
     "CORE": [
-      {
-        "id": "bridge",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          },
-          {
-            "id": "automation",
-            "value": 0.0
-          }
-        ]
-      },
-      {
-        "id": "planetary_resource_container",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "planetary_resource_container",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "crew_quarters",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "life_support",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          }
-        ]
-      }
+      {"id": "bridge", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}, {"id": "automation", "value": 0.0}]},
+      {"id": "planetary_resource_container", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "planetary_resource_container", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "planetary_resource_container", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "planetary_resource_container", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "crew_quarters", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "life_support", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "life_support", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "life_support", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "life_support", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]}
     ],
     "OUTER": [
-      {
-        "id": "standard_engine",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "fuel_tank",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          },
-          {
-            "id": "hardened_mount",
-            "value": 1.0
-          }
-        ]
-      }
-    ]
+      {"id": "warp_drive", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "standard_engine", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "fuel_tank", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "fuel_tank", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "fuel_tank", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "fuel_tank", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "fuel_tank", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "battery", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "battery", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "battery", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "battery", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]},
+      {"id": "battery", "modifiers": [{"id": "simple_size_mount", "value": 1.0}, {"id": "hardened_mount", "value": 1.0}]}
+    ],
+    "ARMOR": []
   },
   "resources": {
-    "fuel": 50000.0,
-    "energy": 2000.0,
+    "fuel": 250000.0,
+    "energy": 10000.0,
     "ammo": 0.0
   },
   "expected_stats": {
-    "max_hp": 1880,
-    "mass": 1070.0,
+    "max_hp": 13489,
+    "mass": 9149.999999999998,
     "resource_storage": {
-      "fuel": 50000.0
+      "energy": 10000.0,
+      "fuel": 250000.0
     },
     "cargo_storage": {
-      "metals": 20000.0,
-      "organics": 20000.0,
-      "vapors": 20000.0,
-      "radioactives": 20000.0,
-      "exotics": 20000.0
+      "metals": 40000.0,
+      "organics": 40000.0,
+      "vapors": 40000.0,
+      "radioactives": 40000.0,
+      "exotics": 40000.0
     },
     "pod_storage_mass": 0.0,
+    "strategic_movement": 2600.0,
+    "warp_max_tonnage": 1000.0,
+    "warp_resource_costs": {
+      "energy": 7999.999999999996
+    },
     "resource_consumption_per_hex": {
-      "fuel": 100.0
+      "fuel": 2600.0
     },
     "resource_consumption_per_turn": {},
-    "warp_resource_costs": {},
-    "strategic_movement": 100.0,
-    "warp_max_tonnage": 0,
-    "max_speed": 3.5046728971962615,
-    "acceleration_rate": 0.3275395231024544,
+    "max_speed": 0,
+    "acceleration_rate": 0.0,
     "turn_speed": 0.0,
-    "total_thrust": 150.0
+    "total_thrust": 0
   },
   "_metadata": {
     "is_obsolete": false,
