@@ -1,12 +1,13 @@
 """Tests for engine event emission (PROJ-77 Phase 3).
 
 Verifies that ProductionEngine, OrderProcessor, and ConflictResolutionEngine
-emit the correct events via log_event() when significant actions occur.
+emit the correct events via EventBus when significant actions occur.
 """
 
 import pytest
 from unittest.mock import MagicMock, patch, call
 
+from game.core.event_logging import EventBus
 from game.strategy.events import EventType, EventCategory
 from game.strategy.systems.design_library import DesignLoadResult
 
@@ -16,13 +17,18 @@ from game.strategy.systems.design_library import DesignLoadResult
 # ---------------------------------------------------------------------------
 
 def _capture_log_event_calls():
-    """Return a list that accumulates (event_type, kwargs) tuples."""
+    """Return a (calls_list, fake_handler, EventBus) tuple.
+
+    The EventBus routes events through the fake handler so engines that use
+    ``self._event_bus.log_event(...)`` will populate the calls list.
+    """
     calls = []
 
     def _fake_log_event(event_type, **kwargs):
         calls.append((event_type, kwargs))
 
-    return calls, _fake_log_event
+    bus = EventBus(_fake_log_event)
+    return calls, _fake_log_event, bus
 
 
 def _make_mock_empire(empire_id: int = 0, name: str = "Test Empire"):
@@ -86,12 +92,12 @@ class TestShipBuiltEvent:
         """_spawn_ship() calls log_event with ship_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
@@ -108,8 +114,7 @@ class TestShipBuiltEvent:
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_spawner.log_event', fake):
-                        engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
+                    engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -123,12 +128,12 @@ class TestShipBuiltEvent:
         """ship_built event includes design_id, planet_id, fleet_id."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet(planet_id=42, name="Beta")
         galaxy = _make_mock_galaxy()
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
@@ -144,8 +149,7 @@ class TestShipBuiltEvent:
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_spawner.log_event', fake):
-                        engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
+                    engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -156,15 +160,15 @@ class TestShipBuiltEvent:
         """No event emitted when save_path is None (ship not actually spawned)."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
 
-        calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_spawner.log_event', fake):
-            engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path=None)
+        engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path=None)
 
         assert len(calls) == 0
 
@@ -172,20 +176,19 @@ class TestShipBuiltEvent:
         """No event emitted when design data can't be loaded."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.not_found("bad_design")
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.log_event', fake):
-                engine._spawner._spawn_ship(planet, "bad_design", empire, galaxy, save_path="/test")
+            engine._spawner._spawn_ship(planet, "bad_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 0
 
@@ -203,13 +206,13 @@ class TestFleetShipBuiltEvent:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
         fleet.location = MagicMock(q=5, r=-3)
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
@@ -221,8 +224,7 @@ class TestFleetShipBuiltEvent:
                 mock_ship.name = "Fighter"
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_spawner.log_event', fake):
-                    engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+                engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -239,15 +241,14 @@ class TestFleetShipBuiltEvent:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
 
-        calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_spawner.log_event', fake):
-            engine._spawner._spawn_fleet_ship(fleet, "fighter", empire, save_path=None)
+        engine._spawner._spawn_fleet_ship(fleet, "fighter", empire, save_path=None)
 
         assert len(calls) == 0
 
@@ -264,19 +265,18 @@ class TestComplexBuiltEvent:
         """_spawn_complex() calls log_event with complex_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet(name="Gamma Station")
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Mining Complex"})
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.log_event', fake):
-                engine._spawner._create_and_place_facility(planet, "mining_complex", empire, save_path="/test")
+            engine._spawner._create_and_place_facility(planet, "mining_complex", empire, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -290,19 +290,18 @@ class TestComplexBuiltEvent:
         """complex_built event includes design_id and planet_id."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet(planet_id=99, name="Delta")
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Shipyard"})
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.log_event', fake):
-                engine._spawner._create_and_place_facility(planet, "shipyard_design", empire, save_path="/test")
+            engine._spawner._create_and_place_facility(planet, "shipyard_design", empire, save_path="/test")
 
         _, kw = calls[0]
         assert kw["design_id"] == "shipyard_design"
@@ -312,14 +311,13 @@ class TestComplexBuiltEvent:
         """Complex still gets created (empty design data) and event emitted."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
 
-        calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_spawner.log_event', fake):
-            engine._spawner._create_and_place_facility(planet, "basic_factory", empire, save_path=None)
+        engine._spawner._create_and_place_facility(planet, "basic_factory", empire, save_path=None)
 
         # Complex is still created even without save_path, so event should fire
         assert len(calls) == 1
@@ -341,7 +339,8 @@ class TestFleetComplexBuiltEvent:
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 9
@@ -351,15 +350,13 @@ class TestFleetComplexBuiltEvent:
         galaxy = _make_mock_galaxy()
         galaxy.get_planets_at_global_hex.return_value = [planet]
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Orbital Refinery"})
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.log_event', fake):
-                engine._spawner._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy, save_path="/test")
+            engine._spawner._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -377,15 +374,14 @@ class TestFleetComplexBuiltEvent:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 9
 
-        calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_spawner.log_event', fake):
-            engine._spawner._spawn_fleet_complex(fleet, "design_x", empire, galaxy=None)
+        engine._spawner._spawn_fleet_complex(fleet, "design_x", empire, galaxy=None)
 
         assert len(calls) == 0
 
@@ -395,7 +391,8 @@ class TestFleetComplexBuiltEvent:
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 9
@@ -404,10 +401,8 @@ class TestFleetComplexBuiltEvent:
         galaxy = _make_mock_galaxy()
         galaxy.get_planets_at_global_hex.return_value = []
 
-        calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_spawner.log_event', fake):
-            engine._spawner._spawn_fleet_complex(fleet, "design_y", empire, galaxy)
+        engine._spawner._spawn_fleet_complex(fleet, "design_y", empire, galaxy)
 
         assert len(calls) == 0
 
@@ -464,13 +459,12 @@ class TestColonyFoundedEvent:
         """process_colonize() emits colony_founded on success."""
         from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = OrderProcessor()
+        calls, fake, bus = _capture_log_event_calls()
+        processor = OrderProcessor(event_bus=bus)
         fleet, target_planet = self._make_colonize_fleet()
         empire = _make_mock_empire(name="Human Empire")
         galaxy = _make_mock_galaxy()
         component_registry = self._make_component_registry()
-
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.validation.ColonizeValidator') as mock_val:
             mock_result = MagicMock()
@@ -479,8 +473,7 @@ class TestColonyFoundedEvent:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (fleet.ships[0], 0)
 
-            with patch.object(processor, '_deploy_drop_pod'), \
-                 patch('game.strategy.engine.order_processor.log_event', fake):
+            with patch.object(processor, '_deploy_drop_pod'):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -500,13 +493,12 @@ class TestColonyFoundedEvent:
         """No event emitted when colonization fails validation."""
         from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = OrderProcessor()
+        calls, fake, bus = _capture_log_event_calls()
+        processor = OrderProcessor(event_bus=bus)
         fleet, target_planet = self._make_colonize_fleet()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
         component_registry = self._make_component_registry()
-
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.validation.ColonizeValidator') as mock_val:
             mock_result = MagicMock()
@@ -514,8 +506,7 @@ class TestColonyFoundedEvent:
             mock_result.message = "Invalid"
             mock_val.validate.return_value = mock_result
 
-            with patch('game.strategy.engine.order_processor.log_event', fake):
-                result = processor.process_colonize(
+            result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
                 )
@@ -534,7 +525,8 @@ class TestColonyFoundedEvent:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = OrderProcessor()
+        calls, fake, bus = _capture_log_event_calls()
+        processor = OrderProcessor(event_bus=bus)
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
         component_registry = self._make_component_registry()
@@ -566,8 +558,6 @@ class TestColonyFoundedEvent:
         galaxy.get_planets_at_global_hex.return_value = [resolved_planet]
         galaxy.get_zones_at_global_hex.return_value = []
 
-        calls, fake = _capture_log_event_calls()
-
         # Patch the validator module where it's imported
         with patch('game.strategy.validation.ColonizeValidator') as mock_val:
             mock_result = MagicMock()
@@ -577,11 +567,10 @@ class TestColonyFoundedEvent:
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
             with patch.object(processor, '_deploy_drop_pod'):
-                with patch('game.strategy.engine.order_processor.log_event', fake):
-                    result = processor.process_colonize(
-                        fleet, empire, galaxy,
-                        component_registry=component_registry
-                    )
+                result = processor.process_colonize(
+                    fleet, empire, galaxy,
+                    component_registry=component_registry
+                )
 
         assert result.colonized is True
         assert len(calls) == 1
@@ -611,7 +600,8 @@ class TestCombatResolvedEvent:
         mock_result.team1_survivors = []
         mock_resolver.resolve_battle.return_value = mock_result
 
-        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
 
         f1 = MagicMock(spec=Fleet)
         f1.id = 1
@@ -627,10 +617,7 @@ class TestCombatResolvedEvent:
         f2.ships = [MagicMock()]
         f2.update_from_battle_results = MagicMock()
 
-        calls, fake = _capture_log_event_calls()
-
-        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            winner = engine._resolve_combat_simulated(f1, f2)
+        winner = engine._resolve_combat_simulated(f1, f2)
 
         assert winner == f1
         assert len(calls) == 1
@@ -653,7 +640,8 @@ class TestCombatResolvedEvent:
         mock_result.team1_survivors = [MagicMock()]
         mock_resolver.resolve_battle.return_value = mock_result
 
-        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
 
         f1 = MagicMock(spec=Fleet)
         f1.id = 10
@@ -669,10 +657,7 @@ class TestCombatResolvedEvent:
         f2.ships = [MagicMock()]
         f2.update_from_battle_results = MagicMock()
 
-        calls, fake = _capture_log_event_calls()
-
-        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            winner = engine._resolve_combat_simulated(f1, f2)
+        winner = engine._resolve_combat_simulated(f1, f2)
 
         assert winner == f2
         assert len(calls) == 1
@@ -686,7 +671,8 @@ class TestCombatResolvedEvent:
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock(), event_bus=bus)
 
         # Empty fleets -> RNG fallback
         f1 = MagicMock(spec=Fleet)
@@ -701,15 +687,12 @@ class TestCombatResolvedEvent:
         f2.location = HexCoord(0, 0)
         f2.ships = []
 
-        calls, fake = _capture_log_event_calls()
-
         # PROJ-252: Patch the per-instance RNG, not the global module
         mock_rng = MagicMock()
         mock_rng.random.return_value = 0.8  # f1 wins
         engine._rng = mock_rng
 
-        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            winner = engine._resolve_combat(f1, f2)
+        winner = engine._resolve_combat(f1, f2)
 
         assert winner == f1
         assert len(calls) == 1
@@ -730,7 +713,8 @@ class TestCombatResolvedEvent:
         mock_result.team1_survivors = []
         mock_resolver.resolve_battle.return_value = mock_result
 
-        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
 
         f1 = MagicMock(spec=Fleet)
         f1.id = 1
@@ -746,10 +730,7 @@ class TestCombatResolvedEvent:
         f2.ships = [MagicMock()]
         f2.update_from_battle_results = MagicMock()
 
-        calls, fake = _capture_log_event_calls()
-
-        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            engine._resolve_combat_simulated(f1, f2)
+        engine._resolve_combat_simulated(f1, f2)
 
         _, kw = calls[0]
         assert kw["empire_id"] == 5  # Winner's empire_id
@@ -768,7 +749,8 @@ class TestProductionEventLocationEnrichment:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         planet.location = HexCoord(2, 3)
@@ -780,7 +762,6 @@ class TestProductionEventLocationEnrichment:
         mock_system.global_location = HexCoord(100, 200)
         galaxy.get_system_of_planet.return_value = mock_system
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
@@ -796,8 +777,7 @@ class TestProductionEventLocationEnrichment:
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_spawner.log_event', fake):
-                        engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+                    engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -809,14 +789,14 @@ class TestProductionEventLocationEnrichment:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         planet.location = HexCoord(2, 3)
         galaxy = _make_mock_galaxy()
         galaxy.get_system_of_planet.return_value = None
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
@@ -832,8 +812,7 @@ class TestProductionEventLocationEnrichment:
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_spawner.log_event', fake):
-                        engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+                    engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
 
         _, kw = calls[0]
         assert kw["system_name"] == ""
@@ -844,7 +823,8 @@ class TestProductionEventLocationEnrichment:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         planet.location = HexCoord(1, -2)
@@ -856,10 +836,8 @@ class TestProductionEventLocationEnrichment:
         galaxy = _make_mock_galaxy()
         galaxy.get_system_of_planet.return_value = mock_system
 
-        calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_spawner.log_event', fake):
-            engine._spawner._create_and_place_facility(planet, "factory", empire, save_path=None, galaxy=galaxy)
+        engine._spawner._create_and_place_facility(planet, "factory", empire, save_path=None, galaxy=galaxy)
 
         _, kw = calls[0]
         assert kw["system_name"] == "Alpha Centauri"
@@ -870,13 +848,13 @@ class TestProductionEventLocationEnrichment:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine(registries=fresh_registries)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
         fleet.location = MagicMock(q=5, r=-3)
 
-        calls, fake = _capture_log_event_calls()
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
@@ -887,8 +865,7 @@ class TestProductionEventLocationEnrichment:
                 mock_ship = MagicMock()
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_spawner.log_event', fake):
-                    engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+                engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
 
         _, kw = calls[0]
         assert kw["system_name"] == ""
@@ -917,7 +894,8 @@ class TestCombatEventLocationEnrichment:
         mock_system.name = "Orion"
         mock_galaxy.get_system_at_location.return_value = mock_system
 
-        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
         engine._galaxy = mock_galaxy  # Set galaxy directly (normally set during resolve_all_conflicts)
 
         f1 = MagicMock(spec=Fleet)
@@ -932,10 +910,7 @@ class TestCombatEventLocationEnrichment:
         f2.location = HexCoord(10, 20)
         f2.ships = [MagicMock()]
 
-        calls, fake = _capture_log_event_calls()
-
-        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            engine._resolve_combat_simulated(f1, f2)
+        engine._resolve_combat_simulated(f1, f2)
 
         _, kw = calls[0]
         assert kw["system_name"] == "Orion"
@@ -957,7 +932,8 @@ class TestCombatEventLocationEnrichment:
         mock_galaxy = _make_mock_galaxy()
         mock_galaxy.get_system_at_location.return_value = None
 
-        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        calls, fake, bus = _capture_log_event_calls()
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
         engine._galaxy = mock_galaxy  # Set galaxy directly
 
         f1 = MagicMock(spec=Fleet)
@@ -972,10 +948,7 @@ class TestCombatEventLocationEnrichment:
         f2.location = HexCoord(10, 20)
         f2.ships = [MagicMock()]
 
-        calls, fake = _capture_log_event_calls()
-
-        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
-            engine._resolve_combat_simulated(f1, f2)
+        engine._resolve_combat_simulated(f1, f2)
 
         _, kw = calls[0]
         assert kw["system_name"] == ""
@@ -995,7 +968,8 @@ class TestColonizationEventLocationEnrichment:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = OrderProcessor()
+        calls, fake, bus = _capture_log_event_calls()
+        processor = OrderProcessor(event_bus=bus)
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
 
@@ -1027,8 +1001,6 @@ class TestColonizationEventLocationEnrichment:
 
         component_registry = {}
 
-        calls, fake = _capture_log_event_calls()
-
         with patch('game.strategy.validation.ColonizeValidator') as mock_val:
             mock_result = MagicMock()
             mock_result.is_valid = True
@@ -1036,8 +1008,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'), \
-                 patch('game.strategy.engine.order_processor.log_event', fake):
+            with patch.object(processor, '_deploy_drop_pod'):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
@@ -1055,7 +1026,8 @@ class TestColonizationEventLocationEnrichment:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = OrderProcessor()
+        calls, fake, bus = _capture_log_event_calls()
+        processor = OrderProcessor(event_bus=bus)
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
         galaxy.get_system_of_planet.return_value = None
@@ -1082,8 +1054,6 @@ class TestColonizationEventLocationEnrichment:
 
         component_registry = {}
 
-        calls, fake = _capture_log_event_calls()
-
         with patch('game.strategy.validation.ColonizeValidator') as mock_val:
             mock_result = MagicMock()
             mock_result.is_valid = True
@@ -1091,8 +1061,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'), \
-                 patch('game.strategy.engine.order_processor.log_event', fake):
+            with patch.object(processor, '_deploy_drop_pod'):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]

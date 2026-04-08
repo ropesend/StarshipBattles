@@ -668,9 +668,8 @@ class TestSelfDestructShipNames:
         empire.id = 0
 
         # Should not raise, should use ship_id as name fallback
-        with patch('game.strategy.engine.superweapon_order_processor.log_event'):
-            with patch('game.strategy.engine.superweapon_order_processor.logger'):
-                result = processor.process_self_destruct(fleet, empire, Mock())
+        with patch('game.strategy.engine.superweapon_order_processor.logger'):
+            result = processor.process_self_destruct(fleet, empire, Mock())
 
         assert result.success
         fleet.remove_ship.assert_called_once_with(ship)
@@ -694,9 +693,8 @@ class TestSelfDestructShipNames:
         empire = Mock()
         empire.id = 0
 
-        with patch('game.strategy.engine.superweapon_order_processor.log_event'):
-            with patch('game.strategy.engine.superweapon_order_processor.logger'):
-                result = processor.process_self_destruct(fleet, empire, Mock())
+        with patch('game.strategy.engine.superweapon_order_processor.logger'):
+            result = processor.process_self_destruct(fleet, empire, Mock())
 
         assert result.success
 
@@ -721,9 +719,8 @@ class TestSelfDestructShipNames:
         processor = SuperweaponOrderProcessor()
         empire = Mock()
 
-        with patch('game.strategy.engine.superweapon_order_processor.log_event'):
-            with patch('game.strategy.engine.superweapon_order_processor.logger'):
-                result = processor.process_self_destruct(fleet, empire, Mock())
+        with patch('game.strategy.engine.superweapon_order_processor.logger'):
+            result = processor.process_self_destruct(fleet, empire, Mock())
 
         assert result.success
         # Only existing ship should be removed

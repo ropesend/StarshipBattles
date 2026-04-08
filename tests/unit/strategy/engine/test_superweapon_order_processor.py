@@ -176,22 +176,26 @@ class TestProcessImplodePlanet:
         mock_galaxy.unregister_planet = MagicMock()
         mock_galaxy._planet_to_system = {mock_planet: mock_system}
 
-        processor = SuperweaponOrderProcessor()
+        from game.core.event_logging import EventBus
+        captured = []
+        def _fake(event_type, **kwargs):
+            captured.append((event_type, kwargs))
+        bus = EventBus(_fake)
+
+        processor = SuperweaponOrderProcessor(event_bus=bus)
         empire = MagicMock()
         empire.id = 0
         empire.colonies = []
 
-        with patch('game.strategy.engine.superweapon_order_processor.log_event') as mock_log:
-            with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
-                processor.process_implode_planet(
-                    mock_fleet, empire, mock_galaxy, [empire], component_registry
-                )
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+            processor.process_implode_planet(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
-            mock_log.assert_called_once()
-            call_args = mock_log.call_args
-            from game.strategy.events.event_types import EventType, EventCategory
-            assert call_args[0][0] == EventType.PLANET_DESTROYED
-            assert call_args[1]['category'] == EventCategory.SUPERWEAPONS
+        from game.strategy.events.event_types import EventType, EventCategory
+        assert len(captured) == 1
+        assert captured[0][0] == EventType.PLANET_DESTROYED
+        assert captured[0][1]['category'] == EventCategory.SUPERWEAPONS
 
 
 class TestProcessStellerateStar:
@@ -314,8 +318,8 @@ class TestProcessStellerateStar:
         )
 
         # Assert - both empires should have remove_fleet called
-        empire1.remove_fleet.assert_called_with(mock_fleet)
-        empire2.remove_fleet.assert_called_with(other_fleet)
+        empire1.remove_fleet.assert_called_with(mock_fleet, event_bus=None)
+        empire2.remove_fleet.assert_called_with(other_fleet, event_bus=None)
 
     def test_warp_points_preserved(
         self, mock_fleet, mock_system, component_registry
@@ -923,19 +927,23 @@ class TestProcessSelfDestruct:
         order = FleetOrder(OrderType.SELF_DESTRUCT, target=["ship-1"])
         mock_fleet.get_current_order.return_value = order
 
+        from game.core.event_logging import EventBus
+        captured = []
+        def _fake(event_type, **kwargs):
+            captured.append((event_type, kwargs))
+        bus = EventBus(_fake)
+
         mock_galaxy = MagicMock()
-        processor = SuperweaponOrderProcessor()
+        processor = SuperweaponOrderProcessor(event_bus=bus)
         empire = MagicMock()
         empire.id = 0
 
-        with patch('game.strategy.engine.superweapon_order_processor.log_event') as mock_log:
-            processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
 
-            mock_log.assert_called_once()
-            call_args = mock_log.call_args
-            from game.strategy.events.event_types import EventType, EventCategory
-            assert call_args[0][0] == EventType.SHIPS_SELF_DESTRUCTED
-            assert call_args[1]['category'] == EventCategory.SUPERWEAPONS
+        from game.strategy.events.event_types import EventType, EventCategory
+        assert len(captured) == 1
+        assert captured[0][0] == EventType.SHIPS_SELF_DESTRUCTED
+        assert captured[0][1]['category'] == EventCategory.SUPERWEAPONS
 
 
 class TestComponentConsumption:

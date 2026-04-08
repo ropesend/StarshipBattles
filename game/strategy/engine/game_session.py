@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
 import logging
 
-from game.core.event_logging import EventBus, set_event_handler
+from game.core.event_logging import EventBus
 from game.core.registry import GameRegistries, get_default_registry_provider
 from game.strategy.events import Event, EventLog
 
@@ -81,8 +81,6 @@ class GameSession:
         # Event log (PROJ-77) — PROJ-252: session-scoped EventBus
         self._event_log = EventLog()
         self._event_bus = EventBus(self._create_event_handler())
-        # Backward compat: also register as the module-level handler
-        set_event_handler(self._create_event_handler())
 
         # PROJ-211: Resolve registries at init time, pass to TurnEngine
         self._registries = self._resolve_registries()
@@ -90,7 +88,7 @@ class GameSession:
         # Engine
         # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
         # Callers in the UI/app layer provide it; tests inject mocks.
-        self.turn_engine = TurnEngine(registries=self._registries, ai_factory=ai_factory)
+        self.turn_engine = TurnEngine(registries=self._registries, ai_factory=ai_factory, event_bus=self._event_bus)
         self._command_registry = create_default_registry()
 
         # Initialization via GameInitializer (PROJ-87 Phase 6)
@@ -322,13 +320,12 @@ class GameSession:
         # the conflict_engine is lazy-initialized and will only need it during
         # actual combat. SaveGameService.load_game callers must provide ai_factory
         # or inject a battle_resolver if combat will occur.
-        session.turn_engine = TurnEngine(registries=session._registries, ai_factory=ai_factory)
-        session._command_registry = create_default_registry()
-
         # Restore event log (PROJ-77) — PROJ-252: session-scoped EventBus
         session._event_log = EventLog.from_dict(data.get('event_log', {'events': []}))
         session._event_bus = EventBus(session._create_event_handler())
-        set_event_handler(session._create_event_handler())
+
+        session.turn_engine = TurnEngine(registries=session._registries, ai_factory=ai_factory, event_bus=session._event_bus)
+        session._command_registry = create_default_registry()
 
         # Step 1: Load Galaxy (creates all planets with IDs)
         try:

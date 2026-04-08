@@ -278,8 +278,8 @@ class TestJoinFleetDuringTick:
         # Process tick
         turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
-        joining_fleet.merge_with.assert_called_with(target_fleet)
-        mock_empire.remove_fleet.assert_called_with(joining_fleet)
+        joining_fleet.merge_with.assert_called_with(target_fleet, event_bus=None)
+        mock_empire.remove_fleet.assert_called_with(joining_fleet, event_bus=None)
 
     def test_join_fleet_not_at_location(self, turn_engine, mock_empire, mock_galaxy):
         """JOIN_FLEET does not merge when not co-located."""

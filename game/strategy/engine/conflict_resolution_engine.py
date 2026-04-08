@@ -14,7 +14,6 @@ import random
 from dataclasses import dataclass
 from typing import Optional, List, TYPE_CHECKING
 
-from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.interfaces.engines import IConflictEngine
 
@@ -52,7 +51,8 @@ class ConflictResolutionEngine(IConflictEngine):
         battle_resolver: 'IBattleResolver',
         *,
         registries: Optional['GameRegistries'] = None,
-        area_effect_manager: Optional['AreaEffectManager'] = None
+        area_effect_manager: Optional['AreaEffectManager'] = None,
+        event_bus=None,
     ):
         """
         Initialize the conflict resolution engine.
@@ -66,6 +66,7 @@ class ConflictResolutionEngine(IConflictEngine):
             area_effect_manager: Optional AreaEffectManager for environmental
                                 effects (PROJ-189). When provided, storm effects
                                 are applied to ships during combat.
+            event_bus: Optional EventBus for structured event logging.
         """
         # Battle seed counter for deterministic battles
         self._battle_seed_counter = 0
@@ -78,6 +79,9 @@ class ConflictResolutionEngine(IConflictEngine):
         # PROJ-189: Store area effect manager for storm integration
         self._area_effect_manager: Optional['AreaEffectManager'] = area_effect_manager
         self._galaxy: Optional['Galaxy'] = None  # Set during resolve_all_conflicts
+
+        # PROJ-252: Session-scoped EventBus for structured event logging
+        self._event_bus = event_bus
 
         self._battle_resolver = battle_resolver
 
@@ -122,17 +126,18 @@ class ConflictResolutionEngine(IConflictEngine):
             if effects.in_storm:
                 storm_names = effects.storm_names
 
-        log_event(
-            EventType.COMBAT_RESOLVED,
-            category=EventCategory.COMBAT,
-            empire_id=winner.owner_id,
-            message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
-            winner_fleet_id=winner.id,
-            loser_fleet_id=loser.id,
-            location_hex=[location.q, location.r],
-            system_name=system_name,
-            storm_names=storm_names,
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.COMBAT_RESOLVED,
+                category=EventCategory.COMBAT,
+                empire_id=winner.owner_id,
+                message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
+                winner_fleet_id=winner.id,
+                loser_fleet_id=loser.id,
+                location_hex=[location.q, location.r],
+                system_name=system_name,
+                storm_names=storm_names,
+            )
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before conflict resolution.
@@ -246,7 +251,7 @@ class ConflictResolutionEngine(IConflictEngine):
             # occupants has (Empire, Fleet). Find empire for loser.
             start_tuple = next(t for t in occupants if t[1] == loser)
             loser_empire = start_tuple[0]
-            loser_empire.remove_fleet(loser)
+            loser_empire.remove_fleet(loser, event_bus=self._event_bus)
 
     def _resolve_combat(self, f1: 'Fleet', f2: 'Fleet') -> 'Fleet':
         """

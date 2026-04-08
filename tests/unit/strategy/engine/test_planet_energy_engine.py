@@ -7,6 +7,7 @@ from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
 )
+from game.strategy.events.event_types import EventType, EventCategory
 
 
 def _make_facility(design_data, is_operational=True, instance_id="fac-1"):
@@ -272,3 +273,85 @@ class TestPlanetEnergyEngine:
 
         assert planet.energy == 0.0
         assert planet.energy_capacity == 0.0
+
+
+class TestPlanetEnergyEngineEvents:
+    """Tests for SHIELD_AUTO_DEACTIVATED event logging."""
+
+    def _make_event_bus(self):
+        """Create a mock EventBus that records log_event calls."""
+        bus = MagicMock()
+        bus.logged = []
+
+        def log_event(event_type, **kwargs):
+            bus.logged.append((event_type, kwargs))
+
+        bus.log_event = log_event
+        return bus
+
+    def test_auto_deactivation_logs_event(self, fresh_registries):
+        """Energy depletion logs SHIELD_AUTO_DEACTIVATED for each cancelled component."""
+        event_bus = self._make_event_bus()
+        engine = PlanetEnergyEngine(registries=fresh_registries, event_bus=event_bus)
+        battery = _make_facility(_battery_design(capacity=5000.0), instance_id="bat-1")
+        shield = _make_facility(_shield_design(energy_drain_rate=50.0), instance_id="shd-1")
+        shield.component_states["OUTER:0:planetary_shield"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=50.0,
+        ).to_dict()
+        planet = _make_planet(facilities=[battery, shield])
+        planet.energy = 0.3  # Less than drain_per_tick (0.5)
+        planet.active_abilities['PlanetaryShield'] = True
+        planet.id = 42
+        planet.owner_id = 1
+        empire = _make_empire(colonies=[planet])
+        empire.id = 1
+
+        engine.process_energy_tick(1, [empire])
+
+        assert len(event_bus.logged) == 1
+        event_type, kwargs = event_bus.logged[0]
+        assert event_type == EventType.SHIELD_AUTO_DEACTIVATED
+        assert kwargs['category'] == EventCategory.PLANET_OPERATIONS
+        assert kwargs['empire_id'] == 1
+        assert 'PlanetaryShield' in kwargs['message']
+        assert kwargs['planet_name'] == 'TestPlanet'
+
+    def test_no_event_when_energy_sufficient(self, fresh_registries):
+        """No event logged when shield drains normally."""
+        event_bus = self._make_event_bus()
+        engine = PlanetEnergyEngine(registries=fresh_registries, event_bus=event_bus)
+        battery = _make_facility(_battery_design(capacity=5000.0), instance_id="bat-1")
+        shield = _make_facility(_shield_design(energy_drain_rate=50.0), instance_id="shd-1")
+        shield.component_states["OUTER:0:planetary_shield"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=50.0,
+        ).to_dict()
+        planet = _make_planet(facilities=[battery, shield])
+        planet.energy = 100.0
+        planet.active_abilities['PlanetaryShield'] = True
+        empire = _make_empire(colonies=[planet])
+
+        engine.process_energy_tick(1, [empire])
+
+        assert len(event_bus.logged) == 0
+
+    def test_no_crash_without_event_bus(self, fresh_registries):
+        """Engine works without event_bus (backward compatible)."""
+        engine = PlanetEnergyEngine(registries=fresh_registries)
+        battery = _make_facility(_battery_design(capacity=5000.0), instance_id="bat-1")
+        shield = _make_facility(_shield_design(energy_drain_rate=50.0), instance_id="shd-1")
+        shield.component_states["OUTER:0:planetary_shield"] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=50.0,
+        ).to_dict()
+        planet = _make_planet(facilities=[battery, shield])
+        planet.energy = 0.3
+        planet.active_abilities['PlanetaryShield'] = True
+        empire = _make_empire(colonies=[planet])
+
+        # Should not raise
+        engine.process_energy_tick(1, [empire])

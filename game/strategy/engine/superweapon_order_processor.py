@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.hex_math import HexCoord, hex_distance
-from game.core.event_logging import log_event
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 
@@ -49,9 +48,13 @@ class SuperweaponOrderProcessor:
     - process_self_destruct() - Destroy specific ships in fleet
     """
 
-    def __init__(self):
-        """Initialize the superweapon order processor."""
-        pass
+    def __init__(self, event_bus=None):
+        """Initialize the superweapon order processor.
+
+        Args:
+            event_bus: Optional EventBus for structured event logging.
+        """
+        self._event_bus = event_bus
 
     def _finalize_superweapon(
         self,
@@ -104,19 +107,20 @@ class SuperweaponOrderProcessor:
 
         # Clean up empty fleet (SG-003 fix)
         if fleet_consumed:
-            empire.remove_fleet(fleet)
+            empire.remove_fleet(fleet, event_bus=self._event_bus)
 
         # Log
         logger.info(log_message)
-        log_event(
-            event_type,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=event_message,
-            fleet_id=fleet.id,
-            location_hex=[fleet_loc.q, fleet_loc.r],
-            **event_kwargs
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                event_type,
+                category=EventCategory.SUPERWEAPONS,
+                empire_id=empire.id,
+                message=event_message,
+                fleet_id=fleet.id,
+                location_hex=[fleet_loc.q, fleet_loc.r],
+                **event_kwargs
+            )
 
         return SuperweaponResult(
             success=True,
@@ -259,22 +263,23 @@ class SuperweaponOrderProcessor:
         all_fleets_in_system = galaxy.get_all_fleets_in_system(system, empires)
         for (owner_empire, victim_fleet) in all_fleets_in_system:
             # PROJ-219: Auto-unregisters from galaxy via empire._galaxy
-            owner_empire.remove_fleet(victim_fleet)
+            owner_empire.remove_fleet(victim_fleet, event_bus=self._event_bus)
 
         # 3. Remove all stars (but NOT warp points)
         system.stars = []
 
         logger.info(f"Star system {system_name} stellerated by fleet {fleet.id}")
-        log_event(
-            EventType.STAR_DESTROYED,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=f"Star system {system_name} destroyed",
-            fleet_id=fleet.id,
-            system_name=system_name,
-            location_name=system_name,
-            location_hex=[fleet.location.q, fleet.location.r],
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.STAR_DESTROYED,
+                category=EventCategory.SUPERWEAPONS,
+                empire_id=empire.id,
+                message=f"Star system {system_name} destroyed",
+                fleet_id=fleet.id,
+                system_name=system_name,
+                location_name=system_name,
+                location_hex=[fleet.location.q, fleet.location.r],
+            )
 
         return SuperweaponResult(
             success=True,
@@ -684,19 +689,20 @@ class SuperweaponOrderProcessor:
 
         # Clean up empty fleet (SG-003 fix)
         if fleet_consumed:
-            empire.remove_fleet(fleet)
+            empire.remove_fleet(fleet, event_bus=self._event_bus)
 
         logger.info(f"Ships self-destructed: {', '.join(ship_names)}")
-        log_event(
-            EventType.SHIPS_SELF_DESTRUCTED,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=f"{len(ships_to_remove)} ships self-destructed",
-            fleet_id=fleet.id,
-            ship_count=len(ships_to_remove),
-            ship_names=ship_names,
-            location_hex=[fleet_loc.q, fleet_loc.r],
-        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.SHIPS_SELF_DESTRUCTED,
+                category=EventCategory.SUPERWEAPONS,
+                empire_id=empire.id,
+                message=f"{len(ships_to_remove)} ships self-destructed",
+                fleet_id=fleet.id,
+                ship_count=len(ships_to_remove),
+                ship_names=ship_names,
+                location_hex=[fleet_loc.q, fleet_loc.r],
+            )
 
         return SuperweaponResult(
             success=True,

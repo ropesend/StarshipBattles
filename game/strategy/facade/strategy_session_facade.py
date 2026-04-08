@@ -52,6 +52,8 @@ class StrategySessionFacade:
         self._planet_index: Optional[dict] = None  # id -> Planet
         self._all_stars_cache: Optional[List[StarInfo]] = None
         self._all_stars_cache_turn: int = -1
+        self._fleets_by_hex_cache: Optional[dict] = None  # HexCoord -> [Fleet]
+        self._fleets_by_hex_turn: int = -1
 
     # =========================================================================
     # COMMANDS (Write Path)
@@ -78,6 +80,10 @@ class StrategySessionFacade:
         orders, resolving movement, and processing AI actions.
         """
         self._session.process_turn()
+        # PROJ-254: Invalidate caches after turn processing changes game state
+        self._fleets_by_hex_cache = None
+        self._planet_index = None
+        self._all_stars_cache = None
 
     # --- Command Dispatch Helpers ---
     def dispatch_issue_colonize(self, **kwargs) -> 'ValidationResult':
@@ -282,8 +288,21 @@ class StrategySessionFacade:
             return None
         return FleetInfo.from_fleet(fleet)
 
+    def _build_fleet_hex_index(self) -> dict:
+        """Build HexCoord -> [Fleet] lookup dict (PROJ-254)."""
+        index: dict = {}
+        for empire in self._session.empires:
+            for fleet in empire.fleets:
+                loc = fleet.location
+                if loc not in index:
+                    index[loc] = []
+                index[loc].append(fleet)
+        return index
+
     def get_fleets_at_hex(self, hex_coord: HexCoord) -> List[FleetInfo]:
         """Get all fleets at a specific hex coordinate.
+
+        PROJ-254: Uses per-turn cached hex index for O(1) lookup.
 
         Args:
             hex_coord: The hex coordinate to query
@@ -291,12 +310,13 @@ class StrategySessionFacade:
         Returns:
             List of FleetInfo DTOs for fleets at the hex
         """
-        result = []
-        for empire in self._session.empires:
-            for fleet in empire.fleets:
-                if fleet.location == hex_coord:
-                    result.append(FleetInfo.from_fleet(fleet))
-        return result
+        current_turn = getattr(self._session, 'turn_number', 0)
+        if self._fleets_by_hex_cache is None or self._fleets_by_hex_turn != current_turn:
+            self._fleets_by_hex_cache = self._build_fleet_hex_index()
+            self._fleets_by_hex_turn = current_turn
+
+        fleets = self._fleets_by_hex_cache.get(hex_coord, [])
+        return [FleetInfo.from_fleet(f) for f in fleets]
 
     def get_fleet_path_preview(
         self, fleet_id: int, target_hex: HexCoord

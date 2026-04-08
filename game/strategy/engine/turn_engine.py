@@ -20,6 +20,7 @@ Turn Phases:
        - Phase 1:    Instant orders (via OrderProcessor)
        - Phase 1.5:  Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
        - Phase 1.6:  Planet action orders (via PlanetActionEngine) - shield activation, etc.
+       - Phase 1.7:  Component activation timers (via ComponentActivationEngine)
        - Phase 2:    Calculate moves (via FleetMovementEngine)
        - Phase 3:    Apply moves (via FleetMovementEngine)
        - Phase 4:    Combat (via ConflictResolutionEngine)
@@ -147,6 +148,7 @@ class TurnEngine:
         planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
         planet_action_engine: Optional['IPlanetActionEngine'] = None,
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
+        event_bus=None,
     ):
         """
         Initialize the turn engine.
@@ -188,6 +190,9 @@ class TurnEngine:
 
         # PROJ-211: Store registries for passing to sub-engines (required)
         self._registries = registries
+
+        # PROJ-252: Session-scoped EventBus for structured event logging
+        self._event_bus = event_bus
 
         # PROJ-43 Phase 4: Store injected engines or None for lazy init
         self._movement_engine: Optional['IMovementEngine'] = movement_engine
@@ -296,7 +301,7 @@ class TurnEngine:
         if self._production_engine is None:
             from game.strategy.engine.production_engine import ProductionEngine
             # PROJ-211: Pass registries for ship creation DI compliance
-            self._production_engine = ProductionEngine(registries=self._registries)
+            self._production_engine = ProductionEngine(registries=self._registries, event_bus=self._event_bus)
         return self._production_engine
 
     @property
@@ -304,7 +309,7 @@ class TurnEngine:
         """Return order processor, lazily creating default if not injected."""
         if self._order_processor is None:
             from game.strategy.engine.order_processor import OrderProcessor
-            self._order_processor = OrderProcessor()
+            self._order_processor = OrderProcessor(event_bus=self._event_bus)
         return self._order_processor
 
     @property
@@ -330,7 +335,8 @@ class TurnEngine:
             self._conflict_engine = ConflictResolutionEngine(
                 battle_resolver,
                 registries=self._registries,
-                area_effect_manager=AreaEffectManager()
+                area_effect_manager=AreaEffectManager(),
+                event_bus=self._event_bus,
             )
         return self._conflict_engine
 
@@ -392,7 +398,7 @@ class TurnEngine:
         """Return planet energy engine, lazily creating default if not injected."""
         if self._planet_energy_engine is None:
             from game.strategy.engine.planet_energy_engine import PlanetEnergyEngine
-            self._planet_energy_engine = PlanetEnergyEngine(registries=self._registries)
+            self._planet_energy_engine = PlanetEnergyEngine(registries=self._registries, event_bus=self._event_bus)
         return self._planet_energy_engine
 
     @property
@@ -404,6 +410,7 @@ class TurnEngine:
             self._planet_action_engine = PlanetActionEngine(
                 registries=self._registries,
                 action_time_resolver=ActionTimeResolver(),
+                event_bus=self._event_bus,
             )
         return self._planet_action_engine
 
@@ -550,18 +557,21 @@ class TurnEngine:
         PROJ-161: Added per-tick harvesting.
         PROJ-251: Sets _current_tick for error context in EnginePhaseError.
 
-        Eleven-phase processing:
-        Phase 0:   Harvesting (1/100th of per-turn extraction)
-        Phase 0b:  Per-turn resource consumption (1/100th of per_turn costs)
-        Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
-        Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
-        Phase 0e:  Construction resource consumption + mid-turn completion (via ProductionEngine)
-        Phase 0f:  Environmental hazards (storm damage, fuel drain) via EnvironmentalHazardEngine
-        Phase 1:   Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
-        Phase 1.5: Execute action orders (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
-        Phase 2:   Calculate paths/next moves for all fleets (based on current positions)
-        Phase 3:   Apply all movements simultaneously
-        Phase 4:   Combat
+        Fourteen-phase processing:
+        Phase 0:    Harvesting (1/100th of per-turn extraction)
+        Phase 0b:   Per-turn resource consumption (1/100th of per_turn costs)
+        Phase 0c:   Fuel generation at facilities (via ResupplyEngine)
+        Phase 0c1:  Planet energy generation/consumption (via PlanetEnergyEngine)
+        Phase 0d:   Fleet resupply from facilities (via ResupplyEngine)
+        Phase 0e:   Construction resource consumption + mid-turn completion (via ProductionEngine)
+        Phase 0f:   Environmental hazards (storm damage, fuel drain) via EnvironmentalHazardEngine
+        Phase 1:    Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
+        Phase 1.5:  Execute action orders (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
+        Phase 1.6:  Planet action orders (shield activation, etc.) via PlanetActionEngine
+        Phase 1.7:  Component activation timers via ComponentActivationEngine
+        Phase 2:    Calculate paths/next moves for all fleets (based on current positions)
+        Phase 3:    Apply all movements simultaneously
+        Phase 4:    Combat
         """
 
         # PROJ-251: Track current tick for error context

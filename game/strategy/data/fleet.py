@@ -96,7 +96,7 @@ class Fleet:
         """Return 'fleet' for BuildContext protocol compliance."""
         return "fleet"
 
-    def add_ship(self, ship: ShipInstance):
+    def add_ship(self, ship: ShipInstance) -> None:
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)
         self.trigger_speed_recalculation()
@@ -287,13 +287,17 @@ class Fleet:
         self.orders = [o for o in self.orders if o.type != order_type]
         return removed
 
-    def merge_with(self, other_fleet: 'Fleet') -> None:
+    def merge_with(self, other_fleet: 'Fleet', event_bus=None) -> None:
         """
         Merge this fleet into other_fleet.
         Transfers all ships and clears this fleet.
 
         PROJ-222: Before clearing orders, redirects all pursuers of this
         fleet to other_fleet and logs FLEET_JOIN_REDIRECTED events.
+
+        Args:
+            other_fleet: Fleet to merge into.
+            event_bus: Optional EventBus for structured event logging.
         """
         if not isinstance(other_fleet, Fleet):
             return
@@ -302,18 +306,30 @@ class Fleet:
         # (clear_orders would unregister from targets, but redirect must happen first)
         redirected = self._pursuer_tracker.redirect_pursuers(other_fleet)
         if redirected:
-            from game.core.event_logging import log_event
             from game.strategy.events.event_types import EventType, EventCategory
-            for pursuer, _old_target in redirected:
-                log_event(
-                    EventType.FLEET_JOIN_REDIRECTED,
-                    category=EventCategory.FLEET_OPERATIONS,
-                    empire_id=pursuer.owner_id,
-                    message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
-                    fleet_id=pursuer.id,
-                    old_target_id=self.id,
-                    new_target_id=other_fleet.id,
-                )
+            if event_bus:
+                for pursuer, _old_target in redirected:
+                    event_bus.log_event(
+                        EventType.FLEET_JOIN_REDIRECTED,
+                        category=EventCategory.FLEET_OPERATIONS,
+                        empire_id=pursuer.owner_id,
+                        message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
+                        fleet_id=pursuer.id,
+                        old_target_id=self.id,
+                        new_target_id=other_fleet.id,
+                    )
+            else:
+                from game.core.event_logging import log_event
+                for pursuer, _old_target in redirected:
+                    log_event(
+                        EventType.FLEET_JOIN_REDIRECTED,
+                        category=EventCategory.FLEET_OPERATIONS,
+                        empire_id=pursuer.owner_id,
+                        message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
+                        fleet_id=pursuer.id,
+                        old_target_id=self.id,
+                        new_target_id=other_fleet.id,
+                    )
 
         # Transfer ships
         other_fleet.ships.extend(self.ships)

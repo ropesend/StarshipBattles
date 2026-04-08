@@ -26,6 +26,7 @@ from game.strategy.data.component_activation_state import (
     ComponentActivationState,
 )
 from game.strategy.interfaces.engines import IPlanetEnergyEngine
+from game.strategy.events.event_types import EventType, EventCategory
 
 logger = logging.getLogger(__name__)
 
@@ -120,11 +121,12 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
     # The resource type used for planetary energy. Configurable if needed.
     ENERGY_RESOURCE = "energy"
 
-    def __init__(self, *, registries: GameRegistries):
+    def __init__(self, *, registries: GameRegistries, event_bus=None):
         """Initialize planet energy engine.
 
         Args:
             registries: GameRegistries for component ability lookup. Required.
+            event_bus: Optional EventBus for structured event logging.
 
         Raises:
             ValidationException: If registries is None.
@@ -138,6 +140,7 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                 context={"class": "PlanetEnergyEngine", "parameter": "registries"}
             )
         self._registries = registries
+        self._event_bus = event_bus
         # PROJ-253: Cache for facility scan results per planet
         self._energy_cache: dict = {}  # planet_id -> {capacity, generation, fingerprint}
 
@@ -178,9 +181,9 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
         self._validate_tick_inputs(empires)
         for empire in empires:
             for colony in empire.colonies:
-                self._process_planet(colony, tick)
+                self._process_planet(colony, tick, empire_id=empire.id)
 
-    def _process_planet(self, planet: 'Planet', tick: int) -> None:
+    def _process_planet(self, planet: 'Planet', tick: int, empire_id: int = -1) -> None:
         """Process energy for a single planet."""
         resource = self.ENERGY_RESOURCE
 
@@ -242,7 +245,7 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
             else:
                 # Insufficient energy — cancel all activating/active components
                 planet.energy = 0.0
-                self._cancel_all_draining_components(planet)
+                self._cancel_all_draining_components(planet, empire_id=empire_id)
 
         # 5. Clamp energy to [0, capacity]
         if new_capacity > 0:
@@ -264,7 +267,7 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                     total += state.energy_drain_rate
         return total
 
-    def _cancel_all_draining_components(self, planet: 'Planet') -> None:
+    def _cancel_all_draining_components(self, planet: 'Planet', empire_id: int = -1) -> None:
         """Cancel all activating/active/deactivating components due to energy depletion."""
         for facility in planet.facilities:
             if not facility.is_operational:
@@ -284,4 +287,18 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                         f"Planet {planet.name}: {ability_name} cancelled "
                         f"(energy depleted, facility {facility.instance_id})"
                     )
+                    if self._event_bus and ability_name:
+                        self._event_bus.log_event(
+                            EventType.SHIELD_AUTO_DEACTIVATED,
+                            category=EventCategory.PLANET_OPERATIONS,
+                            empire_id=empire_id,
+                            message=(
+                                f"{ability_name} auto-deactivated on {planet.name} "
+                                f"(energy depleted)"
+                            ),
+                            planet_name=planet.name,
+                            planet_id=planet.id,
+                            ability_name=ability_name,
+                            facility_id=facility.instance_id,
+                        )
 
