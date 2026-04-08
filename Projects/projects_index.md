@@ -4,6 +4,10 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-260 | Ship Further Decomposition - LayerManager and ResourceManager Extraction | Planning | 2026-04-08 | 2026-04-08 |
+| PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | Planning | 2026-04-08 | 2026-04-08 |
+| PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | Planning | 2026-04-08 | 2026-04-08 |
+| PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | Planning | 2026-04-08 | 2026-04-08 |
 | PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
