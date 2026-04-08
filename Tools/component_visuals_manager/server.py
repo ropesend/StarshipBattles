@@ -13,11 +13,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = "C:\\Developer\\StarshipBattles"
 COMPONENTS_JSON = os.path.join(REPO_ROOT, "data", "components.json")
 METADATA_JSON = os.path.join(REPO_ROOT, "data", "image_metadata.json")
-IMAGE_DIR = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 256")
+IMAGE_DIR_64 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 64")
+IMAGE_DIR_128 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 128")
+# Using 128 as the primary source of truth for indices/filenames
+IMAGE_DIR = IMAGE_DIR_128
 
 # Static mounting
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-app.mount("/assets", StaticFiles(directory=IMAGE_DIR), name="assets")
+app.mount("/assets/64", StaticFiles(directory=IMAGE_DIR_64), name="assets_64")
+app.mount("/assets/128", StaticFiles(directory=IMAGE_DIR_128), name="assets_128")
 
 class ComponentUpdate(BaseModel):
     component_id: str

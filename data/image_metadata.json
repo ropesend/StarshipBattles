@@ -20,7 +20,8 @@
         "resource",
         "shields",
         "cargo",
-        "mines"
+        "mines",
+        "point defence"
     ],
     "assignments": {
         "1": [
@@ -212,31 +213,38 @@
         ],
         "115": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "116": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "117": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "118": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "119": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "120": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "121": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "122": [
             "weapons",
@@ -324,11 +332,13 @@
         ],
         "149": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "150": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "151": [
             "weapons",
@@ -376,35 +386,43 @@
         ],
         "221": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "222": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "223": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "224": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "225": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "226": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "227": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "228": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "229": [
             "weapons",
@@ -444,7 +462,8 @@
         ],
         "202": [
             "weapons",
-            "combat"
+            "combat",
+            "organic"
         ],
         "203": [
             "weapons",
@@ -641,7 +660,8 @@
             "resource"
         ],
         "175": [
-            "resource"
+            "resource",
+            "organic"
         ],
         "198": [
             "resource"
@@ -695,7 +715,101 @@
             "resource"
         ],
         "185": [
-            "resource"
+            "resource",
+            "organic"
+        ],
+        "306": [
+            "armor"
+        ],
+        "307": [
+            "armor"
+        ],
+        "285": [
+            "armor"
+        ],
+        "286": [
+            "armor"
+        ],
+        "294": [
+            "armor"
+        ],
+        "258": [
+            "armor"
+        ],
+        "259": [
+            "armor"
+        ],
+        "247": [
+            "crewsupport"
+        ],
+        "248": [
+            "crewsupport"
+        ],
+        "249": [
+            "crewsupport"
+        ],
+        "471": [
+            "organic"
+        ],
+        "470": [
+            "organic"
+        ],
+        "468": [
+            "organic"
+        ],
+        "467": [
+            "organic"
+        ],
+        "466": [
+            "organic"
+        ],
+        "465": [
+            "organic"
+        ],
+        "464": [
+            "organic"
+        ],
+        "428": [
+            "organic"
+        ],
+        "392": [
+            "organic"
+        ],
+        "358": [
+            "organic"
+        ],
+        "359": [
+            "organic"
+        ],
+        "360": [
+            "organic"
+        ],
+        "361": [
+            "organic"
+        ],
+        "362": [
+            "organic"
+        ],
+        "363": [
+            "organic"
+        ],
+        "364": [
+            "organic"
+        ],
+        "244": [
+            "colony"
+        ],
+        "245": [
+            "colony"
+        ],
+        "246": [
+            "colony"
+        ],
+        "412": [
+            "organic"
+        ],
+        "418": [
+            "organic"
         ]
     }
 }

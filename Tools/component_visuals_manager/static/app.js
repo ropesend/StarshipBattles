@@ -52,7 +52,7 @@ function renderComponentList() {
     list.innerHTML = filtered.map(c => `
         <div class="comp-item ${state.selectedComponentIds.includes(c.id) ? 'active' : ''}" 
              onclick="selectComponent('${c.id}', event)">
-            <img src="${getImageUrl(c.sprite_index)}" alt="${c.name}">
+            <img src="${getImageUrl(c.sprite_index, 64)}" alt="${c.name}">
             <div class="comp-info">
                 <div class="comp-name">${c.name}</div>
                 <div class="comp-id">${c.id}</div>
@@ -97,7 +97,7 @@ function renderImageGrid() {
             <div class="image-card ${isAssigned ? 'assigned' : ''} ${isSelected ? 'selected' : ''} ${isPending ? 'pending' : ''}" 
                  data-index="${index}"
                  onclick="selectImage(${index}, event)">
-                <img src="/assets/${img}" loading="lazy">
+                <img src="${getImageUrl(index, 128)}" loading="lazy">
                 <div class="index-label">${img} [${index}]</div>
             </div>
         `;
@@ -331,11 +331,10 @@ function initRectangleSelection() {
 }
 
 // --- Utils ---
-function getImageUrl(index) {
+function getImageUrl(index, res = 128) {
     if (index === undefined || index === null) return '';
     const indexStr = index.toString().padStart(3, '0');
-    const imgName = state.images.find(i => i.includes(`Comp_${indexStr}`));
-    return imgName ? `/assets/${imgName}` : '';
+    return `/assets/${res}/${res}Portrait_Comp_${indexStr}.png`;
 }
 
 function showStatus(text, type) {
@@ -355,9 +354,8 @@ function showDetailPanel() {
     
     panel.classList.remove('hidden');
     const indexStr = displayIndex.toString().padStart(3, '0');
-    const imgName = state.images.find(i => i.includes(`Comp_${indexStr}`));
     
-    document.getElementById('detailImg').src = `/assets/${imgName}`;
+    document.getElementById('detailImg').src = getImageUrl(displayIndex, 128);
     document.getElementById('detailIndex').textContent = `Index: ${displayIndex} ${state.pendingSpriteIndex === displayIndex ? '(FOCUS)' : ''}`;
     
     const imgTags = state.metadata.assignments[displayIndex.toString()] || [];
