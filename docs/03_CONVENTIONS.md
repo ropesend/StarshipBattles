@@ -226,6 +226,27 @@ def load_data(file_path=None):
 
 **Exceptions:** Test files may use relative paths to test-specific data directories. Scripts with CLI `--output` arguments are also exempt.
 
+### 3.2 Image Asset Format Convention
+
+**All image assets must use PNG format.** This is the standard for the project going forward.
+
+- **New assets:** Must be `.png`. Do not introduce new `.jpg`, `.jpeg`, or `.webp` files.
+- **Existing `.jpg` files:** Should be transitioned to `.png` when touched or as part of asset work. Do not convert them all at once — migrate them when working in the area.
+- **Code that loads images:** Should accept `.png` as the primary format. Filter conditions that accept multiple formats (e.g., `.endswith(('.png', '.jpg'))`) are acceptable for backward compatibility during the transition, but new code should construct filenames with `.png`.
+
+**Component images** follow a resolution-based directory structure under `assets/Images/Components/`:
+
+| Directory | Resolution | Filename pattern | Usage |
+|-----------|-----------|-----------------|-------|
+| `Components 64/` | 64x64 | `64Portrait_Comp_{NNN}.png` | SpriteManager tile grid |
+| `Components 128/` | 128x128 | `128Portrait_Comp_{NNN}.png` | Small icons |
+| `Components 256/` | 256x256 | `256Portrait_Comp_{NNN}.png` | Medium thumbnails |
+| `Components 512/` | 512x512 | `512Portrait_Comp_{NNN}.png` | Large thumbnails |
+| `Components 1024/` | 1024x1024 | `1024Portrait_Comp_{NNN}.png` | High-res display |
+| `Components 2048/` | 2048x2048 | `2048Portrait_Comp_{NNN}.png` | Detail panel portraits |
+
+The filename prefix matches the actual resolution of the images in that directory. Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR` for path constants.
+
 ---
 
 ## 4. Test Conventions

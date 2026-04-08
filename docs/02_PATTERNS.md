@@ -765,11 +765,13 @@ class SpriteManager(metaclass=SingletonMeta):
         self.sprites = []
         self.tile_size = 36
 
-    def load_sprites(self, base_path: str) -> None:
-        components_dir = os.path.join(base_path, "assets", "Images", "Components")
-        tiles_dir = os.path.join(components_dir, "Tiles")
-        if os.path.exists(tiles_dir):
-            self._load_from_directory(tiles_dir)
+    def load_sprites(self, base_path: str = None) -> None:
+        # Loads 64px sprites from Paths.COMPONENTS_64_DIR
+        # Uses regex to parse {resolution}Portrait_Comp_{number}.png filenames
+        if base_path is not None:
+            sprite_dir = os.path.join(base_path, "assets", "Images", "Components", "Components 64")
+        else:
+            sprite_dir = Paths.COMPONENTS_64_DIR
         # ...
 ```
 

@@ -23,23 +23,23 @@ def parse_descriptions():
         if not section.strip():
             continue
             
-        # Extract filename (e.g., 2048Portrait_Comp_004.jpg)
-        match_file = re.search(r"(\d+Portrait_Comp_\d+\.jpg)", section)
+        # Extract component ID (e.g., "004" from "2048Portrait_Comp_004.jpg")
+        match_file = re.search(r"\d+Portrait_Comp_(\d+)\.\w+", section)
         if not match_file:
             continue
-        filename = match_file.group(1)
-        
+        comp_id = match_file.group(1)
+
         # Extract description
         desc_match = re.search(r"Description: (.*)", section, re.DOTALL)
         if not desc_match:
             continue
         description = desc_match.group(1).strip()
-        
+
         # Clean up description (remove subsequent "Image X" header if split failed)
         description = re.split(r"Image \d+:", description)[0].strip()
-        
-        image_map[filename] = description
-    
+
+        image_map[comp_id] = description
+
     return image_map
 
 def get_engineered_prompt(filename, description):
@@ -64,15 +64,13 @@ def main():
     image_map = parse_descriptions()
     
     # Target range 5-15 (Comp_004 to Comp_014)
-    targets = [f"2048Portrait_Comp_{i:03d}.jpg" for i in range(4, 15)]
-    
+    target_ids = [f"{i:03d}" for i in range(4, 15)]
+
     print("\n--- Engineered Prompts for Floating Aesthetics ---\n")
-    for target in targets:
-        if target in image_map:
-            prompt = get_engineered_prompt(target, image_map[target])
-            # Use shorter ID for display
-            comp_id = re.search(r"Comp_\d+", target).group(0)
-            print(f"ID: {comp_id}")
+    for comp_id in target_ids:
+        if comp_id in image_map:
+            prompt = get_engineered_prompt(comp_id, image_map[comp_id])
+            print(f"ID: Comp_{comp_id}")
             print(f"Prompt: {prompt}\n")
 
 if __name__ == "__main__":

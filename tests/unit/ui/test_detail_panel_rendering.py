@@ -69,7 +69,7 @@ class TestDetailPanelRendering:
 
         # Create the panel under test
         self.panel_rect = pygame.Rect(0, 0, 300, 600)
-        self.panel = self.ComponentDetailPanel(self.mock_manager, self.panel_rect, "assets/images")
+        self.panel = self.ComponentDetailPanel(self.mock_manager, self.panel_rect)
 
         # Reset mock calls from init
         self.MockUITextBox.reset_mock()

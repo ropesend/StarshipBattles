@@ -293,14 +293,10 @@ class DesignWorkshopScreen:
             )
         avail_height = self.height - self.bottom_bar_height - self.weapons_report_height
         
-        # Component Image Path
-        comp_img_path = os.path.join(Paths.ASSET_DIR, "Images", "Components")
-        
         with profile_block("Builder: Init Detail Panel"):
             self.detail_panel = ComponentDetailPanel(
                 self.ui_manager,
                 pygame.Rect(detail_x, 0, self.detail_panel_width, avail_height),
-                comp_img_path,
                 event_bus=self.event_bus,
                 modifier_logic=self._modifier_logic
             )

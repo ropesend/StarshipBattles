@@ -13,6 +13,7 @@ import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.core.constants import LayerType  # Canonical location for LayerType
+from game.core.paths import Paths
 from .modifier_logic import ModifierLogic, ModifierLogicService
 from game.ui.fonts import get_font
 
@@ -21,10 +22,9 @@ from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CR
 from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT, GRID_BG, TEXT_ITEM
 
 class ComponentDetailPanel:
-    def __init__(self, manager, rect, image_base_path, event_bus=None, modifier_logic=None):
+    def __init__(self, manager, rect, event_bus=None, modifier_logic=None):
         self.manager = manager
         self.rect = rect
-        self.image_base_path = image_base_path
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -234,9 +234,9 @@ class ComponentDetailPanel:
             
         index = comp.sprite_index
         file_index = index + 1
-        filename = f"2048Portrait_Comp_{file_index:03d}.jpg"
-        
-        full_path = os.path.join(self.image_base_path, "Components 2048", filename)
+        filename = f"2048Portrait_Comp_{file_index:03d}.png"
+
+        full_path = os.path.join(Paths.COMPONENTS_2048_DIR, filename)
         
         surf = None
         if os.path.exists(full_path):

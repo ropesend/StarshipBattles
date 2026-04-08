@@ -50,7 +50,7 @@ class TestSpriteLoading:
         assert self.mgr.get_sprite(1) is None
 
         # Verify image load calls
-        expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Tiles", "Comp_001.bmp")
+        expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Components 64", "Comp_001.bmp")
         mock_load.assert_any_call(expected_path_1)
 
     @patch('os.path.exists')

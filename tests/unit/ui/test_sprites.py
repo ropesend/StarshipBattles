@@ -198,15 +198,27 @@ class TestSpriteManagerNamingConventions:
             assert mgr.get_sprite(1) is None, "Index 1 should be None (gap)"
 
     def test_portrait_pattern_parsing(self):
-        """Test loading files matching 2048Portrait_Comp_* pattern."""
+        """Test loading files matching {resolution}Portrait_Comp_* pattern."""
         mgr = SpriteManager.instance()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create 2048Portrait_Comp_001.jpg -> index 0
-            self._create_test_image(os.path.join(tmpdir, "2048Portrait_Comp_001.jpg"))
+            # Create 64Portrait_Comp_001.png -> index 0
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_001.png"))
 
             mgr._load_from_directory(tmpdir)
 
-            assert mgr.get_sprite(0) is not None, "2048Portrait_Comp_001 should be at index 0"
+            assert mgr.get_sprite(0) is not None, "64Portrait_Comp_001 should be at index 0"
+
+    def test_portrait_pattern_various_resolutions(self):
+        """Test parsing works for different resolution prefixes."""
+        mgr = SpriteManager.instance()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._create_test_image(os.path.join(tmpdir, "2048Portrait_Comp_001.png"))
+            self._create_test_image(os.path.join(tmpdir, "128Portrait_Comp_003.png"))
+
+            mgr._load_from_directory(tmpdir)
+
+            assert mgr.get_sprite(0) is not None, "Comp_001 should be at index 0"
+            assert mgr.get_sprite(2) is not None, "Comp_003 should be at index 2"
 
     def test_unexpected_prefix_skipped(self):
         """Test loading files with unexpected prefixes are skipped."""

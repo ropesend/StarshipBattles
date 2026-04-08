@@ -73,6 +73,14 @@ class Paths:
     SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "ShipThemes")
     COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "Images", "Components")
     RESOURCE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Portraits")
+
+    # Resolution subdirectories within Components/
+    COMPONENTS_2048_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 2048")
+    COMPONENTS_1024_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 1024")
+    COMPONENTS_512_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 512")
+    COMPONENTS_256_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 256")
+    COMPONENTS_128_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 128")
+    COMPONENTS_64_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 64")
     PLANETS_V3_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets", "Planets_V3")
 
     # Resolution subdirectories within Planets_V3/ (PROJ-54 Phase 7)
