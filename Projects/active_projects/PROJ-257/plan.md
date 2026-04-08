@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. DamageContext Move + PhysicsBody Boundary | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. FormulaEvaluator Extraction + AST Walker | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Documentation + Final Verification | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. DamageContext Move + PhysicsBody Boundary | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. FormulaEvaluator Extraction + AST Walker | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Documentation + Final Verification | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-08
-**Active Phase:** Planning complete, ready for Phase 1
-**Last Action:** Project plan populated with all phases, design, decisions, manifests
-**Next Action:** Begin Phase 1 Task 1.1 - Write tests for DamageContext in core
+**Active Phase:** ALL PHASES COMPLETE — Ready for audit
+**Last Action:** Phase 3 complete — docs/01_ARCHITECTURE.md updated with combat_types.py, formula_evaluator.py, PhysicsBody boundary description. All grep verifications pass: zero Engine→Simulation imports, zero eval() calls, all backward-compat re-exports work. 14636 pytest tests pass + 162 simulation tests pass.
+**Next Action:** Audit and user verification
 **Blockers:** None
 
 ## Overview

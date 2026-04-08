@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
 import logging
 from game.core.exceptions import FormulaException
-from game.simulation.formula_system import FormulaEvaluator
+from game.core.formula_evaluator import FormulaEvaluator
 
 logger = logging.getLogger(__name__)
 

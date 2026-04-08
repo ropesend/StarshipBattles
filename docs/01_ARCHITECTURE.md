@@ -62,6 +62,7 @@ Six layers with strict downward-only dependency flow:
 |-----------------------|-------------|
 | `math.py`             | Vector2, clamp, lerp, angle_diff |
 | `hex_math.py`         | HexCoord axial coordinate system for galaxy map |
+| `combat_types.py`     | DamageContext frozen dataclass (attacker identity DTO) |
 | `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleTuning |
 | `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants |
 | `protocols.py`        | All cross-layer Protocol definitions (see Protocols section) |
@@ -69,6 +70,7 @@ Six layers with strict downward-only dependency flow:
 | `exceptions.py`       | GameException hierarchy (10 exception classes) |
 | `error_codes.py`      | ErrorCode enum |
 | `event_logging.py`    | log_event, set_event_handler, get_event_handler |
+| `formula_evaluator.py`| FormulaEvaluator, FormulaContext, AST-based formula evaluation |
 | `validation.py`       | ValidationResult, IValidationRule |
 | `paths.py`            | Paths constants for file locations |
 | `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition |
@@ -85,7 +87,7 @@ Six layers with strict downward-only dependency flow:
 
 | Module          | Description |
 |-----------------|-------------|
-| `physics.py`    | PhysicsBody base class (position, velocity, rotation, drag) |
+| `physics.py`    | PhysicsBody base class (position, velocity, angle, mass, forward_vector). Property container -- subclasses implement own physics. |
 | `collision.py`  | CollisionSystem (hit detection, raycasting, ramming) |
 | `spatial.py`    | SpatialGrid hash grid for efficient proximity queries |
 
@@ -102,7 +104,7 @@ Six layers with strict downward-only dependency flow:
 | `managers/`      | BattleStateManager, RetreatManager |
 | `interfaces/`    | Simulation-internal protocols: IAIController, IAbility, IWeaponAbility, IComponent, ICombatShip, etc. |
 | `validation/`    | ShipDesignValidator |
-| (root modules)  | BattleState, BattleTuning/BattleMode, BattleController, FormulaSystem, ProjectileManager |
+| (root modules)  | BattleState, BattleTuning/BattleMode, BattleController, FormulaSystem (re-export shim → core), ProjectileManager |
 
 ### `game/strategy/` -- 4X strategy layer
 

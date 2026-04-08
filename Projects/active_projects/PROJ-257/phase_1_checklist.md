@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Fix the Engine->Simulation layer violation by moving DamageContext to core. Clarify the PhysicsBody boundary by removing dead code and documenting the arcade physics model.
 
 ---

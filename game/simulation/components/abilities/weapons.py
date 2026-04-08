@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
 from game.core.math import angle_from_vector
-from game.simulation.formula_system import FormulaEvaluator
+from game.core.formula_evaluator import FormulaEvaluator
 
 logger = logging.getLogger(__name__)
 from .base import Ability
