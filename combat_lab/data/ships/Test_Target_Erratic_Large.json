@@ -1,0 +1,72 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-03-29T00:00:00.000000",
+    "_description": "Combat Lab test ship: Test_Target_Erratic_Large - high agility for erratic maneuvers within leash"
+  },
+  "name": "Test Target Erratic Large",
+  "color": [
+    0,
+    0,
+    255
+  ],
+  "team_id": 2,
+  "ship_class": "TestL_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_erratic_maneuver",
+  "layers": {
+    "CORE": [
+      {
+        "id": "test_armor_extreme_hp"
+      },
+      {
+        "id": "test_engine_no_fuel"
+      },
+      {
+        "id": "test_thruster_high"
+      },
+      {
+        "id": "test_thruster_high"
+      },
+      {
+        "id": "test_thruster_high"
+      },
+      {
+        "id": "test_thruster_high"
+      }
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "Large erratic target with 4x high agility thrusters. Mass = hull_test_l(4000). 4 thrusters stack (SUM): raw=2000 total. 180-turn in ~91 ticks, overshoot ~285px — stays within 1000px leash. rotate() divides turn_speed by 100, so effective rotation = 1.976 deg/tick.",
+  "expected_stats": {
+    "max_hp": 1000002130,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 3.125,
+    "acceleration_rate": 0.078125,
+    "turn_speed": 197.64235376052374,
+    "total_thrust": 500.0,
+    "mass": 4000.0,
+    "armor_hp_pool": 1000000000
+  },
+  "propulsion_details": {
+    "engine_thrust": 500,
+    "thruster_count": 4,
+    "raw_turn_rate_each": 500.0,
+    "raw_turn_rate_total": 2000.0,
+    "total_mass": 4000,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 4000 = 3.125",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass^2 = (500 * 2500) / 4000^2 = 0.078125",
+      "turn_speed": "turn_speed = (raw_turn_total * K_TURN) / mass^1.5 = (2000 * 25000) / 4000^1.5 = 197.64",
+      "effective_rotation": "rotate() divides by 100: 197.64 / 100 = 1.976 deg/tick"
+    }
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
+}

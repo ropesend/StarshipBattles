@@ -1,0 +1,107 @@
+{
+  "_template_info": {
+    "description": "Base template for attacker test ships",
+    "usage": "Reference template - shows common structure for test attackers",
+    "variant_properties": [
+      "weapon_component (beam/projectile/seeker)",
+      "weapon_stats (accuracy, damage, range, etc.)",
+      "mass (affects maneuverability)",
+      "ai_strategy (usually 'test_do_nothing')"
+    ],
+    "common_variants": [
+      {
+        "name": "Beam Attacker (Low Accuracy)",
+        "filename": "Test_Attacker_Beam360_Low.json",
+        "weapon_component": "test_beam_low_acc_1dmg",
+        "weapon_stats": {
+          "base_accuracy": 0.5,
+          "accuracy_falloff": 0.002,
+          "damage": 1,
+          "range": 800
+        }
+      },
+      {
+        "name": "Beam Attacker (Med Accuracy)",
+        "filename": "Test_Attacker_Beam360_Med.json",
+        "weapon_component": "test_beam_med_acc_1dmg",
+        "weapon_stats": {
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001,
+          "damage": 1,
+          "range": 1000
+        }
+      },
+      {
+        "name": "Beam Attacker (High Accuracy)",
+        "filename": "Test_Attacker_Beam360_High.json",
+        "weapon_component": "test_beam_high_acc_1dmg",
+        "weapon_stats": {
+          "base_accuracy": 5.0,
+          "accuracy_falloff": 0.0005,
+          "damage": 1,
+          "range": 1200
+        }
+      },
+      {
+        "name": "Projectile Attacker",
+        "filename": "Test_Attacker_Projectile360.json",
+        "weapon_component": "test_projectile_360_10dmg",
+        "weapon_stats": {
+          "damage": 10,
+          "range": 800,
+          "projectile_speed": 300
+        }
+      },
+      {
+        "name": "Seeker Attacker",
+        "filename": "Test_Attacker_Seeker360.json",
+        "weapon_component": "test_seeker_360_50dmg",
+        "weapon_stats": {
+          "damage": 50,
+          "range": 2000,
+          "seeker_speed": 200,
+          "turn_rate": 3.0
+        }
+      }
+    ]
+  },
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T00:00:00Z",
+    "_description": "Combat Lab test ship template"
+  },
+  "name": "Test Attacker [WEAPON_TYPE]",
+  "color": [255, 0, 0],
+  "team_id": 1,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_do_nothing",
+  "layers": {
+    "CORE": [
+      {
+        "id": "[WEAPON_COMPONENT_ID]",
+        "_note": "Replace with appropriate weapon component"
+      }
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "Attacker with [WEAPON_TYPE] weapon for testing",
+  "expected_stats": {
+    "max_hp": 120,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 0,
+    "acceleration_rate": 0.0,
+    "turn_speed": 0.0,
+    "total_thrust": 0,
+    "mass": 25.0,
+    "armor_hp_pool": 0
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
+}

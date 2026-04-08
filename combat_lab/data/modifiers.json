@@ -1,0 +1,122 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T21:37:36.975467",
+    "_description": "Combat Lab test modifiers"
+  },
+  "modifiers": [
+    {
+      "id": "test_damage_boost",
+      "name": "Test Damage Boost",
+      "description": "Test modifier: multiplies damage only.",
+      "param": { "name": "Multiplier", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "damage_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_range_boost",
+      "name": "Test Range Boost",
+      "description": "Test modifier: multiplies range only.",
+      "param": { "name": "Level", "type": "linear", "min": 0, "max": 3, "default": 0 },
+      "effects": [{ "stat": "range_mult", "formula": "2 ^ param" }]
+    },
+    {
+      "id": "test_turret",
+      "name": "Test Turret",
+      "description": "Test modifier: sets firing arc only.",
+      "param": { "name": "Arc", "type": "linear", "min": 0, "max": 360, "default": 0 },
+      "effects": [{ "stat": "arc_set", "formula": "param", "operation": "set" }]
+    },
+    {
+      "id": "test_reload_boost",
+      "name": "Test Reload Boost",
+      "description": "Test modifier: reduces reload time only.",
+      "param": { "name": "Rate", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "reload_mult", "formula": "1.0 / param" }]
+    },
+    {
+      "id": "test_accuracy_boost",
+      "name": "Test Accuracy Boost",
+      "description": "Test modifier: adds accuracy only.",
+      "param": { "name": "Level", "type": "linear", "min": 0, "max": 5, "default": 0 },
+      "effects": [{ "stat": "accuracy_add", "formula": "param * 0.5", "operation": "add" }]
+    },
+    {
+      "id": "test_thrust_boost",
+      "name": "Test Thrust Boost",
+      "description": "Test modifier: multiplies thrust only.",
+      "param": { "name": "Multiplier", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "thrust_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_endurance_boost",
+      "name": "Test Endurance Boost",
+      "description": "Test modifier: multiplies seeker endurance only.",
+      "param": { "name": "Multiplier", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "endurance_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_consumption_reduction",
+      "name": "Test Consumption Reduction",
+      "description": "Test modifier: multiplies resource consumption only.",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "consumption_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_thrust_penalty",
+      "name": "Test Thrust Penalty",
+      "description": "Test modifier: reduces thrust (multiplier < 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "thrust_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_range_penalty",
+      "name": "Test Range Penalty",
+      "description": "Test modifier: reduces weapon range (multiplier < 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "range_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_consumption_increase",
+      "name": "Test Consumption Increase",
+      "description": "Test modifier: increases resource consumption (multiplier > 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "consumption_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_damage_penalty",
+      "name": "Test Damage Penalty",
+      "description": "Test modifier: reduces damage (multiplier < 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "damage_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_reload_penalty",
+      "name": "Test Reload Penalty",
+      "description": "Test modifier: increases reload time (slower firing).",
+      "param": { "name": "Factor", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "reload_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_endurance_penalty",
+      "name": "Test Endurance Penalty",
+      "description": "Test modifier: reduces seeker endurance (multiplier < 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "endurance_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_accuracy_penalty",
+      "name": "Test Accuracy Penalty",
+      "description": "Test modifier: reduces accuracy (negative additive).",
+      "param": { "name": "Level", "type": "linear", "min": 0, "max": 5, "default": 0 },
+      "effects": [{ "stat": "accuracy_add", "formula": "param * -0.5", "operation": "add" }]
+    },
+    {
+      "id": "test_damage_boost_b",
+      "name": "Test Damage Boost B",
+      "description": "Test modifier: second damage multiplier for stacking tests.",
+      "param": { "name": "Multiplier", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "damage_mult", "formula": "param" }]
+    }
+  ]
+}

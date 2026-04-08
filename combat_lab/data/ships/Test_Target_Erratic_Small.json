@@ -1,0 +1,61 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-03-29T00:00:00.000000",
+    "_description": "Combat Lab test ship: Test_Target_Erratic_Small - high agility for erratic maneuvers within leash"
+  },
+  "name": "Test Target Erratic Small",
+  "color": [
+    0,
+    0,
+    255
+  ],
+  "team_id": 2,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_erratic_maneuver",
+  "layers": {
+    "CORE": [
+      {
+        "id": "test_armor_small_extreme_hp"
+      },
+      {
+        "id": "test_engine_no_fuel"
+      },
+      {
+        "id": "test_thruster_high"
+      }
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "Small erratic target with high agility thruster (100x turn rate). Mass = hull_test_s(400). 180-degree turn in ~12 ticks at max speed, overshoot ~360px — stays within 1000px leash. rotate() divides turn_speed by 100, so effective rotation = 15.6 deg/tick.",
+  "expected_stats": {
+    "max_hp": 1000000170,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 31.25,
+    "acceleration_rate": 7.8125,
+    "turn_speed": 1562.5,
+    "total_thrust": 500.0,
+    "mass": 400.0,
+    "armor_hp_pool": 1000000000
+  },
+  "propulsion_details": {
+    "engine_thrust": 500,
+    "raw_turn_rate": 500.0,
+    "total_mass": 400,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 400 = 31.25",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass^2 = (500 * 2500) / 400^2 = 7.8125",
+      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (500.0 * 25000) / 400^1.5 = 1562.5",
+      "effective_rotation": "rotate() divides by 100: 1562.5 / 100 = 15.625 deg/tick"
+    }
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
+}

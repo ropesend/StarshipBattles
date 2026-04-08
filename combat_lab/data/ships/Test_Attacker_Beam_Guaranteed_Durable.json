@@ -1,0 +1,24 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_description": "Combat Lab test ship: Guaranteed-hit beam attacker with extreme HP (survives return fire)"
+  },
+  "name": "Test Attacker Beam Guaranteed Durable",
+  "color": [255, 0, 0],
+  "team_id": 1,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_do_nothing",
+  "layers": {
+    "CORE": [
+      {"id": "test_armor_extreme_hp"},
+      {"id": "test_beam_1dmg_guaranteed"}
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "Guaranteed-hit beam + 1B HP armor in CORE. Survives return fire in duel scenarios like CNC-005.",
+  "expected_stats": {
+    "mass": 400.0
+  }
+}

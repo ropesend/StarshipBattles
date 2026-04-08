@@ -1,0 +1,7 @@
+{
+  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Combat Lab test ship: Test Attacker SeekerRapid SmallAmmo"},
+  "name": "Test Attacker SeekerRapid SmallAmmo", "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
+  "layers": {"CORE": [{"id": "test_seeker_rapid"}, {"id": "test_storage_ammo_100"}], "ARMOR": []},
+  "_test_notes": "Seeker rapid with 100 ammo (depletes at tick ~500)",
+  "expected_stats": {"mass": 400.0}
+}

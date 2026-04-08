@@ -1,0 +1,7 @@
+{
+  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Combat Lab test ship: Test Attacker Seeker Dmg200"},
+  "name": "Test Attacker Seeker Dmg200", "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
+  "layers": {"CORE": [{"id": "test_seeker_dmg_200"}], "ARMOR": []},
+  "_test_notes": "200 damage seeker",
+  "expected_stats": {"mass": 400.0}
+}
