@@ -5,7 +5,6 @@ Provides static methods for randomizing identity fields, visual selections,
 and ship themes in the Species Setup dialog. Uses pre-generated race name
 data from game/data/race_names.json when a portrait is selected.
 """
-import os
 import random
 from typing import Dict, List, Optional
 
@@ -31,7 +30,7 @@ class RaceRandomizer:
         if RaceRandomizer._race_names_cache is not None:
             return RaceRandomizer._race_names_cache
 
-        path = os.path.join(Paths.GAME_DIR, "data", "race_names.json")
+        path = Paths.RACE_NAMES_FILE
         data = load_json(path, default={})
         RaceRandomizer._race_names_cache = data
         return data

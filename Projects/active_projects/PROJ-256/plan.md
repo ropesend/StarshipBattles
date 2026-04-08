@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Expand Paths Constants & Move ships/ | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate Data File References | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate Asset Path References | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate Remaining Hardcoded Paths | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Verification & Documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Expand Paths Constants & Move ships/ | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate Data File References | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate Asset Path References | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Migrate Remaining Hardcoded Paths | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Verification & Documentation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-07
-**Active Phase:** Not Started
-**Next Action:** Begin Phase 1
+**Active Phase:** Complete
+**Next Action:** Project complete — all phases done.
 **Blockers:** None
-**Context for Next Agent:** Fresh project. Audit complete — ~40 hardcoded path violations across ~25 files. Central path config exists at `game/core/paths.py` but is underused.
+**Context for Next Agent:** All 5 phases complete. 25+ files migrated to use Paths constants. ships/ moved to output/ships/. 14737 tests passing. Convention documented in docs/03_CONVENTIONS.md. A few Tools/ files (component_visuals_manager, image_comparator) still have hardcoded paths but are standalone MCP servers outside the game package.
 
 ## Overview
 

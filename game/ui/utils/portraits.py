@@ -13,6 +13,8 @@ Usage:
     )
 """
 import os
+
+from game.core.paths import Paths
 import re
 from typing import Optional, Tuple, List
 
@@ -105,10 +107,10 @@ def get_portrait_search_paths(theme: str, ship_class: str) -> List[str]:
     """
     filename = get_portrait_filename(ship_class)
     return [
-        os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
+        os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename),
         os.path.join("resources", "Portraits", theme, filename),
         os.path.join("resources", "Portraits", theme, f"{ship_class}_Portrait.jpg"),
-        os.path.join("assets", "Images", "Default_Ship_Portrait.png"),
+        Paths.DEFAULT_SHIP_PORTRAIT,
     ]
 
 

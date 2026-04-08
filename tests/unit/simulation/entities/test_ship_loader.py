@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch, PropertyMock
 
 from game.core.exceptions import MissingResourceException
+from game.core.paths import Paths
 from game.simulation.entities.ship_loader import (
     load_vehicle_classes_data,
     load_vehicle_classes,
@@ -342,12 +343,12 @@ class TestInitializeShipData:
             mock_load.assert_called_once_with(expected_path, registry_provider=mock_provider)
 
     def test_calls_load_vehicle_classes_with_default_path(self):
-        """Calls load_vehicle_classes with no arguments when base_path is None."""
+        """Calls load_vehicle_classes with Paths.VEHICLE_CLASSES_FILE when base_path is None."""
         mock_provider = MagicMock()
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes') as mock_load:
             initialize_ship_data(registry_provider=mock_provider)
 
-            mock_load.assert_called_once_with(registry_provider=mock_provider)
+            mock_load.assert_called_once_with(Paths.VEHICLE_CLASSES_FILE, registry_provider=mock_provider)
 
     def test_propagates_errors_from_load_vehicle_classes(self, tmp_path):
         """Propagates MissingResourceException from load_vehicle_classes."""

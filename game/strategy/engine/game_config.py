@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
+from game.core.paths import Paths
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -14,14 +15,8 @@ if TYPE_CHECKING:
 
 
 def _get_default_asset_path() -> str:
-    """
-    Calculate default asset path relative to project root.
-    Uses __file__ traversal to find project root reliably.
-    """
-    # Navigate: game_config.py -> engine -> strategy -> game -> StarshipBattles
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
-    return os.path.join(project_root, "assets", "ShipThemes")
+    """Return the path to the ShipThemes asset directory."""
+    return Paths.SHIP_THEMES_DIR
 
 
 # Theme defaults for auto-assignment based on player number

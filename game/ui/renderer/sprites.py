@@ -1,7 +1,9 @@
 import logging
-import pygame
 import os
+
+import pygame
 from typing import Optional
+from game.core.paths import Paths
 from game.core.singleton import SingletonMeta
 from game.ui.colors import BLACK
 
@@ -27,15 +29,18 @@ class SpriteManager(metaclass=SingletonMeta):
         self.sprites = []
         self.tile_size = 36
 
-    def load_sprites(self, base_path: str) -> None:
+    def load_sprites(self, base_path: str = None) -> None:
         """Load sprites from assets/Images/Components if available.
 
         Checks for 'Tiles' subdirectory first, then falls back to base directory.
 
         Args:
-            base_path: Base path of the game installation.
+            base_path: Optional base path override. Uses Paths.COMPONENTS_IMAGES_DIR if None.
         """
-        components_dir = os.path.join(base_path, "assets", "Images", "Components")
+        if base_path is not None:
+            components_dir = os.path.join(base_path, "assets", "Images", "Components")
+        else:
+            components_dir = Paths.COMPONENTS_IMAGES_DIR
         tiles_dir = os.path.join(components_dir, "Tiles")
         
         if os.path.exists(tiles_dir):

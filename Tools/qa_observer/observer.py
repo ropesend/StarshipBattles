@@ -219,8 +219,8 @@ def main():
         # Copy game logs into session data before processing
         logs_dest = session_dir / "logs"
         logs_dest.mkdir(exist_ok=True)
-        project_root = Path(__file__).resolve().parent.parent.parent
-        game_logs_dir = project_root / "output" / "logs"
+        from game.core.paths import Paths
+        game_logs_dir = Path(Paths.LOGS_DIR)
         log_files = [
             "battle.log",
             "battle_log.txt",

@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, TYPE_CHECKING
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
+from game.core.paths import Paths
 from game.ui.screens.strategy_detail_fmt import format_planet_info
 from game.ui.fonts import get_font
 from game.ui.utils.formatters import format_compact_number
@@ -444,7 +445,7 @@ class PlanetReportPanel:
         Args:
             icon_size: Size of the square icons in pixels (default 24).
         """
-        base_path = os.path.join("assets", "Images", "Resource Portraits")
+        base_path = Paths.RESOURCE_PORTRAITS_DIR
 
         for resource in ALL_RESOURCE_NAMES:
             filename = RESOURCE_PORTRAIT_FILES.get(resource)

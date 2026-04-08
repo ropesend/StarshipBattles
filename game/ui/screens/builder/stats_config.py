@@ -37,9 +37,9 @@ from .stat_rows_dynamic import (  # noqa: F401
 
 def load_stats_config():
     """Load stats configuration from data/stats_layout.json."""
-    import os
+    from game.core.paths import Paths
 
-    path = os.path.join(os.getcwd(), 'data', 'stats_layout.json')
+    path = Paths.STATS_LAYOUT_FILE
     data = load_json(path, default={})
     if not data:
         logger.warning(f"Stats config not found or empty: {path}")

@@ -171,4 +171,4 @@ def initialize_ship_data(base_path: Optional[str] = None, *, registry_provider=N
         path = os.path.join(base_path, "data", "vehicleclasses.json")
         load_vehicle_classes(path, registry_provider=registry_provider)
     else:
-        load_vehicle_classes(registry_provider=registry_provider)
+        load_vehicle_classes(Paths.VEHICLE_CLASSES_FILE, registry_provider=registry_provider)

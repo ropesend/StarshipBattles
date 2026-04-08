@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 # PROJ-211: Re-added get_default_registry_provider for load_* functions
+from game.core.paths import Paths
 from game.core.registry import clear_registry, get_default_registry_provider
 
 if TYPE_CHECKING:
@@ -53,7 +54,7 @@ class WorkshopDataLoader:
             registries: GameRegistries instance (required for _get_default_class)
         """
         self.directory = directory
-        self.default_data_dir = default_data_dir or os.path.join(os.getcwd(), "data")
+        self.default_data_dir = default_data_dir or Paths.DATA_DIR
         self._registries = registries
     
     def find_file(self, base_names: Union[str, List[str]], 
