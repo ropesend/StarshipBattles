@@ -314,7 +314,7 @@ Components are defined in a top-level `"components"` array. Each entry has:
     "mass": "=50 * sqrt(ship_class_mass / 1000)",
     "hp": "=200 * sqrt(ship_class_mass / 1000)",
     "allowed_vehicle_types": ["Ship"],
-    "sprite_index": 3,
+    "sprite_index": 4,
     "abilities": {
         "CommandAndControl": true,
         "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"

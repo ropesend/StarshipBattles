@@ -233,8 +233,7 @@ class ComponentDetailPanel:
             self.image_element = None
             
         index = comp.sprite_index
-        file_index = index + 1
-        filename = f"2048Portrait_Comp_{file_index:03d}.png"
+        filename = f"2048Portrait_Comp_{index:03d}.png"
 
         full_path = os.path.join(Paths.COMPONENTS_2048_DIR, filename)
         

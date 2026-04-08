@@ -1,5 +1,6 @@
 import os
 import json
+import signal
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
@@ -139,6 +140,15 @@ async def create_tag(new_tag: NewTag):
             save_json(METADATA_JSON, data)
             return {"status": "success", "tags": data["tags"]}
         return {"status": "exists", "tags": data["tags"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/shutdown")
+async def shutdown_server():
+    try:
+        # Graceful shutdown for Windows uvicorn
+        os.kill(os.getpid(), signal.SIGTERM)
+        return {"status": "shutting down"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -77,12 +77,12 @@ class SpriteManager(metaclass=SingletonMeta):
                 # Try portrait pattern: {resolution}Portrait_Comp_{number}.{ext}
                 match = _PORTRAIT_PATTERN.match(f)
                 if match:
-                    index = int(match.group(2)) - 1
+                    index = int(match.group(2))
                 else:
                     # Try legacy pattern: Comp_{number}.{ext}
                     match = _LEGACY_PATTERN.match(f)
                     if match:
-                        index = int(match.group(1)) - 1
+                        index = int(match.group(1))
 
                 if index < 0: continue
 
