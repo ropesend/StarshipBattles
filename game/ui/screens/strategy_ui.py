@@ -205,8 +205,8 @@ class StrategyUI:
             self.system_header.set_text(f"System: {system_obj.name}")
         else:
             self.system_header.set_text("Deep Space (No System)")
-            
-        self.system_tree.set_items(contents, self)
+
+        self.system_tree.set_items(contents, self, system_obj=system_obj)
 
     def show_sector_info(self, hex_coord, contents):
         """Populate Middle List (Sector/Hex)."""
