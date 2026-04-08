@@ -18,6 +18,7 @@ import os
 from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required, save_json
+from game.core.paths import Paths
 from game.core.exceptions import ValidationException, ComponentException
 import logging
 
@@ -63,7 +64,7 @@ class ShipIO:
     """
 
     # Configurable default directory (can be changed by builder)
-    default_ships_folder = "ships"
+    default_ships_folder: str = Paths.SHIPS_DIR
 
     # Shared adapter instance (lazy-initialized)
     _design_loader: Optional[DesignLoaderAdapter] = None
@@ -71,9 +72,8 @@ class ShipIO:
     @classmethod
     def _ensure_ships_folder(cls) -> str:
         """Return the ships folder path, creating it if necessary."""
-        folder = os.path.join(os.getcwd(), cls.default_ships_folder)
-        os.makedirs(folder, exist_ok=True)
-        return folder
+        os.makedirs(cls.default_ships_folder, exist_ok=True)
+        return cls.default_ships_folder
 
     @classmethod
     def _get_design_loader(cls) -> DesignLoaderAdapter:

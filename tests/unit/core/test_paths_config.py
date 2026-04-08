@@ -56,6 +56,30 @@ class TestPathConstants:
         """Paths.VEHICLE_CLASSES_FILE is a real file."""
         assert os.path.isfile(Paths.VEHICLE_CLASSES_FILE)
 
+    def test_ships_dir_under_output(self):
+        """PROJ-256: SHIPS_DIR must be under OUTPUT_DIR, not project root."""
+        assert Paths.SHIPS_DIR.startswith(Paths.OUTPUT_DIR)
+        assert Paths.SHIPS_DIR == os.path.join(Paths.OUTPUT_DIR, "ships")
+
+    def test_battles_dir_under_data(self):
+        """PROJ-256: BATTLES_DIR must be under DATA_DIR."""
+        assert Paths.BATTLES_DIR == os.path.join(Paths.DATA_DIR, "battles")
+
+    def test_new_data_file_constants_defined(self):
+        """PROJ-256: New data file constants point to correct locations."""
+        assert Paths.PRODUCTION_RATES_FILE == os.path.join(Paths.DATA_DIR, "production_rates.json")
+        assert Paths.SYSTEM_BLUEPRINTS_FILE == os.path.join(Paths.DATA_DIR, "system_blueprints.json")
+        assert Paths.ASTROPHYSICS_FILE == os.path.join(Paths.DATA_DIR, "astrophysics.json")
+        assert Paths.GALAXY_LAYOUTS_FILE == os.path.join(Paths.DATA_DIR, "galaxy_layouts.json")
+        assert Paths.HOMEWORLD_PRESETS_FILE == os.path.join(Paths.DATA_DIR, "homeworld_presets.json")
+        assert Paths.RACE_NAMES_FILE == os.path.join(Paths.DATA_DIR, "race_names.json")
+
+    def test_new_asset_constants_defined(self):
+        """PROJ-256: New asset directory constants point to correct locations."""
+        assert Paths.COMPONENTS_IMAGES_DIR == os.path.join(Paths.ASSET_DIR, "Images", "Components")
+        assert Paths.RESOURCE_PORTRAITS_DIR == os.path.join(Paths.ASSET_DIR, "Images", "Resource Portraits")
+        assert Paths.DEFAULT_SHIP_PORTRAIT == os.path.join(Paths.ASSET_DIR, "Images", "Default_Ship_Portrait.png")
+
 
 class TestPathlibAccessors:
     """Tests for pathlib.Path accessor methods."""
@@ -93,6 +117,13 @@ class TestPathlibAccessors:
         assert isinstance(result, Path)
         assert "saves" in str(result)
 
+    def test_get_ships_dir_returns_path(self):
+        """PROJ-256: get_ships_dir() returns pathlib.Path under output."""
+        result = Paths.get_ships_dir()
+        assert isinstance(result, Path)
+        assert "output" in str(result)
+        assert str(result).endswith("ships")
+
     def test_get_logs_dir_returns_path(self):
         """get_logs_dir() returns pathlib.Path."""
         result = Paths.get_logs_dir()
@@ -114,3 +145,7 @@ class TestPathConsistency:
     def test_asset_dir_matches_get_assets_dir(self):
         """ASSET_DIR and get_assets_dir() point to same location."""
         assert Paths.ASSET_DIR == str(Paths.get_assets_dir())
+
+    def test_ships_dir_matches_get_ships_dir(self):
+        """PROJ-256: SHIPS_DIR and get_ships_dir() point to same location."""
+        assert Paths.SHIPS_DIR == str(Paths.get_ships_dir())

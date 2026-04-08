@@ -9,8 +9,9 @@ venv/
 .venv
 .vscode/
 
-# Allow all JSON files in data/ and ships/ folders
+# Allow all JSON files in data/ folder
 # Ignore root-level config JSONs except specific ones
+# Ship designs live in output/ships/ (covered by /output/ below)
 
 /component_presets.json
 /output/

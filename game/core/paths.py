@@ -54,11 +54,11 @@ class Paths:
     CORE_DIR: str = os.path.join(GAME_DIR, "core")
     DATA_DIR: str = os.path.join(ROOT_DIR, "data")
     ASSET_DIR: str = os.path.join(ROOT_DIR, "assets")
-    SHIPS_DIR: str = os.path.join(ROOT_DIR, "ships")
 
     # === Output Directory (user/runtime data) ===
     OUTPUT_DIR: str = os.path.join(ROOT_DIR, "output")
     SAVES_DIR: str = os.path.join(OUTPUT_DIR, "saves")
+    SHIPS_DIR: str = os.path.join(OUTPUT_DIR, "ships")
     RACES_DIR: str = os.path.join(OUTPUT_DIR, "races")
     SCREENSHOTS_DIR: str = os.path.join(OUTPUT_DIR, "screenshots")
     LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
@@ -66,10 +66,13 @@ class Paths:
 
     # === Data Subdirectories ===
     FORMATIONS_DIR: str = os.path.join(DATA_DIR, "formations")
+    BATTLES_DIR: str = os.path.join(DATA_DIR, "battles")
     TECH_PRESETS_DIR: str = os.path.join(DATA_DIR, "tech_presets")
 
     # === Asset Subdirectories ===
     SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "ShipThemes")
+    COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "Images", "Components")
+    RESOURCE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Portraits")
     PLANETS_V3_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets", "Planets_V3")
 
     # Resolution subdirectories within Planets_V3/ (PROJ-54 Phase 7)
@@ -95,6 +98,12 @@ class Paths:
     VEHICLE_CLASSES_FILE: str = os.path.join(DATA_DIR, "vehicleclasses.json")
     VEHICLE_LAYERS_FILE: str = os.path.join(DATA_DIR, "vehiclelayers.json")
     RESOURCES_FILE: str = os.path.join(DATA_DIR, "resources.json")
+    PRODUCTION_RATES_FILE: str = os.path.join(DATA_DIR, "production_rates.json")
+    SYSTEM_BLUEPRINTS_FILE: str = os.path.join(DATA_DIR, "system_blueprints.json")
+    ASTROPHYSICS_FILE: str = os.path.join(DATA_DIR, "astrophysics.json")
+    GALAXY_LAYOUTS_FILE: str = os.path.join(DATA_DIR, "galaxy_layouts.json")
+    HOMEWORLD_PRESETS_FILE: str = os.path.join(DATA_DIR, "homeworld_presets.json")
+    RACE_NAMES_FILE: str = os.path.join(DATA_DIR, "race_names.json")
 
     # === Settings Files ===
     DEFAULT_KEYBINDINGS_FILE: str = os.path.join(DATA_DIR, "default_keybindings.json")
@@ -102,6 +111,7 @@ class Paths:
 
     # === Asset Files ===
     ASSET_MANIFEST_FILE: str = os.path.join(ASSET_DIR, "asset_manifest.json")
+    DEFAULT_SHIP_PORTRAIT: str = os.path.join(ASSET_DIR, "Images", "Default_Ship_Portrait.png")
     PLANET_CLASSIFICATIONS_FILE: str = os.path.join(PLANETS_V3_DIR, "planet_classifications.json")
 
     # === Log Files ===
@@ -128,6 +138,10 @@ class Paths:
     @classmethod
     def get_output_dir(cls) -> Path:
         return _PROJECT_ROOT / "output"
+
+    @classmethod
+    def get_ships_dir(cls) -> Path:
+        return _PROJECT_ROOT / "output" / "ships"
 
     @classmethod
     def get_saves_dir(cls) -> Path:
