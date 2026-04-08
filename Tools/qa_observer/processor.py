@@ -105,6 +105,30 @@ def write_word_timestamps(session_dir: Path, words: list):
     print(f"Word timestamps written to {output_path}")
 
 
+def load_filler_words() -> set:
+    """Load filler words from FILLER_WORDS env var (comma-separated, case-insensitive)."""
+    raw = os.getenv("FILLER_WORDS", "")
+    if not raw.strip():
+        return set()
+    return {w.strip().lower() for w in raw.split(",") if w.strip()}
+
+
+def filter_filler_words(words: list, filler_set: set) -> list:
+    """Remove filler words from the word list for markdown output.
+
+    Matching is case-insensitive and ignores trailing punctuation so that
+    Google Speech variants like 'Um,' or 'uh.' are caught.
+    """
+    if not filler_set:
+        return words
+    filtered = []
+    for w in words:
+        cleaned = w["word"].strip(".,!?;:").lower()
+        if cleaned not in filler_set:
+            filtered.append(w)
+    return filtered
+
+
 def generate_markdown(session_dir: Path, words: list, screenshots: list):
     output_path = session_dir / "QA_Session_Log.md"
     
@@ -218,8 +242,18 @@ def main():
     print("Writing word-level timestamps...")
     write_word_timestamps(session_dir, all_words)
 
+    # Filter filler words for markdown only (JSONL keeps the raw transcript)
+    filler_set = load_filler_words()
+    if filler_set:
+        filtered_words = filter_filler_words(all_words, filler_set)
+        removed = len(all_words) - len(filtered_words)
+        if removed:
+            print(f"Filtered {removed} filler word(s) from transcript.")
+    else:
+        filtered_words = all_words
+
     print("Generating synchronized Markdown...")
-    generate_markdown(session_dir, all_words, screenshots)
+    generate_markdown(session_dir, filtered_words, screenshots)
 
     # Prune old sessions, keeping only the 5 most recent
     prune_old_sessions(session_dir.parent, keep=5)
