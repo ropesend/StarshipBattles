@@ -52,6 +52,6 @@ It also rescans all provider ships and their components on every update call, wi
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Verify aura bonuses are identical in a strategy-layer integration test
 - [ ] Confirm no duplicate MAX-then-SUM logic remains in `fleet_aura_manager.py`

@@ -287,7 +287,7 @@ Both use the same `eval()` sandbox pattern with whitelisted math functions but d
 **Tests:** Full test suite
 - [ ] Run existing formula tests: `pytest tests/unit/systems/test_formula_system.py tests/unit/systems/test_formula_overflow_underflow.py tests/unit/simulation/test_formula_exceptions.py -v`
 - [ ] Run modifier tests: `pytest tests/unit/modifiers/ tests/unit/simulation/components/test_modifier_effects.py -v`
-- [ ] Run full test suite: `python scripts/test_sharded.py`
+- [ ] Run full test suite: `python Tools/test_sharded/test_sharded.py`
 - [ ] Confirm zero test failures and zero test changes
 
 ---
@@ -461,7 +461,7 @@ Recommendation: Use aliases. The test files are testing formula evaluation behav
 - [ ] Grep for direct `eval(` calls in `game/simulation/` -- should only be in `FormulaEvaluator.evaluate()` in `formula_system.py`
 - [ ] Grep for `FORMULA_ERROR_SYNTAX` / `FORMULA_ERROR_UNDEFINED` etc. -- should not exist anywhere
 - [ ] Grep for old function imports: `from game.simulation.formula_system import evaluate_math_formula` -- should not appear in `game/` (only in `tests/` via aliases)
-- [ ] Run full test suite: `python scripts/test_sharded.py`
+- [ ] Run full test suite: `python Tools/test_sharded/test_sharded.py`
 - [ ] Check if any docs reference formula evaluation: search `docs/` for "formula" and update if needed
 - [ ] Update `docs/01_ARCHITECTURE.md` or `docs/02_PATTERNS.md` if formula evaluation is documented there
 
@@ -483,7 +483,7 @@ Recommendation: Use aliases. The test files are testing formula evaluation behav
 - [ ] `pytest tests/unit/modifiers/ -v` -- all pass
 - [ ] `pytest tests/unit/systems/test_formula_system.py tests/unit/systems/test_formula_overflow_underflow.py -v` -- all pass
 - [ ] `pytest tests/unit/strategy/ -v` -- all pass
-- [ ] `python scripts/test_sharded.py` -- full suite green
+- [ ] `python Tools/test_sharded/test_sharded.py` -- full suite green
 - [ ] Grep confirms single `eval()` call site in FormulaEvaluator
 - [ ] No imports of old function names remain in `game/` (only in `tests/` via aliases)
 - [ ] `modifier_effects.py` has no direct `eval()` call

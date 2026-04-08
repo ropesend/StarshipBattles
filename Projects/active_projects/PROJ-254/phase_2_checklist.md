@@ -45,7 +45,7 @@
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run simulation tests — all pass
 - [ ] Grep for `survivors_by_name` — should be removed or replaced
 - [ ] Grep for `.name` used as lookup key in battle reconciliation — should be zero

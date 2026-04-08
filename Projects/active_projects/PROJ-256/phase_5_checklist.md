@@ -18,7 +18,7 @@ Confirm all paths are centralized, update documentation, run full test suite.
 - [ ] Verify `Paths` class docstring lists all constant categories
 
 ## Test Suite
-- [ ] Run full test suite: `python scripts/test_sharded.py`
+- [ ] Run full test suite: `python Tools/test_sharded/test_sharded.py`
 - [ ] Confirm test count is >= 14691 (no tests lost)
 - [ ] Confirm 0 failures
 

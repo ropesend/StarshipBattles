@@ -9,7 +9,7 @@ Checks each design for:
 - Mass consistency with expected_stats (if present)
 
 Usage:
-    python scripts/validate_designs.py [directory]
+    python Tools/validate_designs/validate_designs.py [directory]
 
 Default directory: tests/fixtures/quickstart/designs/
 Exit code: 0 if all valid, 1 if any errors.
@@ -18,8 +18,18 @@ import json
 import sys
 from pathlib import Path
 
-# Add project root to path
-project_root = Path(__file__).parent.parent
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+project_root = _find_project_root()
 sys.path.insert(0, str(project_root))
 
 from game.core.registry import GameRegistries

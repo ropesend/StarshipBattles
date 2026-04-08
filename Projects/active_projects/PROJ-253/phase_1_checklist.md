@@ -72,6 +72,6 @@ For a ship with 30 components over 1000 ticks, that's 120,000+ component iterati
 - [ ] If assertion fires, it indicates a missing dirty-flag call site — fix and add test
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run simulation tests (`python -m simulation_tests.run_tests`) — all pass
 - [ ] Instrument `calculate()` with a call counter in a test: 100 ticks on stable ship should show 1-2 calls (initial + maybe one), not 100

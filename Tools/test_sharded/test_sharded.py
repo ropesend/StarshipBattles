@@ -23,7 +23,17 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+PROJECT_ROOT = _find_project_root()
 DURATIONS_FILE = PROJECT_ROOT / ".test_durations.json"
 SHARD_RESULTS_DIR = PROJECT_ROOT / ".pytest_cache" / "shard_results"
 

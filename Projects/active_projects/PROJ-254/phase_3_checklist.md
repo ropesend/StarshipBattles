@@ -49,6 +49,6 @@ The docs (`04_SERVICES.md:443`) explicitly call this the "single source of truth
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Verify return values are identical for valid designs (before/after comparison)
 - [ ] Grep for `expected_stats` in `ship_design_stats.py` — should be removed or only in comments

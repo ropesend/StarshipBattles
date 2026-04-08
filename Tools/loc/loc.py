@@ -1,15 +1,26 @@
 """Lines of code counter for Starship Battles.
 
 Usage:
-    python scripts/loc.py             # simple summary
-    python scripts/loc.py --detailed  # JSON output with per-section, per-type breakdowns
+    python Tools/loc/loc.py             # simple summary
+    python Tools/loc/loc.py --detailed  # JSON output with per-section, per-type breakdowns
 """
 
 import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+ROOT = _find_project_root()
 SKIP_DIRS = {"__pycache__", ".git", "venv", ".venv", "node_modules", ".VSCodeCounter"}
 SKIP_FILES = {"test_history.json"}
 
@@ -17,7 +28,7 @@ SKIP_FILES = {"test_history.json"}
 PROD_SECTIONS = ["ai", "assets", "core", "data", "engine", "research", "simulation", "strategy", "ui"]
 
 # -- Additional source dirs/files outside game/ ------------------------------
-EXTRA_SOURCE_DIRS = ["scripts"]
+EXTRA_SOURCE_DIRS = []
 EXTRA_SOURCE_FILES = ["launcher.py"]
 
 # -- Test sections ------------------------------------------------------------

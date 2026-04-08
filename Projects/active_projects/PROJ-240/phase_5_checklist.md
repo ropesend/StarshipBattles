@@ -22,7 +22,7 @@
 ---
 
 ### Task 5.2: Run final verification [Simple]
-- [x] Full test suite: `python scripts/test_sharded.py`
+- [x] Full test suite: `python Tools/test_sharded/test_sharded.py`
 - [x] Simulation tests: `python -m simulation_tests.run_tests --fast`
 - [x] Verify no new imports of production types outside TYPE_CHECKING blocks
 - [x] Verify all new files have module-level docstrings

@@ -43,6 +43,6 @@
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run simulation tests (`python -m simulation_tests.run_tests`) — all pass
 - [ ] Profile: in a 50-ship battle, count candidates returned by `query_radius()` vs `query_radius_exact()` — expect significant reduction

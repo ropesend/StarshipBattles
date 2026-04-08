@@ -131,7 +131,7 @@ When a project worker completes:
 
 2. **If worker completed ALL phases (SUCCESS):**
    a. Merge branch: `git merge <branch> --no-edit`
-   b. Run full test suite: `python scripts/test_sharded.py`
+   b. Run full test suite: `python Tools/test_sharded/test_sharded.py`
    c. **If tests pass:**
       - Update project `plan.md`: all phases Complete, Current State = "Audit ready"
       - Mark project `done`
@@ -219,7 +219,7 @@ Your project modifies these files (from manifest.md):
    - Update Current State as you progress
    - Validate phases: python Projects/scripts/validate_phase.py PROJ-{ID} N
 6. If you complete ALL phases:
-   - Run full test suite: python scripts/test_sharded.py
+   - Run full test suite: python Tools/test_sharded/test_sharded.py
    - Update Current State to indicate project complete
    - Report SUCCESS
 7. If you approach context limit (~80%):

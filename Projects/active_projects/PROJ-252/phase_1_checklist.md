@@ -52,7 +52,7 @@ Currently `BattleEngine.start(seed=N)` calls `random.seed(N)` on the process-glo
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run simulation tests (`python -m simulation_tests.run_tests`) — all pass
 - [ ] Grep `game/simulation/` for remaining `random.seed(` calls — should be zero
 - [ ] Grep `game/simulation/combat/` for remaining `random.random(` or `random.choices(` — should be zero

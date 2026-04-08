@@ -710,7 +710,7 @@ External caller: `tests/unit/regressions/test_bug_regressions_2026_01.py:55` cal
 - [x] Verify `docs/02_PATTERNS.md` code snippets are accurate
 
 #### Task 5.2: Run final verification [Simple]
-- [x] Full test suite: `python scripts/test_sharded.py`
+- [x] Full test suite: `python Tools/test_sharded/test_sharded.py`
 - [x] Simulation tests: `python -m simulation_tests.run_tests --fast`
 - [x] Verify no new imports of production types outside TYPE_CHECKING blocks
 - [x] Verify all modified files have updated docstrings
@@ -723,7 +723,7 @@ External caller: `tests/unit/regressions/test_bug_regressions_2026_01.py:55` cal
 
 ### Project Start (REQUIRED)
 - [x] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
-- [x] Run full test suite: `python scripts/test_sharded.py` -- baseline established
+- [x] Run full test suite: `python Tools/test_sharded/test_sharded.py` -- baseline established
 
 ### After Each Phase
 - [x] Run `pytest tests/unit/entities/test_components.py tests/unit/simulation/components/ -v` -- all affected tests pass
@@ -731,7 +731,7 @@ External caller: `tests/unit/regressions/test_bug_regressions_2026_01.py:55` cal
 - [x] `component.modifiers`, `component.ability_instances` still accessible as before
 
 ### Final Verification
-- [x] `python scripts/test_sharded.py` -- full suite passes
+- [x] `python Tools/test_sharded/test_sharded.py` -- full suite passes
 - [x] `python -m simulation_tests.run_tests --fast` -- simulation tests pass
 - [x] Component class is ~300 lines (down from ~370 class body)
 - [x] All managers are proper stateful delegates (no more static-method-on-raw-list pattern)

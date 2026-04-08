@@ -141,14 +141,14 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 
 ### Project Start (REQUIRED)
 - [ ] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
-- [ ] Run full test suite: `python scripts/test_sharded.py` -- establish baseline
+- [ ] Run full test suite: `python Tools/test_sharded/test_sharded.py` -- establish baseline
 
 ### After Each Phase
 - [ ] Run targeted tests for affected files
 - [ ] No behavioral changes -- only names changed
 
 ### Final Verification
-- [ ] `python scripts/test_sharded.py` -- all tests pass
+- [ ] `python Tools/test_sharded/test_sharded.py` -- all tests pass
 - [ ] `grep -r "team2_ships" game/ tests/` returns zero results
 - [ ] All `team1_ships` references now correctly map to `team_id == 1` (not `team_id == 0`)
 - [ ] Docstrings are clean -- no "team1 means team 0" disclaimers remain

@@ -14,7 +14,7 @@
 
 ### Task 4.1: Organize remaining __init__ properties [Simple]
 **File:** `game/simulation/entities/ship.py`
-**Tests:** `python scripts/test_sharded.py`
+**Tests:** `python Tools/test_sharded/test_sharded.py`
 
 - [x] Group into sections: Identity, Registries, Layers, Stats, Resources, Combat Stats, Budget, AI, Formation/Physics, Delegates
 - [x] Remove any properties now owned by delegates (cache vars, combat state)

@@ -2,14 +2,24 @@
 import ast
 import os
 import sys
+from pathlib import Path
+
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return str(current)
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
 
 # Configuration
-PROJECT_ROOT = r"c:\Dev\Starship Battles"
+PROJECT_ROOT = _find_project_root()
 ENTRY_POINTS = [
     os.path.join(PROJECT_ROOT, "launcher.py"),
     os.path.join(PROJECT_ROOT, "game", "app.py"),
-    # Add other entry points if known, e.g. server scripts or tools
-    # os.path.join(PROJECT_ROOT, "tools", "some_tool.py"), 
 ]
 
 # Add project root to sys.path for resolution simulation

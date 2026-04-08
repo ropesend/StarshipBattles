@@ -556,7 +556,7 @@ def __init__(self, ...):
 - [x] Reorganize __init__ into the sections above
 - [x] Remove any properties now owned by delegates
 - [x] Verify no duplicate initialization between Ship and delegates
-- [x] Run full test suite: `python scripts/test_sharded.py`
+- [x] Run full test suite: `python Tools/test_sharded/test_sharded.py`
 
 #### Task 4.2: Verify line count targets [Simple]
 - [x] Ship.__init__ should be ~80 lines (down from ~160)
@@ -577,7 +577,7 @@ def __init__(self, ...):
 - [x] Verify `docs/03_CONVENTIONS.md` naming conventions match new file names
 
 #### Task 5.2: Run final verification [Simple]
-- [x] Full test suite: `python scripts/test_sharded.py`
+- [x] Full test suite: `python Tools/test_sharded/test_sharded.py`
 - [x] Simulation tests: `python -m simulation_tests.run_tests --fast`
 - [x] Verify no new imports of production types outside TYPE_CHECKING blocks
 - [x] Verify all new files have module-level docstrings
@@ -588,14 +588,14 @@ def __init__(self, ...):
 
 ### Project Start (REQUIRED)
 - [x] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
-- [x] Run full test suite: `python scripts/test_sharded.py` -- baseline established
+- [x] Run full test suite: `python Tools/test_sharded/test_sharded.py` -- baseline established
 
 ### After Each Phase
 - [x] Run `pytest tests/unit/entities/ tests/unit/simulation/ -v` -- all affected tests pass
 - [x] No call site changes required (facade preserves public API)
 
 ### Final Verification
-- [x] `python scripts/test_sharded.py` -- full suite passes (14391 passed)
+- [x] `python Tools/test_sharded/test_sharded.py` -- full suite passes (14391 passed)
 - [x] `python -m simulation_tests.run_tests --fast` -- simulation tests pass (162 passed)
 - [x] Ship.py is 678 lines (down from 850, with _initialize_layers and change_class remaining)
 - [x] All new managers have comprehensive test coverage (24 + 19 = 43 new tests)

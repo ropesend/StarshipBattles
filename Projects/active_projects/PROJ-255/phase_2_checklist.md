@@ -39,7 +39,7 @@
 - [ ] Add any required `TYPE_CHECKING` imports
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run `python -c "from game.ai.controller import AIController"` — no import errors
 - [ ] Run `python -c "from game.simulation.entities.ship_stats import ShipStatsCalculator"` — no import errors
 - [ ] Run `python -c "from game.strategy.engine.turn_engine import TurnEngine"` — no import errors

@@ -2,7 +2,7 @@
 """Fix quickstart designs: add crew housing/life support as needed, recalculate expected_stats.
 
 Usage:
-    python scripts/fix_designs.py [directory]
+    python Tools/fix_designs/fix_designs.py [directory]
 
 Default directory: tests/fixtures/quickstart/designs/
 """
@@ -11,7 +11,18 @@ import math
 import sys
 from pathlib import Path
 
-project_root = Path(__file__).parent.parent
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+project_root = _find_project_root()
 sys.path.insert(0, str(project_root))
 
 from game.core.registry import GameRegistries

@@ -1,6 +1,18 @@
 
 import os
 import sys
+from pathlib import Path
+
+
+def _find_project_root():
+    """Find project root by looking for game/ and data/ directories."""
+    current = Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return str(current)
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
 
 def find_orphaned_tests(test_root, source_root):
     orphaned = []
@@ -44,9 +56,10 @@ def find_orphaned_tests(test_root, source_root):
     return orphaned
 
 if __name__ == "__main__":
-    test_root = r"c:\Dev\Starship Battles\tests\unit"
-    source_root = r"c:\Dev\Starship Battles\game"
-    
+    _root = _find_project_root()
+    test_root = os.path.join(_root, "tests", "unit")
+    source_root = os.path.join(_root, "game")
+
     start_dirs = [
         (test_root, source_root)
     ]

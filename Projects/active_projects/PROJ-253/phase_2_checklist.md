@@ -52,6 +52,6 @@ For a planet with 10 facilities averaging 5 components each, that's 150+ iterati
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Verify energy values are identical before/after for a multi-planet test scenario
 - [ ] Instrument cache rebuilds with counter — confirm rebuilds only on mutation events

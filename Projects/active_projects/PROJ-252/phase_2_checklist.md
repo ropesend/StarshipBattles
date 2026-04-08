@@ -49,6 +49,6 @@
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Verify `set_event_handler()` is no longer called from `GameSession.__init__`
 - [ ] Verify new `EventBus` instances are isolated (test from TDD step confirms this)

@@ -20,7 +20,7 @@ The optional argument specifies which designs to validate:
 1. **Run the validator script:**
 
    ```bash
-   cd c:/Developer/StarshipBattles && python scripts/validate_designs.py <directory>
+   python Tools/validate_designs/validate_designs.py <directory>
    ```
 
    If the argument is `all`, run it once for quickstart fixtures and once for each `designs/empire_*/` directory found under `output/saves/`.

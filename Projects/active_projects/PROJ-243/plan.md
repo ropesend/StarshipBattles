@@ -228,7 +228,7 @@ This skips all 5 initialization steps. It should call `add_ship_mid_battle()` in
 
 ### Project Start (REQUIRED)
 - [x] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
-- [x] Run full test suite: `python scripts/test_sharded.py` — establish baseline
+- [x] Run full test suite: `python Tools/test_sharded/test_sharded.py` — establish baseline
 
 ### After Each Phase
 - [x] Run targeted tests for changed files
@@ -238,7 +238,7 @@ This skips all 5 initialization steps. It should call `add_ship_mid_battle()` in
 ### Final Verification
 - [x] `pytest tests/unit/simulation/ -v` — all pass
 - [x] `pytest tests/integration/simulation/ -v` — all pass
-- [x] `python scripts/test_sharded.py` — full suite green (14370 passed)
+- [x] `python Tools/test_sharded/test_sharded.py` — full suite green (14370 passed)
 - [x] `add_ship_mid_battle()` calls `_initialize_ship()` and `aura_manager.register_ship()`
 - [x] `start()` uses `_initialize_ship()` in its per-ship loop (DRY)
 - [x] Fighter launch calls `add_ship_mid_battle()` instead of duplicating logic

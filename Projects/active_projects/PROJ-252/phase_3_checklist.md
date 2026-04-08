@@ -47,7 +47,7 @@ Note: `ship_component_manager.py` already has a `# PROJ-211` comment acknowledgi
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run simulation tests (`python -m simulation_tests.run_tests`) — all pass
 - [ ] Grep `game/simulation/` for `get_default_registry_provider` — should return zero results
 - [ ] Remove `# PROJ-211` comment if present (debt is now paid)

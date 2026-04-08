@@ -59,6 +59,6 @@ These are called frequently by the UI layer.
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Verify results are identical for all three queries (before/after comparison in integration test)
 - [ ] Verify index consistency: after complex scenario (moves, creates, destroys), index matches full scan

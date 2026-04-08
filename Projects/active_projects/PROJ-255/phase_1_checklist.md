@@ -68,6 +68,6 @@ def update(self) -> None:
 - [ ] Run tests — confirm they pass
 
 ### Verification
-- [ ] Run full test suite (`python scripts/test_sharded.py`) — no regressions
+- [ ] Run full test suite (`python Tools/test_sharded/test_sharded.py`) — no regressions
 - [ ] Run simulation tests (`python -m simulation_tests.run_tests`) — all pass
 - [ ] Verify AI behavior is identical: run same battle seed before/after, compare outcomes
