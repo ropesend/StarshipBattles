@@ -84,17 +84,17 @@ def get_unit_test_data_dir() -> Path:
     return get_project_root() / "tests" / "unit" / "data"
 
 
-def get_simulation_test_data_dir() -> Path:
+def get_combat_lab_data_dir() -> Path:
     """
-    Return the simulation test data directory.
+    Return the combat lab data directory.
 
     This directory contains test data for combat simulation tests including
     components.json, modifiers.json, vehicleclasses.json, and ship configurations.
 
     Returns:
-        Path to the simulation_tests/data/ directory
+        Path to the combat_lab/data/ directory
     """
-    return get_project_root() / "simulation_tests" / "data"
+    return get_project_root() / "combat_lab" / "data"
 
 
 # ============================================================================
@@ -132,6 +132,6 @@ def unit_test_data_dir() -> Path:
 
 
 @pytest.fixture
-def simulation_test_data_dir() -> Path:
-    """Fixture providing the simulation test data directory path."""
-    return get_simulation_test_data_dir()
+def combat_lab_data_dir() -> Path:
+    """Fixture providing the combat lab data directory path."""
+    return get_combat_lab_data_dir()

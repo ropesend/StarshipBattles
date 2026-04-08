@@ -343,7 +343,7 @@ Key rules:
 
 ### 5.3 Simulation Test Data
 
-Test-specific data lives in `simulation_tests/data/`:
+Test-specific data lives in `combat_lab/data/`:
 - `components.json` -- Test-only components (e.g., `TestS_2L` class ships)
 - `ships/` -- Test ship JSON definitions
 - `schemas/` -- JSON schemas (may be outdated; verify against actual data before use)

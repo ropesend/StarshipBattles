@@ -89,7 +89,7 @@ docs/
 ## Quick Reference
 
 - **Test command (pytest):** `python Tools/test_sharded/test_sharded.py`
-- **Test command (simulation):** `python -m simulation_tests.run_tests`
+- **Test command (simulation):** `python -m combat_lab.run_tests`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist
 - **Historical/archived docs:** `Projects/_archive/` (not in docs/ — do not read for current info)

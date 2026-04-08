@@ -165,7 +165,9 @@ game/
 tests/
 ├── unit/              # Fast unit tests
 ├── integration/       # Integration tests
-└── simulation_tests/  # Battle simulation tests
+└── unit/combat_lab/   # Combat Lab pytest tests
+
+combat_lab/                # In-game Combat Lab (scenarios, runner, services)
 
 Tools/               # Development utilities (see Tools/README.md)
 

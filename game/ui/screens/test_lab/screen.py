@@ -16,9 +16,9 @@ from game.core.config import DisplayConfig
 from game.core.string_utils import display_name
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
-from test_framework.registry import TestRegistry
-from test_framework.test_history import TestHistory
-from simulation_tests.logging_config import get_logger
+from combat_lab.registry import TestRegistry
+from combat_lab.test_history import TestHistory
+from combat_lab.logging_config import get_logger
 
 # Intra-package imports
 from .dialogs import JSONPopup, ConfirmationDialog
@@ -70,7 +70,7 @@ class TestLabScreen:
         self._button_callbacks = {}  # Maps UIButton -> callback function
 
         # Initialize controller (handles all business logic)
-        from test_framework.services.test_lab_controller import TestLabUIController
+        from combat_lab.services.test_lab_controller import TestLabUIController
         self.registry = TestRegistry()
         self.test_history = TestHistory()
         self.controller = TestLabUIController(game, self.registry, self.test_history)
@@ -426,7 +426,7 @@ class TestLabScreen:
 
     def _on_view_battle_states(self, run_record, run_number):
         """Open the battle state viewer for a test run."""
-        from test_framework.battle_state_capture import load_battle_state_json
+        from combat_lab.battle_state_capture import load_battle_state_json
 
         initial_json = None
         final_json = None

@@ -162,7 +162,7 @@ def get_all_python_files(root_dir):
     all_files = set()
     for root, dirs, files in os.walk(root_dir):
         # Skip hidden/venv/test dirs
-        if "venv" in root or ".git" in root or "tests" in root or "simulation_tests" in root or "__pycache__" in root:
+        if "venv" in root or ".git" in root or "tests" in root or "combat_lab" in root or "__pycache__" in root:
             continue
             
         for file in files:

@@ -2,7 +2,7 @@
 Data extraction utilities for TestLabScreen.
 
 This module contains pure data loading operations with no UI dependencies:
-- get_test_data_dir(): Locate the simulation_tests/data directory
+- get_test_data_dir(): Locate the combat_lab/data directory
 - TestLabDataExtractor: Load ship and component data from test scenarios
 
 Extracted from screen.py to reduce file size and improve testability.
@@ -10,26 +10,26 @@ Extracted from screen.py to reduce file size and improve testability.
 import os
 
 from game.core.json_utils import load_json
-from simulation_tests.logging_config import get_logger
+from combat_lab.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
 def get_test_data_dir():
     """
-    Get the path to simulation_tests/data directory.
+    Get the path to combat_lab/data directory.
 
     This function provides a single source of truth for locating test data files,
     avoiding incorrect relative path construction from different modules.
 
     Returns:
-        str: Absolute path to simulation_tests/data directory
+        str: Absolute path to combat_lab/data directory
     """
     # Navigate from game/ui/screens/test_lab/ to project root (4 levels up)
-    # Then into simulation_tests/data
+    # Then into combat_lab/data
     current_dir = os.path.dirname(__file__)  # game/ui/screens/test_lab
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))  # project root
-    return os.path.join(project_root, 'simulation_tests', 'data')
+    return os.path.join(project_root, 'combat_lab', 'data')
 
 
 class TestLabDataExtractor:

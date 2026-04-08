@@ -32,7 +32,7 @@ python Tools/loc/loc.py --detailed  # JSON output with per-section, per-type bre
 
 **Test code**:
 - `tests/unit`, `tests/integration`, `tests/regression`, `tests/performance`, `tests/repro_issues`, `tests/fixtures`, `tests/infrastructure`
-- `simulation_tests/`, `test_framework/`
+- `combat_lab/`
 - `conftest.py`
 
 **Excluded**: `__pycache__`, `.git`, `venv`, `node_modules`, `.VSCodeCounter`, `output/` directories, `test_history.json`, `.pyc` files.

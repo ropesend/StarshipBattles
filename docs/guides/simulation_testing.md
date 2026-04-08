@@ -10,12 +10,12 @@ Consolidated guide for the Starship Battles simulation test system. Covers test 
 
 Simulation tests validate game mechanics (weapons, propulsion, shields, etc.) by running the BattleEngine in headless mode and checking outcomes against expected values. The same tests can run in both the **CLI runner** (headless) and **Combat Lab** (visual, interactive).
 
-**Important:** Simulation tests do NOT use pytest. They run via `python -m simulation_tests.run_tests`.
+**Important:** Simulation tests do NOT use pytest. They run via `python -m combat_lab.run_tests`.
 
 ### Directory Structure
 
 ```
-simulation_tests/
+combat_lab/
 ├── run_tests.py                     # CLI test runner (auto-discovery)
 ├── test_constants.py                # Shared constants
 ├── test_history.json                # Historical test run data
@@ -73,7 +73,7 @@ simulation_tests/
 └── output/                          # Test output artifacts
 ```
 
-**Key isolation rule:** Tests in `simulation_tests/` use ONLY data from `simulation_tests/data/`. Production data in `data/` is never modified by tests.
+**Key isolation rule:** Tests in `combat_lab/` use ONLY data from `combat_lab/data/`. Production data in `data/` is never modified by tests.
 
 ---
 
@@ -83,22 +83,22 @@ simulation_tests/
 
 ```bash
 # Run all simulation tests
-python -m simulation_tests.run_tests
+python -m combat_lab.run_tests
 
 # Filter by ID prefix
-python -m simulation_tests.run_tests BEAMWEAPON
+python -m combat_lab.run_tests BEAMWEAPON
 
 # Run a specific test
-python -m simulation_tests.run_tests BEAMWEAPON-001
+python -m combat_lab.run_tests BEAMWEAPON-001
 
 # List all discovered tests
-python -m simulation_tests.run_tests --list
+python -m combat_lab.run_tests --list
 
 # Skip high-tick (-HT) tests for quick validation
-python -m simulation_tests.run_tests --fast
+python -m combat_lab.run_tests --fast
 
 # Don't record to test_history.json
-python -m simulation_tests.run_tests --no-history
+python -m combat_lab.run_tests --no-history
 ```
 
 ### Key Features
@@ -141,8 +141,8 @@ Both environments use the exact same `BattleEngine` code. The only difference is
 ### TestScenario Class
 
 ```python
-from simulation_tests.scenarios import TestScenario, TestMetadata
-from simulation_tests.scenarios.validation import check_exact, check_true
+from combat_lab.scenarios import TestScenario, TestMetadata
+from combat_lab.scenarios.validation import check_exact, check_true
 
 class MyTest(TestScenario):
     metadata = TestMetadata(
@@ -209,7 +209,7 @@ The validation system uses **Check objects** with three phases:
 #### Check Functions
 
 ```python
-from simulation_tests.scenarios.validation import (
+from combat_lab.scenarios.validation import (
     check_exact, check_approx, check_tost, check_true,
     Check, ValidationReport,
 )
@@ -232,10 +232,10 @@ from simulation_tests.scenarios.validation import (
 ### TestRegistry (Discovery)
 
 ```python
-from test_framework.registry import TestRegistry
+from combat_lab.registry import TestRegistry
 
 registry = TestRegistry()
-# Auto-discovers all scenarios in simulation_tests/scenarios/*.py
+# Auto-discovers all scenarios in combat_lab/scenarios/*.py
 
 weapon_tests = registry.get_by_category("Weapons")
 beam_tests = registry.get_by_subcategory("Weapons", "Beam Accuracy")
@@ -251,7 +251,7 @@ test = registry.get_by_id("BEAMWEAPON-001")
 
 **1. Identify the ability under test.** One test = one behavior.
 
-**2. Check the coverage plan** (`simulation_tests/ABILITY_TEST_COVERAGE_PLAN.md`) to see what is already covered.
+**2. Check the coverage plan** (`combat_lab/ABILITY_TEST_COVERAGE_PLAN.md`) to see what is already covered.
 
 **3. Design the simplest possible scenario:**
 - Use the smallest hull that meets requirements (see Standard Hulls below)
@@ -260,7 +260,7 @@ test = registry.get_by_id("BEAMWEAPON-001")
 - Prefer 360-degree firing arcs and generous ranges to reduce complexity
 - **Rule:** Prefer two single-ability components over one multi-ability component (exception: when testing resource consumption that requires both abilities on same component)
 
-**4. Create the scenario class** in the appropriate file under `simulation_tests/scenarios/`.
+**4. Create the scenario class** in the appropriate file under `combat_lab/scenarios/`.
 
 **5. Calculate expected values with explicit formulas:**
 ```
@@ -280,7 +280,7 @@ max_speed:
 
 **7. Implement `validate(engine) -> List[Check]`** with data, precondition, and outcome checks.
 
-**8. Run the test** via `python -m simulation_tests.run_tests <TEST_ID>`.
+**8. Run the test** via `python -m combat_lab.run_tests <TEST_ID>`.
 
 ### Component Mass Convention
 
@@ -325,7 +325,7 @@ Use `test_` prefix with literal descriptions:
 Position ships at a specific distance and measure accuracy or damage.
 
 ```python
-from simulation_tests.scenarios.validation import check_exact, check_tost, check_true
+from combat_lab.scenarios.validation import check_exact, check_tost, check_true
 
 class BeamRangeTest(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Beam360_Low.json"
@@ -375,7 +375,7 @@ The template runs two separate battles — one internally during `setup()`, one 
 the normal runner loop — then compares their results in `validate()`.
 
 ```python
-from simulation_tests.scenarios.templates import ComparisonScenario
+from combat_lab.scenarios.templates import ComparisonScenario
 
 class SensorIncreasesAccuracyScenario(ComparisonScenario):
     metadata = TestMetadata(test_id="TOHIT-ATK-001", name="Sensor Increases Accuracy", ...)
@@ -549,7 +549,7 @@ Weapon-level resource dependency tests exist within weapon files:
 | `PointDefense` | High | Expand SEEKER-PD-001/002 coverage |
 | `VehicleLaunch` | Low | Carrier/hangar launch cycle and capacity |
 
-See `simulation_tests/ABILITY_TEST_COVERAGE_PLAN.md` for the full inventory.
+See `combat_lab/ABILITY_TEST_COVERAGE_PLAN.md` for the full inventory.
 
 ---
 
@@ -639,7 +639,7 @@ These engine behaviors affect how tests should be designed:
 - Identify a primary outcome value for summary display.
 
 ### Data Isolation
-- Tests use ONLY `simulation_tests/data/` files.
+- Tests use ONLY `combat_lab/data/` files.
 - Never modify production data in `data/`.
 - Validate data at load time: Assumed vs Live values produce warnings on mismatch.
 
@@ -658,12 +658,12 @@ These engine behaviors affect how tests should be designed:
 
 ### Issue: Ship file not found
 
-**Fix:** Ensure ship files are in `simulation_tests/data/ships/`. Use `self._load_ship('filename.json')` which resolves the path automatically.
+**Fix:** Ensure ship files are in `combat_lab/data/ships/`. Use `self._load_ship('filename.json')` which resolves the path automatically.
 
 ### Issue: Test not discovered by runner
 
 **Check:**
-1. File is in `simulation_tests/scenarios/`
+1. File is in `combat_lab/scenarios/`
 2. File name ends with `_scenarios.py`
 3. Class extends `TestScenario` (or a template)
 4. Class has a `metadata` attribute (not None)
