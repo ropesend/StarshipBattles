@@ -118,7 +118,8 @@ class StrategyInputHandler:
         contexts = ["strategy", "global", "detail_panel"]
         if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
                                                                 'WARP_TARGET', 'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET',
-                                                                'OPEN_WARP_TARGET', 'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
+                                                                'OPEN_WARP_TARGET', 'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET',
+                                                                'EDIT_MOVE'):
             contexts.append("fleet")
         # PROJ-238: Add planet context when planet is selected
         from game.core.protocols import is_planet

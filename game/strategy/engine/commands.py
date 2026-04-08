@@ -384,14 +384,16 @@ class IssuePlanetOrderCommand(Command):
         planet_id: Planet to issue order to.
         order_type: OrderType name (e.g., "ACTIVATE_ABILITY").
         facility_instance_id: Target facility UUID.
-        component_id: Optional specific component within facility.
+        component_id: Optional specific component within facility (legacy).
         ability_name: Ability name for generic ACTIVATE_ABILITY/DEACTIVATE_ABILITY.
+        component_key: Composite key (LAYER:INDEX:COMP_ID) targeting a specific component.
     """
     planet_id: int
     order_type: str
     facility_instance_id: str
     component_id: Optional[str] = None
     ability_name: Optional[str] = None
+    component_key: Optional[str] = None
 
 
 @dataclass

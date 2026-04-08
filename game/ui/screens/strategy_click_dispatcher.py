@@ -47,6 +47,7 @@ class ClickModeDispatcher:
             'OPEN_WARP_TARGET': self._handle_open_warp_click,
             'CLOSE_WARP_TARGET': self._handle_close_warp_click,
             'DYSON_SPHERE_TARGET': self._handle_dyson_sphere_click,
+            'EDIT_MOVE': self._handle_edit_move_click,
             'SELECT': self._handle_select_mode_click,
         }
 
@@ -212,6 +213,20 @@ class ClickModeDispatcher:
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
             logger.debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_edit_move_click(self, mx: int, my: int, button: int) -> bool:
+        """Handle click in EDIT_MOVE mode — select new destination for an existing MOVE order."""
+        if button == 1:  # Left Click — confirm new destination
+            new_hex = self._resolve_click_target(mx, my)
+            self.scene.complete_edit_move(new_hex)
+            return True
+        elif button == 3:  # Right click — cancel edit, restore SELECT mode
+            self.scene._edit_move_ghost_hex = None
+            self.scene._edit_move_order_index = None
+            self.scene._edit_move_fleet = None
+            self.input_mode = 'SELECT'
             return True
         return False
 

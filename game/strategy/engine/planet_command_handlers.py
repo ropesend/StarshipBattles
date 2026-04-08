@@ -60,13 +60,15 @@ class IssuePlanetOrderCommandHandler:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for ACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_activate_ability(
-                planet, cmd.facility_instance_id, cmd.ability_name, component_registry
+                planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
+                component_key=cmd.component_key,
             )
         elif order_type == OrderType.DEACTIVATE_ABILITY:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for DEACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_deactivate_ability(
-                planet, cmd.facility_instance_id, cmd.ability_name, component_registry
+                planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
+                component_key=cmd.component_key,
             )
         else:
             return ValidationResult.error(f"Unsupported planet order type: {cmd.order_type}")
@@ -82,6 +84,8 @@ class IssuePlanetOrderCommandHandler:
             target['component_id'] = cmd.component_id
         if cmd.ability_name:
             target['ability_name'] = cmd.ability_name
+        if cmd.component_key:
+            target['component_key'] = cmd.component_key
 
         order = PlanetOrder(order_type, target=target)
         planet.add_order(order)

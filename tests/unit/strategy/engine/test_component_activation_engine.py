@@ -35,7 +35,6 @@ def _make_planet(name="TestPlanet", facilities=None):
     planet.name = name
     planet.id = 1
     planet.facilities = facilities or []
-    planet.active_abilities = {}
     return planet
 
 
@@ -79,8 +78,8 @@ class TestComponentActivationEngine:
         assert updated.progress_ticks == 1
         assert updated.phase == ActivationPhase.ACTIVATING
 
-    def test_activation_completes_sets_planet_ability_active(self):
-        """When activation completes, planet.active_abilities should be set True."""
+    def test_activation_completes_transitions_to_active(self):
+        """When activation completes, component state transitions to ACTIVE."""
         state = ComponentActivationState(
             phase=ActivationPhase.ACTIVATING,
             progress_ticks=249,
@@ -99,12 +98,11 @@ class TestComponentActivationEngine:
 
         updated = facility.get_activation_state("OUTER:0:stellar_stabilizer")
         assert updated.phase == ActivationPhase.ACTIVE
-        assert planet.active_abilities.get("StellarStabilizer") is True
         assert len(results) == 1
         assert results[0]['transitioned'] is True
 
-    def test_deactivation_completes_sets_planet_ability_inactive(self):
-        """When deactivation completes, planet.active_abilities should be set False."""
+    def test_deactivation_completes_transitions_to_inactive(self):
+        """When deactivation completes, component state transitions to INACTIVE."""
         state = ComponentActivationState(
             phase=ActivationPhase.DEACTIVATING,
             progress_ticks=149,
@@ -116,7 +114,6 @@ class TestComponentActivationEngine:
             "OUTER:0:warp_stabilizer": state.to_dict()
         })
         planet = _make_planet(facilities=[facility])
-        planet.active_abilities = {"WarpFieldStabilizer": True}
         empire = _make_empire(colonies=[planet])
         engine = ComponentActivationEngine()
 
@@ -124,7 +121,6 @@ class TestComponentActivationEngine:
 
         updated = facility.get_activation_state("OUTER:0:warp_stabilizer")
         assert updated.phase == ActivationPhase.INACTIVE
-        assert planet.active_abilities.get("WarpFieldStabilizer") is False
 
     def test_three_components_tick_in_parallel(self):
         """Three ACTIVATING components should all tick on the same tick."""
@@ -170,8 +166,9 @@ class TestComponentActivationEngine:
 
         transitioned = [r for r in results if r['transitioned']]
         assert len(transitioned) == 3
-        for name in ["GeologicStabilizer", "StellarStabilizer", "WarpFieldStabilizer"]:
-            assert planet.active_abilities.get(name) is True
+        for key in states:
+            updated = facility.get_activation_state(key)
+            assert updated.phase == ActivationPhase.ACTIVE
 
     def test_inactive_and_active_components_not_ticked(self):
         """INACTIVE and ACTIVE components should not produce results."""

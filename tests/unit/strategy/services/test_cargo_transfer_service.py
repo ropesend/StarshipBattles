@@ -7,8 +7,12 @@ import pytest
 from unittest.mock import MagicMock, PropertyMock
 
 from game.core.hex_math import HexCoord
-from game.strategy.services.cargo_transfer_service import CargoTransferService
+from game.strategy.services.cargo_transfer_service import (
+    CargoTransferService,
+    project_fleet_position,
+)
 from game.strategy.engine.commands import IssueTransferCommand
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.facade.dto.fleet_dto import FleetInfo
 from game.strategy.facade.dto.planet_dto import PlanetInfo
 
@@ -508,3 +512,152 @@ class TestGetInventoryItemsResources:
         resource_items = [r for r in result if r['cargo_type'] == 'metals']
         assert len(resource_items) == 1
         assert resource_items[0]['max_amount'] == 0
+
+
+class TestProjectFleetPosition:
+    """Tests for project_fleet_position() — walks order queue to find effective position."""
+
+    def test_no_orders_returns_current_location(self):
+        """Fleet with no orders projects to current location."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(10, 20)
+        fleet.orders = []
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(10, 20)
+
+    def test_single_move_returns_move_target(self):
+        """Fleet with one MOVE order projects to the move destination."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(5, 5))]
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(5, 5)
+
+    def test_multiple_moves_returns_last_destination(self):
+        """Fleet with MOVE->MOVE projects to the final destination."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [
+            Order(OrderType.MOVE, HexCoord(5, 5)),
+            Order(OrderType.MOVE, HexCoord(10, 10)),
+        ]
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(10, 10)
+
+    def test_move_then_non_move_returns_move_target(self):
+        """Fleet with MOVE->COLONIZE projects to the MOVE destination."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        planet = MagicMock()
+        fleet.orders = [
+            Order(OrderType.MOVE, HexCoord(5, 5)),
+            Order(OrderType.COLONIZE, planet),
+        ]
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(5, 5)
+
+    def test_warp_order_updates_position(self):
+        """WARP orders also update the projected position."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [Order(OrderType.WARP, HexCoord(100, 200))]
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(100, 200)
+
+    def test_move_warp_move_chain(self):
+        """MOVE->WARP->MOVE chain projects to final position."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [
+            Order(OrderType.MOVE, HexCoord(5, 5)),
+            Order(OrderType.WARP, HexCoord(100, 200)),
+            Order(OrderType.MOVE, HexCoord(105, 205)),
+        ]
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(105, 205)
+
+    def test_non_movement_orders_only_returns_current_location(self):
+        """Fleet with only non-movement orders projects to current location."""
+        fleet = MagicMock()
+        fleet.location = HexCoord(10, 20)
+        fleet.orders = [
+            Order(OrderType.COLONIZE, MagicMock()),
+            Order(OrderType.TRANSFER, {'direction': 'unload'}),
+        ]
+
+        result = project_fleet_position(fleet)
+
+        assert result == HexCoord(10, 20)
+
+
+class TestResolveColoniesProjected:
+    """Tests for resolve_colonies with projected fleet position."""
+
+    def test_resolve_colonies_uses_projected_hex_when_primary_empty(self):
+        """When primary hex is empty and fleet has MOVE order, uses move destination."""
+        facade = MagicMock()
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(5, 5))]
+
+        colony = MagicMock()
+        colony.owner_id = 1
+
+        # Primary hex (0,0) empty, fleet location (0,0) empty, projected (5,5) has colony
+        facade.get_planets_at_hex.side_effect = lambda h: [colony] if h == HexCoord(5, 5) else []
+
+        result = CargoTransferService.resolve_colonies(facade, HexCoord(0, 0), fleet)
+
+        assert len(result) == 1
+        assert result[0] == colony
+
+    def test_resolve_colonies_move_chain_uses_final_destination(self):
+        """MOVE->MOVE->TRANSFER: resolve colonies at final MOVE destination."""
+        facade = MagicMock()
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [
+            Order(OrderType.MOVE, HexCoord(5, 5)),
+            Order(OrderType.MOVE, HexCoord(10, 10)),
+        ]
+
+        colony = MagicMock()
+        colony.owner_id = 1
+
+        facade.get_planets_at_hex.side_effect = lambda h: [colony] if h == HexCoord(10, 10) else []
+
+        result = CargoTransferService.resolve_colonies(facade, HexCoord(0, 0), fleet)
+
+        assert len(result) == 1
+        assert result[0] == colony
+
+    def test_resolve_colonies_primary_hex_takes_priority(self):
+        """When primary hex has colonies, projected position is not checked."""
+        facade = MagicMock()
+        fleet = MagicMock()
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(5, 5))]
+
+        colony_at_primary = MagicMock()
+        colony_at_primary.owner_id = 1
+
+        facade.get_planets_at_hex.return_value = [colony_at_primary]
+
+        result = CargoTransferService.resolve_colonies(facade, HexCoord(0, 0), fleet)
+
+        assert len(result) == 1
+        assert result[0] == colony_at_primary
+        # Should only be called once (primary hex found colonies)
+        facade.get_planets_at_hex.assert_called_once()

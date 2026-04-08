@@ -9,12 +9,36 @@ PROJ-162: Extract CargoTransferService from UI Dialogs
 
 from typing import List, Dict, Any, Optional, TYPE_CHECKING, Union
 
+from game.strategy.data.order_types import OrderType, MOVEMENT_ORDER_TYPES
+
 if TYPE_CHECKING:
     from game.strategy.engine.commands import IssueTransferCommand
     from game.core.hex_math import HexCoord
     from game.strategy.facade.dto.fleet_dto import FleetInfo
     from game.strategy.facade.dto.planet_dto import PlanetInfo
     from game.strategy.data.fleet import Fleet
+
+
+def project_fleet_position(fleet: 'Fleet') -> 'HexCoord':
+    """Project where a fleet will be after executing all queued orders.
+
+    Walks the order queue and tracks MOVE/WARP destinations. Returns the
+    last movement destination, or the fleet's current location if no
+    movement orders are queued.
+
+    Args:
+        fleet: Fleet with .location and .orders attributes.
+
+    Returns:
+        HexCoord of the fleet's projected position.
+    """
+    position = fleet.location
+    for order in fleet.orders:
+        if order.type in MOVEMENT_ORDER_TYPES and order.type != OrderType.MOVE_TO_FLEET:
+            from game.core.hex_math import HexCoord
+            if isinstance(order.target, HexCoord):
+                position = order.target
+    return position
 
 
 def _extract_population_items(
@@ -81,23 +105,32 @@ class CargoTransferService:
 
     @staticmethod
     def resolve_colonies(facade, hex_coord: 'HexCoord', fleet: 'Fleet') -> List['PlanetInfo']:
-        """Resolve colonies at a hex, with fallback to fleet location.
+        """Resolve colonies at a hex, with fallback to fleet location and projected position.
+
+        Tries in order:
+        1. Primary hex (the explicitly specified location)
+        2. Fleet's current location (handles relative hex from system view)
+        3. Fleet's projected position after queued MOVE/WARP orders
 
         Args:
             facade: Strategy facade for planet lookup
             hex_coord: Primary hex coordinate to check
-            fleet: Fleet object (used for location fallback)
+            fleet: Fleet object (used for location and order-queue fallback)
 
         Returns:
             List of PlanetInfo objects that are colonized (owner_id not None)
         """
         planets = facade.get_planets_at_hex(hex_coord)
 
-        # Fallback: if no planets at clicked hex, try fleet's location
-        # This handles relative hex from system view
-        # Fleet always has location attribute
+        # Fallback 1: if no planets at clicked hex, try fleet's current location
         if not planets and fleet.location:
             planets = facade.get_planets_at_hex(fleet.location)
+
+        # Fallback 2: try fleet's projected position from queued orders
+        if not planets:
+            projected = project_fleet_position(fleet)
+            if projected != fleet.location:
+                planets = facade.get_planets_at_hex(projected)
 
         # Filter to only colonized planets
         colonies = [p for p in planets if p.owner_id is not None]

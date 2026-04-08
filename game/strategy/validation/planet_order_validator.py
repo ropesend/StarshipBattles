@@ -27,8 +27,13 @@ class PlanetOrderValidator:
         facility_instance_id: str,
         ability_name: str,
         component_registry: Optional[Dict[str, Any]] = None,
+        component_key: Optional[str] = None,
     ) -> ValidationResult:
-        """Validate that a generic ability activation order can be issued."""
+        """Validate that a generic ability activation order can be issued.
+
+        Validates at component-key granularity when provided, allowing
+        multiple instances of the same ability to be activated independently.
+        """
         facility = None
         for f in planet.facilities:
             if f.instance_id == facility_instance_id:
@@ -44,17 +49,30 @@ class PlanetOrderValidator:
         if not _facility_has_ability(facility, ability_name, component_registry):
             return ValidationResult.error(f"Facility does not have {ability_name}.")
 
-        # Check ability is not already active
-        active_abilities = getattr(planet, 'active_abilities', {})
-        if active_abilities.get(ability_name, False):
-            return ValidationResult.error(f"{ability_name} is already active.")
+        # Check this specific component is not already active or activating
+        if component_key:
+            from game.strategy.data.component_activation_state import ActivationPhase
+            state = facility.get_activation_state(component_key)
+            if state.phase in (ActivationPhase.ACTIVE, ActivationPhase.ACTIVATING):
+                return ValidationResult.error(f"{ability_name} is already active on this component.")
 
-        # Check no conflicting activation order already queued
-        from game.strategy.data.order_types import OrderType
-        for order in planet.orders:
-            if order.type == OrderType.ACTIVATE_ABILITY and isinstance(order.target, dict):
-                if order.target.get('ability_name') == ability_name:
-                    return ValidationResult.error(f"{ability_name} activation already queued.")
+            # Check no conflicting activation order for this specific component
+            from game.strategy.data.order_types import OrderType
+            for order in planet.orders:
+                if order.type == OrderType.ACTIVATE_ABILITY and isinstance(order.target, dict):
+                    if order.target.get('component_key') == component_key:
+                        return ValidationResult.error(f"{ability_name} activation already queued for this component.")
+        else:
+            # Legacy fallback: check by ability_name (backward compatibility)
+            active_abilities = getattr(planet, 'active_abilities', {})
+            if active_abilities.get(ability_name, False):
+                return ValidationResult.error(f"{ability_name} is already active.")
+
+            from game.strategy.data.order_types import OrderType
+            for order in planet.orders:
+                if order.type == OrderType.ACTIVATE_ABILITY and isinstance(order.target, dict):
+                    if order.target.get('ability_name') == ability_name:
+                        return ValidationResult.error(f"{ability_name} activation already queued.")
 
         return ValidationResult.success()
 
@@ -64,8 +82,12 @@ class PlanetOrderValidator:
         facility_instance_id: str,
         ability_name: str,
         component_registry: Optional[Dict[str, Any]] = None,
+        component_key: Optional[str] = None,
     ) -> ValidationResult:
-        """Validate that a generic ability deactivation order can be issued."""
+        """Validate that a generic ability deactivation order can be issued.
+
+        Validates at component-key granularity when provided.
+        """
         facility = None
         for f in planet.facilities:
             if f.instance_id == facility_instance_id:
@@ -81,19 +103,26 @@ class PlanetOrderValidator:
         if not _facility_has_ability(facility, ability_name, component_registry):
             return ValidationResult.error(f"Facility does not have {ability_name}.")
 
-        # Check ability is active or activating
-        active_abilities = getattr(planet, 'active_abilities', {})
-        is_active = active_abilities.get(ability_name, False)
+        # Check this specific component is active or activating
+        if component_key:
+            from game.strategy.data.component_activation_state import ActivationPhase
+            state = facility.get_activation_state(component_key)
+            if state.phase not in (ActivationPhase.ACTIVE, ActivationPhase.ACTIVATING):
+                return ValidationResult.error(f"{ability_name} is not active on this component.")
+        else:
+            # Legacy fallback: check by ability_name
+            active_abilities = getattr(planet, 'active_abilities', {})
+            is_active = active_abilities.get(ability_name, False)
 
-        if not is_active:
-            from game.strategy.data.order_types import OrderType
-            activating = any(
-                (o.type == OrderType.ACTIVATE_ABILITY and isinstance(o.target, dict)
-                 and o.target.get('ability_name') == ability_name)
-                for o in planet.orders
-            )
-            if not activating:
-                return ValidationResult.error(f"{ability_name} is not active.")
+            if not is_active:
+                from game.strategy.data.order_types import OrderType
+                activating = any(
+                    (o.type == OrderType.ACTIVATE_ABILITY and isinstance(o.target, dict)
+                     and o.target.get('ability_name') == ability_name)
+                    for o in planet.orders
+                )
+                if not activating:
+                    return ValidationResult.error(f"{ability_name} is not active.")
 
         return ValidationResult.success()
 

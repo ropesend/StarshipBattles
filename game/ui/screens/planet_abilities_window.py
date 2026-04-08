@@ -12,8 +12,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIButton, UILabel
 
-from game.core.patterns.layer_iterator import iter_components
-from game.strategy.data.order_types import OrderType
+from game.core.patterns.layer_iterator import iter_keyed_components
+from game.strategy.data.component_activation_state import ActivationPhase
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +54,11 @@ class PlanetAbilitiesWindow(UIWindow):
         self._build_ui()
 
     def _build_ui(self):
-        """Build ability rows."""
+        """Build ability rows — one per activatable component instance."""
         container = self.get_container()
         y = 10
 
-        # Scan planet facilities for toggleable abilities
+        # Scan planet facilities for toggleable abilities (per-component granularity)
         abilities_found = self._scan_abilities()
 
         if not abilities_found:
@@ -71,31 +71,42 @@ class PlanetAbilitiesWindow(UIWindow):
             self._widgets.append(lbl)
             return
 
-        for ability_name, display_name, facility_id, facility_name in abilities_found:
-            # Ability name + facility
-            name_text = f"{display_name} ({facility_name})"
+        for entry in abilities_found:
+            ability_name = entry['ability_name']
+            display_name = entry['display_name']
+            facility_id = entry['facility_id']
+            facility_name = entry['facility_name']
+            component_key = entry['component_key']
+            instance_label = entry['instance_label']
+            row_key = f"{facility_id}:{component_key}"
+
+            # Ability name + facility + instance number
+            name_text = f"{display_name} ({facility_name}{instance_label})"
             name_lbl = UILabel(
-                relative_rect=pygame.Rect(10, y, 250, self.ROW_HEIGHT),
+                relative_rect=pygame.Rect(10, y, 290, self.ROW_HEIGHT),
                 text=name_text,
                 manager=self.ui_manager,
                 container=container,
             )
             self._widgets.append(name_lbl)
 
-            # Status label
-            status = self._get_ability_status(ability_name)
+            # Status from component_state (source of truth)
+            status = self._get_component_status(facility_id, component_key)
             status_lbl = UILabel(
-                relative_rect=pygame.Rect(265, y, 150, self.ROW_HEIGHT),
+                relative_rect=pygame.Rect(305, y, 110, self.ROW_HEIGHT),
                 text=status,
                 manager=self.ui_manager,
                 container=container,
             )
             self._widgets.append(status_lbl)
-            self._status_labels[ability_name] = status_lbl
+            self._status_labels[row_key] = status_lbl
 
-            # Toggle button
-            active_abilities = getattr(self.planet, 'active_abilities', {})
-            is_active = active_abilities.get(ability_name, False)
+            # Determine active state from component_state
+            facility = next((f for f in self.planet.facilities if f.instance_id == facility_id), None)
+            is_active = False
+            if facility:
+                state = facility.get_activation_state(component_key)
+                is_active = state.phase in (ActivationPhase.ACTIVE, ActivationPhase.ACTIVATING)
 
             btn_text = "Deactivate" if is_active else "Activate"
             btn = UIButton(
@@ -106,68 +117,88 @@ class PlanetAbilitiesWindow(UIWindow):
             )
             btn._ability_name = ability_name
             btn._facility_id = facility_id
+            btn._component_key = component_key
             btn._is_active = is_active
             self._widgets.append(btn)
-            self._toggle_buttons[ability_name] = btn
+            self._toggle_buttons[row_key] = btn
 
             y += self.ROW_HEIGHT
 
-    def _scan_abilities(self) -> List[tuple]:
-        """Scan planet facilities for toggleable abilities.
+    def _scan_abilities(self) -> List[Dict]:
+        """Scan planet facilities for toggleable abilities at per-component granularity.
 
-        Returns list of (ability_name, display_name, facility_id, facility_name).
+        Returns list of dicts with keys: ability_name, display_name, facility_id,
+        facility_name, component_key, instance_label.
+
+        Each activatable component gets its own entry — no deduplication by ability name.
+        When multiple instances of the same ability exist, they get numbered labels
+        (e.g., " #1", " #2").
         """
         from game.strategy.services.component_inspector import extract_abilities_from_component
 
-        results = []
+        raw_entries = []
         for facility in self.planet.facilities:
             if not getattr(facility, 'is_operational', True):
                 continue
-            for comp in iter_components(facility.design_data):
+            for comp_key, layer_name, comp in iter_keyed_components(facility.design_data):
                 abilities = extract_abilities_from_component(comp, self.component_registry)
                 for ability_name, display_name in TOGGLEABLE_ABILITIES.items():
                     if ability_name in abilities:
                         ability_data = abilities[ability_name]
-                        # Must have activation_time to be toggleable
                         if isinstance(ability_data, dict) and 'activation_time' in ability_data:
-                            # Avoid duplicates
-                            if not any(r[0] == ability_name for r in results):
-                                results.append((
-                                    ability_name,
-                                    display_name,
-                                    facility.instance_id,
-                                    facility.name,
-                                ))
-        return results
+                            raw_entries.append({
+                                'ability_name': ability_name,
+                                'display_name': display_name,
+                                'facility_id': facility.instance_id,
+                                'facility_name': facility.name,
+                                'component_key': comp_key,
+                            })
 
-    def _get_ability_status(self, ability_name: str) -> str:
-        """Get display status for an ability including tick progress."""
-        active_abilities = getattr(self.planet, 'active_abilities', {})
-        is_active = active_abilities.get(ability_name, False)
+        # Add instance labels when multiple entries share the same ability_name
+        ability_counts: Dict[str, int] = {}
+        for entry in raw_entries:
+            name = entry['ability_name']
+            ability_counts[name] = ability_counts.get(name, 0) + 1
 
-        # Check for pending activation/deactivation orders
-        for order in self.planet.orders:
-            target = order.target if isinstance(order.target, dict) else {}
-            order_ability = target.get('ability_name', '')
+        ability_indices: Dict[str, int] = {}
+        for entry in raw_entries:
+            name = entry['ability_name']
+            if ability_counts[name] > 1:
+                idx = ability_indices.get(name, 0) + 1
+                ability_indices[name] = idx
+                entry['instance_label'] = f" #{idx}"
+            else:
+                entry['instance_label'] = ""
 
-            # Generic ability orders
-            if order.type == OrderType.ACTIVATE_ABILITY and order_ability == ability_name:
-                progress = order.execution_progress
-                return f"Activating ({progress} ticks)"
-            if order.type == OrderType.DEACTIVATE_ABILITY and order_ability == ability_name:
-                progress = order.execution_progress
-                return f"Deactivating ({progress} ticks)"
+        return raw_entries
 
-        return "Active" if is_active else "Inactive"
+    def _get_component_status(self, facility_id: str, component_key: str) -> str:
+        """Get display status for a specific component's activation state."""
+        facility = next((f for f in self.planet.facilities if f.instance_id == facility_id), None)
+        if not facility:
+            return "Unknown"
+
+        state = facility.get_activation_state(component_key)
+
+        if state.phase == ActivationPhase.ACTIVATING:
+            remaining = state.required_ticks - state.progress_ticks
+            return f"Activating ({remaining})"
+        elif state.phase == ActivationPhase.DEACTIVATING:
+            remaining = state.required_ticks - state.progress_ticks
+            return f"Deactivating ({remaining})"
+        elif state.phase == ActivationPhase.ACTIVE:
+            return "Active"
+        return "Inactive"
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """Handle toggle button clicks."""
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             ability_name = getattr(event.ui_element, '_ability_name', None)
             facility_id = getattr(event.ui_element, '_facility_id', None)
+            component_key = getattr(event.ui_element, '_component_key', None)
             is_active = getattr(event.ui_element, '_is_active', None)
 
-            if ability_name and facility_id is not None:
+            if ability_name and facility_id is not None and component_key:
                 order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
 
                 from game.strategy.engine.commands import IssuePlanetOrderCommand
@@ -176,6 +207,7 @@ class PlanetAbilitiesWindow(UIWindow):
                     order_type=order_type,
                     facility_instance_id=facility_id,
                     ability_name=ability_name,
+                    component_key=component_key,
                 )
                 result = self.facade.handle_command(cmd)
                 if result and not result.is_valid:
@@ -186,9 +218,10 @@ class PlanetAbilitiesWindow(UIWindow):
                     event.ui_element._is_active = new_active
                     event.ui_element.set_text("Deactivate" if new_active else "Activate")
                     # Update status label
-                    if ability_name in self._status_labels:
-                        self._status_labels[ability_name].set_text(
-                            self._get_ability_status(ability_name)
+                    row_key = f"{facility_id}:{component_key}"
+                    if row_key in self._status_labels:
+                        self._status_labels[row_key].set_text(
+                            self._get_component_status(facility_id, component_key)
                         )
                 return True
 

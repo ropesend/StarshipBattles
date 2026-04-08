@@ -118,9 +118,6 @@ class Planet:
     energy_capacity: float = 0.0     # Max (recalculated from batteries each tick)
     energy_generation: float = 0.0   # Rate (recalculated from generators each tick)
 
-    # Generic activatable abilities state
-    active_abilities: Dict[str, bool] = field(default_factory=dict)
-
     # Atmosphere modification target (gas formula -> target Pa)
     atmosphere_target: Dict[str, float] = field(default_factory=dict)
 
@@ -140,13 +137,25 @@ class Planet:
     def __hash__(self):
         return hash((self.name, self.location, self.orbit_distance))
 
+    @property
+    def active_abilities(self) -> Dict[str, bool]:
+        """Derived summary: ability_name -> True if ANY component with that ability is ACTIVE.
+
+        Scans all facility component_states for ACTIVE phase entries.
+        This is the single source of truth — no separate stored field.
+        """
+        result: Dict[str, bool] = {}
+        for facility in self.facilities:
+            for _key, state_data in facility.component_states.items():
+                if isinstance(state_data, dict) and state_data.get('phase') == 'active':
+                    ability_name = state_data.get('ability_name', '')
+                    if ability_name:
+                        result[ability_name] = True
+        return result
+
     def is_ability_active(self, ability_key: str) -> bool:
         """Check if an activatable strategic ability is active on this planet."""
         return self.active_abilities.get(ability_key, False)
-
-    def set_ability_active(self, ability_key: str, active: bool):
-        """Set an activatable strategic ability's state on this planet."""
-        self.active_abilities[ability_key] = active
 
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
@@ -400,7 +409,6 @@ class Planet:
             'energy': self.energy,
             'energy_capacity': self.energy_capacity,
             'energy_generation': self.energy_generation,
-            'active_abilities': dict(self.active_abilities),
             'atmosphere_target': dict(self.atmosphere_target),
             'orders': [o.to_dict() for o in self.orders],
         }
@@ -506,7 +514,6 @@ class Planet:
             energy=data.get('energy', 0.0),
             energy_capacity=data.get('energy_capacity', 0.0),
             energy_generation=data.get('energy_generation', 0.0),
-            active_abilities=data.get('active_abilities', {}),
             atmosphere_target=data.get('atmosphere_target', {}),
             orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
         )
