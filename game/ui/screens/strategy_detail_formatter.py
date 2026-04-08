@@ -271,10 +271,28 @@ class StrategyDetailFormatter:
             if self.btn_planet_orders:
                 self.btn_planet_orders.show()
             if self.btn_atmosphere:
-                self.btn_atmosphere.show()
+                if self._planet_has_atmosphere_modifier(obj):
+                    self.btn_atmosphere.show()
             if self.btn_abilities:
                 self.btn_abilities.show()
         self._layout_action_buttons()
+
+    def _planet_has_atmosphere_modifier(self, planet) -> bool:
+        """Check if a planet has any operational facility with AtmosphereModifier ability."""
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        from game.core.patterns.layer_iterator import iter_components
+
+        registries = getattr(self.scene, 'session', None)
+        registries = getattr(registries, 'registries', None) if registries else None
+
+        for facility in getattr(planet, 'facilities', []):
+            if not getattr(facility, 'is_operational', True):
+                continue
+            for comp in iter_components(facility.design_data):
+                abilities = extract_abilities_from_component(comp, registries)
+                if 'AtmosphereModifier' in abilities:
+                    return True
+        return False
 
     def _layout_action_buttons(self):
         """Position all visible action buttons in a horizontal row at the bottom."""

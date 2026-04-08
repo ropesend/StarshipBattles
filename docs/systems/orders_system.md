@@ -109,7 +109,10 @@ Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` rea
 
 ### Planet Action Orders (`PLANET_ACTION_ORDER_TYPES`)
 
-Handled by `PlanetActionEngine`. Processed every tick (no speed concept — planets act immediately).
+Handled by `PlanetActionEngine`. All consecutive planet action orders dispatch instantly
+on the same tick (zero-tick dispatch). Processing stops at the first non-planet-action
+order in the queue. This ensures multiple activations queued on the same turn all begin
+with equal progress.
 
 | OrderType | Target | Behavior |
 |-----------|--------|----------|

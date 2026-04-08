@@ -185,3 +185,45 @@ class TestAtmosphereEngine:
         engine.process_atmosphere([empire])
 
         assert planet.atmosphere["O2"] == pytest.approx(10000.0)
+
+    def test_no_facility_no_change(self):
+        """Target set but no facility with AtmosphereModifier — no change."""
+        planet = MockPlanet(
+            atmosphere={},
+            atmosphere_target={"N2": 150000.0},
+            facilities=[]
+        )
+        empire = MockEmpire(colonies=[planet])
+        engine = AtmosphereEngine()
+
+        engine.process_atmosphere([empire])
+
+        assert planet.atmosphere.get("N2", 0.0) == 0.0
+
+    def test_earth_like_rate_reaches_target_in_about_1000_turns(self):
+        """Default modification_rate should reach 150kPa on Earth-like planet in ~1000 turns."""
+        # modification_rate = 7.8e15 kg/turn
+        # Earth: surface_area=5.1e14, gravity=9.8
+        # Pa/turn = rate * gravity / area = 7.8e15 * 9.8 / 5.1e14 ≈ 150 Pa/turn
+        # Turns for 150,000 Pa = 150,000 / 150 = 1000
+        rate = 7.8e15
+        planet = MockPlanet(
+            atmosphere={},
+            atmosphere_target={"N2": 150000.0},
+            surface_area=5.1e14,
+            surface_gravity=9.8,
+            facilities=[_make_atmo_facility(rate)]
+        )
+        empire = MockEmpire(colonies=[planet])
+        engine = AtmosphereEngine()
+
+        # Run one turn
+        engine.process_atmosphere([empire])
+        pa_per_turn = planet.atmosphere.get("N2", 0.0)
+
+        # Should be approximately 150 Pa/turn
+        assert pa_per_turn == pytest.approx(150.0, rel=0.05)
+
+        # At this rate, ~1000 turns to reach 150,000 Pa
+        estimated_turns = 150000.0 / pa_per_turn
+        assert 900 < estimated_turns < 1100

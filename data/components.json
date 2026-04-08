@@ -3047,7 +3047,7 @@
             "sprite_index": 0,
             "abilities": {
                 "AtmosphereModifier": {
-                    "modification_rate": 1000000000000.0
+                    "modification_rate": 7800000000000000.0
                 },
                 "CrewRequired": 50
             },

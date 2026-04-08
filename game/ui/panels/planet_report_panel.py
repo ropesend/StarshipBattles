@@ -381,7 +381,7 @@ class PlanetReportPanel:
             # Quality label (deposit)
             qual_label = UILabel(
                 relative_rect=pygame.Rect(col_x, 48, col_w, 20),
-                text=f"{quality:.0f}" if quality else "-",
+                text=f"{quality:.1f}" if quality else "-",
                 manager=self.manager,
                 container=self.resource_panel
             )
