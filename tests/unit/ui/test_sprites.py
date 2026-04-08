@@ -186,27 +186,27 @@ class TestSpriteManagerNamingConventions:
         """Test loading files matching Comp_* pattern."""
         mgr = SpriteManager.instance()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create Comp_001.png -> index 0
+            # Create Comp_001.png -> index 1
             self._create_test_image(os.path.join(tmpdir, "Comp_001.png"))
-            # Create Comp_005.png -> index 4
+            # Create Comp_005.png -> index 5
             self._create_test_image(os.path.join(tmpdir, "Comp_005.png"))
 
             mgr._load_from_directory(tmpdir)
 
-            assert mgr.get_sprite(0) is not None, "Comp_001 should be at index 0"
-            assert mgr.get_sprite(4) is not None, "Comp_005 should be at index 4"
-            assert mgr.get_sprite(1) is None, "Index 1 should be None (gap)"
+            assert mgr.get_sprite(1) is not None, "Comp_001 should be at index 1"
+            assert mgr.get_sprite(5) is not None, "Comp_005 should be at index 5"
+            assert mgr.get_sprite(2) is None, "Index 2 should be None (gap)"
 
     def test_portrait_pattern_parsing(self):
         """Test loading files matching {resolution}Portrait_Comp_* pattern."""
         mgr = SpriteManager.instance()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create 64Portrait_Comp_001.png -> index 0
+            # Create 64Portrait_Comp_001.png -> index 1
             self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_001.png"))
 
             mgr._load_from_directory(tmpdir)
 
-            assert mgr.get_sprite(0) is not None, "64Portrait_Comp_001 should be at index 0"
+            assert mgr.get_sprite(1) is not None, "64Portrait_Comp_001 should be at index 1"
 
     def test_portrait_pattern_various_resolutions(self):
         """Test parsing works for different resolution prefixes."""
@@ -217,8 +217,8 @@ class TestSpriteManagerNamingConventions:
 
             mgr._load_from_directory(tmpdir)
 
-            assert mgr.get_sprite(0) is not None, "Comp_001 should be at index 0"
-            assert mgr.get_sprite(2) is not None, "Comp_003 should be at index 2"
+            assert mgr.get_sprite(1) is not None, "Comp_001 should be at index 1"
+            assert mgr.get_sprite(3) is not None, "Comp_003 should be at index 3"
 
     def test_unexpected_prefix_skipped(self):
         """Test loading files with unexpected prefixes are skipped."""
@@ -232,7 +232,7 @@ class TestSpriteManagerNamingConventions:
             mgr._load_from_directory(tmpdir)
 
             # Should only have one sprite (the valid one)
-            assert mgr.get_sprite(0) is not None
+            assert mgr.get_sprite(1) is not None
             count = sum(1 for s in mgr.sprites if s is not None)
             assert count == 1
 
@@ -240,19 +240,20 @@ class TestSpriteManagerNamingConventions:
         """Test sparse sprite list (indices with gaps)."""
         mgr = SpriteManager.instance()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create sprites at indices 0, 2, 5 (with gaps)
-            self._create_test_image(os.path.join(tmpdir, "Comp_001.bmp"))  # index 0
-            self._create_test_image(os.path.join(tmpdir, "Comp_003.bmp"))  # index 2
-            self._create_test_image(os.path.join(tmpdir, "Comp_006.bmp"))  # index 5
+            # Create sprites at indices 1, 3, 6 (with gaps)
+            self._create_test_image(os.path.join(tmpdir, "Comp_001.bmp"))  # index 1
+            self._create_test_image(os.path.join(tmpdir, "Comp_003.bmp"))  # index 3
+            self._create_test_image(os.path.join(tmpdir, "Comp_006.bmp"))  # index 6
 
             mgr._load_from_directory(tmpdir)
 
-            assert mgr.get_sprite(0) is not None, "Index 0 should have sprite"
-            assert mgr.get_sprite(1) is None, "Index 1 should be None (gap)"
-            assert mgr.get_sprite(2) is not None, "Index 2 should have sprite"
-            assert mgr.get_sprite(3) is None, "Index 3 should be None (gap)"
+            assert mgr.get_sprite(0) is None, "Index 0 should be None (no Comp_000)"
+            assert mgr.get_sprite(1) is not None, "Index 1 should have sprite"
+            assert mgr.get_sprite(2) is None, "Index 2 should be None (gap)"
+            assert mgr.get_sprite(3) is not None, "Index 3 should have sprite"
             assert mgr.get_sprite(4) is None, "Index 4 should be None (gap)"
-            assert mgr.get_sprite(5) is not None, "Index 5 should have sprite"
+            assert mgr.get_sprite(5) is None, "Index 5 should be None (gap)"
+            assert mgr.get_sprite(6) is not None, "Index 6 should have sprite"
 
 
 class TestSpriteManagerThreadSafety:

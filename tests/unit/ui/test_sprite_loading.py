@@ -39,15 +39,15 @@ class TestSpriteLoading:
         self.mgr.load_sprites(base_path)
 
         # Verify
-        # Index 0 should be filled (Comp_001)
-        assert self.mgr.get_sprite(0) is not None
-        # Index 4 should be filled (Comp_005)
-        assert self.mgr.get_sprite(4) is not None
-        # Index 9 should be filled (Comp_010)
-        assert self.mgr.get_sprite(9) is not None
+        # Index 1 should be filled (Comp_001)
+        assert self.mgr.get_sprite(1) is not None
+        # Index 5 should be filled (Comp_005)
+        assert self.mgr.get_sprite(5) is not None
+        # Index 10 should be filled (Comp_010)
+        assert self.mgr.get_sprite(10) is not None
 
-        # Index 1 should be None (not in files)
-        assert self.mgr.get_sprite(1) is None
+        # Index 2 should be None (not in files)
+        assert self.mgr.get_sprite(2) is None
 
         # Verify image load calls
         expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Components 64", "Comp_001.bmp")

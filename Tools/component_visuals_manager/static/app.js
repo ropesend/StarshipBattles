@@ -31,6 +31,28 @@ async function init() {
     }
 }
 
+async function shutdownServer() {
+    if (!confirm("Are you sure you want to shut down the server?\nThis will terminate the Python process.")) {
+        return;
+    }
+    
+    showStatus("Shutting down...", "saving");
+    try {
+        const res = await fetch('/api/shutdown', { method: 'POST' });
+        if (res.ok) {
+            document.body.innerHTML = `
+                <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0c10; color: #fff; font-family: sans-serif;">
+                    <h1 style="color: #f85149; margin-bottom: 1rem;">Server Shutdown</h1>
+                    <p style="color: #8b949e;">The backend process has been terminated.</p>
+                    <p style="color: #8b949e; margin-top: 2rem; font-size: 0.8rem;">You can now close this tab.</p>
+                </div>
+            `;
+        }
+    } catch (e) {
+        showStatus("Shutdown Failed", "error");
+    }
+}
+
 // --- Rendering ---
 function renderAll() {
     renderComponentList();
