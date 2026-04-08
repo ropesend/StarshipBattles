@@ -2,7 +2,7 @@
 Test scenario fixtures for Combat Lab service tests.
 
 This module provides helper functions and fixtures for testing code that
-interacts with TestScenario and TestMetadata from the simulation_tests framework.
+interacts with TestScenario and TestMetadata from the combat_lab framework.
 
 Usage:
     from tests.fixtures.test_scenarios import create_test_metadata, create_mock_test_scenario
@@ -62,7 +62,7 @@ def create_test_metadata(
             conditions=["Distance: 50px", "Stationary target"]
         )
     """
-    from simulation_tests.scenarios.base import TestMetadata
+    from combat_lab.scenarios.base import TestMetadata
 
     return TestMetadata(
         test_id=test_id,
@@ -212,7 +212,7 @@ def create_scenario_info(
     test_id: str = "TEST-001",
     metadata: Optional[Any] = None,
     scenario_class: Optional[type] = None,
-    file_path: str = "simulation_tests/scenarios/test_scenarios.py",
+    file_path: str = "combat_lab/scenarios/test_scenarios.py",
     last_run_results: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
@@ -235,7 +235,7 @@ def create_scenario_info(
         'test_id': test_id,
         'metadata': metadata,
         'class': scenario_class or Mock(),
-        'module': f"simulation_tests.scenarios.{test_id.lower().replace('-', '_')}",
+        'module': f"combat_lab.scenarios.{test_id.lower().replace('-', '_')}",
         'file': file_path,
         'last_run_results': last_run_results,
     }

@@ -39,9 +39,9 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 | strategy | 29 | 4,206 | 387 | 1,248 | 5,841 |
 | strategy (Files) | 20 | 2,501 | 363 | 719 | 3,583 |
 | strategy\\facade | 9 | 1,705 | 24 | 529 | 2,258 |
-| test_framework | 8 | 2,001 | 56 | 607 | 2,664 |
-| test_framework (Files) | 1 | 50 | 6 | 21 | 77 |
-| test_framework\\services | 7 | 1,951 | 50 | 586 | 2,587 |
+| combat_lab | 8 | 2,001 | 56 | 607 | 2,664 |
+| combat_lab (Files) | 1 | 50 | 6 | 21 | 77 |
+| combat_lab\\services | 7 | 1,951 | 50 | 586 | 2,587 |
 | ui | 10 | 1,561 | 236 | 474 | 2,271 |
 | unit | 331 | 50,952 | 5,359 | 16,354 | 72,665 |
 | unit (Files) | 19 | 1,420 | 287 | 440 | 2,147 |

@@ -158,9 +158,9 @@ Pytest fixtures: `project_root`, `data_dir`, `assets_dir`, `test_data_dir`, `uni
 | `tests/simulation/` | Simulation subsystem tests | Medium | `fresh_registries` |
 | `tests/regression/` | Bug regression tests | Varies | `fresh_registries` |
 | `tests/performance/` | Performance benchmarks | Slow | `fresh_registries` |
-| `simulation_tests/` | Combat Lab scenarios (separate pytest root) | Slow | Own conftest and data |
+| `combat_lab/` | Combat Lab scenarios (separate pytest root) | Slow | Own conftest and data |
 
-The `simulation_tests/` directory has its own `pytest.ini` and is **excluded** from the main test run (`--ignore=simulation_tests` in root `pytest.ini`). Run it separately.
+The `combat_lab/` directory has its own `pytest.ini` and is **excluded** from the main test run (`--ignore=combat_lab` in root `pytest.ini`). Run it separately.
 
 ---
 
@@ -178,7 +178,7 @@ pytest tests/unit/simulation/test_damage.py
 pytest tests/integration/
 
 # Simulation tests (separate suite)
-cd simulation_tests && pytest
+cd combat_lab && pytest
 
 # With coverage
 pytest tests/ --cov=game -n 12
@@ -187,7 +187,7 @@ pytest tests/ --cov=game -n 12
 pytest tests/ -k "test_shield_absorb" -n 0
 ```
 
-Default `pytest.ini` settings: `testpaths = tests`, `addopts = -n 4 --ignore=Refactoring --ignore-glob=*.txt --ignore=simulation_tests --junitxml=./.pytest_cache/test-results.xml`.
+Default `pytest.ini` settings: `testpaths = tests`, `addopts = -n 4 --ignore=Refactoring --ignore-glob=*.txt --ignore=combat_lab --junitxml=./.pytest_cache/test-results.xml`.
 
 ---
 

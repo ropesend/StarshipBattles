@@ -178,7 +178,7 @@ class TestShipClassMutation:
         weapons AND no operational engines = derelict.
 
         The per-component RequiresCommandAndControl check is tested
-        separately in simulation_tests (CNC category).
+        separately in combat_lab (CNC category).
         """
         # Add bridge and crew support
         bridge = create_component('bridge', registries=self.registries)

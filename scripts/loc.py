@@ -30,7 +30,7 @@ TEST_SECTIONS = {
     "tests/fixtures": "tests/fixtures",
     "tests/infrastructure": "tests/infrastructure",
 }
-EXTRA_TEST_DIRS = ["simulation_tests", "test_framework"]
+EXTRA_TEST_DIRS = ["combat_lab"]
 EXTRA_TEST_FILES = ["conftest.py"]
 
 # -- File type groups ---------------------------------------------------------

@@ -130,8 +130,8 @@ class Paths:
     CRASH_LOG: str = os.path.join(LOGS_DIR, "crash_log.txt")
     PROFILING_HISTORY: str = os.path.join(LOGS_DIR, "profiling_history.json")
 
-    # === Simulation Tests Output ===
-    SIMULATION_TESTS_OUTPUT_DIR: str = os.path.join(ROOT_DIR, "simulation_tests", "output")
+    # === Combat Lab Output ===
+    COMBAT_LAB_OUTPUT_DIR: str = os.path.join(ROOT_DIR, "combat_lab", "output")
 
     # === pathlib.Path Accessors ===
     @classmethod

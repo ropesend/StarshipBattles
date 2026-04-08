@@ -1,8 +1,0 @@
-{
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "30 dmg guaranteed-hit beam attacker for pipeline overflow tests"},
-  "name": "Test Attacker Beam 30dmg Guaranteed",
-  "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
-  "layers": {"CORE": [{"id": "test_beam_30dmg_guaranteed"}], "ARMOR": []},
-  "_test_notes": "30 damage per hit, guaranteed hit. For pipeline overflow tests where damage exceeds shield + SRA.",
-  "expected_stats": {"mass": 400.0}
-}

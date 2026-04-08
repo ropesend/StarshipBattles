@@ -8,9 +8,9 @@ screen's pygame rendering through callback interfaces.
 import time
 import pygame
 
-from test_framework.runner import TestRunner
-from test_framework.battle_state_capture import BattleStateCapture
-from simulation_tests.logging_config import get_logger
+from combat_lab.runner import TestRunner
+from combat_lab.battle_state_capture import BattleStateCapture
+from combat_lab.logging_config import get_logger
 
 logger = get_logger(__name__)
 

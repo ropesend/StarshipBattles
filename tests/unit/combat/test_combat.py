@@ -100,7 +100,7 @@ class TestDamageLayerLogic:
 
         Derelict is now a functional definition (can't fight), not tied to
         a specific component like the bridge. Per-component C&C requirements
-        are tested in simulation_tests (CNC category).
+        are tested in combat_lab (CNC category).
         """
         # The ship (Frigate) starts with no weapons/engines → derelict
         self.ship.recalculate_stats()

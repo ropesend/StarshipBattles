@@ -580,24 +580,24 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 | saves\\testing races\\turns | 2 | 22,236 | 0 | 0 | 22,236 |
 | scripts | 9 | 559 | 159 | 189 | 907 |
 | ships | 6 | 4,137 | 0 | 0 | 4,137 |
-| simulation_tests | 375 | 66,117 | 908 | 3,138 | 70,163 |
-| simulation_tests (Files) | 9 | 11,023 | 87 | 688 | 11,798 |
-| simulation_tests\\battle_states | 298 | 41,022 | 0 | 0 | 41,022 |
-| simulation_tests\\data | 41 | 4,564 | 35 | 349 | 4,948 |
-| simulation_tests\\data (Files) | 8 | 2,083 | 27 | 197 | 2,307 |
-| simulation_tests\\data\\schemas | 5 | 762 | 0 | 71 | 833 |
-| simulation_tests\\data\\ship_templates | 4 | 369 | 8 | 59 | 436 |
-| simulation_tests\\data\\ships | 24 | 1,350 | 0 | 22 | 1,372 |
-| simulation_tests\\scenarios | 13 | 6,905 | 688 | 1,353 | 8,946 |
-| simulation_tests\\specs | 1 | 555 | 0 | 171 | 726 |
-| simulation_tests\\suites | 1 | 168 | 0 | 59 | 227 |
-| simulation_tests\\tests | 9 | 1,127 | 90 | 317 | 1,534 |
-| simulation_tests\\utils | 2 | 243 | 8 | 74 | 325 |
-| simulation_tests\\validation | 1 | 510 | 0 | 127 | 637 |
-| test_framework | 18 | 2,830 | 231 | 775 | 3,836 |
-| test_framework (Files) | 7 | 1,508 | 102 | 410 | 2,020 |
-| test_framework\\scenarios | 4 | 308 | 41 | 79 | 428 |
-| test_framework\\services | 7 | 1,014 | 88 | 286 | 1,388 |
+| combat_lab | 375 | 66,117 | 908 | 3,138 | 70,163 |
+| combat_lab (Files) | 9 | 11,023 | 87 | 688 | 11,798 |
+| combat_lab\\battle_states | 298 | 41,022 | 0 | 0 | 41,022 |
+| combat_lab\\data | 41 | 4,564 | 35 | 349 | 4,948 |
+| combat_lab\\data (Files) | 8 | 2,083 | 27 | 197 | 2,307 |
+| combat_lab\\data\\schemas | 5 | 762 | 0 | 71 | 833 |
+| combat_lab\\data\\ship_templates | 4 | 369 | 8 | 59 | 436 |
+| combat_lab\\data\\ships | 24 | 1,350 | 0 | 22 | 1,372 |
+| combat_lab\\scenarios | 13 | 6,905 | 688 | 1,353 | 8,946 |
+| combat_lab\\specs | 1 | 555 | 0 | 171 | 726 |
+| combat_lab\\suites | 1 | 168 | 0 | 59 | 227 |
+| combat_lab\\tests | 9 | 1,127 | 90 | 317 | 1,534 |
+| combat_lab\\utils | 2 | 243 | 8 | 74 | 325 |
+| combat_lab\\validation | 1 | 510 | 0 | 127 | 637 |
+| combat_lab | 18 | 2,830 | 231 | 775 | 3,836 |
+| combat_lab (Files) | 7 | 1,508 | 102 | 410 | 2,020 |
+| combat_lab\\scenarios | 4 | 308 | 41 | 79 | 428 |
+| combat_lab\\services | 7 | 1,014 | 88 | 286 | 1,388 |
 | tests | 500 | 70,862 | 7,144 | 20,944 | 98,950 |
 | tests (Files) | 4 | 285 | 30 | 104 | 419 |
 | tests\\fixtures | 13 | 1,752 | 66 | 362 | 2,180 |
@@ -618,9 +618,9 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 | tests\\strategy | 25 | 3,449 | 372 | 958 | 4,779 |
 | tests\\strategy (Files) | 20 | 2,501 | 363 | 719 | 3,583 |
 | tests\\strategy\\facade | 5 | 948 | 9 | 239 | 1,196 |
-| tests\\test_framework | 8 | 2,001 | 56 | 607 | 2,664 |
-| tests\\test_framework (Files) | 1 | 50 | 6 | 21 | 77 |
-| tests\\test_framework\\services | 7 | 1,951 | 50 | 586 | 2,587 |
+| tests\\combat_lab | 8 | 2,001 | 56 | 607 | 2,664 |
+| tests\\combat_lab (Files) | 1 | 50 | 6 | 21 | 77 |
+| tests\\combat_lab\\services | 7 | 1,951 | 50 | 586 | 2,587 |
 | tests\\ui | 10 | 1,561 | 236 | 474 | 2,271 |
 | tests\\unit | 331 | 50,952 | 5,359 | 16,354 | 72,665 |
 | tests\\unit (Files) | 19 | 1,420 | 287 | 440 | 2,147 |

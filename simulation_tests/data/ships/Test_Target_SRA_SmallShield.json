@@ -1,7 +1,0 @@
-{
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Target with small shield (10) + SRA (15) for cap test"},
-  "name": "Test Target SRA SmallShield", "color": [0, 0, 255], "team_id": 2, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
-  "layers": {"CORE": [{"id": "test_hull_extreme_hp"}, {"id": "test_shield_10"}], "ARMOR": [{"id": "test_sra_15_indestructible"}]},
-  "_test_notes": "Small shield (10 HP max) + SRA (15). SRA recharges 15 but shield caps at 10.",
-  "expected_stats": {"mass": 400.0}
-}

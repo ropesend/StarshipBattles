@@ -1,8 +1,0 @@
-{
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Target with C&C-requiring shield but NO bridge"},
-  "name": "Test Target Shield NoCNC",
-  "color": [0, 0, 255], "team_id": 2, "ship_class": "TestS_2L_CNC", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
-  "layers": {"CORE": [{"id": "test_armor_extreme_hp"}, {"id": "test_shield_200_cnc"}], "ARMOR": []},
-  "_test_notes": "Shield requires C&C but no bridge. Shield should be non-operational.",
-  "expected_stats": {"mass": 400.0}
-}

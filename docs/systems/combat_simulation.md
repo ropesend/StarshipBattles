@@ -301,7 +301,7 @@ After damage reaches hull layers, `_finalize_damage()` runs:
 ### Pipeline Validation
 
 The damage pipeline is validated by integration tests in
-`simulation_tests/scenarios/damage_pipeline_scenarios.py`:
+`combat_lab/scenarios/damage_pipeline_scenarios.py`:
 - PIPELINE-001 through PIPELINE-005: Pairwise and full pipeline combinations
 - PIPELINE-007: SRA recharge cap overflow (excess recharge above max_shields is wasted)
 

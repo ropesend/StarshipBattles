@@ -1,7 +1,7 @@
 """Tests for Combat Lab data path construction.
 
 Ensures that ship JSON and component JSON files are loaded from the correct
-paths (simulation_tests/data/) rather than incorrect relative paths.
+paths (combat_lab/data/) rather than incorrect relative paths.
 """
 import os
 import pytest
@@ -10,29 +10,29 @@ from unittest.mock import Mock, patch, MagicMock
 
 
 class TestDataPathConstruction:
-    """Tests that data paths resolve to simulation_tests/data/ directory."""
+    """Tests that data paths resolve to combat_lab/data/ directory."""
 
-    def test_simulation_tests_data_directory_exists(self):
-        """The simulation_tests/data directory should exist at project root."""
+    def test_combat_lab_data_directory_exists(self):
+        """The combat_lab/data directory should exist at project root."""
         # Get project root (go up from tests/unit/test_lab/)
         project_root = Path(__file__).parent.parent.parent.parent
-        data_dir = project_root / 'simulation_tests' / 'data'
+        data_dir = project_root / 'combat_lab' / 'data'
 
         assert data_dir.exists(), f"Expected {data_dir} to exist"
         assert data_dir.is_dir(), f"Expected {data_dir} to be a directory"
 
     def test_ships_directory_exists(self):
-        """The simulation_tests/data/ships directory should exist."""
+        """The combat_lab/data/ships directory should exist."""
         project_root = Path(__file__).parent.parent.parent.parent
-        ships_dir = project_root / 'simulation_tests' / 'data' / 'ships'
+        ships_dir = project_root / 'combat_lab' / 'data' / 'ships'
 
         assert ships_dir.exists(), f"Expected {ships_dir} to exist"
         assert ships_dir.is_dir(), f"Expected {ships_dir} to be a directory"
 
     def test_components_json_exists(self):
-        """The simulation_tests/data/components.json file should exist."""
+        """The combat_lab/data/components.json file should exist."""
         project_root = Path(__file__).parent.parent.parent.parent
-        components_file = project_root / 'simulation_tests' / 'data' / 'components.json'
+        components_file = project_root / 'combat_lab' / 'data' / 'components.json'
 
         assert components_file.exists(), f"Expected {components_file} to exist"
         assert components_file.is_file(), f"Expected {components_file} to be a file"
@@ -87,15 +87,15 @@ class TestExtractShipsFromScenario:
         assert len(loaded_paths) == 1
         loaded_path = loaded_paths[0]
 
-        # Path should end with simulation_tests/data/ships/filename
-        assert 'simulation_tests' in loaded_path, \
-            f"Path should contain 'simulation_tests': {loaded_path}"
+        # Path should end with combat_lab/data/ships/filename
+        assert 'combat_lab' in loaded_path, \
+            f"Path should contain 'combat_lab': {loaded_path}"
         assert loaded_path.endswith('Test_Attacker_Beam360_Low.json'), \
             f"Path should end with ship filename: {loaded_path}"
 
-        # Critical: Path should NOT contain 'game/ui/simulation_tests'
-        assert 'game\\ui\\simulation_tests' not in loaded_path and \
-               'game/ui/simulation_tests' not in loaded_path, \
+        # Critical: Path should NOT contain 'game/ui/combat_lab'
+        assert 'game\\ui\\combat_lab' not in loaded_path and \
+               'game/ui/combat_lab' not in loaded_path, \
             f"Path should NOT be relative to game/ui/: {loaded_path}"
 
     def test_extract_ships_returns_ship_data(self, mock_test_lab_screen):
@@ -170,10 +170,10 @@ class TestShowShipsJson:
         assert len(loaded_paths) == 1
         loaded_path = loaded_paths[0]
 
-        # Path should contain simulation_tests at project root
-        assert 'simulation_tests' in loaded_path
-        assert 'game\\ui\\simulation_tests' not in loaded_path and \
-               'game/ui/simulation_tests' not in loaded_path, \
+        # Path should contain combat_lab at project root
+        assert 'combat_lab' in loaded_path
+        assert 'game\\ui\\combat_lab' not in loaded_path and \
+               'game/ui/combat_lab' not in loaded_path, \
             f"Path should NOT be relative to game/ui/: {loaded_path}"
 
 
@@ -211,11 +211,11 @@ class TestShowComponentsJson:
         assert len(loaded_paths) == 1
         loaded_path = loaded_paths[0]
 
-        # Path should be simulation_tests/data/components.json
-        assert 'simulation_tests' in loaded_path
+        # Path should be combat_lab/data/components.json
+        assert 'combat_lab' in loaded_path
         assert 'components.json' in loaded_path
-        assert 'game\\ui\\simulation_tests' not in loaded_path and \
-               'game/ui/simulation_tests' not in loaded_path, \
+        assert 'game\\ui\\combat_lab' not in loaded_path and \
+               'game/ui/combat_lab' not in loaded_path, \
             f"Path should NOT be relative to game/ui/: {loaded_path}"
 
 
@@ -253,17 +253,17 @@ class TestLoadComponentData:
         assert len(loaded_paths) == 1
         loaded_path = loaded_paths[0]
 
-        assert 'simulation_tests' in loaded_path
+        assert 'combat_lab' in loaded_path
         assert 'components.json' in loaded_path
-        assert 'game\\ui\\simulation_tests' not in loaded_path and \
-               'game/ui/simulation_tests' not in loaded_path
+        assert 'game\\ui\\combat_lab' not in loaded_path and \
+               'game/ui/combat_lab' not in loaded_path
 
 
 class TestPathHelperFunction:
     """Tests for the get_test_data_dir helper function."""
 
     def test_get_test_data_dir_returns_correct_path(self):
-        """get_test_data_dir should return path to simulation_tests/data/."""
+        """get_test_data_dir should return path to combat_lab/data/."""
         from game.ui.screens.test_lab.data_extractor import get_test_data_dir
 
         data_dir = get_test_data_dir()
@@ -272,10 +272,10 @@ class TestPathHelperFunction:
         assert os.path.isabs(data_dir) or data_dir.startswith('.'), \
             "Should return a path string"
 
-        # Should end with simulation_tests/data
+        # Should end with combat_lab/data
         normalized = data_dir.replace('\\', '/')
-        assert normalized.endswith('simulation_tests/data'), \
-            f"Path should end with 'simulation_tests/data': {data_dir}"
+        assert normalized.endswith('combat_lab/data'), \
+            f"Path should end with 'combat_lab/data': {data_dir}"
 
         # Should actually exist
         assert os.path.exists(data_dir), \

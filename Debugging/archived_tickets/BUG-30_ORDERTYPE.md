@@ -8,7 +8,7 @@ WARNING: DuelScenario in templates.py has no metadata
 WARNING: PropulsionScenario in templates.py has no metadata
 WARNING: StaticTargetScenario in templates.py has no metadata
 INFO: Discovered 51 scenarios
-INFO: Loaded 25 test histories from C:\Dev\Starship Battles\simulation_tests\test_history.json
+INFO: Loaded 25 test histories from C:\Dev\Starship Battles\combat_lab\test_history.json
 INFO: 
 === Static Validation: Checking test metadata against component data ===
 INFO:   BEAMWEAPON-010: 4 pass, 1 fail, 0 warn

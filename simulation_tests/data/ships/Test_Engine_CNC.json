@@ -1,8 +1,0 @@
-{
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Ship with C&C bridge + engine requiring C&C. AI thrusts forward."},
-  "name": "Test Engine CNC",
-  "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L_CNC", "theme_id": "Federation", "ai_strategy": "test_straight_line",
-  "layers": {"CORE": [{"id": "test_bridge_indestructible"}, {"id": "test_engine_no_fuel_cnc"}], "ARMOR": []},
-  "_test_notes": "Bridge provides C&C, engine requires C&C. AI thrusts forward — should accelerate and move.",
-  "expected_stats": {"mass": 400.0}
-}

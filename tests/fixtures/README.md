@@ -35,7 +35,7 @@ from tests.fixtures.paths import (
     get_assets_dir,         # Returns Path to assets/ directory
     get_test_data_dir,      # Returns Path to tests/data/
     get_unit_test_data_dir, # Returns Path to tests/unit/data/
-    get_simulation_test_data_dir,  # Returns Path to simulation_tests/data/
+    get_combat_lab_data_dir,  # Returns Path to combat_lab/data/
 )
 ```
 
@@ -47,7 +47,7 @@ from tests.fixtures.paths import (
 | `assets_dir` | function | Path to assets/ directory |
 | `test_data_dir` | function | Path to tests/data/ |
 | `unit_test_data_dir` | function | Path to tests/unit/data/ |
-| `simulation_test_data_dir` | function | Path to simulation_tests/data/ |
+| `combat_lab_data_dir` | function | Path to combat_lab/data/ |
 
 ---
 

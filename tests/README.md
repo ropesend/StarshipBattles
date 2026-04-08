@@ -40,7 +40,7 @@ tests/
 │   │   └── services/        # Simulation service tests
 │   ├── strategy/            # Strategy map tests
 │   ├── systems/             # Core system tests
-│   ├── test_framework/      # Test framework tests (Combat Lab)
+│   ├── combat_lab/      # Test framework tests (Combat Lab)
 │   │   └── services/        # Combat Lab service tests
 │   └── ui/                  # UI panel/rendering tests
 ├── integration/             # Integration tests
@@ -132,7 +132,7 @@ conftest.py (project root)
             ├── pytest_configure_node() - Worker verification
             └── pygame_display_reset [autouse, function] - Display setup/reset
 
-    └── tests/unit/test_framework/services/conftest.py
+    └── tests/unit/combat_lab/services/conftest.py
         ├── mock_battle_engine [function]
         ├── mock_battle_screen [function]
         ├── mock_game [function]
@@ -150,7 +150,7 @@ conftest.py (project root)
         ├── observer_spy [function]
         └── sample_validation_* [function]
 
-simulation_tests/conftest.py (separate test suite)
+combat_lab/conftest.py (separate test suite)
 ├── validate_test_data_schemas [autouse, session] - Schema validation
 ├── init_pygame [autouse, session] - Pygame init
 ├── isolated_registry [class] - Class-scoped isolated registry
