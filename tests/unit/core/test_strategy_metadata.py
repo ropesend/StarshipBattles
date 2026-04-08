@@ -31,11 +31,11 @@ class TestStrategyMetadataServiceSingleton:
         instance2 = StrategyMetadataService.instance()
         assert instance1 is instance2
 
-    def test_direct_instantiation_returns_same_instance(self):
-        """Direct instantiation should return the same singleton instance."""
+    def test_direct_instantiation_creates_new_instance(self):
+        """PROJ-258: Direct instantiation creates a NEW instance (not singleton)."""
         instance1 = StrategyMetadataService.instance()
         instance2 = StrategyMetadataService()
-        assert instance1 is instance2
+        assert instance1 is not instance2
 
     def test_reset_clears_instance(self):
         """reset() should allow a new instance to be created."""

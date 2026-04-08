@@ -1,5 +1,8 @@
 """
-Tests for RegistryManager singleton behavior, thread safety, and test isolation.
+Tests for RegistryManager instance management, thread safety, and test isolation.
+
+PROJ-258: RegistryManager migrated from SingletonMeta to DI via ApplicationContext.
+The .instance() and .reset() compatibility shims use a module-level reference.
 """
 
 import pytest
@@ -7,37 +10,29 @@ import threading
 from unittest.mock import MagicMock
 
 from game.core.registry import RegistryManager
-from game.core.singleton import SingletonMeta
 
 
 # =============================================================================
-# Test: Singleton Behavior
+# Test: Instance Management (PROJ-258: module-level reference pattern)
 # =============================================================================
 
-class TestSingletonBehavior:
-    """Tests for RegistryManager singleton pattern."""
+class TestInstanceManagement:
+    """Tests for RegistryManager instance access via module-level reference."""
 
     def test_instance_returns_same_object(self):
-        """instance() should always return the same object."""
-        from game.core.registry import RegistryManager
-
+        """instance() should return the module-level default instance."""
         r1 = RegistryManager.instance()
         r2 = RegistryManager.instance()
-
         assert r1 is r2
 
-    def test_direct_instantiation_returns_same_object(self, registry):
-        """Direct instantiation should return same singleton (metaclass behavior)."""
-        from game.core.registry import RegistryManager
-
-        # With SingletonMeta, direct construction returns the singleton
+    def test_direct_instantiation_creates_new_object(self):
+        """Direct RegistryManager() creates a NEW instance (not singleton)."""
+        r1 = RegistryManager()
         r2 = RegistryManager()
-        assert r2 is registry
+        assert r1 is not r2
 
     def test_reset_allows_new_instance(self):
-        """reset() should allow creating a new instance."""
-        from game.core.registry import RegistryManager
-
+        """reset() should replace the module-level instance."""
         r1 = RegistryManager.instance()
         id1 = id(r1)
 
@@ -46,26 +41,17 @@ class TestSingletonBehavior:
         r2 = RegistryManager.instance()
         id2 = id(r2)
 
-        # New instance has different id
         assert id1 != id2
 
-    def test_has_thread_lock_via_metaclass(self):
-        """RegistryManager should have a lock for thread safety via SingletonMeta."""
-        from game.core.registry import RegistryManager
-
-        # Lock is stored in SingletonMeta._locks, keyed by class
-        assert RegistryManager in SingletonMeta._locks
-        assert isinstance(SingletonMeta._locks[RegistryManager], type(threading.Lock()))
-
-    def test_reset_removes_instance(self):
-        """reset() should remove instance from SingletonMeta."""
-        from game.core.registry import RegistryManager
-
-        RegistryManager.instance()
-        assert RegistryManager in SingletonMeta._instances
+    def test_reset_provides_clean_state(self):
+        """reset() creates a fresh instance with empty registries."""
+        r1 = RegistryManager.instance()
+        r1.components["test"] = {"id": "test"}
 
         RegistryManager.reset()
-        assert RegistryManager not in SingletonMeta._instances
+
+        r2 = RegistryManager.instance()
+        assert len(r2.components) == 0
 
 
 # =============================================================================

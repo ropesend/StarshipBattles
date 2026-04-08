@@ -28,68 +28,68 @@ Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
 
-## 1. Singleton (SingletonMeta)
+## 1. ApplicationContext (DI Container) — PROJ-258
 
 ### Where
 
-- Metaclass: `game/core/singleton.py` -- `SingletonMeta`
-- Users:
-  - `RegistryManager` -- `game/core/registry.py`
-  - `SpriteManager` -- `game/ui/renderer/sprites.py`
-  - `StrategyManager` -- `game/ai/strategy_manager.py`
-  - `ScreenshotManager` -- `game/ui/services/screenshot_manager.py`
-  - `StrategyMetadataService` -- `game/core/strategy_metadata.py`
-  - `Profiler` -- `game/core/profiling.py`
-  - `AssetManager` -- `game/assets/asset_manager.py`
-  - `ShipThemeManager` -- `game/ui/assets/ship_theme_manager.py`
-  - `SessionRegistryCache` -- `tests/infrastructure/session_cache.py` (manual singleton, not metaclass)
+- Container: `game/context.py` -- `ApplicationContext`
+- Factory methods: `create_production()`, `create_test(**overrides)`
+- Composition root: `game/app.py` -- `Game.__init__` creates context
 
 ### How It Works
 
-`SingletonMeta` is a thread-safe metaclass with double-checked locking. Classes that use
-`metaclass=SingletonMeta` get singleton behavior automatically -- both `MyClass()` and
-`MyClass.instance()` return the same instance.
+`ApplicationContext` is a dependency injection container holding references to all application
+services. Created once at startup (production) or per-test (testing). Passed explicitly to code
+that needs service references. **Not a singleton** — the caller manages lifetime.
 
 ```python
-# game/core/singleton.py (actual code)
-class SingletonMeta(type):
-    _instances: Dict[Type, Any] = {}
-    _locks: Dict[Type, threading.Lock] = {}
+# game/context.py
+class ApplicationContext:
+    def __init__(self, registry_manager, profiler, strategy_metadata,
+                 component_cache, strategy_manager, asset_manager,
+                 sprite_manager, ship_theme_manager, screenshot_manager,
+                 game_settings):
+        self.registry_manager = registry_manager
+        self.profiler = profiler
+        # ... all 10 services
 
-    def __call__(cls, *args, **kwargs):
-        if cls in SingletonMeta._instances:
-            return SingletonMeta._instances[cls]
-        lock = SingletonMeta._locks[cls]
-        with lock:
-            if cls in SingletonMeta._instances:
-                return SingletonMeta._instances[cls]
-            instance = super().__call__(*args, **kwargs)
-            SingletonMeta._instances[cls] = instance
-            return instance
+    @classmethod
+    def create_production(cls) -> 'ApplicationContext':
+        """Creates all services directly. Called once from app.py."""
+        ...
 
-    def reset(cls) -> None:
-        """Reset for testing -- destroys the instance entirely."""
-        lock = SingletonMeta._locks.get(cls)
-        if lock:
-            with lock:
-                if cls in SingletonMeta._instances:
-                    del SingletonMeta._instances[cls]
+    @classmethod
+    def create_test(cls, **overrides) -> 'ApplicationContext':
+        """Creates fresh lightweight instances. Override specific services via kwargs."""
+        ...
 ```
 
-Usage in a class:
+### Services Managed (10 total)
 
-```python
-class SpriteManager(metaclass=SingletonMeta):
-    def __init__(self):
-        self.sprites = []
-        self.tile_size = 36
-```
+| Service | File | Layer |
+|---------|------|-------|
+| RegistryManager | `game/core/registry.py` | Core |
+| Profiler | `game/core/profiling.py` | Core |
+| StrategyMetadataService | `game/core/strategy_metadata.py` | Core |
+| ComponentCacheManager | `game/simulation/components/component_loader.py` | Simulation |
+| StrategyManager | `game/ai/strategy_manager.py` | AI |
+| AssetManager | `game/assets/asset_manager.py` | Assets |
+| SpriteManager | `game/ui/renderer/sprites.py` | UI |
+| ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
+| ScreenshotManager | `game/ui/services/screenshot_manager.py` | UI |
+| GameSettings | `game/ui/services/game_settings.py` | UI |
 
-### When to Use
+### Migration Notes
 
-- Global managers that need exactly one instance (rendering, data loading, AI strategies).
-- `reset()` comes free with `SingletonMeta`; always call it in test teardown.
-- Prefer DI over direct singleton access for business logic (see pattern 3).
+All 10 services were formerly singletons using `SingletonMeta`. They retain `.instance()` and
+`.reset()` compatibility shims (classmethods using a module-level reference) so existing code
+continues to work. New code should use ApplicationContext.
+
+### Legacy: SingletonMeta (Deprecated)
+
+`SingletonMeta` (`game/core/singleton.py`) is retained but **no production code uses it**.
+The metaclass is available if needed for future use but all former users now use the
+module-level reference + compatibility shim pattern.
 
 ---
 
@@ -174,19 +174,19 @@ from game.core.registry import get_default_registry_provider
 provider = get_default_registry_provider()
 ```
 
-**3. Direct singleton (composition roots only):**
+**3. Direct access (composition roots only):**
 ```python
-mgr = RegistryManager.instance()
+mgr = ctx.registry_manager  # Via ApplicationContext
 mgr.hydrate(components_data, modifiers_data, vehicle_classes_data)
 ```
 
-**Production path:** `DefaultRegistryProvider` delegates to `RegistryManager` singleton:
+**Production path:** `DefaultRegistryProvider` delegates to module-level RegistryManager:
 
 ```python
 # game/core/registry.py (actual code)
 class DefaultRegistryProvider:
     def get_components(self) -> Dict[str, Any]:
-        return RegistryManager.instance().components
+        return get_default_registry_manager().components
 ```
 
 **Test path:** `TestRegistryProvider` holds isolated data:
@@ -750,7 +750,7 @@ should prefer explicit `EventBus` injection where possible.
 
 ### Where
 
-`game/ui/renderer/sprites.py` -- `SpriteManager` (singleton via `SingletonMeta`)
+`game/ui/renderer/sprites.py` -- `SpriteManager` (managed by ApplicationContext)
 
 ### How It Works
 
@@ -760,7 +760,7 @@ Individual UI panels also maintain local caches for expensive operations
 
 ```python
 # game/ui/renderer/sprites.py (actual code)
-class SpriteManager(metaclass=SingletonMeta):
+class SpriteManager:
     def __init__(self):
         self.sprites = []
         self.tile_size = 36
@@ -1189,7 +1189,8 @@ def _validate_tick_inputs(self, empires):
 
 | Pattern | Primary File | Key Class/Function |
 |---------|-------------|-------------------|
-| Singleton | `game/core/singleton.py` | `SingletonMeta` |
+| ApplicationContext (DI) | `game/context.py` | `ApplicationContext` |
+| Singleton (deprecated) | `game/core/singleton.py` | `SingletonMeta` |
 | Protocol+TypeGuard | `game/core/protocols.py` | `IFleet`, `is_fleet()` |
 | DI (Registry) | `game/core/registry.py` | `DefaultRegistryProvider`, `TestRegistryProvider` |
 | Registry | `game/core/registry.py` | `RegistryManager`, `GameRegistries` |

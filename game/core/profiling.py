@@ -10,25 +10,21 @@ from game.core.json_utils import load_json, save_json
 from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
-from game.core.singleton import SingletonMeta
+
+# Module-level Profiler reference (PROJ-258)
+_default_profiler: Optional['Profiler'] = None
 
 
-class Profiler(metaclass=SingletonMeta):
-    """
-    Singleton profiler for performance measurement.
+class Profiler:
+    """Profiler for performance measurement.
 
-    Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
+    PROJ-258: Migrated from SingletonMeta to DI via ApplicationContext.
 
     Usage:
-        profiler = Profiler.instance()
+        profiler = ctx.profiler  # Via ApplicationContext
         profiler.start()
         with profile_block("my_operation"):
             do_something()
-
-    Testing:
-        - Use reset() to destroy instance completely
-        - Use clear() to reset records but preserve instance
     """
 
     def __init__(self):
@@ -37,6 +33,20 @@ class Profiler(metaclass=SingletonMeta):
         self.records: List[Dict] = []
         self.start_time = None
         logger.info(f"Profiler initialized with session ID: {self.session_id}")
+
+    @classmethod
+    def instance(cls) -> 'Profiler':
+        """PROJ-258 compatibility shim — returns module-level Profiler."""
+        global _default_profiler
+        if _default_profiler is None:
+            _default_profiler = cls()
+        return _default_profiler
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level Profiler."""
+        global _default_profiler
+        _default_profiler = cls()
 
     def clear(self):
         """Reset all records. Used for test isolation."""

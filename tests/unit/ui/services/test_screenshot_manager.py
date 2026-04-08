@@ -14,13 +14,11 @@ class TestScreenshotManagerSingleton:
 
     def test_instance_returns_same_object(self):
         """Two calls return same instance."""
-        # Need to reset before test to ensure clean state
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -30,33 +28,29 @@ class TestScreenshotManagerSingleton:
         assert instance1 is instance2
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_reset_allows_new_instance(self):
         """After reset(), instance() creates new object."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
                 instance1 = ScreenshotManager.instance()
 
-                # Reset by removing from SingletonMeta
-                if ScreenshotManager in SingletonMeta._instances:
-                    del SingletonMeta._instances[ScreenshotManager]
+                # Reset clears the module-level reference
+                ssm_module._default_screenshot_manager = None
 
                 instance2 = ScreenshotManager.instance()
 
         assert instance1 is not instance2
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
 
 class TestScreenshotCapture:
@@ -66,11 +60,10 @@ class TestScreenshotCapture:
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -79,8 +72,7 @@ class TestScreenshotCapture:
         yield manager
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_capture_disabled_does_nothing(self, mock_manager):
         """No file ops when enabled=False."""
@@ -187,11 +179,10 @@ class TestClipboardOperations:
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -200,8 +191,7 @@ class TestClipboardOperations:
         yield manager
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_clipboard_tkinter_success(self, mock_manager):
         """Tkinter path works without error."""
@@ -243,11 +233,10 @@ class TestCaptureStrategyLayer:
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -256,8 +245,7 @@ class TestCaptureStrategyLayer:
         yield manager
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     @pytest.fixture
     def mock_scene(self):
@@ -381,11 +369,10 @@ class TestShowToast:
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -394,8 +381,7 @@ class TestShowToast:
         yield manager
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_show_toast_creates_message_window(self, mock_manager):
         """show_toast creates UIMessageWindow with correct parameters."""
@@ -466,11 +452,10 @@ class TestScreenshotManagerLogging:
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -479,8 +464,7 @@ class TestScreenshotManagerLogging:
         yield manager
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_capture_success_logs_info(self, mock_manager):
         """Successful capture should log info message with file path."""
@@ -501,11 +485,10 @@ class TestScreenshotManagerLogging:
     def test_directory_creation_logs_info(self):
         """Creating screenshot directory should log info."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
@@ -516,17 +499,15 @@ class TestScreenshotManagerLogging:
         mock_log.info.assert_called()
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_directory_creation_failure_logs_error(self):
         """Failed directory creation should log error and disable screenshots."""
         from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
 
         # Clear any existing instance
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.makedirs', side_effect=OSError("Permission denied")):
@@ -539,8 +520,7 @@ class TestScreenshotManagerLogging:
         assert manager.enabled is False
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_clipboard_failure_logs_warning_not_error(self, mock_manager):
         """Clipboard failure should log warning (non-critical)."""

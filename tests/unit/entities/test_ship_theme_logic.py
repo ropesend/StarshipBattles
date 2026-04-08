@@ -29,15 +29,15 @@ class TestShipThemeLogic:
         # Clean up singleton
         ShipThemeManager.reset()
 
-    def test_singleton_handling(self):
-        """Test that the singleton pattern works and returns unique instance."""
+    def test_instance_management(self):
+        """PROJ-258: instance() returns module-level default, direct() creates new."""
         instance1 = ShipThemeManager.instance()
         instance2 = ShipThemeManager.instance()
         assert instance1 is instance2
 
-        # With SingletonMeta, direct construction returns the singleton
+        # Direct construction creates a new instance (not singleton)
         instance3 = ShipThemeManager()
-        assert instance1 is instance3
+        assert instance1 is not instance3
 
     def test_fallback_generation(self):
         """Test that fallback image is generated with expected properties."""

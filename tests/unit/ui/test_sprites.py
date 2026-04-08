@@ -87,11 +87,11 @@ class TestSpriteManagerSingletonLifecycle:
         assert mgr1 is not mgr2, "After reset, should get new instance"
         assert mgr2.tile_size == 36, "New instance should have default tile_size"
 
-    def test_direct_init_returns_singleton(self):
-        """Test direct __init__() returns singleton when instance exists."""
+    def test_direct_init_creates_new_instance(self):
+        """PROJ-258: Direct SpriteManager() creates a new instance."""
         mgr1 = SpriteManager.instance()
-        mgr2 = SpriteManager()  # Direct construction
-        assert mgr1 is mgr2, "Direct construction should return same singleton"
+        mgr2 = SpriteManager()
+        assert mgr1 is not mgr2, "Direct construction should create new instance"
 
 
 class TestSpriteManagerErrorPaths:

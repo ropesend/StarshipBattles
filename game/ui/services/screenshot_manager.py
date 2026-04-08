@@ -1,11 +1,12 @@
 """
-Screenshot Manager - Singleton for capturing screenshots.
+Screenshot Manager - Captures screenshots.
 
 DUP-UI2-001: Clipboard copy now uses shared tkinter_utils module.
 """
 import os
 import datetime
 import subprocess
+from typing import Optional
 
 import pygame
 
@@ -14,16 +15,14 @@ from game.core.paths import Paths
 import logging
 
 logger = logging.getLogger(__name__)
-from game.core.singleton import SingletonMeta
 from game.ui.services.tkinter_utils import copy_to_clipboard
 
+_default_screenshot_manager: Optional['ScreenshotManager'] = None
 
-class ScreenshotManager(metaclass=SingletonMeta):
+
+class ScreenshotManager:
     """
-    Singleton manager for capturing screenshots.
-
-    Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
+    Manager for capturing screenshots.
 
     Usage:
         manager = ScreenshotManager.instance()
@@ -35,6 +34,20 @@ class ScreenshotManager(metaclass=SingletonMeta):
 
     def __init__(self):
         self._setup()
+
+    @classmethod
+    def instance(cls) -> 'ScreenshotManager':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_screenshot_manager
+        if _default_screenshot_manager is None:
+            _default_screenshot_manager = cls()
+        return _default_screenshot_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_screenshot_manager
+        _default_screenshot_manager = cls()
 
     def _setup(self):
         self.enabled = ENABLE_SCREENSHOTS

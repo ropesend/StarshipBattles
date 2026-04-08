@@ -4,7 +4,7 @@ import os
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 import pytest
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, set_default_registry_manager
 from game.core.config import DisplayConfig
 
 @pytest.fixture(autouse=True)
@@ -30,8 +30,9 @@ def reset_game_state(monkeypatch, request):
     from game.simulation.components.component import reset_component_caches
 
     # 0. PRE-TEST CLEANUP (ALWAYS - ensures isolation even after test failures)
-    mgr = RegistryManager.instance()
-    mgr.clear()
+    # PROJ-258: RegistryManager is no longer a singleton — create fresh and set as default
+    mgr = RegistryManager()
+    set_default_registry_manager(mgr)
 
     # Reset module-level caches to prevent stale data from previous tests
     reset_component_caches()
@@ -93,8 +94,7 @@ def reset_game_state(monkeypatch, request):
         # Clear profiler records
         try:
             from game.core.profiling import Profiler
-            if Profiler._instance is not None:
-                Profiler._instance.clear()
+            Profiler.instance().clear()
         except Exception:
             pass
 

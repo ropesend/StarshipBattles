@@ -28,7 +28,7 @@ def configure_logging():
 from game.ui.utils import create_centered_rect
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import ResourceCatalog
-from game.core.registry import GameRegistries, RegistryManager, get_default_registry_provider
+from game.core.registry import GameRegistries, get_default_registry_provider
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
@@ -43,6 +43,7 @@ from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
 from game.core.profiling import Profiler, profile_action
 from game.core.protocols import IScene
+from game.context import ApplicationContext
 from game.ui.services.input_mapper import InputMapper
 from game.core.input_actions import InputAction
 from game.exit_dialog import (
@@ -73,6 +74,9 @@ class Game:
 
     def __init__(self, args=None):
         pygame.init()
+
+        # DI container — wraps existing singletons (PROJ-258 Phase 1)
+        self.ctx = ApplicationContext.create_production()
 
         # Initialize fonts
         pygame.font.init()
@@ -119,7 +123,7 @@ class Game:
         load_modifiers(Paths.MODIFIERS_FILE, registry_provider=provider)
         # Populate resources registry from ResourceCatalog
         catalog = ResourceCatalog.from_json(Paths.RESOURCES_FILE)
-        resources_registry = RegistryManager.instance().resources
+        resources_registry = self.ctx.registry_manager.resources
         for defn in catalog.all_definitions():
             resources_registry[defn.id] = {'id': defn.id, 'name': defn.name,
                                            'description': defn.description,
@@ -134,7 +138,7 @@ class Game:
         # PROJ-181: Deprecated set_default_registries() removed.
         # All DI consumers now use get_default_registry_provider() which reads
         # from RegistryManager (hydrated via load_components/load_modifiers above).
-        registry = RegistryManager.instance()
+        registry = self.ctx.registry_manager
         self.registries = GameRegistries(
             components=registry.components,
             modifiers=registry.modifiers,

@@ -24,29 +24,36 @@ Testing:
 
 from typing import Dict, List, Optional
 
-from game.core.singleton import SingletonMeta
+# Module-level reference (PROJ-258)
+_default_service: Optional['StrategyMetadataService'] = None
 
 
-class StrategyMetadataService(metaclass=SingletonMeta):
-    """
-    Singleton service providing strategy metadata (names, IDs) to UI layer.
+class StrategyMetadataService:
+    """Service providing strategy metadata (names, IDs) to UI layer.
+
+    PROJ-258: Migrated from SingletonMeta to DI via ApplicationContext.
 
     This decouples the UI from the AI layer's StrategyManager by providing
     only the display-relevant data (names, IDs) without AI behavior logic.
-
-    Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
-        - Data is populated by AI layer on load
-
-    Usage:
-        service = StrategyMetadataService.instance()
-        names = service.get_strategy_names()
-        name = service.get_strategy_display_name('aggressive_ranged')
     """
 
     def __init__(self):
         """Initialize the StrategyMetadataService."""
         self._strategies: Dict[str, dict] = {}
+
+    @classmethod
+    def instance(cls) -> 'StrategyMetadataService':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_service
+        if _default_service is None:
+            _default_service = cls()
+        return _default_service
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_service
+        _default_service = cls()
 
     def clear(self) -> None:
         """

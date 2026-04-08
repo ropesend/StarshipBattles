@@ -1,5 +1,7 @@
 import logging
 import os
+from typing import Optional
+
 import pygame
 from game.core.json_utils import load_json
 from game.core.paths import Paths
@@ -7,15 +9,13 @@ from game.core.exceptions import ResourceException
 from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
-from game.core.singleton import SingletonMeta
+
+_default_asset_manager: Optional['AssetManager'] = None
 
 
-class AssetManager(metaclass=SingletonMeta):
+class AssetManager:
     """
-    Singleton manager for game assets (images, etc.).
-
-    Thread Safety:
-        - Instance creation is thread-safe via SingletonMeta
+    Manager for game assets (images, etc.).
 
     Usage:
         manager = AssetManager.instance()
@@ -42,6 +42,20 @@ class AssetManager(metaclass=SingletonMeta):
             logger.info(f"Loaded star metadata from {metadata_path}")
         else:
             logger.warning(f"Star metadata not found at {metadata_path}")
+
+    @classmethod
+    def instance(cls) -> 'AssetManager':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_asset_manager
+        if _default_asset_manager is None:
+            _default_asset_manager = cls()
+        return _default_asset_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_asset_manager
+        _default_asset_manager = cls()
 
     def clear(self):
         """Reset all caches. Used for test isolation."""

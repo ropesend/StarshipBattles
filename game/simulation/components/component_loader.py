@@ -12,7 +12,6 @@ import logging
 import os
 from typing import Optional, TYPE_CHECKING
 
-from game.core.singleton import SingletonMeta
 from game.core.json_utils import load_json_required
 from game.core.paths import Paths
 from game.core.exceptions import ValidationException
@@ -29,8 +28,15 @@ logger = logging.getLogger(__name__)
 # Cache Manager
 # =============================================================================
 
-class ComponentCacheManager(metaclass=SingletonMeta):
-    """Thread-safe singleton manager for component and modifier caches."""
+# Module-level reference (PROJ-258)
+_default_cache_manager: 'Optional[ComponentCacheManager]' = None
+
+
+class ComponentCacheManager:
+    """Manager for component and modifier caches.
+
+    PROJ-258: Migrated from SingletonMeta to DI via ApplicationContext.
+    """
 
     def __init__(self):
         self.component_cache = None
@@ -38,12 +44,23 @@ class ComponentCacheManager(metaclass=SingletonMeta):
         self.last_component_file = None
         self.last_modifier_file = None
 
+    @classmethod
+    def instance(cls) -> 'ComponentCacheManager':
+        """PROJ-258 compatibility shim — returns module-level instance."""
+        global _default_cache_manager
+        if _default_cache_manager is None:
+            _default_cache_manager = cls()
+        return _default_cache_manager
+
+    @classmethod
+    def reset(cls) -> None:
+        """PROJ-258 compatibility shim — replaces module-level instance."""
+        global _default_cache_manager
+        _default_cache_manager = cls()
+
 
 def reset_component_caches():
-    """Reset all caches for test isolation.
-
-    PROJ-225: Uses SingletonMeta.reset() which destroys the instance entirely.
-    """
+    """Reset all caches for test isolation."""
     ComponentCacheManager.reset()
 
 
