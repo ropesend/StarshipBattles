@@ -303,5 +303,5 @@ def get_resource_str(planet, resource_name):
         quantity_str = format_compact_number(quantity)
 
         quality = resource['quality']
-        return f"{quantity_str} (Q{quality:.0f})"
+        return f"{quantity_str} (Q{quality:.1f})"
     return "-"

@@ -6,7 +6,7 @@ The Starship Battles codebase uses a service layer pattern to provide clean abst
 
 Services exist in two layers:
 - **Simulation services** (`game/simulation/services/`) -- battle lifecycle, ship design, component modifiers, design loading, registry loading
-- **Strategy services** (`game/strategy/services/`) -- fleet navigation, fleet speed, ship stats, cargo transfers, design costs, area effects, component inspection, action timing, modifier resolution, strategic ability scanning
+- **Strategy services** (`game/strategy/services/`) -- fleet navigation, fleet speed, ship stats, cargo transfers, design costs, area effects, component inspection, action timing, modifier resolution, strategic ability scanning, system effects collection
 
 ---
 
@@ -42,6 +42,7 @@ game/strategy/services/
     modifier_resolver.py        # Resolve size_mount modifiers from design_data
     ship_stats_calculator.py    # DEPRECATED — stat calculation moved to simulation layer
     strategic_ability_scanner.py # Find strategic abilities across spatial scopes
+    system_effects_collector.py  # Aggregate system-scope effects for UI display
 ```
 
 ---

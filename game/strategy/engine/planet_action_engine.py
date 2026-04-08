@@ -92,9 +92,8 @@ class PlanetActionEngine(IPlanetActionEngine):
         results = []
         for empire in empires:
             for planet in empire.colonies:
-                result = self._process_planet_tick(planet, empire, component_registry)
-                if result is not None:
-                    results.append(result)
+                planet_results = self._process_planet_tick(planet, empire, component_registry)
+                results.extend(planet_results)
         return results
 
     def _process_planet_tick(
@@ -102,39 +101,49 @@ class PlanetActionEngine(IPlanetActionEngine):
         planet: 'Planet',
         empire: 'Empire',
         component_registry: Optional[Dict[str, Any]] = None,
-    ) -> Optional[PlanetActionTickResult]:
-        """Process a single planet's current order.
+    ) -> List[PlanetActionTickResult]:
+        """Process all consecutive planet action orders on a planet.
 
         ACTIVATE_ABILITY and DEACTIVATE_ABILITY are instant — they set the
         ComponentActivationState on the target facility and pop immediately.
-        The actual timer is ticked by ComponentActivationEngine (Phase 1.7).
+        All consecutive planet action orders are dispatched in the same tick
+        so that abilities activated on the same turn begin with equal progress.
+        Processing stops when a non-planet-action order is reached or the
+        queue is empty.
+
+        The actual activation timer is ticked by ComponentActivationEngine (Phase 1.7).
         """
-        order = planet.get_current_order()
-        if order is None:
-            return None
+        results = []
 
-        if order.type not in PLANET_ACTION_ORDER_TYPES:
-            return None
+        while True:
+            order = planet.get_current_order()
+            if order is None:
+                break
 
-        # Validate target facility still exists
-        if not self._target_facility_exists(planet, order):
-            logger.warning(
-                f"Planet {planet.name}: target facility for {order.type.name} "
-                f"no longer exists, canceling order"
-            )
+            if order.type not in PLANET_ACTION_ORDER_TYPES:
+                break
+
+            # Validate target facility still exists
+            if not self._target_facility_exists(planet, order):
+                logger.warning(
+                    f"Planet {planet.name}: target facility for {order.type.name} "
+                    f"no longer exists, canceling order"
+                )
+                planet.pop_order()
+                continue
+
+            # Instant dispatch — set activation state and pop order
+            self._execute_order(planet, order, empire, component_registry)
             planet.pop_order()
-            return None
+            results.append(PlanetActionTickResult(
+                planet_name=planet.name,
+                order_type=order.type,
+                action_completed=True,
+                execution_progress=0,
+                action_time=0,
+            ))
 
-        # Instant dispatch — set activation state and pop order
-        self._execute_order(planet, order, empire, component_registry)
-        planet.pop_order()
-        return PlanetActionTickResult(
-            planet_name=planet.name,
-            order_type=order.type,
-            action_completed=True,
-            execution_progress=0,
-            action_time=0,
-        )
+        return results
 
     def _execute_order(
         self,

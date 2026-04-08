@@ -407,12 +407,73 @@ indication in the System panel.
   expandable to individual provider facilities with planet location
 - `game/ui/screens/strategy_ui.py` — passes `system_obj` through to tree panel
 
-### 6.8 Documentation Updates
+### 6.8 Planet Action Orders — Zero-Tick Batch Dispatch
 
+**Problem:** Planet action orders (ACTIVATE/DEACTIVATE) consumed one tick each when
+queued. Three stabilizers activated on the same turn showed staggered progress (100/99/98
+ticks after one turn) instead of equal progress.
+
+**Root cause:** `PlanetActionEngine._process_planet_tick()` processed exactly one order
+per tick. Each subsequent activation started one tick later.
+
+**Solution:** Refactored `_process_planet_tick()` to loop through all consecutive planet
+action orders, dispatching them all instantly on the same tick. Processing stops at the
+first non-planet-action order.
+
+**Files modified:**
+- `game/strategy/engine/planet_action_engine.py` — `_process_planet_tick()` returns
+  `List[PlanetActionTickResult]` (was `Optional[single]`), loops until queue empty or
+  non-planet-action order reached
+- `tests/unit/strategy/engine/test_planet_action_engine.py` — +4 new tests (batch dispatch,
+  three stabilizers same progress, mixed order stop, activate+deactivate same tick),
+  old sequential test replaced
+
+### 6.9 Quality Display — One Decimal Place
+
+**Problem:** Planet report quality row showed integer values (e.g., "51"), making it
+impossible to track incremental quality improvements from enrichment facilities.
+
+**Files modified:**
+- `game/ui/panels/planet_report_panel.py` — quality format `:.0f` → `:.1f` (shows "51.3")
+- `game/ui/screens/planet_list_filters.py` — quality format `:.0f` → `:.1f` in planet list
+
+### 6.10 Quality Display — One Decimal Place
+
+**Files modified:**
+- `game/ui/panels/planet_report_panel.py` — quality format `:.0f` → `:.1f`
+- `game/ui/screens/planet_list_filters.py` — quality format `:.0f` → `:.1f`
+
+### 6.11 Atmosphere Modification Fix
+
+**Problem:** Setting atmosphere target and running turns had no effect. Atmosphere stayed at 0.
+
+**Root cause:** No quickstart complex design included the `atmosphere_modifier` component.
+The `AtmosphereEngine` found no facilities with `AtmosphereModifier` ability, so
+`total_rate_kg` was 0 and the engine returned early.
+
+**Additional issue:** The `modification_rate` (1e12 kg/turn) was far too slow — would take
+~7.5 million turns to reach 150kPa on an Earth-like planet.
+
+**Files modified/created:**
+- `data/components.json` — `atmosphere_modifier.modification_rate`: 1e12 → 7.8e15
+  (targets ~150 Pa/turn on Earth-like, ~1000 turns for 150kPa)
+- `tests/fixtures/quickstart/designs/qs_atmosphere_processor_complex.json` — NEW design
+  with `atmosphere_modifier` component (player must build manually, not in INITIAL_COMPLEXES)
+- `game/ui/screens/strategy_detail_formatter.py` — Atmosphere button only shown when planet
+  has a facility with `AtmosphereModifier` ability (new `_planet_has_atmosphere_modifier()`)
+- `tests/unit/strategy/engine/test_atmosphere_engine.py` — +2 tests (no facility no change,
+  rate reaches target in ~1000 turns)
+
+### 6.12 Documentation Updates
+
+- `docs/01_ARCHITECTURE.md` — removed stale `active_abilities` from IPlanet protocol table
+- `docs/04_SERVICES.md` — added `project_fleet_position()`, `SystemEffectsCollector`
 - `docs/systems/strategy_layer.md` — system effects display section, per-component activation
-  architecture section, fleet position projection section, shield event generation note
-- `docs/systems/orders_system.md` — order editing section, key files table updated
+  architecture section, fleet position projection section, shield event generation note,
+  Phase 1.6 batch dispatch note
+- `docs/systems/orders_system.md` — order editing section, zero-tick dispatch note
+- `CLAUDE.md` — test baseline updated to 14769
 
 ### Test Results
 
-All changes: **14758 tests passed, 0 failed** (full sharded suite).
+All changes: **14769 tests passed, 0 failed** (full sharded suite).

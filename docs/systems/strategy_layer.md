@@ -147,7 +147,7 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 | 0f | `EnvironmentalHazardEngine` | Storm damage, fuel drain |
 | 1 | `OrderProcessor` | Instant orders (JOIN_FLEET) |
 | 1.5 | `ActionExecutionEngine` | Action orders (COLONIZE, TRANSFER, superweapons) |
-| 1.6 | `PlanetActionEngine` | Planet action orders (shield activation, etc.) |
+| 1.6 | `PlanetActionEngine` | Planet action orders (shield activation, etc.) — all consecutive planet action orders dispatch instantly on the same tick |
 | 2 | `FleetMovementEngine` | Calculate paths/next moves |
 | 3 | `FleetMovementEngine` | Apply all movements simultaneously |
 | 4 | `ConflictResolutionEngine` | Combat detection and resolution |
