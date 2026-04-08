@@ -13,9 +13,13 @@ app = FastAPI()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = "C:\\Developer\\StarshipBattles"
 COMPONENTS_JSON = os.path.join(REPO_ROOT, "data", "components.json")
-METADATA_JSON = os.path.join(REPO_ROOT, "data", "image_metadata.json")
+METADATA_JSON = os.path.join(REPO_ROOT, "assets", "Images", "Components", "image_metadata.json")
 IMAGE_DIR_64 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 64")
 IMAGE_DIR_128 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 128")
+IMAGE_DIR_256 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 256")
+IMAGE_DIR_512 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 512")
+IMAGE_DIR_1024 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 1024")
+IMAGE_DIR_2048 = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 2048")
 # Using 128 as the primary source of truth for indices/filenames
 IMAGE_DIR = IMAGE_DIR_128
 
@@ -23,6 +27,10 @@ IMAGE_DIR = IMAGE_DIR_128
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 app.mount("/assets/64", StaticFiles(directory=IMAGE_DIR_64), name="assets_64")
 app.mount("/assets/128", StaticFiles(directory=IMAGE_DIR_128), name="assets_128")
+app.mount("/assets/256", StaticFiles(directory=IMAGE_DIR_256), name="assets_256")
+app.mount("/assets/512", StaticFiles(directory=IMAGE_DIR_512), name="assets_512")
+app.mount("/assets/1024", StaticFiles(directory=IMAGE_DIR_1024), name="assets_1024")
+app.mount("/assets/2048", StaticFiles(directory=IMAGE_DIR_2048), name="assets_2048")
 
 class ComponentUpdate(BaseModel):
     component_id: str
@@ -53,11 +61,13 @@ async def get_init():
         components_data = load_json(COMPONENTS_JSON)
         metadata_data = load_json(METADATA_JSON)
         
-        # List images
+        # List images: Strictly only PNGs from the whitelisted IMAGE_DIR (Components 128)
+        # Any images in "New Component images" or "Tiles" will be ignored by this scan.
         images = []
-        for f in sorted(os.listdir(IMAGE_DIR)):
-            if f.lower().endswith((".jpg", ".png", ".jpeg")):
-                images.append(f)
+        if os.path.exists(IMAGE_DIR):
+            for f in sorted(os.listdir(IMAGE_DIR)):
+                if f.lower().endswith(".png"):
+                    images.append(f)
                 
         return {
             "components": components_data["components"],
