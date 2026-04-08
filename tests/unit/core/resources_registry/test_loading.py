@@ -35,7 +35,7 @@ class TestHappyPath:
         assert catalog.has("ammo")
 
     def test_load_resources_uses_default_path(self, tmp_path, monkeypatch):
-        """When no filepath is provided, use the default data/resources.json path."""
+        """When no filepath is provided, use Paths.RESOURCES_FILE."""
         resources_data = {"resources": [{"id": "default_resource"}]}
 
         with patch('game.core.resources.os.path.exists') as mock_exists, \
@@ -47,7 +47,7 @@ class TestHappyPath:
 
             mock_exists.assert_called()
             call_args = mock_exists.call_args_list[0][0][0]
-            assert "data/resources.json" in call_args or call_args == "data/resources.json"
+            assert call_args.endswith(os.path.join("data", "resources.json"))
 
     def test_load_resources_with_custom_filepath(self, tmp_path):
         """Load resources from a custom filepath."""

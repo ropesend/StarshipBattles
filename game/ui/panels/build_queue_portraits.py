@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Optional, Dict
 
 import pygame
 
+from game.core.paths import Paths
 from game.ui.colors import (
     RESOURCE_METALS, RESOURCE_ORGANICS, RESOURCE_VAPORS,
     RESOURCE_RADIOACTIVES, RESOURCE_EXOTICS,
@@ -197,7 +198,7 @@ class BuildQueuePortraitLoader:
             All 5 resources are always present (fallback to colored square if file missing).
         """
         icons: Dict[str, pygame.Surface] = {}
-        base_path = os.path.join("assets", "Images", "Resource Portraits")
+        base_path = Paths.RESOURCE_PORTRAITS_DIR
 
         for resource, filename in RESOURCE_PORTRAIT_FILES.items():
             path = os.path.join(base_path, filename)

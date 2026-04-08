@@ -25,7 +25,7 @@ from game.core.strategy_metadata import StrategyMetadataService
 from game.core.json_utils import load_json_required
 from game.core.paths import Paths
 from game.ui.screens.setup_data_io import (
-    get_base_path, scan_ship_designs, scan_formations,
+    scan_ship_designs, scan_formations,
     load_ships_from_entries, save_battle_setup, load_battle_setup
 )
 from game.ui.screens.setup_renderer import (
@@ -107,8 +107,7 @@ class BattleSetupScreen:
         """Open dialog to save current setup to JSON."""
         root = tk.Tk()
         root.withdraw()
-        base_path = get_base_path()
-        battles_dir = os.path.join(base_path, "data", "battles")
+        battles_dir = Paths.BATTLES_DIR
         if not os.path.exists(battles_dir):
             os.makedirs(battles_dir)
 
@@ -127,8 +126,7 @@ class BattleSetupScreen:
         """Open dialog to load a battle setup."""
         root = tk.Tk()
         root.withdraw()
-        base_path = get_base_path()
-        battles_dir = os.path.join(base_path, "data", "battles")
+        battles_dir = Paths.BATTLES_DIR
 
         filepath = filedialog.askopenfilename(
             initialdir=battles_dir,

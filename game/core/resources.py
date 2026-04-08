@@ -76,7 +76,7 @@ class ResourceCatalog:
         self._definitions: Dict[str, ResourceDefinition] = dict(definitions)
 
     @classmethod
-    def from_json(cls, file_path: str = "data/resources.json") -> 'ResourceCatalog':
+    def from_json(cls, file_path: str = None) -> 'ResourceCatalog':
         """Load a ResourceCatalog from a JSON file.
 
         Args:
@@ -87,6 +87,9 @@ class ResourceCatalog:
             A ResourceCatalog populated with definitions from the file.
             Returns an empty catalog if the file cannot be loaded.
         """
+        if file_path is None:
+            from game.core.paths import Paths
+            file_path = Paths.RESOURCES_FILE
         resolved = _resolve_resource_path(file_path)
         if resolved is None:
             logger.warning(f"Resources file not found at {file_path}, returning empty catalog")

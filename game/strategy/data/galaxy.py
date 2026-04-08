@@ -9,8 +9,6 @@ from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
 import logging
 from game.strategy.data.naming import NameRegistry
-import os
-
 from game.strategy.data.stars import StarGenerator, Star
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.storm import Storm
@@ -23,6 +21,7 @@ from game.strategy.data.galaxy_system_generator import GalaxySystemGenerator
 from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
 from game.strategy.data.galaxy_spatial_index import GalaxySpatialIndex
 from game.core.json_utils import load_json
+from game.core.paths import Paths
 
 if TYPE_CHECKING:
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
@@ -174,7 +173,7 @@ class Galaxy:
         self.fleets_by_id = {}  # int -> Fleet
         
         # Initialize Naming Registry
-        data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
+        data_path = Paths.STAR_SYSTEM_NAMES_FILE
         self.naming = NameRegistry(data_path)
         self.star_image_registry = StarImageRegistry()
         self.star_generator = StarGenerator(image_registry=self.star_image_registry)
@@ -182,7 +181,7 @@ class Galaxy:
         self.planet_generator = PlanetGenerator(self.image_registry)
 
         # Load storm definitions and create storm generator (PROJ-189)
-        storms_path = os.path.join(os.getcwd(), 'data', 'storms.json')
+        storms_path = Paths.STORMS_FILE
         storm_defs = load_json(storms_path, default={})
         self.storm_generator = StormGenerator(storm_defs) if storm_defs else None
 

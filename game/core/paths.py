@@ -102,8 +102,11 @@ class Paths:
     SYSTEM_BLUEPRINTS_FILE: str = os.path.join(DATA_DIR, "system_blueprints.json")
     ASTROPHYSICS_FILE: str = os.path.join(DATA_DIR, "astrophysics.json")
     GALAXY_LAYOUTS_FILE: str = os.path.join(DATA_DIR, "galaxy_layouts.json")
-    HOMEWORLD_PRESETS_FILE: str = os.path.join(DATA_DIR, "homeworld_presets.json")
-    RACE_NAMES_FILE: str = os.path.join(DATA_DIR, "race_names.json")
+    STAR_SYSTEM_NAMES_FILE: str = os.path.join(DATA_DIR, "StarSystemNames.YAML")
+    STORMS_FILE: str = os.path.join(DATA_DIR, "storms.json")
+    STATS_LAYOUT_FILE: str = os.path.join(DATA_DIR, "stats_layout.json")
+    HOMEWORLD_PRESETS_FILE: str = os.path.join(GAME_DIR, "data", "homeworld_presets.json")
+    RACE_NAMES_FILE: str = os.path.join(GAME_DIR, "data", "race_names.json")
 
     # === Settings Files ===
     DEFAULT_KEYBINDINGS_FILE: str = os.path.join(DATA_DIR, "default_keybindings.json")

@@ -14,6 +14,7 @@ from typing import Optional, TYPE_CHECKING
 
 from game.core.singleton import SingletonMeta
 from game.core.json_utils import load_json_required
+from game.core.paths import Paths
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 from game.simulation.components.component_constants import Modifier
@@ -51,7 +52,7 @@ def reset_component_caches():
 # =============================================================================
 
 def load_components_data(
-    file_path: str = "data/components.json",
+    file_path: str = None,
     *,
     registries: 'GameRegistries'
 ) -> dict:
@@ -68,6 +69,8 @@ def load_components_data(
     """
     from game.simulation.components.component import Component
 
+    if file_path is None:
+        file_path = Paths.COMPONENTS_FILE
     if not os.path.exists(file_path):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         abs_path = os.path.join(base_dir, file_path)
@@ -110,7 +113,7 @@ def load_components_data(
         return {}
 
 
-def load_components(file_path="data/components.json", *, registry_provider=None):
+def load_components(file_path=None, *, registry_provider=None):
     """Load components from JSON and populate the global registry.
 
     PROJ-211: registry_provider is now required (no fallback).
@@ -123,6 +126,9 @@ def load_components(file_path="data/components.json", *, registry_provider=None)
 
     if registry_provider is None:
         raise ValueError("registry_provider is required (PROJ-211: no fallback)")
+
+    if file_path is None:
+        file_path = Paths.COMPONENTS_FILE
 
     cache_mgr = ComponentCacheManager.instance()
     comps = registry_provider.get_components()
@@ -154,7 +160,7 @@ def load_components(file_path="data/components.json", *, registry_provider=None)
 # Modifier Loading
 # =============================================================================
 
-def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
+def load_modifiers_data(file_path: str = None) -> dict:
     """Pure function to load modifiers from JSON file.
 
     Args:
@@ -165,6 +171,8 @@ def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
     """
     from game.simulation.components.modifier_schema import validate_modifier_v2
 
+    if file_path is None:
+        file_path = Paths.MODIFIERS_FILE
     if not os.path.exists(file_path):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         abs_path = os.path.join(base_dir, file_path)
@@ -206,7 +214,7 @@ def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
         return {}
 
 
-def load_modifiers(file_path="data/modifiers.json", *, registry_provider=None):
+def load_modifiers(file_path=None, *, registry_provider=None):
     """Load modifiers from JSON and populate the global registry.
 
     PROJ-211: registry_provider is now required (no fallback).
@@ -217,6 +225,9 @@ def load_modifiers(file_path="data/modifiers.json", *, registry_provider=None):
     """
     if registry_provider is None:
         raise ValueError("registry_provider is required (PROJ-211: no fallback)")
+
+    if file_path is None:
+        file_path = Paths.MODIFIERS_FILE
 
     cache_mgr = ComponentCacheManager.instance()
     mods = registry_provider.get_modifiers()

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from game.core.json_utils import load_json_required
+from game.core.paths import Paths
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -21,7 +22,7 @@ class SystemBlueprintsLoader:
     specific characteristics (star count, planet count, mass distributions).
     """
 
-    DEFAULT_PATH = Path("data/system_blueprints.json")
+    DEFAULT_PATH = Path(Paths.SYSTEM_BLUEPRINTS_FILE)
 
     def __init__(self, file_path: Optional[Path] = None):
         """

@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.json_utils import load_json
+from game.core.paths import Paths
 from game.strategy.services.modifier_resolver import resolve_size_multiplier
 
 if TYPE_CHECKING:
@@ -33,7 +34,7 @@ def _load_production_rates() -> Dict[str, Dict[str, float]]:
     global _production_rates_cache
     if _production_rates_cache is None:
         try:
-            _production_rates_cache = load_json("data/production_rates.json")
+            _production_rates_cache = load_json(Paths.PRODUCTION_RATES_FILE)
         except (FileNotFoundError, ValueError):
             _production_rates_cache = {}
     return _production_rates_cache

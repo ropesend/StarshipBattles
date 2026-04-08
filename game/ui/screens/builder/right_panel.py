@@ -11,6 +11,7 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
+from game.core.paths import Paths
 from game.core.strategy_metadata import StrategyMetadataService
 from game.core.string_utils import display_name
 from game.ui.panels.design_stats_panel import DesignStatsPanel
@@ -248,16 +249,16 @@ class BuilderRightPanel:
         filename = f"{class_clean}_Portrait.jpg"
         
         # Load from assets/ShipThemes/{theme}/Portraits/
-        full_path = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
+        full_path = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename)
 
         if not os.path.exists(full_path):
             # Try with spaces in ship class name
-            full_path_space = os.path.join("assets", "ShipThemes", theme, "Portraits", f"{ship_class}_Portrait.jpg")
+            full_path_space = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", f"{ship_class}_Portrait.jpg")
             if os.path.exists(full_path_space):
                 full_path = full_path_space
             else:
                  # Fallback to Default Portrait
-                 default_path = os.path.join("assets", "Images", "Default_Ship_Portrait.png")
+                 default_path = Paths.DEFAULT_SHIP_PORTRAIT
                  if os.path.exists(default_path):
                      full_path = default_path
                  else:

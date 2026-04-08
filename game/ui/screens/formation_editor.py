@@ -15,6 +15,7 @@ import pygame
 import pygame_gui
 
 from game.core.json_utils import load_json, save_json
+from game.core.paths import Paths
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 import logging
@@ -734,8 +735,7 @@ class FormationEditorScreen:
         """Save formation to file via dialog."""
         if not is_tkinter_available():
             return
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        initial_dir = os.path.join(base_path, "data", "formations")
+        initial_dir = Paths.FORMATIONS_DIR
         if not os.path.exists(initial_dir):
             os.makedirs(initial_dir)
 
@@ -753,8 +753,7 @@ class FormationEditorScreen:
         """Load formation from file via dialog."""
         if not is_tkinter_available():
             return
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        initial_dir = os.path.join(base_path, "data", "formations")
+        initial_dir = Paths.FORMATIONS_DIR
         if not os.path.exists(initial_dir):
             os.makedirs(initial_dir)
 

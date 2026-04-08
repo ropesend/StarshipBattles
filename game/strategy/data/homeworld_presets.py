@@ -6,9 +6,9 @@ which define the environmental preferences for races based on their
 homeworld planet type.
 """
 from typing import Dict, List, Optional
-import os
 
 from game.core.json_utils import load_json
+from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 
 
@@ -18,10 +18,7 @@ _presets_cache: Optional[Dict[str, dict]] = None
 
 def _get_presets_path() -> str:
     """Get the path to the homeworld_presets.json file."""
-    # Navigate from this file to game/data/
-    current_dir = os.path.dirname(__file__)
-    game_dir = os.path.dirname(os.path.dirname(current_dir))
-    return os.path.join(game_dir, "data", "homeworld_presets.json")
+    return Paths.HOMEWORLD_PRESETS_FILE
 
 
 def load_homeworld_presets() -> Dict[str, dict]:

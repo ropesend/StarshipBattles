@@ -6,10 +6,10 @@ applying proper scaling for galaxy radius.
 """
 
 import logging
-import os
 from typing import Dict, Any, List, Optional
 
 from game.core.json_utils import load_json_required
+from game.core.paths import Paths
 from game.core.exceptions import ValidationException, ResourceException
 from game.core.error_codes import ErrorCode
 
@@ -30,7 +30,7 @@ class GalaxyLayoutsLoader:
     for the target galaxy radius.
     """
 
-    DEFAULT_PATH = os.path.join("data", "galaxy_layouts.json")
+    DEFAULT_PATH = Paths.GALAXY_LAYOUTS_FILE
 
     @staticmethod
     def load(file_path: str = None) -> Dict[str, Any]:

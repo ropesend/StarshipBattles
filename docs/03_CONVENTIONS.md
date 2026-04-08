@@ -202,6 +202,30 @@ Additional rules:
 - **DON'T:** Use wildcard imports (`from module import *`).
 - **DO:** Import abilities from the abilities package, not from individual submodules.
 
+### 3.1 File Path Convention (PROJ-256)
+
+All file/directory paths in production code must use constants from `game.core.paths.Paths`. Never hardcode paths like `"data/components.json"` or `os.path.join("assets", "ShipThemes", ...)`.
+
+```python
+# WRONG
+path = os.path.join(os.getcwd(), "data", "components.json")
+path = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
+
+# RIGHT
+from game.core.paths import Paths
+path = Paths.COMPONENTS_FILE
+path = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename)
+```
+
+For functions with path defaults, use `None` with body resolution:
+```python
+def load_data(file_path=None):
+    if file_path is None:
+        file_path = Paths.COMPONENTS_FILE
+```
+
+**Exceptions:** Test files may use relative paths to test-specific data directories. Scripts with CLI `--output` arguments are also exempt.
+
 ---
 
 ## 4. Test Conventions

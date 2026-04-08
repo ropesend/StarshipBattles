@@ -13,6 +13,8 @@ Functions:
 from __future__ import annotations
 
 import os
+
+from game.core.paths import Paths
 import pygame
 from typing import Dict, Optional, Tuple, TYPE_CHECKING
 
@@ -68,9 +70,9 @@ def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pyga
 
     # Try multiple portrait paths
     portrait_paths = [
-        os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
-        os.path.join("assets", "ShipThemes", theme, "Portraits", f"{ship_class}_Portrait.jpg"),
-        os.path.join("assets", "Images", "Default_Ship_Portrait.png")
+        os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename),
+        os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", f"{ship_class}_Portrait.jpg"),
+        Paths.DEFAULT_SHIP_PORTRAIT,
     ]
 
     for path in portrait_paths:
@@ -154,7 +156,7 @@ def _load_topdown_thumbnail_uncached(design: DesignMetadata, target_height: int)
     # Try to find the skin file
     skin_paths = []
     for class_name in class_variations:
-        skin_paths.append(os.path.join("assets", "ShipThemes", theme, "Skins", f"{class_name}.png"))
+        skin_paths.append(os.path.join(Paths.SHIP_THEMES_DIR, theme, "Skins", f"{class_name}.png"))
 
     loaded_img = None
     for path in skin_paths:

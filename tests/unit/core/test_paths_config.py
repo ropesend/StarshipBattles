@@ -71,8 +71,8 @@ class TestPathConstants:
         assert Paths.SYSTEM_BLUEPRINTS_FILE == os.path.join(Paths.DATA_DIR, "system_blueprints.json")
         assert Paths.ASTROPHYSICS_FILE == os.path.join(Paths.DATA_DIR, "astrophysics.json")
         assert Paths.GALAXY_LAYOUTS_FILE == os.path.join(Paths.DATA_DIR, "galaxy_layouts.json")
-        assert Paths.HOMEWORLD_PRESETS_FILE == os.path.join(Paths.DATA_DIR, "homeworld_presets.json")
-        assert Paths.RACE_NAMES_FILE == os.path.join(Paths.DATA_DIR, "race_names.json")
+        assert Paths.HOMEWORLD_PRESETS_FILE == os.path.join(Paths.GAME_DIR, "data", "homeworld_presets.json")
+        assert Paths.RACE_NAMES_FILE == os.path.join(Paths.GAME_DIR, "data", "race_names.json")
 
     def test_new_asset_constants_defined(self):
         """PROJ-256: New asset directory constants point to correct locations."""
