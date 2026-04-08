@@ -89,6 +89,17 @@
         </div>
     </div>
 
+    <div id="shutdownModal" class="modal-overlay hidden">
+        <div class="modal" style="border-color: var(--accent-red)">
+            <h3 style="color: var(--accent-red)">Shutdown Server?</h3>
+            <p>This will terminate the Python background process. You will need to manually restart the server from the terminal to use this tool again.</p>
+            <div class="modal-buttons">
+                <button onclick="closeShutdownModal()" class="btn-secondary">Keep Running</button>
+                <button onclick="performShutdown()" class="btn-primary" style="background: var(--accent-red)">Shutdown Process</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/app.js"></script>
 </body>
 </html>

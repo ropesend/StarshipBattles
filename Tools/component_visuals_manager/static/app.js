@@ -31,11 +31,16 @@ async function init() {
     }
 }
 
-async function shutdownServer() {
-    if (!confirm("Are you sure you want to shut down the server?\nThis will terminate the Python process.")) {
-        return;
-    }
-    
+function shutdownServer() {
+    document.getElementById('shutdownModal').classList.remove('hidden');
+}
+
+function closeShutdownModal() {
+    document.getElementById('shutdownModal').classList.add('hidden');
+}
+
+async function performShutdown() {
+    closeShutdownModal();
     showStatus("Shutting down...", "saving");
     try {
         const res = await fetch('/api/shutdown', { method: 'POST' });
