@@ -1,21 +1,19 @@
 import logging
-import math
 import uuid
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Iterator
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 from game.engine.physics import PhysicsBody
-from game.simulation.components.component import Component, create_component
+from game.simulation.components.component import Component
 from game.core.constants import LayerType
-from game.simulation.entities.layer_data import LayerData
 from game.core.registry import GameRegistries
 
 logger = logging.getLogger(__name__)
 
 # Re-export for backward compatibility and convenient access
 from game.simulation.physics_constants import DEFAULT_MAX_MASS
-from game.core.constants import LayerDefaults, CombatConstants
+from game.core.constants import CombatConstants
 
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
@@ -88,6 +86,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self._registries = registries
         class_def = self._registries.vehicle_classes.get(self.ship_class, {})
 
+        # === Layer Manager (PROJ-260: must init before _initialize_layers) ===
+        from game.simulation.entities.ship_layer_manager import ShipLayerManager
+        self._layer_manager = ShipLayerManager(self)
+
         # === Layers & Hull ===
         self._initialize_layers()
         self._equip_default_hull(class_def)
@@ -118,9 +120,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         # === Resources ===
         self.resources = ResourceRegistry()
-        self._resources_initialized: bool = False
-        self._prev_max_resources: dict = {}
-        self._prev_max_shields: int = 0
+
+        # PROJ-260: Resource state delegate
+        from game.simulation.entities.ship_resource_manager import ShipResourceManager
+        self._resource_manager = ShipResourceManager(self)
 
         # === Combat Stats (populated by ShipStatsCalculator) ===
         self.emissive_armor = 0
@@ -187,23 +190,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
 
     def _equip_default_hull(self, class_def: dict) -> None:
-        """Auto-equip the default hull component defined in the vehicle class.
-
-        PROJ-225: Extracted from duplicated logic in __init__ and change_class.
-
-        Args:
-            class_def: Vehicle class definition dict (may contain 'default_hull_id')
-        """
-        default_hull_id = class_def.get('default_hull_id')
-        if default_hull_id:
-            hull_component = create_component(default_hull_id, registries=self._registries)
-            if hull_component:
-                # Direct append to avoid validation during init/class change
-                self.layers[LayerType.HULL].components.append(hull_component)
-                hull_component.layer_assigned = LayerType.HULL
-                hull_component.ship = self
-            else:
-                logger.warning(f"Ship '{self.name}': Failed to create default hull '{default_hull_id}'")
+        """Auto-equip the default hull component. Delegates to ShipLayerManager."""
+        self._layer_manager.equip_default_hull(class_def)
 
     @property
     def registries(self) -> GameRegistries:
@@ -362,134 +350,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.combat_manager.update_derelict_status()
 
     def _initialize_layers(self) -> None:
-        """Initialize or Re-initialize layers based on current ship_class."""
-        # PROJ-42: Use registries (always set via fallback in __init__)
-        class_def = self._registries.vehicle_classes.get(self.ship_class, {})
-        self.layers: Dict[LayerType, LayerData] = {}
-        layer_defs = class_def.get('layers', [])
-
-        # Fallback if no layers defined in vehicle class
-        if not layer_defs:
-            layer_defs = [
-                { "type": "CORE", "radius_pct": LayerDefaults.CORE_RADIUS_PCT, "restrictions": [] },
-                { "type": "INNER", "radius_pct": LayerDefaults.INNER_RADIUS_PCT, "restrictions": [] },
-                { "type": "OUTER", "radius_pct": LayerDefaults.OUTER_RADIUS_PCT, "restrictions": [] },
-                { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
-            ]
-
-        # PROJ-84: Force HULL layer existence using LayerData factory
-        self.layers[LayerType.HULL] = LayerData.create_hull()
-
-        for l_def in layer_defs:
-            l_type_str = l_def.get('type')
-            try:
-                l_type = LayerType[l_type_str]
-                # Avoid overwriting HULL if it was somehow in data
-                if l_type == LayerType.HULL: continue
-
-                # PROJ-84: Use LayerData.from_definition() factory
-                self.layers[l_type] = LayerData.from_definition(l_def)
-            except KeyError:
-                # PROJ-45: Enhanced logging with context for unknown layer types
-                valid_layers = [lt.name for lt in LayerType]
-                logger.warning(
-                    f"Unknown LayerType '{l_type_str}' in ship class '{self.ship_class}'. "
-                    f"Valid types: {valid_layers}. Skipping layer."
-                )
-
-        # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
-        # Sort layers: HULL -> CORE -> INNER -> OUTER -> ARMOR
-        layer_order = [LayerType.HULL, LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
-
-        # Filter layers present in this ship
-        present_layers = [l for l in layer_order if l in self.layers]
-
-        # Calculate total mass capacity (sum of max_mass_pct)
-        # HULL is structural (radius 0), so excluded from area-proportional calculation
-        total_capacity_pct = sum(self.layers[l].max_mass_pct for l in present_layers if l != LayerType.HULL)
-
-        if total_capacity_pct > 0:
-            cumulative_mass_pct = 0.0
-            for l_type in present_layers:
-                if l_type == LayerType.HULL:
-                    self.layers[l_type].radius_pct = 0.0
-                    continue
-                cumulative_mass_pct += self.layers[l_type].max_mass_pct
-                # Area = pi * r^2. Mass proportional to Area.
-                self.layers[l_type].radius_pct = math.sqrt(cumulative_mass_pct / total_capacity_pct)
-        else:
-            # Fallback if no mass limits defined
-            pass
+        """Initialize or re-initialize layers. Delegates to ShipLayerManager."""
+        self._layer_manager.initialize_layers()
 
     def change_class(self, new_class: str, migrate_components: bool = False) -> None:
+        """Change the ship class and optionally migrate components.
+        Delegates to ShipLayerManager (PROJ-260).
         """
-        Change the ship class and optionally migrate components.
-
-        Args:
-            new_class: The new class name (e.g. "Cruiser")
-            migrate_components: If True, attempts to keep components and fit them into new layers.
-                                If False, clears all components.
-        """
-        # PROJ-42: Use registries instead of provider
-        if new_class not in self._registries.vehicle_classes:
-            logger.error(f"Unknown class {new_class}")
-            return
-
-        old_components = []
-        if migrate_components:
-            # Flatten all components with their original layer
-            for l_type, layer_data in self.layers.items():
-                for comp in layer_data.components:
-                    # DON'T migrate the hull! New class gets its own new hull.
-                    # This matches the to_dict() logic and Task 2.1 intent.
-                    if l_type == LayerType.HULL or comp.id.startswith('hull_'):
-                        continue
-                    old_components.append((comp, l_type))
-
-        # Update Class
-        self.ship_class = new_class
-        class_def = self._registries.vehicle_classes.get(self.ship_class)
-        if class_def is None:
-            raise ValidationException(
-                f"Unknown vehicle class '{self.ship_class}'",
-                code=ErrorCode.VALIDATION_ERROR.value,
-                context={"class": "Ship", "method": "change_class",
-                         "ship_class": self.ship_class}
-            )
-        self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
-        self.vehicle_type = class_def.get('type', "Ship")
-        self.max_mass_budget = class_def.get('max_mass', DEFAULT_MAX_MASS)
-
-        # Re-initialize Layers (clears self.layers)
-        self._initialize_layers()
-
-        # Auto-equip default Hull component for the NEW class (BUG-11 Fix)
-        self._equip_default_hull(class_def)
-        
-        if migrate_components:
-            # Attempt to restore components
-            for comp, old_layer in old_components:
-                added = False
-                
-                # 1. Try original layer
-                if old_layer in self.layers:
-                    if self.add_component(comp, old_layer):
-                         added = True
-                
-                # 2. If failed, try all other layers in the new ship
-                if not added:
-                    for layer_type in self.layers.keys():
-                        if layer_type == old_layer: continue 
-                        
-                        if self.add_component(comp, layer_type):
-                            added = True
-                            break
-                
-                if not added:
-                    logger.warning(f"Could not fit component {comp.name} during refit to {new_class}")
-        
-        # Finally recalculate stats
-        self.recalculate_stats()
+        self._layer_manager.change_class(new_class, migrate_components)
 
     def _attach_component(self, component: Component, layer_type: LayerType, modifier_service=None) -> None:
         """Attach a validated component to a layer and apply mandatory modifiers.
@@ -593,22 +461,33 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         return self.stat_querier.get_total_sensor_score()
 
     def get_resource_stat(self, resource_name: str, stat_type: str) -> float:
-        """Get a resource-related stat by name and type.
+        """Get a resource-related stat. Delegates to ShipResourceManager (PROJ-260)."""
+        return self._resource_manager.get_resource_stat(resource_name, stat_type)
 
-        Provides typed accessor for dynamic resource attributes (e.g., fuel_consumption,
-        ammo_endurance). This method replaces direct f-string getattr patterns for
-        portability to statically-typed languages (C#/Rust).
+    # PROJ-260: Backward-compat properties for resource state (accessed by ShipStatsCalculator)
+    @property
+    def _resources_initialized(self) -> bool:
+        return self._resource_manager.resources_initialized
 
-        Args:
-            resource_name: Resource name (e.g., 'fuel', 'ammo', 'energy')
-            stat_type: Stat suffix (e.g., 'consumption', 'endurance', 'recharge',
-                       'potential_consumption', 'net', 'max_usage')
+    @_resources_initialized.setter
+    def _resources_initialized(self, value: bool) -> None:
+        self._resource_manager.resources_initialized = value
 
-        Returns:
-            The stat value, or 0.0 if the attribute doesn't exist.
-        """
-        attr_name = f'{resource_name}_{stat_type}'
-        return getattr(self, attr_name, 0.0)
+    @property
+    def _prev_max_resources(self) -> dict:
+        return self._resource_manager.prev_max_resources
+
+    @_prev_max_resources.setter
+    def _prev_max_resources(self, value: dict) -> None:
+        self._resource_manager.prev_max_resources = value
+
+    @property
+    def _prev_max_shields(self) -> int:
+        return self._resource_manager.prev_max_shields
+
+    @_prev_max_shields.setter
+    def _prev_max_shields(self, value: int) -> None:
+        self._resource_manager.prev_max_shields = value
 
     def get_total_ecm_score(self) -> float:
         """Calculate total Evasion/Defense Score from all active ECM/Electronics."""

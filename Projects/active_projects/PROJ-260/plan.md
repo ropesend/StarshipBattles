@@ -14,9 +14,9 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Deep Analysis of Ship Class | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract ShipLayerManager | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Extract ShipResourceManager | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Thin Facade + Docs + Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 2. Extract ShipLayerManager | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Extract ShipResourceManager | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Thin Facade + Docs + Verification | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-08
