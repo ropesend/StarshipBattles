@@ -4,10 +4,13 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-260 | Ship Further Decomposition - LayerManager and ResourceManager Extraction | Planning | 2026-04-08 | 2026-04-08 |
-| PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | Planning | 2026-04-08 | 2026-04-08 |
-| PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | Planning | 2026-04-08 | 2026-04-08 |
-| PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | Planning | 2026-04-08 | 2026-04-08 |
+| PROJ-267 | Test Infrastructure Consolidation | Planning | 2026-04-09 | 2026-04-09 |
+| PROJ-266 | Critical UI Screen Test Coverage | Planning | 2026-04-09 | 2026-04-09 |
+| PROJ-265 | Simulation Domain Test Coverage | Planning | 2026-04-09 | 2026-04-09 |
+| PROJ-264 | Strategy Engine Test Coverage | Planning | 2026-04-09 | 2026-04-09 |
+| PROJ-263 | Delete Duplicate Test Files | Planning | 2026-04-09 | 2026-04-09 |
+| PROJ-262 | Delete Dead and Reimplemented Tests | Planning | 2026-04-09 | 2026-04-09 |
+| PROJ-261 | Fix Test Suite Production Bugs | Planning | 2026-04-09 | 2026-04-09 |
 | PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
@@ -16,6 +19,10 @@ w# Projects Index
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-260 | Ship Further Decomposition - LayerManager and ResourceManager Extraction | Archived | 2026-04-08 | 2026-04-09 |
+| PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | Archived | 2026-04-08 | 2026-04-09 |
+| PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | Archived | 2026-04-08 | 2026-04-09 |
+| PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | Archived | 2026-04-08 | 2026-04-09 |
 | PROJ-250 | Dual-Source Retreat Config Ambiguity | Archived | 2026-04-06 | 2026-04-08 |
 | PROJ-249 | PDC Targeting Configuration | Archived | 2026-04-06 | 2026-04-08 |
 | PROJ-248 | Weapon Cache Mutable Return | Archived | 2026-04-06 | 2026-04-08 |
@@ -25,16 +32,6 @@ w# Projects Index
 | PROJ-240 | Ship God Class Decomposition | Archived | 2026-04-05 | 2026-04-08 |
 | PROJ-239 | Strategy Layer Health Remediation | Archived | 2026-04-05 | 2026-04-05 |
 | PROJ-238 | Order System Unification & Planet Orders UI | Archived | 2026-03-29 | 2026-04-05 |
-| PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | Archived | 2026-03-29 | 2026-04-05 |
-| PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | Archived | 2026-03-28 | 2026-04-05 |
-| PROJ-235 | TurnEngine Phase Timing Cleanup | Archived | 2026-03-28 | 2026-04-05 |
-| PROJ-234 | ShipInstance God Object Decomposition | Archived | 2026-03-28 | 2026-04-05 |
-| PROJ-233 | Refactor ProductionEngine - Extract Oversized Methods and Deduplicate Spawn Logic | Archived | 2026-03-28 | 2026-04-05 |
-| PROJ-232 | Command Layer Cleanup - Fix Dataclasses, Eliminate Handler Boilerplate, Add Type Safety | Archived | 2026-03-28 | 2026-04-05 |
-| PROJ-231 | Star List Panel | Archived | 2026-03-28 | 2026-03-28 |
-| PROJ-230 | Planet Generation Balance Tuning | Archived | 2026-03-27 | 2026-03-28 |
-| PROJ-229 | Galaxy Generation Inspector Tool | Archived | 2026-03-27 | 2026-03-28 |
-| PROJ-228 | UI Structural Patterns (Dedup Campaign 5/5) | Archived | 2026-03-24 | 2026-03-25 |
 | PROJ-256 | Centralize All File Paths via Paths Class | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-255 | Code Quality & Decomposition | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-254 | Identity, Indexing & Correctness | Archived | 2026-04-08 | 2026-04-08 |
@@ -42,7 +39,6 @@ w# Projects Index
 | PROJ-252 | Determinism & Global State Isolation | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-251 | Error Boundary Architecture Refactor | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-245 | Spatial Grid Incremental Updates | Archived | 2026-04-05 | 2026-04-08 |
-| PROJ-227 | UI Formatting, Portraits & Shared Components (Dedup Campaign 4/5) | Archived | 2026-03-24 | 2026-03-25 |
 
 ---
 

@@ -225,3 +225,14 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-224 | Core Utilities & Shared Helpers (Dedup Campaign 1/5) | 2026-03-25 | PROJ-201-250 |
 | PROJ-225 | Simulation Layer Consolidation (Dedup Campaign 2/5) | 2026-03-25 | PROJ-201-250 |
 | PROJ-226 | Strategy Layer Consolidation (Dedup Campaign 3/5) | 2026-03-25 | PROJ-201-250 |
+| PROJ-227 | UI Formatting, Portraits & Shared Components (Dedup Campaign 4/5) | 2026-03-25 | PROJ-201-250 |
+| PROJ-228 | UI Structural Patterns (Dedup Campaign 5/5) | 2026-03-25 | PROJ-201-250 |
+| PROJ-229 | Galaxy Generation Inspector Tool | 2026-03-28 | PROJ-201-250 |
+| PROJ-230 | Planet Generation Balance Tuning | 2026-03-28 | PROJ-201-250 |
+| PROJ-231 | Star List Panel | 2026-03-28 | PROJ-201-250 |
+| PROJ-232 | Command Layer Cleanup - Fix Dataclasses, Eliminate Handler Boilerplate, Add Type Safety | 2026-04-05 | PROJ-201-250 |
+| PROJ-233 | Refactor ProductionEngine - Extract Oversized Methods and Deduplicate Spawn Logic | 2026-04-05 | PROJ-201-250 |
+| PROJ-234 | ShipInstance God Object Decomposition | 2026-04-05 | PROJ-201-250 |
+| PROJ-235 | TurnEngine Phase Timing Cleanup | 2026-04-05 | PROJ-201-250 |
+| PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | 2026-04-05 | PROJ-201-250 |
+| PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | 2026-04-05 | PROJ-201-250 |
