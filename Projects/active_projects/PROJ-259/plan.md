@@ -14,25 +14,25 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Screen State Machine | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. TurnEngine Config Object | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Battle Engine Tick Phases | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. TurnEngine Config Object | Complete (abstraction + integration) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Battle Engine Tick Phases | Complete (abstraction + integration) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Documentation + Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-08
 **Last Updated:** 2026-04-08
-**Active Phase:** All new abstractions implemented (TDD), integration work remains
+**Active Phase:** Phases 2-3 complete, Phase 1 partially complete (app.py refactor pending), Phase 4 (docs) pending
 **Last Action:** All 3 new abstractions implemented with full TDD:
   - ScreenStateMachine (game/core/state_machine.py, 19 tests) — transition table, guards, callbacks, push/pop stack
   - TurnEngineConfig (game/strategy/engine/turn_engine_config.py, 6 tests) — frozen dataclass with 13 Optional fields
   - ITickPhase + TickPhaseRegistry (game/simulation/systems/tick_phase.py, 9 tests) — protocol + priority-sorted registry
   14675 tests pass.
-**Next Action:** Phase 1 Tasks 1.3-1.4 (app.py refactor with state machine), Phase 2 Tasks 2.3-2.5 (TurnEngine integration + call site migration), Phase 3 Tasks 3.3-3.5 (BattleEngine integration)
+**Next Action:** Phase 1 Tasks 1.3-1.4 (app.py refactor with ScreenStateMachine), then Phase 4 (docs)
 **Blockers:** None
-**Context for Next Agent:** The 3 new abstractions are DONE and TESTED. What remains is INTEGRATING them into the existing code:
-  - app.py: Replace 23 _switch_scene() calls + 3 return_state fields with ScreenStateMachine
-  - turn_engine.py: Add config parameter, migrate 85 call sites (most don't need changes)
-  - battle_engine.py: Convert 5 private methods to ITickPhase implementations, delegate update() to registry
+**Context for Next Agent:** TurnEngine and BattleEngine integrations are DONE. Remaining work:
+  - Phase 1 Tasks 1.3-1.4: app.py refactor — replace 23 _switch_scene() calls + 3 return_state fields with ScreenStateMachine. Read design.md for the full transition map.
+  - Phase 4: Documentation updates for all three new abstractions.
+  - Task 2.4-2.5 (TurnEngine call site migration) deferred — backward compat kwargs still work.
 
 ## Overview
 This project introduces three infrastructure improvements that formalize existing patterns into explicit, testable abstractions: (1) a screen state machine with a transition table and guards to replace 23 bare `_switch_scene()` calls in `game/app.py`, (2) a `TurnEngineConfig` dataclass to bundle the 15 optional engine parameters of `TurnEngine.__init__()`, and (3) an `ITickPhase` protocol with a phase registry to replace the hardcoded tick loop in `BattleEngine.update()`. None of these fix bugs -- they improve code clarity, testability, and extensibility.

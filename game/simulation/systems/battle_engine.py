@@ -78,6 +78,7 @@ from game.core.error_codes import ErrorCode
 if TYPE_CHECKING:
     # PROJ-132: Only import protocols from simulation layer, not concrete AI types
     from game.simulation.interfaces.ai_controller import IAIController, IAIControllerFactory
+    from game.simulation.systems.tick_phase import TickPhaseRegistry
 
 class BattleLogger:
     """Toggleable logger that writes battle events to file."""
@@ -172,7 +173,8 @@ class BattleEngine:
     def __init__(
         self,
         logger: Optional[BattleLogger] = None,
-        ai_factory: Optional['IAIControllerFactory'] = None
+        ai_factory: Optional['IAIControllerFactory'] = None,
+        tick_phases: Optional['TickPhaseRegistry'] = None,
     ):
         """
         Create a BattleEngine instance.
@@ -180,9 +182,16 @@ class BattleEngine:
         Args:
             logger: Optional battle logger for event recording
             ai_factory: AI controller factory for creating controllers.
-                        Required for start() unless ai_controllers are provided directly.
-                        Also used for mid-battle operations (reinforcements, fighter launches).
+            tick_phases: Optional TickPhaseRegistry for custom tick phases.
+                        If None, uses create_default_phases() (PROJ-259).
         """
+        # PROJ-259: Tick phase registry (pluggable tick phases)
+        if tick_phases is None:
+            from game.simulation.systems.tick_phase import create_default_phases
+            self._tick_phases = create_default_phases()
+        else:
+            self._tick_phases = tick_phases
+
         self.ships: List['Ship'] = []
         self.ai_controllers: List['IAIController'] = []
 
@@ -208,6 +217,9 @@ class BattleEngine:
         # Fleet aura manager (scoped ability bonuses)
         from game.simulation.combat.fleet_aura_manager import FleetAuraManager
         self.aura_manager = FleetAuraManager()
+
+        # PROJ-259: Cache for alive ships (set by RebuildGridPhase, read by AttackProcessingPhase)
+        self._alive_ships_cache: List['Ship'] = []
 
         # Use provided logger or create a default one (disabled by default to avoid side effects unless requested)
         self.logger = logger if logger else BattleLogger(enabled=False)
@@ -422,19 +434,12 @@ class BattleEngine:
         """
         if self.is_battle_over():
             return
-            
+
         self.tick_counter += 1
-        self.recent_beams = [] # Clear previous beams
+        self.recent_beams = []  # Clear previous beams
 
-        alive_ships = self._rebuild_grid()
-        self._update_ai_and_ships()
-        self._process_attacks(self._collect_new_attacks(alive_ships))
-
-        # 4. Ship-to-Ship Collisions
-        self.collision_system.process_ramming(self.ships, self.logger)
-        
-        # 5. Update Projectiles
-        self.projectile_manager.update(self.grid)
+        # PROJ-259: Delegate to registered tick phases (default: 5 phases)
+        self._tick_phases.execute_all(self)
 
     def _rebuild_grid(self) -> List['Ship']:
         """Rebuild the spatial grid and return ships alive at tick start."""

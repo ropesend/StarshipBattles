@@ -25,7 +25,11 @@ from typing import Any, List, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['ITickPhase', 'TickPhaseRegistry']
+__all__ = [
+    'ITickPhase', 'TickPhaseRegistry',
+    'RebuildGridPhase', 'AIAndShipUpdatePhase', 'AttackProcessingPhase',
+    'RammingPhase', 'ProjectileUpdatePhase', 'create_default_phases',
+]
 
 
 @runtime_checkable
@@ -72,3 +76,103 @@ class TickPhaseRegistry:
         """Execute all registered phases in priority order."""
         for phase in self._phases:
             phase.execute(engine)
+
+
+# =============================================================================
+# Default Tick Phases (PROJ-259)
+# =============================================================================
+
+
+class RebuildGridPhase:
+    """Rebuild the spatial hash grid with alive ships and projectiles."""
+
+    @property
+    def name(self) -> str:
+        return "rebuild_grid"
+
+    @property
+    def priority(self) -> int:
+        return 100
+
+    def execute(self, engine: Any) -> None:
+        engine._alive_ships_cache = engine._rebuild_grid()
+
+
+class AIAndShipUpdatePhase:
+    """Update AI controllers and ship systems."""
+
+    @property
+    def name(self) -> str:
+        return "ai_and_ship_update"
+
+    @property
+    def priority(self) -> int:
+        return 200
+
+    def execute(self, engine: Any) -> None:
+        engine._update_ai_and_ships()
+
+
+class AttackProcessingPhase:
+    """Collect and process new attacks (beams, projectiles, launches)."""
+
+    @property
+    def name(self) -> str:
+        return "attack_processing"
+
+    @property
+    def priority(self) -> int:
+        return 300
+
+    def execute(self, engine: Any) -> None:
+        attacks = engine._collect_new_attacks(engine._alive_ships_cache)
+        engine._process_attacks(attacks)
+
+
+class RammingPhase:
+    """Process ship-to-ship ramming collisions."""
+
+    @property
+    def name(self) -> str:
+        return "ramming"
+
+    @property
+    def priority(self) -> int:
+        return 400
+
+    def execute(self, engine: Any) -> None:
+        engine.collision_system.process_ramming(engine.ships, engine.logger)
+
+
+class ProjectileUpdatePhase:
+    """Update projectile movement, hit detection, and expiration."""
+
+    @property
+    def name(self) -> str:
+        return "projectile_update"
+
+    @property
+    def priority(self) -> int:
+        return 500
+
+    def execute(self, engine: Any) -> None:
+        engine.projectile_manager.update(engine.grid)
+
+
+def create_default_phases() -> TickPhaseRegistry:
+    """Create a TickPhaseRegistry with the 5 default battle engine phases.
+
+    Returns a registry with phases in standard execution order:
+        100: RebuildGridPhase
+        200: AIAndShipUpdatePhase
+        300: AttackProcessingPhase
+        400: RammingPhase
+        500: ProjectileUpdatePhase
+    """
+    registry = TickPhaseRegistry()
+    registry.register(RebuildGridPhase())
+    registry.register(AIAndShipUpdatePhase())
+    registry.register(AttackProcessingPhase())
+    registry.register(RammingPhase())
+    registry.register(ProjectileUpdatePhase())
+    return registry

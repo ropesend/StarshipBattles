@@ -42,7 +42,7 @@ __all__ = [
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
-from game.core.exceptions import StateException, FrozenStateException
+from game.core.exceptions import FrozenStateException
 from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
@@ -265,18 +265,14 @@ def set_default_registry_manager(manager: RegistryManager) -> None:
 def get_default_registry_manager() -> RegistryManager:
     """Get the module-level RegistryManager reference.
 
-    Returns:
-        The RegistryManager instance set via set_default_registry_manager().
+    Auto-creates on first access if not yet set.
 
-    Raises:
-        StateException: If no RegistryManager has been set.
+    Returns:
+        The module-level RegistryManager instance.
     """
+    global _default_manager
     if _default_manager is None:
-        raise StateException(
-            "No RegistryManager configured. Call set_default_registry_manager() "
-            "or use ApplicationContext.create_production() first.",
-            code=ErrorCode.STATE_FROZEN.value,
-        )
+        _default_manager = RegistryManager()
     return _default_manager
 
 

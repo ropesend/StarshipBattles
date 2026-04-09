@@ -68,6 +68,7 @@ logger = logging.getLogger(__name__)
 TICKS_PER_TURN = 100
 
 if TYPE_CHECKING:
+    from game.strategy.engine.turn_engine_config import TurnEngineConfig
     from game.strategy.interfaces.battle_resolver import IBattleResolver
     from game.strategy.interfaces.engines import (
         IMovementEngine,
@@ -134,6 +135,7 @@ class TurnEngine:
         battle_resolver: Optional['IBattleResolver'] = None,
         *,
         registries: GameRegistries,
+        config: Optional['TurnEngineConfig'] = None,
         ai_factory: Optional[Any] = None,
         movement_engine: Optional['IMovementEngine'] = None,
         production_engine: Optional['IProductionEngine'] = None,
@@ -150,65 +152,45 @@ class TurnEngine:
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
         event_bus=None,
     ):
-        """
-        Initialize the turn engine.
+        """Initialize the turn engine.
 
-        PROJ-43 Phase 4: All engines can be injected for testing.
-        PROJ-50: Added registries parameter for DI to sub-engines.
-        PROJ-75 Phase 2: Added harvesting_engine parameter.
+        PROJ-259: Accepts optional TurnEngineConfig to bundle engine dependencies.
+        Individual engine kwargs still work for backward compatibility — they
+        take precedence over config values when both are provided.
 
         Args:
-            battle_resolver: Optional battle resolver implementation.
-                           If None, defaults to SimulationBattleResolver.
+            battle_resolver: Optional battle resolver. If None, defaults to SimulationBattleResolver.
             registries: GameRegistries for DI to sub-engines (required).
-            movement_engine: Optional movement engine (IMovementEngine).
-                           If None, creates FleetMovementEngine.
-            production_engine: Optional production engine (IProductionEngine).
-                           If None, creates ProductionEngine.
-            order_processor: Optional order processor (IOrderProcessor).
-                           If None, creates OrderProcessor.
-            conflict_engine: Optional conflict engine (IConflictEngine).
-                           If None, creates ConflictResolutionEngine.
-            resource_engine: Optional resource engine (IConsumableEngine).
-                           If None, creates ConsumableManagementEngine.
-            population_engine: Optional population engine (IPopulationEngine).
-                           If None, creates PopulationEngine.
-            resupply_engine: Optional resupply engine (IResupplyEngine).
-                           If None, creates ResupplyEngine.
-            harvesting_engine: Optional harvesting engine (IHarvestingEngine).
-                           If None, creates HarvestingEngine.
-            action_engine: Optional action execution engine (IActionExecutionEngine).
-                           If None, creates ActionExecutionEngine.
-            environmental_engine: Optional environmental hazard engine (IEnvironmentalHazardEngine).
-                           If None, creates EnvironmentalHazardEngine.
+            config: Optional TurnEngineConfig bundling all 13 engine dependencies.
+                   Individual kwargs override config values.
+            ai_factory: Optional AI controller factory.
+            movement_engine..component_activation_engine: Individual engine overrides.
+                   If None and config provides a value, config value is used.
+                   If both None, lazy-initializes default implementation.
+            event_bus: Optional event bus for structured logging.
         """
-        # PROJ-11: Inject battle resolver for clean layer separation
-        # PROJ-239: Store battle_resolver and ai_factory; resolver is created lazily
-        # when conflict_engine is first accessed (not at construction time).
+        from game.strategy.engine.turn_engine_config import TurnEngineConfig
+        cfg = config or TurnEngineConfig()
+
         self._battle_resolver = battle_resolver
         self._ai_factory = ai_factory
-
-        # PROJ-211: Store registries for passing to sub-engines (required)
         self._registries = registries
-
-        # PROJ-252: Session-scoped EventBus for structured event logging
         self._event_bus = event_bus
 
-        # PROJ-43 Phase 4: Store injected engines or None for lazy init
-        self._movement_engine: Optional['IMovementEngine'] = movement_engine
-        self._production_engine: Optional['IProductionEngine'] = production_engine
-        self._order_processor: Optional['IOrderProcessor'] = order_processor
-        self._conflict_engine: Optional['IConflictEngine'] = conflict_engine
-        self._resource_engine: Optional['IConsumableEngine'] = resource_engine
-        self._population_engine: Optional['IPopulationEngine'] = population_engine
-        self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine
-        self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
-        self._action_engine: Optional['IActionExecutionEngine'] = action_engine
-        self._environmental_engine: Optional['IEnvironmentalHazardEngine'] = environmental_engine
-        # PROJ-237: Planet energy and action engines
-        self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine
-        self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine
-        self._component_activation_engine: Optional['IComponentActivationEngine'] = component_activation_engine
+        # Engine fields: individual kwargs take precedence over config
+        self._movement_engine: Optional['IMovementEngine'] = movement_engine or cfg.movement_engine
+        self._production_engine: Optional['IProductionEngine'] = production_engine or cfg.production_engine
+        self._order_processor: Optional['IOrderProcessor'] = order_processor or cfg.order_processor
+        self._conflict_engine: Optional['IConflictEngine'] = conflict_engine or cfg.conflict_engine
+        self._resource_engine: Optional['IConsumableEngine'] = resource_engine or cfg.resource_engine
+        self._population_engine: Optional['IPopulationEngine'] = population_engine or cfg.population_engine
+        self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine or cfg.resupply_engine
+        self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine or cfg.harvesting_engine
+        self._action_engine: Optional['IActionExecutionEngine'] = action_engine or cfg.action_engine
+        self._environmental_engine: Optional['IEnvironmentalHazardEngine'] = environmental_engine or cfg.environmental_engine
+        self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine or cfg.planet_energy_engine
+        self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine or cfg.planet_action_engine
+        self._component_activation_engine: Optional['IComponentActivationEngine'] = component_activation_engine or cfg.component_activation_engine
 
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
@@ -634,12 +616,13 @@ class TurnEngine:
         self._time_phase('combat', self.conflict_engine.resolve_all_conflicts, empires, galaxy=galaxy)
 
 
-def create_default_turn_engine(registries: GameRegistries, ai_factory=None) -> TurnEngine:
+def create_default_turn_engine(registries: GameRegistries, ai_factory=None, config=None) -> TurnEngine:
     """
     Factory function to create a TurnEngine with all default engines.
 
     PROJ-43 Phase 4: Simplifies instantiation for production code.
     PROJ-211: Requires registries parameter for strict DI.
+    PROJ-259: Accepts optional TurnEngineConfig.
 
     This factory creates a TurnEngine with all default sub-engines.
     For testing, use the TurnEngine constructor directly to inject
@@ -671,5 +654,5 @@ def create_default_turn_engine(registries: GameRegistries, ai_factory=None) -> T
             production_engine=mock_production
         )
     """
-    return TurnEngine(registries=registries, ai_factory=ai_factory)
+    return TurnEngine(registries=registries, config=config, ai_factory=ai_factory)
 
