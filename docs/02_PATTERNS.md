@@ -7,7 +7,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 
 ## Table of Contents
 
-1. [Singleton (SingletonMeta)](#1-singleton-singletonmeta)
+1. [ApplicationContext (DI Container)](#1-applicationcontext-di-container--proj-258)
 2. [Protocol + TypeGuard](#2-protocol--typeguard)
 3. [Dependency Injection (Registry)](#3-dependency-injection-registry)
 4. [Registry Pattern](#4-registry-pattern)
@@ -79,17 +79,29 @@ class ApplicationContext:
 | ScreenshotManager | `game/ui/services/screenshot_manager.py` | UI |
 | GameSettings | `game/ui/services/game_settings.py` | UI |
 
-### Migration Notes
+### How Services Are Accessed
 
-All 10 services were formerly singletons using `SingletonMeta`. They retain `.instance()` and
-`.reset()` compatibility shims (classmethods using a module-level reference) so existing code
-continues to work. New code should use ApplicationContext.
+Each service has a module-level `get_default_xxx()` / `set_default_xxx()` accessor pair.
+`ApplicationContext.create_production()` creates all instances and sets all module-level
+references, ensuring `get_default_xxx()` returns the same instance as `ctx.xxx`.
+
+```python
+# Production code — via ApplicationContext (preferred)
+ctx = ApplicationContext.create_production()
+ctx.profiler.start()
+
+# Production code — via module-level accessor (for decorators, convenience functions)
+from game.core.profiling import get_default_profiler
+profiler = get_default_profiler()
+
+# Test code — fresh isolated instances
+ctx = ApplicationContext.create_test(profiler=mock_profiler)
+```
 
 ### Legacy: SingletonMeta (Deprecated)
 
 `SingletonMeta` (`game/core/singleton.py`) is retained but **no production code uses it**.
-The metaclass is available if needed for future use but all former users now use the
-module-level reference + compatibility shim pattern.
+No `.instance()` or `.reset()` methods exist on any of the 10 services.
 
 ---
 
@@ -252,7 +264,7 @@ Simulation delegates (ShipComponentManager, ShipValidatorHelper) must use
 ### When to Use
 
 - All services and domain objects that need component/modifier/vehicle-class data.
-- Tests: use `TestRegistryProvider` for isolation; never depend on global singleton state.
+- Tests: use `TestRegistryProvider` for isolation; never depend on global service state.
 
 ### Critical: Registry Lookup for Facility Ability Checks (PROJ-237/238)
 
@@ -333,7 +345,7 @@ for comp in iter_components(design_data):
 
 ### How It Works
 
-`RegistryManager` is a singleton holding four dictionaries: `components`, `modifiers`,
+`RegistryManager` (managed by ApplicationContext) holds four dictionaries: `components`, `modifiers`,
 `vehicle_classes`, and `resources`. `GameRegistries` is an immutable (`@dataclass(frozen=True)`)
 container that bundles these together for DI. It also holds an optional `ResourceCatalog`
 which provides typed, immutable access to all resource definitions (both planetary materials

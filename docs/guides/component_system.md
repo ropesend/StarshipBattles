@@ -181,7 +181,7 @@ For detailed modifier documentation, see [modifier_system.md](modifier_system.md
 | Class | File | Responsibility |
 |-------|------|----------------|
 | `Component` | `game/simulation/components/component.py` | Component instance, ability host |
-| `RegistryManager` | `game/core/registry.py` | Singleton managing all game data registries |
+| `RegistryManager` | `game/core/registry.py` | Service (via ApplicationContext) managing all game data registries |
 | `DefaultRegistryProvider` | `game/core/registry.py` | DI provider backed by RegistryManager |
 | `TestRegistryProvider` | `game/core/registry.py` | Isolated registry for tests |
 | `Ability` | `game/simulation/components/abilities/base.py` | Base ability class |

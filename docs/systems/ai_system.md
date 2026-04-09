@@ -11,7 +11,7 @@ game/ai/
   __init__.py                  # Public API exports
   controller.py                # AIController - per-ship decision loop
   behaviors.py                 # Movement behavior classes (11 total)
-  strategy_manager.py          # StrategyManager singleton - loads/resolves strategies
+  strategy_manager.py          # StrategyManager (via ApplicationContext) - loads/resolves strategies
   target_evaluator.py          # TargetEvaluator - scores potential targets
   combat_utils.py              # Shared helpers (distance, HP, PDC arc checks)
   ai_factory.py                # AIControllerFactory - two-phase creation
@@ -103,7 +103,7 @@ All behaviors extend `AIBehavior(controller)` with `enter()` and `update(target,
 
 ## StrategyManager
 
-Singleton (`SingletonMeta`) that loads and resolves combat strategies from JSON data files.
+Service (managed by ApplicationContext) that loads and resolves combat strategies from JSON data files.
 
 ### Data Files (in `data/`)
 

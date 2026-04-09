@@ -13,13 +13,13 @@ Three conftest files form a layered fixture system. Fixtures from parent directo
 The most critical file. Provides two autouse fixtures that run for **every test**:
 
 1. **`reset_game_state`** (function-scoped, autouse) -- The primary test isolation fixture. For each test it:
-   - Clears `RegistryManager` singleton and module-level component caches (pre-test)
+   - Creates fresh `RegistryManager` instance via `set_default_registry_manager()` and clears module-level component caches (pre-test)
    - Checks for `@pytest.mark.use_custom_data` -- if present, skips production hydration
    - Loads data via `SessionRegistryCache` (once per session, cached thereafter)
    - Calls `mgr.hydrate()` to populate the registry from cached data
    - Patches `ComponentCacheManager` and `load_vehicle_classes` to prevent disk I/O
    - Hydrates `StrategyManager` from cache
-   - Post-test: clears all singletons (RegistryManager, event handler, Profiler, component caches, StrategyManager, ShipThemeManager, ScreenshotManager, SpriteManager)
+   - Post-test: resets all service instances (RegistryManager, event handler, component caches, StrategyManager, ShipThemeManager, ScreenshotManager, SpriteManager) via `set_default_xxx()` calls
 
 2. **`enforce_headless`** (session-scoped, autouse) -- Sets `SDL_VIDEODRIVER=dummy`, initializes Pygame, creates a dummy display at `DisplayConfig.test_resolution()`.
 
@@ -80,7 +80,7 @@ def test_empty_registry(minimal_registries):
 
 **File**: `tests/infrastructure/session_cache.py`
 
-A thread-safe singleton that loads all game data from disk exactly once per test session, then serves deep copies to every test via `reset_game_state`.
+A session-scoped cache that loads all game data from disk exactly once per test session, then serves deep copies to every test via `reset_game_state`.
 
 ### How It Works
 
@@ -204,9 +204,9 @@ Default `pytest.ini` settings: `testpaths = tests`, `addopts = -n 4 --ignore=Ref
 
 ## Common Pitfalls
 
-### 1. Stale Singletons Between Tests
+### 1. Stale Service State Between Tests
 
-`reset_game_state` clears singletons pre- and post-test. If you create a new singleton that holds mutable state, you must add cleanup to the `finally` block in root `conftest.py` or tests will leak state.
+`reset_game_state` resets all service instances pre- and post-test via `set_default_xxx()` calls. If you create a new service that holds mutable state, you must add cleanup to the `finally` block in root `conftest.py` or tests will leak state.
 
 ### 2. Missing `@pytest.mark.use_custom_data`
 
@@ -230,11 +230,11 @@ The `enforce_headless` fixture creates a dummy display. If a test creates its ow
 
 ### 7. Component Cache Pollution
 
-`ComponentCacheManager` is a singleton with module-level caches. `reset_game_state` calls `reset_component_caches()` pre- and post-test. If you manually populate caches, ensure they are cleaned up.
+`ComponentCacheManager` uses a module-level cache accessed via `get_default_cache_manager()`. `reset_game_state` calls `reset_component_caches()` pre- and post-test. If you manually populate caches, ensure they are cleaned up.
 
 ### 8. Parallel Test Isolation (pytest-xdist)
 
-Each xdist worker gets its own process with independent singletons. The `SessionRegistryCache` loads once per worker. Issues arise when tests write to shared files (logs, save files). Use `tmp_path` fixture for file output.
+Each xdist worker gets its own process with independent service instances. The `SessionRegistryCache` loads once per worker. Issues arise when tests write to shared files (logs, save files). Use `tmp_path` fixture for file output.
 
 ---
 
@@ -245,7 +245,7 @@ Each xdist worker gets its own process with independent singletons. The `Session
 | `conftest.py` | Root: `reset_game_state`, `enforce_headless`, `configure_test_logging` |
 | `tests/conftest.py` | DI fixtures, ship factory, assertion helpers |
 | `tests/unit/conftest.py` | Pre-imports `game.ui` to prevent race conditions |
-| `tests/infrastructure/session_cache.py` | `SessionRegistryCache` singleton |
+| `tests/infrastructure/session_cache.py` | `SessionRegistryCache` (session-scoped data cache) |
 | `tests/fixtures/ships.py` | Ship factory + fixtures |
 | `tests/fixtures/components.py` | Component factory + fixtures |
 | `tests/fixtures/battle.py` | BattleEngine factory + fixtures |

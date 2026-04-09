@@ -72,7 +72,7 @@ Six layers with strict downward-only dependency flow:
 | `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleTuning |
 | `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants |
 | `protocols.py`        | All cross-layer Protocol definitions (see Protocols section) |
-| `registry.py`         | GameRegistries container, RegistryManager singleton, DI providers |
+| `registry.py`         | GameRegistries container, RegistryManager (via ApplicationContext), DI providers |
 | `exceptions.py`       | GameException hierarchy (10 exception classes) |
 | `error_codes.py`      | ErrorCode enum |
 | `event_logging.py`    | log_event, set_event_handler, get_event_handler |
@@ -283,7 +283,7 @@ Layers communicate through Protocol definitions in `game/core/protocols.py`. Upp
 
 ### 2. Dependency Injection
 
-**Registry DI:** Services accept `IRegistryProvider` instead of accessing the global `RegistryManager` singleton directly. Production uses `DefaultRegistryProvider`; tests use `TestRegistryProvider`.
+**Registry DI:** Services accept `IRegistryProvider` instead of accessing `RegistryManager` directly. Production uses `DefaultRegistryProvider`; tests use `TestRegistryProvider`. All services are managed by `ApplicationContext` (`game/context.py`).
 
 **AI Factory DI:** `BattleService.create_battle()` accepts an optional `IAIControllerFactory` injected from higher layers (UI/strategy), because AI depends on Simulation (not vice versa).
 
@@ -317,8 +317,8 @@ RegistryLoader (game/simulation/services/registry_loader.py)
   loads: components.json, modifiers.json, vehicleclasses.json, resources.json
        │
        ▼
-RegistryManager (game/core/registry.py)
-  singleton holding GameRegistries(components, modifiers, vehicle_classes, resources, resource_catalog)
+RegistryManager (game/core/registry.py, managed by ApplicationContext)
+  holds GameRegistries(components, modifiers, vehicle_classes, resources, resource_catalog)
        │
        ▼
 IRegistryProvider (injected into services)

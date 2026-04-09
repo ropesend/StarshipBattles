@@ -71,28 +71,60 @@ class ApplicationContext:
         from game.ui.services.screenshot_manager import ScreenshotManager
         from game.ui.services.game_settings import GameSettings
 
-        # PROJ-258: RegistryManager is no longer a singleton — create directly
-        # and set the module-level reference for wrapper functions
-        from game.core.registry import set_default_registry_manager
+        # Create all service instances
         registry_mgr = RegistryManager()
-        set_default_registry_manager(registry_mgr)
-
-        # PROJ-258: Set module-level profiler for profile_action/profile_block
-        from game.core.profiling import set_default_profiler
         profiler = Profiler()
+        strategy_metadata = StrategyMetadataService()
+        component_cache = ComponentCacheManager()
+        strategy_manager = StrategyManager()
+        asset_manager = AssetManager()
+        sprite_manager = SpriteManager()
+        ship_theme_manager = ShipThemeManager()
+        screenshot_manager = ScreenshotManager()
+        game_settings = GameSettings()
+
+        # PROJ-258: Set ALL module-level references so get_default_xxx()
+        # returns the same instances as ctx.xxx (prevents instance divergence)
+        from game.core.registry import set_default_registry_manager
+        from game.core.profiling import set_default_profiler
+        from game.core.strategy_metadata import get_default_strategy_metadata_service as _sms_mod
+        from game.simulation.components.component_loader import get_default_cache_manager as _ccm_mod
+        from game.ai.strategy_manager import get_default_strategy_manager as _sm_mod
+        from game.assets.asset_manager import set_default_asset_manager
+        from game.ui.renderer.sprites import set_default_sprite_manager
+        from game.ui.assets.ship_theme_manager import set_default_ship_theme_manager
+        from game.ui.services.screenshot_manager import set_default_screenshot_manager
+        from game.ui.services.game_settings import set_default_game_settings
+
+        set_default_registry_manager(registry_mgr)
         set_default_profiler(profiler)
+
+        # Set module-level refs for services that have set_default_xxx()
+        set_default_asset_manager(asset_manager)
+        set_default_sprite_manager(sprite_manager)
+        set_default_ship_theme_manager(ship_theme_manager)
+        set_default_screenshot_manager(screenshot_manager)
+        set_default_game_settings(game_settings)
+
+        # Set module-level refs for services with only _default_xxx (no setter)
+        import game.core.strategy_metadata as _sms_module
+        _sms_module._default_service = strategy_metadata
+        import game.simulation.components.component_loader as _ccm_module
+        _ccm_module._default_cache_manager = component_cache
+        import game.ai.strategy_manager as _sm_module
+        _sm_module._default_strategy_manager = strategy_manager
 
         return cls(
             registry_manager=registry_mgr,
             profiler=profiler,
-            strategy_metadata=StrategyMetadataService(),
-            component_cache=ComponentCacheManager(),
-            strategy_manager=StrategyManager(),
-            asset_manager=AssetManager(),
-            sprite_manager=SpriteManager(),
-            ship_theme_manager=ShipThemeManager(),
-            screenshot_manager=ScreenshotManager(),
-            game_settings=GameSettings(),
+            strategy_metadata=strategy_metadata,
+            component_cache=component_cache,
+            strategy_manager=strategy_manager,
+            asset_manager=asset_manager,
+            sprite_manager=sprite_manager,
+            ship_theme_manager=ship_theme_manager,
+            screenshot_manager=screenshot_manager,
+            game_settings=game_settings,
         )
 
     @classmethod
