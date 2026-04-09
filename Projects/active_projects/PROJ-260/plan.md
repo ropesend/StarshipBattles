@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Deep Analysis of Ship Class | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Deep Analysis of Ship Class | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract ShipLayerManager | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract ShipResourceManager | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Thin Facade + Docs + Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-08
-**Active Phase:** Planning
-**Last Action:** Project files populated with full scope and checklists
-**Next Action:** Begin Phase 1 (read-only analysis of Ship class)
+**Active Phase:** Phase 1 Complete, ready for Phase 2
+**Last Action:** Phase 1 analysis complete. Extraction plan: ShipLayerManager (145 lines: _initialize_layers, _equip_default_hull, change_class) + ShipResourceManager (66 lines: get_resource_stat, resource attrs). Projected Ship: ~511 lines. Findings in findings/phase_1_extraction_plan.md.
+**Next Action:** Phase 2 — Extract ShipLayerManager (TDD)
 **Blockers:** PROJ-258 (DI Migration) must be complete before execution begins
 
 ## Overview
