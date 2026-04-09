@@ -20,11 +20,19 @@
 
 ## Current State
 **Last Updated:** 2026-04-08
-**Active Phase:** Planning
-**Last Action:** Project plan created with full analysis
-**Next Action:** Begin Phase 1 -- write tests for ScreenStateMachine
-**Blockers:** Requires PROJ-258 (DI Migration / ApplicationContext) to be complete first
-**Context for Next Agent:** All three sub-projects are independent of each other. Phases 1-3 can technically run in parallel, but sequential execution is safer. Each phase follows TDD: write tests first, then implement, then refactor app.py/turn_engine.py/battle_engine.py to use the new abstractions.
+**Last Updated:** 2026-04-08
+**Active Phase:** All new abstractions implemented (TDD), integration work remains
+**Last Action:** All 3 new abstractions implemented with full TDD:
+  - ScreenStateMachine (game/core/state_machine.py, 19 tests) — transition table, guards, callbacks, push/pop stack
+  - TurnEngineConfig (game/strategy/engine/turn_engine_config.py, 6 tests) — frozen dataclass with 13 Optional fields
+  - ITickPhase + TickPhaseRegistry (game/simulation/systems/tick_phase.py, 9 tests) — protocol + priority-sorted registry
+  14675 tests pass.
+**Next Action:** Phase 1 Tasks 1.3-1.4 (app.py refactor with state machine), Phase 2 Tasks 2.3-2.5 (TurnEngine integration + call site migration), Phase 3 Tasks 3.3-3.5 (BattleEngine integration)
+**Blockers:** None
+**Context for Next Agent:** The 3 new abstractions are DONE and TESTED. What remains is INTEGRATING them into the existing code:
+  - app.py: Replace 23 _switch_scene() calls + 3 return_state fields with ScreenStateMachine
+  - turn_engine.py: Add config parameter, migrate 85 call sites (most don't need changes)
+  - battle_engine.py: Convert 5 private methods to ITickPhase implementations, delegate update() to registry
 
 ## Overview
 This project introduces three infrastructure improvements that formalize existing patterns into explicit, testable abstractions: (1) a screen state machine with a transition table and guards to replace 23 bare `_switch_scene()` calls in `game/app.py`, (2) a `TurnEngineConfig` dataclass to bundle the 15 optional engine parameters of `TurnEngine.__init__()`, and (3) an `ITickPhase` protocol with a phase registry to replace the hardcoded tick loop in `BattleEngine.update()`. None of these fix bugs -- they improve code clarity, testability, and extensibility.
