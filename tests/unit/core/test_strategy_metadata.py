@@ -9,61 +9,29 @@ is now done exclusively through StrategyManager which populates this service.
 """
 
 import pytest
-import threading
 
 from game.core.strategy_metadata import StrategyMetadataService
 
 
 @pytest.fixture(autouse=True)
-def reset_singleton():
-    """Reset singleton before and after each test."""
-    StrategyMetadataService.reset()
+def fresh_service():
+    """Create a fresh service for each test (no shared state)."""
     yield
-    StrategyMetadataService.reset()
 
 
-class TestStrategyMetadataServiceSingleton:
-    """Test singleton behavior."""
-
-    def test_instance_returns_same_object(self):
-        """instance() should always return the same object."""
-        instance1 = StrategyMetadataService.instance()
-        instance2 = StrategyMetadataService.instance()
-        assert instance1 is instance2
+class TestStrategyMetadataServiceConstruction:
+    """Test construction behavior."""
 
     def test_direct_instantiation_creates_new_instance(self):
-        """PROJ-258: Direct instantiation creates a NEW instance (not singleton)."""
-        instance1 = StrategyMetadataService.instance()
+        """Direct instantiation creates independent instances."""
+        instance1 = StrategyMetadataService()
         instance2 = StrategyMetadataService()
         assert instance1 is not instance2
 
-    def test_reset_clears_instance(self):
-        """reset() should allow a new instance to be created."""
-        instance1 = StrategyMetadataService.instance()
-        StrategyMetadataService.reset()
-        instance2 = StrategyMetadataService.instance()
-        assert instance1 is not instance2
-
-    def test_thread_safe_instance_creation(self):
-        """Multiple threads should get the same instance."""
-        instances = []
-        errors = []
-
-        def get_instance():
-            try:
-                instances.append(StrategyMetadataService.instance())
-            except Exception as e:
-                errors.append(e)
-
-        threads = [threading.Thread(target=get_instance) for _ in range(10)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-
-        assert len(errors) == 0
-        assert len(instances) == 10
-        assert all(i is instances[0] for i in instances)
+    def test_new_instance_has_empty_strategies(self):
+        """New instance should have empty strategies."""
+        service = StrategyMetadataService()
+        assert service.strategies == {}
 
 
 class TestStrategyMetadataServiceData:
@@ -71,12 +39,12 @@ class TestStrategyMetadataServiceData:
 
     def test_initial_strategies_empty(self):
         """New instance should have empty strategies."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         assert service.strategies == {}
 
     def test_set_strategies(self):
         """set_strategies should populate the data."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         strategies = {
             'aggressive': {'name': 'Aggressive'},
             'defensive': {'name': 'Defensive'}
@@ -86,7 +54,7 @@ class TestStrategyMetadataServiceData:
 
     def test_set_strategies_copies_data(self):
         """set_strategies should copy, not reference original."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         strategies = {'aggressive': {'name': 'Aggressive'}}
         service.set_strategies(strategies)
         strategies['new_key'] = {'name': 'New'}
@@ -94,7 +62,7 @@ class TestStrategyMetadataServiceData:
 
     def test_clear_removes_data(self):
         """clear() should remove all strategy data."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         service.set_strategies({'aggressive': {'name': 'Aggressive'}})
         service.clear()
         assert service.strategies == {}
@@ -106,7 +74,7 @@ class TestStrategyMetadataServiceQueries:
     @pytest.fixture
     def populated_service(self):
         """Service with test data."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         service.set_strategies({
             'aggressive_ranged': {'name': 'Aggressive Ranged'},
             'defensive_close': {'name': 'Defensive Close'},
@@ -121,12 +89,12 @@ class TestStrategyMetadataServiceQueries:
 
     def test_get_strategy_names_empty(self):
         """get_strategy_names on empty service returns empty list."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         assert service.get_strategy_names() == []
 
     def test_get_strategy_names_uses_id_if_no_name(self):
         """Should fall back to strategy ID if name not in dict."""
-        service = StrategyMetadataService.instance()
+        service = StrategyMetadataService()
         service.set_strategies({
             'has_name': {'name': 'Display Name'},
             'no_name': {'other_field': 'value'}

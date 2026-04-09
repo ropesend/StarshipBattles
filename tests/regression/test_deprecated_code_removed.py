@@ -115,10 +115,10 @@ class TestNewPatternsWork:
         assert callable(get_default_registry_provider)
 
     def test_registry_manager_direct_access_works(self):
-        """RegistryManager.instance().components should work for direct access."""
-        from game.core.registry import RegistryManager
+        """get_default_registry_manager() should provide direct access to registries."""
+        from game.core.registry import get_default_registry_manager
 
-        mgr = RegistryManager.instance()
+        mgr = get_default_registry_manager()
         assert hasattr(mgr, 'components')
         assert hasattr(mgr, 'modifiers')
         assert hasattr(mgr, 'vehicle_classes')
@@ -139,19 +139,18 @@ class TestSingletonUsageCount:
     """
     PROJ-195: Regression guard for RegistryManager.instance() usage.
 
-    This test ensures singleton usage doesn't creep back into non-root code.
-    All remaining references should be in legitimate locations:
-    - game/app.py (composition root)
-    - game/core/registry.py (singleton definition & helpers)
-    - Test infrastructure (conftest, session_cache)
-    - Tests that specifically test singleton behavior
+    This test ensures the deprecated .instance() shim doesn't creep back.
+    After PROJ-258 completion, all code uses get_default_registry_manager()
+    or ApplicationContext instead. The only remaining string occurrences
+    are in this file's counting logic and test_data_layer_boundaries.py's
+    production code guard.
     """
 
-    # Expected counts from PROJ-195 audit (2026-02-25)
-    # game/: 14 (app.py: 2, registry.py: 9, build_queue_source.py: 1, strategy_detail_formatter.py: 1, strategy_detail_fmt.py: 1)
-    # tests/: 82 (all legitimate singleton/isolation tests + resource unification integration tests)
-    EXPECTED_GAME_COUNT = 14
-    EXPECTED_TESTS_COUNT = 82
+    # Expected counts after PROJ-258 shim removal:
+    # game/: 0 (shim removed, all code uses get_default_registry_manager())
+    # tests/: 13 (9 in this file's comments/strings + 4 in test_data_layer_boundaries.py's guard)
+    EXPECTED_GAME_COUNT = 0
+    EXPECTED_TESTS_COUNT = 13
 
     def test_singleton_usage_count_game(self):
         """RegistryManager.instance() count in game/ should not increase."""
@@ -172,8 +171,8 @@ class TestSingletonUsageCount:
         assert total <= self.EXPECTED_GAME_COUNT, (
             f"RegistryManager.instance() count in game/ increased from "
             f"{self.EXPECTED_GAME_COUNT} to {total}. "
-            f"If this is legitimate (composition root or singleton definition), "
-            f"update EXPECTED_GAME_COUNT in this test."
+            f"Use get_default_registry_manager() instead of RegistryManager.instance(). "
+            f"If this is truly necessary, update EXPECTED_GAME_COUNT in this test."
         )
 
     def test_singleton_usage_count_tests(self):
@@ -196,6 +195,6 @@ class TestSingletonUsageCount:
         assert total <= self.EXPECTED_TESTS_COUNT, (
             f"RegistryManager.instance() count in tests/ increased from "
             f"{self.EXPECTED_TESTS_COUNT} to {total}. "
-            f"New tests should use fresh_registries fixture instead of singleton. "
-            f"If this is a legitimate singleton test, update EXPECTED_TESTS_COUNT."
+            f"New tests should use get_default_registry_manager() or fresh_registries fixture. "
+            f"If this is a legitimate usage, update EXPECTED_TESTS_COUNT."
         )

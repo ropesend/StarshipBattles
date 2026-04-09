@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pygame
 import os
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import ShipThemeManager, get_default_ship_theme_manager, set_default_ship_theme_manager
 
 
 class TestShipThemeLogic:
@@ -15,8 +15,8 @@ class TestShipThemeLogic:
         pygame.display.set_mode((1, 1))
 
         # Ensure singleton is reset before each test
-        ShipThemeManager.reset()
-        self.manager = ShipThemeManager.instance()
+        set_default_ship_theme_manager(ShipThemeManager())
+        self.manager = get_default_ship_theme_manager()
 
         yield
 
@@ -27,12 +27,12 @@ class TestShipThemeLogic:
         # subsequent tests with "No video mode set" errors.
 
         # Clean up singleton
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_instance_management(self):
         """PROJ-258: instance() returns module-level default, direct() creates new."""
-        instance1 = ShipThemeManager.instance()
-        instance2 = ShipThemeManager.instance()
+        instance1 = get_default_ship_theme_manager()
+        instance2 = get_default_ship_theme_manager()
         assert instance1 is instance2
 
         # Direct construction creates a new instance (not singleton)
@@ -197,11 +197,11 @@ class TestShipClassToPortraitName:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1))
-        ShipThemeManager.reset()
-        self.manager = ShipThemeManager.instance()
+        set_default_ship_theme_manager(ShipThemeManager())
+        self.manager = get_default_ship_theme_manager()
         yield
         patch.stopall()
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_simple_class_name(self):
         """Simple class names pass through unchanged."""
@@ -240,11 +240,11 @@ class TestGetPortraitImage:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1))
-        ShipThemeManager.reset()
-        self.manager = ShipThemeManager.instance()
+        set_default_ship_theme_manager(ShipThemeManager())
+        self.manager = get_default_ship_theme_manager()
         yield
         patch.stopall()
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_returns_none_when_not_initialized(self):
         """get_portrait_image returns None when discovery not complete."""

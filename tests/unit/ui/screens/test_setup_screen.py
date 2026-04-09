@@ -30,8 +30,8 @@ class TestBattleSetupScreen:
 
         with patch('tkinter.Tk', return_value=self.mock_tk):
             with patch('tkinter.filedialog', self.mock_filedialog):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield
@@ -138,8 +138,8 @@ class TestBattleSetupScreenTeamManagement:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield
@@ -209,8 +209,8 @@ class TestBattleSetupScreenSceneCallbacks:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield
@@ -270,8 +270,8 @@ class TestBattleSetupScreenFileIO:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield
@@ -347,8 +347,8 @@ class TestBattleSetupScreenFormations:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', self.mock_filedialog):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield
@@ -419,8 +419,8 @@ class TestBattleSetupScreenDropdown:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield
@@ -468,8 +468,8 @@ class TestBattleSetupScreenISceneProtocol:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.StrategyMetadataService') as mock_sms:
-                    mock_sms.instance.return_value = self.mock_strategy_service
+                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
+                    mock_sms.return_value = self.mock_strategy_service
                     from game.ui.screens.setup_screen import BattleSetupScreen
                     self.BattleSetupScreen = BattleSetupScreen
                     yield

@@ -21,7 +21,7 @@ from game.ui.colors import BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT
 
 logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
-from game.core.strategy_metadata import StrategyMetadataService
+from game.core.strategy_metadata import get_default_strategy_metadata_service
 from game.core.json_utils import load_json_required
 from game.core.paths import Paths
 from game.ui.screens.setup_data_io import (
@@ -83,7 +83,7 @@ class BattleSetupScreen:
         self.team2 = []
         self.scroll = ScrollState()
         self.ai_dropdown_open = None
-        self.ai_strategies = list(StrategyMetadataService.instance().strategies.keys())
+        self.ai_strategies = list(get_default_strategy_metadata_service().strategies.keys())
 
     def start(self, preserve_teams=False):
         """Initialize or reset the setup screen."""

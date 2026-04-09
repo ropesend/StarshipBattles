@@ -77,9 +77,14 @@ class ApplicationContext:
         registry_mgr = RegistryManager()
         set_default_registry_manager(registry_mgr)
 
+        # PROJ-258: Set module-level profiler for profile_action/profile_block
+        from game.core.profiling import set_default_profiler
+        profiler = Profiler()
+        set_default_profiler(profiler)
+
         return cls(
             registry_manager=registry_mgr,
-            profiler=Profiler(),
+            profiler=profiler,
             strategy_metadata=StrategyMetadataService(),
             component_cache=ComponentCacheManager(),
             strategy_manager=StrategyManager(),

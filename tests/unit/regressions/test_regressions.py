@@ -5,8 +5,8 @@ from unittest.mock import patch
 from game.simulation.entities import ship as ship
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import load_vehicle_classes
-from game.core.registry import RegistryManager, get_default_registry_provider
-from game.ui.assets import ShipThemeManager
+from game.core.registry import get_default_registry_manager, get_default_registry_provider
+from game.ui.assets import get_default_ship_theme_manager
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ class TestRegressions:
         instead of replacing the reference.
         """
         # Store original reference
-        original_ref = RegistryManager.instance().vehicle_classes
+        original_ref = get_default_registry_manager().vehicle_classes
         original_id = id(original_ref)
 
         # PROJ-211: Pass registry_provider explicitly (no fallback)
@@ -46,19 +46,19 @@ class TestRegressions:
         load_vehicle_classes(registry_provider=provider)
 
         # Verify reference is identical
-        assert id(RegistryManager.instance().vehicle_classes) == original_id, \
+        assert id(get_default_registry_manager().vehicle_classes) == original_id, \
             "vehicle_classes reference changed! Imports in other modules will be stale."
-        assert RegistryManager.instance().vehicle_classes is original_ref
+        assert get_default_registry_manager().vehicle_classes is original_ref
 
         # Verify it has content
-        assert len(RegistryManager.instance().vehicle_classes) > 0, "vehicle_classes should not be empty"
+        assert len(get_default_registry_manager().vehicle_classes) > 0, "vehicle_classes should not be empty"
 
     def test_theme_fallback_image(self, pygame_setup):
         """
         Regression Test for Crash on Missing Image:
         Verify that getting an image for a non-existent theme or class returns a valid fallback surface.
         """
-        manager = ShipThemeManager.instance()
+        manager = get_default_ship_theme_manager()
         # Force reload to ensure clean state if needed, but singleton persists.
         # Just use it.
 

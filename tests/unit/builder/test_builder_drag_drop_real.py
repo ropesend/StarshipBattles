@@ -40,12 +40,12 @@ class TestBuilderDragDropReal:
         patchers.append(p_manager)
 
         # Patch SpriteManager
-        p_sprite = patch('game.ui.screens.workshop_screen.SpriteManager')
+        p_sprite = patch('game.ui.screens.workshop_screen.get_default_sprite_manager')
         MockSpriteManager = p_sprite.start()
         patchers.append(p_sprite)
 
         # Patch ThemeManager
-        p_theme = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+        p_theme = patch('game.ui.screens.workshop_screen.get_default_ship_theme_manager')
         MockThemeManager = p_theme.start()
         patchers.append(p_theme)
 

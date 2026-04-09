@@ -3,25 +3,23 @@ import pytest
 import os
 import uuid
 
+from game.core.profiling import Profiler, set_default_profiler
+
 
 @pytest.fixture(autouse=True)
 def reset_profiler():
     """Reset profiler state before and after each test."""
-    from game.core.profiling import Profiler
-
-    Profiler.reset()
-
+    set_default_profiler(Profiler())
     yield
-
-    Profiler.reset()
+    set_default_profiler(None)
 
 
 @pytest.fixture
 def profiler():
     """Get a fresh profiler instance."""
-    from game.core.profiling import Profiler
-    Profiler.reset()
-    return Profiler.instance()
+    p = Profiler()
+    set_default_profiler(p)
+    return p
 
 
 @pytest.fixture

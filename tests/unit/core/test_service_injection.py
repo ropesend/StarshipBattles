@@ -129,7 +129,7 @@ class TestShipStatsCalculatorInjection:
     def test_calculate_stats_uses_injected_vehicle_class_data(self):
         """Verify calculate_stats actually uses injected registry values."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-        from game.core.registry import RegistryManager
+        from game.core.registry import get_default_registry_manager
 
         # Create registries with a unique vehicle class
         unique_max_mass = 99999
@@ -144,8 +144,8 @@ class TestShipStatsCalculatorInjection:
 
         service = ShipStatsCalculator(registries=registries)
 
-        # Ensure singleton does NOT have this class
-        assert "UniqueTestClass" not in RegistryManager.instance().vehicle_classes
+        # Ensure default manager does NOT have this class
+        assert "UniqueTestClass" not in get_default_registry_manager().vehicle_classes
 
         design_data = {
             "ship_class": "UniqueTestClass",
@@ -205,10 +205,10 @@ class TestModifierServiceInjection:
         result = service.is_modifier_allowed("nonexistent_mod", component)
         assert result is False
 
-    def test_is_modifier_allowed_uses_injected_not_singleton(self):
-        """Verify is_modifier_allowed uses injected registry, not singleton."""
+    def test_is_modifier_allowed_uses_injected_not_default_manager(self):
+        """Verify is_modifier_allowed uses injected registry, not default manager."""
         from game.simulation.services.modifier_service import ModifierService
-        from game.core.registry import RegistryManager
+        from game.core.registry import get_default_registry_manager
 
         # Create a unique modifier that only exists in our injected registry
         unique_mod = MockModifierDef(
@@ -217,12 +217,12 @@ class TestModifierServiceInjection:
         )
 
         injected_service = ModifierService(modifier_registry={"unique_injected_mod": unique_mod})
-        # PROJ-50: Singleton service now also requires registry injection
-        singleton_modifiers = RegistryManager.instance().modifiers
-        singleton_service = ModifierService(modifier_registry=singleton_modifiers)
+        # PROJ-50: Default manager service now also requires registry injection
+        default_modifiers = get_default_registry_manager().modifiers
+        singleton_service = ModifierService(modifier_registry=default_modifiers)
 
-        # Verify singleton does NOT have this modifier
-        assert "unique_injected_mod" not in RegistryManager.instance().modifiers
+        # Verify default manager does NOT have this modifier
+        assert "unique_injected_mod" not in get_default_registry_manager().modifiers
 
         component = MockComponent(type_str="TestType")
 
@@ -243,7 +243,7 @@ class TestModifierServiceInjection:
     def test_get_initial_value_uses_injected_registry(self):
         """Verify get_initial_value uses injected registry."""
         from game.simulation.services.modifier_service import ModifierService
-        from game.core.registry import RegistryManager
+        from game.core.registry import get_default_registry_manager
 
         unique_default = 77.5
         unique_mod = MockModifierDef(
@@ -254,8 +254,8 @@ class TestModifierServiceInjection:
 
         service = ModifierService(modifier_registry={"unique_default_mod": unique_mod})
 
-        # Verify singleton does NOT have this modifier
-        assert "unique_default_mod" not in RegistryManager.instance().modifiers
+        # Verify default manager does NOT have this modifier
+        assert "unique_default_mod" not in get_default_registry_manager().modifiers
 
         component = MockComponent(type_str="TestType")
 
@@ -367,8 +367,8 @@ class TestServiceIntegration:
     """Integration tests verifying services work with injected registries."""
 
     def test_isolated_service_testing(self):
-        """Demonstrate isolated testing without singleton pollution."""
-        from game.core.registry import RegistryManager
+        """Demonstrate isolated testing without default manager pollution."""
+        from game.core.registry import get_default_registry_manager
 
         # Create completely isolated registries
         isolated_registries = GameRegistries(
@@ -378,9 +378,9 @@ class TestServiceIntegration:
             resources={}
         )
 
-        # The singleton should NOT contain our isolated data
-        singleton_components = RegistryManager.instance().components
-        assert "isolated_comp" not in singleton_components
+        # The default manager should NOT contain our isolated data
+        default_components = get_default_registry_manager().components
+        assert "isolated_comp" not in default_components
 
         # Our registries should have the isolated data
         assert "isolated_comp" in isolated_registries.components

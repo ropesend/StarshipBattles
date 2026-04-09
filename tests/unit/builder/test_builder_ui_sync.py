@@ -21,8 +21,7 @@ class TestBuilderUISync:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
-        from game.ai.strategy_manager import StrategyManager
-        from game.core.strategy_metadata import StrategyMetadataService
+        from game.ai.strategy_manager import get_default_strategy_manager
         from tests.infrastructure.session_cache import SessionRegistryCache
 
         # Store registries for use in test methods
@@ -34,11 +33,12 @@ class TestBuilderUISync:
         strategies = cache.get_strategies()
 
         # Populate both StrategyManager (for AI) and StrategyMetadataService (for UI)
-        strat_mgr = StrategyManager.instance()
+        strat_mgr = get_default_strategy_manager()
         strat_mgr.strategies = strategies
         strat_mgr._loaded = True
 
-        StrategyMetadataService.instance().set_strategies(strategies)
+        from game.core.strategy_metadata import get_default_strategy_metadata_service
+        get_default_strategy_metadata_service().set_strategies(strategies)
 
         # Re-initialize pygame - required because other tests may have called pygame.quit()
         # which destroys the session-scoped pygame state from root conftest.
@@ -135,8 +135,8 @@ class TestBuilderUISync:
         assert val == target_class
 
         # AI Strategy Name lookup
-        from game.core.strategy_metadata import StrategyMetadataService
-        strat_name = StrategyMetadataService.instance().strategies["kamikaze"]["name"]
+        from game.core.strategy_metadata import get_default_strategy_metadata_service
+        strat_name = get_default_strategy_metadata_service().strategies["kamikaze"]["name"]
         val = self._get_option_value(self.panel.ai_dropdown.selected_option)
         assert val == strat_name
 

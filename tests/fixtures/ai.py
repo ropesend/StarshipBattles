@@ -11,7 +11,7 @@ Usage in conftest.py:
 import pytest
 
 from tests.fixtures.paths import get_unit_test_data_dir
-from game.ai.strategy_manager import StrategyManager
+from game.ai.strategy_manager import get_default_strategy_manager
 
 
 @pytest.fixture
@@ -23,12 +23,12 @@ def strategy_manager_with_test_data(unit_test_data_dir):
     test behavior independent of production data.
 
     This fixture:
-    1. Gets the singleton StrategyManager instance
+    1. Gets the default StrategyManager instance
     2. Loads test targeting, movement, and strategy policies
     3. Yields the manager for test use
     4. Clears the manager after the test
     """
-    manager = StrategyManager.instance()
+    manager = get_default_strategy_manager()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",

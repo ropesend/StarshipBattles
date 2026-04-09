@@ -32,8 +32,8 @@ def builder_setup(fresh_registries):
     mock_create_ui = patcher_create_ui.start()
 
     # Patch internal managers
-    p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
-    p2 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+    p1 = patch('game.ui.screens.workshop_screen.get_default_sprite_manager')
+    p2 = patch('game.ui.screens.workshop_screen.get_default_ship_theme_manager')
     p1.start()
     p2.start()
 

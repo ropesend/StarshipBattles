@@ -21,8 +21,8 @@ def builder_warning_setup():
     mock_create_ui = patcher.start()
 
     # Mock internal managers in both builder_screen and workshop_screen modules
-    p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
-    p2 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+    p1 = patch('game.ui.screens.workshop_screen.get_default_sprite_manager')
+    p2 = patch('game.ui.screens.workshop_screen.get_default_ship_theme_manager')
     p3 = patch('game.ui.screens.workshop_screen.UIConfirmationDialog')
     p4 = patch('game.ui.screens.workshop_event_router.UIConfirmationDialog')
     p1.start()

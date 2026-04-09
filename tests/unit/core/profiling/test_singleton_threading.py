@@ -7,69 +7,27 @@ import threading
 
 
 class TestInstanceManagement:
-    """Tests for Profiler instance access via module-level reference."""
+    """Tests for Profiler instance behavior."""
 
-    def test_instance_returns_same_object(self):
-        """instance() should return the module-level default instance."""
-        from game.core.profiling import Profiler
-
-        p1 = Profiler.instance()
-        p2 = Profiler.instance()
-        assert p1 is p2
-
-    def test_direct_instantiation_creates_new_object(self):
-        """Direct Profiler() creates a NEW instance (not singleton)."""
+    def test_direct_construction_creates_independent_instances(self):
+        """Each Profiler() call creates a new independent instance."""
         from game.core.profiling import Profiler
 
         p1 = Profiler()
         p2 = Profiler()
         assert p1 is not p2
 
-    def test_reset_allows_new_instance(self):
-        """reset() should replace the module-level instance."""
+    def test_each_instance_has_unique_session_id(self):
+        """Each new Profiler has a unique session_id."""
         from game.core.profiling import Profiler
 
-        p1 = Profiler.instance()
-        session_id_1 = p1.session_id
-
-        Profiler.reset()
-
-        p2 = Profiler.instance()
-        session_id_2 = p2.session_id
-
-        assert session_id_1 != session_id_2
+        p1 = Profiler()
+        p2 = Profiler()
+        assert p1.session_id != p2.session_id
 
 
 class TestThreadSafety:
     """Tests for thread-safe operations."""
-
-    def test_concurrent_instance_access(self):
-        """Multiple threads calling instance() should get same instance."""
-        from game.core.profiling import Profiler
-
-        Profiler.reset()
-        results = []
-        errors = []
-
-        def get_instance():
-            try:
-                results.append(Profiler.instance())
-            except Exception as e:
-                errors.append(e)
-
-        threads = [threading.Thread(target=get_instance) for _ in range(10)]
-
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-
-        assert len(errors) == 0
-        assert len(results) == 10
-
-        # All should be same instance
-        first = results[0]
-        assert all(r is first for r in results)
 
     def test_concurrent_recording(self, profiler):
         """Multiple threads recording should not corrupt data."""

@@ -3,23 +3,24 @@ import os
 import time
 import uuid
 from unittest.mock import patch
-from game.core.profiling import Profiler, profile_action, profile_block
+from game.core.profiling import Profiler, profile_action, profile_block, set_default_profiler
 from game.core.json_utils import load_json
 
 
 @pytest.fixture
 def profiler_setup():
     """Set up a fresh profiler state for each test."""
-    Profiler.reset()
-    profiler = Profiler.instance()
+    profiler = Profiler()
     profiler.active = False
     profiler.records = []
+    set_default_profiler(profiler)
     test_file = f"test_profiling_history_{uuid.uuid4().hex[:8]}.json"
     if os.path.exists(test_file):
         os.remove(test_file)
 
     yield test_file
 
+    set_default_profiler(None)
     if os.path.exists(test_file):
         try:
             os.remove(test_file)
@@ -30,14 +31,15 @@ def profiler_setup():
 @pytest.fixture
 def json_utils_setup():
     """Set up for JSON utils tests."""
-    Profiler.reset()
-    profiler = Profiler.instance()
+    profiler = Profiler()
     profiler.active = False
     profiler.records = []
+    set_default_profiler(profiler)
     test_file = f"test_profiling_json_utils_{uuid.uuid4().hex[:8]}.json"
 
     yield test_file
 
+    set_default_profiler(None)
     if os.path.exists(test_file):
         try:
             os.remove(test_file)
@@ -64,7 +66,8 @@ class TestProfilingJsonUtils:
         test_file = json_utils_setup
         mock_save_json.return_value = True
 
-        profiler = Profiler.instance()
+        from game.core.profiling import _default_profiler
+        profiler = _default_profiler
         profiler.start()
         profiler.record("test_action", 0.1)
         profiler.save_history(test_file)
@@ -86,7 +89,8 @@ class TestProfilingJsonUtils:
         with open(test_file, 'w') as f:
             f.write('[{"session_id": "old", "records": []}]')
 
-        profiler = Profiler.instance()
+        from game.core.profiling import _default_profiler
+        profiler = _default_profiler
         profiler.start()
         profiler.record("test_action", 0.1)
         profiler.save_history(test_file)
@@ -96,14 +100,14 @@ class TestProfilingJsonUtils:
 
 
 class TestProfiling:
-    def test_singleton(self, profiler_setup):
-        # Use instance() for singleton access
-        p1 = Profiler.instance()
-        p2 = Profiler.instance()
-        assert p1 is p2
+    def test_independent_instances(self, profiler_setup):
+        # Direct construction creates independent instances
+        p1 = Profiler()
+        p2 = Profiler()
+        assert p1 is not p2
 
     def test_toggling(self, profiler_setup):
-        profiler = Profiler.instance()
+        profiler = Profiler()
         assert not profiler.is_active()
         profiler.start()
         assert profiler.is_active()
@@ -113,7 +117,7 @@ class TestProfiling:
         assert profiler.is_active()
 
     def test_recording(self, profiler_setup):
-        profiler = Profiler.instance()
+        profiler = Profiler()
         profiler.start()
         profiler.record("test_action", 0.1)
         assert len(profiler.records) == 1
@@ -121,14 +125,15 @@ class TestProfiling:
         assert abs(profiler.records[0]['duration_ms'] - 100.0) < 0.1
 
     def test_recording_inactive(self, profiler_setup):
-        profiler = Profiler.instance()
+        profiler = Profiler()
         profiler.stop()
         profiler.record("test_action", 0.1)
         assert len(profiler.records) == 0
 
     def test_context_manager(self, profiler_setup):
-        profiler = Profiler.instance()
+        profiler = Profiler()
         profiler.start()
+        set_default_profiler(profiler)
         with profile_block("block_action"):
             time.sleep(0.02)  # 20ms sleep for more reliable timing
 
@@ -138,8 +143,9 @@ class TestProfiling:
         assert profiler.records[0]['duration_ms'] > 15.0
 
     def test_decorator(self, profiler_setup):
-        profiler = Profiler.instance()
+        profiler = Profiler()
         profiler.start()
+        set_default_profiler(profiler)
 
         @profile_action("func_action")
         def slow_func():
@@ -152,7 +158,7 @@ class TestProfiling:
 
     def test_save_history(self, profiler_setup):
         test_file = profiler_setup
-        profiler = Profiler.instance()
+        profiler = Profiler()
         profiler.start()
         profiler.record("action1", 0.1)
         profiler.save_history(test_file)

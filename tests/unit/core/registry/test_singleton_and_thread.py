@@ -2,27 +2,32 @@
 Tests for RegistryManager instance management, thread safety, and test isolation.
 
 PROJ-258: RegistryManager migrated from SingletonMeta to DI via ApplicationContext.
-The .instance() and .reset() compatibility shims use a module-level reference.
+Module-level get_default_registry_manager() / set_default_registry_manager() are
+the permanent API for accessing the shared instance.
 """
 
 import pytest
 import threading
 from unittest.mock import MagicMock
 
-from game.core.registry import RegistryManager
+from game.core.registry import (
+    RegistryManager,
+    get_default_registry_manager,
+    set_default_registry_manager,
+)
 
 
 # =============================================================================
-# Test: Instance Management (PROJ-258: module-level reference pattern)
+# Test: Instance Management (module-level reference pattern)
 # =============================================================================
 
 class TestInstanceManagement:
     """Tests for RegistryManager instance access via module-level reference."""
 
-    def test_instance_returns_same_object(self):
-        """instance() should return the module-level default instance."""
-        r1 = RegistryManager.instance()
-        r2 = RegistryManager.instance()
+    def test_get_default_returns_same_object(self):
+        """get_default_registry_manager() should return the same instance."""
+        r1 = get_default_registry_manager()
+        r2 = get_default_registry_manager()
         assert r1 is r2
 
     def test_direct_instantiation_creates_new_object(self):
@@ -31,26 +36,26 @@ class TestInstanceManagement:
         r2 = RegistryManager()
         assert r1 is not r2
 
-    def test_reset_allows_new_instance(self):
-        """reset() should replace the module-level instance."""
-        r1 = RegistryManager.instance()
+    def test_set_default_replaces_instance(self):
+        """set_default_registry_manager() should replace the module-level instance."""
+        r1 = get_default_registry_manager()
         id1 = id(r1)
 
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
-        r2 = RegistryManager.instance()
+        r2 = get_default_registry_manager()
         id2 = id(r2)
 
         assert id1 != id2
 
-    def test_reset_provides_clean_state(self):
-        """reset() creates a fresh instance with empty registries."""
-        r1 = RegistryManager.instance()
+    def test_set_default_provides_clean_state(self):
+        """set_default_registry_manager(RegistryManager()) creates a fresh instance with empty registries."""
+        r1 = get_default_registry_manager()
         r1.components["test"] = {"id": "test"}
 
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
-        r2 = RegistryManager.instance()
+        r2 = get_default_registry_manager()
         assert len(r2.components) == 0
 
 
@@ -62,16 +67,14 @@ class TestThreadSafety:
     """Tests for thread-safe operations."""
 
     def test_concurrent_instance_access(self):
-        """Multiple threads calling instance() should get same instance."""
-        from game.core.registry import RegistryManager
-
-        RegistryManager.reset()
+        """Multiple threads calling get_default_registry_manager() should get same instance."""
+        set_default_registry_manager(RegistryManager())
         results = []
         errors = []
 
         def get_instance():
             try:
-                results.append(RegistryManager.instance())
+                results.append(get_default_registry_manager())
             except Exception as e:
                 errors.append(e)
 
@@ -146,12 +149,10 @@ class TestIsolation:
     to prevent data accumulation bugs.
     """
 
-    def test_reset_provides_clean_slate(self):
-        """reset() should provide completely clean state."""
-        from game.core.registry import RegistryManager
-
+    def test_set_default_provides_clean_slate(self):
+        """set_default_registry_manager(RegistryManager()) should provide completely clean state."""
         # Populate with data
-        r1 = RegistryManager.instance()
+        r1 = get_default_registry_manager()
         r1.components["a"] = {"id": "a"}
         r1.modifiers["b"] = {"id": "b"}
         r1.vehicle_classes["c"] = {"name": "c"}
@@ -160,10 +161,10 @@ class TestIsolation:
         r1.freeze()
 
         # Reset
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
         # Get new instance
-        r2 = RegistryManager.instance()
+        r2 = get_default_registry_manager()
 
         # All should be empty/default
         assert len(r2.components) == 0
@@ -183,22 +184,21 @@ class TestIsolation:
         assert len(registry.components) == 0
         assert len(registry.modifiers) == 0
 
-    def test_stale_references_after_reset(self):
+    def test_stale_references_after_set_default(self):
         """
-        WARNING: Stale references after reset can cause issues.
+        WARNING: Stale references after set_default can cause issues.
 
-        When reset() is called, code holding old dict references will see
-        stale data. The clear() method is safer as it preserves dict identity.
+        When set_default_registry_manager() is called with a new instance,
+        code holding old dict references will see stale data.
+        The clear() method is safer as it preserves dict identity.
         """
-        from game.core.registry import RegistryManager
-
-        r1 = RegistryManager.instance()
+        r1 = get_default_registry_manager()
         old_components = r1.components
         old_components["test"] = {"id": "test"}
 
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
-        r2 = RegistryManager.instance()
+        r2 = get_default_registry_manager()
 
         # New instance has different dict
         assert r2.components is not old_components
@@ -225,18 +225,16 @@ class TestIsolation:
         BUG DOC: Demonstrate data accumulation if clear() not called.
 
         Without proper cleanup between tests, data accumulates in the
-        singleton registry.
+        shared registry.
         """
-        from game.core.registry import RegistryManager
-
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
         # Simulate first test
-        r1 = RegistryManager.instance()
+        r1 = get_default_registry_manager()
         r1.components["from_test_1"] = {"id": "from_test_1"}
 
         # Simulate second test (without cleanup)
-        r2 = RegistryManager.instance()
+        r2 = get_default_registry_manager()
         r2.components["from_test_2"] = {"id": "from_test_2"}
 
         # BUG: Both are present (data accumulated)

@@ -68,7 +68,7 @@ from game.core.protocols import is_combatant
 from game.ai.protocols import is_projectile, IGridEntity
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
-from game.ai.strategy_manager import StrategyManager
+from game.ai.strategy_manager import get_default_strategy_manager
 from game.ai.combat_utils import (
     get_capability_cache_key,
     get_entity_id,
@@ -107,7 +107,7 @@ class AIController:
     def get_resolved_strategy(self) -> Dict[str, Any]:
         """Get the fully resolved strategy for this ship's AI strategy ID."""
         strategy_id = self.ship.get_ai_strategy()
-        return StrategyManager.instance().resolve_strategy(strategy_id)
+        return get_default_strategy_manager().resolve_strategy(strategy_id)
 
     def get_engage_distance_multiplier(self, policy) -> float:
         """Helper to get engage distance multiplier from policy."""

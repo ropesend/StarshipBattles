@@ -2,16 +2,16 @@ import pytest
 from unittest.mock import MagicMock, patch
 import os
 import pygame
-from game.ui.renderer.sprites import SpriteManager
+from game.ui.renderer.sprites import SpriteManager, get_default_sprite_manager, set_default_sprite_manager
 
 
 class TestSpriteLoading:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        # Reset singleton
-        SpriteManager.reset()
-        self.mgr = SpriteManager.instance()
+        # Reset default
+        set_default_sprite_manager(SpriteManager())
+        self.mgr = get_default_sprite_manager()
 
     @patch('os.path.exists')
     @patch('os.listdir')

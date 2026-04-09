@@ -338,11 +338,11 @@ class TestPlanetDataSourceCellImage:
 
         # Mock AssetManager
         mock_surface = pygame.Surface((128, 128))
-        with patch("game.ui.screens.planet_data_source.AssetManager") as MockAM:
+        with patch("game.ui.screens.planet_data_source.get_default_asset_manager") as MockAM:
             mock_instance = Mock()
             mock_instance.load_planet_image = Mock(return_value=mock_surface)
             mock_instance.get_missing_texture = Mock(return_value=None)
-            MockAM.instance = Mock(return_value=mock_instance)
+            MockAM.return_value = mock_instance
 
             ds = PlanetDataSource(columns, Mock(), Mock())
             ds.update_data([planet])
@@ -368,11 +368,11 @@ class TestPlanetDataSourceCellImage:
         ]
 
         mock_surface = pygame.Surface((128, 128))
-        with patch("game.ui.screens.planet_data_source.AssetManager") as MockAM:
+        with patch("game.ui.screens.planet_data_source.get_default_asset_manager") as MockAM:
             mock_instance = Mock()
             mock_instance.load_planet_image = Mock(return_value=mock_surface)
             mock_instance.get_missing_texture = Mock(return_value=None)
-            MockAM.instance = Mock(return_value=mock_instance)
+            MockAM.return_value = mock_instance
 
             ds = PlanetDataSource(columns, Mock(), Mock())
             ds.update_data([planet])
@@ -399,11 +399,11 @@ class TestPlanetDataSourceCellImage:
         ]
 
         mock_surface = pygame.Surface((128, 128))
-        with patch("game.ui.screens.planet_data_source.AssetManager") as MockAM:
+        with patch("game.ui.screens.planet_data_source.get_default_asset_manager") as MockAM:
             mock_instance = Mock()
             mock_instance.load_planet_image = Mock(return_value=mock_surface)
             mock_instance.get_missing_texture = Mock(return_value=None)
-            MockAM.instance = Mock(return_value=mock_instance)
+            MockAM.return_value = mock_instance
 
             ds = PlanetDataSource(columns, Mock(), Mock())
             ds.update_data([planet])
@@ -448,11 +448,11 @@ class TestPlanetDataSourceCellImage:
         ]
 
         missing_texture = pygame.Surface((32, 32))
-        with patch("game.ui.screens.planet_data_source.AssetManager") as MockAM:
+        with patch("game.ui.screens.planet_data_source.get_default_asset_manager") as MockAM:
             mock_instance = Mock()
             mock_instance.load_planet_image = Mock(return_value=missing_texture)
             mock_instance.get_missing_texture = Mock(return_value=missing_texture)
-            MockAM.instance = Mock(return_value=mock_instance)
+            MockAM.return_value = mock_instance
 
             ds = PlanetDataSource(columns, Mock(), Mock())
             ds.update_data([planet])

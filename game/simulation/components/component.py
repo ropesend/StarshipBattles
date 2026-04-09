@@ -385,6 +385,7 @@ class Component:
 # =============================================================================
 from game.simulation.components.component_loader import (  # noqa: F401
     ComponentCacheManager,
+    get_default_cache_manager,
     reset_component_caches,
     load_components_data,
     load_components,

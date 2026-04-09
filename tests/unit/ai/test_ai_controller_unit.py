@@ -49,7 +49,7 @@ def mock_grid():
 @pytest.fixture
 def mock_strategy_manager():
     """Create mock StrategyManager with default strategy."""
-    with patch('game.ai.controller.StrategyManager') as mock_sm:
+    with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
         instance = Mock()
         instance.resolve_strategy.return_value = {
             'definition': {},
@@ -60,7 +60,7 @@ def mock_strategy_manager():
                 'retreat_hp_threshold': 0.1,
             }
         }
-        mock_sm.instance.return_value = instance
+        mock_sm.return_value = instance
         yield mock_sm
 
 
@@ -306,7 +306,7 @@ class TestBehaviorContextMerging:
         from game.ai.controller import AIController
 
         # Set up strategy with specific movement policy
-        with patch('game.ai.controller.StrategyManager') as mock_sm:
+        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
             instance = Mock()
             instance.resolve_strategy.return_value = {
                 'definition': {'fire_while_retreating': True},
@@ -318,7 +318,7 @@ class TestBehaviorContextMerging:
                     'approach_distance': 0.5,
                 }
             }
-            mock_sm.instance.return_value = instance
+            mock_sm.return_value = instance
 
             # Set up target so behavior actually runs
             target = Mock()
@@ -350,7 +350,7 @@ class TestBehaviorContextMerging:
         """Definition fields override movement policy fields if both present."""
         from game.ai.controller import AIController
 
-        with patch('game.ai.controller.StrategyManager') as mock_sm:
+        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
             instance = Mock()
             instance.resolve_strategy.return_value = {
                 'definition': {'engage_distance': 0.9},  # Override
@@ -361,7 +361,7 @@ class TestBehaviorContextMerging:
                     'retreat_hp_threshold': 0.1,
                 }
             }
-            mock_sm.instance.return_value = instance
+            mock_sm.return_value = instance
 
             target = Mock()
             target.is_alive = True
@@ -404,14 +404,14 @@ class TestFormationTargetSync:
         mock_ship.get_formation_master.return_value = master
         mock_ship.get_current_target.return_value = None  # Member has no target
 
-        with patch('game.ai.controller.StrategyManager') as mock_sm:
+        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
             instance = Mock()
             instance.resolve_strategy.return_value = {
                 'definition': {},
                 'targeting': {'rules': []},
                 'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
             }
-            mock_sm.instance.return_value = instance
+            mock_sm.return_value = instance
 
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -435,14 +435,14 @@ class TestFormationTargetSync:
         mock_ship.get_formation_master.return_value = master
         mock_ship.get_current_target.return_value = None
 
-        with patch('game.ai.controller.StrategyManager') as mock_sm:
+        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
             instance = Mock()
             instance.resolve_strategy.return_value = {
                 'definition': {},
                 'targeting': {'rules': []},
                 'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
             }
-            mock_sm.instance.return_value = instance
+            mock_sm.return_value = instance
 
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -497,14 +497,14 @@ class TestSecondaryTargetAcquisition:
         mock_grid.query_radius_exact.return_value = [primary, secondary1, secondary2]
         mock_ship.get_current_target.return_value = primary
 
-        with patch('game.ai.controller.StrategyManager') as mock_sm:
+        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
             instance = Mock()
             instance.resolve_strategy.return_value = {
                 'definition': {},
                 'targeting': {'rules': []},
                 'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
             }
-            mock_sm.instance.return_value = instance
+            mock_sm.return_value = instance
 
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -529,14 +529,14 @@ class TestSecondaryTargetAcquisition:
         target.position = Vector2(200, 100)
         mock_ship.get_current_target.return_value = target
 
-        with patch('game.ai.controller.StrategyManager') as mock_sm:
+        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
             instance = Mock()
             instance.resolve_strategy.return_value = {
                 'definition': {},
                 'targeting': {'rules': []},
                 'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
             }
-            mock_sm.instance.return_value = instance
+            mock_sm.return_value = instance
 
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 

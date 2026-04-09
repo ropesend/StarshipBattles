@@ -19,11 +19,11 @@ class ShipThemeManager:
     Manager for ship visual themes.
 
     Usage:
-        manager = ShipThemeManager.instance()
+        manager = get_default_ship_theme_manager()
         surface = manager.load_image("Federation", "Escort")
 
     Testing:
-        - Use reset() to destroy instance completely
+        - Use set_default_ship_theme_manager(ShipThemeManager()) to replace the default
         - Use clear() to reset caches but preserve instance
     """
 
@@ -44,20 +44,6 @@ class ShipThemeManager:
         self.discovery_complete = False
         self._init_lock = threading.Lock()
         self._io_lock = threading.Lock() # For on-demand loading
-
-    @classmethod
-    def instance(cls) -> 'ShipThemeManager':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_ship_theme_manager
-        if _default_ship_theme_manager is None:
-            _default_ship_theme_manager = cls()
-        return _default_ship_theme_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_ship_theme_manager
-        _default_ship_theme_manager = cls()
 
     def clear(self):
         """Reset all caches and state. Used for test isolation."""
@@ -338,3 +324,17 @@ class ShipThemeManager:
 
         # Handle space-separated names (e.g., "Light Cruiser")
         return ship_class.replace(" ", "")
+
+
+def get_default_ship_theme_manager() -> ShipThemeManager:
+    """Get the module-level ShipThemeManager instance, creating one if needed."""
+    global _default_ship_theme_manager
+    if _default_ship_theme_manager is None:
+        _default_ship_theme_manager = ShipThemeManager()
+    return _default_ship_theme_manager
+
+
+def set_default_ship_theme_manager(manager: ShipThemeManager) -> None:
+    """Set the module-level ShipThemeManager instance."""
+    global _default_ship_theme_manager
+    _default_ship_theme_manager = manager

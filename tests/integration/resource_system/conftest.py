@@ -8,7 +8,7 @@ import pytest
 from dataclasses import dataclass
 from typing import Dict, Any, List
 
-from game.core.registry import RegistryManager, GameRegistries
+from game.core.registry import get_default_registry_manager, GameRegistries
 from game.strategy.data.ship_instance import ShipInstance
 
 
@@ -17,16 +17,17 @@ def loaded_registry():
     """
     Registry with real component data loaded.
 
-    # PROJ-195: Legitimate — integration tests that add test components to singleton
-    # for full-pipeline testing. ShipInstance.get_calculated_stats() internally uses
-    # get_default_registry_provider() which reads from the singleton, so these tests
-    # must add components there.
+    # PROJ-195: Legitimate — integration tests that add test components to the
+    # default registry manager for full-pipeline testing.
+    # ShipInstance.get_calculated_stats() internally uses
+    # get_default_registry_provider() which reads from the default manager,
+    # so these tests must add components there.
 
     Relies on reset_game_state (autouse) for isolation.
     That fixture clears, hydrates from SessionRegistryCache,
     and cleans up after each test automatically.
     """
-    return RegistryManager.instance()
+    return get_default_registry_manager()
 
 
 @pytest.fixture

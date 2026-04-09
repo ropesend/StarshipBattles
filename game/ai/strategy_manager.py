@@ -1,9 +1,8 @@
 """
-Strategy Manager - Singleton manager for combat strategies, targeting policies, and movement policies.
+Strategy Manager - Manager for combat strategies, targeting policies, and movement policies.
 
 Exception Handling
 ==================
-- Uses StateException for singleton violations (programming errors)
 - All policy lookups return defaults for missing keys (graceful degradation)
 """
 
@@ -15,16 +14,34 @@ from typing import Any, Dict, Optional
 from game.core.json_utils import load_json
 
 logger = logging.getLogger(__name__)
-from game.core.strategy_metadata import StrategyMetadataService
+from game.core.strategy_metadata import get_default_strategy_metadata_service
 
 # Module-level reference (PROJ-258)
 _default_strategy_manager: Optional['StrategyManager'] = None
 
 
+def get_default_strategy_manager() -> 'StrategyManager':
+    """Get the module-level StrategyManager reference.
+
+    Auto-creates on first access if not yet set.
+
+    Returns:
+        The module-level StrategyManager instance.
+    """
+    global _default_strategy_manager
+    if _default_strategy_manager is None:
+        _default_strategy_manager = StrategyManager()
+    return _default_strategy_manager
+
+
 class StrategyManager:
     """Manager for combat strategies, targeting policies, and movement policies.
 
-    PROJ-258: Migrated from SingletonMeta to DI via ApplicationContext.
+    PROJ-258: Migrated from SingletonMeta to DI via module-level accessor.
+
+    Access patterns:
+        - Production: get_default_strategy_manager()
+        - Tests: StrategyManager() for direct construction
 
     Thread Safety:
         - Data loading (load_data/ensure_loaded) is thread-safe via locking
@@ -44,20 +61,6 @@ class StrategyManager:
             'strategy': {'name': 'Default', 'targeting_policy': 'standard', 'movement_policy': 'kite_max'}
         }
 
-    @classmethod
-    def instance(cls) -> 'StrategyManager':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_strategy_manager
-        if _default_strategy_manager is None:
-            _default_strategy_manager = cls()
-        return _default_strategy_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_strategy_manager
-        _default_strategy_manager = cls()
-
     def clear(self):
         """
         Reset all policies. Used for test isolation.
@@ -69,7 +72,7 @@ class StrategyManager:
         self.strategies = {}
         self._loaded = False
         # Also clear the metadata service for UI layer
-        StrategyMetadataService.instance().clear()
+        get_default_strategy_metadata_service().clear()
 
     def ensure_loaded(self, base_path: str = "data"):
         """
@@ -108,7 +111,7 @@ class StrategyManager:
         self.strategies = strategy_data.get('strategies', {})
 
         # Populate metadata service for UI layer
-        StrategyMetadataService.instance().set_strategies(self.strategies)
+        get_default_strategy_metadata_service().set_strategies(self.strategies)
 
         logger.info(f"StrategyManager loaded: {len(self.strategies)} strategies, {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
 

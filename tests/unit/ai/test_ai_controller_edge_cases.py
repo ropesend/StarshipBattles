@@ -13,7 +13,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.ai.controller import AIController
-from game.ai.strategy_manager import StrategyManager
+from game.ai.strategy_manager import StrategyManager, get_default_strategy_manager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.core.math import Vector2
 
@@ -87,7 +87,7 @@ class TestAIControllerStrategyResolution:
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
         # resolve_strategy should return default when ID not found
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             # Simulate returning a fallback/default strategy
             mock_instance.resolve_strategy = MagicMock(return_value={
@@ -106,7 +106,7 @@ class TestAIControllerStrategyResolution:
         """Controller handles empty targeting rules gracefully."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             mock_instance.resolve_strategy = MagicMock(return_value={
                 'targeting': {'rules': []},  # Empty rules
@@ -123,7 +123,7 @@ class TestAIControllerStrategyResolution:
         """Controller handles missing behavior key with fallback to 'kite'."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             mock_instance.resolve_strategy = MagicMock(return_value={
                 'targeting': {'rules': []},
@@ -165,7 +165,7 @@ class TestAIControllerShipCapabilities:
         mock_grid.query_radius = MagicMock(return_value=[enemy])
         mock_grid.query_radius_exact = MagicMock(return_value=[enemy])
 
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             mock_instance.resolve_strategy = MagicMock(return_value={
                 'targeting': {'rules': [{'type': 'nearest', 'weight': 1}]},
@@ -184,7 +184,7 @@ class TestAIControllerShipCapabilities:
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             mock_instance.resolve_strategy = MagicMock(return_value={
                 'targeting': {'rules': []},
@@ -222,7 +222,7 @@ class TestAIControllerUpdateEdgeCases:
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             mock_instance.resolve_strategy = MagicMock(return_value={
                 'targeting': {'rules': []},
@@ -242,15 +242,20 @@ class TestAIControllerUpdateEdgeCases:
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # Create target for satellite
+        # Create target for satellite with enough attributes for targeting
         enemy = MagicMock()
         enemy.is_alive = True
         enemy.team_id = 1
         enemy.position = Vector2(100, 0)
+        enemy.name = "enemy_ship"
+        enemy.mass = 100.0
+        enemy.max_speed = 10.0
+        enemy.current_shields = 0.0
+        enemy.max_shields = 0.0
         mock_grid.query_radius = MagicMock(return_value=[enemy])
         mock_grid.query_radius_exact = MagicMock(return_value=[enemy])
 
-        with patch.object(StrategyManager, 'instance') as mock_manager:
+        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
             mock_instance = MagicMock()
             mock_instance.resolve_strategy = MagicMock(return_value={
                 'targeting': {'rules': [{'type': 'nearest', 'weight': 1}]},

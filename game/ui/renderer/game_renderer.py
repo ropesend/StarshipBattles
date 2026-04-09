@@ -8,7 +8,7 @@ import pygame
 import math
 from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 from game.ui.colors import (
     LAYER_ARMOR, LAYER_OUTER, LAYER_INNER, LAYER_CORE,
     DEBUG_COLLISION, DEBUG_DIRECTION,
@@ -71,7 +71,7 @@ def draw_ship(surface, ship, camera):
     base_radius = ship.radius
     
     # Draw Theme Image if available
-    theme_mgr = ShipThemeManager.instance()
+    theme_mgr = get_default_ship_theme_manager()
     theme_id = getattr(ship, 'theme_id', 'Federation')
     ship_img = theme_mgr.load_image(theme_id, ship.ship_class)
     

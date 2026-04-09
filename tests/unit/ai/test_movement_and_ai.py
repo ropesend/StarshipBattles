@@ -6,7 +6,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.screens.battle_screen import BattleScreen
 from game.ai.controller import AIController
-from game.ai.strategy_manager import StrategyManager
+from game.ai.strategy_manager import get_default_strategy_manager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.constants import LayerType
@@ -35,7 +35,7 @@ def movement_ai_setup(fresh_registries):
         mod_path_str = str(mod_path)
         load_modifiers(str(mod_path), registry_provider=provider)
 
-    manager = StrategyManager.instance()
+    manager = get_default_strategy_manager()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
@@ -52,7 +52,7 @@ def movement_ai_setup(fresh_registries):
     }
 
     pygame.quit()
-    StrategyManager.instance().clear()
+    get_default_strategy_manager().clear()
 
 
 class TestMovementAndAI:

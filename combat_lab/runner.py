@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from game.core.paths import Paths
-from game.core.registry import RegistryManager, get_default_registry_provider
+from game.core.registry import get_default_registry_manager, get_default_registry_provider
 from game.simulation.systems.battle_engine import BattleEngine
 from game.ai.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
@@ -42,7 +42,7 @@ class TestRunner:
         paths = scenario.get_data_paths()
 
         # Reset Globals (unfreeze if needed for Combat Lab)
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         was_frozen = registry._frozen
         logger.debug(f"RegistryManager frozen state: {was_frozen}")
 

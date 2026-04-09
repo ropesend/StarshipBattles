@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 from game.core.constants import LayerType  # Canonical location for LayerType
 from game.core.string_utils import display_name
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 from game.ui.colors import BAR_BG, BAR_BORDER
 from game.ui.utils.formatters import get_damage_color
 
@@ -172,7 +172,7 @@ class ShipDetailPanel:
         theme_id = ship.design_data.get('theme_id', 'Federation')
         ship_class = ship.design_data.get('ship_class', 'Unknown')
         logger.debug(f"ShipDetailPanel: building display for theme_id='{theme_id}', ship_class='{ship_class}'")
-        theme_mgr = ShipThemeManager.instance()
+        theme_mgr = get_default_ship_theme_manager()
 
         # Portrait image (left)
         portrait_surf = self._get_scaled_image(

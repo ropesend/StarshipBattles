@@ -14,7 +14,7 @@ from game.ui.config import UIConfig
 import logging
 
 logger = logging.getLogger(__name__)
-from game.ui.services.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.ui.screens.star_list_filters import (
     gather_stars, filter_stars, sort_stars,
     compute_star_ranges, get_system_name, get_star_type_display,
@@ -451,7 +451,7 @@ class StarListWindow(UIWindow):
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen."""
-        sm = ScreenshotManager.instance()
+        sm = get_default_screenshot_manager()
         sm.capture(label="star_list")
         logger.info("Screenshot: Star List window captured")
         sm.show_toast(self.ui_manager, self.rect.width)

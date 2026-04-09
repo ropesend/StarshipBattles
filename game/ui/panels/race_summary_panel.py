@@ -17,7 +17,7 @@ import pygame_gui
 from typing import Dict, List, Optional, Callable, TYPE_CHECKING
 
 from game.core.string_utils import display_name
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 
 logger = logging.getLogger(__name__)
 from game.ui.utils import create_section_header
@@ -584,7 +584,7 @@ class RaceSummaryPanel:
         if not self.race_config.theme_id or not self.summary_ship_panel:
             return
 
-        theme_manager = ShipThemeManager.instance()
+        theme_manager = get_default_ship_theme_manager()
         theme_manager.initialize()
 
         # Show one representative from each category with both views

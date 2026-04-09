@@ -9,8 +9,10 @@ These tests verify that the new pure loading functions:
 import pytest
 import copy
 
-from game.core.registry import RegistryManager, GameRegistries
-from game.core.singleton import SingletonMeta
+from game.core.registry import (
+    RegistryManager, GameRegistries,
+    set_default_registry_manager, get_default_registry_manager,
+)
 
 
 def _make_minimal_registries():
@@ -21,10 +23,9 @@ def _make_minimal_registries():
 @pytest.fixture(autouse=True)
 def reset_registry():
     """Reset registry state before and after each test."""
-    original_instance = SingletonMeta._instances.get(RegistryManager)
-    RegistryManager.reset()
+    set_default_registry_manager(RegistryManager())
     yield
-    RegistryManager.reset()
+    set_default_registry_manager(RegistryManager())
 
 
 # =============================================================================
@@ -59,10 +60,9 @@ class TestLoadComponentsData:
     def test_load_components_data_does_not_modify_registry(self):
         """load_components_data() should NOT modify the global registry."""
         from game.simulation.components.component import load_components_data
-        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = RegistryManager.instance().components
+        registry = get_default_registry_manager().components
         assert len(registry) == 0
 
         # Call pure function - PROJ-211: registries is now required
@@ -130,10 +130,9 @@ class TestLoadModifiersData:
     def test_load_modifiers_data_does_not_modify_registry(self):
         """load_modifiers_data() should NOT modify the global registry."""
         from game.simulation.components.component import load_modifiers_data
-        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = RegistryManager.instance().modifiers
+        registry = get_default_registry_manager().modifiers
         assert len(registry) == 0
 
         # Call pure function
@@ -195,10 +194,9 @@ class TestLoadVehicleClassesData:
     def test_load_vehicle_classes_data_does_not_modify_registry(self):
         """load_vehicle_classes_data() should NOT modify the global registry."""
         from game.simulation.entities.ship_loader import load_vehicle_classes_data
-        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = RegistryManager.instance().vehicle_classes
+        registry = get_default_registry_manager().vehicle_classes
         assert len(registry) == 0
 
         # Call pure function
@@ -274,10 +272,9 @@ class TestResourceCatalogLoading:
     def test_resource_catalog_does_not_modify_registry(self):
         """ResourceCatalog.from_json() should NOT modify the global registry."""
         from game.core.resources import ResourceCatalog
-        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = RegistryManager.instance().resources
+        registry = get_default_registry_manager().resources
         assert len(registry) == 0
 
         # Load catalog

@@ -173,13 +173,13 @@ class TestAIControllerWithProductionData:
     @pytest.fixture
     def production_strategy_manager(self):
         """Load production combat strategies from real JSON files."""
-        from game.ai.strategy_manager import StrategyManager
+        from game.ai.strategy_manager import get_default_strategy_manager
         from tests.fixtures.paths import get_data_dir
 
         data_dir = get_data_dir()
 
         # Clear and reload with production data
-        manager = StrategyManager.instance()
+        manager = get_default_strategy_manager()
         manager.clear()
         manager.load_data(str(data_dir))
 

@@ -99,12 +99,12 @@ class WorkshopDataLoader:
     
     def clear_registries(self) -> None:
         """Clear all game data registries before loading new data."""
-        from game.core.strategy_metadata import StrategyMetadataService
+        from game.core.strategy_metadata import get_default_strategy_metadata_service
 
         clear_registry()
 
         # Clear StrategyMetadataService data
-        StrategyMetadataService.instance().clear()
+        get_default_strategy_metadata_service().clear()
     
     def load_all(self) -> LoadResult:
         """
@@ -175,12 +175,12 @@ class WorkshopDataLoader:
         PROJ-148: Uses StrategyManager.load_data() as the single source of truth.
         StrategyManager automatically populates StrategyMetadataService.
         """
-        from game.ai.strategy_manager import StrategyManager
+        from game.ai.strategy_manager import get_default_strategy_manager
 
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")
 
-        manager = StrategyManager.instance()
+        manager = get_default_strategy_manager()
         manager.clear()  # Clears both StrategyManager and StrategyMetadataService
 
         if os.path.exists(test_strat):

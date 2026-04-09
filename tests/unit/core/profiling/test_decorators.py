@@ -3,27 +3,23 @@ import pytest
 import time
 
 
-class TestProfilerSingleton:
-    """Tests for the Profiler singleton pattern."""
+class TestProfilerConstruction:
+    """Tests for Profiler direct construction."""
 
-    def test_singleton_returns_same_instance(self):
-        """Profiler.instance() should return same instance."""
+    def test_construction_creates_independent_instances(self):
+        """Profiler() should create independent instances."""
         from game.core.profiling import Profiler
 
-        # Reset to ensure fresh state
-        Profiler.reset()
+        instance1 = Profiler()
+        instance2 = Profiler()
 
-        instance1 = Profiler.instance()
-        instance2 = Profiler.instance()
+        assert instance1 is not instance2
 
-        assert instance1 is instance2
-
-    def test_singleton_methods_work(self):
-        """Profiler singleton should work with method calls."""
+    def test_instance_methods_work(self):
+        """Profiler instance should work with method calls."""
         from game.core.profiling import Profiler
 
-        Profiler.reset()
-        profiler = Profiler.instance()
+        profiler = Profiler()
 
         assert profiler.active is False
         profiler.start()

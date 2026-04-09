@@ -276,7 +276,7 @@ class FleetDataSource(ITableDataSource):
         Returns:
             Scaled pygame surface.
         """
-        from game.ui.assets import ShipThemeManager
+        from game.ui.assets import get_default_ship_theme_manager
 
         # Get theme and ship class from design_data
         theme_id = ship.design_data.get("theme_id", "Federation")
@@ -288,7 +288,7 @@ class FleetDataSource(ITableDataSource):
             return self._image_cache[cache_key]
 
         # Get image from theme manager
-        theme_mgr = ShipThemeManager.instance()
+        theme_mgr = get_default_ship_theme_manager()
         target_height = self._row_height - 4
 
         if image_type == "portrait":

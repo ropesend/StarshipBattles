@@ -61,8 +61,8 @@ def reset_game_state(monkeypatch, request):
         # 4. Patch Loaders/Caches to prevent Disk I/O during test execution
 
         # A. Component Cache: Inject data so load_components() returns early
-        from game.simulation.components.component import ComponentCacheManager
-        cache_mgr = ComponentCacheManager.instance()
+        from game.simulation.components.component_loader import get_default_cache_manager
+        cache_mgr = get_default_cache_manager()
         cache_mgr.component_cache = cache.get_components()
         cache_mgr.modifier_cache = cache.get_modifiers()
 
@@ -70,8 +70,8 @@ def reset_game_state(monkeypatch, request):
         monkeypatch.setattr("game.simulation.entities.ship_loader.load_vehicle_classes", lambda *args, **kwargs: None)
 
         # C. Combat Strategies: Hydrate from cache
-        from game.ai.strategy_manager import StrategyManager
-        strategy_mgr = StrategyManager.instance()
+        from game.ai.strategy_manager import get_default_strategy_manager
+        strategy_mgr = get_default_strategy_manager()
         strategy_mgr.strategies = cache.get_strategies()
 
         yield
@@ -91,29 +91,24 @@ def reset_game_state(monkeypatch, request):
         except Exception:
             pass
 
-        # Clear profiler records
-        try:
-            from game.core.profiling import Profiler
-            Profiler.instance().clear()
-        except Exception:
-            pass
+        # PROJ-258: Profiler is DI-managed — no module-level cleanup needed
 
         # 2. Reset module-level caches to prevent pollution to next test
         reset_component_caches()
 
-        # 3. Reset AI Strategy Manager using singleton pattern
-        from game.ai.strategy_manager import StrategyManager
-        StrategyManager.instance().clear()
+        # 3. Reset AI Strategy Manager
+        from game.ai.strategy_manager import get_default_strategy_manager
+        get_default_strategy_manager().clear()
 
-        # 4. Reset UI singletons using thread-safe reset() methods
-        from game.ui.assets import ShipThemeManager
-        ShipThemeManager.reset()
+        # 4. Reset UI module-level defaults
+        from game.ui.assets import ShipThemeManager, set_default_ship_theme_manager
+        set_default_ship_theme_manager(ShipThemeManager())
 
-        from game.ui.services.screenshot_manager import ScreenshotManager
-        ScreenshotManager.reset()
+        from game.ui.services.screenshot_manager import ScreenshotManager, set_default_screenshot_manager
+        set_default_screenshot_manager(ScreenshotManager())
 
-        from game.ui.renderer.sprites import SpriteManager
-        SpriteManager.reset()
+        from game.ui.renderer.sprites import SpriteManager, set_default_sprite_manager
+        set_default_sprite_manager(SpriteManager())
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_test_logging():

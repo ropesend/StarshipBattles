@@ -18,7 +18,9 @@ import threading
 from unittest.mock import patch
 
 from game.core.resources import ResourceCatalog
-from game.core.registry import RegistryManager
+from game.core.registry import (
+    RegistryManager, get_default_registry_manager, set_default_registry_manager,
+)
 
 
 # =============================================================================
@@ -46,7 +48,7 @@ class TestDataIndependence:
 
     def test_resource_catalog_does_not_modify_registry(self, tmp_path):
         """Loading a catalog should not modify global registry."""
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         initial_count = len(registry.resources)
 
         file1 = tmp_path / "resources.json"
@@ -79,7 +81,7 @@ class TestDataIndependence:
         file1 = tmp_path / "resources.json"
         file1.write_text(json.dumps({"resources": [{"id": "caller_resource", "name": "Caller"}]}))
 
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         initial_count = len(registry.resources)
 
         # Load catalog (doesn't touch registry)
@@ -102,9 +104,9 @@ class TestRegistryIntegration:
     """Tests for integration with RegistryManager when caller updates it."""
 
     def test_registry_resources_returns_correct_dict(self, sample_resources_file):
-        """RegistryManager.instance().resources returns the resource dict."""
+        """get_default_registry_manager().resources returns the resource dict."""
         catalog = ResourceCatalog.from_json(sample_resources_file)
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         for defn in catalog.all_definitions():
             registry.resources[defn.id] = {'id': defn.id, 'name': defn.name}
 
@@ -115,7 +117,7 @@ class TestRegistryIntegration:
 
     def test_registry_resources_empty_after_clear(self):
         """After clearing registry, resources dict is empty."""
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         registry.resources["test"] = {"id": "test"}
 
         assert len(registry.resources) >= 1
@@ -140,15 +142,15 @@ class TestRegistryIntegration:
 
     def test_registry_manager_resources_initialization(self):
         """RegistryManager initializes with empty resources dict."""
-        RegistryManager.reset()
-        registry = RegistryManager.instance()
+        set_default_registry_manager(RegistryManager())
+        registry = get_default_registry_manager()
 
         assert isinstance(registry.resources, dict)
         assert len(registry.resources) == 0
 
     def test_registry_update_accumulates(self, tmp_path):
         """Registry update accumulates data (standard dict behavior)."""
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         registry.resources.clear()
 
         file1 = tmp_path / "resources1.json"
@@ -204,14 +206,14 @@ class TestThreadSafety:
     def test_registry_manager_singleton_shared_resources(self, sample_resources_file):
         """All threads share the same resources dict via singleton."""
         catalog = ResourceCatalog.from_json(sample_resources_file)
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         for defn in catalog.all_definitions():
             registry.resources[defn.id] = {'id': defn.id, 'name': defn.name}
 
         registries = []
 
         def get_registry():
-            registries.append(RegistryManager.instance())
+            registries.append(get_default_registry_manager())
 
         threads = [threading.Thread(target=get_registry) for _ in range(5)]
 
@@ -233,7 +235,7 @@ class TestFixtureIntegration:
 
     def test_reset_game_state_clears_resources(self):
         """Calling registry.clear() should clear resources."""
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         registry.resources["test_resource"] = {"id": "test_resource"}
 
         assert "test_resource" in registry.resources

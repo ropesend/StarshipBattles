@@ -64,8 +64,8 @@ class SessionRegistryCache:
                 load_vehicle_classes(registry_provider=provider)
 
                 # 4. Load combat strategies
-                from game.ai.strategy_manager import StrategyManager
-                strategy_mgr = StrategyManager.instance()
+                from game.ai.strategy_manager import get_default_strategy_manager
+                strategy_mgr = get_default_strategy_manager()
                 strategy_mgr.clear()
                 strategy_mgr.load_data(str(Paths.DATA_DIR))
                 strategy_mgr._loaded = True
@@ -74,7 +74,7 @@ class SessionRegistryCache:
                 self.modifiers_data = copy.deepcopy(mgr.modifiers)
                 self.components_data = copy.deepcopy(mgr.components)
                 self.vehicle_classes_data = copy.deepcopy(mgr.vehicle_classes)
-                self.strategies_data = copy.deepcopy(StrategyManager.instance().strategies)
+                self.strategies_data = copy.deepcopy(get_default_strategy_manager().strategies)
 
                 self._is_loaded = True
 

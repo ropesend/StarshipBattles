@@ -13,7 +13,7 @@ import pygame_gui
 from typing import TYPE_CHECKING, List, Optional, Callable, Set
 
 from game.core.input_actions import InputAction
-from game.ui.services.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -536,7 +536,7 @@ class BuildQueueScreen:
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen."""
-        sm = ScreenshotManager.instance()
+        sm = get_default_screenshot_manager()
         sm.capture(label="build_queue")
         sm.show_toast(self.manager, self.screen_width)
 

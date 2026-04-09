@@ -8,7 +8,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch, MagicMock
 
-from game.ui.renderer.sprites import SpriteManager
+from game.ui.renderer.sprites import SpriteManager, get_default_sprite_manager, set_default_sprite_manager
 from tests.fixtures.paths import get_project_root, get_assets_dir
 
 
@@ -26,7 +26,7 @@ class TestSprites:
         yield
 
         # Always reset singleton after test
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
 
     def test_load_sprites(self):
         """Test loading sprites using the new directory method."""
@@ -66,30 +66,30 @@ class TestSpriteManagerSingletonLifecycle:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
         yield
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
 
     def test_instance_returns_same_object(self):
         """Test instance() returns same object on repeated calls."""
-        mgr1 = SpriteManager.instance()
-        mgr2 = SpriteManager.instance()
+        mgr1 = get_default_sprite_manager()
+        mgr2 = get_default_sprite_manager()
         assert mgr1 is mgr2, "instance() should return the same object"
 
     def test_reset_destroys_instance(self):
         """Test reset() destroys instance, next instance() creates new one."""
-        mgr1 = SpriteManager.instance()
+        mgr1 = get_default_sprite_manager()
         mgr1.tile_size = 999  # Modify it
 
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
 
-        mgr2 = SpriteManager.instance()
+        mgr2 = get_default_sprite_manager()
         assert mgr1 is not mgr2, "After reset, should get new instance"
         assert mgr2.tile_size == 36, "New instance should have default tile_size"
 
     def test_direct_init_creates_new_instance(self):
         """PROJ-258: Direct SpriteManager() creates a new instance."""
-        mgr1 = SpriteManager.instance()
+        mgr1 = get_default_sprite_manager()
         mgr2 = SpriteManager()
         assert mgr1 is not mgr2, "Direct construction should create new instance"
 
@@ -102,13 +102,13 @@ class TestSpriteManagerErrorPaths:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
         yield
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
 
     def test_load_sprites_nonexistent_directory(self):
         """Test load_sprites() with non-existent directory path falls back gracefully."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         # Use temp dir that doesn't have assets
         with tempfile.TemporaryDirectory() as tmpdir:
             mgr.load_sprites(tmpdir)
@@ -117,7 +117,7 @@ class TestSpriteManagerErrorPaths:
 
     def test_load_from_directory_empty_directory(self):
         """Test _load_from_directory() with empty directory (no image files)."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             mgr._load_from_directory(tmpdir)
             # Should handle gracefully with empty sprites list
@@ -128,7 +128,7 @@ class TestSpriteManagerErrorPaths:
         """Test _load_from_directory() with corrupt/invalid image file."""
         mock_load.side_effect = pygame.error("Corrupt image")
 
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create a file with valid naming pattern
             corrupt_file = os.path.join(tmpdir, "Comp_001.png")
@@ -142,7 +142,7 @@ class TestSpriteManagerErrorPaths:
 
     def test_get_sprite_out_of_bounds_index(self):
         """Test get_sprite() with out-of-bounds index returns None."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         mgr.sprites = [MagicMock()]  # One sprite at index 0
 
         result = mgr.get_sprite(999)
@@ -150,7 +150,7 @@ class TestSpriteManagerErrorPaths:
 
     def test_get_sprite_negative_index(self):
         """Test get_sprite() with negative index returns None."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         mgr.sprites = [MagicMock()]
 
         result = mgr.get_sprite(-1)
@@ -158,7 +158,7 @@ class TestSpriteManagerErrorPaths:
 
     def test_get_sprite_empty_list(self):
         """Test get_sprite() with empty sprites list returns None."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         mgr.sprites = []
 
         result = mgr.get_sprite(0)
@@ -173,9 +173,9 @@ class TestSpriteManagerNamingConventions:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
         yield
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
 
     def _create_test_image(self, path):
         """Create a minimal valid image file."""
@@ -184,7 +184,7 @@ class TestSpriteManagerNamingConventions:
 
     def test_comp_pattern_parsing(self):
         """Test loading files matching Comp_* pattern."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create Comp_001.png -> index 1
             self._create_test_image(os.path.join(tmpdir, "Comp_001.png"))
@@ -199,7 +199,7 @@ class TestSpriteManagerNamingConventions:
 
     def test_portrait_pattern_parsing(self):
         """Test loading files matching {resolution}Portrait_Comp_* pattern."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create 64Portrait_Comp_001.png -> index 1
             self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_001.png"))
@@ -210,7 +210,7 @@ class TestSpriteManagerNamingConventions:
 
     def test_portrait_pattern_various_resolutions(self):
         """Test parsing works for different resolution prefixes."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             self._create_test_image(os.path.join(tmpdir, "2048Portrait_Comp_001.png"))
             self._create_test_image(os.path.join(tmpdir, "128Portrait_Comp_003.png"))
@@ -222,7 +222,7 @@ class TestSpriteManagerNamingConventions:
 
     def test_unexpected_prefix_skipped(self):
         """Test loading files with unexpected prefixes are skipped."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create file with unknown prefix
             self._create_test_image(os.path.join(tmpdir, "Unknown_001.png"))
@@ -238,7 +238,7 @@ class TestSpriteManagerNamingConventions:
 
     def test_sparse_sprite_list(self):
         """Test sparse sprite list (indices with gaps)."""
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create sprites at indices 1, 3, 6 (with gaps)
             self._create_test_image(os.path.join(tmpdir, "Comp_001.bmp"))  # index 1
@@ -264,16 +264,16 @@ class TestSpriteManagerThreadSafety:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
         yield
-        SpriteManager.reset()
+        set_default_sprite_manager(SpriteManager())
 
     def test_concurrent_instance_calls(self):
         """Test concurrent instance() calls all return same instance."""
         results = []
 
         def get_instance():
-            return SpriteManager.instance()
+            return get_default_sprite_manager()
 
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = [executor.submit(get_instance) for _ in range(8)]
@@ -291,7 +291,7 @@ class TestSpriteManagerThreadSafety:
         if not os.path.exists(components_dir):
             pytest.skip(f"Components directory not found")
 
-        mgr = SpriteManager.instance()
+        mgr = get_default_sprite_manager()
         errors = []
 
         def load_and_check():

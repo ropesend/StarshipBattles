@@ -15,6 +15,12 @@ logger = logging.getLogger(__name__)
 _default_profiler: Optional['Profiler'] = None
 
 
+def set_default_profiler(profiler: Optional['Profiler']) -> None:
+    """Set the module-level default profiler used by profile_action/profile_block."""
+    global _default_profiler
+    _default_profiler = profiler
+
+
 class Profiler:
     """Profiler for performance measurement.
 
@@ -33,20 +39,6 @@ class Profiler:
         self.records: List[Dict] = []
         self.start_time = None
         logger.info(f"Profiler initialized with session ID: {self.session_id}")
-
-    @classmethod
-    def instance(cls) -> 'Profiler':
-        """PROJ-258 compatibility shim — returns module-level Profiler."""
-        global _default_profiler
-        if _default_profiler is None:
-            _default_profiler = cls()
-        return _default_profiler
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level Profiler."""
-        global _default_profiler
-        _default_profiler = cls()
 
     def clear(self):
         """Reset all records. Used for test isolation."""
@@ -119,8 +111,8 @@ def profile_action(name: str):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            profiler = Profiler.instance()
-            if not profiler.is_active():
+            profiler = _default_profiler
+            if profiler is None or not profiler.is_active():
                 return func(*args, **kwargs)
 
             t0 = time.perf_counter()
@@ -137,8 +129,8 @@ def profile_action(name: str):
 @contextmanager
 def profile_block(name: str):
     """Context manager to profile a block of code."""
-    profiler = Profiler.instance()
-    if not profiler.is_active():
+    profiler = _default_profiler
+    if profiler is None or not profiler.is_active():
         yield
         return
 

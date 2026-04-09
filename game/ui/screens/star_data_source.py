@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import pygame
 
-from game.assets.asset_manager import AssetManager
+from game.assets.asset_manager import get_default_asset_manager
 from game.ui.components.table.data_source import ITableDataSource
 
 # Icon size for table display
@@ -104,7 +104,7 @@ class StarDataSource(ITableDataSource):
             if cache_key in self._icon_cache:
                 return self._icon_cache[cache_key]
 
-            am = AssetManager.instance()
+            am = get_default_asset_manager()
             img = am.load_star_image(image_id, 128)
             if img and img != am.get_missing_texture():
                 scaled = pygame.transform.smoothscale(img, (_ICON_SIZE, _ICON_SIZE))

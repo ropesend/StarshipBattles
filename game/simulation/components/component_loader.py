@@ -32,6 +32,20 @@ logger = logging.getLogger(__name__)
 _default_cache_manager: 'Optional[ComponentCacheManager]' = None
 
 
+def get_default_cache_manager() -> 'ComponentCacheManager':
+    """Get the module-level ComponentCacheManager reference.
+
+    Auto-creates on first access if not yet set.
+
+    Returns:
+        The module-level ComponentCacheManager instance.
+    """
+    global _default_cache_manager
+    if _default_cache_manager is None:
+        _default_cache_manager = ComponentCacheManager()
+    return _default_cache_manager
+
+
 class ComponentCacheManager:
     """Manager for component and modifier caches.
 
@@ -44,24 +58,11 @@ class ComponentCacheManager:
         self.last_component_file = None
         self.last_modifier_file = None
 
-    @classmethod
-    def instance(cls) -> 'ComponentCacheManager':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_cache_manager
-        if _default_cache_manager is None:
-            _default_cache_manager = cls()
-        return _default_cache_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_cache_manager
-        _default_cache_manager = cls()
-
 
 def reset_component_caches():
     """Reset all caches for test isolation."""
-    ComponentCacheManager.reset()
+    global _default_cache_manager
+    _default_cache_manager = ComponentCacheManager()
 
 
 # =============================================================================
@@ -147,7 +148,7 @@ def load_components(file_path=None, *, registry_provider=None):
     if file_path is None:
         file_path = Paths.COMPONENTS_FILE
 
-    cache_mgr = ComponentCacheManager.instance()
+    cache_mgr = get_default_cache_manager()
     comps = registry_provider.get_components()
 
     if cache_mgr.component_cache is not None and cache_mgr.last_component_file == file_path:
@@ -246,7 +247,7 @@ def load_modifiers(file_path=None, *, registry_provider=None):
     if file_path is None:
         file_path = Paths.MODIFIERS_FILE
 
-    cache_mgr = ComponentCacheManager.instance()
+    cache_mgr = get_default_cache_manager()
     mods = registry_provider.get_modifiers()
 
     if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == file_path:

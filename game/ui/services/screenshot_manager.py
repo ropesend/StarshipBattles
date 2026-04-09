@@ -25,29 +25,15 @@ class ScreenshotManager:
     Manager for capturing screenshots.
 
     Usage:
-        manager = ScreenshotManager.instance()
+        manager = get_default_screenshot_manager()
         manager.capture(surface, label="battle_end")
 
     Testing:
-        - Use reset() to destroy instance completely
+        - Use set_default_screenshot_manager(ScreenshotManager()) to replace the default
     """
 
     def __init__(self):
         self._setup()
-
-    @classmethod
-    def instance(cls) -> 'ScreenshotManager':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_screenshot_manager
-        if _default_screenshot_manager is None:
-            _default_screenshot_manager = cls()
-        return _default_screenshot_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_screenshot_manager
-        _default_screenshot_manager = cls()
 
     def _setup(self):
         self.enabled = ENABLE_SCREENSHOTS
@@ -228,3 +214,17 @@ class ScreenshotManager:
             )
         except Exception as e:  # Intentional broad catch: UI toast is informational, any failure is non-critical
             logger.warning(f"Failed to show screenshot toast: {e}")
+
+
+def get_default_screenshot_manager() -> ScreenshotManager:
+    """Get the module-level ScreenshotManager instance, creating one if needed."""
+    global _default_screenshot_manager
+    if _default_screenshot_manager is None:
+        _default_screenshot_manager = ScreenshotManager()
+    return _default_screenshot_manager
+
+
+def set_default_screenshot_manager(manager: ScreenshotManager) -> None:
+    """Set the module-level ScreenshotManager instance."""
+    global _default_screenshot_manager
+    _default_screenshot_manager = manager

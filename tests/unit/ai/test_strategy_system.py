@@ -2,7 +2,7 @@ import pytest
 import pygame
 import json
 from unittest.mock import MagicMock, patch
-from game.ai.strategy_manager import StrategyManager
+from game.ai.strategy_manager import StrategyManager, get_default_strategy_manager
 from game.ai.target_evaluator import TargetEvaluator
 from tests.fixtures.paths import get_unit_test_data_dir
 
@@ -10,9 +10,8 @@ from tests.fixtures.paths import get_unit_test_data_dir
 @pytest.fixture
 def strategy_system_setup():
     # Setup StrategyManager with test data
-    # Reset singleton to get a fresh instance
-    StrategyManager.reset()
-    manager = StrategyManager.instance()
+    manager = get_default_strategy_manager()
+    manager.clear()
     # Point to unit_tests/data which we populated earlier
     unit_test_data_dir = get_unit_test_data_dir()
     manager.load_data(
@@ -124,8 +123,7 @@ class TestResolveStrategyFallbackChain:
     @pytest.fixture
     def isolated_manager(self):
         """Create an isolated StrategyManager with minimal test data."""
-        StrategyManager.reset()
-        manager = StrategyManager.instance()
+        manager = StrategyManager()
 
         # Manually set up test data instead of loading from files
         manager.targeting_policies = {
@@ -159,8 +157,6 @@ class TestResolveStrategyFallbackChain:
         manager._loaded = True
 
         yield manager
-
-        StrategyManager.reset()
 
     def test_resolve_valid_strategy_with_valid_policies(self, isolated_manager):
         """Valid strategy with valid policies returns expected data."""

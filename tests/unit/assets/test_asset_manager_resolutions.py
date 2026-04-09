@@ -11,7 +11,7 @@ import pytest
 import pygame
 from unittest.mock import patch, MagicMock
 
-from game.assets.asset_manager import AssetManager
+from game.assets.asset_manager import AssetManager, get_default_asset_manager, set_default_asset_manager
 from game.core.paths import Paths
 from game.core.exceptions import ResourceException
 
@@ -19,12 +19,12 @@ from game.core.exceptions import ResourceException
 @pytest.fixture
 def asset_manager():
     """Create a fresh AssetManager instance for each test."""
-    # Reset singleton before test
-    AssetManager.reset()
-    manager = AssetManager.instance()
+    # Reset default before test
+    set_default_asset_manager(AssetManager())
+    manager = get_default_asset_manager()
     yield manager
-    # Reset singleton after test for isolation
-    AssetManager.reset()
+    # Reset default after test for isolation
+    set_default_asset_manager(AssetManager())
 
 
 class TestGetPlanetFolderForSize:

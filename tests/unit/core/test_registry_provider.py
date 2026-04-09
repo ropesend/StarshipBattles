@@ -95,10 +95,10 @@ class TestDefaultRegistryProvider:
     @pytest.fixture(autouse=True)
     def reset_registry(self):
         """Reset registry state before and after each test."""
-        from game.core.registry import RegistryManager
-        RegistryManager.reset()
+        from game.core.registry import RegistryManager, set_default_registry_manager
+        set_default_registry_manager(RegistryManager())
         yield
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
     def test_class_exists(self):
         """DefaultRegistryProvider class should exist in game.core.registry."""
@@ -113,54 +113,54 @@ class TestDefaultRegistryProvider:
         provider = DefaultRegistryProvider()
         assert isinstance(provider, IRegistryProvider)
 
-    def test_get_components_returns_singleton_components(self):
-        """get_components() should return singleton's components dict."""
-        from game.core.registry import DefaultRegistryProvider, RegistryManager
+    def test_get_components_returns_default_manager_components(self):
+        """get_components() should return the default manager's components dict."""
+        from game.core.registry import DefaultRegistryProvider, get_default_registry_manager
 
-        # Add data to singleton
-        RegistryManager.instance().components["test_comp"] = {"id": "test_comp"}
+        # Add data to default manager
+        get_default_registry_manager().components["test_comp"] = {"id": "test_comp"}
 
         provider = DefaultRegistryProvider()
         result = provider.get_components()
 
         assert "test_comp" in result
-        assert result is RegistryManager.instance().components
+        assert result is get_default_registry_manager().components
 
-    def test_get_modifiers_returns_singleton_modifiers(self):
-        """get_modifiers() should return singleton's modifiers dict."""
-        from game.core.registry import DefaultRegistryProvider, RegistryManager
+    def test_get_modifiers_returns_default_manager_modifiers(self):
+        """get_modifiers() should return the default manager's modifiers dict."""
+        from game.core.registry import DefaultRegistryProvider, get_default_registry_manager
 
-        RegistryManager.instance().modifiers["test_mod"] = {"id": "test_mod"}
+        get_default_registry_manager().modifiers["test_mod"] = {"id": "test_mod"}
 
         provider = DefaultRegistryProvider()
         result = provider.get_modifiers()
 
         assert "test_mod" in result
-        assert result is RegistryManager.instance().modifiers
+        assert result is get_default_registry_manager().modifiers
 
-    def test_get_vehicle_classes_returns_singleton_classes(self):
-        """get_vehicle_classes() should return singleton's vehicle_classes dict."""
-        from game.core.registry import DefaultRegistryProvider, RegistryManager
+    def test_get_vehicle_classes_returns_default_manager_classes(self):
+        """get_vehicle_classes() should return the default manager's vehicle_classes dict."""
+        from game.core.registry import DefaultRegistryProvider, get_default_registry_manager
 
-        RegistryManager.instance().vehicle_classes["Cruiser"] = {"name": "Cruiser"}
+        get_default_registry_manager().vehicle_classes["Cruiser"] = {"name": "Cruiser"}
 
         provider = DefaultRegistryProvider()
         result = provider.get_vehicle_classes()
 
         assert "Cruiser" in result
-        assert result is RegistryManager.instance().vehicle_classes
+        assert result is get_default_registry_manager().vehicle_classes
 
-    def test_reflects_singleton_changes(self):
-        """Provider should reflect changes to underlying singleton."""
-        from game.core.registry import DefaultRegistryProvider, RegistryManager
+    def test_reflects_default_manager_changes(self):
+        """Provider should reflect changes to the underlying default manager."""
+        from game.core.registry import DefaultRegistryProvider, get_default_registry_manager
 
         provider = DefaultRegistryProvider()
 
         # Initially empty
         assert len(provider.get_components()) == 0
 
-        # Add to singleton
-        RegistryManager.instance().components["new"] = {"id": "new"}
+        # Add to default manager
+        get_default_registry_manager().components["new"] = {"id": "new"}
 
         # Provider should see the change
         assert "new" in provider.get_components()
@@ -224,20 +224,23 @@ class TestTestRegistryProvider:
 
         assert provider.get_vehicle_classes() == custom_classes
 
-    def test_isolated_from_singleton(self):
-        """TestRegistryProvider should be isolated from singleton."""
-        from game.core.registry import TestRegistryProvider, RegistryManager
+    def test_isolated_from_default_manager(self):
+        """TestRegistryProvider should be isolated from the default manager."""
+        from game.core.registry import (
+            TestRegistryProvider, RegistryManager,
+            set_default_registry_manager, get_default_registry_manager,
+        )
 
-        # Reset singleton
-        RegistryManager.reset()
+        # Reset default manager
+        set_default_registry_manager(RegistryManager())
 
-        # Add to singleton
-        RegistryManager.instance().components["singleton_data"] = {"id": "singleton_data"}
+        # Add to default manager
+        get_default_registry_manager().components["singleton_data"] = {"id": "singleton_data"}
 
         # Create isolated provider
         provider = TestRegistryProvider()
 
-        # Provider should NOT see singleton data
+        # Provider should NOT see default manager data
         assert "singleton_data" not in provider.get_components()
 
     def test_multiple_providers_independent(self):
@@ -312,23 +315,23 @@ class TestGetResourcesMethod:
     @pytest.fixture(autouse=True)
     def reset_registry(self):
         """Reset registry state before and after each test."""
-        from game.core.registry import RegistryManager
-        RegistryManager.reset()
+        from game.core.registry import RegistryManager, set_default_registry_manager
+        set_default_registry_manager(RegistryManager())
         yield
-        RegistryManager.reset()
+        set_default_registry_manager(RegistryManager())
 
     def test_default_provider_get_resources_returns_registry_data(self):
-        """DefaultRegistryProvider.get_resources() should return RegistryManager.instance().resources."""
-        from game.core.registry import DefaultRegistryProvider, RegistryManager
+        """DefaultRegistryProvider.get_resources() should return the default manager's resources."""
+        from game.core.registry import DefaultRegistryProvider, get_default_registry_manager
 
-        # Add data to singleton resources
-        RegistryManager.instance().resources["fuel"] = {"id": "fuel", "max": 100}
+        # Add data to default manager resources
+        get_default_registry_manager().resources["fuel"] = {"id": "fuel", "max": 100}
 
         provider = DefaultRegistryProvider()
         result = provider.get_resources()
 
         assert "fuel" in result
-        assert result is RegistryManager.instance().resources
+        assert result is get_default_registry_manager().resources
 
     def test_test_provider_get_resources_returns_custom_data(self):
         """TestRegistryProvider(resources=...).get_resources() should return custom data."""

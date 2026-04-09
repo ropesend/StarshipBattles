@@ -18,7 +18,7 @@ import json
 import pytest
 
 from game.core.resources import ResourceCatalog
-from game.core.registry import GameRegistries, RegistryManager
+from game.core.registry import GameRegistries, get_default_registry_manager
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.harvesting_engine import HarvestingEngine
@@ -175,7 +175,7 @@ class TestCustomResourceShipStorage:
     def test_custom_resource_storage_in_stats(self):
         """A component with ResourceStorage for a custom resource appears in ship stats."""
         # Register a test component with dilithium storage
-        registry = RegistryManager.instance()
+        registry = get_default_registry_manager()
         registry.components["dilithium_tank"] = {
             "id": "dilithium_tank",
             "type": "ResourceStorage",

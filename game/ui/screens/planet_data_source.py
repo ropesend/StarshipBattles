@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import pygame
 
-from game.assets.asset_manager import AssetManager
+from game.assets.asset_manager import get_default_asset_manager
 from game.ui.components.table.data_source import ITableDataSource
 
 
@@ -193,7 +193,7 @@ class PlanetDataSource(ITableDataSource):
             return self._icon_cache[cache_key]
 
         # Load image from AssetManager
-        am = AssetManager.instance()
+        am = get_default_asset_manager()
         img = am.load_planet_image(planet.image_id, requested_size=128)
 
         if img and img != am.get_missing_texture():

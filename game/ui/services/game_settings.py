@@ -33,20 +33,6 @@ class GameSettings:
         self._data: Dict[str, Any] = dict(DEFAULTS)
         self._load()
 
-    @classmethod
-    def instance(cls) -> 'GameSettings':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_game_settings
-        if _default_game_settings is None:
-            _default_game_settings = cls()
-        return _default_game_settings
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_game_settings
-        _default_game_settings = cls()
-
     def _load(self) -> None:
         """Load settings from disk, merging with defaults."""
         saved = load_json(SETTINGS_FILE, default={})
@@ -92,3 +78,17 @@ class GameSettings:
     @background_brightness.setter
     def background_brightness(self, value: float) -> None:
         self.set('background_brightness', max(0.0, min(1.0, value)))
+
+
+def get_default_game_settings() -> GameSettings:
+    """Get the module-level GameSettings instance, creating one if needed."""
+    global _default_game_settings
+    if _default_game_settings is None:
+        _default_game_settings = GameSettings()
+    return _default_game_settings
+
+
+def set_default_game_settings(manager: GameSettings) -> None:
+    """Set the module-level GameSettings instance."""
+    global _default_game_settings
+    _default_game_settings = manager

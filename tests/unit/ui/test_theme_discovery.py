@@ -6,7 +6,7 @@ import tempfile
 import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import ShipThemeManager, get_default_ship_theme_manager, set_default_ship_theme_manager
 
 from game.core.paths import Paths
 
@@ -24,8 +24,8 @@ class TestNewThemes:
         if not pygame.display.get_surface():
              pygame.display.set_mode((1, 1), pygame.NOFRAME)
 
-        ShipThemeManager.reset()
-        manager = ShipThemeManager.instance()
+        set_default_ship_theme_manager(ShipThemeManager())
+        manager = get_default_ship_theme_manager()
 
         # Verify resources exist
         klingon_json = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Klingons", "theme.json")
@@ -55,7 +55,7 @@ class TestNewThemes:
         patch.stopall()
 
         # Clean up singleton
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
         # NOTE: Do not call pygame.quit() or pygame.display.quit() here - the root
         # conftest manages pygame lifecycle at session scope. Calling quit() here
@@ -93,30 +93,30 @@ class TestShipThemeManagerSingletonLifecycle:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
         yield
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_instance_returns_same_object(self):
         """Test instance() returns same object on repeated calls."""
-        mgr1 = ShipThemeManager.instance()
-        mgr2 = ShipThemeManager.instance()
+        mgr1 = get_default_ship_theme_manager()
+        mgr2 = get_default_ship_theme_manager()
         assert mgr1 is mgr2, "instance() should return the same object"
 
     def test_reset_destroys_instance(self):
         """Test reset() destroys instance, next instance() creates new one."""
-        mgr1 = ShipThemeManager.instance()
+        mgr1 = get_default_ship_theme_manager()
         mgr1.default_theme = "TestTheme"
 
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
-        mgr2 = ShipThemeManager.instance()
+        mgr2 = get_default_ship_theme_manager()
         assert mgr1 is not mgr2, "After reset, should get new instance"
         assert mgr2.default_theme == "Federation", "New instance should have default theme"
 
     def test_clear_resets_caches_preserves_instance(self):
         """Test clear() resets caches but preserves instance."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.themes = {"test": {"Escort": MagicMock()}}
         mgr.theme_data = {"test": {"Escort": {}}}
         mgr.discovery_complete = True
@@ -124,7 +124,7 @@ class TestShipThemeManagerSingletonLifecycle:
         mgr.clear()
 
         # Same instance
-        assert ShipThemeManager.instance() is mgr
+        assert get_default_ship_theme_manager() is mgr
         # But caches are cleared
         assert mgr.themes == {}
         assert mgr.theme_data == {}
@@ -132,7 +132,7 @@ class TestShipThemeManagerSingletonLifecycle:
 
     def test_direct_init_creates_new_instance(self):
         """PROJ-258: Direct ShipThemeManager() creates a new instance."""
-        mgr1 = ShipThemeManager.instance()
+        mgr1 = get_default_ship_theme_manager()
         mgr2 = ShipThemeManager()
         assert mgr1 is not mgr2, "Direct construction should create new instance"
 
@@ -145,16 +145,16 @@ class TestShipThemeManagerErrorPaths:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
         yield
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     @patch('game.ui.assets.ship_theme_manager.os.path.exists')
     def test_initialize_missing_shipthemes_directory(self, mock_exists):
         """Test initialize() with missing ShipThemes directory doesn't crash."""
         mock_exists.return_value = False
 
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.initialize()  # Should not raise
 
         assert mgr.theme_data == {}
@@ -168,7 +168,7 @@ class TestShipThemeManagerErrorPaths:
         mock_exists.return_value = True
         mock_scandir.return_value = []
 
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.initialize()
 
         assert mgr.theme_data == {}
@@ -190,7 +190,7 @@ class TestShipThemeManagerErrorPaths:
         # load_json returns None (file not found)
         mock_load_json.return_value = None
 
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.initialize()
 
         # Theme should be skipped
@@ -211,7 +211,7 @@ class TestShipThemeManagerErrorPaths:
         # Return data that will cause KeyError (missing 'images')
         mock_load_json.return_value = {"name": "BadTheme"}
 
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.initialize()
 
         # Theme should be discovered but with empty ship data
@@ -219,7 +219,7 @@ class TestShipThemeManagerErrorPaths:
 
     def test_load_image_nonexistent_theme(self):
         """Test load_image() with non-existent theme_id returns fallback."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.discovery_complete = True
         mgr.theme_data = {}  # No themes
 
@@ -231,7 +231,7 @@ class TestShipThemeManagerErrorPaths:
 
     def test_load_image_nonexistent_ship_class(self):
         """Test load_image() with non-existent ship_class returns fallback."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.discovery_complete = True
         mgr.theme_data = {"Federation": {}}  # Theme exists but no ships
 
@@ -242,7 +242,7 @@ class TestShipThemeManagerErrorPaths:
 
     def test_load_image_before_discovery(self):
         """Test load_image() before discovery returns fallback."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         assert mgr.discovery_complete is False
 
         img = mgr.load_image("Federation", "Escort")
@@ -259,13 +259,13 @@ class TestShipThemeManagerCaching:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
         yield
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_load_image_caching(self):
         """Test load_image() caching: second call returns same surface."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
 
         # Use real theme if available
         themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
@@ -286,7 +286,7 @@ class TestShipThemeManagerCaching:
 
     def test_clear_invalidates_cache(self):
         """Test clear() invalidates cache, next load_image() reloads."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
 
         themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
         if not os.path.exists(themes_dir):
@@ -320,13 +320,13 @@ class TestShipThemeManagerMetrics:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
         yield
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_get_metrics_returns_rect(self):
         """Test get_metrics() returns expected metrics dict for valid theme/class."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
 
         themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
         if not os.path.exists(themes_dir):
@@ -347,7 +347,7 @@ class TestShipThemeManagerMetrics:
 
     def test_get_metrics_caching(self):
         """Test get_metrics() caching behavior."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
 
         themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
         if not os.path.exists(themes_dir):
@@ -367,7 +367,7 @@ class TestShipThemeManagerMetrics:
 
     def test_get_metrics_before_discovery(self):
         """Test get_metrics() returns None before discovery."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         assert mgr.discovery_complete is False
 
         result = mgr.get_image_metrics("Federation", "Escort")
@@ -382,16 +382,16 @@ class TestShipThemeManagerThreadSafety:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
         yield
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_concurrent_instance_calls(self):
         """Test concurrent instance() calls all return same instance."""
         results = []
 
         def get_instance():
-            return ShipThemeManager.instance()
+            return get_default_ship_theme_manager()
 
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = [executor.submit(get_instance) for _ in range(8)]
@@ -403,7 +403,7 @@ class TestShipThemeManagerThreadSafety:
 
     def test_concurrent_load_image_no_corruption(self):
         """Test concurrent load_image() calls don't corrupt cache."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
 
         themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
         if not os.path.exists(themes_dir):
@@ -433,8 +433,8 @@ class TestShipThemeManagerThreadSafety:
 
     def test_concurrent_initialize_double_checked_locking(self):
         """Test concurrent initialize() calls use double-checked locking."""
-        ShipThemeManager.reset()
-        mgr = ShipThemeManager.instance()
+        set_default_ship_theme_manager(ShipThemeManager())
+        mgr = get_default_ship_theme_manager()
         initialize_count = [0]
         lock = threading.Lock()
 
@@ -473,13 +473,13 @@ class TestShipThemeManagerManualScale:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
         yield
-        ShipThemeManager.reset()
+        set_default_ship_theme_manager(ShipThemeManager())
 
     def test_get_manual_scale_default(self):
         """Test get_manual_scale returns 1.0 for unknown ship."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.discovery_complete = True
         mgr.theme_data = {"Test": {}}
 
@@ -488,7 +488,7 @@ class TestShipThemeManagerManualScale:
 
     def test_get_manual_scale_before_discovery(self):
         """Test get_manual_scale returns 1.0 before discovery."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         assert mgr.discovery_complete is False
 
         scale = mgr.get_manual_scale("Test", "Escort")
@@ -496,7 +496,7 @@ class TestShipThemeManagerManualScale:
 
     def test_get_manual_scale_with_value(self):
         """Test get_manual_scale returns configured value."""
-        mgr = ShipThemeManager.instance()
+        mgr = get_default_ship_theme_manager()
         mgr.discovery_complete = True
         mgr.theme_data = {
             "Test": {

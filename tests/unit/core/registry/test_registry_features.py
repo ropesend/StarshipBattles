@@ -6,7 +6,7 @@ GameRegistries container, and default registries functions.
 import pytest
 from unittest.mock import MagicMock
 
-from game.core.registry import RegistryManager
+from game.core.registry import get_default_registry_manager
 from game.core.exceptions import StateException
 
 
@@ -15,56 +15,56 @@ from game.core.exceptions import StateException
 # =============================================================================
 
 class TestRegistryDirectAccess:
-    """Tests for accessing registries directly through RegistryManager."""
+    """Tests for accessing registries directly through the default RegistryManager."""
 
     def test_components_dict_accessible(self, registry):
-        """RegistryManager.instance().components should return components dict."""
+        """get_default_registry_manager().components should return components dict."""
         registry.components["test"] = {"id": "test"}
 
-        result = RegistryManager.instance().components
+        result = get_default_registry_manager().components
 
         assert result is registry.components
         assert "test" in result
 
     def test_modifiers_dict_accessible(self, registry):
-        """RegistryManager.instance().modifiers should return modifiers dict."""
+        """get_default_registry_manager().modifiers should return modifiers dict."""
         registry.modifiers["mod"] = {"id": "mod"}
 
-        result = RegistryManager.instance().modifiers
+        result = get_default_registry_manager().modifiers
 
         assert result is registry.modifiers
         assert "mod" in result
 
     def test_vehicle_classes_dict_accessible(self, registry):
-        """RegistryManager.instance().vehicle_classes should return vehicle_classes dict."""
+        """get_default_registry_manager().vehicle_classes should return vehicle_classes dict."""
         registry.vehicle_classes["Cruiser"] = {"name": "Cruiser"}
 
-        result = RegistryManager.instance().vehicle_classes
+        result = get_default_registry_manager().vehicle_classes
 
         assert result is registry.vehicle_classes
         assert "Cruiser" in result
 
     def test_resources_dict_accessible(self, registry):
-        """RegistryManager.instance().resources should return resources dict."""
+        """get_default_registry_manager().resources should return resources dict."""
         registry.resources["fuel"] = {"id": "fuel"}
 
-        result = RegistryManager.instance().resources
+        result = get_default_registry_manager().resources
 
         assert result is registry.resources
         assert "fuel" in result
 
     def test_get_validator_returns_validator(self, registry):
-        """RegistryManager.instance().get_validator() should return the validator."""
+        """get_default_registry_manager().get_validator() should return the validator."""
         mock_validator = MagicMock()
         registry.set_validator(mock_validator)
 
-        result = RegistryManager.instance().get_validator()
+        result = get_default_registry_manager().get_validator()
 
         assert result is mock_validator
 
     def test_get_validator_returns_none_when_not_set(self, registry):
-        """RegistryManager.instance().get_validator() should return None when not set."""
-        result = RegistryManager.instance().get_validator()
+        """get_default_registry_manager().get_validator() should return None when not set."""
+        result = get_default_registry_manager().get_validator()
 
         assert result is None
 

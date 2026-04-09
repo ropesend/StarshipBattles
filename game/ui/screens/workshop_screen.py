@@ -16,16 +16,16 @@ from game.core.profiling import profile_block
 from game.core.constants import LayerType
 from game.core.paths import Paths
 from game.ui.fonts import get_font
-from game.ui.renderer.sprites import SpriteManager
+from game.ui.renderer.sprites import get_default_sprite_manager
 from game.ui.panels.builder_widgets import ModifierEditorPanel
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 from game.ui.screens.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
 from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 from game.ui.screens.builder.schematic_view import SchematicView
 from game.ui.screens.builder.interaction_controller import InteractionController
 from game.ui.screens.builder.event_bus import EventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
-from game.ui.services.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
@@ -66,7 +66,7 @@ class DesignWorkshopScreen:
         self.on_start_battle = context.on_return  # Use context's callback
 
         self.event_bus = EventBus()
-        self.screenshot_manager = ScreenshotManager.instance()
+        self.screenshot_manager = get_default_screenshot_manager()
 
         # PROJ-211: Initialize ModifierLogic with registry provider
         ModifierLogic.init_service(context.registries)
@@ -106,10 +106,10 @@ class DesignWorkshopScreen:
         
         # Managers
         self.viewmodel.refresh_available_components()
-        self.sprite_mgr = SpriteManager.instance()
+        self.sprite_mgr = get_default_sprite_manager()
         
         with profile_block("Builder: Init Managers"):
-            self.theme_manager = ShipThemeManager.instance()
+            self.theme_manager = get_default_ship_theme_manager()
             self.theme_manager.initialize() # No path needed anymore
         
         # Layout (from centralized constants)

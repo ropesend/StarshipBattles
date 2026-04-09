@@ -22,30 +22,16 @@ class SpriteManager:
     Manager for component sprite images.
 
     Usage:
-        manager = SpriteManager.instance()
+        manager = get_default_sprite_manager()
         sprite = manager.get_sprite(index)
 
     Testing:
-        - Use reset() to destroy instance completely
+        - Use set_default_sprite_manager(SpriteManager()) to replace the default
     """
 
     def __init__(self):
         self.sprites = []
         self.tile_size = 36
-
-    @classmethod
-    def instance(cls) -> 'SpriteManager':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_sprite_manager
-        if _default_sprite_manager is None:
-            _default_sprite_manager = cls()
-        return _default_sprite_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_sprite_manager
-        _default_sprite_manager = cls()
 
     def load_sprites(self, base_path: str = None) -> None:
         """Load sprites from the 64px component image directory.
@@ -132,3 +118,17 @@ class SpriteManager:
         if 0 <= index < len(self.sprites):
             return self.sprites[index]
         return None
+
+
+def get_default_sprite_manager() -> SpriteManager:
+    """Get the module-level SpriteManager instance, creating one if needed."""
+    global _default_sprite_manager
+    if _default_sprite_manager is None:
+        _default_sprite_manager = SpriteManager()
+    return _default_sprite_manager
+
+
+def set_default_sprite_manager(manager: SpriteManager) -> None:
+    """Set the module-level SpriteManager instance."""
+    global _default_sprite_manager
+    _default_sprite_manager = manager

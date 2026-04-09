@@ -8,16 +8,16 @@ import json
 from typing import Dict, Any, List
 from unittest.mock import MagicMock, patch
 
-from game.core.registry import RegistryManager
+from game.core.registry import get_default_registry_manager
 
 
 @pytest.fixture
 def reset_resource_registry():
     """Clear and reset resource registry between tests.
 
-    # PROJ-195: Legitimate — test isolation fixture that clears singleton
+    # PROJ-195: Legitimate — test isolation fixture that clears default manager
     """
-    registry = RegistryManager.instance()
+    registry = get_default_registry_manager()
     registry.resources.clear()
     yield
     registry.resources.clear()

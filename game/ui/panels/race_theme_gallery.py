@@ -13,7 +13,7 @@ import pygame
 import pygame_gui
 from typing import Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 from game.ui.panels.base_gallery import BaseGallery
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
@@ -108,7 +108,7 @@ class RaceThemeGallery(BaseGallery):
             return self._theme_cache
 
         themes = []
-        theme_manager = ShipThemeManager.instance()
+        theme_manager = get_default_ship_theme_manager()
         theme_manager.initialize()
         theme_ids = theme_manager.get_available_themes()
 

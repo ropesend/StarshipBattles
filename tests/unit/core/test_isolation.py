@@ -8,7 +8,7 @@ These tests are designed to be run in sequence to verify that state
 from one test doesn't leak into the next.
 """
 import pytest
-from game.core.registry import RegistryManager
+from game.core.registry import get_default_registry_manager
 
 
 class TestRegistryIsolation:
@@ -26,7 +26,7 @@ class TestRegistryIsolation:
         This test adds a custom component to the registry. The next test
         should NOT see this data if isolation is working correctly.
         """
-        mgr = RegistryManager.instance()
+        mgr = get_default_registry_manager()
 
         # Add a unique test component directly to the components dict
         test_component = {
@@ -46,7 +46,7 @@ class TestRegistryIsolation:
         This test verifies that the component added in the previous test
         is NOT present, confirming isolation is working.
         """
-        mgr = RegistryManager.instance()
+        mgr = get_default_registry_manager()
 
         # The test component from part 1 should NOT be present
         # (reset_game_state should have cleared it)
@@ -64,9 +64,9 @@ class TestStrategyManagerIsolation:
 
     def test_strategy_isolation_part1_modify_strategies(self):
         """Add a custom strategy that should be cleared after test."""
-        from game.ai.strategy_manager import StrategyManager
+        from game.ai.strategy_manager import get_default_strategy_manager
 
-        mgr = StrategyManager.instance()
+        mgr = get_default_strategy_manager()
         # Add a test strategy
         mgr.strategies['__isolation_test_strategy__'] = {'name': 'Test Strategy'}
 
@@ -75,9 +75,9 @@ class TestStrategyManagerIsolation:
 
     def test_strategy_isolation_part2_verify_clean(self):
         """Verify custom strategy was cleared by reset_game_state."""
-        from game.ai.strategy_manager import StrategyManager
+        from game.ai.strategy_manager import get_default_strategy_manager
 
-        mgr = StrategyManager.instance()
+        mgr = get_default_strategy_manager()
 
         # The test strategy should NOT be present if isolation worked
         # (reset_game_state clears strategies)
@@ -91,9 +91,9 @@ class TestComponentCacheIsolation:
 
     def test_cache_isolation_part1_modify_cache(self):
         """Add a component to cache that should be cleared after test."""
-        from game.simulation.components.component import ComponentCacheManager
+        from game.simulation.components.component_loader import get_default_cache_manager
 
-        cache = ComponentCacheManager.instance()
+        cache = get_default_cache_manager()
         original_count = len(cache.component_cache) if cache.component_cache else 0
 
         # Add a test component to the cache
@@ -106,9 +106,9 @@ class TestComponentCacheIsolation:
 
     def test_cache_isolation_part2_verify_clean(self):
         """Verify custom cached component was cleared."""
-        from game.simulation.components.component import ComponentCacheManager
+        from game.simulation.components.component_loader import get_default_cache_manager
 
-        cache = ComponentCacheManager.instance()
+        cache = get_default_cache_manager()
 
         # Our test component should NOT be present if isolation worked
         if cache.component_cache:

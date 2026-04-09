@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch, mock_open
 import os
 import pygame
-from game.assets.asset_manager import AssetManager, get_asset_manager
+from game.assets.asset_manager import AssetManager, get_asset_manager, set_default_asset_manager
 
 
 class TestAssetManagerLogging:
@@ -12,9 +12,9 @@ class TestAssetManagerLogging:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         """Reset singleton for each test."""
-        AssetManager.reset()
+        set_default_asset_manager(AssetManager())
         yield
-        AssetManager.reset()
+        set_default_asset_manager(AssetManager())
 
     @patch("game.assets.asset_manager.logger")
     def test_load_manifest_file_not_found_uses_log_error(self, mock_logger):
@@ -99,9 +99,9 @@ class TestAssetManager:
     def setup_teardown(self):
         # Reset singleton logic if possible or just use a fresh instance logic
         # Since _instance is used, we need to reset it to test initialization
-        AssetManager.reset()
+        set_default_asset_manager(AssetManager())
         yield
-        AssetManager.reset()
+        set_default_asset_manager(AssetManager())
 
     def test_singleton(self):
         am1 = get_asset_manager()

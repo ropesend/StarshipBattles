@@ -4,16 +4,16 @@ Shared fixtures for resource registry tests.
 import json
 import pytest
 
-from game.core.registry import RegistryManager
+from game.core.registry import get_default_registry_manager
 
 
 @pytest.fixture(autouse=True)
 def clean_registry():
     """Ensure clean registry state before and after each test.
 
-    # PROJ-195: Legitimate — isolation fixture for singleton resource registry tests
+    # PROJ-195: Legitimate — isolation fixture for resource registry tests
     """
-    registry = RegistryManager.instance()
+    registry = get_default_registry_manager()
     # Unfreeze if frozen
     registry._frozen = False
     registry.resources.clear()

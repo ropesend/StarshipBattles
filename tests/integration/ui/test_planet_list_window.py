@@ -18,16 +18,15 @@ class TestScreenshotToastErrorLogging:
 
     def test_screenshot_toast_failure_logs_warning(self, caplog):
         """Screenshot toast failure should log warning (ERR-022)."""
-        from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
+        from game.ui.services.screenshot_manager import ScreenshotManager, get_default_screenshot_manager
 
-        # Clear singleton to ensure fresh state
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        # Clear to ensure fresh state
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         mock_ui_manager = MagicMock()
 
@@ -46,21 +45,19 @@ class TestScreenshotToastErrorLogging:
                 f"Warning should mention screenshot/toast. Got: {warning_text}"
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None
 
     def test_screenshot_toast_success_no_warning(self, caplog):
         """Successful screenshot toast should not produce warnings."""
-        from game.ui.services.screenshot_manager import ScreenshotManager
-        from game.core.singleton import SingletonMeta
+        import game.ui.services.screenshot_manager as ssm_module
+        from game.ui.services.screenshot_manager import ScreenshotManager, get_default_screenshot_manager
 
-        # Clear singleton to ensure fresh state
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        # Clear to ensure fresh state
+        ssm_module._default_screenshot_manager = None
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         mock_ui_manager = MagicMock()
 
@@ -79,5 +76,4 @@ class TestScreenshotToastErrorLogging:
                 assert len(toast_warnings) == 0, "Successful toast should not log warning"
 
         # Cleanup
-        if ScreenshotManager in SingletonMeta._instances:
-            del SingletonMeta._instances[ScreenshotManager]
+        ssm_module._default_screenshot_manager = None

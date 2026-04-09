@@ -12,7 +12,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from game.core.registry import RegistryManager
+from game.core.registry import get_default_registry_manager
 from game.core.exceptions import FrozenStateException
 from game.simulation.services.registry_loader import reload_registries_from_directory
 
@@ -24,11 +24,11 @@ def fresh_registry():
     Unlike the default setup, this clears all existing data to test
     that reload_registries_from_directory properly populates empty registries.
 
-    PROJ-195: Legitimate — testing reload_registries_from_directory on singleton.
-    This fixture must use RegistryManager.instance() because the reload function
-    is specifically designed to operate on the global singleton registry.
+    PROJ-195: Legitimate — testing reload_registries_from_directory on the
+    default registry manager. The reload function is specifically designed
+    to operate on the global registry.
     """
-    reg = RegistryManager.instance()
+    reg = get_default_registry_manager()
     # Clear to test loading into empty registries
     reg.components.clear()
     reg.modifiers.clear()

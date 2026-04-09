@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 
-from game.ui.services.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import ScreenshotManager, get_default_screenshot_manager, set_default_screenshot_manager
 from game.strategy.systems.design_library import DesignLoadResult
 
 
@@ -21,8 +21,8 @@ class TestScreenshotStrategyLayerSupport:
     def setup(self):
         if not pygame.get_init():
             pygame.init()
-        ScreenshotManager.reset()
-        manager = ScreenshotManager.instance()
+        set_default_screenshot_manager(ScreenshotManager())
+        manager = get_default_screenshot_manager()
         manager.enabled = True
         manager.base_dir = "test_screenshots"
         yield manager
@@ -194,13 +194,13 @@ class TestScreenshotInputHandler:
         assert hasattr(handler._ui_router, 'take_screenshot_full')
         assert hasattr(handler._ui_router, 'take_screenshot_viewport')
 
-    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
-    def test_f12_triggers_full_screenshot(self, mock_sm_class):
+    @patch('game.ui.screens.strategy_ui_action_router.get_default_screenshot_manager')
+    def test_f12_triggers_full_screenshot(self, mock_get_sm):
         """F12 should trigger full screenshot capture."""
         from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
         mock_sm = MagicMock()
-        mock_sm_class.instance.return_value = mock_sm
+        mock_get_sm.return_value = mock_sm
 
         mock_scene = MagicMock()
         mock_scene.ui = MagicMock()
@@ -215,13 +215,13 @@ class TestScreenshotInputHandler:
         args, kwargs = mock_sm.capture_strategy_layer.call_args
         assert kwargs.get('include_ui') is True
 
-    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
-    def test_f11_triggers_viewport_screenshot(self, mock_sm_class):
+    @patch('game.ui.screens.strategy_ui_action_router.get_default_screenshot_manager')
+    def test_f11_triggers_viewport_screenshot(self, mock_get_sm):
         """F11 should trigger viewport-only screenshot capture."""
         from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
         mock_sm = MagicMock()
-        mock_sm_class.instance.return_value = mock_sm
+        mock_get_sm.return_value = mock_sm
 
         mock_scene = MagicMock()
         mock_scene.ui = MagicMock()
@@ -267,8 +267,8 @@ class TestBuildQueueScreenshotSupport:
         # The actual DI injection is tested via integration tests
         assert hasattr(BuildQueueScreen, '_take_screenshot')
 
-    @patch('game.ui.screens.build_queue_screen.ScreenshotManager')
-    def test_build_queue_f12_event_calls_take_screenshot(self, mock_sm_class):
+    @patch('game.ui.screens.build_queue_screen.get_default_screenshot_manager')
+    def test_build_queue_f12_event_calls_take_screenshot(self, mock_get_sm):
         """
         BUG-15 Rev 5: Verify F12 KEYDOWN event triggers _take_screenshot via handle_event.
         PROJ-40: Updated to pass injected dependencies instead of patching imports.
@@ -280,7 +280,7 @@ class TestBuildQueueScreenshotSupport:
         mock_sm = MagicMock()
         mock_sm.enabled = True
         mock_sm.base_dir = "test_screenshots"
-        mock_sm_class.instance.return_value = mock_sm
+        mock_get_sm.return_value = mock_sm
 
         # Mock UIManager and its methods
         mock_manager = MagicMock()
@@ -358,7 +358,7 @@ class TestBuildQueueScreenshotSupport:
             # Call handle_event with F12
             screen.handle_event(f12_event)
 
-            # Verify ScreenshotManager.instance() was called
-            mock_sm_class.instance.assert_called()
+            # Verify get_default_screenshot_manager() was called
+            mock_get_sm.assert_called()
             # Verify capture was called
             mock_sm.capture.assert_called_once_with(label="build_queue")

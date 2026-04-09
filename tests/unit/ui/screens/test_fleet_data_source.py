@@ -609,7 +609,7 @@ class TestFleetDataSourceGetCellImage:
         # Mock the theme manager
         mock_surface = pygame.Surface((40, 40))
         with patch(
-            "game.ui.assets.ShipThemeManager.instance"
+            "game.ui.assets.get_default_ship_theme_manager"
         ) as mock_theme_mgr_cls:
             mock_theme_mgr = Mock()
             mock_theme_mgr.get_portrait_image = Mock(return_value=mock_surface)
@@ -635,7 +635,7 @@ class TestFleetDataSourceGetCellImage:
 
         mock_surface = pygame.Surface((60, 60))
         with patch(
-            "game.ui.assets.ShipThemeManager.instance"
+            "game.ui.assets.get_default_ship_theme_manager"
         ) as mock_theme_mgr_cls:
             mock_theme_mgr = Mock()
             mock_theme_mgr.load_image = Mock(return_value=mock_surface)
@@ -672,7 +672,7 @@ class TestFleetDataSourceGetCellImage:
 
         mock_surface = pygame.Surface((40, 40))
         with patch(
-            "game.ui.assets.ShipThemeManager.instance"
+            "game.ui.assets.get_default_ship_theme_manager"
         ) as mock_theme_mgr_cls:
             mock_theme_mgr = Mock()
             mock_theme_mgr.get_portrait_image = Mock(return_value=mock_surface)

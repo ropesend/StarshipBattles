@@ -147,32 +147,6 @@ class RegistryManager:
         self._validator: Any = None
         self._frozen: bool = False
 
-    @classmethod
-    def instance(cls) -> 'RegistryManager':
-        """Get the module-level RegistryManager instance.
-
-        PROJ-258 compatibility shim: delegates to module-level _default_manager.
-        Existing code calling RegistryManager.instance() continues to work.
-        New code should use ApplicationContext or get_default_registry_manager().
-        """
-        # Can't call get_default_registry_manager() here (defined after class).
-        # Access module global directly — will be set by conftest/app startup.
-        global _default_manager
-        if _default_manager is None:
-            # Auto-create for backward compat (test code that runs before conftest)
-            _default_manager = cls()
-        return _default_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """Reset by replacing the module-level instance with a fresh one.
-
-        PROJ-258 compatibility shim for test teardown code.
-        New code should create fresh RegistryManager instances directly.
-        """
-        global _default_manager
-        _default_manager = cls()
-
     def freeze(self):
         """
         Prevent further modifications to the registry.

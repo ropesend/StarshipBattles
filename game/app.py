@@ -32,7 +32,7 @@ from game.core.registry import GameRegistries, get_default_registry_provider
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
-from game.ui.renderer.sprites import SpriteManager
+from game.ui.renderer.sprites import get_default_sprite_manager
 from game.ui.screens.battle_screen import BattleScreen
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_screen import StrategyScreen
@@ -41,7 +41,7 @@ from game.ui.screens.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
-from game.core.profiling import Profiler, profile_action
+from game.core.profiling import profile_action
 from game.core.protocols import IScene
 from game.context import ApplicationContext
 from game.ui.services.input_mapper import InputMapper
@@ -152,7 +152,7 @@ class Game:
         self.input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
 
         # Load sprites
-        sprite_mgr = SpriteManager.instance()
+        sprite_mgr = get_default_sprite_manager()
         sprite_mgr.load_sprites(Paths.ROOT_DIR)
 
         # Menu scene (PROJ-65: unified scene dispatch)
@@ -572,7 +572,7 @@ class Game:
                 if action == InputAction.GLOBAL_EXIT:
                     self.show_exit_dialog = True
                 elif action == InputAction.GLOBAL_TOGGLE_PROFILER:
-                    active = Profiler.instance().toggle()
+                    active = self.ctx.profiler.toggle()
                     logger.info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
             elif event.type == pygame.VIDEORESIZE:
                 self._handle_resize(event.w, event.h)
@@ -730,7 +730,7 @@ class Game:
             # BattleScreen handles headless mode internally
             if not self.battle_scene.headless_mode:
                 self.active_scene.draw(self.screen)
-                self.battle_scene.draw_hud(self.screen, self.font_med, Profiler.instance().is_active())
+                self.battle_scene.draw_hud(self.screen, self.font_med, self.ctx.profiler.is_active())
         else:
             self.active_scene.draw(self.screen)
 
@@ -770,7 +770,7 @@ def main():
             f.write(error_msg)
         raise
 
-    Profiler.instance().save_history()
+    game.ctx.profiler.save_history()
 
 
 if __name__ == "__main__":

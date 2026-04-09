@@ -152,21 +152,21 @@ class TestZoomAndScreenshotViaMapper:
         mock_scene._camera_nav.zoom_to_system.assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
-    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
+    @patch('game.ui.screens.strategy_ui_action_router.get_default_screenshot_manager')
     def test_f12_takes_full_screenshot(self, mock_sm_class, mock_scene, mapper):
         """F12 triggers full screenshot via UIActionRouter."""
         mock_sm = MagicMock()
-        mock_sm_class.instance.return_value = mock_sm
+        mock_sm_class.return_value = mock_sm
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         result = handler.handle_event(_keydown(pygame.K_F12))
         mock_sm.capture_strategy_layer.assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
-    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
+    @patch('game.ui.screens.strategy_ui_action_router.get_default_screenshot_manager')
     def test_f11_takes_viewport_screenshot(self, mock_sm_class, mock_scene, mapper):
         """F11 triggers viewport screenshot via UIActionRouter."""
         mock_sm = MagicMock()
-        mock_sm_class.instance.return_value = mock_sm
+        mock_sm_class.return_value = mock_sm
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         result = handler.handle_event(_keydown(pygame.K_F11))
         mock_sm.capture_strategy_layer.assert_called_once()

@@ -14,7 +14,7 @@ from game.simulation.components.component_constants import ComponentStatus
 
 if TYPE_CHECKING:
     from game.core.protocols import ICombatShip
-from game.core.strategy_metadata import StrategyMetadataService
+from game.core.strategy_metadata import get_default_strategy_metadata_service
 from game.ui.config import UIConfig
 from game.ui.colors import (
     RESOURCE_FUEL, RESOURCE_ENERGY, RESOURCE_AMMO, RESOURCE_SHIELD, RESOURCE_BIOMASS,
@@ -255,7 +255,7 @@ def draw_ship_info_header(surface, ship, x_indent, y, font):
         surface.blit(text, (x_indent, y))
         y += UIConfig.ELEMENT_SPACING
 
-    strat_name = StrategyMetadataService.instance().strategies.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
+    strat_name = get_default_strategy_metadata_service().strategies.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
     text = font.render(f"AI: {strat_name}", True, AI_STRATEGY_TEXT)
     surface.blit(text, (x_indent, y))
     y += UIConfig.ELEMENT_SPACING

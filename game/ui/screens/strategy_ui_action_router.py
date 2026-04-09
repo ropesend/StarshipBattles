@@ -10,7 +10,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from game.core.input_actions import InputAction
-from game.ui.services.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import get_default_screenshot_manager
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_input_handler import StrategyInputHandler
@@ -100,7 +100,7 @@ class UIActionRouter:
 
     def take_screenshot_full(self) -> None:
         """Take a full screenshot of the strategy layer including UI."""
-        sm = ScreenshotManager.instance()
+        sm = get_default_screenshot_manager()
         sm.capture_strategy_layer(self.scene, include_ui=True, label="strategy_full")
         logger.info("Screenshot: Full strategy layer captured (F12)")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager
@@ -108,7 +108,7 @@ class UIActionRouter:
 
     def take_screenshot_viewport(self) -> None:
         """Take a screenshot of only the galaxy viewport (no UI)."""
-        sm = ScreenshotManager.instance()
+        sm = get_default_screenshot_manager()
         sm.capture_strategy_layer(self.scene, include_ui=False, label="strategy_viewport")
         logger.info("Screenshot: Galaxy viewport captured (F11)")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager

@@ -58,11 +58,11 @@ class TestRenderingLogic:
 
         self.mock_draw.circle.assert_not_called()
 
-    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.get_default_ship_theme_manager')
     def test_component_color_coding(self, mock_theme_mgr_cls):
         """Verify components are colored based on abilities."""
         mock_theme_instance = MagicMock()
-        mock_theme_mgr_cls.instance.return_value = mock_theme_instance
+        mock_theme_mgr_cls.return_value = mock_theme_instance
         mock_theme_instance.load_image.return_value = None
 
         comp_weapon = MagicMock()
@@ -147,7 +147,7 @@ class TestDrawShipBehavior:
             draw_ship(surface, ship, camera)
             mock_draw.circle.assert_not_called()
 
-    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.get_default_ship_theme_manager')
     def test_draw_ship_with_theme_image(self, mock_theme_cls):
         """Test draw_ship with theme image available draws it."""
         ship = self._create_mock_ship()
@@ -156,7 +156,7 @@ class TestDrawShipBehavior:
         # Create real surface to use as mock theme image
         mock_img = pygame.Surface((100, 100), pygame.SRCALPHA)
         mock_instance = MagicMock()
-        mock_theme_cls.instance.return_value = mock_instance
+        mock_theme_cls.return_value = mock_instance
         mock_instance.load_image.return_value = mock_img
         mock_instance.get_image_metrics.return_value = pygame.Rect(0, 0, 80, 80)
         mock_instance.get_manual_scale.return_value = 1.0
@@ -169,14 +169,14 @@ class TestDrawShipBehavior:
         # Should have called blit (to draw the theme image)
         assert surface.blit.called
 
-    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.get_default_ship_theme_manager')
     def test_draw_ship_no_theme_image_draws_dot(self, mock_theme_cls):
         """Test draw_ship with no theme image (fallback to geometric rendering)."""
         ship = self._create_mock_ship()
         camera = self._create_mock_camera()
 
         mock_instance = MagicMock()
-        mock_theme_cls.instance.return_value = mock_instance
+        mock_theme_cls.return_value = mock_instance
         mock_instance.load_image.return_value = None
 
         surface = MagicMock()
@@ -186,14 +186,14 @@ class TestDrawShipBehavior:
             # Should draw a simple circle (dot) as fallback
             assert mock_draw.circle.called
 
-    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.get_default_ship_theme_manager')
     def test_draw_ship_zoom_affects_radius(self, mock_theme_cls):
         """Test draw_ship with different zoom levels affects scaled_radius."""
         ship = self._create_mock_ship()
         ship.radius = 20
 
         mock_instance = MagicMock()
-        mock_theme_cls.instance.return_value = mock_instance
+        mock_theme_cls.return_value = mock_instance
         mock_instance.load_image.return_value = None
 
         surface = MagicMock()
@@ -210,7 +210,7 @@ class TestDrawShipBehavior:
             draw_ship(surface, ship, camera_high)
             # Still should draw
 
-    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.get_default_ship_theme_manager')
     def test_draw_ship_at_camera_boundary(self, mock_theme_cls):
         """Test draw_ship at camera boundary (partially visible) still draws."""
         ship = self._create_mock_ship()
@@ -220,7 +220,7 @@ class TestDrawShipBehavior:
         camera = self._create_mock_camera()
 
         mock_instance = MagicMock()
-        mock_theme_cls.instance.return_value = mock_instance
+        mock_theme_cls.return_value = mock_instance
         mock_instance.load_image.return_value = None
 
         surface = MagicMock()

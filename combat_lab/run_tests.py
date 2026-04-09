@@ -81,7 +81,7 @@ def run_scenario(scenario_cls, runner):
         (test_id, passed, skip_reason, duration, failure_detail, scenario_results)
         scenario_results is the dict from scenario.results, or None if skipped/crashed.
     """
-    from game.core.registry import RegistryManager
+    from game.core.registry import get_default_registry_manager
 
     test_id = scenario_cls.metadata.test_id
 
@@ -116,7 +116,7 @@ def run_scenario(scenario_cls, runner):
         duration = time.time() - start
         return test_id, False, None, duration, f"CRASH: {e}", None
     finally:
-        RegistryManager.instance().clear()
+        get_default_registry_manager().clear()
 
 
 def format_result(test_id, passed, skip_reason, duration, detail, _results):

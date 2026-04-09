@@ -24,7 +24,7 @@ from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
 from game.strategy.systems.race_randomizer import RaceRandomizer
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 
 # PROJ-12 Phase 4: Import extracted components
 from game.ui.screens.race_browser_dialog import RaceBrowserDialog
@@ -412,7 +412,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             "Battleship", "Dreadnought", "Superdreadnought",
         ]
 
-        theme_manager = ShipThemeManager.instance()
+        theme_manager = get_default_ship_theme_manager()
         theme_manager.initialize()
 
         # Layout: 3 columns of ships, each showing top-down + portrait pair

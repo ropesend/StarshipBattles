@@ -12,7 +12,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
 
-from game.assets.asset_manager import AssetManager
+from game.assets.asset_manager import get_default_asset_manager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 if TYPE_CHECKING:
@@ -136,7 +136,7 @@ class PlanetSelectionWindow(UIWindow):
                     # Load planet portrait image
                     portrait_surface = None
                     if planet.image_id:
-                        am = AssetManager.instance()
+                        am = get_default_asset_manager()
                         portrait_surface = am.load_planet_image(planet.image_id, requested_size=512)
                         # Apply rotation if specified
                         if portrait_surface and planet.image_rotation:

@@ -16,11 +16,12 @@ from typing import Callable, Optional, TYPE_CHECKING
 import logging
 
 logger = logging.getLogger(__name__)
-from game.ui.assets import ShipThemeManager
+from game.ui.assets import get_default_ship_theme_manager
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
+    from game.ui.assets import ShipThemeManager
     from game.strategy.systems.race_library import RaceLibrary
 
 
@@ -128,7 +129,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
             return
 
         # Initialize ShipThemeManager for ship previews
-        theme_manager = ShipThemeManager.instance()
+        theme_manager = get_default_ship_theme_manager()
         theme_manager.initialize()
 
         # Set scrollable area size
@@ -145,7 +146,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
             y += self.ROW_HEIGHT
 
     def _create_race_row(self, race: 'RaceConfig', y: int, index: int,
-                         theme_manager: ShipThemeManager) -> dict:
+                         theme_manager: 'ShipThemeManager') -> dict:
         """Create a single race row as a single UIButton with embedded imagery.
 
         BUG-95: Uses a single UIButton per row with the composite surface set as
@@ -194,7 +195,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         return row
 
     def _render_row_surface(self, race: 'RaceConfig', width: int, height: int,
-                            theme_manager: ShipThemeManager) -> pygame.Surface:
+                            theme_manager: 'ShipThemeManager') -> pygame.Surface:
         """Render portrait, flag, ship preview, and name onto a single surface."""
         surf = pygame.Surface((width, height), pygame.SRCALPHA)
         x = 5

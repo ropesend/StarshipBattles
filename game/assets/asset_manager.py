@@ -18,11 +18,11 @@ class AssetManager:
     Manager for game assets (images, etc.).
 
     Usage:
-        manager = AssetManager.instance()
+        manager = get_default_asset_manager()
         image = manager.load_image("category", "key")
 
     Testing:
-        - Use reset() to destroy instance completely
+        - Use set_default_asset_manager(AssetManager()) to replace the default
         - Use clear() to reset caches but preserve instance
     """
 
@@ -42,20 +42,6 @@ class AssetManager:
             logger.info(f"Loaded star metadata from {metadata_path}")
         else:
             logger.warning(f"Star metadata not found at {metadata_path}")
-
-    @classmethod
-    def instance(cls) -> 'AssetManager':
-        """PROJ-258 compatibility shim — returns module-level instance."""
-        global _default_asset_manager
-        if _default_asset_manager is None:
-            _default_asset_manager = cls()
-        return _default_asset_manager
-
-    @classmethod
-    def reset(cls) -> None:
-        """PROJ-258 compatibility shim — replaces module-level instance."""
-        global _default_asset_manager
-        _default_asset_manager = cls()
 
     def clear(self):
         """Reset all caches. Used for test isolation."""
@@ -342,7 +328,21 @@ class AssetManager:
         self.missing_texture = s
         return s
 
-# Global Accessor (uses singleton pattern now)
-def get_asset_manager():
-    """Get the AssetManager singleton instance."""
-    return AssetManager.instance()
+def get_default_asset_manager() -> AssetManager:
+    """Get the module-level AssetManager instance, creating one if needed."""
+    global _default_asset_manager
+    if _default_asset_manager is None:
+        _default_asset_manager = AssetManager()
+    return _default_asset_manager
+
+
+def set_default_asset_manager(manager: AssetManager) -> None:
+    """Set the module-level AssetManager instance."""
+    global _default_asset_manager
+    _default_asset_manager = manager
+
+
+# Global Accessor (convenience alias)
+def get_asset_manager() -> AssetManager:
+    """Get the default AssetManager instance."""
+    return get_default_asset_manager()

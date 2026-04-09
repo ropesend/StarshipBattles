@@ -17,7 +17,7 @@ from game.ui.config import UIConfig
 import logging
 
 logger = logging.getLogger(__name__)
-from game.ui.services.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.ui.screens.planet_list_filters import (
     gather_planets, filter_planets, sort_planets,
     compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str
@@ -490,7 +490,7 @@ class PlanetListWindow(UIWindow):
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the planet list."""
-        sm = ScreenshotManager.instance()
+        sm = get_default_screenshot_manager()
         sm.capture(label="planet_list")
         logger.info("Screenshot: Planet List window captured")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager

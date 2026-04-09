@@ -8,6 +8,8 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch, call
 import os
 
+from game.ui.services.screenshot_manager import get_default_screenshot_manager
+
 
 class TestScreenshotManagerSingleton:
     """Tests for ScreenshotManager singleton behavior."""
@@ -22,8 +24,8 @@ class TestScreenshotManagerSingleton:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                instance1 = ScreenshotManager.instance()
-                instance2 = ScreenshotManager.instance()
+                instance1 = get_default_screenshot_manager()
+                instance2 = get_default_screenshot_manager()
 
         assert instance1 is instance2
 
@@ -40,12 +42,12 @@ class TestScreenshotManagerSingleton:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                instance1 = ScreenshotManager.instance()
+                instance1 = get_default_screenshot_manager()
 
                 # Reset clears the module-level reference
                 ssm_module._default_screenshot_manager = None
 
-                instance2 = ScreenshotManager.instance()
+                instance2 = get_default_screenshot_manager()
 
         assert instance1 is not instance2
 
@@ -67,7 +69,7 @@ class TestScreenshotCapture:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         yield manager
 
@@ -186,7 +188,7 @@ class TestClipboardOperations:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         yield manager
 
@@ -240,7 +242,7 @@ class TestCaptureStrategyLayer:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         yield manager
 
@@ -376,7 +378,7 @@ class TestShowToast:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         yield manager
 
@@ -459,7 +461,7 @@ class TestScreenshotManagerLogging:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                manager = ScreenshotManager.instance()
+                manager = get_default_screenshot_manager()
 
         yield manager
 
@@ -493,7 +495,7 @@ class TestScreenshotManagerLogging:
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
                 with patch('game.ui.services.screenshot_manager.logger') as mock_log:
-                    manager = ScreenshotManager.instance()
+                    manager = get_default_screenshot_manager()
 
         # Should log info about directory creation
         mock_log.info.assert_called()
@@ -512,7 +514,7 @@ class TestScreenshotManagerLogging:
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.makedirs', side_effect=OSError("Permission denied")):
                 with patch('game.ui.services.screenshot_manager.logger') as mock_log:
-                    manager = ScreenshotManager.instance()
+                    manager = get_default_screenshot_manager()
 
         # Should log error
         mock_log.error.assert_called()
