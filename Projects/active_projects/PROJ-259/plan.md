@@ -13,21 +13,21 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Screen State Machine | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Screen State Machine | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. TurnEngine Config Object | Complete (abstraction + integration) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle Engine Tick Phases | Complete (abstraction + integration) | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Documentation + Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Documentation + Verification | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-08
 **Last Updated:** 2026-04-08
-**Active Phase:** Phases 2-3 complete, Phase 1 partially complete (app.py refactor pending), Phase 4 (docs) pending
+**Active Phase:** PROJECT COMPLETE — All 4 phases done
 **Last Action:** All 3 new abstractions implemented with full TDD:
   - ScreenStateMachine (game/core/state_machine.py, 19 tests) — transition table, guards, callbacks, push/pop stack
   - TurnEngineConfig (game/strategy/engine/turn_engine_config.py, 6 tests) — frozen dataclass with 13 Optional fields
   - ITickPhase + TickPhaseRegistry (game/simulation/systems/tick_phase.py, 9 tests) — protocol + priority-sorted registry
   14675 tests pass.
-**Next Action:** Phase 1 Tasks 1.3-1.4 (app.py refactor with ScreenStateMachine), then Phase 4 (docs)
+**Next Action:** Phase 4 — Documentation updates for all three abstractions
 **Blockers:** None
 **Context for Next Agent:** TurnEngine and BattleEngine integrations are DONE. Remaining work:
   - Phase 1 Tasks 1.3-1.4: app.py refactor — replace 23 _switch_scene() calls + 3 return_state fields with ScreenStateMachine. Read design.md for the full transition map.

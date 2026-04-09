@@ -44,6 +44,7 @@ from game.ui.screens.menu_scene import MenuScene
 from game.core.profiling import profile_action
 from game.core.protocols import IScene
 from game.context import ApplicationContext
+from game.core.state_machine import ScreenStateMachine
 from game.ui.services.input_mapper import InputMapper
 from game.core.input_actions import InputAction
 from game.exit_dialog import (
@@ -67,6 +68,36 @@ def parse_args():
                         help='Force 2560x1600 resolution regardless of monitor size')
     args, _ = parser.parse_known_args()
     return args
+
+
+# PROJ-259: Valid screen transitions (from_state, to_state)
+_SCREEN_TRANSITIONS = frozenset({
+    (GameState.MENU, GameState.BUILDER),
+    (GameState.MENU, GameState.BATTLE_SETUP),
+    (GameState.MENU, GameState.STRATEGY),
+    (GameState.MENU, GameState.FORMATION),
+    (GameState.MENU, GameState.TEST_LAB),
+    (GameState.MENU, GameState.RESEARCH_TREE),
+    (GameState.MENU, GameState.GALAXY_TEST),
+    (GameState.BUILDER, GameState.MENU),
+    (GameState.BUILDER, GameState.STRATEGY),
+    (GameState.BATTLE, GameState.BATTLE_SETUP),
+    (GameState.BATTLE, GameState.TEST_LAB),
+    (GameState.BATTLE, GameState.STRATEGY),
+    (GameState.BATTLE_SETUP, GameState.MENU),
+    (GameState.BATTLE_SETUP, GameState.BATTLE),
+    (GameState.FORMATION, GameState.MENU),
+    (GameState.TEST_LAB, GameState.MENU),
+    (GameState.TEST_LAB, GameState.BATTLE),
+    (GameState.RESEARCH_TREE, GameState.MENU),
+    (GameState.GALAXY_TEST, GameState.MENU),
+    (GameState.STRATEGY, GameState.BUILDER),
+    (GameState.STRATEGY, GameState.MENU),
+    (GameState.STRATEGY, GameState.KEYBINDINGS),
+    (GameState.STRATEGY, GameState.BATTLE),
+    (GameState.KEYBINDINGS, GameState.STRATEGY),
+    (GameState.KEYBINDINGS, GameState.MENU),
+})
 
 
 class Game:
@@ -112,9 +143,14 @@ class Game:
         self.showing_load_menu = False
         self.showing_race_setup = False
         self.showing_new_game_setup: bool = False  # PROJ-199: Lazy init elimination
-        self.return_state: Optional[GameState] = None  # PROJ-199: Lazy init elimination
         self.race_setup_window = None
-        self.state = GameState.MENU
+
+        # PROJ-259: Screen state machine with validated transitions
+        self.state_machine = ScreenStateMachine(
+            initial_state=GameState.MENU,
+            transitions=_SCREEN_TRANSITIONS,
+        )
+        self.active_scene = None  # Set in _init_scenes()
 
         # Load game data
         # PROJ-211: Pass registry_provider explicitly (no fallback)
@@ -189,42 +225,47 @@ class Game:
             ("Galaxy Test", self.start_galaxy_test),
         ]
 
+    @property
+    def state(self) -> GameState:
+        """Current game state — delegates to state machine."""
+        return self.state_machine.state
+
+    @state.setter
+    def state(self, value: GameState) -> None:
+        """Direct state assignment — only for initial setup. Use _switch_scene for transitions."""
+        # During init, state_machine may not exist yet
+        if hasattr(self, 'state_machine'):
+            self.state_machine._state = value
+        # No-op before state_machine is created (handled by state_machine init)
+
     def _switch_scene(self, state: GameState, scene: IScene) -> None:
-        """Switch to a new scene with unified dispatch (PROJ-65)."""
-        self.state = state
+        """Switch to a new scene with validated transition (PROJ-259)."""
+        self.state_machine.transition(state)
         self.active_scene = scene
 
     @profile_action("App: Start Builder")
     def start_builder(self, return_to=None, context=None):
-        """
-        Enter design workshop.
-
-        Args:
-            return_to: State to return to (MENU or STRATEGY)
-            context: Optional WorkshopContext for integrated mode
-        """
-        self.builder_return_state = return_to
-        # Use provided context or create default standalone context
-        # PROJ-211: Pass registries explicitly (no fallback)
+        """Enter design workshop. Uses state stack for return-to-previous."""
         if context is None:
             context = WorkshopContext.standalone(tech_preset_name="default", registries=self.registries)
         context.on_return = self.on_builder_return
         self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
-        self._switch_scene(GameState.BUILDER, self.builder_scene)
+        # PROJ-259: Push current state so pop_and_return goes back to caller
+        self.state_machine.push_and_transition(GameState.BUILDER)
+        self.active_scene = self.builder_scene
 
     def on_builder_return(self, custom_ship=None):
-        """Return from design workshop to caller or main menu."""
-        # Clean up workshop UI elements before switching state
+        """Return from design workshop to caller (via state stack)."""
         if hasattr(self, 'builder_scene') and hasattr(self.builder_scene, 'cleanup'):
             self.builder_scene.cleanup()
 
-        if self.builder_return_state == GameState.STRATEGY:
+        return_state = self.state_machine.pop_and_return()
+        if return_state == GameState.STRATEGY:
             if hasattr(self.strategy_scene, 'handle_resize'):
                 self.strategy_scene.handle_resize(self.width, self.height)
-            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
+            self.active_scene = self.strategy_scene
         else:
-            self._switch_scene(GameState.MENU, self._menu_scene)
-        self.builder_return_state = None
+            self.active_scene = self._menu_scene
 
     @profile_action("App: Start Battle Setup")
     def start_battle_setup(self, preserve_teams=False):
@@ -458,28 +499,26 @@ class Game:
         from game.ui.screens.keybindings_scene import KeybindingsScene
 
         logger.info("Opening keybindings editor")
-        self._keybindings_return_state = self.state
         self.keybindings_scene = KeybindingsScene(
             self.width, self.height,
             self.input_mapper,
             on_close_callback=self.on_keybindings_return,
         )
-        self._switch_scene(GameState.KEYBINDINGS, self.keybindings_scene)
+        # PROJ-259: Push current state for return-to-previous
+        self.state_machine.push_and_transition(GameState.KEYBINDINGS)
+        self.active_scene = self.keybindings_scene
 
     def on_keybindings_return(self):
-        """Return from keybindings editor to previous scene."""
+        """Return from keybindings editor to previous scene (via state stack)."""
         logger.info("Returning from keybindings editor")
-        return_state = getattr(self, '_keybindings_return_state', GameState.MENU)
+        return_state = self.state_machine.pop_and_return()
 
         if return_state == GameState.STRATEGY:
-            # Refresh tooltips on strategy UI with possibly changed bindings
             if hasattr(self.strategy_scene, '_ui') and hasattr(self.strategy_scene._ui, '_apply_tooltips'):
                 self.strategy_scene._ui._apply_tooltips()
-            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
+            self.active_scene = self.strategy_scene
         else:
-            self._switch_scene(GameState.MENU, self._menu_scene)
-
-        self._keybindings_return_state = None
+            self.active_scene = self._menu_scene
 
     def start_race_setup(self):
         """Open race setup wizard."""

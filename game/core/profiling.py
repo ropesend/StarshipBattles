@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 _default_profiler: Optional['Profiler'] = None
 
 
+def get_default_profiler() -> Optional['Profiler']:
+    """Get the module-level default profiler. Returns None if not set."""
+    return _default_profiler
+
+
 def set_default_profiler(profiler: Optional['Profiler']) -> None:
     """Set the module-level default profiler used by profile_action/profile_block."""
     global _default_profiler

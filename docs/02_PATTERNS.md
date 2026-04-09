@@ -25,6 +25,11 @@ Each section: **Where**, **How It Works**, **When to Use**.
 16. [ScrollState (Scroll Utility)](#16-scrollstate-scroll-utility)
 17. [Serializable Protocol](#17-serializable-protocol)
 18. [Per-Battle RNG](#18-per-battle-rng-proj-252)
+19. [Error Boundary](#19-error-boundary-turn-engine--proj-251)
+20. [Precondition Validation](#20-precondition-validation-sub-engines--proj-251)
+21. [Screen State Machine](#21-screen-state-machine-proj-259)
+22. [TurnEngineConfig](#22-turnengineconfig-proj-259)
+23. [Tick Phase Registry](#23-tick-phase-registry-proj-259)
 
 ---
 
@@ -1197,6 +1202,46 @@ def _validate_tick_inputs(self, empires):
 
 ---
 
+## 21. Screen State Machine (PROJ-259)
+
+**Where:** `game/core/state_machine.py` -- `ScreenStateMachine`, `game/app.py` -- transition table
+
+**How It Works:**
+- Declarative transition table: `_SCREEN_TRANSITIONS` frozenset of `(from_state, to_state)` tuples
+- `ScreenStateMachine` validates all transitions, supports guards and on_enter/on_exit callbacks
+- State stack via `push_and_transition()` / `pop_and_return()` for return-to-previous (builder, keybindings)
+- `_switch_scene()` in app.py delegates to `state_machine.transition()` then sets active_scene
+
+**When to Use:** Formalize any state machine where transitions should be validated declaratively.
+
+---
+
+## 22. TurnEngineConfig (PROJ-259)
+
+**Where:** `game/strategy/engine/turn_engine_config.py` -- `TurnEngineConfig`
+
+**How It Works:**
+Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__()` accepts `config=TurnEngineConfig(...)` alongside individual kwargs (individual kwargs take precedence for backward compat).
+
+**When to Use:** Pass to `TurnEngine()` or `create_default_turn_engine()` when overriding specific engines for testing.
+
+---
+
+## 23. Tick Phase Registry (PROJ-259)
+
+**Where:** `game/simulation/systems/tick_phase.py` -- `ITickPhase`, `TickPhaseRegistry`, 5 default phases
+
+**How It Works:**
+- `ITickPhase` protocol: `name`, `priority`, `execute(engine)`
+- `TickPhaseRegistry`: ordered list of phases, sorted by priority (ascending)
+- `BattleEngine.update()` calls `self._tick_phases.execute_all(self)`
+- 5 default phases: RebuildGrid(100), AIAndShipUpdate(200), AttackProcessing(300), Ramming(400), ProjectileUpdate(500)
+- Custom phases can be registered at any priority without modifying BattleEngine
+
+**When to Use:** Extend the battle simulation with new tick phases (e.g., environmental effects) by registering a custom `ITickPhase` at the desired priority.
+
+---
+
 ## Quick Reference
 
 | Pattern | Primary File | Key Class/Function |
@@ -1226,6 +1271,9 @@ def _validate_tick_inputs(self, empires):
 | Serializable | `game/core/protocols.py` | `ISerializable` |
 | Error Boundary | `game/strategy/engine/turn_state_snapshot.py` | `TurnStateSnapshot`, `EnginePhaseError` |
 | Precondition Validation | `game/strategy/engine/*.py` | `_validate_tick_inputs()` |
+| Screen State Machine | `game/core/state_machine.py` | `ScreenStateMachine` |
+| TurnEngineConfig | `game/strategy/engine/turn_engine_config.py` | `TurnEngineConfig` |
+| Tick Phase Registry | `game/simulation/systems/tick_phase.py` | `ITickPhase`, `TickPhaseRegistry` |
 
 ### Critical Naming Reminders
 
