@@ -101,7 +101,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage       | Description |
 |------------------|-------------|
-| `entities/`      | Ship (main entity), ShipComponentManager, ShipCombatManager, ShipSerializer, ShipPhysics, ShipCombatEngine, ShipFormation, LayerData, Projectile, AbilityAggregator, ShipLoader, ShipStats, ShipStatQuerier |
+| `entities/`      | Ship (main entity, 11 delegates), ShipComponentManager, ShipCombatManager, ShipLayerManager, ShipResourceManager, ShipSerializer, ShipPhysics, ShipCombatEngine, ShipFormation, LayerData, Projectile, AbilityAggregator, ShipLoader, ShipStats, ShipStatQuerier |
 | `components/`    | Component class (facade), create_component factory, 4 delegates (ModifierManager, AbilityManager, ComponentHealthManager, ComponentResourceManager), ComponentStatsCalculator (static) |
 | `components/abilities/` | Ability classes: weapons (beam, seeker, projectile), defense, propulsion, cargo, crew, resources, harvester, colonize, superweapons |
 | `systems/`       | BattleEngine (tick loop), BattleEndConditions, ResourceState, ResourceRegistry, TechPresetLoader |
