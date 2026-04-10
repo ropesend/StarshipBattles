@@ -68,7 +68,8 @@ def find_abilities_in_scope(
         target_planet: The planet being affected.
         galaxy: Galaxy for spatial queries.
         empire: Empire that owns the abilities.
-        scope: Scope string ('planet', 'sector', 'system', 'empire', 'allied_empire').
+        scope: Scope string ('planet', 'sector', 'system', 'empire', 'allied_empire',
+               'player_sector', 'player_system', 'enemy_sector', 'enemy_system').
         registries: Optional GameRegistries.
 
     Returns:
@@ -151,7 +152,7 @@ def _resolve_planets_for_scope(
     if scope == 'planet' or scope == 'self':
         return [target_planet]
 
-    if scope == 'sector' or scope == 'allied_sector':
+    if scope in ('sector', 'allied_sector', 'player_sector', 'enemy_sector'):
         location = getattr(target_planet, 'location', None)
         get_planets = getattr(galaxy, 'get_planets_at_global_hex', None) if galaxy else None
         if location is None or get_planets is None:
@@ -159,9 +160,11 @@ def _resolve_planets_for_scope(
         all_planets = get_planets(location)
         if not isinstance(all_planets, list):
             return [target_planet]
+        if scope == 'enemy_sector':
+            return [p for p in all_planets if getattr(p, 'owner_id', -1) != empire_id]
         return [p for p in all_planets if getattr(p, 'owner_id', -1) == empire_id]
 
-    if scope == 'system' or scope == 'allied_system':
+    if scope in ('system', 'allied_system', 'player_system', 'enemy_system'):
         if galaxy is None:
             return [target_planet]
         location = getattr(target_planet, 'location', None)
@@ -174,6 +177,8 @@ def _resolve_planets_for_scope(
         planets = getattr(system, 'planets', [])
         if not isinstance(planets, list):
             return [target_planet]
+        if scope == 'enemy_system':
+            return [p for p in planets if getattr(p, 'owner_id', -1) != empire_id]
         return [p for p in planets if getattr(p, 'owner_id', -1) == empire_id]
 
     if scope == 'empire':

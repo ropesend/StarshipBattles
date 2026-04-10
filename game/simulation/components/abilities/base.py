@@ -28,12 +28,16 @@ class AbilityScope(Enum):
     SELF: Only the owner entity (ship, complex, etc.)
     FLEET: All ships in the same battle group/fleet
     SECTOR: All entities in the same hex
-    ALLIED_SECTOR: Allied entities in the same hex
+    ALLIED_SECTOR: Allied entities in the same hex (owner + allies)
     SYSTEM: All entities in the star system
-    ALLIED_SYSTEM: Allied entities in the star system
+    ALLIED_SYSTEM: Allied entities in the star system (owner + allies)
     PLANET: Planet-wide effect (for planetary shields, sensors, etc.)
     EMPIRE: All colonies belonging to the owning player
     ALLIED_EMPIRE: All colonies of the owning player and their allies
+    ENEMY_SECTOR: Enemy entities in the same hex (not owned by the player)
+    ENEMY_SYSTEM: Enemy entities in the star system (not owned by the player)
+    PLAYER_SECTOR: Only the player's own entities in the same hex (excludes allies)
+    PLAYER_SYSTEM: Only the player's own entities in the star system (excludes allies)
     """
     SELF = "self"
     FLEET = "fleet"
@@ -44,6 +48,10 @@ class AbilityScope(Enum):
     PLANET = "planet"
     EMPIRE = "empire"
     ALLIED_EMPIRE = "allied_empire"
+    ENEMY_SECTOR = "enemy_sector"
+    ENEMY_SYSTEM = "enemy_system"
+    PLAYER_SECTOR = "player_sector"
+    PLAYER_SYSTEM = "player_system"
 
 
 class Ability:

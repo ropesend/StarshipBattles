@@ -55,6 +55,32 @@ Stacking behavior is validated by simulation tests:
 
 ---
 
+## Scope Reference
+
+Scopes control which entities an ability affects. Defined in `AbilityScope` enum
+(`game/simulation/components/abilities/base.py`). Each ability declares `allowed_scopes`
+(valid scopes) and `default_scope` (used when JSON omits `scope`).
+
+| Scope | Value | Description |
+|-------|-------|-------------|
+| SELF | `"self"` | Only the owner entity |
+| FLEET | `"fleet"` | All ships in the same battle group |
+| SECTOR | `"sector"` | All entities in the same hex |
+| ALLIED_SECTOR | `"allied_sector"` | Allied entities in the same hex (owner + allies) |
+| SYSTEM | `"system"` | All entities in the star system |
+| ALLIED_SYSTEM | `"allied_system"` | Allied entities in the star system (owner + allies) |
+| PLANET | `"planet"` | Planet-wide effect |
+| EMPIRE | `"empire"` | All colonies belonging to the owning player |
+| ALLIED_EMPIRE | `"allied_empire"` | All colonies of the owning player and their allies |
+| ENEMY_SECTOR | `"enemy_sector"` | Enemy entities in the same hex (not owned by the player) |
+| ENEMY_SYSTEM | `"enemy_system"` | Enemy entities in the star system (not owned by the player) |
+| PLAYER_SECTOR | `"player_sector"` | Only the player's own entities in the same hex (excludes allies) |
+| PLAYER_SYSTEM | `"player_system"` | Only the player's own entities in the star system (excludes allies) |
+
+**Key distinction:** `PLAYER_*` scopes are strictly owner-only. `ALLIED_*` scopes include the owner and their allies. `ENEMY_*` scopes target only entities not owned by the player.
+
+---
+
 ## Weapons
 
 ### WeaponAbility

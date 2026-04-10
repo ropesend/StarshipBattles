@@ -188,6 +188,77 @@ class TestAbilityBaseClassLayerScope:
         assert ab.scope == AbilityScope.SELF
 
 
+class TestAbilityScopeNewValues:
+    """Tests for parsing new ENEMY_* and PLAYER_* scopes from JSON data."""
+
+    @pytest.fixture
+    def mock_component(self):
+        mock = MagicMock()
+        mock.ship = MagicMock()
+        return mock
+
+    def test_ability_parses_enemy_sector_scope(self, mock_component):
+        """Ability should parse enemy_sector scope from JSON data."""
+        from game.simulation.components.abilities.base import Ability, AbilityScope
+
+        class EnemyScopeAbility(Ability):
+            allowed_scopes = [AbilityScope.SELF, AbilityScope.ENEMY_SECTOR, AbilityScope.ENEMY_SYSTEM]
+            default_scope = AbilityScope.SELF
+
+        data = {'value': 5.0, 'scope': 'enemy_sector'}
+        ab = EnemyScopeAbility(mock_component, data)
+        assert ab.scope == AbilityScope.ENEMY_SECTOR
+
+    def test_ability_parses_enemy_system_scope(self, mock_component):
+        """Ability should parse enemy_system scope from JSON data."""
+        from game.simulation.components.abilities.base import Ability, AbilityScope
+
+        class EnemyScopeAbility(Ability):
+            allowed_scopes = [AbilityScope.SELF, AbilityScope.ENEMY_SECTOR, AbilityScope.ENEMY_SYSTEM]
+            default_scope = AbilityScope.SELF
+
+        data = {'value': 5.0, 'scope': 'enemy_system'}
+        ab = EnemyScopeAbility(mock_component, data)
+        assert ab.scope == AbilityScope.ENEMY_SYSTEM
+
+    def test_ability_parses_player_sector_scope(self, mock_component):
+        """Ability should parse player_sector scope from JSON data."""
+        from game.simulation.components.abilities.base import Ability, AbilityScope
+
+        class PlayerScopeAbility(Ability):
+            allowed_scopes = [AbilityScope.SELF, AbilityScope.PLAYER_SECTOR, AbilityScope.PLAYER_SYSTEM]
+            default_scope = AbilityScope.SELF
+
+        data = {'value': 5.0, 'scope': 'player_sector'}
+        ab = PlayerScopeAbility(mock_component, data)
+        assert ab.scope == AbilityScope.PLAYER_SECTOR
+
+    def test_ability_parses_player_system_scope(self, mock_component):
+        """Ability should parse player_system scope from JSON data."""
+        from game.simulation.components.abilities.base import Ability, AbilityScope
+
+        class PlayerScopeAbility(Ability):
+            allowed_scopes = [AbilityScope.SELF, AbilityScope.PLAYER_SECTOR, AbilityScope.PLAYER_SYSTEM]
+            default_scope = AbilityScope.SELF
+
+        data = {'value': 5.0, 'scope': 'player_system'}
+        ab = PlayerScopeAbility(mock_component, data)
+        assert ab.scope == AbilityScope.PLAYER_SYSTEM
+
+    def test_ability_rejects_new_scope_when_not_allowed(self, mock_component):
+        """Ability should reject new scopes when not in allowed_scopes."""
+        from game.simulation.components.abilities.base import Ability, AbilityScope
+
+        class SelfOnlyAbility(Ability):
+            allowed_scopes = [AbilityScope.SELF]
+            default_scope = AbilityScope.SELF
+
+        data = {'value': 5.0, 'scope': 'enemy_sector'}
+        with pytest.raises(ValidationException) as exc_info:
+            SelfOnlyAbility(mock_component, data)
+        assert 'does not support scope' in str(exc_info.value)
+
+
 class TestAbilityAllowedScopes:
     """Tests for the allowed_scopes class attribute."""
 

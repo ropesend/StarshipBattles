@@ -219,6 +219,126 @@ class TestFindAbilitiesInScope:
         assert len(results) == 0
 
 
+class TestPlayerAndEnemyScopeResolution:
+    """Test PLAYER_* and ENEMY_* scope resolution in find_abilities_in_scope."""
+
+    def _make_galaxy_mock(self, planets_at_hex=None, system_planets=None):
+        galaxy = MagicMock()
+
+        if planets_at_hex is not None:
+            galaxy.get_planets_at_global_hex.return_value = planets_at_hex
+        else:
+            galaxy.get_planets_at_global_hex.return_value = []
+
+        if system_planets is not None:
+            mock_system = MagicMock()
+            mock_system.planets = system_planets
+            galaxy.get_system_at_location.return_value = mock_system
+        else:
+            galaxy.get_system_at_location.return_value = None
+
+        return galaxy
+
+    def test_player_sector_returns_only_owned_planets(self):
+        """PLAYER_SECTOR scope should return only owned planets at the hex."""
+        from game.core.hex_math import HexCoord
+        target = MockPlanet(name="Mine", owner_id=0, location=HexCoord(5, 5))
+        target.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 1.5})
+        ]
+        enemy = MockPlanet(name="Enemy", owner_id=1, location=HexCoord(5, 5))
+        enemy.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 9.9})
+        ]
+
+        galaxy = self._make_galaxy_mock(planets_at_hex=[target, enemy])
+        empire = MockEmpire(id=0, colonies=[target])
+
+        results = find_abilities_in_scope("TestAbility", target, galaxy, empire, "player_sector")
+        assert len(results) == 1
+        assert results[0]["multiplier"] == 1.5
+
+    def test_player_system_returns_only_owned_planets(self):
+        """PLAYER_SYSTEM scope should return only owned planets in the system."""
+        from game.core.hex_math import HexCoord
+        target = MockPlanet(name="Mine", owner_id=0, location=HexCoord(5, 5))
+        target.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 1.5})
+        ]
+        allied = MockPlanet(name="Ally", owner_id=2, location=HexCoord(5, 6))
+        allied.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 2.0})
+        ]
+        enemy = MockPlanet(name="Enemy", owner_id=1, location=HexCoord(5, 7))
+        enemy.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 9.9})
+        ]
+
+        galaxy = self._make_galaxy_mock(system_planets=[target, allied, enemy])
+        empire = MockEmpire(id=0, colonies=[target])
+
+        results = find_abilities_in_scope("TestAbility", target, galaxy, empire, "player_system")
+        assert len(results) == 1
+        assert results[0]["multiplier"] == 1.5
+
+    def test_enemy_sector_returns_only_non_owned_planets(self):
+        """ENEMY_SECTOR scope should return only non-owned planets at the hex."""
+        from game.core.hex_math import HexCoord
+        target = MockPlanet(name="Mine", owner_id=0, location=HexCoord(5, 5))
+        target.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 1.0})
+        ]
+        enemy = MockPlanet(name="Enemy", owner_id=1, location=HexCoord(5, 5))
+        enemy.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 3.0})
+        ]
+
+        galaxy = self._make_galaxy_mock(planets_at_hex=[target, enemy])
+        empire = MockEmpire(id=0, colonies=[target])
+
+        results = find_abilities_in_scope("TestAbility", target, galaxy, empire, "enemy_sector")
+        assert len(results) == 1
+        assert results[0]["multiplier"] == 3.0
+
+    def test_enemy_system_returns_only_non_owned_planets(self):
+        """ENEMY_SYSTEM scope should return only non-owned planets in the system."""
+        from game.core.hex_math import HexCoord
+        target = MockPlanet(name="Mine", owner_id=0, location=HexCoord(5, 5))
+        target.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 1.0})
+        ]
+        enemy1 = MockPlanet(name="Enemy1", owner_id=1, location=HexCoord(5, 6))
+        enemy1.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 2.0})
+        ]
+        enemy2 = MockPlanet(name="Enemy2", owner_id=2, location=HexCoord(5, 7))
+        enemy2.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 4.0})
+        ]
+
+        galaxy = self._make_galaxy_mock(system_planets=[target, enemy1, enemy2])
+        empire = MockEmpire(id=0, colonies=[target])
+
+        results = find_abilities_in_scope("TestAbility", target, galaxy, empire, "enemy_system")
+        assert len(results) == 2
+        multipliers = sorted([r["multiplier"] for r in results])
+        assert multipliers == [2.0, 4.0]
+
+    def test_enemy_sector_excludes_owned_planets(self):
+        """ENEMY_SECTOR scope should not include the owner's own planets."""
+        from game.core.hex_math import HexCoord
+        owned = MockPlanet(name="Mine", owner_id=0, location=HexCoord(5, 5))
+        owned.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 1.0})
+        ]
+
+        galaxy = self._make_galaxy_mock(planets_at_hex=[owned])
+        empire = MockEmpire(id=0, colonies=[owned])
+
+        results = find_abilities_in_scope("TestAbility", owned, galaxy, empire, "enemy_sector")
+        assert len(results) == 0
+
+
 class TestAggregateMultipliers:
     """Test two-phase stacking: intra-group MAX, inter-group MULTIPLY."""
 
