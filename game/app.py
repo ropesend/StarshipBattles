@@ -779,13 +779,13 @@ class Game:
     def _handle_battle_setup_action(self, action: str, **kwargs):
         """Handle scene actions from BattleSetupScreen."""
         if action == "start_battle":
-            self.start_battle(kwargs["team1"], kwargs["team2"])
+            self.start_battle(kwargs["team0"], kwargs["team1"])
         elif action == "start_headless":
-            team1, team2 = kwargs["team1"], kwargs["team2"]
-            logger.info(f"Team 1: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
-            logger.info(f"Team 2: {len(team2)} ships ({sum(s.max_hp for s in team2):.0f} total HP)")
+            team0, team1 = kwargs["team0"], kwargs["team1"]
+            logger.info(f"Team 1: {len(team0)} ships ({sum(s.max_hp for s in team0):.0f} total HP)")
+            logger.info(f"Team 2: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
             logger.info("Running simulation...")
-            self.start_battle(team1, team2, headless=True)
+            self.start_battle(team0, team1, headless=True)
         elif action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
 

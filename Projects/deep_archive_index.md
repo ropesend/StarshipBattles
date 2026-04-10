@@ -243,3 +243,6 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-245 | Spatial Grid Incremental Updates | 2026-04-08 | PROJ-201-250 |
 | PROJ-246 | Silent Formula Evaluation Failure | 2026-04-08 | PROJ-201-250 |
 | PROJ-247 | Ship ID Mapping Fragility | 2026-04-08 | PROJ-201-250 |
+| PROJ-242 | Unified Formula Evaluation System | 2026-04-10 | PROJ-201-250 |
+| PROJ-243 | Mid-Battle Ship Addition Fix | 2026-04-10 | PROJ-201-250 |
+| PROJ-244 | Team Naming Standardization | 2026-04-10 | PROJ-201-250 |

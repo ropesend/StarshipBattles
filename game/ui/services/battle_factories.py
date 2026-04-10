@@ -152,8 +152,8 @@ def create_test_battle(
 
 
 def create_strategy_battle(
+    fleet0: Any,
     fleet1: Any,
-    fleet2: Any,
     seed: Optional[int] = None,
     allow_retreat: bool = True,
 ) -> BattleController:
@@ -161,8 +161,8 @@ def create_strategy_battle(
     Create a controller for a strategy layer fleet battle.
 
     Args:
-        fleet1: First fleet (team 0)
-        fleet2: Second fleet (team 1)
+        fleet0: Fleet for team 0
+        fleet1: Fleet for team 1
         seed: Random seed for determinism
         allow_retreat: Allow ships to retreat
 
@@ -180,8 +180,8 @@ def create_strategy_battle(
 
 
 def create_hypothetical_battle(
+    ships0: List['Ship'],
     ships1: List['Ship'],
-    ships2: List['Ship'],
     seed: Optional[int] = None,
 ) -> BattleController:
     """
@@ -190,8 +190,8 @@ def create_hypothetical_battle(
     Ships are deep-cloned to ensure no mutation of originals.
 
     Args:
-        ships1: Ships for team 0 (will be cloned)
-        ships2: Ships for team 1 (will be cloned)
+        ships0: Ships for team 0 (will be cloned)
+        ships1: Ships for team 1 (will be cloned)
         seed: Random seed for determinism
 
     Returns:
@@ -206,6 +206,6 @@ def create_hypothetical_battle(
     # Clone ships to ensure isolation (PROJ-141: DUP-UI2-006)
     return create_started_battle_controller(
         config,
+        _clone_ships(ships0),
         _clone_ships(ships1),
-        _clone_ships(ships2),
     )

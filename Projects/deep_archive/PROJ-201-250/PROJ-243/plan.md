@@ -19,12 +19,12 @@
 | 4. Integration Tests | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-05
+**Last Updated:** 2026-04-10
 **Current Phase:** Complete
-**Last Action:** All 4 phases complete. Full test suite passes (14370 passed, 2 skipped, 0 failures).
-**Next Action:** None — project complete.
+**Last Agent Action:** Project review (Protocol 09) completed — 17 findings addressed, Key Files table updated, decisions.md populated, design.md annotated, minor observations recorded. PROJ-268 filed for remove_ship() aura cleanup.
+**Next Action:** Archive project. Separately, implement PROJ-268 (FleetAuraManager.unregister_ship).
 **Blockers:** None
-**Context for Next Agent:** N/A — project is finished. All production code changes, unit tests, integration tests, and docs are done.
+**Context for Next Agent:** Plan reviewed and updated on 2026-04-10. All references verified against current codebase. Key changes: line numbers corrected for post-PROJ-253/259 drift, Ship.__init__ annotation updated to reflect fix, decisions.md backfilled. One scope gap identified → PROJ-268.
 
 ## Overview
 `BattleEngine.add_ship_mid_battle()` (lines 320-355 of `battle_engine.py`) is incomplete compared to `start()` (lines 285-300). Ships added mid-battle (reinforcements, launched fighters) are missing five critical initialization steps: combat event bus wiring, initial component updates, stat recalculation, derelict status check, and aura manager registration. Additionally, `fleet_attack_bonus` and `fleet_defense_bonus` are dynamically set on Ship by `FleetAuraManager._recalculate()` (lines 193-194) but never declared in `Ship.__init__`, which is a latent `AttributeError` if any code reads these attributes before the aura manager runs.
@@ -55,11 +55,11 @@ The fighter launch path in `BattleEngine.update()` (lines 478-511) has the same 
 ## Key Files Reference
 | Component | File Path | Class/Function | Key Lines |
 |-----------|-----------|----------------|-----------|
-| Battle engine | `game/simulation/systems/battle_engine.py` | `BattleEngine` | `start()`: 221-306, `add_ship_mid_battle()`: 320-355, `update()` fighter launch: 462-511 |
-| Ship entity | `game/simulation/entities/ship.py` | `Ship.__init__` | Lines 34-192 (no fleet_attack/defense_bonus declared) |
-| Fleet aura manager | `game/simulation/combat/fleet_aura_manager.py` | `FleetAuraManager` | `initialize()`: 60-91, `_scan_ship()`: 93-113, `_recalculate()`: 121-197 |
-| Battle controller | `game/simulation/battle_controller.py` | `BattleController.add_reinforcements()` | Lines 327-372 (calls `engine.add_ship_mid_battle()` at line 362) |
-| Collision system | `game/engine/collision.py` | `CollisionSystem.process_beam_attack()` | Lines 110, 115 (getattr fallback for fleet bonuses) |
+| Battle engine | `game/simulation/systems/battle_engine.py` | `BattleEngine` | `start()`: 237-315, `_initialize_ship()`: 329-340, `add_ship_mid_battle()`: 342-381, `_process_launch_attack()` fighter launch: 505-534 |
+| Ship entity | `game/simulation/entities/ship.py` | `Ship.__init__` | Lines 48-189 (fleet_attack_bonus and fleet_defense_bonus declared at lines 138-139) |
+| Fleet aura manager | `game/simulation/combat/fleet_aura_manager.py` | `FleetAuraManager` | `initialize()`: 64-97, `_scan_ship()`: 99-119, `register_ship()`: 121-135, `_recalculate()`: 171-235 |
+| Battle controller | `game/simulation/battle_controller.py` | `BattleController.add_reinforcements()` | Lines 336-380 (calls `engine.add_ship_mid_battle()` at line 371) |
+| Collision system | `game/engine/collision.py` | `CollisionSystem.process_beam_attack()` | Lines 115, 120 (getattr fallback for fleet bonuses) |
 | Existing edge case tests | `tests/unit/simulation/battle_controller/test_edge_cases.py` | `TestAddReinforcementsEdgeCases` | Lines 82-143 (3 tests, none verify init steps) |
 | Test conftest | `tests/unit/simulation/battle_controller/conftest.py` | Fixtures | Lines 1-67 |
 
@@ -252,7 +252,7 @@ This skips all 5 initialization steps. It should call `add_ship_mid_battle()` in
 ## Audit Log
 | Cycle | Date | Findings | Resolution |
 |-------|------|----------|------------|
-| 1 | | | |
+| 1 | 2026-04-10 | 17 findings: 10 stale refs, 1 scope gap (High), 2 doc gaps, 4 minor observations | Line refs updated, decisions.md populated, design.md annotated, PROJ-268 filed for remove_ship() aura cleanup, minor observations recorded in decisions.md |
 
 ## Completion Checklist
 - [x] All Phase 1 tasks checked off
@@ -261,7 +261,7 @@ This skips all 5 initialization steps. It should call `add_ship_mid_battle()` in
 - [x] All Phase 4 tasks checked off
 - [x] All tests passing (14370 passed, 2 skipped, 0 failures)
 - [x] No regressions in existing battle controller tests (125 pass)
-- [ ] Audit passed (no significant issues)
+- [x] Audit passed (review 2026-04-10: no blocking issues, 1 scope gap → PROJ-268)
 - [ ] User verified
 
 ## Related Documents

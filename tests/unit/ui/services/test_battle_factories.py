@@ -229,14 +229,14 @@ class TestCreateStrategyBattle:
         from game.ui.services.battle_factories import create_strategy_battle
         from game.simulation.battle_config import BattleMode
 
+        mock_fleet0 = Mock()
         mock_fleet1 = Mock()
-        mock_fleet2 = Mock()
 
         with patch('game.ui.services.battle_factories.BattleController') as mock_bc:
             mock_controller = Mock()
             mock_bc.return_value = mock_controller
 
-            result = create_strategy_battle(mock_fleet1, mock_fleet2)
+            result = create_strategy_battle(mock_fleet0, mock_fleet1)
 
         # Should be configured but not have ships added yet
         mock_controller.configure.assert_called_once()
@@ -246,14 +246,14 @@ class TestCreateStrategyBattle:
         """create_strategy_battle supports allow_retreat parameter."""
         from game.ui.services.battle_factories import create_strategy_battle
 
+        mock_fleet0 = Mock()
         mock_fleet1 = Mock()
-        mock_fleet2 = Mock()
 
         with patch('game.ui.services.battle_factories.BattleController') as mock_bc:
             mock_controller = Mock()
             mock_bc.return_value = mock_controller
 
-            create_strategy_battle(mock_fleet1, mock_fleet2, allow_retreat=False)
+            create_strategy_battle(mock_fleet0, mock_fleet1, allow_retreat=False)
 
         mock_controller.configure.assert_called_once()
 
@@ -278,15 +278,15 @@ class TestCreateHypotheticalBattle:
         from game.ui.services.battle_factories import create_hypothetical_battle
 
         # Create mock ships with position
-        mock_ship1 = Mock()
-        mock_ship1.x = 100.0
-        mock_ship1.y = 200.0
-        mock_ship1.registries = Mock()
+        mock_ship0 = Mock()
+        mock_ship0.x = 100.0
+        mock_ship0.y = 200.0
+        mock_ship0.registries = Mock()
 
-        mock_ship2 = Mock()
-        mock_ship2.x = 300.0
-        mock_ship2.y = 400.0
-        mock_ship2.registries = Mock()
+        mock_ship1 = Mock()
+        mock_ship1.x = 300.0
+        mock_ship1.y = 400.0
+        mock_ship1.registries = Mock()
 
         with patch('game.ui.services.battle_factories.BattleController') as mock_bc:
             mock_controller = Mock()
@@ -297,7 +297,7 @@ class TestCreateHypotheticalBattle:
                 mock_serializer.to_dict.return_value = {}
                 mock_serializer.from_dict.side_effect = lambda data, registries: Mock()
 
-                create_hypothetical_battle([mock_ship1], [mock_ship2])
+                create_hypothetical_battle([mock_ship0], [mock_ship1])
 
         # Both teams should have ships added
         assert mock_controller.add_ships.call_count == 2

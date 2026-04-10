@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Rename all production code (signatures, call sites, local vars) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Update test fixtures and verify full suite | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Rename all production code (signatures, call sites, local vars) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Update remaining files, docs, and verify full suite | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-05
-**Active Phase:** Planning
-**Last Action:** Plan rewritten with full protocol compliance and swarm findings
-**Next Action:** Begin Phase 1 — rename BattleEngine.start() parameters
+**Last Updated:** 2026-04-10
+**Active Phase:** Complete — all phases done
+**Last Agent Action:** Completed Tasks 2.4-2.8. All verification greps pass, 14181 tests pass.
+**Next Action:** Audit and archive
 **Blockers:** None
-**Context for Next Agent:** Pure mechanical rename. Every change is `team1_ships` -> `team0_ships` and `team2_ships` -> `team1_ships`. No behavioral changes. Rename must be done in dependency order: engine first, then callers, then local variables, then tests.
+**Context for Next Agent:** Project fully complete. All team naming standardized to 0-based. Full test suite passes (14181 tests). Ready for audit.
 
 ## Overview
 The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleService` internally stores `_team0_ships` and `_team1_ships` (0-indexed, correct), but passes them to `BattleEngine.start(team1_ships=..., team2_ships=...)` where `team1_ships` receives team 0 and `team2_ships` receives team 1. This naming mismatch propagates through factories, screens, and test fixtures. The project standardizes all parameter names, local variables, and docstrings to use 0-based naming (`team0_ships`, `team1_ships`) throughout.
@@ -46,6 +46,11 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 - Test fixtures (`tests/fixtures/battle.py`) function signature, docstring, local variables
 - Test file docstrings referencing old naming
 - Module docstring example in `battle_engine.py`
+- `test_battle_determinism.py` local function params and variables (added 2026-04-10 review)
+- `setup_screen.py` → `app.py` callback kwargs chain (`team1`/`team2` → `team0`/`team1`) (added 2026-04-10 review)
+- `battle_factories.py` `create_hypothetical_battle(ships1, ships2)` and `create_strategy_battle(fleet1, fleet2)` params (added 2026-04-10 review)
+- `docs/systems/combat_simulation.md` code example (added 2026-04-10 review)
+- `tests/fixtures/README.md` code example (added 2026-04-10 review)
 
 **Out of Scope:**
 - `BattleResult.team0_survivors` / `team1_survivors` -- already uses correct 0-based naming
@@ -56,6 +61,7 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 - Any `team_id` integer values -- these stay as 0 and 1
 - All `simulation_tests/` scenarios -- use `add_ships(team_id=)` pattern, no old naming
 - `BattleService` test file internal attribute access (`service._team1_ships`) -- already correct 0-based
+- `setup_screen.py` `self.team1` / `self.team2` UI data list attributes -- user-facing 1-based display concepts
 
 ## Key Files Reference
 | Component | File Path | Class/Function |
@@ -71,6 +77,9 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 | Test fixtures | `tests/fixtures/battle.py` | `create_battle_engine_with_ships()` |
 | Battle screen tests | `tests/unit/ui/test_battle_screen_simulation.py` | docstring on line 90 |
 | Integration tests | `tests/integration/fleet_combat/test_service_integration.py` | local variables lines 146-147 |
+| Determinism tests | `tests/integration/fleet_combat/test_battle_determinism.py` | `_run_battle()` params, `_make_teams()` locals |
+| Combat simulation docs | `docs/systems/combat_simulation.md` | code example lines 32-33 |
+| Fixtures README | `tests/fixtures/README.md` | code example line 152 |
 
 ## Decisions Log
 | Date | Decision | Rationale |
@@ -80,6 +89,9 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 | 2026-04-05 | Phase by dependency layer (engine -> callers -> locals -> tests) | Engine first so callers can be updated against the new API. Tests last since they follow the public API. |
 | 2026-04-05 | Collapsed from 4 phases to 2 | Mechanical rename doesn't warrant 4 separate phases. Phase 1 = all production code, Phase 2 = test fixtures + verification. |
 | 2026-04-05 | battle_panels.py local vars stay as `team0_ships`/`team1_ships` | Even though display says "TEAM 1", the variable filtering `team_id == 0` should be `team0_ships` for code clarity. |
+| 2026-04-10 | Include setup_screen→app.py kwargs chain in scope | kwargs `team1`/`team2` carry ships with `team_id=0`/`team_id=1` — same confusion pattern. Rename to `team0`/`team1`. |
+| 2026-04-10 | Include battle_factories ships1/ships2 and fleet1/fleet2 in scope | `ships1` maps to team 0 with docstring clarifying "Ships for team 0" — exactly the off-by-one pattern PROJ-244 eliminates. Rename to `ships0`/`ships1` and `fleet0`/`fleet1`. |
+| 2026-04-10 | Documentation does need updating | Original plan said "no documentation updates needed" — incorrect. `combat_simulation.md` and `fixtures/README.md` have code examples with old naming. |
 
 ## Initial Analysis
 
@@ -125,14 +137,14 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 
 ### Phase 1: Rename All Production Code [Simple]
 **Objective:** Rename all function signatures, call sites, and local variables in production code
-**Status:** Not Started
+**Status:** Complete (2026-04-05, commits d85718a2 + abacb998)
 **Checklist:** [phase_1_checklist.md](phase_1_checklist.md)
 
 ---
 
-### Phase 2: Update Test Fixtures and Verify Full Suite [Simple]
-**Objective:** Update test helper functions, docstrings, and verify everything passes
-**Status:** Not Started
+### Phase 2: Update Remaining Files, Docs, and Verify Full Suite [Simple]
+**Objective:** Fix missed files (test_battle_determinism.py, kwargs chain, factories, docs), then verify everything passes
+**Status:** Complete (2026-04-10)
 **Checklist:** [phase_2_checklist.md](phase_2_checklist.md)
 
 ---
@@ -150,9 +162,11 @@ The battle simulator uses inconsistent 0-based and 1-based team naming. `BattleS
 ### Final Verification
 - [ ] `python Tools/test_sharded/test_sharded.py` -- all tests pass
 - [ ] `grep -r "team2_ships" game/ tests/` returns zero results
+- [ ] `grep -r "ships2\b" game/ui/services/battle_factories.py` returns zero results
+- [ ] `grep -r "fleet2\b" game/ui/services/battle_factories.py` returns zero results
 - [ ] All `team1_ships` references now correctly map to `team_id == 1` (not `team_id == 0`)
 - [ ] Docstrings are clean -- no "team1 means team 0" disclaimers remain
-- [ ] No documentation updates needed (this is an internal naming change, not an architecture change)
+- [ ] Documentation code examples updated (`docs/systems/combat_simulation.md`, `tests/fixtures/README.md`)
 
 ---
 

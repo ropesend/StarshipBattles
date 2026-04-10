@@ -69,8 +69,8 @@ class BattleSetupScreen:
             height: Screen height in pixels
             scene_callback: Callback function for scene transitions.
                            Called with (action, **kwargs) where action is:
-                           - "start_battle": Start visual battle with team1, team2 kwargs
-                           - "start_headless": Start headless battle with team1, team2 kwargs
+                           - "start_battle": Start visual battle with team0, team1 kwargs
+                           - "start_headless": Start headless battle with team0, team1 kwargs
                            - "return_to_menu": Return to main menu
         """
         self.screen_width = width
@@ -335,9 +335,9 @@ class BattleSetupScreen:
     def _trigger_start_battle(self, headless: bool):
         """Trigger battle start via callback."""
         if self.scene_callback:
-            team1, team2 = self.get_ships()
+            team0, team1 = self.get_ships()
             action = "start_headless" if headless else "start_battle"
-            self.scene_callback(action, team1=team1, team2=team2)
+            self.scene_callback(action, team0=team0, team1=team1)
 
     def _trigger_return_to_menu(self):
         """Trigger return to menu via callback."""

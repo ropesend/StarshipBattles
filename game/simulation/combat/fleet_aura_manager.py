@@ -134,6 +134,20 @@ class FleetAuraManager:
             self._scan_ship(ship)
         self._recalculate(all_ships)
 
+    def unregister_ship(self, ship: Any, all_ships: List[Any]) -> None:
+        """Unregister a ship removed from battle (retreat/escape).
+
+        Removes the ship's AuraProvider entries and recalculates bonuses
+        so teammates no longer receive bonuses from the removed ship.
+
+        Args:
+            ship: The ship being removed
+            all_ships: All ships remaining in battle (excluding the removed one)
+        """
+        self._providers = [p for p in self._providers if p.ship is not ship]
+        self._providers_dirty = True
+        self._recalculate(all_ships)
+
     def invalidate_aura_cache(self) -> None:
         """Mark aura cache as dirty (PROJ-253). Forces recalculation on next update."""
         self._providers_dirty = True

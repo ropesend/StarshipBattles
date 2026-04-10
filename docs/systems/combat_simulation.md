@@ -29,8 +29,8 @@ controller.configure(BattleConfig(
     show_results=True,                           # Show results screen?
     start_paused=True,                           # Start paused?
 ))
-controller.add_ships(team1_ships, team_id=0)
-controller.add_ships(team2_ships, team_id=1)
+controller.add_ships(team0_ships, team_id=0)
+controller.add_ships(team1_ships, team_id=1)
 controller.start()
 battle_screen.start_battle(controller)  # ONE entry point
 ```

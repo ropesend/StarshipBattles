@@ -149,7 +149,7 @@ from tests.fixtures.battle import (
 )
 
 engine = create_battle_engine(enable_logging=True)
-engine = create_battle_engine_with_ships(team1_count=3, team2_count=2)
+engine = create_battle_engine_with_ships(team0_count=3, team1_count=2)
 ```
 
 **Fixtures:**

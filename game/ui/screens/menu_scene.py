@@ -47,7 +47,7 @@ class MenuScene:
             theme_path=theme_path if os.path.exists(theme_path) else None
         )
         self.ui_manager.preload_fonts([
-            {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': 1}
+            {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
         ])
 
         # Button tracking

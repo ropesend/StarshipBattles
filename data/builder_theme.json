@@ -51,7 +51,7 @@
         },
         "misc": {
             "shape": "rounded_rectangle",
-            "shape_corner_radius": "4",
+            "shape_corner_radius": "3",
             "border_width": "2",
             "shadow_width": "2",
             "tool_tip_delay": "0.5"
@@ -130,7 +130,7 @@
         },
         "misc": {
             "shape": "rounded_rectangle",
-            "shape_corner_radius": "4"
+            "shape_corner_radius": "3"
         }
     },
     "horizontal_slider.#left_button": {

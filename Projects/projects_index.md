@@ -4,9 +4,6 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
-| PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
-| PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
 
 ## Archived Projects
 

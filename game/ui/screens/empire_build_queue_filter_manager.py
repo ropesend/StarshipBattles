@@ -30,11 +30,11 @@ NUMERIC_COLUMNS: set[str] = {
 
 # Default column definitions for the empire build queue window
 DEFAULT_COLUMNS: List[Dict[str, Any]] = [
-    {'id': 'location', 'width': 180, 'title': 'Location', 'visible': True},
-    {'id': 'system', 'width': 120, 'title': 'System', 'visible': True},
+    {'id': 'location', 'width': 200, 'title': 'Location', 'visible': True},
+    {'id': 'system', 'width': 130, 'title': 'System', 'visible': True},
     {'id': 'sector', 'width': 80, 'title': 'Sector', 'visible': True},
     {'id': 'queue_count', 'width': 80, 'title': 'Items', 'visible': True},
-    {'id': 'first_item', 'width': 150, 'title': 'Building', 'visible': True},
+    {'id': 'first_item', 'width': 170, 'title': 'Building', 'visible': True},
     {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
     {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
     {'id': 'build_rate', 'width': 80, 'title': 'Build Rate', 'visible': True},

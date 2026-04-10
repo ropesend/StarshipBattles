@@ -60,7 +60,7 @@ class StrategyUI:
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
         self.manager = pygame_gui.UIManager((screen_width, screen_height), theme_path=theme_path)
         self.manager.preload_fonts([
-            {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': 1}
+            {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
         ])
 
         # PROJ-86: Create all panels and widgets via panel manager

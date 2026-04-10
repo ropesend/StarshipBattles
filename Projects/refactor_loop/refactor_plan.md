@@ -34,29 +34,6 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-243: Mid-Battle Ship Addition Fix**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-243/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-243/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
-  - **Dependencies:** None
-
----
-
-- [ ] **PROJ-244: Team Naming Standardization**
-  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-244/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-244/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
-  - **Dependencies:** None
-
----
-
-- [ ] **PROJ-242: Unified Formula Evaluation System**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-242/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-242/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
-  - **Dependencies:** None
-
----
 
 ## Execution Log
 

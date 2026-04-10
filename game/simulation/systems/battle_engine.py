@@ -393,6 +393,9 @@ class BattleEngine:
         if ship in self.ships:
             self.ships.remove(ship)
 
+            # Unregister from aura manager (remove fleet-scope bonuses)
+            self.aura_manager.unregister_ship(ship, self.ships)
+
             # Remove associated AI controller.
             # Adapter unwrap: ai.ship is a ShipControllableAdapter (the facade
             # that AIController interacts with), and ai.ship.ship is the underlying

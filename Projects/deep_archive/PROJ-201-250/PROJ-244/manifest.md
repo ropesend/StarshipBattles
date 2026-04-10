@@ -18,3 +18,7 @@
 | tests/fixtures/battle.py | Test | Rename create_battle_engine_with_ships() params, locals, ship names |
 | tests/integration/fleet_combat/test_service_integration.py | Test | Update keyword arg in fixture call |
 | tests/unit/ui/test_battle_screen_simulation.py | Test | Update docstring |
+| tests/integration/fleet_combat/test_battle_determinism.py | Test | Rename _run_battle() params and _make_teams() locals (added 2026-04-10) |
+| docs/systems/combat_simulation.md | Docs | Update code example team1_ships/team2_ships → team0/team1 (added 2026-04-10) |
+| tests/fixtures/README.md | Docs | Update code example team1_count/team2_count → team0/team1 (added 2026-04-10) |
+| tests/unit/ui/services/test_battle_factories.py | Test | Rename mock_fleet1/2, mock_ship1/2 in factory tests (added 2026-04-10) |

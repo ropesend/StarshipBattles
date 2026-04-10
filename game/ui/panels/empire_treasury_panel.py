@@ -21,7 +21,7 @@ from game.ui.utils import create_section_header
 
 
 # Layout constants
-LABEL_COL_WIDTH = 200
+LABEL_COL_WIDTH = 240
 RESOURCE_COL_WIDTH = 100
 ICON_SIZE = 20
 ROW_HEIGHT = 28
@@ -142,7 +142,7 @@ class EmpireTreasuryPanel:
             # Abbreviated label
             abbrev = RESOURCE_ABBREVIATIONS.get(resource, resource[:3])
             label = UILabel(
-                relative_rect=pygame.Rect(x, y + ICON_SIZE + 2, RESOURCE_COL_WIDTH, 15),
+                relative_rect=pygame.Rect(x, y + ICON_SIZE + 2, RESOURCE_COL_WIDTH, 22),
                 text=abbrev,
                 manager=self.ui_manager,
                 container=self._scroll_container

@@ -123,3 +123,27 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-242: Unified Formula Evaluation System**
+  - **Phases:** 4 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-242/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-242/plan.md)
+  - **Audit:** Not audited (implemented outside refactor loop) | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-243: Mid-Battle Ship Addition Fix**
+  - **Phases:** 4 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-243/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-243/plan.md)
+  - **Audit:** Reviewed (Protocol 09, 2026-04-10) | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-244: Team Naming Standardization**
+  - **Phases:** 2 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-244/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-244/plan.md)
+  - **Audit:** Skipped (user-accepted) | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
