@@ -13,16 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Consolidate shared helpers into conftest files | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Consolidate colonize_validator tests | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Relocate misplaced test files | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Consolidate shared helpers into conftest files | Deferred | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Consolidate colonize_validator tests | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Relocate misplaced test files | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-09
-**Active Phase:** Planning Complete
-**Last Action:** Plan written with verified file locations and line numbers
-**Next Action:** Begin Phase 1 -- consolidate make_colony_ship and MockGalaxy/MockSystem/MockPlanet helpers
+**Active Phase:** Phases 2 and 3 complete. Phase 1 deferred.
+**Last Action:** Phase 2: Extracted 13 inline MockPlanetType definitions to module level in test_colonize_validator.py (1,247→1,207 LOC, 43 tests still passing). Phase 3: Moved 6 misplaced test files to correct directories (ship_theme→ui, hex_math→core, battle_setup→ui/screens, 3 DTO files→unit/strategy/facade).
+**Next Action:** Phase 1 (shared helper consolidation) deferred — touching 20+ files with MockGalaxy is high-risk/low-urgency and better done as a focused session.
 **Blockers:** None
+**Context:** Full suite: 14,179 passed, 0 failures. Phase 1 not started. The validator review rejected the 8.7:1 ratio claim — the colonize validator tests are thorough edge case coverage, not bloat. The MockPlanetType extraction was the only genuine consolidation opportunity in Phase 2.
 **Context for Next Agent:** All duplicate helper locations have been verified via grep. The root `tests/conftest.py` already has a `make_colony_ship_for_planet()` at line 339, and `tests/integration/colonization/conftest.py` has another at line 41. Phase 1 focuses on making all files use a single canonical version. Phase 2 is an independent refactor of one bloated test file. Phase 3 moves files to correct directories (depends on PROJ-263 completing first for the hex math file, which PROJ-263 may delete entirely).
 
 ## Overview

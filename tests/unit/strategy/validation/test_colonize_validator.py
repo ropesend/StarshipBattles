@@ -4,11 +4,20 @@ Tests for ColonizeValidator.
 PROJ-36: Tests for centralized colonize order validation.
 Migrated from test_turn_engine.py::TestColonizeValidation.
 Phase 3: Updated to use carried_items with drop pods instead of cargo_contents.
+PROJ-267: Extracted MockPlanetType to module level (was defined 13 times inline).
 """
 import pytest
+from enum import Enum
 from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
+
+
+class MockPlanetType(Enum):
+    """Shared mock planet type enum for colonize validator tests."""
+    CONTINENTAL = "CONTINENTAL"
+    ICE_DWARF = "ICE_DWARF"
+    DYSON_SPHERE = "DYSON_SPHERE"
 
 
 # Helper to create a standard drop pod item dict
@@ -50,11 +59,6 @@ def mock_fleet():
 @pytest.fixture
 def mock_planet():
     """Create a mock unowned planet."""
-    from enum import Enum
-
-    class MockPlanetType(Enum):
-        CONTINENTAL = "CONTINENTAL"
-
     planet = MagicMock()
     planet.name = "Test Planet"
     planet.owner_id = None  # Unowned
@@ -183,10 +187,6 @@ class TestColonizeValidatorEdgeCases:
     def test_multiple_planets_finds_valid_candidate(self, mock_galaxy, mock_fleet):
         """When multiple planets exist, finds a valid unowned candidate."""
         from game.strategy.validation import ColonizeValidator
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         owned_planet = MagicMock()
         owned_planet.owner_id = 1
@@ -329,9 +329,6 @@ class TestColonizeValidatorColonyPods:
         from enum import Enum
         from game.strategy.data.planet import Planet
 
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-
         # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
         planet = MagicMock(spec=Planet)
         planet.name = "Frostworld"
@@ -356,9 +353,6 @@ class TestColonizeValidatorColonyPods:
         """Create a mock CONTINENTAL planet."""
         from enum import Enum
         from game.strategy.data.planet import Planet
-
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
         planet = MagicMock(spec=Planet)
@@ -558,9 +552,6 @@ class TestColonizeValidatorColonyPods:
         another_planet.owner_id = None
         another_planet.location = HexCoord(0, 0)
 
-        from enum import Enum
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
         another_planet.planet_type = MockPlanetType.ICE_DWARF
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf, another_planet]
@@ -587,9 +578,6 @@ class TestColonizeValidatorColonyPods:
         ice_dwarf_planet.owner_id = None
         ice_dwarf_planet.location = HexCoord(0, 0)
 
-        from enum import Enum
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
         ice_dwarf_planet.planet_type = MockPlanetType.ICE_DWARF
 
         # Existing order uses one pod
@@ -628,10 +616,6 @@ class TestColonizeValidatorZoneColonization:
         """Fleet in Dyson Sphere's zone can colonize it."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.planet import Planet
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            DYSON_SPHERE = "DYSON_SPHERE"
 
         mock_dyson = MagicMock(spec=Planet)
         mock_dyson.name = "Dyson Sphere"
@@ -668,10 +652,6 @@ class TestColonizeValidatorZoneColonization:
     def test_validate_colonize_dyson_sphere_from_center(self, mock_galaxy, mock_fleet):
         """Fleet at Dyson Sphere's center can colonize it (standard case)."""
         from game.strategy.validation import ColonizeValidator
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            DYSON_SPHERE = "DYSON_SPHERE"
 
         mock_dyson = MagicMock()
         mock_dyson.name = "Dyson Sphere"
@@ -696,10 +676,6 @@ class TestColonizeValidatorZoneColonization:
     def test_validate_colonize_normal_planet_unchanged(self, mock_galaxy, mock_fleet):
         """Normal planets (no zone) work without zone lookup."""
         from game.strategy.validation import ColonizeValidator
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         mock_planet = MagicMock()
         mock_planet.name = "Normal Planet"
@@ -724,10 +700,6 @@ class TestColonizeValidatorZoneColonization:
     def test_validate_zone_planet_not_at_different_location(self, mock_galaxy, mock_fleet):
         """Cannot colonize planet if fleet is outside both center and zone."""
         from game.strategy.validation import ColonizeValidator
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            DYSON_SPHERE = "DYSON_SPHERE"
 
         mock_dyson = MagicMock()
         mock_dyson.name = "Dyson Sphere"
@@ -782,10 +754,6 @@ class TestColonizeValidatorAnyPlanetPods:
         """Create a mock planet of the given type."""
         from enum import Enum
         from game.strategy.data.planet import Planet
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-            CONTINENTAL = "CONTINENTAL"
 
         planet = MagicMock(spec=Planet)
         planet.name = name
@@ -923,10 +891,6 @@ class TestColonizeValidatorAdvancedEdgeCases:
         """Create a mock planet of the given type."""
         from enum import Enum
         from game.strategy.data.planet import Planet
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-            CONTINENTAL = "CONTINENTAL"
 
         # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
         planet = MagicMock(spec=Planet)
@@ -1203,10 +1167,6 @@ class TestColonizeValidatorAdvancedEdgeCases:
         """Zone objects already in planets list are not duplicated."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.planet import Planet
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            DYSON_SPHERE = "DYSON_SPHERE"
 
         galaxy = MagicMock()
 
