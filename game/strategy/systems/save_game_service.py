@@ -460,7 +460,7 @@ class SaveGameService:
 
             return metadata
 
-        except (PermissionError, OSError, json.JSONDecodeError) as e:
+        except (PermissionError, OSError, JSONDecodeError) as e:
             logger.error(f"SaveGameService: Error reading save info from {save_path} - {e}")
             return None
         except (KeyError, TypeError, ValueError) as e:

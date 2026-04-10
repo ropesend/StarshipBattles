@@ -484,3 +484,17 @@ class TestSaveGameServiceExceptionHandling:
             info = SaveGameService.get_save_info("SomeSave")
 
         assert info is None
+
+    def test_get_save_info_handles_json_decode_error(self, setup_tmpdir):
+        """BUG-4: get_save_info should catch JSONDecodeError, not raise NameError.
+
+        Previously used json.JSONDecodeError but only imported JSONDecodeError
+        (bare name), causing NameError when JSONDecodeError was actually raised.
+        """
+        from json import JSONDecodeError
+
+        with patch('game.strategy.systems.save_game_service.load_json',
+                   side_effect=JSONDecodeError("Corrupt", "", 0)):
+            info = SaveGameService.get_save_info("CorruptSave")
+
+        assert info is None

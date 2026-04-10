@@ -332,17 +332,6 @@ class TestDrawGrid:
 
         renderer._draw_grid.assert_called_once()
 
-    def test_draw_grid_skips_massive_hex_counts(self, renderer, mock_scene):
-        """_draw_grid should skip when hex count > 80000."""
-        # This tests the early exit condition in _draw_grid
-        # When zoom is very low, the hex count would be huge
-        # The method should return early without drawing
-        # We can't easily test this without calling the real method,
-        # but we can verify the condition exists in the code
-        from game.ui.screens.strategy_renderer import StrategyRenderer
-        import inspect
-        source = inspect.getsource(StrategyRenderer._draw_grid)
-        assert '80000' in source  # The threshold constant exists
 
 
 # ===========================================================================
@@ -372,13 +361,6 @@ class TestDrawWarpLanes:
 
         # Verify iteration happened (no exception)
 
-    def test_draw_warp_lanes_viewport_culling_logic(self, renderer, mock_scene):
-        """_draw_warp_lanes should have viewport culling logic."""
-        # Verify the culling logic exists in the code
-        from game.ui.screens.strategy_renderer import StrategyRenderer
-        import inspect
-        source = inspect.getsource(StrategyRenderer._draw_warp_lanes)
-        assert 'is_on_screen' in source  # Viewport culling function exists
 
 
 # ===========================================================================

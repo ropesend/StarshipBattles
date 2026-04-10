@@ -147,4 +147,4 @@ class TestAllLayoutsValid:
 
         # Should succeed (at least occasionally)
         # Note: Some sparse layouts might fail occasionally, but with 1000 attempts should work
-        assert coord is not None or True  # Allow None for very sparse configs
+        assert coord is not None

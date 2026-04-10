@@ -6,25 +6,12 @@ and helper classes.
 
 import pytest
 from unittest.mock import MagicMock, patch
-import pygame
 
 
 # --- Constants Tests ---
 
 class TestGalaxyTestConstants:
     """Tests for galaxy_test constants module."""
-
-    def test_constants_can_be_imported(self):
-        """Constants module can be imported."""
-        from game.ui.screens.galaxy_test.constants import (
-            SIDEBAR_WIDTH,
-            HEX_SIZE,
-            PLANET_TYPE_COLORS
-        )
-
-        assert SIDEBAR_WIDTH is not None
-        assert HEX_SIZE is not None
-        assert PLANET_TYPE_COLORS is not None
 
     def test_sidebar_width_is_positive(self):
         """SIDEBAR_WIDTH is a positive number."""
@@ -54,92 +41,6 @@ class TestGalaxyTestConstants:
             assert isinstance(color, tuple), f"{planet_type} color is not tuple"
             assert len(color) == 3, f"{planet_type} color not 3 elements"
             assert all(0 <= c <= 255 for c in color), f"{planet_type} color invalid"
-
-
-# --- GalaxyTestScreen Import Tests ---
-
-class TestGalaxyTestScreenImport:
-    """Tests for GalaxyTestScreen import."""
-
-    def test_screen_can_be_imported(self):
-        """GalaxyTestScreen can be imported."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        assert GalaxyTestScreen is not None
-
-    def test_screen_has_mode_constants(self):
-        """GalaxyTestScreen has mode constants."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        assert hasattr(GalaxyTestScreen, 'MODE_MENU')
-        assert hasattr(GalaxyTestScreen, 'MODE_GALAXY')
-        assert hasattr(GalaxyTestScreen, 'MODE_SYSTEM')
-
-
-# --- GalaxyTestScreen Initialization Tests ---
-
-class TestGalaxyTestScreenInit:
-    """Tests for GalaxyTestScreen initialization."""
-
-    def test_screen_stores_dimensions(self):
-        """Screen stores width and height."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        screen.screen_width = 1920
-        screen.screen_height = 1080
-
-        assert screen.screen_width == 1920
-        assert screen.screen_height == 1080
-
-    def test_screen_stores_callback(self):
-        """Screen stores on_close_callback."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        callback = MagicMock()
-        screen.on_close_callback = callback
-
-        assert screen.on_close_callback is callback
-
-    def test_screen_starts_in_menu_mode(self):
-        """Screen starts in menu mode."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        screen.mode = GalaxyTestScreen.MODE_MENU
-
-        assert screen.mode == GalaxyTestScreen.MODE_MENU
-
-    def test_screen_has_canvas_dimensions(self):
-        """Screen has canvas dimensions."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        screen.canvas_width = 1600
-        screen.canvas_height = 900
-
-        assert screen.canvas_width == 1600
-        assert screen.canvas_height == 900
-
-    def test_screen_has_ui_elements_list(self):
-        """Screen has _ui_elements list."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        screen._ui_elements = []
-
-        assert isinstance(screen._ui_elements, list)
 
 
 # --- Clear UI Tests ---
@@ -182,24 +83,6 @@ class TestClearUI:
 class TestModeSwitching:
     """Tests for mode switching."""
 
-    def test_mode_menu_is_string(self):
-        """MODE_MENU is a string constant."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        assert isinstance(GalaxyTestScreen.MODE_MENU, str)
-
-    def test_mode_galaxy_is_string(self):
-        """MODE_GALAXY is a string constant."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        assert isinstance(GalaxyTestScreen.MODE_GALAXY, str)
-
-    def test_mode_system_is_string(self):
-        """MODE_SYSTEM is a string constant."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        assert isinstance(GalaxyTestScreen.MODE_SYSTEM, str)
-
     def test_modes_are_distinct(self):
         """All modes are distinct strings."""
         from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
@@ -211,71 +94,3 @@ class TestModeSwitching:
         ]
 
         assert len(set(modes)) == 3
-
-
-# --- Camera Tests ---
-
-class TestCameraSetup:
-    """Tests for camera configuration."""
-
-    def test_screen_has_camera(self):
-        """Screen has camera attribute."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        camera = MagicMock()
-        screen.camera = camera
-
-        assert screen.camera is camera
-
-
-# --- Helper Class Tests ---
-
-class TestGalaxyModeHelper:
-    """Tests for GalaxyModeHelper."""
-
-    def test_helper_can_be_imported(self):
-        """GalaxyModeHelper can be imported."""
-        from game.ui.screens.galaxy_test.galaxy_mode import GalaxyModeHelper
-
-        assert GalaxyModeHelper is not None
-
-
-class TestSystemModeHelper:
-    """Tests for SystemModeHelper."""
-
-    def test_helper_can_be_imported(self):
-        """SystemModeHelper can be imported."""
-        from game.ui.screens.galaxy_test.system_mode import SystemModeHelper
-
-        assert SystemModeHelper is not None
-
-
-# --- FPS Tracking Tests ---
-
-class TestFPSTracking:
-    """Tests for FPS tracking."""
-
-    def test_screen_has_fps_clock(self):
-        """Screen has fps_clock attribute."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        screen.fps_clock = MagicMock()
-
-        assert screen.fps_clock is not None
-
-    def test_screen_has_current_fps(self):
-        """Screen has current_fps attribute."""
-        from game.ui.screens.galaxy_test.screen import GalaxyTestScreen
-
-        with patch.object(GalaxyTestScreen, '__init__', lambda self, *a, **kw: None):
-            screen = GalaxyTestScreen.__new__(GalaxyTestScreen)
-
-        screen.current_fps = 60.0
-
-        assert screen.current_fps == 60.0

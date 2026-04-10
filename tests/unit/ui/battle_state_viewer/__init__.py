@@ -1,1 +1,0 @@
-# Battle state viewer tests

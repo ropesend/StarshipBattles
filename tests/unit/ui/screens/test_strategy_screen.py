@@ -735,21 +735,6 @@ class TestEdgeCases:
         assert screen.screen_height == 2160
         mocks['ui'].handle_resize.assert_called_once_with(3840, 2160)
 
-    def test_turn_processing_flag_boundary(self):
-        """turn_processing flag should toggle correctly at boundaries."""
-        screen, _ = _make_strategy_screen()
-
-        # Initially False
-        assert screen.turn_processing is False
-
-        # Can set to True
-        screen.turn_processing = True
-        assert screen.turn_processing is True
-
-        # Can set back to False
-        screen.turn_processing = False
-        assert screen.turn_processing is False
-
     def test_cycle_selection_with_single_colony(self):
         """cycle_selection() should work with only one colony."""
         screen, mocks = _make_strategy_screen()
@@ -772,30 +757,6 @@ class TestEdgeCases:
         screen.cycle_selection('fleet', -1)
 
         mocks['camera_nav'].cycle_selection.assert_called_once_with('fleet', -1)
-
-    def test_detail_zoom_level_boundary_values(self):
-        """detail_zoom_level should accept boundary values."""
-        screen, _ = _make_strategy_screen()
-
-        # Test minimum zoom (common minimum is around 0.1-0.5)
-        screen.detail_zoom_level = 0.1
-        assert screen.detail_zoom_level == 0.1
-
-        # Test maximum zoom (typical max is 10-20)
-        screen.detail_zoom_level = 20.0
-        assert screen.detail_zoom_level == 20.0
-
-    def test_hex_size_boundary(self):
-        """hex_size should handle typical boundary values."""
-        screen, _ = _make_strategy_screen()
-
-        # Small hex size
-        screen.hex_size = 1
-        assert screen.hex_size == 1
-
-        # Large hex size
-        screen.hex_size = 100
-        assert screen.hex_size == 100
 
     def test_current_player_index_wrapping(self):
         """advance_turn() should delegate to game_state manager for player wrapping."""

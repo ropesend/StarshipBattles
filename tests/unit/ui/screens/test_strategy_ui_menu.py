@@ -84,33 +84,6 @@ def _make_strategy_ui():
     return ui, scene, manager
 
 
-# --- Task 2.1: Menu Button Replaces Save Game ---
-
-class TestMenuButtonAttribute:
-    """Verify btn_save_game is replaced by btn_menu in StrategyUI."""
-
-    def test_no_btn_save_game_attribute(self):
-        """StrategyUI should NOT have btn_save_game after Phase 2."""
-        from game.ui.screens import strategy_ui
-        import inspect
-        source = inspect.getsource(strategy_ui.StrategyUI)
-        assert 'btn_save_game' not in source
-
-    def test_has_btn_menu_in_source(self):
-        """StrategyUI source should reference btn_menu."""
-        from game.ui.screens import strategy_ui
-        import inspect
-        source = inspect.getsource(strategy_ui.StrategyUI)
-        assert 'btn_menu' in source
-
-    def test_has_menu_panel_attribute_in_init(self):
-        """StrategyUI source should initialize menu_panel = None."""
-        from game.ui.screens import strategy_ui
-        import inspect
-        source = inspect.getsource(strategy_ui.StrategyUI.__init__)
-        assert 'menu_panel' in source
-
-
 # --- Task 2.2: Panel Management Methods ---
 
 class TestToggleMenuPanel:
@@ -357,15 +330,3 @@ class TestMenuPanelModal:
         scene.build_queue_screen = None
 
         assert ui._has_modal_open() is False
-
-
-# --- Import Verification ---
-
-class TestStrategyMenuPanelImport:
-    """Verify StrategyMenuPanel is imported in strategy_ui."""
-
-    def test_import_exists(self):
-        from game.ui.screens import strategy_ui
-        import inspect
-        source = inspect.getsource(strategy_ui)
-        assert 'from game.ui.screens.strategy_menu_panel import StrategyMenuPanel' in source

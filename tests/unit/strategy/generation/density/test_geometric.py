@@ -83,7 +83,7 @@ class TestGeometricPrimitive:
 
         # The densities should differ due to rotation
         # (one point is inside, the other near edge or outside)
-        assert d1 != d2 or True  # May be equal by coincidence
+        assert d1 != d2
 
     def test_zero_edge_falloff_hard_edge(self):
         """Zero edge falloff should create hard boundary."""

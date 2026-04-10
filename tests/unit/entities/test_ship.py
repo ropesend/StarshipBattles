@@ -273,7 +273,7 @@ def ship_with_components(registry_with_hull):
     return ship
 
 
-class TestHullAutoEquip:
+class TestHullAutoEquipVerification:
     """TC-3.2.1: Hull Auto-Equip Verification"""
 
     def test_hull_auto_equip(self, registry_with_hull):

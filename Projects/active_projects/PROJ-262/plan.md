@@ -19,11 +19,17 @@
 
 ## Current State
 **Last Updated:** 2026-04-09
-**Active Phase:** 1
-**Last Action:** Plan written
-**Next Action:** Begin Phase 1 -- verify zero `game.*` imports, delete 11 files
+**Active Phase:** 3 (partial)
+**Last Action:** Completed Phase 1 (11 files deleted, 270 tests removed), Phase 2 (6 files deleted + 4 surgical edits, 99 tests removed), and partial Phase 3 (deleted test_engine_interfaces.py 476 LOC, test_ship_stats_phase_ordering.py 22 LOC, ui/mocks/, _verify_builder_imports.py; removed 8 getsource tests from 3 files; 58 tests removed).
+**Next Action:** Continue Phase 3 — remaining items: delete import-only scaffold tests from 11 panel/race files, delete trivial constant tests from ~15 files, remove scaffold from test_protocols.py, test_calculator_phases.py, test_battle_mode_handlers.py, test_component_constants.py, test_simulation_adapter.py, test_battle_resolver.py, test_extract_phase.py. See phase_3_checklist.md for full list.
 **Blockers:** None
-**Context for Next Agent:** Start with Phase 1 Task 1.1 (verification grep). Each file must be confirmed to have zero `game.*` imports before deletion. Run test suite after all 11 files are deleted to confirm no regressions.
+**Context for Next Agent:** 
+- Baseline was 14,694 tests. Currently at 14,267 (427 dead tests removed so far).
+- Phase 1 COMPLETE: All 11 reimplemented-logic files deleted. 4 empty directories cleaned up.
+- Phase 2 COMPLETE: 6 files deleted entirely + 4 files surgically edited (galaxy_test_screen, design_report_panel, planet_report_panel, design_stats_panel, strategy_screen, strategy_scene).
+- Phase 3 IN PROGRESS (~60% done): Big items done (engine_interfaces 476 LOC, getsource tests). Remaining: many small scaffold/trivial edits across ~25 files. See checklist for details.
+- Pre-existing issue: tests/unit/strategy/engine/test_build_order_command_handler.py has import error (unrelated, pre-dates this project).
+- All tests passing (14,267 passed, 0 failed).
 
 ## Overview
 The test suite contains ~5,100 LOC of tests that provide zero regression protection. They fall into three categories: (1) files that define local functions mimicking production logic and test those copies instead of real code (zero `game.*` imports), (2) tests that set an attribute then immediately assert it (testing Python, not the application), and (3) scaffold/dead code like `hasattr` checks, `inspect.getsource` text matching, import-only assertions, and placeholder `pass` tests. This project deletes all of them across three phases.

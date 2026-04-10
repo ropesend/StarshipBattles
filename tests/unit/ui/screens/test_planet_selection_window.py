@@ -61,26 +61,3 @@ class TestPlanetSelectionWindowParameters:
         assert 'show_any_button' in params
 
 
-class TestPlanetSelectionWindowBtnAnyGuard:
-    """Test btn_any is properly guarded when None."""
-
-    def test_btn_any_guard_in_source(self):
-        """Verify btn_any.check_pressed() is guarded with 'if self.btn_any'."""
-        from game.ui.screens import planet_selection_window
-        import inspect
-
-        source = inspect.getsource(planet_selection_window.PlanetSelectionWindow.update)
-
-        # Verify the guard exists: "if self.btn_any and self.btn_any.check_pressed()"
-        assert "if self.btn_any and self.btn_any.check_pressed()" in source
-
-    def test_btn_any_conditional_creation_in_source(self):
-        """Verify btn_any is conditionally created based on show_any_button."""
-        from game.ui.screens import planet_selection_window
-        import inspect
-
-        source = inspect.getsource(planet_selection_window.PlanetSelectionWindow.__init__)
-
-        # Verify conditional creation pattern
-        assert "self.btn_any = None" in source
-        assert "if show_any_button:" in source

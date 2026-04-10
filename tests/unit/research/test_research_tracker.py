@@ -256,6 +256,59 @@ class TestResearchTrackerBudget:
         assert ResearchTracker.MAX_RP_BUDGET == 500
         assert ResearchTracker.DEFAULT_RP_BUDGET == 200
 
+    def test_set_rp_budget_clamps_allocations_when_reduced(self, research_tracker):
+        """BUG-5: Reducing budget below total allocated should clamp allocations."""
+        research_tracker.set_rp_budget(200)
+        research_tracker.set_allocation('node_a', 100)
+        research_tracker.set_allocation('node_b', 100)
+        assert research_tracker.get_total_allocated() == 200
+
+        # Reduce budget to 100 — allocations must be clamped
+        research_tracker.set_rp_budget(100)
+
+        assert research_tracker.get_total_allocated() <= 100
+        # Proportional: each should get ~50
+        state_a = research_tracker.get_state('node_a')
+        state_b = research_tracker.get_state('node_b')
+        assert state_a.rp_allocation + state_b.rp_allocation <= 100
+
+    def test_set_rp_budget_increase_does_not_change_allocations(self, research_tracker):
+        """Increasing budget should not change existing allocations."""
+        research_tracker.set_rp_budget(100)
+        research_tracker.set_allocation('node_a', 50)
+
+        research_tracker.set_rp_budget(200)
+
+        state_a = research_tracker.get_state('node_a')
+        assert state_a.rp_allocation == 50
+        assert research_tracker.get_remaining_rp() == 150
+
+    def test_set_rp_budget_to_minimum_clamps_all_allocations(self, research_tracker):
+        """Setting budget to minimum should clamp all allocations."""
+        research_tracker.set_rp_budget(200)
+        research_tracker.set_allocation('node_a', 100)
+        research_tracker.set_allocation('node_b', 50)
+        research_tracker.set_allocation('node_c', 50)
+
+        research_tracker.set_rp_budget(ResearchTracker.MIN_RP_BUDGET)
+
+        total = research_tracker.get_total_allocated()
+        assert total <= ResearchTracker.MIN_RP_BUDGET
+
+    def test_set_rp_budget_clamp_preserves_relative_ratios(self, research_tracker):
+        """BUG-5: Clamping should approximately preserve allocation ratios."""
+        research_tracker.set_rp_budget(200)
+        research_tracker.set_allocation('node_a', 150)
+        research_tracker.set_allocation('node_b', 50)
+
+        research_tracker.set_rp_budget(100)
+
+        state_a = research_tracker.get_state('node_a')
+        state_b = research_tracker.get_state('node_b')
+        # 3:1 ratio should be approximately preserved
+        assert state_a.rp_allocation >= state_b.rp_allocation
+        assert state_a.rp_allocation + state_b.rp_allocation <= 100
+
 
 class TestResearchTrackerTurnManagement:
     """Tests for turn tracking."""

@@ -75,4 +75,4 @@ class TestSpiralArmPrimitive:
 
         # The patterns should be different
         # (exact difference depends on spiral math)
-        assert d1 != d2 or True  # May be equal by coincidence
+        assert d1 != d2

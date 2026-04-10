@@ -207,10 +207,41 @@ class ResearchTracker:
         """
         Set total RP available per turn.
 
+        If the new budget is lower than total allocated RP, existing
+        allocations are proportionally scaled down to fit.
+
         Args:
             budget: RP budget (clamped to MIN_RP_BUDGET - MAX_RP_BUDGET)
         """
         self.rp_budget = max(self.MIN_RP_BUDGET, min(self.MAX_RP_BUDGET, budget))
+        self._clamp_allocations_to_budget()
+
+    def _clamp_allocations_to_budget(self) -> None:
+        """Scale down allocations proportionally if total exceeds budget."""
+        total = self.get_total_allocated()
+        if total <= self.rp_budget:
+            return
+
+        if self.rp_budget == 0:
+            for state in self.node_states.values():
+                state.rp_allocation = 0
+            return
+
+        scale = self.rp_budget / total
+        allocated = 0
+        # Sort by allocation descending so remainder goes to largest allocator
+        nodes_with_rp = sorted(
+            [(nid, s) for nid, s in self.node_states.items() if s.rp_allocation > 0],
+            key=lambda x: x[1].rp_allocation,
+            reverse=True,
+        )
+        for i, (node_id, state) in enumerate(nodes_with_rp):
+            if i == len(nodes_with_rp) - 1:
+                # Last node gets the remainder to ensure exact budget match
+                state.rp_allocation = self.rp_budget - allocated
+            else:
+                state.rp_allocation = int(state.rp_allocation * scale)
+                allocated += state.rp_allocation
 
     def increment_turn(self) -> None:
         """Increment the turn counter."""

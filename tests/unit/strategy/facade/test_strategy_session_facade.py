@@ -692,8 +692,8 @@ class TestEventQueries:
         session.event_log.get_events_by_category.assert_called_once_with("COMBAT")
 
 
-class TestGameStateQueries:
-    """Tests for game state query methods (PROJ-208 Phase 4)."""
+class TestGameStateQueriesSavePath:
+    """Tests for save path query methods (PROJ-208 Phase 4)."""
 
     def test_get_save_path_returns_session_save_path(self):
         """get_save_path returns session's save_path."""
