@@ -236,3 +236,10 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-235 | TurnEngine Phase Timing Cleanup | 2026-04-05 | PROJ-201-250 |
 | PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | 2026-04-05 | PROJ-201-250 |
 | PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | 2026-04-05 | PROJ-201-250 |
+| PROJ-238 | Order System Unification & Planet Orders UI | 2026-04-05 | PROJ-201-250 |
+| PROJ-239 | Strategy Layer Health Remediation | 2026-04-05 | PROJ-201-250 |
+| PROJ-240 | Ship God Class Decomposition | 2026-04-08 | PROJ-201-250 |
+| PROJ-241 | Component God Class Decomposition | 2026-04-08 | PROJ-201-250 |
+| PROJ-245 | Spatial Grid Incremental Updates | 2026-04-08 | PROJ-201-250 |
+| PROJ-246 | Silent Formula Evaluation Failure | 2026-04-08 | PROJ-201-250 |
+| PROJ-247 | Ship ID Mapping Fragility | 2026-04-08 | PROJ-201-250 |
