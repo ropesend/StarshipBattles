@@ -10,20 +10,6 @@ import pytest
 class TestDisplayConfig:
     """Tests for DisplayConfig."""
 
-    def test_default_resolution_values(self):
-        """Default resolution values are correct (4K)."""
-        from game.core.config import DisplayConfig
-
-        assert DisplayConfig.DEFAULT_WIDTH == 3840
-        assert DisplayConfig.DEFAULT_HEIGHT == 2160
-
-    def test_test_resolution_values(self):
-        """Test resolution values are correct."""
-        from game.core.config import DisplayConfig
-
-        assert DisplayConfig.TEST_WIDTH == 1440
-        assert DisplayConfig.TEST_HEIGHT == 900
-
     def test_default_resolution_tuple(self):
         """default_resolution() returns tuple (4K)."""
         from game.core.config import DisplayConfig
@@ -38,48 +24,3 @@ class TestDisplayConfig:
 
         resolution = DisplayConfig.test_resolution()
         assert resolution == (1440, 900)
-
-
-class TestAIConfig:
-    """Tests for AIConfig."""
-
-    def test_spacing_values(self):
-        """Spacing values are correct."""
-        from game.core.config import AIConfig
-
-        assert AIConfig.MIN_SPACING == 150
-        assert AIConfig.DEFAULT_ORBIT_DISTANCE == 500
-        assert AIConfig.MAX_CORRECTION_FORCE == 500
-
-class TestPhysicsConfig:
-    """Tests for PhysicsConfig."""
-
-    def test_tick_rate(self):
-        """Tick rate is correct."""
-        from game.core.config import PhysicsConfig
-
-        assert PhysicsConfig.TICK_RATE == 0.01
-
-
-
-class TestBattleConfig:
-    """Tests for BattleConfig."""
-
-    def test_query_radius(self):
-        """Query radius values are correct."""
-        from game.core.config import BattleTuning
-
-        assert BattleTuning.TARGET_QUERY_RADIUS == 200000
-        assert BattleTuning.MISSILE_QUERY_RADIUS == 1500
-
-    def test_collision_values(self):
-        """Collision detection values are correct."""
-        from game.core.config import BattleTuning
-
-        assert BattleTuning.COLLISION_BUFFER == 100
-
-
-
-# TestUIConfig moved to tests/unit/ui/test_ui_config.py
-# (UIConfig is UI-layer code, not core-layer)
-

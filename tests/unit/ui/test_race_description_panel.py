@@ -36,12 +36,6 @@ def mock_ui_manager():
 class TestRaceDescriptionPanelCreation:
     """Tests for RaceDescriptionPanel initialization."""
 
-    def test_race_description_panel_can_be_imported(self):
-        """RaceDescriptionPanel can be imported from separate module."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
-
-        assert RaceDescriptionPanel is not None
-
     def test_race_description_panel_has_text_box_references(self):
         """RaceDescriptionPanel has expected text box reference attributes."""
         from game.ui.panels.race_description_panel import RaceDescriptionPanel

@@ -13,36 +13,6 @@ from game.simulation.components.component_constants import (
 class TestComponentStatusEnum:
     """Tests for ComponentStatus enum."""
 
-    def test_component_status_active(self):
-        """ACTIVE is defined."""
-        assert hasattr(ComponentStatus, 'ACTIVE')
-        assert ComponentStatus.ACTIVE is not None
-
-    def test_component_status_damaged(self):
-        """DAMAGED is defined."""
-        assert hasattr(ComponentStatus, 'DAMAGED')
-        assert ComponentStatus.DAMAGED is not None
-
-    def test_component_status_no_crew(self):
-        """NO_CREW is defined."""
-        assert hasattr(ComponentStatus, 'NO_CREW')
-        assert ComponentStatus.NO_CREW is not None
-
-    def test_component_status_no_power(self):
-        """NO_POWER is defined."""
-        assert hasattr(ComponentStatus, 'NO_POWER')
-        assert ComponentStatus.NO_POWER is not None
-
-    def test_component_status_no_fuel(self):
-        """NO_FUEL is defined."""
-        assert hasattr(ComponentStatus, 'NO_FUEL')
-        assert ComponentStatus.NO_FUEL is not None
-
-    def test_component_status_no_ammo(self):
-        """NO_AMMO is defined."""
-        assert hasattr(ComponentStatus, 'NO_AMMO')
-        assert ComponentStatus.NO_AMMO is not None
-
     def test_component_status_all_unique(self):
         """All enum values are distinct."""
         values = [status.value for status in ComponentStatus]

@@ -35,19 +35,6 @@ from game.strategy.engine.commands import (
 )
 
 
-class TestCommandType:
-    """Tests for CommandType enum."""
-
-    def test_issue_order_exists(self):
-        """CommandType should have ISSUE_ORDER type."""
-        assert hasattr(CommandType, 'ISSUE_ORDER')
-        assert CommandType.ISSUE_ORDER is not None
-
-    def test_enum_is_auto_generated(self):
-        """CommandType values should be auto-generated integers."""
-        assert isinstance(CommandType.ISSUE_ORDER.value, int)
-
-
 class TestCommandBase:
     """Tests for Command base class."""
 
@@ -115,12 +102,6 @@ class TestIssueMoveCommand:
         assert cmd.fleet_id == 7
         assert cmd.target_hex == target
         assert cmd.type == CommandType.ISSUE_ORDER
-
-    def test_with_origin_hex(self):
-        """IssueMoveCommand should work with origin hex."""
-        target = HexCoord(0, 0)
-        cmd = IssueMoveCommand(fleet_id=1, target_hex=target)
-        assert cmd.target_hex == HexCoord(0, 0)
 
 
 # NOTE: TestIssueBuildShipCommand removed in PROJ-208 Phase 2 (dead code).

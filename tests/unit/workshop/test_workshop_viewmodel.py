@@ -354,3 +354,96 @@ class TestWorkshopViewModel:
         removed = viewmodel.remove_component(None, 0)
 
         assert removed is None
+
+    # ─────────────────────────────────────────────────────────────────
+    # Ship Property Mutation Tests (migrated from test_builder_viewmodel.py)
+    # ─────────────────────────────────────────────────────────────────
+
+    def test_set_ship_name_updates_and_emits(self, viewmodel_setup, mock_registries):
+        """set_ship_name updates ship name and emits SHIP_UPDATED event."""
+        from game.simulation.entities.ship import Ship
+        viewmodel, event_bus = viewmodel_setup
+
+        ship = Ship("Original Name", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_name("New Ship Name")
+
+        assert ship.name == "New Ship Name"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 1
+
+    def test_set_ship_name_no_change_if_same(self, viewmodel_setup, mock_registries):
+        """set_ship_name should not emit if name unchanged."""
+        from game.simulation.entities.ship import Ship
+        viewmodel, event_bus = viewmodel_setup
+
+        ship = Ship("Same Name", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_name("Same Name")
+
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0
+
+    def test_set_ship_theme_updates_and_emits(self, viewmodel_setup, mock_registries):
+        """set_ship_theme updates ship theme_id and emits SHIP_UPDATED event."""
+        from game.simulation.entities.ship import Ship
+        viewmodel, event_bus = viewmodel_setup
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_theme("Klingon")
+
+        assert ship.theme_id == "Klingon"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 1
+
+    def test_set_ship_theme_no_change_if_same(self, viewmodel_setup, mock_registries):
+        """set_ship_theme should not emit if theme unchanged."""
+        from game.simulation.entities.ship import Ship
+        viewmodel, event_bus = viewmodel_setup
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", theme_id="Federation", registries=mock_registries)
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_theme("Federation")
+
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0
+
+    def test_set_ship_ai_strategy_updates_and_emits(self, viewmodel_setup, mock_registries):
+        """set_ship_ai_strategy updates ship ai_strategy and emits SHIP_UPDATED event."""
+        from game.simulation.entities.ship import Ship
+        viewmodel, event_bus = viewmodel_setup
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        ship.ai_strategy = "standard_ranged"
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_ai_strategy("aggressive_close")
+
+        assert ship.ai_strategy == "aggressive_close"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 1
+
+    def test_set_ship_ai_strategy_no_change_if_same(self, viewmodel_setup, mock_registries):
+        """set_ship_ai_strategy should not emit if strategy unchanged."""
+        from game.simulation.entities.ship import Ship
+        viewmodel, event_bus = viewmodel_setup
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        ship.ai_strategy = "standard_ranged"
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_ai_strategy("standard_ranged")
+
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0

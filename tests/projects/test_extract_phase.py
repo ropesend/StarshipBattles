@@ -400,31 +400,3 @@ Next Project ID: PROJ-02
         assert updated.index("New decision") < updated.index("Old decision")
 
 
-class TestValidatePhaseWithExtracted:
-    """Test validate_phase.py handling of extracted phases."""
-
-    def test_validate_phase_extracted_with_active_subproject(self, tmp_path, monkeypatch):
-        """Should pass validation for extracted phase with active sub-project."""
-        # This tests the integration between validate_phase and extraction
-        # The actual test would require setting up the full project structure
-        pass  # Placeholder for integration test
-
-    def test_validate_phase_extracted_with_archived_subproject(self, tmp_path, monkeypatch):
-        """Should pass and suggest auto-complete for archived sub-project."""
-        pass  # Placeholder for integration test
-
-
-class TestValidateAuditReadyWithExtracted:
-    """Test validate_audit_ready.py handling of extracted phases."""
-
-    def test_audit_ready_with_extracted_phases(self, tmp_path, monkeypatch):
-        """Should include extracted phase checks in audit validation."""
-        pass  # Placeholder for integration test
-
-    def test_audit_ready_warns_active_subproject(self, tmp_path, monkeypatch):
-        """Should warn when sub-project is still active."""
-        pass  # Placeholder for integration test
-
-    def test_audit_ready_errors_missing_subproject(self, tmp_path, monkeypatch):
-        """Should error when sub-project reference is invalid."""
-        pass  # Placeholder for integration test

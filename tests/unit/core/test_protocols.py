@@ -8,73 +8,6 @@ duck typing replacement.
 import pytest
 
 
-class TestProtocolExistence:
-    """Verify that all expected Protocols exist and are importable."""
-
-    def test_import_all_protocols(self):
-        """All Protocols should be importable from protocols module."""
-        from game.core.protocols import (
-            ILocatable,
-            INamed,
-            IOwnable,
-            IStarSystem,
-            IStar,
-            IPlanet,
-            IFleet,
-            IWarpPoint,
-            ISectorEnvironment,
-            ICombatant,
-            IDamageable,
-            # PROJ-193: New Protocols
-            IEmpire,
-            IFacility,
-            IShipInstance,
-            ICombatShip,
-        )
-        # If we get here, all imports succeeded
-        assert IStarSystem is not None
-        assert IStar is not None
-        assert IPlanet is not None
-        assert IFleet is not None
-        assert IWarpPoint is not None
-        assert ISectorEnvironment is not None
-        assert ICombatant is not None
-        # PROJ-193: New Protocols
-        assert IEmpire is not None
-        assert IFacility is not None
-        assert IShipInstance is not None
-        assert ICombatShip is not None
-
-    def test_import_all_typeguards(self):
-        """All TypeGuard functions should be importable."""
-        from game.core.protocols import (
-            is_star_system,
-            is_star,
-            is_planet,
-            is_fleet,
-            is_warp_point,
-            is_sector_environment,
-            is_combatant,
-            # PROJ-193: New TypeGuards
-            is_empire,
-            is_facility,
-            is_ship_instance,
-            is_combat_ship,
-        )
-        assert callable(is_star_system)
-        assert callable(is_star)
-        assert callable(is_planet)
-        assert callable(is_fleet)
-        assert callable(is_warp_point)
-        assert callable(is_sector_environment)
-        assert callable(is_combatant)
-        # PROJ-193: New TypeGuards
-        assert callable(is_empire)
-        assert callable(is_facility)
-        assert callable(is_ship_instance)
-        assert callable(is_combat_ship)
-
-
 class TestProtocolsWithRealClasses:
     """Test that real game classes satisfy the Protocols."""
 
@@ -488,36 +421,6 @@ class TestICameraProtocol:
 # =============================================================================
 # PROJ-193: New Protocol Satisfaction Tests
 # =============================================================================
-
-
-class TestPROJ193ProtocolImports:
-    """Verify PROJ-193 Protocols and TypeGuards are importable."""
-
-    def test_import_new_protocols(self):
-        """All PROJ-193 Protocols should be importable."""
-        from game.core.protocols import (
-            IEmpire,
-            IFacility,
-            IShipInstance,
-            ICombatShip,
-        )
-        assert IEmpire is not None
-        assert IFacility is not None
-        assert IShipInstance is not None
-        assert ICombatShip is not None
-
-    def test_import_new_typeguards(self):
-        """All PROJ-193 TypeGuard functions should be importable."""
-        from game.core.protocols import (
-            is_empire,
-            is_facility,
-            is_ship_instance,
-            is_combat_ship,
-        )
-        assert callable(is_empire)
-        assert callable(is_facility)
-        assert callable(is_ship_instance)
-        assert callable(is_combat_ship)
 
 
 class TestPROJ193ProtocolSatisfaction:

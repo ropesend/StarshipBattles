@@ -30,16 +30,6 @@ def _make_mock_event_bus():
 
 # --- ComponentModifierGridPanel Import Tests ---
 
-class TestComponentModifierGridPanelImport:
-    """Tests for module import."""
-
-    def test_panel_can_be_imported(self):
-        """ComponentModifierGridPanel can be imported."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        assert ComponentModifierGridPanel is not None
-
-
 # --- ComponentModifierGridPanel Initialization Tests ---
 
 class TestComponentModifierGridPanelInit:

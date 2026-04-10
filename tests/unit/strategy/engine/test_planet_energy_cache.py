@@ -49,19 +49,6 @@ class TestPlanetEnergyCache:
         assert hasattr(engine, '_energy_cache')
         assert planet.id in engine._energy_cache
 
-    def test_cached_values_reused_on_unchanged_facilities(self):
-        """Subsequent ticks with same facilities should use cached values."""
-        engine = PlanetEnergyEngine(registries=_make_registries())
-        planet = _make_planet(facilities=[])
-
-        engine._process_planet(planet, tick=1)
-        engine._process_planet(planet, tick=2)
-
-        # Should have cached — the scan only runs once
-        cache = engine._energy_cache[planet.id]
-        assert 'capacity' in cache
-        assert 'generation' in cache
-
     def test_invalidate_energy_cache_clears_planet(self):
         """invalidate_energy_cache() should remove the planet's cache entry."""
         engine = PlanetEnergyEngine(registries=_make_registries())

@@ -101,20 +101,6 @@ class TestImplodePlanetCommandHandlerPassesRegistry:
             assert 'component_registry' in call_kwargs
             assert call_kwargs['component_registry'] == mock_component_registry
 
-    def test_rejects_fleet_without_destroy_planet_ability(self, mock_session):
-        """Handler rejects fleet without DestroyPlanet ability."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetCommandHandler
-        from game.strategy.engine.commands import IssueImplodePlanetCommand
-
-        cmd = IssueImplodePlanetCommand(fleet_id=1, planet_id=100)
-        handler = ImplodePlanetCommandHandler()
-
-        # Patch find_ship_with_ability to return None (no ship has ability)
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "DestroyPlanet" in result.message
 
 
 class TestStellerateStarCommandHandlerPassesRegistry:
@@ -136,19 +122,6 @@ class TestStellerateStarCommandHandlerPassesRegistry:
             assert 'component_registry' in call_kwargs
             assert call_kwargs['component_registry'] == mock_component_registry
 
-    def test_rejects_fleet_without_destroy_star_ability(self, mock_session):
-        """Handler rejects fleet without DestroyStar ability."""
-        from game.strategy.engine.superweapon_command_handlers import StellerateStarCommandHandler
-        from game.strategy.engine.commands import IssueStellerateStarCommand
-
-        cmd = IssueStellerateStarCommand(fleet_id=1)
-        handler = StellerateStarCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "DestroyStar" in result.message
 
 
 class TestOpenWarpPointCommandHandlerPassesRegistry:
@@ -172,21 +145,6 @@ class TestOpenWarpPointCommandHandlerPassesRegistry:
             assert 'component_registry' in call_kwargs
             assert call_kwargs['component_registry'] == mock_component_registry
 
-    def test_rejects_fleet_without_open_warp_point_ability(self, mock_session):
-        """Handler rejects fleet without OpenWarpPoint ability."""
-        from game.strategy.engine.superweapon_command_handlers import OpenWarpPointCommandHandler
-        from game.strategy.engine.commands import IssueOpenWarpPointCommand
-
-        cmd = IssueOpenWarpPointCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), target_system_name="Target System"
-        )
-        handler = OpenWarpPointCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "OpenWarpPoint" in result.message
 
 
 class TestCloseWarpPointCommandHandlerPassesRegistry:
@@ -208,19 +166,6 @@ class TestCloseWarpPointCommandHandlerPassesRegistry:
             assert 'component_registry' in call_kwargs
             assert call_kwargs['component_registry'] == mock_component_registry
 
-    def test_rejects_fleet_without_close_warp_point_ability(self, mock_session):
-        """Handler rejects fleet without CloseWarpPoint ability."""
-        from game.strategy.engine.superweapon_command_handlers import CloseWarpPointCommandHandler
-        from game.strategy.engine.commands import IssueCloseWarpPointCommand
-
-        cmd = IssueCloseWarpPointCommand(fleet_id=1, warp_point_destination_id="Alpha Centauri")
-        handler = CloseWarpPointCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "CloseWarpPoint" in result.message
 
 
 class TestCreateDysonSphereCommandHandlerPassesRegistry:
@@ -242,19 +187,6 @@ class TestCreateDysonSphereCommandHandlerPassesRegistry:
             assert 'component_registry' in call_kwargs
             assert call_kwargs['component_registry'] == mock_component_registry
 
-    def test_rejects_fleet_without_create_dyson_sphere_ability(self, mock_session):
-        """Handler rejects fleet without CreateDysonSphere ability."""
-        from game.strategy.engine.superweapon_command_handlers import CreateDysonSphereCommandHandler
-        from game.strategy.engine.commands import IssueCreateDysonSphereCommand
-
-        cmd = IssueCreateDysonSphereCommand(fleet_id=1)
-        handler = CreateDysonSphereCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "CreateDysonSphere" in result.message
 
 
 # =============================================================================

@@ -48,12 +48,6 @@ def mock_ui_manager():
 class TestRaceEnvironmentPanelCreation:
     """Tests for RaceEnvironmentPanel initialization."""
 
-    def test_race_environment_panel_can_be_imported(self):
-        """RaceEnvironmentPanel can be imported from separate module."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        assert RaceEnvironmentPanel is not None
-
     def test_race_environment_panel_has_slider_references(self):
         """RaceEnvironmentPanel has expected slider reference attributes."""
         from game.ui.panels.race_environment_panel import RaceEnvironmentPanel

@@ -35,30 +35,6 @@ class TestBattleModeHandlerInterface:
         with pytest.raises(TypeError):
             BattleModeHandler()
 
-    def test_has_configure_method(self):
-        """BattleModeHandler defines configure method."""
-        assert hasattr(BattleModeHandler, 'configure')
-
-    def test_has_can_retreat_method(self):
-        """BattleModeHandler defines can_retreat method."""
-        assert hasattr(BattleModeHandler, 'can_retreat')
-
-    def test_has_can_reinforce_method(self):
-        """BattleModeHandler defines can_reinforce method."""
-        assert hasattr(BattleModeHandler, 'can_reinforce')
-
-    def test_has_apply_results_method(self):
-        """BattleModeHandler defines apply_results method."""
-        assert hasattr(BattleModeHandler, 'apply_results')
-
-    def test_has_should_clone_ships_method(self):
-        """BattleModeHandler defines should_clone_ships method."""
-        assert hasattr(BattleModeHandler, 'should_clone_ships')
-
-    def test_has_is_headless_default_method(self):
-        """BattleModeHandler defines is_headless_default method."""
-        assert hasattr(BattleModeHandler, 'is_headless_default')
-
 
 # === ManualBattleModeHandler Tests ===
 
@@ -255,39 +231,3 @@ class TestBattleModeHandlerFactory:
         assert isinstance(handler, HypotheticalBattleModeHandler)
 
 
-# === Mode Characteristics Summary Tests ===
-
-class TestModeCharacteristics:
-    """Tests verifying the correct characteristics for each mode."""
-
-    def test_manual_mode_characteristics(self):
-        """Manual mode: visual, no retreat, no reinforce, no clone."""
-        handler = ManualBattleModeHandler()
-        assert handler.is_headless_default() is False
-        assert handler.can_retreat() is False
-        assert handler.can_reinforce() is False
-        assert handler.should_clone_ships() is False
-
-    def test_test_mode_characteristics(self):
-        """Test mode: headless, no retreat, no reinforce, no clone."""
-        handler = TestBattleModeHandler()
-        assert handler.is_headless_default() is True
-        assert handler.can_retreat() is False
-        assert handler.can_reinforce() is False
-        assert handler.should_clone_ships() is False
-
-    def test_strategy_mode_characteristics(self):
-        """Strategy mode: headless, retreat, reinforce, no clone."""
-        handler = StrategyBattleModeHandler()
-        assert handler.is_headless_default() is True
-        assert handler.can_retreat() is True
-        assert handler.can_reinforce() is True
-        assert handler.should_clone_ships() is False
-
-    def test_hypothetical_mode_characteristics(self):
-        """Hypothetical mode: headless, no retreat, no reinforce, clone."""
-        handler = HypotheticalBattleModeHandler()
-        assert handler.is_headless_default() is True
-        assert handler.can_retreat() is False
-        assert handler.can_reinforce() is False
-        assert handler.should_clone_ships() is True

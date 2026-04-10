@@ -81,45 +81,6 @@ class TestErrorCodeNamingConvention:
             assert code.value.startswith('T'), f"{code.name} should start with T"
 
 
-class TestErrorCodeCategories:
-    """Tests for error code category organization."""
-
-    def test_has_validation_codes(self):
-        """At least one validation code exists."""
-        v_codes = [c for c in ErrorCode if c.value.startswith('V')]
-        assert len(v_codes) > 0, "No validation codes found"
-
-    def test_has_state_codes(self):
-        """At least one state code exists."""
-        s_codes = [c for c in ErrorCode if c.value.startswith('S')]
-        assert len(s_codes) > 0, "No state codes found"
-
-    def test_has_resource_codes(self):
-        """At least one resource code exists."""
-        r_codes = [c for c in ErrorCode if c.value.startswith('R')]
-        assert len(r_codes) > 0, "No resource codes found"
-
-    def test_has_persistence_codes(self):
-        """At least one persistence code exists."""
-        p_codes = [c for c in ErrorCode if c.value.startswith('P')]
-        assert len(p_codes) > 0, "No persistence codes found"
-
-    def test_has_formula_codes(self):
-        """At least one formula code exists."""
-        f_codes = [c for c in ErrorCode if c.value.startswith('F')]
-        assert len(f_codes) > 0, "No formula codes found"
-
-    def test_has_component_codes(self):
-        """At least one component code exists."""
-        c_codes = [c for c in ErrorCode if c.value.startswith('C')]
-        assert len(c_codes) > 0, "No component codes found"
-
-    def test_has_turn_processing_codes(self):
-        """At least one turn processing code exists (PROJ-251)."""
-        t_codes = [c for c in ErrorCode if c.value.startswith('T')]
-        assert len(t_codes) > 0, "No turn processing codes found"
-
-
 class TestErrorCodeAccess:
     """Tests for accessing error codes."""
 

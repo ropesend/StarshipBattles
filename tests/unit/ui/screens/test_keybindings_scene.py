@@ -279,11 +279,3 @@ class TestUpdateAndDraw:
         scene.draw(surface)
 
 
-class TestAppIntegration:
-    """app.py should have start_keybindings and return methods."""
-
-    def test_game_state_keybindings_exists(self):
-        """GameState.KEYBINDINGS should exist."""
-        from game.core.constants import GameState
-        assert hasattr(GameState, 'KEYBINDINGS')
-        assert GameState.KEYBINDINGS == 10

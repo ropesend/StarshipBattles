@@ -54,12 +54,6 @@ def mock_asset_loader():
 class TestRacePortraitGalleryCreation:
     """Tests for RacePortraitGallery initialization."""
 
-    def test_race_portrait_gallery_can_be_imported(self):
-        """RacePortraitGallery can be imported from separate module."""
-        from game.ui.panels.race_portrait_gallery import RacePortraitGallery
-
-        assert RacePortraitGallery is not None
-
     def test_race_portrait_gallery_has_button_list(self):
         """RacePortraitGallery has asset_buttons list attribute."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery

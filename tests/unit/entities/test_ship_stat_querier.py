@@ -260,29 +260,6 @@ class TestShipStatQuerierCachedSummary:
 # Additional Edge Case Tests (PROJ-118 Phase 2)
 # ============================================================================
 
-class TestShipStatQuerierInitialization:
-    """Tests for ShipStatQuerier initialization."""
-
-    def test_init_stores_ship_reference(self):
-        """ShipStatQuerier stores reference to the ship."""
-        mock_ship = Mock()
-        querier = ShipStatQuerier(mock_ship)
-
-        assert querier._ship is mock_ship
-
-    def test_init_with_different_ships(self):
-        """Each querier instance references its own ship."""
-        ship1 = Mock()
-        ship2 = Mock()
-
-        querier1 = ShipStatQuerier(ship1)
-        querier2 = ShipStatQuerier(ship2)
-
-        assert querier1._ship is ship1
-        assert querier2._ship is ship2
-        assert querier1._ship is not querier2._ship
-
-
 class TestGetAbilityTotalEdgeCases:
     """Edge case tests for get_ability_total method."""
 

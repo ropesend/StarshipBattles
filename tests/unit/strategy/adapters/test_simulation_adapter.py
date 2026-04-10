@@ -11,55 +11,6 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 
 # =============================================================================
-# SimulationBattleResolver Import Tests
-# =============================================================================
-
-
-class TestSimulationBattleResolverImport:
-    """Test SimulationBattleResolver is properly importable."""
-
-    def test_adapter_importable_from_adapters(self):
-        """SimulationBattleResolver should be importable from adapters module."""
-        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-        assert SimulationBattleResolver is not None
-
-    def test_adapter_importable_from_adapters_package(self):
-        """SimulationBattleResolver should be accessible from adapters package."""
-        from game.strategy.adapters import SimulationBattleResolver
-        assert SimulationBattleResolver is not None
-
-
-# =============================================================================
-# SimulationBattleResolver Implementation Tests
-# =============================================================================
-
-
-class TestSimulationBattleResolverImplementation:
-    """Test SimulationBattleResolver properly implements IBattleResolver."""
-
-    def test_implements_ibattle_resolver(self):
-        """SimulationBattleResolver should implement IBattleResolver interface."""
-        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-        from game.strategy.interfaces.battle_resolver import IBattleResolver
-
-        assert issubclass(SimulationBattleResolver, IBattleResolver)
-
-    def test_can_instantiate(self):
-        """SimulationBattleResolver should be instantiable."""
-        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-
-        resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        assert resolver is not None
-
-    def test_has_resolve_battle_method(self):
-        """SimulationBattleResolver should have resolve_battle method."""
-        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-
-        resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        assert hasattr(resolver, 'resolve_battle')
-        assert callable(resolver.resolve_battle)
-
-
 # =============================================================================
 # SimulationBattleResolver Behavior Tests
 # =============================================================================

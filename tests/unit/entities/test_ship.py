@@ -488,11 +488,6 @@ class TestDefaultMaxMass:
     def setup(self, fresh_registries):
         yield
 
-    def test_constant_exists(self):
-        """DEFAULT_MAX_MASS is defined in ship module."""
-        from game.simulation.entities.ship import DEFAULT_MAX_MASS
-        assert DEFAULT_MAX_MASS == 1000
-
     def test_ship_uses_constant_for_unknown_class(self, fresh_registries):
         """Ship with unknown class uses DEFAULT_MAX_MASS."""
         from game.simulation.entities.ship import DEFAULT_MAX_MASS

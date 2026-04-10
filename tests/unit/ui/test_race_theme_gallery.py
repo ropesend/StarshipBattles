@@ -48,12 +48,6 @@ def mock_panel():
 class TestRaceThemeGalleryCreation:
     """Tests for RaceThemeGallery initialization."""
 
-    def test_race_theme_gallery_can_be_imported(self):
-        """RaceThemeGallery can be imported from separate module."""
-        from game.ui.panels.race_theme_gallery import RaceThemeGallery
-
-        assert RaceThemeGallery is not None
-
     def test_race_theme_gallery_has_button_list(self):
         """RaceThemeGallery has asset_buttons list attribute (via BaseGallery)."""
         from game.ui.panels.race_theme_gallery import RaceThemeGallery

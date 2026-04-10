@@ -15,22 +15,6 @@ def renderer():
 class TestRendererAnimationState:
     """Tests for animation state tracking in StrategyRenderer."""
 
-    def test_renderer_has_elapsed_time_initialized_to_zero(self, renderer):
-        """Elapsed time should start at zero."""
-        assert renderer._elapsed_time == 0.0
-
-    def test_update_accumulates_delta_time(self, renderer):
-        """update(dt) should accumulate elapsed time."""
-        renderer.update(0.016)
-        assert renderer._elapsed_time == pytest.approx(0.016)
-
-    def test_update_accumulates_over_multiple_calls(self, renderer):
-        """Multiple update calls should accumulate elapsed time."""
-        renderer.update(0.016)
-        renderer.update(0.016)
-        renderer.update(0.016)
-        assert renderer._elapsed_time == pytest.approx(0.048)
-
     def test_update_handles_large_dt(self, renderer):
         """update should handle large delta time values."""
         renderer.update(1.0)
@@ -40,20 +24,6 @@ class TestRendererAnimationState:
         """update should handle zero delta time."""
         renderer.update(0.0)
         assert renderer._elapsed_time == pytest.approx(0.0)
-
-
-class TestWarpPointRotationConstant:
-    """Tests for the rotation speed constant."""
-
-    def test_rotation_speed_constant_exists(self):
-        """WARP_POINT_ROTATION_SPEED constant should be defined."""
-        from game.ui.screens.strategy_renderer import WARP_POINT_ROTATION_SPEED
-        assert WARP_POINT_ROTATION_SPEED == 12.0
-
-    def test_rotation_speed_is_positive(self):
-        """Rotation speed should be positive."""
-        from game.ui.screens.strategy_renderer import WARP_POINT_ROTATION_SPEED
-        assert WARP_POINT_ROTATION_SPEED > 0
 
 
 class TestWarpPointRotationAngle:

@@ -57,19 +57,6 @@ def mock_galaxy():
 # Test: OrderProcessor Creation
 # =============================================================================
 
-class TestOrderProcessorCreation:
-    """Tests for OrderProcessor initialization."""
-
-    def test_order_processor_can_be_created(self):
-        """OrderProcessor can be instantiated."""
-        from game.strategy.engine.order_processor import OrderProcessor
-
-        processor = OrderProcessor()
-
-        assert processor is not None
-
-
-
 # =============================================================================
 # Test: JOIN_FLEET Processing
 # =============================================================================
@@ -455,37 +442,6 @@ class TestInstantOrderProcessing:
 # =============================================================================
 # Test: Order Result Dataclass
 # =============================================================================
-
-class TestOrderResult:
-    """Tests for OrderResult dataclass."""
-
-    def test_join_fleet_result_has_required_fields(self):
-        """JoinFleetResult has expected fields."""
-        from game.strategy.engine.order_processor import JoinFleetResult
-
-        result = JoinFleetResult(merged=True, cancelled=False)
-
-        assert result.merged is True
-        assert result.cancelled is False
-
-    def test_colonize_result_has_required_fields(self):
-        """ColonizeResult has expected fields."""
-        from game.strategy.engine.order_processor import ColonizeResult
-
-        result = ColonizeResult(colonized=True, planet_name="Earth")
-
-        assert result.colonized is True
-        assert result.planet_name == "Earth"
-
-    def test_colonize_result_defaults(self):
-        """ColonizeResult has sensible defaults."""
-        from game.strategy.engine.order_processor import ColonizeResult
-
-        result = ColonizeResult(colonized=False)
-
-        assert result.colonized is False
-        assert result.planet_name is None
-
 
 # =============================================================================
 # Test: PROJ-55 Colony Ship Removal

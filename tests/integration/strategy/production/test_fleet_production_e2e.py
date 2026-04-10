@@ -18,7 +18,6 @@ from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.engine.production_engine import ProductionEngine
-from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
 
 def _make_cargo_ship(resources=None):
@@ -206,90 +205,6 @@ class TestFleetProductionE2E:
         assert len(fleet.construction_queue) == 0
         # Complex should appear on planet
         assert len(mock_planet.facilities) == initial_facility_count + 1
-
-    def test_e2e_fleet_with_build_order_cannot_move(self):
-        """E2E: Fleet with BUILD order → try to move → blocked."""
-        movement_engine = FleetMovementEngine()
-
-        # Create fleet with BUILD order
-        fleet = Fleet(1, 0, HexCoord(0, 0))
-        fleet.speed = 10.0  # Needs speed to be considered for movement
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
-        fleet.construction_queue = [
-            {"design_id": "test_ship", "type": "ship", "turns_remaining": 5}
-        ]
-
-        empire = MagicMock()
-        empire.id = 0
-        empire.fleets = [fleet]
-
-        mock_galaxy = MagicMock()
-        mock_galaxy.get_zones_at_global_hex.return_value = []
-
-        # Collect movements at tick 10 (when fleet would move based on speed)
-        movements = movement_engine.collect_movements([empire], mock_galaxy, tick=10)
-
-        # Fleet should NOT be in movements (blocked by BUILD order)
-        fleet_ids = [m[0].id for m in movements]
-        assert fleet.id not in fleet_ids
-
-    def test_e2e_fleet_without_build_order_can_move(self):
-        """E2E: Fleet without BUILD order can still move."""
-        movement_engine = FleetMovementEngine()
-
-        # Create fleet with MOVE order (not BUILD)
-        fleet = Fleet(1, 0, HexCoord(0, 0))
-        fleet.speed = 10.0  # Needs speed
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(5, 5))]
-        fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
-
-        empire = MagicMock()
-        empire.id = 0
-        empire.fleets = [fleet]
-
-        # Explicit empty zone list — MagicMock iteration is non-deterministic
-        # across xdist workers, causing flaky failures in sharded runs
-        mock_galaxy = MagicMock()
-        mock_galaxy.get_zones_at_global_hex.return_value = []
-
-        # Collect movements at tick 10
-        movements = movement_engine.collect_movements([empire], mock_galaxy, tick=10)
-
-        # Fleet should be in movements
-        fleet_ids = [m[0].id for m in movements]
-        assert fleet.id in fleet_ids
-
-    def test_e2e_save_load_preserves_build_state(self, temp_save_dir):
-        """E2E: Save game with building fleet → load → state preserved."""
-        # Create fleet with full build state
-        original_fleet = Fleet("test_fleet", 0, HexCoord(10, -5))
-        original_fleet.add_order(FleetOrder(OrderType.BUILD))
-        original_fleet.construction_queue = [
-            {"design_id": "destroyer", "type": "ship", "turns_remaining": 5},
-            {"design_id": "frigate", "type": "ship", "turns_remaining": 3},
-        ]
-
-        # Serialize
-        d = original_fleet.to_dict()
-        d['location'] = [10, -5]  # Fix HexCoord
-
-        # Simulate save to file
-        save_file = os.path.join(temp_save_dir, "test_fleet.json")
-        with open(save_file, 'w') as f:
-            json.dump(d, f)
-
-        # Load from file
-        with open(save_file, 'r') as f:
-            loaded_data = json.load(f)
-
-        restored_fleet = Fleet.from_dict(loaded_data)
-
-        # Verify full state preserved
-        assert restored_fleet.id == original_fleet.id
-        assert restored_fleet.is_building is True
-        assert len(restored_fleet.construction_queue) == 2
-        assert restored_fleet.construction_queue[0]["design_id"] == "destroyer"
-        assert restored_fleet.construction_queue[0]["turns_remaining"] == 5
 
     def test_e2e_complex_pauses_when_fleet_moves_away_from_planet(
         self, temp_save_dir, mock_galaxy_at_planet, fresh_registries

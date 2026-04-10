@@ -44,7 +44,3 @@ class TestCenterOnHex:
 
         assert scene.camera.position.x == 0.0
         assert scene.camera.position.y == 0.0
-
-    def test_center_on_hex_method_exists(self):
-        """CameraNavigator should have a center_on_hex method."""
-        assert hasattr(CameraNavigator, 'center_on_hex')

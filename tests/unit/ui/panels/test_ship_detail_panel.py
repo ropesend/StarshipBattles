@@ -129,12 +129,6 @@ class TestGetDamageColor:
 class TestShipDetailPanelInit:
     """Tests for ShipDetailPanel initialization."""
 
-    def test_panel_can_be_imported(self):
-        """ShipDetailPanel can be imported."""
-        from game.ui.panels.ship_detail_panel import ShipDetailPanel
-
-        assert ShipDetailPanel is not None
-
     def test_panel_stores_manager(self):
         """Panel stores manager reference."""
         from game.ui.panels.ship_detail_panel import ShipDetailPanel

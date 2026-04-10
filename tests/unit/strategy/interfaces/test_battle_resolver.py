@@ -4,7 +4,6 @@ Tests for IBattleResolver interface and BattleResult DTO.
 PROJ-11 Phase 4: Interface Contracts - Tests written BEFORE implementation (TDD).
 """
 import pytest
-from abc import ABC
 from dataclasses import dataclass
 from unittest.mock import MagicMock
 
@@ -16,16 +15,6 @@ from unittest.mock import MagicMock
 
 class TestBattleResult:
     """Test BattleResult data transfer object."""
-
-    def test_battle_result_importable(self):
-        """BattleResult should be importable from interfaces module."""
-        from game.strategy.interfaces.battle_resolver import BattleResult
-        assert BattleResult is not None
-
-    def test_battle_result_is_dataclass(self):
-        """BattleResult should be a dataclass."""
-        from game.strategy.interfaces.battle_resolver import BattleResult
-        assert hasattr(BattleResult, '__dataclass_fields__')
 
     def test_battle_result_has_winner_field(self):
         """BattleResult should have winner field (0, 1, or None for draw)."""
@@ -72,31 +61,6 @@ class TestBattleResult:
 
 class TestIBattleResolverInterface:
     """Test IBattleResolver abstract base class interface contract."""
-
-    def test_ibattle_resolver_importable(self):
-        """IBattleResolver should be importable from interfaces module."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver
-        assert IBattleResolver is not None
-
-    def test_ibattle_resolver_is_abstract(self):
-        """IBattleResolver should be an abstract base class."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver
-        assert issubclass(IBattleResolver, ABC)
-
-    def test_ibattle_resolver_cannot_instantiate(self):
-        """IBattleResolver should not be directly instantiable."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver
-
-        with pytest.raises(TypeError):
-            IBattleResolver()
-
-    def test_ibattle_resolver_has_resolve_battle_method(self):
-        """IBattleResolver should define resolve_battle abstract method."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver
-
-        assert hasattr(IBattleResolver, 'resolve_battle')
-        # Check it's abstract
-        assert getattr(IBattleResolver.resolve_battle, '__isabstractmethod__', False)
 
     def test_concrete_implementation_must_implement_resolve_battle(self):
         """Concrete implementation must implement resolve_battle."""
@@ -165,16 +129,3 @@ class TestIBattleResolverInterface:
         assert result.tick_count == 150
 
 
-# =============================================================================
-# Module Re-exports Test
-# =============================================================================
-
-
-class TestInterfacesModuleExports:
-    """Test that interfaces module properly exports IBattleResolver."""
-
-    def test_battle_resolver_accessible_from_interfaces_package(self):
-        """IBattleResolver should be accessible from game.strategy.interfaces."""
-        from game.strategy.interfaces import IBattleResolver, BattleResult
-        assert IBattleResolver is not None
-        assert BattleResult is not None

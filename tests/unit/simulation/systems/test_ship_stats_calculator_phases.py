@@ -369,36 +369,3 @@ class TestShipStatsCalculatorPhases:
         assert ship.crew_onboard == 10  # Phase 1 & 2
 
 
-class TestPhaseHelperMethods:
-    """Test individual phase helper methods after extraction."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self, fresh_registries):
-        """Set up test fixtures with DI registries."""
-        self.registries = fresh_registries
-        self.vehicle_classes = fresh_registries.vehicle_classes
-
-    def test_priority_sort_key_exists(self):
-        """Verify _priority_sort_key method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
-        assert hasattr(calculator, '_priority_sort_key')
-
-    def test_check_mass_limits_exists(self):
-        """Verify _check_mass_limits method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
-        assert hasattr(calculator, '_check_mass_limits')
-
-    def test_initialize_resources_exists(self):
-        """Verify _initialize_resources method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
-        assert hasattr(calculator, '_initialize_resources')
-
-    def test_get_ability_total_exists(self):
-        """Verify _get_ability_total method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
-        assert hasattr(calculator, '_get_ability_total')
-
-    def test_calculate_ability_totals_exists(self):
-        """Verify calculate_ability_totals method exists after refactor."""
-        calculator = ShipStatsCalculator(self.vehicle_classes, resource_catalog=self.registries.resource_catalog)
-        assert hasattr(calculator, 'calculate_ability_totals')

@@ -249,12 +249,6 @@ class TestMenuSceneConstants:
                     from game.ui.screens.menu_scene import MenuScene
                     yield MenuScene
 
-    def test_bg_color_constant(self, mock_scene_class):
-        """Test BG_COLOR constant is defined."""
-        MenuScene = mock_scene_class
-        assert hasattr(MenuScene, 'BG_COLOR')
-        assert MenuScene.BG_COLOR == (20, 20, 30)
-
     def test_stores_width_and_height(self, mock_scene_class):
         """Test scene stores width and height."""
         MenuScene = mock_scene_class

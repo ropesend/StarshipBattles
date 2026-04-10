@@ -54,12 +54,6 @@ def mock_asset_loader():
 class TestRaceFlagGalleryCreation:
     """Tests for RaceFlagGallery initialization."""
 
-    def test_race_flag_gallery_can_be_imported(self):
-        """RaceFlagGallery can be imported from separate module."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
-
-        assert RaceFlagGallery is not None
-
     def test_race_flag_gallery_has_button_list(self):
         """RaceFlagGallery has asset_buttons list attribute."""
         from game.ui.panels.race_flag_gallery import RaceFlagGallery

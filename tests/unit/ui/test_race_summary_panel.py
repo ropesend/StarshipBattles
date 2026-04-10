@@ -125,12 +125,6 @@ def mock_asset_loader():
 class TestRaceSummaryPanelCreation:
     """Tests for RaceSummaryPanel initialization."""
 
-    def test_race_summary_panel_can_be_imported(self):
-        """RaceSummaryPanel can be imported from separate module."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        assert RaceSummaryPanel is not None
-
     def test_race_summary_panel_has_expected_attributes(self):
         """RaceSummaryPanel has expected UI element attributes."""
         from game.ui.panels.race_summary_panel import RaceSummaryPanel
