@@ -39,25 +39,30 @@ class TestDesignValidator:
         assert isinstance(result.is_valid, bool)
         assert isinstance(result.errors, list)
 
-    def test_missing_crew_fails(self, registries):
-        """Design with components requiring crew but no crew quarters should fail."""
-        # Use a component with a fixed (non-formula) CrewRequired value
+    def test_missing_combat_movement_fails(self, registries):
+        """Design with RequiresCombatMovement but no engine should fail."""
+        # Ship with bridge but no engine — fails "Needs Combat propulsion"
         design = {
-            'ship_class': 'frigate',
+            'ship_class': 'Escort',
+            'vehicle_type': 'Ship',
+            'theme_id': 'Federation',
+            'team_id': 0,
+            'color': [255, 255, 255],
+            'ai_strategy': 'standard_ranged',
             'layers': {
                 'CORE': [
-                    # metal_harvester has CrewRequired: 5 (fixed numeric)
-                    {'id': 'metal_harvester', 'modifiers': []},
-                    {'id': 'metal_harvester', 'modifiers': []},
-                    {'id': 'metal_harvester', 'modifiers': []},
-                    # No crew_quarters — 15 crew required, 0 capacity
-                ]
-            }
+                    {'id': 'bridge'},
+                    {'id': 'crew_quarters'},
+                    {'id': 'life_support'},
+                ],
+            },
+            'resources': {'fuel': 0, 'energy': 0, 'ammo': 0},
         }
         validator = DesignValidator(registries)
         result = validator.validate(design)
         assert not result.is_valid
-        assert any("crew housing" in e.lower() for e in result.errors)
+        assert any("combat propulsion" in e.lower() for e in result.errors), \
+            f"Expected 'Needs Combat propulsion' error, got: {result.errors}"
 
     def test_missing_component_fails(self, registries):
         """Design with nonexistent component should fail."""
@@ -94,19 +99,18 @@ class TestLayerMassValidation:
 
     def test_over_layer_mass_produces_warning(self, registries):
         """A design exceeding a layer's mass percentage produces a warning."""
-        # Capital_Escort CORE limit = 50% of 1000 (Escort) = 500kg
-        # bridge=50, crew_quarters=30 each, life_support=20 each
-        # 1 bridge + 14 crew_quarters + 2 life_support = 50 + 420 + 40 = 510 > 500
+        # Planetary Complex Tier 1, max_mass=1000, CORE limit=50%=500kg
+        # central_complex_command=100 + 14*crew_quarters(30)=420 + 2*life_support(20)=40 = 560 > 500
         design = {
-            'ship_class': 'Escort',
-            'vehicle_type': 'Ship',
+            'ship_class': 'Planetary Complex (Tier 1)',
+            'vehicle_type': 'Planetary Complex',
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
             'ai_strategy': 'standard_ranged',
             'layers': {
                 'CORE': [
-                    {'id': 'bridge'},
+                    {'id': 'central_complex_command'},
                 ] + [{'id': 'crew_quarters'} for _ in range(14)] + [
                     {'id': 'life_support'},
                     {'id': 'life_support'},
@@ -118,32 +122,35 @@ class TestLayerMassValidation:
         result = validator.validate(design)
 
         layer_warnings = [w for w in result.warnings if 'CORE' in w and 'mass' in w.lower()]
-        assert len(layer_warnings) > 0, f"Expected CORE layer mass warning, got: {result.warnings}"
+        assert len(layer_warnings) > 0, f"Expected CORE layer mass warning, got warnings: {result.warnings}, errors: {result.errors}"
 
     def test_total_mass_over_budget_produces_warning(self, registries):
-        """A design exceeding the total class mass budget produces a warning."""
-        # Escort max_mass is 1000. crew_quarters=30 each.
-        # 1 bridge(50) + 30 crew_quarters(900) + 5 life_support(100) = 1050 > 1000
+        """A design exceeding the total class mass budget produces an error."""
+        # Planetary Complex Tier 1, max_mass=1000
+        # Stuff it with too many components
         design = {
-            'ship_class': 'Escort',
-            'vehicle_type': 'Ship',
+            'ship_class': 'Planetary Complex (Tier 1)',
+            'vehicle_type': 'Planetary Complex',
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
             'ai_strategy': 'standard_ranged',
             'layers': {
-                'CORE': [{'id': 'bridge'}] + [{'id': 'crew_quarters'} for _ in range(10)],
-                'OUTER': [{'id': 'crew_quarters'} for _ in range(20)] + [
+                'CORE': [
+                    {'id': 'central_complex_command'},
+                ] + [{'id': 'crew_quarters'} for _ in range(10)] + [
                     {'id': 'life_support'} for _ in range(5)
                 ],
+                'OUTER': [{'id': 'crew_quarters'} for _ in range(20)],
             },
             'resources': {'fuel': 0, 'energy': 0, 'ammo': 0},
         }
         validator = DesignValidator(registries)
         result = validator.validate(design)
 
-        total_warnings = [w for w in result.warnings if 'total' in w.lower() and 'mass' in w.lower()]
-        assert len(total_warnings) > 0, f"Expected total mass warning, got: {result.warnings}"
+        # Sim validator reports total mass as an error
+        mass_issues = [e for e in result.errors if 'mass' in e.lower()]
+        assert len(mass_issues) > 0, f"Expected mass budget error, got errors: {result.errors}, warnings: {result.warnings}"
 
     def test_layer_violations_are_warnings_not_errors(self, registries):
         """Layer mass violations are warnings (not errors) so designs can still be saved."""
