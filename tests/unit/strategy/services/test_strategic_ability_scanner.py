@@ -18,10 +18,20 @@ class MockFacility:
     design_data: Dict[str, Any]
     is_operational: bool = True
     instance_id: str = "fac-1"
-    component_states: Dict[str, bool] = field(default_factory=dict)
+    component_states: Dict[str, Any] = field(default_factory=dict)
 
     def is_component_active(self, comp_id):
         return self.component_states.get(comp_id, True)
+
+    def get_activation_state(self, component_key: str):
+        """Return ComponentActivationState for a component (mirrors PlanetaryFacility)."""
+        from game.strategy.data.component_activation_state import ComponentActivationState
+        data = self.component_states.get(component_key)
+        if data is None:
+            return ComponentActivationState()
+        if isinstance(data, dict):
+            return ComponentActivationState.from_dict(data)
+        return ComponentActivationState()
 
 
 @dataclass
@@ -55,6 +65,28 @@ def _make_facility_with_ability(ability_key, ability_data, comp_id="comp1"):
                 ]
             }
         }
+    )
+
+
+def _make_facility_with_activation(
+    ability_key, ability_data, phase, comp_id="comp1", layer="CORE", index=0
+):
+    """Helper to create a facility with a component at a specific activation phase.
+
+    Sets up both the design_data (so the ability is discoverable) and the
+    component_states (so the activation state can be checked).
+    """
+    comp_key = f"{layer}:{index}:{comp_id}"
+    state_data = {"phase": phase, "ability_name": ability_key}
+    return MockFacility(
+        design_data={
+            "layers": {
+                layer: [
+                    {"id": comp_id, "abilities": {ability_key: ability_data}}
+                ]
+            }
+        },
+        component_states={comp_key: state_data},
     )
 
 
@@ -121,19 +153,23 @@ class TestFindAbilitiesInScope:
     """Test scoped ability discovery."""
 
     def _make_galaxy_mock(self, planets_at_hex=None, system_planets=None):
+        from game.core.hex_math import HexCoord
         galaxy = MagicMock()
 
+        # Sector scope: get_planet_global_hex -> get_planets_at_global_hex
+        galaxy.get_planet_global_hex.return_value = HexCoord(5, 5)
         if planets_at_hex is not None:
             galaxy.get_planets_at_global_hex.return_value = planets_at_hex
         else:
             galaxy.get_planets_at_global_hex.return_value = []
 
+        # System scope: get_system_of_planet -> system.planets
         if system_planets is not None:
             mock_system = MagicMock()
             mock_system.planets = system_planets
-            galaxy.get_system_at_location.return_value = mock_system
+            galaxy.get_system_of_planet.return_value = mock_system
         else:
-            galaxy.get_system_at_location.return_value = None
+            galaxy.get_system_of_planet.return_value = None
 
         return galaxy
 
@@ -223,19 +259,23 @@ class TestPlayerAndEnemyScopeResolution:
     """Test PLAYER_* and ENEMY_* scope resolution in find_abilities_in_scope."""
 
     def _make_galaxy_mock(self, planets_at_hex=None, system_planets=None):
+        from game.core.hex_math import HexCoord
         galaxy = MagicMock()
 
+        # Sector scope: get_planet_global_hex -> get_planets_at_global_hex
+        galaxy.get_planet_global_hex.return_value = HexCoord(5, 5)
         if planets_at_hex is not None:
             galaxy.get_planets_at_global_hex.return_value = planets_at_hex
         else:
             galaxy.get_planets_at_global_hex.return_value = []
 
+        # System scope: get_system_of_planet -> system.planets
         if system_planets is not None:
             mock_system = MagicMock()
             mock_system.planets = system_planets
-            galaxy.get_system_at_location.return_value = mock_system
+            galaxy.get_system_of_planet.return_value = mock_system
         else:
-            galaxy.get_system_at_location.return_value = None
+            galaxy.get_system_of_planet.return_value = None
 
         return galaxy
 
@@ -337,6 +377,244 @@ class TestPlayerAndEnemyScopeResolution:
 
         results = find_abilities_in_scope("TestAbility", owned, galaxy, empire, "enemy_sector")
         assert len(results) == 0
+
+
+class TestActivationStateFiltering:
+    """Test that require_active filters by ComponentActivationState."""
+
+    def test_require_active_finds_active_component(self):
+        """require_active=True should include abilities on ACTIVE components."""
+        planet = MockPlanet()
+        planet.facilities = [
+            _make_facility_with_activation(
+                "GeologicStabilizer",
+                {"energy_drain_rate": 50.0},
+                phase="active",
+            )
+        ]
+
+        results = find_abilities_at_planet(
+            "GeologicStabilizer", planet, require_active=True
+        )
+        assert len(results) == 1
+        assert results[0]["energy_drain_rate"] == 50.0
+
+    def test_require_active_skips_inactive_component(self):
+        """require_active=True should exclude abilities on INACTIVE components."""
+        planet = MockPlanet()
+        planet.facilities = [
+            _make_facility_with_activation(
+                "GeologicStabilizer",
+                {"energy_drain_rate": 50.0},
+                phase="inactive",
+            )
+        ]
+
+        results = find_abilities_at_planet(
+            "GeologicStabilizer", planet, require_active=True
+        )
+        assert len(results) == 0
+
+    def test_require_active_skips_activating_component(self):
+        """require_active=True should exclude ACTIVATING (not yet ready)."""
+        planet = MockPlanet()
+        planet.facilities = [
+            _make_facility_with_activation(
+                "GeologicStabilizer",
+                {"energy_drain_rate": 50.0},
+                phase="activating",
+            )
+        ]
+
+        results = find_abilities_at_planet(
+            "GeologicStabilizer", planet, require_active=True
+        )
+        assert len(results) == 0
+
+    def test_require_active_skips_deactivating_component(self):
+        """require_active=True should exclude DEACTIVATING (shutting down)."""
+        planet = MockPlanet()
+        planet.facilities = [
+            _make_facility_with_activation(
+                "GeologicStabilizer",
+                {"energy_drain_rate": 50.0},
+                phase="deactivating",
+            )
+        ]
+
+        results = find_abilities_at_planet(
+            "GeologicStabilizer", planet, require_active=True
+        )
+        assert len(results) == 0
+
+    def test_default_require_active_false_includes_all(self):
+        """Default require_active=False should return abilities regardless of phase."""
+        planet = MockPlanet()
+        planet.facilities = [
+            _make_facility_with_activation(
+                "GeologicStabilizer",
+                {"energy_drain_rate": 50.0},
+                phase="inactive",
+            )
+        ]
+
+        # Default (no require_active) — should still find it
+        results = find_abilities_at_planet("GeologicStabilizer", planet)
+        assert len(results) == 1
+
+    def test_require_active_with_mixed_components(self):
+        """Only ACTIVE components returned when require_active=True with mixed states."""
+        active_fac = _make_facility_with_activation(
+            "GeologicStabilizer",
+            {"energy_drain_rate": 50.0, "scope": "system"},
+            phase="active",
+            comp_id="geo_stab_1",
+        )
+        inactive_fac = _make_facility_with_activation(
+            "GeologicStabilizer",
+            {"energy_drain_rate": 25.0, "scope": "sector"},
+            phase="inactive",
+            comp_id="geo_stab_2",
+        )
+
+        planet = MockPlanet()
+        planet.facilities = [active_fac, inactive_fac]
+
+        results = find_abilities_at_planet(
+            "GeologicStabilizer", planet, require_active=True
+        )
+        assert len(results) == 1
+        assert results[0]["energy_drain_rate"] == 50.0
+
+
+class TestScopeResolutionCoordinateCorrectness:
+    """Test that scope resolution uses correct coordinate types.
+
+    _resolve_planets_for_scope must use global hex coordinates (not local
+    planet.location) when calling Galaxy spatial methods.
+    """
+
+    def test_system_scope_uses_get_system_of_planet(self):
+        """System scope must use get_system_of_planet, not get_system_at_location.
+
+        Planet.location is local (relative to system center). Passing it to
+        get_system_at_location (which expects global coords) returns None for
+        most planets, silently breaking system-scope lookups.
+        """
+        from game.core.hex_math import HexCoord
+
+        # Planet at local coord (2,3) — NOT a system center
+        target = MockPlanet(name="Target", owner_id=0, location=HexCoord(2, 3))
+        sibling = MockPlanet(name="Sibling", owner_id=0, location=HexCoord(1, 0))
+        sibling.facilities = [
+            _make_facility_with_ability("GeologicStabilizer", {"energy_drain_rate": 50.0})
+        ]
+
+        mock_system = MagicMock()
+        mock_system.planets = [target, sibling]
+
+        galaxy = MagicMock()
+        # get_system_at_location with local coord returns None (realistic)
+        galaxy.get_system_at_location.return_value = None
+        # get_system_of_planet returns the correct system
+        galaxy.get_system_of_planet.return_value = mock_system
+
+        empire = MockEmpire(id=0)
+
+        results = find_abilities_in_scope(
+            "GeologicStabilizer", target, galaxy, empire, "system"
+        )
+        assert len(results) == 1
+        assert results[0]["energy_drain_rate"] == 50.0
+
+    def test_sector_scope_uses_global_hex_not_local(self):
+        """Sector scope must convert planet.location to global hex before lookup.
+
+        Planet.location is local. get_planets_at_global_hex expects global
+        coordinates. The scanner must call get_planet_global_hex first.
+        """
+        from game.core.hex_math import HexCoord
+
+        local_coord = HexCoord(2, 3)
+        global_coord = HexCoord(52, 33)  # system at (50,30) + local (2,3)
+
+        target = MockPlanet(name="Target", owner_id=0, location=local_coord)
+        colocated = MockPlanet(name="Colocated", owner_id=0, location=local_coord)
+        colocated.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 1.5})
+        ]
+
+        galaxy = MagicMock()
+        galaxy.get_planet_global_hex.return_value = global_coord
+        # Local coord lookup returns empty (realistic — no planets at global (2,3))
+        galaxy.get_planets_at_global_hex.side_effect = (
+            lambda hex_c: [target, colocated] if hex_c == global_coord else []
+        )
+
+        empire = MockEmpire(id=0)
+
+        results = find_abilities_in_scope(
+            "TestAbility", target, galaxy, empire, "sector"
+        )
+        assert len(results) == 1
+        assert results[0]["multiplier"] == 1.5
+
+    def test_system_scope_finds_stabilizer_on_sibling_planet(self):
+        """A system-scope stabilizer on Planet A must protect Planet B in same system."""
+        from game.core.hex_math import HexCoord
+
+        planet_a = MockPlanet(name="A", owner_id=0, location=HexCoord(1, 0))
+        planet_a.facilities = [
+            _make_facility_with_ability(
+                "GeologicStabilizer",
+                {"energy_drain_rate": 50.0, "scope": "system"}
+            )
+        ]
+        planet_b = MockPlanet(name="B", owner_id=0, location=HexCoord(0, 2))
+
+        mock_system = MagicMock()
+        mock_system.planets = [planet_a, planet_b]
+
+        galaxy = MagicMock()
+        galaxy.get_system_of_planet.return_value = mock_system
+        # Simulate the real failure: local coord lookup misses
+        galaxy.get_system_at_location.return_value = None
+
+        empire = MockEmpire(id=0)
+
+        # Scan from planet B — should find stabilizer on planet A
+        results = find_abilities_in_scope(
+            "GeologicStabilizer", planet_b, galaxy, empire, "system"
+        )
+        assert len(results) == 1, (
+            "System-scope stabilizer on sibling planet must be found"
+        )
+
+    def test_sector_scope_finds_ability_at_correct_global_hex(self):
+        """Sector scope must find abilities on co-located planet via global hex."""
+        from game.core.hex_math import HexCoord
+
+        global_hex = HexCoord(50, 30)
+
+        planet_a = MockPlanet(name="A", owner_id=0, location=HexCoord(0, 0))
+        planet_a.facilities = [
+            _make_facility_with_ability("TestAbility", {"multiplier": 2.0})
+        ]
+        planet_b = MockPlanet(name="B", owner_id=0, location=HexCoord(0, 0))
+
+        galaxy = MagicMock()
+        galaxy.get_planet_global_hex.return_value = global_hex
+        galaxy.get_planets_at_global_hex.side_effect = (
+            lambda hex_c: [planet_a, planet_b] if hex_c == global_hex else []
+        )
+
+        empire = MockEmpire(id=0)
+
+        results = find_abilities_in_scope(
+            "TestAbility", planet_b, galaxy, empire, "sector"
+        )
+        assert len(results) == 1
+        assert results[0]["multiplier"] == 2.0
 
 
 class TestAggregateMultipliers:

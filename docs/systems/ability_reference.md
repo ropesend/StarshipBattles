@@ -266,18 +266,18 @@ Regenerates shields per second.
 | Base Class | `StaticValueAbility` |
 
 Provides sensor/targeting attack bonus for to-hit calculations.
-Supports fleet/system/empire scope — a single component can provide
-a to-hit bonus to all friendly ships in the battle group.
+Supports fleet/system/allied_system/empire scope — a single component can provide
+a to-hit bonus to all friendly ships in the battle group or star system.
 
 **Data Format:** Dict with value and optional scope
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | value | float | Yes | Attack bonus (+) or penalty (-) |
-| scope | string | No | `"self"` (default), `"fleet"`, `"system"`, or `"empire"` |
+| scope | string | No | `"self"` (default), `"fleet"`, `"system"`, `"allied_system"`, or `"empire"` |
 | stack_group | string | No | Stacking group (same group = MAX, different = SUM) |
 
-**Scope:** `self` (default), `fleet`, `system`, `empire`
+**Scope:** `self` (default), `fleet`, `system`, `allied_system`, `empire`
 
 **Example:** `{"ToHitAttackModifier": {"value": 2.0, "scope": "fleet", "stack_group": "FleetSensor"}}`
 
@@ -298,12 +298,18 @@ a to-hit bonus to all friendly ships in the battle group.
 | Base Class | `StaticValueAbility` |
 
 Provides evasion/defense bonus for to-hit calculations.
+Supports fleet/system/allied_system/empire scope — a single component can provide
+an evasion bonus to all friendly ships in the battle group or star system.
 
-**Data Format:** Scalar (bonus value, positive or negative)
+**Data Format:** Dict with value and optional scope
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | value | float | Yes | Defense bonus (+) or penalty (-) |
+| scope | string | No | `"self"` (default), `"fleet"`, `"system"`, `"allied_system"`, or `"empire"` |
+| stack_group | string | No | Stacking group (same group = MAX, different = SUM) |
+
+**Scope:** `self` (default), `fleet`, `system`, `allied_system`, `empire`
 
 **Stat Bindings:** None (static value, not modified)
 

@@ -738,7 +738,8 @@ class SuperweaponOrderProcessor:
         for empire in empires:
             for scope in scopes:
                 stabilizers = find_abilities_in_scope(
-                    ability_name, reference_entity, galaxy, empire, scope
+                    ability_name, reference_entity, galaxy, empire, scope,
+                    require_active=True
                 )
                 if stabilizers:
                     return True

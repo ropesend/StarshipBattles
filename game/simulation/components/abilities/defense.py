@@ -52,12 +52,13 @@ class ShieldRegeneration(SimpleMultiplierAbility):
 class ToHitAttackModifier(StaticValueAbility):
     """Modifier for to-hit attack bonuses.
 
-    Supports fleet/system/empire scope — a single component can provide
-    a to-hit bonus to all friendly ships in the battle group.
+    Supports fleet/system/allied_system/empire scope — a single component can
+    provide a to-hit bonus to all friendly ships in the battle group or system.
     """
     allowed_scopes = [
         AbilityScope.SELF, AbilityScope.FLEET,
-        AbilityScope.SYSTEM, AbilityScope.EMPIRE,
+        AbilityScope.SYSTEM, AbilityScope.ALLIED_SYSTEM,
+        AbilityScope.EMPIRE,
     ]
 
     ui_label = 'Targeting'
@@ -68,12 +69,13 @@ class ToHitAttackModifier(StaticValueAbility):
 class ToHitDefenseModifier(StaticValueAbility):
     """Modifier for to-hit defense bonuses.
 
-    Supports fleet/system/empire scope — a single component can provide
-    an evasion bonus to all friendly ships in the battle group.
+    Supports fleet/system/allied_system/empire scope — a single component can
+    provide an evasion bonus to all friendly ships in the battle group or system.
     """
     allowed_scopes = [
         AbilityScope.SELF, AbilityScope.FLEET,
-        AbilityScope.SYSTEM, AbilityScope.EMPIRE,
+        AbilityScope.SYSTEM, AbilityScope.ALLIED_SYSTEM,
+        AbilityScope.EMPIRE,
     ]
 
     ui_label = 'Evasion'

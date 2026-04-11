@@ -515,6 +515,142 @@
             }
         },
         {
+            "id": "tactical_data_link",
+            "name": "Tactical Data Link",
+            "type": "Sensor",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 25,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 0.5,
+                    "scope": "fleet",
+                    "stack_group": "TacticalDataLink"
+                },
+                "RequiresCommandAndControl": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 15.0,
+                        "trigger": "constant"
+                    }
+                ],
+                "CrewRequired": 20
+            },
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "metals": 300,
+                "vapors": 200,
+                "exotics": 150
+            }
+        },
+        {
+            "id": "electronic_warfare_suite",
+            "name": "Electronic Warfare Suite",
+            "type": "Electronics",
+            "mass": 250,
+            "hp": 120,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 26,
+            "abilities": {
+                "ToHitDefenseModifier": {
+                    "value": 0.5,
+                    "scope": "fleet",
+                    "stack_group": "ElectronicWarfare"
+                },
+                "RequiresCommandAndControl": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 15.0,
+                        "trigger": "constant"
+                    }
+                ],
+                "CrewRequired": 20
+            },
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "metals": 350,
+                "vapors": 250,
+                "exotics": 200
+            }
+        },
+        {
+            "id": "system_defense_uplink",
+            "name": "System Defense Uplink",
+            "type": "Sensor",
+            "mass": 500,
+            "hp": 400,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 25,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 0.3,
+                    "scope": "allied_system",
+                    "stack_group": "SystemDefenseUplink"
+                },
+                "RequiresCommandAndControl": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 25.0,
+                        "trigger": "constant"
+                    }
+                ],
+                "CrewRequired": 30
+            },
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "metals": 800,
+                "vapors": 400,
+                "exotics": 300
+            }
+        },
+        {
+            "id": "system_countermeasures_network",
+            "name": "System Countermeasures Network",
+            "type": "Electronics",
+            "mass": 600,
+            "hp": 350,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 26,
+            "abilities": {
+                "ToHitDefenseModifier": {
+                    "value": 0.3,
+                    "scope": "allied_system",
+                    "stack_group": "SystemCountermeasures"
+                },
+                "RequiresCommandAndControl": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 25.0,
+                        "trigger": "constant"
+                    }
+                ],
+                "CrewRequired": 30
+            },
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "metals": 900,
+                "vapors": 500,
+                "exotics": 400
+            }
+        },
+        {
             "id": "multiplex_tracking",
             "name": "Multiplex Tracking",
             "type": "Electronics",

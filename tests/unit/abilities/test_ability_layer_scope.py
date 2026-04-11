@@ -259,6 +259,34 @@ class TestAbilityScopeNewValues:
         assert 'does not support scope' in str(exc_info.value)
 
 
+class TestToHitModifierAlliedSystemScope:
+    """Tests that ToHitAttackModifier and ToHitDefenseModifier accept allied_system scope."""
+
+    @pytest.fixture
+    def mock_component(self):
+        mock = MagicMock()
+        mock.ship = MagicMock()
+        return mock
+
+    def test_to_hit_attack_modifier_accepts_allied_system(self, mock_component):
+        """ToHitAttackModifier should accept allied_system scope."""
+        from game.simulation.components.abilities.defense import ToHitAttackModifier
+        from game.simulation.components.abilities.base import AbilityScope
+
+        data = {'value': 0.3, 'scope': 'allied_system'}
+        ab = ToHitAttackModifier(mock_component, data)
+        assert ab.scope == AbilityScope.ALLIED_SYSTEM
+
+    def test_to_hit_defense_modifier_accepts_allied_system(self, mock_component):
+        """ToHitDefenseModifier should accept allied_system scope."""
+        from game.simulation.components.abilities.defense import ToHitDefenseModifier
+        from game.simulation.components.abilities.base import AbilityScope
+
+        data = {'value': 0.3, 'scope': 'allied_system'}
+        ab = ToHitDefenseModifier(mock_component, data)
+        assert ab.scope == AbilityScope.ALLIED_SYSTEM
+
+
 class TestAbilityAllowedScopes:
     """Tests for the allowed_scopes class attribute."""
 

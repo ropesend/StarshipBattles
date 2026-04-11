@@ -10,7 +10,7 @@ Used by HarvestingEngine, ProductionEngine, and SuperweaponOrderProcessor.
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from game.core.patterns.layer_iterator import iter_components
+from game.core.patterns.layer_iterator import iter_keyed_components
 from game.strategy.services.component_inspector import get_component_abilities
 
 if TYPE_CHECKING:
@@ -25,6 +25,7 @@ def find_abilities_at_planet(
     ability_key: str,
     planet: 'Planet',
     registries=None,
+    require_active: bool = False,
 ) -> List[Dict[str, Any]]:
     """Find all instances of an ability on a planet's operational facilities.
 
@@ -32,6 +33,9 @@ def find_abilities_at_planet(
         ability_key: Ability registry key (e.g., 'ResourceHarvestBooster').
         planet: Planet whose facilities to scan.
         registries: Optional GameRegistries for component lookup.
+        require_active: If True, only include abilities whose component is in
+            the ACTIVE activation phase. Defaults to False for backward
+            compatibility (always-on abilities like harvest boosters).
 
     Returns:
         List of ability data dicts found.
@@ -43,9 +47,13 @@ def find_abilities_at_planet(
     for facility in facilities:
         if not getattr(facility, 'is_operational', True):
             continue
-        for comp in iter_components(facility.design_data):
+        for comp_key, _layer, comp in iter_keyed_components(facility.design_data):
             ability_data = _extract_ability(comp, ability_key, registries)
             if ability_data is not None:
+                if require_active and not _is_component_functionally_active(
+                    facility, comp_key
+                ):
+                    continue
                 if isinstance(ability_data, list):
                     results.extend(ability_data)
                 else:
@@ -60,6 +68,7 @@ def find_abilities_in_scope(
     empire: 'Empire',
     scope: str,
     registries=None,
+    require_active: bool = False,
 ) -> List[Dict[str, Any]]:
     """Find all instances of an ability affecting a planet at a given scope.
 
@@ -71,6 +80,8 @@ def find_abilities_in_scope(
         scope: Scope string ('planet', 'sector', 'system', 'empire', 'allied_empire',
                'player_sector', 'player_system', 'enemy_sector', 'enemy_system').
         registries: Optional GameRegistries.
+        require_active: If True, only include abilities whose component is in
+            the ACTIVE activation phase.
 
     Returns:
         List of ability data dicts with their scope metadata.
@@ -81,7 +92,9 @@ def find_abilities_in_scope(
 
     results = []
     for planet in planets_to_scan:
-        results.extend(find_abilities_at_planet(ability_key, planet, registries))
+        results.extend(find_abilities_at_planet(
+            ability_key, planet, registries, require_active=require_active
+        ))
 
     return results
 
@@ -153,11 +166,14 @@ def _resolve_planets_for_scope(
         return [target_planet]
 
     if scope in ('sector', 'allied_sector', 'player_sector', 'enemy_sector'):
-        location = getattr(target_planet, 'location', None)
+        get_global_hex = getattr(galaxy, 'get_planet_global_hex', None) if galaxy else None
         get_planets = getattr(galaxy, 'get_planets_at_global_hex', None) if galaxy else None
-        if location is None or get_planets is None:
+        if get_global_hex is None or get_planets is None:
             return [target_planet]
-        all_planets = get_planets(location)
+        global_hex = get_global_hex(target_planet)
+        if global_hex is None:
+            return [target_planet]
+        all_planets = get_planets(global_hex)
         if not isinstance(all_planets, list):
             return [target_planet]
         if scope == 'enemy_sector':
@@ -167,11 +183,10 @@ def _resolve_planets_for_scope(
     if scope in ('system', 'allied_system', 'player_system', 'enemy_system'):
         if galaxy is None:
             return [target_planet]
-        location = getattr(target_planet, 'location', None)
-        get_system = getattr(galaxy, 'get_system_at_location', None)
-        if get_system is None or location is None:
+        get_system = getattr(galaxy, 'get_system_of_planet', None)
+        if get_system is None:
             return [target_planet]
-        system = get_system(location)
+        system = get_system(target_planet)
         if system is None:
             return [target_planet]
         planets = getattr(system, 'planets', [])
@@ -189,6 +204,27 @@ def _resolve_planets_for_scope(
         return list(getattr(empire, 'colonies', []))
 
     return [target_planet]
+
+
+def _is_component_functionally_active(facility, comp_key: str) -> bool:
+    """Check if a component is in the ACTIVE activation phase.
+
+    Uses the facility's get_activation_state method to look up the
+    ComponentActivationState for the given component key.
+
+    Args:
+        facility: Facility object (PlanetaryFacility or compatible).
+        comp_key: Composite component key (e.g., "CORE:0:geologic_stabilizer_system").
+
+    Returns:
+        True if the component is in the ACTIVE phase, False otherwise.
+        Returns False if the facility does not support activation state.
+    """
+    get_state = getattr(facility, 'get_activation_state', None)
+    if get_state is None:
+        return False
+    state = get_state(comp_key)
+    return state.is_functionally_active
 
 
 def _extract_ability(
