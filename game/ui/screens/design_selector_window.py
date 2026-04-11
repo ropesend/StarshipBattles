@@ -372,7 +372,7 @@ class DesignSelectorWindow(UIWindow):
         name_text = design.name
 
         UILabel(
-            relative_rect=pygame.Rect(name_x, 5, 200, 25),
+            relative_rect=pygame.Rect(name_x, 5, 350, 30),
             text=name_text,
             manager=self.ui_manager,
             container=row
@@ -380,7 +380,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Ship class
         UILabel(
-            relative_rect=pygame.Rect(name_x, 30, 150, 20),
+            relative_rect=pygame.Rect(name_x, 35, 250, 20),
             text=f"Class: {design.ship_class}",
             manager=self.ui_manager,
             container=row
@@ -388,7 +388,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Vehicle type
         UILabel(
-            relative_rect=pygame.Rect(name_x + 155, 30, 150, 20),
+            relative_rect=pygame.Rect(name_x + 255, 35, 180, 20),
             text=f"Type: {design.vehicle_type}",
             manager=self.ui_manager,
             container=row
@@ -396,7 +396,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Mass
         UILabel(
-            relative_rect=pygame.Rect(name_x + 315, 30, 100, 20),
+            relative_rect=pygame.Rect(name_x + 440, 35, 100, 20),
             text=f"Mass: {design.mass:.0f}",
             manager=self.ui_manager,
             container=row
