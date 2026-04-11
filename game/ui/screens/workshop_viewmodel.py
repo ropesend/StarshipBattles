@@ -619,6 +619,21 @@ class WorkshopViewModel:
         self._ship.ai_strategy = strategy_id
         self._emit_ship_updated()
 
+    def set_ship_design_role(self, role_id: str) -> None:
+        """Set the ship's design role via the ViewModel.
+
+        Args:
+            role_id: Design role identifier (e.g., "line_combatant", "carrier")
+        """
+        if not self._require_ship("set design role"):
+            return
+
+        if self._ship.design_role == role_id:
+            return
+
+        self._ship.design_role = role_id
+        self._emit_ship_updated()
+
     # ─────────────────────────────────────────────────────────────────
     # Quick-Add (Component Palette '+' Button)
     # ─────────────────────────────────────────────────────────────────

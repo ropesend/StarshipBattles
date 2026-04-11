@@ -165,6 +165,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         # === AI & Targeting ===
         self.ai_strategy: str = "standard_ranged"
+        self.design_role: str = "general_purpose"
         self.source_file: Optional[str] = None
         self.current_target: Optional[Any] = None
         self.secondary_targets: List[Any] = []
