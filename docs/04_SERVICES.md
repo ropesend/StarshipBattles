@@ -144,6 +144,7 @@ class DesignResult:
 | `add_component_instance` | `(ship: Ship, component: Component, layer: LayerType) -> DesignResult` | Add a pre-constructed component instance to ship |
 | `add_component_bulk` | `(ship: Ship, component_id: str, layer: LayerType, count: int) -> DesignResult` | Add multiple copies of a component |
 | `remove_component` | `(ship: Ship, layer: LayerType, index: int) -> DesignResult` | Remove component by layer and index |
+| `move_component` | `(ship: Ship, source_layer: LayerType, index: int, target_layer: LayerType) -> DesignResult` | Move component between layers (atomic remove + re-add, preserves instance). Mass budget is advisory — moves are not blocked by it. |
 | `change_class` | `(ship: Ship, new_class: str, migrate_components: bool = True) -> DesignResult` | Change vehicle class, optionally migrating components (default: migrate) |
 | `validate_design` | `(ship: Ship) -> ValidationResult` | Full design validation |
 | `get_available_components` | `(ship: Ship, layer: LayerType) -> List[str]` | Get component IDs valid for the given layer |
@@ -177,6 +178,19 @@ if result.success:
     summary = service.get_ship_summary(ship)
     print(f"{summary['name']}: {summary['mass']}/{summary['max_mass']}kg")
 ```
+
+#### WorkshopViewModel Higher-Level Operations
+
+The `WorkshopViewModel` (`game/ui/screens/workshop_viewmodel.py`) composes
+`VehicleDesignService` calls with layer resolution and UI state management.
+These are not service methods but ViewModel methods that delegate to the service.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `resolve_target_layer` | `(component: Component, selected_layer: Optional[LayerType]) -> Optional[LayerType]` | Find best layer for quick-add (innermost valid, or nearest to selection) |
+| `quick_add_component` | `(component_id: str, selected_layer?: LayerType, count?: int) -> bool` | Add component via palette "+" button with auto layer resolution |
+| `move_component` | `(source_layer: LayerType, index: int, target_layer: LayerType) -> bool` | Move single component between layers (remove + re-add instance) |
+| `move_component_group` | `(group_key: str, source_layer: LayerType, target_layer: LayerType) -> bool` | Move all components in a group between layers |
 
 ---
 

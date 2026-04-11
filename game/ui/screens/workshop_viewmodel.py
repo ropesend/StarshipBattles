@@ -18,6 +18,7 @@ from game.ui.screens.builder_utils import BuilderEvents
 from game.ui.colors import VEHICLE_DEFAULT
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+from game.core.constants import LayerType
 
 import logging
 
@@ -25,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from game.core.constants import LayerType
     from game.simulation.components.component import Component
     from game.simulation.services.vehicle_design_service import DesignResult
     from game.ui.screens.workshop_context import WorkshopContext
@@ -618,3 +618,219 @@ class WorkshopViewModel:
 
         self._ship.ai_strategy = strategy_id
         self._emit_ship_updated()
+
+    # ─────────────────────────────────────────────────────────────────
+    # Quick-Add (Component Palette '+' Button)
+    # ─────────────────────────────────────────────────────────────────
+
+    def resolve_target_layer(
+        self, component: Component, selected_layer: Optional[LayerType] = None
+    ) -> Optional[LayerType]:
+        """Resolve which layer to place a component in for quick-add.
+
+        Rules:
+        1. If selected_layer is valid for the component, use it.
+        2. If selected_layer is invalid, find the nearest valid layer
+           (preferring inner layers on ties).
+        3. If no selected_layer, use the innermost valid layer.
+        4. HULL is never a valid quick-add target.
+
+        Args:
+            component: The component template to check placement for.
+            selected_layer: Currently active/filtered layer, or None.
+
+        Returns:
+            The target LayerType, or None if no valid layer exists.
+        """
+        if not self._ship:
+            return None
+
+        from game.simulation.validation.ship_validator import LayerRestrictionDefinitionRule
+        restriction_rule = LayerRestrictionDefinitionRule()
+
+        # Collect valid non-HULL layers
+        valid_layers = []
+        for l_type in self._ship.layers:
+            if l_type == LayerType.HULL:
+                continue
+            if restriction_rule.validate(self._ship, component, l_type).is_valid:
+                valid_layers.append(l_type)
+
+        if not valid_layers:
+            return None
+
+        # If selected layer is valid, use it directly
+        if selected_layer is not None and selected_layer in valid_layers:
+            return selected_layer
+
+        # If selected layer given but invalid, find nearest valid layer
+        if selected_layer is not None:
+            valid_layers.sort(
+                key=lambda l: (abs(l.value - selected_layer.value), l.value)
+            )
+            return valid_layers[0]
+
+        # No selection: return innermost valid layer
+        return min(valid_layers, key=lambda l: l.value)
+
+    def quick_add_component(
+        self,
+        component_id: str,
+        selected_layer: Optional[LayerType] = None,
+        count: int = 1,
+    ) -> bool:
+        """Add a component via quick-add ('+' button in component palette).
+
+        Resolves the target layer automatically, then adds the component.
+
+        Args:
+            component_id: ID of the component to add.
+            selected_layer: Currently active/filtered layer, or None.
+            count: Number of copies to add (default 1).
+
+        Returns:
+            True if at least one component was added, False otherwise.
+        """
+        if not self._require_ship("quick-add component"):
+            return False
+
+        from game.simulation.components.component import create_component
+        comp_template = create_component(component_id, registries=self._registries)
+        if comp_template is None:
+            logger.warning("Quick-add failed: component '%s' not found", component_id)
+            return False
+
+        target_layer = self.resolve_target_layer(comp_template, selected_layer)
+        if target_layer is None:
+            logger.warning(
+                "Quick-add failed: no valid layer for '%s'", component_id
+            )
+            return False
+
+        if count > 1:
+            return self.add_component_bulk(component_id, target_layer, count) > 0
+        return self.add_component(component_id, target_layer)
+
+    # ─────────────────────────────────────────────────────────────────
+    # Component Movement Between Layers
+    # ─────────────────────────────────────────────────────────────────
+
+    def resolve_move_target(
+        self,
+        component: Component,
+        source_layer: LayerType,
+        direction: str,
+    ) -> Optional[LayerType]:
+        """Find the next valid layer in the given direction.
+
+        Searches layer-by-layer from source_layer in the specified direction,
+        skipping HULL and layers where the component fails restriction validation.
+
+        Args:
+            component: The component to move.
+            source_layer: Current layer of the component.
+            direction: "up" (toward inner / lower value) or "down" (toward outer).
+
+        Returns:
+            The target LayerType, or None if no valid layer in that direction.
+        """
+        if not self._ship:
+            return None
+
+        from game.simulation.validation.ship_validator import LayerRestrictionDefinitionRule
+        restriction_rule = LayerRestrictionDefinitionRule()
+
+        # Sort ship layers by value, excluding HULL
+        ship_layers = sorted(
+            [l for l in self._ship.layers if l != LayerType.HULL],
+            key=lambda l: l.value,
+        )
+
+        if direction == "up":
+            # Layers with lower value than source, in descending order (nearest first)
+            candidates = [l for l in reversed(ship_layers) if l.value < source_layer.value]
+        else:
+            # Layers with higher value than source, in ascending order (nearest first)
+            candidates = [l for l in ship_layers if l.value > source_layer.value]
+
+        for candidate in candidates:
+            if restriction_rule.validate(self._ship, component, candidate).is_valid:
+                return candidate
+
+        return None
+
+    def move_component(
+        self, source_layer: LayerType, index: int, target_layer: LayerType
+    ) -> bool:
+        """Move a single component from one layer to another.
+
+        Preserves the component instance (modifiers, state). Mass budget
+        violations produce warnings but do not block the move.
+
+        Args:
+            source_layer: Layer to move from.
+            index: Index of the component in the source layer.
+            target_layer: Layer to move to.
+
+        Returns:
+            True if successful, False otherwise.
+        """
+        if not self._require_ship("move component"):
+            return False
+
+        result = self._ship_service.move_component(
+            self._ship, source_layer, index, target_layer
+        )
+        self._last_result = result
+
+        if result.success:
+            self.notify_ship_changed()
+            return True
+        else:
+            logger.warning("Failed to move component: %s", result.errors)
+            return False
+
+    def move_component_group(
+        self,
+        group_key: str,
+        source_layer: LayerType,
+        target_layer: LayerType,
+    ) -> bool:
+        """Move all components matching a group_key from one layer to another.
+
+        Iterates in reverse index order to avoid index shifting during removal.
+
+        Args:
+            group_key: The group key identifying which components to move.
+            source_layer: Layer to move from.
+            target_layer: Layer to move to.
+
+        Returns:
+            True if at least one component was moved, False otherwise.
+        """
+        if not self._require_ship("move component group"):
+            return False
+
+        if source_layer not in self._ship.layers:
+            return False
+
+        from game.ui.screens.builder.grouping_strategies import get_component_group_key
+
+        # Collect indices of matching components (reverse order for safe removal)
+        layer_comps = self._ship.layers[source_layer].components
+        indices = [
+            i for i, c in enumerate(layer_comps)
+            if get_component_group_key(c) == group_key
+        ]
+
+        if not indices:
+            return False
+
+        # Move in reverse index order to avoid shifting
+        for idx in reversed(indices):
+            self._ship_service.move_component(
+                self._ship, source_layer, idx, target_layer
+            )
+
+        self.notify_ship_changed()
+        return True

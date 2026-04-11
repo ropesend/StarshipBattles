@@ -16,7 +16,9 @@ from .structure_list_items import (
     ACTION_ADD_GROUP, ACTION_ADD_INDIVIDUAL,
     ACTION_REMOVE_GROUP, ACTION_REMOVE_INDIVIDUAL,
     ACTION_SELECT_GROUP, ACTION_SELECT_INDIVIDUAL,
-    ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER
+    ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER,
+    ACTION_MOVE_UP_INDIVIDUAL, ACTION_MOVE_DOWN_INDIVIDUAL,
+    ACTION_MOVE_UP_GROUP, ACTION_MOVE_DOWN_GROUP,
 )
 from .grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from .panel_layout_config import StructurePanelLayoutConfig, ComponentItemContext
@@ -220,9 +222,14 @@ class LayerPanel(DropTarget):
                         )
                         self.ui_cache[item_key] = item
                         
+                    # Set move button enabled/disabled state
+                    can_up = self.viewmodel.resolve_move_target(comp_template, l_type, "up") is not None
+                    can_down = self.viewmodel.resolve_move_target(comp_template, l_type, "down") is not None
+                    item.set_move_buttons_enabled(can_up, can_down)
+
                     new_items_list.append(item)
                     y_pos += item.height
-                    
+
                     if is_expanded:
                         for idx, comp in enumerate(comp_list):
                              is_last = (idx == len(comp_list) - 1)
@@ -259,6 +266,9 @@ class LayerPanel(DropTarget):
                                  )
                                  self.ui_cache[ind_key] = ind_item
                                  
+                             # Reuse the group's move state for individuals
+                             ind_item.set_move_buttons_enabled(can_up, can_down)
+
                              new_items_list.append(ind_item)
                              y_pos += ind_item.height
             
@@ -308,6 +318,12 @@ class LayerPanel(DropTarget):
             return ('remove_group', payload)
         elif action == ACTION_REMOVE_INDIVIDUAL:
             return ('remove_individual', payload)
+        elif action in (ACTION_MOVE_UP_INDIVIDUAL, ACTION_MOVE_DOWN_INDIVIDUAL):
+            direction = 'up' if action == ACTION_MOVE_UP_INDIVIDUAL else 'down'
+            return ('move_individual', (payload[0], payload[1], direction))
+        elif action in (ACTION_MOVE_UP_GROUP, ACTION_MOVE_DOWN_GROUP):
+            direction = 'up' if action == ACTION_MOVE_UP_GROUP else 'down'
+            return ('move_group', (payload[0], payload[1], direction))
             
         elif action == ACTION_START_DRAG:
             # Reorder Strategy: Pick up component (remove from game.simulation.entities.ship) and attach to cursor

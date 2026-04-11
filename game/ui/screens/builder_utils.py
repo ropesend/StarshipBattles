@@ -59,9 +59,9 @@ def calculate_dynamic_layer_width(screen_width: int) -> int:
     """
     center = calculate_center_width(screen_width)
 
-    # Layer panel takes 37.5% of center, capped between 375-625px (25% wider than original)
-    dynamic_width = int(center * 0.375)
-    return max(375, min(625, dynamic_width))
+    # Layer panel takes 40% of center, capped between 435-685px (room for move buttons)
+    dynamic_width = int(center * 0.40)
+    return max(435, min(685, dynamic_width))
 
 
 def calculate_bottom_panel_height(screen_height: int) -> int:

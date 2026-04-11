@@ -298,6 +298,58 @@ class VehicleDesignService:
             removed_component=removed
         )
 
+    def move_component(
+        self,
+        ship: Ship,
+        source_layer: LayerType,
+        index: int,
+        target_layer: LayerType,
+    ) -> DesignResult:
+        """Move a component from one layer to another, preserving the instance.
+
+        This is an atomic remove + re-add. Mass budget is NOT enforced
+        (over-budget designs are valid but produce a warning).
+
+        Args:
+            ship: The ship to modify
+            source_layer: Layer to remove from
+            index: Index of the component in the source layer
+            target_layer: Layer to add to
+
+        Returns:
+            DesignResult indicating success/failure
+        """
+        errors = []
+
+        # No-op: same layer
+        if source_layer == target_layer:
+            return DesignResult(success=True, ship=ship)
+
+        # Validate source layer/index
+        if source_layer not in ship.layers:
+            errors.append(f"Layer {source_layer.name} does not exist on ship")
+            return DesignResult(success=False, errors=errors)
+
+        layer_components = ship.layers[source_layer].components
+        if index < 0 or index >= len(layer_components):
+            errors.append(f"Invalid component index {index} for layer {source_layer.name}")
+            return DesignResult(success=False, errors=errors)
+
+        if target_layer not in ship.layers:
+            errors.append(f"Target layer {target_layer.name} does not exist on ship")
+            return DesignResult(success=False, errors=errors)
+
+        # Remove from source
+        component = ship.remove_component(source_layer, index)
+        if component is None:
+            errors.append(f"Failed to remove component at index {index}")
+            return DesignResult(success=False, errors=errors)
+
+        # Add to target — bypass normal validation (mass budget is advisory)
+        ship.layers[target_layer].components.append(component)
+
+        return DesignResult(success=True, ship=ship)
+
     def change_class(
         self,
         ship: Ship,
