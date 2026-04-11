@@ -214,9 +214,21 @@ These are the starter facilities every empire's home planet receives.
 
 ### Non-Complex QS Designs
 
-The `data/designs/` directory also contains QS ship designs (escorts, freighters,
-colony ships, superweapon platforms). These follow the same JSON structure but with
-different `vehicle_type` values and combat-oriented components.
+The `data/designs/` directory also contains QS ship designs. These follow the same
+JSON structure but with `vehicle_type: "Ship"` and combat or logistics components.
+
+**Combat ships** (used by FleetBattleSetupScreen for battle testing):
+
+| Design | Class | Role | Key Loadout |
+|--------|-------|------|-------------|
+| `qs_light_combat_escort` | Escort | fleet_escort | Beam weapons, PDC, engine, thruster |
+| `qs_heavy_cruiser` | Cruiser | line_combatant | Beams, railguns, shields, armor |
+| `qs_missile_cruiser` | Cruiser | missile_platform | 6 seeker missiles, PDC, ordnance storage |
+| `qs_battleship` | Battleship | line_combatant | Heavy railguns, lasers, shields, heavy armor |
+
+**Logistics/utility ships:** `qs_escort` (unarmed), `qs_general_purpose` (shipyard + colony),
+`qs_cargo_freighter` (cargo hauler), `qs_colony_ship`, `qs_colony_drop_pod`,
+superweapon platforms (planet/star destroyer, warp gate, sphere builder).
 
 ---
 

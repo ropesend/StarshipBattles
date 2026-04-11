@@ -1090,7 +1090,7 @@ implementations.
 
 - Implementation: `game/ui/widgets/scroll_state.py` -- `ScrollState`
 - Tests: `tests/unit/ui/widgets/test_scroll_state.py`
-- Consumers: `results_panel.py`, `test_run_details.py`, `dialogs.py`, `json_viewer.py`, `scrollable_json_panel.py`, `modifier_impact_grid.py`, `battle_panels.py`, `setup_screen.py`, `battle_state_viewer.py`
+- Consumers: `results_panel.py`, `test_run_details.py`, `dialogs.py`, `json_viewer.py`, `scrollable_json_panel.py`, `modifier_impact_grid.py`, `battle_panels.py`, `battle_state_viewer.py`
 
 ### How It Works
 

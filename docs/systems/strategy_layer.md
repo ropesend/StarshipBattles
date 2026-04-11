@@ -435,6 +435,11 @@ Bridges strategy Fleet with simulation Ship for combat:
 - `update_from_battle_results(surviving_ships)` -- updates fleet from
   `IPostBattleShip` protocol; ships not in survivors are removed (destroyed)
 
+Used by both `ConflictResolutionEngine` (strategy-layer auto battles) and
+`FleetBattleSetupScreen` (manual battle setup). The setup screen creates
+real Fleet objects with ShipInstance ships, then calls `to_battle_ships()`
+to convert them for the simulation layer.
+
 #### FleetPursuerTracker (`fleet.pursuer_tracker`)
 
 **File:** `game/strategy/data/fleet_pursuer_tracker.py`

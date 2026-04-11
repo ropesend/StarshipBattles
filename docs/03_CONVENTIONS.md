@@ -23,7 +23,7 @@ Major game states use **Screen**. Minor/modal states use **Scene**.
 
 | Suffix | Usage | Actual classes |
 |--------|-------|----------------|
-| **Screen** | Major game states: battle, strategy, workshop, setup | `BattleScreen`, `StrategyScreen`, `DesignWorkshopScreen`, `BuildQueueScreen`, `BattleSetupScreen`, `TestLabScreen`, `NewGameSetupScreen`, `RaceSetupScreen`, `GalaxyTestScreen` |
+| **Screen** | Major game states: battle, strategy, workshop, setup | `BattleScreen`, `StrategyScreen`, `DesignWorkshopScreen`, `BuildQueueScreen`, `FleetBattleSetupScreen` (aliased as `BattleSetupScreen` in app.py), `TestLabScreen`, `NewGameSetupScreen`, `RaceSetupScreen`, `GalaxyTestScreen` |
 | **Scene** | Minor overlays: menus, settings | `MenuScene`, `KeybindingsScene` |
 
 - **DO:** Name new major game states with `Screen`.
@@ -355,6 +355,12 @@ Starter designs (`data/designs/`) and starter races (`data/races/`) are shipped 
 2. Run `python Tools/validate_designs/validate_designs.py` to validate
 3. Add tests in `tests/unit/quickstart/test_quickstart_designs.py` if the design has special requirements
 4. If the design is a starting complex (auto-built on homeworld), add its design_id to `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py`
+
+**Combat QS ship designs** (for battle setup testing):
+- `qs_light_combat_escort.json` — Escort with beam weapons and PDC (fleet_escort)
+- `qs_heavy_cruiser.json` — Cruiser with beams, railguns, shields, armor (line_combatant)
+- `qs_missile_cruiser.json` — Cruiser with 6 seeker missiles and PDC (missile_platform)
+- `qs_battleship.json` — Battleship with heavy railguns, lasers, shields, armor (line_combatant)
 
 **Adding a new starter race:**
 1. Create `data/races/qs_<name>.json` with required fields: `race_id`, `name`, `flag_id`, `portrait_id`, `theme_id`, homeworld/environment preferences, and aptitudes
