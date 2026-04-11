@@ -169,6 +169,174 @@ def get_resource_max_usage(ship, res_name):
     return 0
 
 
+# --- Weapon Getters ---
+
+def get_weapon_count(ship):
+    """Count total weapon components on the ship."""
+    count = 0
+    for comp in ship.get_all_components():
+        if comp.has_ability('WeaponAbility'):
+            count += 1
+    return count
+
+def get_total_dps(ship):
+    """Calculate total damage per second across all weapons."""
+    summary = ship.cached_summary
+    return summary.get('dps', 0) if summary else 0
+
+def get_dps_duration(ship):
+    """Calculate how long DPS can be sustained (min of ammo and energy endurance)."""
+    ammo_end = getattr(ship, 'ammo_endurance', float('inf'))
+    energy_end = getattr(ship, 'energy_endurance', float('inf'))
+    return min(ammo_end, energy_end)
+
+def get_max_range(ship):
+    """Get maximum weapon range."""
+    return ship.max_weapon_range
+
+
+# --- Strategic Movement Getters ---
+
+def get_warp_capable(ship):
+    """Check if ship has warp capability."""
+    return 1.0 if ship.warp_max_tonnage > 0 else 0.0
+
+def get_warp_tonnage(ship):
+    """Get maximum warp tonnage."""
+    return ship.warp_max_tonnage
+
+def get_warp_cost(ship):
+    """Get warp energy cost per jump."""
+    return ship.warp_energy_cost
+
+def get_warp_jumps(ship):
+    """Calculate number of warp jumps possible from full resources."""
+    warp_costs = ship.warp_resource_costs
+    if not warp_costs:
+        return 0
+    min_jumps = float('inf')
+    for res_type, cost in warp_costs.items():
+        if cost > 0:
+            capacity = get_resource_storage(ship, res_type)
+            jumps = int(capacity / cost) if capacity > 0 else 0
+            min_jumps = min(min_jumps, jumps)
+    return int(min_jumps) if min_jumps != float('inf') else 0
+
+def get_fuel_per_hex(ship):
+    """Get fuel consumption per strategic hex moved."""
+    from game.simulation.components.abilities.resources import ResourceConsumption
+    total = 0.0
+    for layer in ship.layers.values():
+        for comp in layer.components:
+            for ability in comp.ability_instances:
+                if isinstance(ability, ResourceConsumption):
+                    if ability.resource_type == 'fuel' and ability.trigger == 'strategic_per_hex':
+                        total += ability.amount
+    return total
+
+def get_hex_range(ship):
+    """Calculate strategic hex range from fuel storage and per-hex consumption."""
+    fuel_cap = get_resource_storage(ship, 'fuel')
+    cost_per_hex = get_fuel_per_hex(ship)
+    if cost_per_hex <= 0:
+        return float('inf') if fuel_cap > 0 else 0
+    return int(fuel_cap / cost_per_hex)
+
+
+# --- Cargo & Transport Getters ---
+
+def get_cargo_capacity(ship, cargo_type='generic'):
+    """Get cargo capacity for a specific type."""
+    return ship.cargo_storage.get(cargo_type, 0)
+
+def get_passenger_capacity(ship):
+    """Get passenger transport capacity."""
+    return ship.cargo_storage.get('passengers', 0)
+
+def get_pod_storage(ship):
+    """Get pod/item storage mass capacity."""
+    return ship.pod_storage_mass
+
+def get_colony_types(ship):
+    """Get list of planet types this design can colonize."""
+    types = set()
+    for comp in ship.get_all_components():
+        if comp.has_ability('ColonizePlanet'):
+            ab = comp.get_ability('ColonizePlanet')
+            if hasattr(ab, 'planet_type'):
+                types.add(ab.planet_type)
+    return ', '.join(sorted(types)) if types else 'None'
+
+
+# --- Superweapon Getters ---
+
+_SUPERWEAPON_ABILITIES = [
+    'DestroyPlanet', 'DestroyStar', 'OpenWarpPoint',
+    'CloseWarpPoint', 'CreateDysonSphere', 'SelfDestruct',
+]
+
+_SUPERWEAPON_LABELS = {
+    'DestroyPlanet': 'Planet Imploder',
+    'DestroyStar': 'Stellerator',
+    'OpenWarpPoint': 'Warp Point Creator',
+    'CloseWarpPoint': 'Warp Point Closer',
+    'CreateDysonSphere': 'Dyson Sphere Constructor',
+    'SelfDestruct': 'Self-Destruct',
+}
+
+def get_superweapon_summary(ship):
+    """Get formatted summary of superweapon capabilities with activation counts."""
+    entries = []
+    for ab_name in _SUPERWEAPON_ABILITIES:
+        count = 0
+        for comp in ship.get_all_components():
+            if comp.has_ability(ab_name):
+                count += 1
+        if count > 0:
+            label = _SUPERWEAPON_LABELS.get(ab_name, ab_name)
+            entries.append(f"{label} x{count}")
+    return '; '.join(entries) if entries else 'None'
+
+def has_superweapons(ship):
+    """Check if ship has any superweapon abilities."""
+    for comp in ship.get_all_components():
+        for ab_name in _SUPERWEAPON_ABILITIES:
+            if comp.has_ability(ab_name):
+                return True
+    return False
+
+
+# --- Misc Getters ---
+
+def get_repair_rate(ship):
+    """Get hull repair rate."""
+    return ship.repair_rate
+
+def get_command_status(ship):
+    """Check if ship has command and control (bridge)."""
+    for comp in ship.get_all_components():
+        if comp.has_ability('CommandAndControl'):
+            return 1.0
+    return 0.0
+
+
+# --- New Formatters ---
+
+def fmt_yes_no(val):
+    """Format boolean-like value as Yes/No."""
+    return "Yes" if val > 0 else "No"
+
+def fmt_int(val):
+    """Format as integer."""
+    if val == float('inf') or val > 999999:
+        return "∞"
+    return f"{int(val)}"
+
+def fmt_text(val):
+    """Format string values (pass-through)."""
+    return str(val) if val else "None"
+
+
 # --- Function Registries ---
 
 GETTERS = {
@@ -190,6 +358,28 @@ GETTERS = {
     'get_fuel_consumption': get_fuel_consumption,
     'get_ammo_consumption': get_ammo_consumption,
     'get_energy_consumption': get_energy_consumption,
+    # Weapons
+    'get_weapon_count': get_weapon_count,
+    'get_total_dps': get_total_dps,
+    'get_dps_duration': get_dps_duration,
+    'get_max_range': get_max_range,
+    # Strategic movement
+    'get_warp_capable': get_warp_capable,
+    'get_warp_tonnage': get_warp_tonnage,
+    'get_warp_cost': get_warp_cost,
+    'get_warp_jumps': get_warp_jumps,
+    'get_fuel_per_hex': get_fuel_per_hex,
+    'get_hex_range': get_hex_range,
+    # Cargo & transport
+    'get_cargo_capacity': get_cargo_capacity,
+    'get_passenger_capacity': get_passenger_capacity,
+    'get_pod_storage': get_pod_storage,
+    'get_colony_types': get_colony_types,
+    # Superweapons
+    'get_superweapon_summary': get_superweapon_summary,
+    # Misc
+    'get_repair_rate': get_repair_rate,
+    'get_command_status': get_command_status,
 }
 
 FORMATTERS = {
@@ -198,6 +388,9 @@ FORMATTERS = {
     'fmt_decimal': fmt_decimal,
     'fmt_score': fmt_score,
     'fmt_targeting': fmt_targeting,
+    'fmt_yes_no': fmt_yes_no,
+    'fmt_int': fmt_int,
+    'fmt_text': fmt_text,
 }
 
 VALIDATORS = {

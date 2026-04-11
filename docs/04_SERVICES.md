@@ -191,6 +191,23 @@ These are not service methods but ViewModel methods that delegate to the service
 | `quick_add_component` | `(component_id: str, selected_layer?: LayerType, count?: int) -> bool` | Add component via palette "+" button with auto layer resolution |
 | `move_component` | `(source_layer: LayerType, index: int, target_layer: LayerType) -> bool` | Move single component between layers (remove + re-add instance) |
 | `move_component_group` | `(group_key: str, source_layer: LayerType, target_layer: LayerType) -> bool` | Move all components in a group between layers |
+| `on_modifier_changed` | `() -> None` | Called after any modifier change — syncs multi-selection, always recalculates ship stats |
+
+#### Stats Panel Configuration
+
+The stats panel is driven by `data/stats_sections.json`. Each section declares visibility
+rules, column placement, and stat definitions. Key files:
+
+| File | Purpose |
+|------|---------|
+| `data/stats_sections.json` | Section definitions, visibility rules, always-visible overrides |
+| `game/ui/screens/builder/stat_getters.py` | Getter functions registered in `GETTERS` dict |
+| `game/ui/screens/builder/stat_rows_dynamic.py` | Dynamic row generators for variable-content sections |
+| `game/ui/screens/builder/stats_config.py` | Config loader, `SECTION_GENERATORS` registry, `resolve_section_visibility()` |
+| `game/ui/panels/design_stats_panel.py` | Panel rendering with collapsible sections |
+
+To add a new stat: add getter to `stat_getters.py`, register in `GETTERS`, add item to section in JSON.
+To add a new section: add generator to `stat_rows_dynamic.py`, register in `SECTION_GENERATORS`, add section to JSON.
 
 ---
 

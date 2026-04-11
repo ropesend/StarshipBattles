@@ -14,14 +14,14 @@
                     "validator": "mass_validator"
                 },
                 {
-                    "id": "strategic_speed",
-                    "label": "Strat Spd",
-                    "getter": "get_strategic_speed",
-                    "unit": " hex/turn"
-                },
-                {
                     "id": "max_hp",
                     "label": "Max HP"
+                },
+                {
+                    "id": "command",
+                    "label": "Command",
+                    "getter": "get_command_status",
+                    "formatter": "fmt_yes_no"
                 },
                 {
                     "id": "max_energy",
@@ -37,7 +37,7 @@
             ]
         },
         "maneuvering": {
-            "title": "Maneuvering",
+            "title": "Combat Movement",
             "column": 1,
             "order": 20,
             "visibility": {
@@ -71,6 +71,43 @@
                     "label": "Trn Rate",
                     "key": "turn_speed",
                     "unit": " deg/s"
+                }
+            ]
+        },
+        "weapons": {
+            "title": "Weapons",
+            "column": 1,
+            "order": 25,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["WeaponAbility"]
+            },
+            "items": [
+                {
+                    "id": "weapon_count",
+                    "label": "Weapons",
+                    "getter": "get_weapon_count",
+                    "formatter": "fmt_int"
+                },
+                {
+                    "id": "total_dps",
+                    "label": "Total DPS",
+                    "getter": "get_total_dps",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "max_range",
+                    "label": "Max Range",
+                    "getter": "get_max_range",
+                    "formatter": "{:.0f}",
+                    "unit": " px"
+                },
+                {
+                    "id": "dps_duration",
+                    "label": "DPS Durtn",
+                    "getter": "get_dps_duration",
+                    "formatter": "fmt_time"
                 }
             ]
         },
@@ -126,6 +163,13 @@
                     "label": "Rgn/Hit",
                     "unit": "/hit",
                     "formatter": "fmt_decimal"
+                },
+                {
+                    "id": "repair_rate",
+                    "label": "Repair",
+                    "getter": "get_repair_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
                 }
             ]
         },
@@ -160,8 +204,63 @@
                 }
             ]
         },
+        "strategic_movement": {
+            "title": "Strategic Movement",
+            "column": 2,
+            "order": 5,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["StrategicMovement", "WarpJump"]
+            },
+            "items": [
+                {
+                    "id": "strategic_speed",
+                    "label": "Strat Spd",
+                    "getter": "get_strategic_speed",
+                    "unit": " hex/turn"
+                },
+                {
+                    "id": "fuel_per_hex",
+                    "label": "Fuel/Hex",
+                    "getter": "get_fuel_per_hex",
+                    "formatter": "fmt_decimal"
+                },
+                {
+                    "id": "hex_range",
+                    "label": "Hex Range",
+                    "getter": "get_hex_range",
+                    "formatter": "fmt_int"
+                },
+                {
+                    "id": "warp_capable",
+                    "label": "Warp",
+                    "getter": "get_warp_capable",
+                    "formatter": "fmt_yes_no"
+                },
+                {
+                    "id": "warp_tonnage",
+                    "label": "Warp Ton",
+                    "getter": "get_warp_tonnage",
+                    "formatter": "{:,.0f}",
+                    "unit": " t"
+                },
+                {
+                    "id": "warp_cost",
+                    "label": "Warp Cost",
+                    "getter": "get_warp_cost",
+                    "formatter": "fmt_decimal",
+                    "unit": " E"
+                },
+                {
+                    "id": "warp_jumps",
+                    "label": "Warp Jumps",
+                    "getter": "get_warp_jumps",
+                    "formatter": "fmt_int"
+                }
+            ]
+        },
         "logistics": {
-            "title": "Logistics",
+            "title": "Combat Resources",
             "column": 2,
             "order": 10,
             "visibility": {
@@ -172,7 +271,7 @@
             "items": []
         },
         "crewlogistics": {
-            "title": "Crew Logistics",
+            "title": "Crew",
             "column": 2,
             "order": 20,
             "visibility": {
@@ -224,6 +323,17 @@
                 }
             ]
         },
+        "cargo": {
+            "title": "Cargo & Transport",
+            "column": 2,
+            "order": 35,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "cargo"
+            },
+            "generator": "cargo",
+            "items": []
+        },
         "buildcost": {
             "title": "Build Cost",
             "column": 2,
@@ -233,20 +343,65 @@
             "items": []
         },
         "colony_strategic": {
-            "title": "Colony / Strategic",
+            "title": "Production",
             "column": 2,
-            "order": 90,
+            "order": 85,
             "visibility": {
                 "type": "dynamic",
                 "generator": "strategic"
             },
             "generator": "strategic",
             "items": []
+        },
+        "planetary_engineering": {
+            "title": "Planetary Engineering",
+            "column": 2,
+            "order": 90,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "planetary_engineering"
+            },
+            "generator": "planetary_engineering",
+            "items": []
+        },
+        "planetary_defense": {
+            "title": "Planetary Defense",
+            "column": 2,
+            "order": 91,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "planetary_defense"
+            },
+            "generator": "planetary_defense",
+            "items": []
+        },
+        "strategic_modifiers": {
+            "title": "Strategic Modifiers",
+            "column": 2,
+            "order": 92,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "strategic_modifiers"
+            },
+            "generator": "strategic_modifiers",
+            "items": []
+        },
+        "superweapons": {
+            "title": "Superweapons",
+            "column": 2,
+            "order": 95,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "superweapons"
+            },
+            "generator": "superweapons",
+            "items": []
         }
     },
     "always_visible": {
         "Ship": [
-            "main", "maneuvering", "crewlogistics", "logistics"
+            "main", "maneuvering", "strategic_movement",
+            "crewlogistics", "logistics"
         ],
         "Planetary Complex": [
             "main", "crewlogistics", "buildcost"

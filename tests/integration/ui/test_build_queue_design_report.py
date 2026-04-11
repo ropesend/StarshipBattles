@@ -117,6 +117,18 @@ class MockShip:
             'Volatiles': 150
         }
 
+        # Cargo & strategic attributes
+        self.cargo_storage = {}
+        self.pod_storage_mass = 0.0
+        self.warp_max_tonnage = 0.0
+        self.warp_energy_cost = 0.0
+        self.warp_resource_costs = {}
+        self.repair_rate = 0.0
+        self.total_strategic_movement = 0
+        self.max_weapon_range = 0.0
+        self.ammo_endurance = float('inf')
+        self.energy_endurance = float('inf')
+
     def get_all_components(self):
         """Return empty component list for mock."""
         return []

@@ -77,6 +77,16 @@ class TestBuilderImprovements:
         mock_ship.turn_speed = 30
         mock_ship.acceleration_rate = 10
         mock_ship.total_thrust = 1000
+        mock_ship.cargo_storage = {}
+        mock_ship.pod_storage_mass = 0.0
+        mock_ship.warp_max_tonnage = 0.0
+        mock_ship.warp_energy_cost = 0.0
+        mock_ship.warp_resource_costs = {}
+        mock_ship.repair_rate = 0.0
+        mock_ship.total_strategic_movement = 0
+        mock_ship.max_weapon_range = 0.0
+        mock_ship.ammo_endurance = float('inf')
+        mock_ship.energy_endurance = float('inf')
         mock_ship.energy_gen_rate = 10
         mock_ship.resources = MagicMock()  # spec=Ship doesn't see instance vars automatically
         mock_ship.resources.set_max_value('fuel', 1000)

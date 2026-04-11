@@ -307,3 +307,195 @@ def has_strategic_abilities(ship) -> bool:
         info['has_planetary_yard'] or info['has_space_shipyard'] or
         info['staging_capacity'] > 0
     )
+
+
+# --- Cargo & Transport Dynamic Rows ---
+
+def get_cargo_rows(ship):
+    """Generate stat rows for cargo, pod storage, and colonization."""
+    rows = []
+
+    # Cargo by type
+    for cargo_type, capacity in sorted(ship.cargo_storage.items()):
+        if capacity > 0:
+            def cap_getter(s, ct=cargo_type):
+                return s.cargo_storage.get(ct, 0)
+            label = cargo_type.replace('_', ' ').title()
+            rows.append(StatDefinition(
+                id=f"cargo_{cargo_type}", label=f"{label} Cap",
+                getter=cap_getter, formatter="{:,.0f}", unit=""
+            ))
+
+    # Pod storage
+    if ship.pod_storage_mass > 0:
+        rows.append(StatDefinition(
+            id="pod_storage", label="Pod Storage",
+            getter=lambda s: s.pod_storage_mass, formatter="{:,.0f}", unit=" mass"
+        ))
+
+    # Colony capability
+    from .stat_getters import get_colony_types
+    colony_str = get_colony_types(ship)
+    if colony_str != 'None':
+        rows.append(StatDefinition(
+            id="colony_types", label="Colonizes",
+            getter=get_colony_types, formatter=lambda v: str(v), unit=""
+        ))
+
+    return rows
+
+
+def has_cargo_abilities(ship) -> bool:
+    """Check if ship has any cargo/transport/colony abilities."""
+    if ship.cargo_storage:
+        return True
+    if ship.pod_storage_mass > 0:
+        return True
+    for comp in ship.get_all_components():
+        if comp.has_ability('ColonizePlanet'):
+            return True
+    return False
+
+
+# --- Planetary Engineering Dynamic Rows ---
+
+_PLANETARY_ABILITIES = {
+    'AtmosphereModifier': ('Atmo Rate', 'modification_rate', '/turn'),
+    'WaterModifier': ('Water Rate', 'modification_rate', '/turn'),
+}
+
+_ACTIVATABLE_ABILITIES = {
+    'GravityModifier': 'Gravity Mod',
+    'RadiationShield': 'Rad Shield',
+    'PlanetaryShield': 'Planet Shield',
+    'GeologicStabilizer': 'Geo Stabilizer',
+    'StellarStabilizer': 'Star Stabilizer',
+    'WarpFieldStabilizer': 'Warp Stabilizer',
+}
+
+def get_planetary_engineering_rows(ship):
+    """Generate rows for planetary modification abilities."""
+    rows = []
+
+    for ab_name, (label, rate_attr, unit) in _PLANETARY_ABILITIES.items():
+        for comp in ship.get_all_components():
+            if comp.has_ability(ab_name):
+                ab = comp.get_ability(ab_name)
+                rate = getattr(ab, rate_attr, 0)
+                if rate != 0:
+                    def rate_getter(s, an=ab_name, ra=rate_attr):
+                        total = 0
+                        for c in s.get_all_components():
+                            if c.has_ability(an):
+                                a = c.get_ability(an)
+                                total += getattr(a, ra, 0)
+                        return total
+                    rows.append(StatDefinition(
+                        id=f"planetary_{ab_name.lower()}", label=label,
+                        getter=rate_getter, formatter="{:.2f}", unit=unit
+                    ))
+                break
+
+    return rows
+
+
+def get_planetary_defense_rows(ship):
+    """Generate rows for planetary defense/stabilizer abilities."""
+    rows = []
+
+    for ab_name, label in _ACTIVATABLE_ABILITIES.items():
+        for comp in ship.get_all_components():
+            if comp.has_ability(ab_name):
+                ab = comp.get_ability(ab_name)
+                activation = getattr(ab, 'activation_time', 0)
+                scope = getattr(ab, 'scope', 'self')
+                scope_text = f" ({scope})" if scope != 'self' else ""
+
+                def drain_getter(s, an=ab_name):
+                    total = 0
+                    for c in s.get_all_components():
+                        if c.has_ability(an):
+                            a = c.get_ability(an)
+                            total += getattr(a, 'energy_drain_rate', 0)
+                    return total
+
+                rows.append(StatDefinition(
+                    id=f"defense_{ab_name.lower()}", label=f"{label}{scope_text}",
+                    getter=drain_getter, formatter="{:.1f}", unit=" E/s"
+                ))
+
+                if activation > 0:
+                    rows.append(StatDefinition(
+                        id=f"defense_{ab_name.lower()}_time", label=f"  Activation",
+                        getter=lambda s, at=activation: at,
+                        formatter="{:.0f}", unit="s"
+                    ))
+                break
+
+    return rows
+
+
+# --- Strategic Modifiers Dynamic Rows ---
+
+def get_strategic_modifier_rows(ship):
+    """Generate rows for shield/damage modifiers with scope."""
+    rows = []
+
+    modifier_abilities = {
+        'ShieldModifier': ('Shield Mult', 'multiplier'),
+        'DamageModifier': ('Damage Mult', 'multiplier'),
+        'BuildRateBooster': ('Build Rate', 'multiplier'),
+        'ResourceHarvestBooster': ('Harvest Boost', 'multiplier'),
+    }
+
+    for ab_name, (label, mult_attr) in modifier_abilities.items():
+        for comp in ship.get_all_components():
+            if comp.has_ability(ab_name):
+                ab = comp.get_ability(ab_name)
+                scope = getattr(ab, 'scope', 'self')
+                scope_text = f" ({scope})" if scope != 'self' else ""
+
+                def mult_getter(s, an=ab_name, ma=mult_attr):
+                    # Aggregate: multiply across components
+                    total = 1.0
+                    for c in s.get_all_components():
+                        if c.has_ability(an):
+                            a = c.get_ability(an)
+                            total *= getattr(a, ma, 1.0)
+                    return total
+
+                rows.append(StatDefinition(
+                    id=f"modifier_{ab_name.lower()}", label=f"{label}{scope_text}",
+                    getter=mult_getter, formatter="{:.2f}x", unit=""
+                ))
+                break
+
+    return rows
+
+
+# --- Superweapon Dynamic Rows ---
+
+def get_superweapon_rows(ship):
+    """Generate rows for each superweapon type with activation count."""
+    from .stat_getters import _SUPERWEAPON_ABILITIES, _SUPERWEAPON_LABELS
+    rows = []
+
+    for ab_name in _SUPERWEAPON_ABILITIES:
+        count = 0
+        for comp in ship.get_all_components():
+            if comp.has_ability(ab_name):
+                count += 1
+        if count > 0:
+            label = _SUPERWEAPON_LABELS.get(ab_name, ab_name)
+            def count_getter(s, an=ab_name):
+                c = 0
+                for comp in s.get_all_components():
+                    if comp.has_ability(an):
+                        c += 1
+                return c
+            rows.append(StatDefinition(
+                id=f"superweapon_{ab_name.lower()}", label=label,
+                getter=count_getter, formatter=lambda v: f"x{int(v)}", unit=" uses"
+            ))
+
+    return rows

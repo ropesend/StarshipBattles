@@ -34,6 +34,9 @@ from .stat_getters import (  # noqa: F401
 from .stat_rows_dynamic import (  # noqa: F401
     get_logistics_rows, get_construction_rows,
     get_strategic_rows, has_strategic_abilities,
+    get_cargo_rows, get_planetary_engineering_rows,
+    get_planetary_defense_rows, get_strategic_modifier_rows,
+    get_superweapon_rows,
 )
 
 
@@ -107,6 +110,11 @@ SECTION_GENERATORS: Dict[str, callable] = {
     'logistics': get_logistics_rows,
     'construction': get_construction_rows,
     'strategic': get_strategic_rows,
+    'cargo': get_cargo_rows,
+    'planetary_engineering': get_planetary_engineering_rows,
+    'planetary_defense': get_planetary_defense_rows,
+    'strategic_modifiers': get_strategic_modifier_rows,
+    'superweapons': get_superweapon_rows,
 }
 
 
