@@ -122,8 +122,9 @@ def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h,
     Returns:
         Updated Y position after drawing
     """
-    # ICombatShip.resources can be None for ships without consumables
-    if not ship.resources:
+    # ICombatShip.resources can be None for ships without consumables,
+    # or may not have get_all_resources (e.g. if resources is not a ResourceRegistry)
+    if not ship.resources or not hasattr(ship.resources, 'get_all_resources'):
         return y
 
     # Get all resources via public API
