@@ -111,6 +111,37 @@
             "name": "Assault Pod",
             "description": "Orbital assault and boarding delivery.",
             "allowed_vehicle_types": ["Drop Pod"]
+        },
+
+        "transport": {
+            "name": "Transport",
+            "description": "Cargo hauling and logistics.",
+            "allowed_vehicle_types": ["Ship"]
+        },
+        "superweapon_platform": {
+            "name": "Superweapon Platform",
+            "description": "Carries strategic superweapons (planet destroyers, warp manipulators, etc.).",
+            "allowed_vehicle_types": ["Ship", "Satellite"]
+        },
+        "megastructure_builder": {
+            "name": "Megastructure Builder",
+            "description": "Constructs megastructures (Dyson spheres, ringworlds, etc.).",
+            "allowed_vehicle_types": ["Ship"]
+        },
+        "enrichment_facility": {
+            "name": "Enrichment Facility",
+            "description": "Improves resource quality through processing and refinement.",
+            "allowed_vehicle_types": ["Planetary Complex", "Satellite"]
+        },
+        "resupply_depot": {
+            "name": "Resupply Depot",
+            "description": "Fuel synthesis and fleet resupply operations.",
+            "allowed_vehicle_types": ["Planetary Complex", "Satellite"]
+        },
+        "construction_accelerator": {
+            "name": "Construction Accelerator",
+            "description": "Boosts build rates for nearby construction projects.",
+            "allowed_vehicle_types": ["Planetary Complex", "Satellite"]
         }
     }
 }

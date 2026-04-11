@@ -1,206 +1,207 @@
 {
-  "name": "Colony Drop Pod",
-  "vehicle_type": "Drop Pod",
-  "ship_class": "Drop Pod (Small)",
-  "theme_id": "Federation",
-  "team_id": 0,
-  "color": [
-    100,
-    100,
-    255
-  ],
-  "ai_strategy": "standard_ranged",
-  "layers": {
-    "CORE": [
-      {
-        "id": "central_complex_command",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
+    "name": "Colony Drop Pod",
+    "vehicle_type": "Drop Pod",
+    "ship_class": "Drop Pod (Small)",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "ai_strategy": "standard_ranged",
+    "layers": {
+        "CORE": [
+            {
+                "id": "central_complex_command",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "planetary_yard_module",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "metal_harvester",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "organic_harvester",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "vapor_harvester",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "radioactive_harvester",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "exotic_harvester",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "resource_vault_metals",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "resource_vault_organics",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "resource_vault_vapors",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "resource_vault_radioactives",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            },
+            {
+                "id": "resource_vault_exotics",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.2
+                    }
+                ]
+            }
         ]
-      },
-      {
-        "id": "crew_quarters",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "crew_quarters",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "crew_quarters",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "crew_quarters",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "life_support",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "life_support",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 1.0
-          }
-        ]
-      },
-      {
-        "id": "planetary_yard_module",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "metal_harvester",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "organic_harvester",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "vapor_harvester",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "radioactive_harvester",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "exotic_harvester",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "resource_vault_metals",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "resource_vault_organics",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "resource_vault_vapors",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "resource_vault_radioactives",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      },
-      {
-        "id": "resource_vault_exotics",
-        "modifiers": [
-          {
-            "id": "simple_size_mount",
-            "value": 0.2
-          }
-        ]
-      }
-    ]
-  },
-  "initial_stockpile": {
-    "metals": 200,
-    "organics": 100,
-    "vapors": 50,
-    "radioactives": 50,
-    "exotics": 25
-  },
-  "expected_stats": {
-    "max_hp": 1970,
-    "mass": 870.0,
-    "resource_storage": {},
-    "cargo_storage": {},
-    "pod_storage_mass": 0.0,
-    "resource_consumption_per_hex": {},
-    "resource_consumption_per_turn": {},
-    "warp_resource_costs": {},
-    "strategic_movement": 0.0,
-    "warp_max_tonnage": 0,
-    "max_speed": 0,
-    "acceleration_rate": 0.0,
-    "turn_speed": 0.0,
-    "total_thrust": 0
-  },
-  "_metadata": {
-    "is_obsolete": false,
-    "times_built": 0
-  }
+    },
+    "initial_stockpile": {
+        "metals": 200,
+        "organics": 100,
+        "vapors": 50,
+        "radioactives": 50,
+        "exotics": 25
+    },
+    "expected_stats": {
+        "max_hp": 1970,
+        "mass": 870.0,
+        "resource_storage": {},
+        "cargo_storage": {},
+        "pod_storage_mass": 0.0,
+        "resource_consumption_per_hex": {},
+        "resource_consumption_per_turn": {},
+        "warp_resource_costs": {},
+        "strategic_movement": 0.0,
+        "warp_max_tonnage": 0,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 0
+    },
+    "design_role": "colony_pod"
 }
