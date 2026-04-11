@@ -208,12 +208,13 @@ class StrategyUI:
 
         self.system_tree.set_items(contents, self, system_obj=system_obj)
 
-    def show_sector_info(self, hex_coord, contents):
+    def show_sector_info(self, hex_coord, contents, system_obj=None):
         """Populate Middle List (Sector/Hex)."""
         self.sector_header.set_text(f"Sector: [{hex_coord.q}, {hex_coord.r}]")
-        
-        # Use Tree Panel now with flat view
-        self.sector_tree.set_items(contents, self, flat_view=True)
+
+        # Use Tree Panel with flat view; pass system_obj and hex_coord for sector effects
+        self.sector_tree.set_items(contents, self, flat_view=True,
+                                   system_obj=system_obj, hex_coord=hex_coord)
         
     def _get_label_for_obj(self, obj):
         return self._detail_formatter._get_label_for_obj(obj)

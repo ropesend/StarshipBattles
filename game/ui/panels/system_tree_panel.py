@@ -132,12 +132,13 @@ class SystemTreePanel:
         
         self.on_selection_callback = None
         
-    def set_items(self, contents, scene_interface, flat_view=False, system_obj=None):
+    def set_items(self, contents, scene_interface, flat_view=False, system_obj=None, hex_coord=None):
         """
         Rebuild tree from content list.
         scene_interface used to fetch assets logic (dependency injection).
         flat_view: If True, do not use top-level "Planetary System" grouping (for Sector View).
-        system_obj: Optional StarSystem object for system effects display.
+        system_obj: Optional StarSystem object for effects display.
+        hex_coord: Optional global hex coordinate for sector effects (used with flat_view).
         """
         # Clear old
         # BUG-26: Copy list to avoid mutation during iteration
@@ -257,9 +258,11 @@ class SystemTreePanel:
              self.root_items.append(item)
              self.items.append(item)
 
-        # 3.5 System Effects (from empire colonies' system-scope abilities)
+        # 3.5 System Effects (system panel) or Sector Effects (sector panel)
         if system_obj and not flat_view:
             self._add_system_effects(system_obj, scene_interface)
+        if system_obj and flat_view and hex_coord:
+            self._add_sector_effects(system_obj, scene_interface, hex_coord)
 
         # 4. Planets
         if planets:
@@ -362,113 +365,131 @@ class SystemTreePanel:
 
         self.layout()
 
-    def _add_system_effects(self, system_obj, scene_interface):
-        """Add system-scope effects section to the tree.
+    def _get_empire_context(self, scene_interface):
+        """Extract empire_id and registries from the scene interface."""
+        empire_id = None
+        registries = None
+        session = getattr(scene_interface, 'scene', None)
+        if session:
+            session = getattr(session, 'session', None)
+        if session:
+            player_empire = getattr(session, 'player_empire', None)
+            if player_empire:
+                empire_id = player_empire.id
+            registries = getattr(session, 'registries', None)
+        return empire_id, registries
 
-        Shows a collapsible "System Effects" group with one row per effect type.
-        Each effect row expands to show individual provider facilities.
-        """
+    def _add_system_effects(self, system_obj, scene_interface):
+        """Add system-scope effects section to the tree."""
         try:
             from game.strategy.services.system_effects_collector import collect_system_effects
 
-            empire_id = None
-            session = getattr(scene_interface, 'scene', None)
-            if session:
-                session = getattr(session, 'session', None)
-            if session:
-                player_empire = getattr(session, 'player_empire', None)
-                if player_empire:
-                    empire_id = player_empire.id
-                registries = getattr(session, 'registries', None)
-            else:
-                registries = None
-
+            empire_id, registries = self._get_empire_context(scene_interface)
             if empire_id is None:
                 return
 
             effects = collect_system_effects(system_obj, empire_id, registries)
-            if not effects:
-                return
-
-            # Create "System Effects" group header
-            group_label = f"System Effects ({len(effects)})"
-            effects_header = SystemTreeItem(
-                None, group_label, None,
-                container=self.scrolling_container,
-                manager=self.manager,
-                width=self.rect.width - 20,
-                parent_panel=self,
-            )
-            effects_header.is_group = True
-            effects_header.group_key = "system_effects"
-            effects_header.expanded = "system_effects" in self.expanded_groups
-
-            self.root_items.append(effects_header)
-            self.items.append(effects_header)
-
-            for effect in effects:
-                # Build effect header label with aggregate value
-                display = effect['display_name']
-                status = effect['status']
-                providers = effect['providers']
-
-                # Format value for display
-                value_str = self._format_effect_value(effect)
-                if value_str:
-                    effect_label = f"{display} {value_str} — {status}"
-                else:
-                    effect_label = f"{display} — {status}"
-
-                if len(providers) == 1:
-                    # Single provider: show as leaf with location
-                    p = providers[0]
-                    location_label = f"{effect_label} ({p['planet_name']})"
-                    leaf = SystemTreeItem(
-                        None, location_label, None,
-                        container=self.scrolling_container,
-                        manager=self.manager,
-                        width=self.rect.width - 20,
-                        indent=1,
-                        parent_panel=self,
-                    )
-                    effects_header.add_child(leaf)
-                    self.items.append(leaf)
-                else:
-                    # Multiple providers: collapsible group
-                    effect_item = SystemTreeItem(
-                        None, effect_label, None,
-                        container=self.scrolling_container,
-                        manager=self.manager,
-                        width=self.rect.width - 20,
-                        indent=1,
-                        parent_panel=self,
-                    )
-                    effect_item.is_group = True
-                    effect_item.group_key = f"effect_{effect['group_key']}"
-                    effect_item.expanded = effect_item.group_key in self.expanded_groups
-
-                    effects_header.add_child(effect_item)
-                    self.items.append(effect_item)
-
-                    for p in providers:
-                        p_value = self._format_provider_value(effect, p)
-                        p_label = f"{p['facility_name']} ({p['planet_name']}) — {p['status']}"
-                        if p_value:
-                            p_label = f"{p['facility_name']} ({p['planet_name']}) {p_value} — {p['status']}"
-                        child = SystemTreeItem(
-                            None, p_label, None,
-                            container=self.scrolling_container,
-                            manager=self.manager,
-                            width=self.rect.width - 20,
-                            indent=2,
-                            parent_panel=self,
-                        )
-                        effect_item.add_child(child)
-                        self.items.append(child)
-
+            self._add_effects_group(effects, "System Effects", "system_effects")
         except Exception:
             import logging
             logging.getLogger(__name__).debug("Could not load system effects", exc_info=True)
+
+    def _add_sector_effects(self, system_obj, scene_interface, hex_coord):
+        """Add sector-scope effects section to the tree."""
+        try:
+            from game.strategy.services.system_effects_collector import collect_sector_effects
+
+            empire_id, registries = self._get_empire_context(scene_interface)
+            if empire_id is None:
+                return
+
+            effects = collect_sector_effects(system_obj, hex_coord, empire_id, registries)
+            self._add_effects_group(effects, "Sector Effects", "sector_effects")
+        except Exception:
+            import logging
+            logging.getLogger(__name__).debug("Could not load sector effects", exc_info=True)
+
+    def _add_effects_group(self, effects, group_label_prefix, group_key):
+        """Shared: render a collapsible effects group (system or sector).
+
+        Args:
+            effects: List of effect dicts from collect_system_effects/collect_sector_effects.
+            group_label_prefix: e.g., "System Effects" or "Sector Effects".
+            group_key: e.g., "system_effects" or "sector_effects".
+        """
+        if not effects:
+            return
+
+        label = f"{group_label_prefix} ({len(effects)})"
+        effects_header = SystemTreeItem(
+            None, label, None,
+            container=self.scrolling_container,
+            manager=self.manager,
+            width=self.rect.width - 20,
+            parent_panel=self,
+        )
+        effects_header.is_group = True
+        effects_header.group_key = group_key
+        effects_header.expanded = group_key in self.expanded_groups
+
+        self.root_items.append(effects_header)
+        self.items.append(effects_header)
+
+        for effect in effects:
+            display = effect['display_name']
+            status = effect['status']
+            providers = effect['providers']
+
+            value_str = self._format_effect_value(effect)
+            if value_str:
+                effect_label = f"{display} {value_str} — {status}"
+            else:
+                effect_label = f"{display} — {status}"
+
+            if len(providers) == 1:
+                p = providers[0]
+                location_label = f"{effect_label} ({p['planet_name']})"
+                leaf = SystemTreeItem(
+                    None, location_label, None,
+                    container=self.scrolling_container,
+                    manager=self.manager,
+                    width=self.rect.width - 20,
+                    indent=1,
+                    parent_panel=self,
+                )
+                effects_header.add_child(leaf)
+                self.items.append(leaf)
+            else:
+                effect_item = SystemTreeItem(
+                    None, effect_label, None,
+                    container=self.scrolling_container,
+                    manager=self.manager,
+                    width=self.rect.width - 20,
+                    indent=1,
+                    parent_panel=self,
+                )
+                effect_item.is_group = True
+                effect_item.group_key = f"effect_{effect['group_key']}"
+                effect_item.expanded = effect_item.group_key in self.expanded_groups
+
+                effects_header.add_child(effect_item)
+                self.items.append(effect_item)
+
+                for p in providers:
+                    p_value = self._format_provider_value(effect, p)
+                    p_label = f"{p['facility_name']} ({p['planet_name']}) — {p['status']}"
+                    if p_value:
+                        p_label = f"{p['facility_name']} ({p['planet_name']}) {p_value} — {p['status']}"
+                    child = SystemTreeItem(
+                        None, p_label, None,
+                        container=self.scrolling_container,
+                        manager=self.manager,
+                        width=self.rect.width - 20,
+                        indent=2,
+                        parent_panel=self,
+                    )
+                    effect_item.add_child(child)
+                    self.items.append(child)
 
     @staticmethod
     def _format_effect_value(effect: dict) -> str:

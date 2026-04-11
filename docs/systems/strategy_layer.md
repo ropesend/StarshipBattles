@@ -580,20 +580,29 @@ populations. The dropdown lists species sorted by population count; "Species Ide
 uses the selected species' preferences from `RaceConfig`. Single-species planets show
 no dropdown.
 
-### System Effects Display
+### System & Sector Effects Display
 
 **File:** `game/strategy/services/system_effects_collector.py`
 
-`collect_system_effects(system, empire_id, registries)` scans all empire-owned
-colonies in a star system for system-scope abilities and returns structured effect
-data for UI display.
+Effects are split between two UI panels based on scope:
+- **System effects** → shown in the **System panel** (top) — affects all hexes in the star system
+- **Sector effects** → shown in the **Sector panel** (middle) — affects a single hex only
 
-**Supported ability types:** GeologicStabilizer, StellarStabilizer, WarpFieldStabilizer,
-ResourceHarvestBooster, BuildRateBooster, QualityImprovement, ShieldModifier, DamageModifier.
+**Scope sets:**
+- `_SYSTEM_SCOPES`: `system`, `allied_system`, `player_system`, `enemy_system`
+- `_SECTOR_SCOPES`: `sector`, `allied_sector`, `player_sector`, `enemy_sector`
 
-**Scope filter:** The collector accepts abilities with scopes in `_SYSTEM_RELEVANT_SCOPES`:
-`system`, `allied_system`, `player_system`, `enemy_system`, `sector`, `allied_sector`,
-`player_sector`, `enemy_sector`. Scopes `self`, `fleet`, and `planet` are excluded.
+**Functions:**
+- `collect_system_effects(system, empire_id, registries)` — scans all colonies in the
+  system, returns effects with system-level scopes only
+- `collect_sector_effects(system, hex_coord, empire_id, registries)` — scans colonies
+  at the specific hex, returns effects with sector-level scopes only
+- Both delegate to `_collect_effects(planets, empire_id, registries, allowed_scopes)` —
+  shared scanning/aggregation logic
+
+**Supported ability types** (in `SYSTEM_EFFECT_ABILITIES`): GeologicStabilizer,
+StellarStabilizer, WarpFieldStabilizer, ResourceHarvestBooster, BuildRateBooster,
+QualityImprovement, ShieldModifier, DamageModifier.
 
 **Two categories:**
 - **Activatable** (have activation_time): status from ComponentActivationState
@@ -603,10 +612,10 @@ ResourceHarvestBooster, BuildRateBooster, QualityImprovement, ShieldModifier, Da
 **Aggregation:** Values use two-phase stacking (intra-group MAX, inter-group MULTIPLY)
 via `aggregate_multipliers()` from `strategic_ability_scanner.py`.
 
-**UI integration:** `SystemTreePanel._add_system_effects()` renders a collapsible
-"System Effects (N)" group after Warp Points and before Planets in the system tree.
-Each effect type is a group header with aggregate status and value. Expanding shows
-individual provider facilities with their planet location, individual value, and status.
+**UI rendering:** `SystemTreePanel` uses shared `_add_effects_group()` to render
+collapsible effect groups. `_add_system_effects()` calls it for the system panel;
+`_add_sector_effects()` calls it for the sector panel. Each effect type is a group
+header with aggregate status and value. Expanding shows individual provider facilities.
 
 ### Atmosphere Modification Pipeline
 
@@ -759,7 +768,7 @@ All three stabilizers (Geologic, Stellar, WarpField) use a unified check in
 4. Add display name to `TOGGLEABLE_ABILITIES` dict in `planet_abilities_window.py`
 5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`
 6. If it blocks superweapons: add check method in `superweapon_order_processor.py` using `_is_stabilized()`
-7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system/sector scope — the collector accepts scopes in `_SYSTEM_RELEVANT_SCOPES` (system*, sector*, planet)
+7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system or sector scope — system-scoped abilities show in the System panel via `_SYSTEM_SCOPES`, sector-scoped abilities show in the Sector panel via `_SECTOR_SCOPES`
 8. If it affects combat: add to `combat_modifier_collector.py` with `require_active=True`
 9. Add keyboard toggle binding in `strategy_fleet_command_router.py`
 10. Create component in `components.json` with `energy_drain_rate`, `activation_time`, `deactivation_time` in the ability data — these are required for the abilities window to show the ability

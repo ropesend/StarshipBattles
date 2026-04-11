@@ -25,13 +25,14 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Abilities we consider "system effects" — must have scope == "system"
-# Maps ability_name -> display_name
-# Scopes considered relevant for the system effects display panel.
-# Includes all system-level and sector-level scopes (anything that affects
-# more than just the owning entity).
-_SYSTEM_RELEVANT_SCOPES = frozenset({
+# Scope sets for filtering effects into the correct UI panel.
+# System = all hexes in a star system (radius 50, diameter 101).
+# Sector = a single hex on the galaxy map.
+_SYSTEM_SCOPES = frozenset({
     'system', 'allied_system', 'player_system', 'enemy_system',
+})
+
+_SECTOR_SCOPES = frozenset({
     'sector', 'allied_sector', 'player_sector', 'enemy_sector',
 })
 
@@ -110,15 +111,68 @@ def collect_system_effects(
     empire_id: int,
     registries=None,
 ) -> List[Dict[str, Any]]:
-    """Collect all system-scope effects from empire colonies in the system.
+    """Collect system-scope effects from empire colonies in the system.
 
-    Returns a list of effect dicts, each representing a grouped ability type.
-    Effects are grouped by ability_name (+ resource_type for parameterized abilities).
+    Only includes abilities with system-level scopes (system, allied_system,
+    player_system, enemy_system). Sector-scoped abilities are excluded —
+    use collect_sector_effects() for those.
 
     Args:
         system: StarSystem to scan.
         empire_id: Empire ID to filter colonies by ownership.
         registries: Optional GameRegistries for component lookup.
+
+    Returns:
+        List of effect dicts (see _collect_effects for structure).
+    """
+    return _collect_effects(list(system.planets), empire_id, registries, _SYSTEM_SCOPES)
+
+
+def collect_sector_effects(
+    system: 'StarSystem',
+    hex_coord,
+    empire_id: int,
+    registries=None,
+) -> List[Dict[str, Any]]:
+    """Collect sector-scope effects from empire colonies at a specific hex.
+
+    Only includes abilities with sector-level scopes (sector, allied_sector,
+    player_sector, enemy_sector). System-scoped abilities are excluded —
+    use collect_system_effects() for those.
+
+    Args:
+        system: StarSystem containing the hex.
+        hex_coord: Global hex coordinate to filter planets by location.
+        empire_id: Empire ID to filter colonies by ownership.
+        registries: Optional GameRegistries for component lookup.
+
+    Returns:
+        List of effect dicts (see _collect_effects for structure).
+    """
+    # Find planets at this specific hex
+    planets_at_hex = []
+    global_loc = getattr(system, 'global_location', None)
+    for planet in system.planets:
+        if global_loc is not None:
+            planet_global = global_loc + planet.location
+            if planet_global == hex_coord:
+                planets_at_hex.append(planet)
+        else:
+            planets_at_hex.append(planet)
+
+    return _collect_effects(planets_at_hex, empire_id, registries, _SECTOR_SCOPES)
+
+
+def _collect_effects(
+    planets: List,
+    empire_id: int,
+    registries,
+    allowed_scopes: frozenset,
+) -> List[Dict[str, Any]]:
+    """Shared logic: scan planets for abilities matching allowed_scopes.
+
+    Returns a list of effect dicts, each representing a grouped ability type.
+    Effects are grouped by ability_name (+ resource_type for parameterized abilities).
 
     Returns:
         List of effect dicts with keys:
@@ -130,10 +184,9 @@ def collect_system_effects(
         - aggregate_value: float (stacked multiplier or rate, 0.0 if N/A)
         - providers: list of provider dicts
     """
-    # Collect raw provider entries
-    raw_providers: Dict[str, list] = {}  # group_key -> list of provider dicts
+    raw_providers: Dict[str, dict] = {}
 
-    for planet in system.planets:
+    for planet in planets:
         if getattr(planet, 'owner_id', None) != empire_id:
             continue
 
@@ -149,23 +202,19 @@ def collect_system_effects(
                     if ability_data is None:
                         continue
 
-                    # Handle list format (QualityImprovement has array of entries)
                     entries = ability_data if isinstance(ability_data, list) else [ability_data]
 
                     for entry in entries:
                         if not isinstance(entry, dict):
                             continue
 
-                        # Filter to system/sector-level scopes (any scope that affects
-                        # a meaningful area around the planet, not just self/fleet)
                         entry_scope = entry.get('scope', 'self')
-                        if entry_scope not in _SYSTEM_RELEVANT_SCOPES:
+                        if entry_scope not in allowed_scopes:
                             continue
 
                         group_key = _make_group_key(ability_name, entry)
                         display_name = _make_display_name(ability_name, entry)
 
-                        # Determine status
                         if _is_activatable(entry):
                             status = _get_component_status(facility, comp_key)
                             is_active = _is_active_component(facility, comp_key, entry)
@@ -173,7 +222,6 @@ def collect_system_effects(
                             status = "Active"
                             is_active = True
 
-                        # Extract value (multiplier or rate)
                         value = entry.get('multiplier', entry.get('improvement_rate', 0.0))
 
                         provider = {
@@ -202,7 +250,6 @@ def collect_system_effects(
     for group_key, group_data in raw_providers.items():
         providers = group_data['providers']
 
-        # Aggregate status: Active if any provider is active
         any_active = any(p['is_active'] for p in providers)
         any_activating = any('Activating' in p['status'] for p in providers)
         any_deactivating = any('Deactivating' in p['status'] for p in providers)
@@ -210,7 +257,6 @@ def collect_system_effects(
         if any_active:
             aggregate_status = "Active"
         elif any_activating:
-            # Show first activating status with counter
             for p in providers:
                 if 'Activating' in p['status']:
                     aggregate_status = p['status']
@@ -222,12 +268,10 @@ def collect_system_effects(
         else:
             aggregate_status = "Inactive"
 
-        # Aggregate value using two-phase stacking
         active_entries = [p['ability_data'] for p in providers if p['is_active']]
         if active_entries:
             aggregate_value = aggregate_multipliers(active_entries)
         else:
-            # Show what the value would be if activated
             aggregate_value = aggregate_multipliers([p['ability_data'] for p in providers])
 
         results.append({

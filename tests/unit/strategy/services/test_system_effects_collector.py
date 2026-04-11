@@ -262,3 +262,113 @@ class TestCollectSystemEffects:
 
         result = collect_system_effects(system, empire_id=1)
         assert result == []
+
+    def test_sector_scope_excluded_from_system_effects(self):
+        """Sector-scoped abilities should NOT appear in system effects."""
+        design = {
+            "layers": {
+                "OUTER": [{
+                    "id": "shield_sup_sector",
+                    "abilities": {
+                        "ShieldModifier": {
+                            "multiplier": 0.50,
+                            "scope": "enemy_sector",
+                            "stack_group": "shield_suppressor_sector",
+                            "energy_drain_rate": 30.0,
+                            "activation_time": 15,
+                            "deactivation_time": 5,
+                        }
+                    }
+                }]
+            }
+        }
+        fac = _make_facility("fac-1", design)
+        planet = _make_planet("Test I", 1, facilities=[fac])
+        system = _make_system("Test", [planet])
+
+        result = collect_system_effects(system, empire_id=1)
+        assert result == []
+
+    def test_allied_sector_scope_excluded_from_system_effects(self):
+        """allied_sector scope should NOT appear in system effects."""
+        design = {
+            "layers": {
+                "OUTER": [{
+                    "id": "shield_boost_sector",
+                    "abilities": {
+                        "ShieldModifier": {
+                            "multiplier": 1.50,
+                            "scope": "allied_sector",
+                            "stack_group": "shield_booster_sector",
+                            "energy_drain_rate": 30.0,
+                            "activation_time": 15,
+                            "deactivation_time": 5,
+                        }
+                    }
+                }]
+            }
+        }
+        fac = _make_facility("fac-1", design)
+        planet = _make_planet("Test I", 1, facilities=[fac])
+        system = _make_system("Test", [planet])
+
+        result = collect_system_effects(system, empire_id=1)
+        assert result == []
+
+
+class TestCollectSectorEffects:
+    """Tests for collect_sector_effects."""
+
+    def test_sector_scope_included(self):
+        """Sector-scoped abilities should appear in sector effects."""
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        design = {
+            "layers": {
+                "OUTER": [{
+                    "id": "shield_sup_sector",
+                    "abilities": {
+                        "ShieldModifier": {
+                            "multiplier": 0.50,
+                            "scope": "enemy_sector",
+                            "stack_group": "shield_suppressor_sector",
+                            "energy_drain_rate": 30.0,
+                            "activation_time": 15,
+                            "deactivation_time": 5,
+                        }
+                    }
+                }]
+            }
+        }
+        fac = _make_facility("fac-1", design)
+        planet = _make_planet("Test I", 1, facilities=[fac])
+        planet.location = MagicMock()
+        system = _make_system("Test", [planet])
+
+        hex_coord = MagicMock()
+        system.global_location = MagicMock()
+        system.global_location.__add__ = lambda self, other: hex_coord
+        hex_coord.__eq__ = lambda self, other: True
+        hex_coord.__hash__ = lambda self: 0
+
+        result = collect_sector_effects(system, hex_coord, empire_id=1)
+        assert len(result) == 1
+        assert result[0]['ability_name'] == 'ShieldModifier'
+
+    def test_system_scope_excluded_from_sector_effects(self):
+        """System-scoped abilities should NOT appear in sector effects."""
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        fac = _make_facility("fac-1", _stabilizer_design("geo_sys", "GeologicStabilizer", scope="system"))
+        planet = _make_planet("Test I", 1, facilities=[fac])
+        planet.location = MagicMock()
+        system = _make_system("Test", [planet])
+
+        hex_coord = MagicMock()
+        system.global_location = MagicMock()
+        system.global_location.__add__ = lambda self, other: hex_coord
+        hex_coord.__eq__ = lambda self, other: True
+        hex_coord.__hash__ = lambda self: 0
+
+        result = collect_sector_effects(system, hex_coord, empire_id=1)
+        assert result == []

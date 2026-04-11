@@ -609,8 +609,8 @@ class ClickModeDispatcher:
         else:
             self.scene.ui.show_system_info(None, [])
 
-        # Update Sector Panel
-        self.scene.ui.show_sector_info(hex_clicked, sector_contents)
+        # Update Sector Panel (pass system for sector effects display)
+        self.scene.ui.show_sector_info(hex_clicked, sector_contents, system_obj=clicked_system)
 
         # Determine best pick
         best_pick = None
