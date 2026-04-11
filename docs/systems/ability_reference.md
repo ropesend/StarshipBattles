@@ -209,16 +209,26 @@ Guided seeking missile with tracking, HP, and stealth properties. Fires omni-dir
 | Registry Key | `ShieldProjection` |
 | Class | `ShieldProjection` |
 | Source | `defense.py` |
-| Layer | COMBAT |
+| Layer | BOTH |
 | Base Class | `SimpleMultiplierAbility` |
 
-Provides shield capacity (HP pool).
+Provides shield capacity (HP pool). Operates at both combat layer (SELF scope on ships) and strategic layer (sector/system scopes on planetary complexes).
 
-**Data Format:** Scalar (shield HP)
+**Data Format:** Scalar or Dict
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Shield capacity in HP |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `value` | float | Yes | — | Shield capacity in HP |
+| `scope` | string | No | `"self"` | Effect range |
+| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active (planetary complex variant) |
+| `activation_time` | int | No | 0 | Ticks to activate (planetary complex variant) |
+| `deactivation_time` | int | No | 0 | Ticks to deactivate |
+
+**Allowed Scopes:** SELF, FLEET, PLAYER_SECTOR, ALLIED_SECTOR, PLAYER_SYSTEM, ALLIED_SYSTEM
+
+**Combat (SELF scope):** Shield capacity on the ship, modified by CAPACITY_MULT and SHIELD_CAPACITY_MULT stat bindings.
+
+**Strategic (sector/system scopes):** Flat shield bonus added to all friendly ships pre-battle via the combat modifier collector. Requires activation on planetary complexes (checked with `require_active=True`).
 
 **Stat Bindings:**
 

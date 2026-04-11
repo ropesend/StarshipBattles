@@ -97,6 +97,17 @@ operate per-turn on the strategy layer, independent of combat:
 |---------|---------|-------------|
 | `PlanetaryShield` | Planet defense; blocks superweapons, consumes energy | `energy_drain_rate`, `activation_time`, `deactivation_time` |
 | `StrategicResourceGeneration` | Per-turn resource generation | `resource` (type name, required), `generation_rate` (per turn) |
+| `GeologicStabilizer` | Prevents IMPLODE_PLANET superweapon | `energy_drain_rate`, `activation_time`, `deactivation_time`, `scope` |
+| `StellarStabilizer` | Prevents STELLERATE_STAR / CREATE_DYSON_SPHERE | `energy_drain_rate`, `activation_time`, `deactivation_time`, `scope` |
+| `WarpFieldStabilizer` | Prevents OPEN/CLOSE_WARP_POINT | `energy_drain_rate`, `activation_time`, `deactivation_time`, `scope` |
+| `ShieldModifier` | Multiplies fleet shields in combat (activatable) | `multiplier`, `scope`, `energy_drain_rate`, `activation_time`, `deactivation_time` |
+| `DamageModifier` | Multiplies fleet damage in combat (activatable) | `multiplier`, `scope`, `energy_drain_rate`, `activation_time`, `deactivation_time` |
+| `GravityModifier` | Modifies planet gravity (activatable, reverts) | `energy_drain_rate`, `activation_time`, `deactivation_time` |
+| `WaterModifier` | Modifies planet water level (passive, permanent) | `modification_rate` |
+| `RadiationShield` | Adds radiation shielding (activatable, reverts) | `energy_drain_rate`, `activation_time`, `deactivation_time`, `max_shielding` |
+| `AtmosphereModifier` | Modifies planet atmosphere (passive, permanent) | `modification_rate` |
+| `ResourceHarvestBooster` | Multiplies resource harvest rate in scope | `resource_type`, `multiplier`, `scope`, `stack_group` |
+| `BuildRateBooster` | Multiplies construction rate in scope | `multiplier`, `scope`, `stack_group` |
 
 These are separate from combat abilities (`ResourceGeneration` operates per-second
 in combat; `StrategicResourceGeneration` operates per-turn on the strategy map).

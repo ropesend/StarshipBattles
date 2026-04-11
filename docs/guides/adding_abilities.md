@@ -305,7 +305,7 @@ class MyStrategicAbility(Ability):
 
 **AbilityLayer values:** `COMBAT`, `STRATEGIC`, `BOTH`
 
-**AbilityScope values:** `SELF`, `SECTOR`, `ALLIED_SECTOR`, `SYSTEM`, `ALLIED_SYSTEM`, `PLANET`
+**AbilityScope values:** `SELF`, `FLEET`, `SECTOR`, `ALLIED_SECTOR`, `PLAYER_SECTOR`, `ENEMY_SECTOR`, `SYSTEM`, `ALLIED_SYSTEM`, `PLAYER_SYSTEM`, `ENEMY_SYSTEM`, `PLANET`, `EMPIRE`, `ALLIED_EMPIRE`
 
 Scope can also be set per-instance in component JSON:
 ```json
@@ -313,6 +313,27 @@ Scope can also be set per-instance in component JSON:
     "StrategicMovement": {"value": 100, "scope": "allied_sector"}
 }
 ```
+
+## Step 8: Strategic Ability Registration (if applicable)
+
+Strategic-layer abilities that appear in the game UI require additional registration beyond the ABILITY_REGISTRY. See [strategy_layer.md](../systems/strategy_layer.md) for the full checklist.
+
+**If the ability is activatable** (has `energy_drain_rate`/`activation_time`):
+1. Add to `TOGGLEABLE_ABILITIES` in `game/ui/screens/planet_abilities_window.py`
+2. Add to `_ACTIVATABLE_ABILITIES` in `game/strategy/engine/planet_energy_engine.py`
+3. Add to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py`
+
+**If the ability affects system/sector scope:**
+4. Add to `SYSTEM_EFFECT_ABILITIES` in `game/strategy/services/system_effects_collector.py`
+
+**If the ability modifies combat stats:**
+5. Add collection logic to `game/strategy/services/combat_modifier_collector.py` with `require_active=True`
+
+**If the ability modifies planet properties** (like gravity, water, radiation):
+6. Add an editor window (follow `gravity_target_editor.py` pattern with `species_selector_mixin`)
+7. Add the editor's ability key to `_ENVIRONMENT_EDITORS` in `planet_abilities_window.py`
+8. Add an `_open_*_editor()` method to `strategy_event_router.py`
+9. Wire the editor in `strategy_window_manager.py:_open_planet_editor()`
 
 ## Working with Ship Layers
 
@@ -442,6 +463,10 @@ No `__init__` override needed -- the base `Ability.__init__` handles `component`
 - [ ] Unit tests for STAT_BINDINGS
 - [ ] Integration tests for modifier interaction
 - [ ] All tests pass
+- [ ] (If activatable) Added to `TOGGLEABLE_ABILITIES`, `_ACTIVATABLE_ABILITIES`, `_ACTIVATABLE_DISPLAY_NAMES`
+- [ ] (If system/sector scope) Added to `SYSTEM_EFFECT_ABILITIES` in system_effects_collector
+- [ ] (If combat-affecting) Added to combat_modifier_collector with `require_active=True`
+- [ ] (If planet modifier) Editor window, `_ENVIRONMENT_EDITORS`, event router method
 
 ## Common Errors and Solutions
 
