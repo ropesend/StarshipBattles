@@ -273,6 +273,26 @@ aggregate HP drops; individual mode uses per-ship thresholds.
 `GroupPolicyRegistry.validate_policy(combat_policy)` returns error messages
 for invalid preset IDs.
 
+### Spatial Behaviors
+
+**Package:** `game/ai/spatial_behaviors/`
+
+Spatial behaviors define how ships position relative to an anchor (ship,
+group centroid, or zone). Each behavior computes a target position; the
+AI controller navigates the ship there.
+
+| Behavior | Type | Description |
+|----------|------|-------------|
+| `FreeManeuverBehavior` | Loose | No spatial constraints |
+| `BattleLineBehavior` | Rigid | Line/wedge/echelon perpendicular to leader facing |
+| `ColumnBehavior` | Rigid | Single file behind leader |
+| `ScreenBehavior` | Loose | Orbit around anchor point at radius |
+| `EscortBehavior` | Loose | Stay near anchor ship |
+| `PatrolZoneBehavior` | Loose | Cover a circular zone |
+
+Factory: `create_spatial_behavior(type_str, **kwargs)` creates behavior by
+type string. Unknown types default to `FreeManeuverBehavior`.
+
 ### Fleet Delegates
 
 Fleet uses composition with 4 delegates:
