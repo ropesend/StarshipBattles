@@ -72,7 +72,6 @@ Input handlers are prefixed with their screen/context name:
 | Class | File |
 |-------|------|
 | `StrategyInputHandler` | `game/ui/screens/strategy_input_handler.py` |
-| `FormationInputHandler` | `game/ui/screens/formation_input_handler.py` |
 | `TestLabInputHandler` | `game/ui/screens/test_lab/test_lab_input_handler.py` |
 | `WeaponsInputHandler` | `game/ui/screens/builder/weapons_input_handler.py` |
 
@@ -341,6 +340,10 @@ Key rules:
 | `data/homeworld_presets.json` | Homeworld planet configuration presets |
 | `data/race_names.json` | Generated race name pools |
 | `data/components.json` | All component definitions |
+| `data/combat_strategies.json` | Per-ship AI combat strategies (targeting + movement policy pairs) |
+| `data/targeting_policies.json` | Targeting rule sets for per-ship AI |
+| `data/movement_policies.json` | Movement behavior presets for per-ship AI |
+| `data/group_policies.json` | Group-level combat policy presets (targeting, movement, retreat — 21 presets for fleet hierarchy) |
 
 ### 5.3 Starter Designs and Races
 

@@ -37,8 +37,8 @@
 |--------|----------|--------|
 | Combat/Simulation | [combat_simulation.md](systems/combat_simulation.md) | Battle modes, damage pipeline, ship architecture, abilities |
 | Abilities | [ability_reference.md](systems/ability_reference.md) | All 44 component abilities: registry keys, parameters, stat bindings |
-| Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, events |
-| AI | [ai_system.md](systems/ai_system.md) | Behaviors, strategy manager, target evaluator, adapters |
+| Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, fleet hierarchy (task forces, squadrons), design roles, group policies, deployment zones, auto-suggestion, events |
+| AI | [ai_system.md](systems/ai_system.md) | Movement behaviors, spatial behaviors, group target coordinator, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
 | Orders | [orders_system.md](systems/orders_system.md) | Order lifecycle, types, execution engines |
 | Production | [production_system.md](systems/production_system.md) | Build queues, tick-based production, spawning, rate resolution |
@@ -67,6 +67,8 @@ docs/
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging
 ├── 06_UI_STYLE_GUIDE.md         # Colors, themes, pygame_gui
+│
+├── _ignore/                     # User's personal notes — NOT documentation. DO NOT READ.
 │
 ├── guides/                      # How-to guides for common tasks
 │   ├── component_system.md        Component/ability system overview

@@ -365,7 +365,7 @@ All defined as module-level tuples in `game/ui/colors.py`. Import by name:
 
 ### Setup Screen
 
-Constants prefixed `SETUP_*`, `FORMATION_*`, `ITEM_*`, `DROPDOWN_*` for battle setup UI.
+Constants prefixed `SETUP_*`, `ITEM_*`, `DROPDOWN_*` for battle setup UI.
 See `game/ui/colors.py` lines 192-211 for the full set.
 
 ### Weapon Renderer
@@ -403,11 +403,6 @@ Constants prefixed `JSON_*` for syntax-highlighted JSON display. `SCROLLBAR_TRAC
 
 Constants prefixed `DIFF_*` for changed/added/removed highlighting, plus `VIEWER_BTN_*`
 for diff viewer buttons.
-
-### Formation Editor
-
-Constants prefixed `FORMATION_GRID`, `FORMATION_AXIS`, `FORMATION_ARROW*`,
-`FORMATION_FIXED*` for the formation editor grid and markers.
 
 ### Design Thumbnail Fallbacks
 

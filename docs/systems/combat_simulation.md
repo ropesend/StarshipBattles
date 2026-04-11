@@ -203,7 +203,6 @@ the strategy layer's `ConflictResolutionEngine`, not by apply_results().
 - `game/simulation/entities/ship_stats.py` -- `ShipStatsCalculator`
 - `game/simulation/entities/ship_stat_querier.py` -- `ShipStatQuerier`
 - `game/simulation/entities/ship_physics.py` -- `ShipPhysicsMixin`
-- `game/simulation/entities/ship_formation.py` -- `ShipFormation`
 - `game/simulation/entities/ship_validator_helper.py` -- `ShipValidatorHelper`
 
 ### Ship Class
@@ -239,7 +238,6 @@ Ship
   ├── stats_calculator: ShipStatsCalculator (lazy)
   ├── stat_querier: ShipStatQuerier (lazy)
   ├── validator_helper: ShipValidatorHelper (lazy)
-  ├── formation: ShipFormation
   └── resources: ResourceRegistry
 ```
 
@@ -337,7 +335,7 @@ Armor, storage tanks, crew quarters, life support, and strategy-only components 
 
 `is_derelict` is a **functional flag** (not tied to a specific component):
 - `True` when the ship has **no operational weapons AND no operational engines**
-- Used by UI for status display, by battle engine for victory counting, by AI for formation control
+- Used by UI for status display, by battle engine for victory counting, by AI for behavior decisions
 - Can result from C&C loss, resource depletion, crew shortage, or component destruction
 
 `battle_engine.start()` runs an initial component update cycle so that RequiresCommandAndControl
@@ -487,7 +485,6 @@ Defined across files in `game/simulation/components/abilities/`:
 | `ICombatShip` | Ships in combat | name, team_id, position, velocity, hp, shields, layers, combat_engine |
 | `IProjectile` | Projectiles (missiles, bullets) | owner, team_id, position, damage, type, target, turn_rate |
 | `IPhysicsShip` | Ships with movement | is_thrusting, engine_throttle, mass, turn_speed, turn_throttle, acceleration_rate |
-| `IFormationHost` | Formation leaders | formation |
 | `ISerializableShip` | Strategic persistence | total_strategic_movement, warp_max_tonnage, ship_class, warp_energy_cost, vehicle_type, theme_id |
 
 TypeGuard functions: `is_combat_ship()`, `is_projectile()`, `is_physics_ship()`, etc.

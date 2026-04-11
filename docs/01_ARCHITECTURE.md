@@ -116,11 +116,11 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage      | Description |
 |-----------------|-------------|
-| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
+| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), fleet hierarchy (`fleet_hierarchy.py` [BattleRole, CombatPolicy, FleetHierarchyNode], `task_force.py`, `squadron.py`, `design_role.py`, `group_policy_registry.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, TurnStateSnapshot, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`). **Error model (PROJ-251):** Sub-engines validate preconditions via `_validate_tick_inputs()`. `_time_phase()` wraps failures in `EnginePhaseError`. `process_turn()` captures pre-turn snapshot and rolls back on failure. |
-| `services/`     | FleetSpeedCalculator, FleetNavigationService, ComponentInspector (includes `has_warp_capability`, `get_ability_list`), DesignCostCalculator, DesignValidator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner |
+| `services/`     | FleetSpeedCalculator, FleetNavigationService, ComponentInspector (includes `has_warp_capability`, `get_ability_list`), DesignCostCalculator, DesignValidator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner, DeploymentZoneCalculator, TaskGroupSuggester |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
-| `facade/dto/`   | Read-only DTOs: FleetInfo (+ `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`), SystemInfo, PlanetInfo (+ `staging_yard_summary`), EmpireInfo |
+| `facade/dto/`   | Read-only DTOs: FleetInfo (+ `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`), SystemInfo, PlanetInfo (+ `staging_yard_summary`), EmpireInfo, TaskForceInfo, SquadronInfo, ShipInfoExtended (fleet hierarchy DTOs) |
 | `interfaces/`   | IBattleResolver, BattleResult (strategy-layer battle DTO) |
 | `adapters/`     | SimulationBattleResolver (IBattleResolver implementation) |
 | `generation/`   | Galaxy generation: density maps, planet gen, star placement, storm gen |
@@ -136,6 +136,7 @@ Six layers with strict downward-only dependency flow:
 | `controller.py`      | AIController -- main decision loop per ship. `update()` decomposed into `_acquire_targets()`, `_select_behavior()`, `_execute_behavior()` stages. |
 | `behaviors.py`       | 11 behavior classes (Kite, AttackRun, Ram, Flee, Orbit, StationaryFire, DoNothing, StraightLine, RotateOnly, Erratic + base AIBehavior) |
 | `spatial_behaviors/`  | Spatial positioning system: BattleLine, Column, Screen, Escort, PatrolZone, FreeManeuver. Replaces old ShipFormation. |
+| `group_target_coordinator.py` | GroupTargetCoordinator -- focus fire, reserve commitment, flagship succession |
 | `strategy_manager.py`| StrategyManager -- resolves AI strategy names to definitions |
 | `target_evaluator.py`| TargetEvaluator -- scores and prioritizes targets |
 | `ai_factory.py`      | AIControllerFactory -- creates controllers (moved from simulation layer) |

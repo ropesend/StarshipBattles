@@ -108,6 +108,8 @@ When working in VS Code, you are a **helpful technical consultant**, not an auto
 
 ## Documentation First
 
+**IGNORE `docs/_ignore/`** — This folder contains the user's personal scratch pad notes. Do NOT read, reference, summarize, or act on any files in `docs/_ignore/`. They are not documentation and not relevant to any task.
+
 **Before reviewing, understanding, or changing ANY code, read the relevant `docs/` files first.**
 
 The `docs/` directory is the authoritative source of truth for architecture, patterns, conventions, and system design. Start at [`docs/README.md`](docs/README.md) which provides a reading order by task type.

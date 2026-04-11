@@ -398,8 +398,9 @@ Requires component registry via DI (constructor or ship's `_registries`).
 Bridges strategy Fleet with simulation Ship for combat:
 
 - `to_battle_ships(team_id, formation_positions?, registries?)` -- converts
-  `ShipInstance` list to simulation `Ship` objects with formation positions
-  (default: Team 0 at x=20000, Team 1 at x=80000, 2000px vertical spacing)
+  `ShipInstance` list to simulation `Ship` objects with deployment positions
+  (default: Team 0 at x=20000, Team 1 at x=80000, 2000px vertical spacing;
+  use `DeploymentZoneCalculator` for hierarchy-aware positioning)
 - `update_from_battle_results(surviving_ships)` -- updates fleet from
   `IPostBattleShip` protocol; ships not in survivors are removed (destroyed)
 
