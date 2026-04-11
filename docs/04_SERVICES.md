@@ -191,6 +191,7 @@ These are not service methods but ViewModel methods that delegate to the service
 | `quick_add_component` | `(component_id: str, selected_layer?: LayerType, count?: int) -> bool` | Add component via palette "+" button with auto layer resolution |
 | `move_component` | `(source_layer: LayerType, index: int, target_layer: LayerType) -> bool` | Move single component between layers (remove + re-add instance) |
 | `move_component_group` | `(group_key: str, source_layer: LayerType, target_layer: LayerType) -> bool` | Move all components in a group between layers |
+| `resolve_move_target` | `(component: Component, source_layer: LayerType, direction: str) -> Optional[LayerType]` | Find next valid layer in "up"/"down" direction (skips HULL and invalid layers) |
 | `on_modifier_changed` | `() -> None` | Called after any modifier change — syncs multi-selection, always recalculates ship stats |
 
 #### Stats Panel Configuration

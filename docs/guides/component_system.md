@@ -177,12 +177,13 @@ Modifiers customize component stats. They are applied in the Workshop during shi
 ### Modifier Flow
 
 ```
-1. User adjusts slider in Workshop UI
-2. Component.set_modifier_value() called
-3. Modifier value stored in component.modifiers dict
-4. Component.recalculate_stats() triggered
-5. Ability.recalculate() applies stat bindings
-6. Final stat values updated
+1. User adjusts slider/button in Workshop UI
+2. ModifierEditorPanel._on_row_change() sets modifier value
+3. component.recalculate_stats() called (component-level)
+4. Workshop callback → viewmodel.on_modifier_changed()
+5. Multi-selection: modifiers synced to other selected components
+6. viewmodel.notify_ship_changed() → ship.recalculate_stats()
+7. SHIP_UPDATED event emitted → all UI panels refresh
 ```
 
 For detailed modifier documentation, see [modifier_system.md](modifier_system.md).
