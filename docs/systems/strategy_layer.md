@@ -231,23 +231,54 @@ FleetHierarchyNode), `game/strategy/data/task_force.py`, and
 
 ### Design Roles
 
-**File:** `game/strategy/data/design_role.py`
+**Data file:** `data/design_roles.json`
+**Registry:** `game/strategy/data/design_role.py` — `DesignRoleRegistry`
+**Enum (legacy):** `game/strategy/data/design_role.py` — `DesignRole`
 
-Design roles are classification labels assigned to ship designs based on
-component loadout. They drive auto-suggestion for fleet organization and
-UI grouping but have no direct combat behavior effect.
+Design roles are classification labels assigned to vehicle designs. They
+drive auto-suggestion for fleet organization and UI grouping but have no
+direct combat behavior effect. The player assigns a role in the Design
+Workshop via a dropdown.
 
-10 starter roles: `LINE_COMBATANT`, `FLEET_ESCORT`, `INTERCEPTOR`,
-`ASSAULT_SHIP`, `MISSILE_PLATFORM`, `RAIDER`, `CARRIER`, `SUPPORT_SHIP`,
-`SCOUT`, `COMMAND_SHIP`.
+**28 roles** defined in `data/design_roles.json`, each with:
+- `id` �� string identifier (e.g., `"line_combatant"`)
+- `name` — display name (e.g., `"Line Combatant"`)
+- `description` — tooltip text
+- `allowed_vehicle_types` — which vehicle types can use this role (e.g., `["Ship", "Satellite"]`)
 
+Role categories:
+- **Ship combat** (6): line_combatant, fleet_escort, interceptor, assault_ship, missile_platform, raider
+- **Ship support** (4): carrier, support_ship, scout, command_ship
+- **Universal** (4): general_purpose, shield_projector, sensor_platform, stellar_protector
+- **Planetary complex** (5): resource_harvester, production_facility, defensive_platform, planetary_modifier, research_facility
+- **Specialized** (7): transport, superweapon_platform, megastructure_builder, enrichment_facility, resupply_depot, construction_accelerator, colony_pod, assault_pod
+
+**DesignRoleRegistry** (loaded from JSON):
+- `get_roles_for_vehicle_type(type)` — roles allowed for a vehicle type (for dropdown filtering)
+- `get_role_name(role_id)` — display name from ID
+- `get_role_id_by_name(display_name)` — ID from display name
+- `get_all_role_ids()` — all role IDs
+- Module-level accessor: `get_default_design_role_registry()`
+
+**Auto-classification** (legacy, still available):
 - `classify_design_role(abilities, mass)` — classify from ability set + mass
 - `classify_from_design_data(design_data, component_registry)` — classify from full design
 
-ShipInstance fields:
-- `design_role: Optional[str]` — auto-classified role (DesignRole value)
-- `role_override: Optional[str]` — player override
+**Ship field:** `Ship.design_role: str` — stored in design JSON, defaults to `"general_purpose"`
+
+**ShipInstance fields:**
+- `design_role: Optional[str]` — from design data
+- `role_override: Optional[str]` — player override per instance
 - `effective_role` property — returns override if set, else design_role
+
+**DesignMetadata field:** `design_role: str` — extracted during `from_design_file()`,
+used by `DesignSelectorWindow` role filter dropdown.
+
+**UI integration:**
+- **Design Workshop** right panel: "Role:" dropdown after "AI:" dropdown, filtered by current vehicle type. Updates when vehicle type changes.
+- **Design Selector** (load dialog): "Design Role:" filter dropdown in sidebar. Defaults to "All Roles", filters design list when a specific role is selected.
+
+All 25 QS starter designs have `design_role` assigned.
 
 ### Group Combat Policies
 
