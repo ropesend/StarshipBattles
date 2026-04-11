@@ -10,6 +10,10 @@ import pygame_gui
 from pygame_gui.elements import UIWindow, UILabel, UIButton, UIHorizontalSlider
 from typing import Optional, Callable
 
+from game.ui.screens.species_selector_mixin import (
+    build_species_selector, get_selected_race_id, load_race_config,
+)
+
 logger = logging.getLogger(__name__)
 
 # Slider range
@@ -50,6 +54,8 @@ class RadiationShieldEditor(UIWindow):
         self.on_apply_callback = on_apply_callback
         self.on_close_callback = on_close_callback
         self.race_config = race_config
+        self._species_dropdown = None
+        self._default_race_id = None
 
         self.magnetic_field = getattr(planet, 'magnetic_field', 0.0)
         self.current_shielding = getattr(planet, 'radiation_shielding', 0.0)
@@ -57,12 +63,17 @@ class RadiationShieldEditor(UIWindow):
         self._build_ui()
 
     def _build_ui(self):
-        """Build the editor UI with info labels, a shielding slider, and buttons."""
+        """Build the editor UI with species selector, info labels, slider, and buttons."""
         content_rect = self.get_container().get_rect()
         container_w = content_rect.width
         container_h = content_rect.height
 
         y = 10
+
+        # Species selector (shown only if multiple species on planet)
+        self._species_dropdown, widgets, y, self._default_race_id = build_species_selector(
+            self.planet, self, self.ui_manager, y, container_w,
+        )
 
         # Natural magnetic field display
         self.lbl_field = UILabel(
@@ -189,16 +200,17 @@ class RadiationShieldEditor(UIWindow):
         self.kill()
 
     def _set_auto(self):
-        """Calculate and set the needed shielding from species radiation tolerance.
+        """Calculate and set the needed shielding from selected species' radiation tolerance.
 
         Formula:
             threshold = 0.5 - (radiation_tolerance / 200)
             needed = max(0, threshold - planet.magnetic_field)
         """
-        if self.race_config is None:
+        rc = self._get_active_race_config()
+        if rc is None:
             return
 
-        radiation_tolerance = getattr(self.race_config, 'radiation_tolerance', None)
+        radiation_tolerance = getattr(rc, 'radiation_tolerance', None)
         if radiation_tolerance is None:
             return
 
@@ -212,6 +224,20 @@ class RadiationShieldEditor(UIWindow):
             "Auto shielding: tolerance=%s, threshold=%.3f, field=%.3f, needed=%.3f",
             radiation_tolerance, threshold, self.magnetic_field, clamped,
         )
+
+    def _get_active_race_config(self):
+        """Get the race config for the currently selected species."""
+        if self._species_dropdown is not None:
+            race_id = get_selected_race_id(self._species_dropdown)
+            if race_id:
+                rc = load_race_config(race_id)
+                if rc:
+                    return rc
+        if self._default_race_id:
+            rc = load_race_config(self._default_race_id)
+            if rc:
+                return rc
+        return self.race_config
 
     def _clear_target(self):
         """Clear shielding target (apply None)."""

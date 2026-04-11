@@ -701,6 +701,9 @@ ACTIVE   --[deactivate order]--> DEACTIVATING --[N ticks]--> INACTIVE
 | `WarpFieldStabilizer` | OPEN_WARP_POINT, CLOSE_WARP_POINT | system | 250 ticks | 150 ticks | 150/turn |
 | `GravityModifier` | — (modifies planet gravity) | self | 15 ticks | 5 ticks | 30/turn |
 | `RadiationShield` | — (adds radiation shielding) | self | 15 ticks | 5 ticks | 20/turn |
+| `ShieldModifier` | — (modifies fleet shields in combat) | varies | 15-25 ticks | 5-10 ticks | 30-50/turn |
+| `DamageModifier` | — (modifies fleet damage in combat) | varies | 15-25 ticks | 5-10 ticks | 30-50/turn |
+| `ShieldProjection` | — (adds flat shields in combat) | varies | 15-25 ticks | 5-10 ticks | 30-50/turn |
 
 The list of activatable ability keys is maintained in `planet_energy_engine.py:_ACTIVATABLE_ABILITIES`.
 
@@ -729,10 +732,13 @@ All three stabilizers (Geologic, Stellar, WarpField) use a unified check in
 4. Add display name to `TOGGLEABLE_ABILITIES` dict in `planet_abilities_window.py`
 5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`
 6. If it blocks superweapons: add check method in `superweapon_order_processor.py` using `_is_stabilized()`
-7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system-scope
-8. Add keyboard toggle binding in `strategy_fleet_command_router.py`
-9. Create component in `components.json` and QS complex design in `data/designs/`
-10. Write tests in `tests/unit/simulation/components/abilities/` and `tests/unit/strategy/engine/`
+7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system/sector scope — the collector accepts scopes in `_SYSTEM_RELEVANT_SCOPES` (system*, sector*, planet)
+8. If it affects combat: add to `combat_modifier_collector.py` with `require_active=True`
+9. Add keyboard toggle binding in `strategy_fleet_command_router.py`
+10. Create component in `components.json` with `energy_drain_rate`, `activation_time`, `deactivation_time` in the ability data — these are required for the abilities window to show the ability
+11. Create QS complex design in `data/designs/` with `design_role` field
+12. Write tests in `tests/unit/simulation/components/abilities/` and `tests/unit/strategy/engine/`
+13. Update `docs/systems/ability_reference.md` and `docs/systems/strategy_layer.md` activatable abilities table
 
 ### Build Queue Source DI
 

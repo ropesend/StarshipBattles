@@ -151,8 +151,6 @@ class StrategyDetailFormatter:
         self.btn_build_yard.hide()
         if self.btn_planet_orders:
             self.btn_planet_orders.hide()  # PROJ-238
-        if self.btn_atmosphere:
-            self.btn_atmosphere.hide()
         if self.btn_abilities:
             self.btn_abilities.hide()
         self.btn_orders.hide()
@@ -270,9 +268,6 @@ class StrategyDetailFormatter:
                 self.btn_build_yard.show()
             if self.btn_planet_orders:
                 self.btn_planet_orders.show()
-            if self.btn_atmosphere:
-                if self._planet_has_atmosphere_modifier(obj):
-                    self.btn_atmosphere.show()
             if self.btn_abilities:
                 self.btn_abilities.show()
         self._layout_action_buttons()
@@ -314,7 +309,7 @@ class StrategyDetailFormatter:
         """Position all visible action buttons in a horizontal row at the bottom."""
         try:
             all_buttons = [
-                self.btn_planet_orders, self.btn_atmosphere, self.btn_build_yard,
+                self.btn_planet_orders, self.btn_build_yard,
                 self.btn_abilities,
                 self.btn_orders, self.btn_fleet_report, self.btn_colonize, self.btn_build_fleet,
             ]

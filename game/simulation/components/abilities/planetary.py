@@ -425,10 +425,17 @@ class ShieldModifierAbility(Ability):
 
     Strategic-layer ability that modifies shield effectiveness in combat.
     Values below 1.0 suppress shields; values above 1.0 boost them.
-    Applied pre-battle by the combat modifier collector.
+    Applied pre-battle by the combat modifier collector when ACTIVE.
+
+    Planetary complex variants are activatable (have energy_drain_rate and
+    activation_time). Ship-mounted fleet variants can omit these fields
+    to remain passive (always-on).
 
     Data fields:
         multiplier: Shield capacity multiplier (e.g., 0.75 for 25% reduction)
+        energy_drain_rate: Energy consumed per turn while active (0 = passive)
+        activation_time: Ticks to activate (0 = passive/instant)
+        deactivation_time: Ticks to deactivate
     """
 
     layer = AbilityLayer.STRATEGIC
@@ -448,14 +455,20 @@ class ShieldModifierAbility(Ability):
 
         if isinstance(data, dict):
             self.multiplier = data.get("multiplier", 1.0)
+            self.energy_drain_rate = data.get("energy_drain_rate", 0.0)
+            self.activation_time = data.get("activation_time", 0)
+            self.deactivation_time = data.get("deactivation_time", 0)
         else:
             self.multiplier = 1.0
+            self.energy_drain_rate = 0.0
+            self.activation_time = 0
+            self.deactivation_time = 0
 
     def get_primary_value(self) -> float:
         return self.multiplier
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
-        return [
+        rows = [
             {
                 'label': 'Shield Modifier',
                 'value': f'{self.multiplier:.2f}x',
@@ -467,6 +480,19 @@ class ShieldModifierAbility(Ability):
                 'color_hint': HINT_SHIELD_CAP
             },
         ]
+        if self.energy_drain_rate > 0:
+            rows.append({
+                'label': 'Energy Drain',
+                'value': f'{self.energy_drain_rate:.1f}/turn',
+                'color_hint': HINT_WARP_ENERGY
+            })
+        if self.activation_time > 0:
+            rows.append({
+                'label': 'Activation',
+                'value': f'{self.activation_time} ticks',
+                'color_hint': HINT_DEFAULT
+            })
+        return rows
 
 
 class DamageModifierAbility(Ability):
@@ -474,10 +500,17 @@ class DamageModifierAbility(Ability):
 
     Strategic-layer ability that modifies weapon damage in combat.
     Values below 1.0 suppress damage; values above 1.0 boost it.
-    Applied pre-battle by the combat modifier collector.
+    Applied pre-battle by the combat modifier collector when ACTIVE.
+
+    Planetary complex variants are activatable (have energy_drain_rate and
+    activation_time). Ship-mounted fleet variants can omit these fields
+    to remain passive (always-on).
 
     Data fields:
         multiplier: Damage output multiplier (e.g., 1.25 for 25% increase)
+        energy_drain_rate: Energy consumed per turn while active (0 = passive)
+        activation_time: Ticks to activate (0 = passive/instant)
+        deactivation_time: Ticks to deactivate
     """
 
     layer = AbilityLayer.STRATEGIC
@@ -497,14 +530,20 @@ class DamageModifierAbility(Ability):
 
         if isinstance(data, dict):
             self.multiplier = data.get("multiplier", 1.0)
+            self.energy_drain_rate = data.get("energy_drain_rate", 0.0)
+            self.activation_time = data.get("activation_time", 0)
+            self.deactivation_time = data.get("deactivation_time", 0)
         else:
             self.multiplier = 1.0
+            self.energy_drain_rate = 0.0
+            self.activation_time = 0
+            self.deactivation_time = 0
 
     def get_primary_value(self) -> float:
         return self.multiplier
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
-        return [
+        rows = [
             {
                 'label': 'Damage Modifier',
                 'value': f'{self.multiplier:.2f}x',
@@ -516,6 +555,19 @@ class DamageModifierAbility(Ability):
                 'color_hint': HINT_SHIELD_CAP
             },
         ]
+        if self.energy_drain_rate > 0:
+            rows.append({
+                'label': 'Energy Drain',
+                'value': f'{self.energy_drain_rate:.1f}/turn',
+                'color_hint': HINT_WARP_ENERGY
+            })
+        if self.activation_time > 0:
+            rows.append({
+                'label': 'Activation',
+                'value': f'{self.activation_time} ticks',
+                'color_hint': HINT_DEFAULT
+            })
+        return rows
 
 
 class QualityImprovementAbility(Ability):

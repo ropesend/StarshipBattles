@@ -14,26 +14,35 @@ class TestShieldModifierAbility:
     """Tests for ShieldModifierAbility."""
 
     def test_construction_from_dict(self):
-        """Should parse multiplier, scope, and stack_group."""
+        """Should parse multiplier, scope, stack_group, and activation fields."""
         comp = MagicMock()
         data = {
             "multiplier": 0.75,
             "scope": "enemy_system",
             "stack_group": "shield_suppress_system",
+            "energy_drain_rate": 50.0,
+            "activation_time": 25,
+            "deactivation_time": 10,
         }
         ability = ShieldModifierAbility(comp, data)
 
         assert ability.multiplier == 0.75
         assert ability.scope == AbilityScope.ENEMY_SYSTEM
         assert ability.stack_group == "shield_suppress_system"
+        assert ability.energy_drain_rate == 50.0
+        assert ability.activation_time == 25
+        assert ability.deactivation_time == 10
 
     def test_defaults(self):
-        """Should default to 1.0 multiplier and allied_system scope."""
+        """Should default to 1.0 multiplier, allied_system scope, and passive (0) activation."""
         comp = MagicMock()
         ability = ShieldModifierAbility(comp, {})
 
         assert ability.multiplier == 1.0
         assert ability.scope == AbilityScope.ALLIED_SYSTEM
+        assert ability.energy_drain_rate == 0.0
+        assert ability.activation_time == 0
+        assert ability.deactivation_time == 0
 
     def test_layer_is_strategic(self):
         """Should be a strategic-layer ability."""
@@ -81,6 +90,18 @@ class TestShieldModifierAbility:
         assert 'Shield Modifier' in labels
         assert 'Scope' in labels
 
+    def test_get_ui_rows_with_activation(self):
+        """Should show energy drain and activation when present."""
+        comp = MagicMock()
+        ability = ShieldModifierAbility(comp, {
+            "multiplier": 1.25, "scope": "allied_system",
+            "energy_drain_rate": 50.0, "activation_time": 25,
+        })
+        rows = ability.get_ui_rows()
+        labels = [r['label'] for r in rows]
+        assert 'Energy Drain' in labels
+        assert 'Activation' in labels
+
     def test_no_stat_bindings(self):
         """Strategic ability should have no stat bindings."""
         assert ShieldModifierAbility.STAT_BINDINGS == []
@@ -90,26 +111,35 @@ class TestDamageModifierAbility:
     """Tests for DamageModifierAbility."""
 
     def test_construction_from_dict(self):
-        """Should parse multiplier, scope, and stack_group."""
+        """Should parse multiplier, scope, stack_group, and activation fields."""
         comp = MagicMock()
         data = {
             "multiplier": 1.50,
             "scope": "allied_sector",
             "stack_group": "damage_boost_sector",
+            "energy_drain_rate": 30.0,
+            "activation_time": 15,
+            "deactivation_time": 5,
         }
         ability = DamageModifierAbility(comp, data)
 
         assert ability.multiplier == 1.50
         assert ability.scope == AbilityScope.ALLIED_SECTOR
         assert ability.stack_group == "damage_boost_sector"
+        assert ability.energy_drain_rate == 30.0
+        assert ability.activation_time == 15
+        assert ability.deactivation_time == 5
 
     def test_defaults(self):
-        """Should default to 1.0 multiplier and allied_system scope."""
+        """Should default to 1.0 multiplier, allied_system scope, and passive (0) activation."""
         comp = MagicMock()
         ability = DamageModifierAbility(comp, {})
 
         assert ability.multiplier == 1.0
         assert ability.scope == AbilityScope.ALLIED_SYSTEM
+        assert ability.energy_drain_rate == 0.0
+        assert ability.activation_time == 0
+        assert ability.deactivation_time == 0
 
     def test_layer_is_strategic(self):
         """Should be a strategic-layer ability."""

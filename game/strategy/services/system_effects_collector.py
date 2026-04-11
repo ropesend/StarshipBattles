@@ -27,6 +27,14 @@ logger = logging.getLogger(__name__)
 
 # Abilities we consider "system effects" — must have scope == "system"
 # Maps ability_name -> display_name
+# Scopes considered relevant for the system effects display panel.
+# Includes all system-level and sector-level scopes (anything that affects
+# more than just the owning entity).
+_SYSTEM_RELEVANT_SCOPES = frozenset({
+    'system', 'allied_system', 'player_system', 'enemy_system',
+    'sector', 'allied_sector', 'player_sector', 'enemy_sector',
+})
+
 SYSTEM_EFFECT_ABILITIES = {
     'GeologicStabilizer': 'Geologic Stabilizer',
     'StellarStabilizer': 'Stellar Stabilizer',
@@ -148,8 +156,10 @@ def collect_system_effects(
                         if not isinstance(entry, dict):
                             continue
 
-                        # Filter to system scope only
-                        if entry.get('scope') != 'system':
+                        # Filter to system/sector-level scopes (any scope that affects
+                        # a meaningful area around the planet, not just self/fleet)
+                        entry_scope = entry.get('scope', 'self')
+                        if entry_scope not in _SYSTEM_RELEVANT_SCOPES:
                             continue
 
                         group_key = _make_group_key(ability_name, entry)

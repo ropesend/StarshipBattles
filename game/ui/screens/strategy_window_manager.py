@@ -576,8 +576,32 @@ class StrategyWindowManager:
         y = (self.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
         self.planet_abilities_window = PlanetAbilitiesWindow(
-            rect, self.manager, planet, self.scene.facade, component_registry
+            rect, self.manager, planet, self.scene.facade, component_registry,
+            on_open_editor=self._open_planet_editor,
         )
+
+    def _open_planet_editor(self, editor_type: str, planet) -> None:
+        """Open a planet environment editor from the abilities window.
+
+        Args:
+            editor_type: One of 'atmosphere', 'gravity', 'water', 'radiation'.
+            planet: Planet object.
+        """
+        from game.ui.screens.strategy_event_router import StrategyEventRouter
+        # Delegate to the event router which has all editor opening methods
+        router = getattr(self.scene, '_event_router', None)
+        if router is None:
+            # Build a temporary router if not available on scene
+            router = StrategyEventRouter(self.scene.ui)
+        editor_map = {
+            'atmosphere': router._open_atmosphere_editor,
+            'gravity': router._open_gravity_editor,
+            'water': router._open_water_editor,
+            'radiation': router._open_radiation_shield_editor,
+        }
+        opener = editor_map.get(editor_type)
+        if opener:
+            opener(planet)
 
     # =========================================================================
     # System Selection Prompt (PROJ-138)

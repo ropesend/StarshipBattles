@@ -82,6 +82,9 @@ _ACTIVATABLE_ABILITIES = [
     'WarpFieldStabilizer',
     'GravityModifier',
     'RadiationShield',
+    'ShieldModifier',
+    'DamageModifier',
+    'ShieldProjection',
 ]
 
 
