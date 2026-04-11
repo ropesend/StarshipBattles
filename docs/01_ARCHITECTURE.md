@@ -116,7 +116,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage      | Description |
 |-----------------|-------------|
-| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), fleet hierarchy (`fleet_hierarchy.py` [BattleRole, CombatPolicy, FleetHierarchyNode], `task_force.py`, `squadron.py`, `design_role.py`, `group_policy_registry.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
+| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), fleet hierarchy (`fleet_hierarchy.py` [BattleRole, CombatPolicy, FleetHierarchyNode], `task_force.py`, `squadron.py`, `design_role.py` [DesignRole enum, DesignRoleRegistry — loads 28 roles from `data/design_roles.json` with vehicle type filtering], `group_policy_registry.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, TurnStateSnapshot, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`). **Error model (PROJ-251):** Sub-engines validate preconditions via `_validate_tick_inputs()`. `_time_phase()` wraps failures in `EnginePhaseError`. `process_turn()` captures pre-turn snapshot and rolls back on failure. |
 | `services/`     | FleetSpeedCalculator, FleetNavigationService, ComponentInspector (includes `has_warp_capability`, `get_ability_list`), DesignCostCalculator, DesignValidator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner, DeploymentZoneCalculator, TaskGroupSuggester |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
@@ -127,7 +127,7 @@ Six layers with strict downward-only dependency flow:
 | `events/`       | EventLog, EventTypes for strategy-layer event tracking |
 | `formulas/`     | Habitability formulas |
 | `validation/`   | ColonizeValidator, SuperweaponValidator, TransferValidator, PlanetOrderValidator |
-| `systems/`      | DesignLibrary, RaceLibrary, RaceRandomizer, SaveGameService |
+| `systems/`      | DesignLibrary (design filtering including `design_role`), RaceLibrary, RaceRandomizer, SaveGameService |
 
 ### `game/ai/` -- Combat AI
 

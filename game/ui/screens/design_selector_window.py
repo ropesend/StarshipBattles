@@ -163,6 +163,25 @@ class DesignSelectorWindow(UIWindow):
         )
         y_offset += 40
 
+        # Design role filter
+        UILabel(
+            relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 25),
+            text="Design Role:",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y_offset += 30
+
+        role_options = self._get_role_filter_options()
+        self.role_dropdown = UIDropDownMenu(
+            options_list=role_options,
+            starting_option="All Roles",
+            relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 30),
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y_offset += 40
+
         # Show obsolete checkbox (as button for now)
         self.obsolete_button = UIButton(
             relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 35),
@@ -259,11 +278,23 @@ class DesignSelectorWindow(UIWindow):
         if type_option != "All Types":
             type_filter = type_option
 
+        role_option = self.role_dropdown.selected_option
+        if isinstance(role_option, tuple):
+            role_option = role_option[0]
+
+        role_filter = None
+        if role_option != "All Roles":
+            # Map display name back to role ID
+            from game.strategy.data.design_role import get_default_design_role_registry
+            registry = get_default_design_role_registry()
+            role_filter = registry.get_role_id_by_name(role_option)
+
         logger.info(f"DesignSelector: Refreshing design list (mode={self.mode})")
         logger.debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
         logger.debug(f"  filter_name: '{self.filter_name}'")
         logger.debug(f"  class_filter: {class_filter}")
         logger.debug(f"  type_filter: {type_filter}")
+        logger.debug(f"  role_filter: {role_filter}")
         logger.debug(f"  show_obsolete: {self.show_obsolete}")
 
         # Search designs
@@ -272,6 +303,7 @@ class DesignSelectorWindow(UIWindow):
             filters={
                 'ship_class': class_filter,
                 'vehicle_type': type_filter,
+                'design_role': role_filter,
                 'show_obsolete': self.show_obsolete
             }
         )
@@ -286,6 +318,18 @@ class DesignSelectorWindow(UIWindow):
 
         # Rebuild UI
         self._rebuild_design_list()
+
+    def _get_role_filter_options(self):
+        """Get role display names for the filter dropdown."""
+        from game.strategy.data.design_role import get_default_design_role_registry
+
+        registry = get_default_design_role_registry()
+        all_role_ids = registry.get_all_role_ids()
+
+        options = ["All Roles"]
+        for role_id in sorted(all_role_ids):
+            options.append(registry.get_role_name(role_id))
+        return options
 
     def _rebuild_design_list(self):
         """Rebuild the design list UI"""
@@ -372,7 +416,7 @@ class DesignSelectorWindow(UIWindow):
         name_text = design.name
 
         UILabel(
-            relative_rect=pygame.Rect(name_x, 5, 200, 25),
+            relative_rect=pygame.Rect(name_x, 5, 350, 30),
             text=name_text,
             manager=self.ui_manager,
             container=row
@@ -380,7 +424,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Ship class
         UILabel(
-            relative_rect=pygame.Rect(name_x, 30, 150, 20),
+            relative_rect=pygame.Rect(name_x, 35, 250, 20),
             text=f"Class: {design.ship_class}",
             manager=self.ui_manager,
             container=row
@@ -388,7 +432,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Vehicle type
         UILabel(
-            relative_rect=pygame.Rect(name_x + 155, 30, 150, 20),
+            relative_rect=pygame.Rect(name_x + 255, 35, 180, 20),
             text=f"Type: {design.vehicle_type}",
             manager=self.ui_manager,
             container=row
@@ -396,7 +440,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Mass
         UILabel(
-            relative_rect=pygame.Rect(name_x + 315, 30, 100, 20),
+            relative_rect=pygame.Rect(name_x + 440, 35, 100, 20),
             text=f"Mass: {design.mass:.0f}",
             manager=self.ui_manager,
             container=row

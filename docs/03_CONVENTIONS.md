@@ -344,13 +344,14 @@ Key rules:
 | `data/targeting_policies.json` | Targeting rule sets for per-ship AI |
 | `data/movement_policies.json` | Movement behavior presets for per-ship AI |
 | `data/group_policies.json` | Group-level combat policy presets (targeting, movement, retreat — 21 presets for fleet hierarchy) |
+| `data/design_roles.json` | Design role definitions (28 roles) with vehicle type restrictions — loaded by `DesignRoleRegistry` |
 
 ### 5.3 Starter Designs and Races
 
 Starter designs (`data/designs/`) and starter races (`data/races/`) are shipped game data used by both quickstart and normal new games. All files use the `qs_` prefix.
 
 **Adding a new starter design:**
-1. Create `data/designs/qs_<name>.json` with required fields: `name`, `ship_class`, `vehicle_type`, `layers`, `expected_stats`, `_metadata`
+1. Create `data/designs/qs_<name>.json` with required fields: `name`, `ship_class`, `vehicle_type`, `design_role`, `layers`, `expected_stats`, `_metadata`
 2. Run `python Tools/validate_designs/validate_designs.py` to validate
 3. Add tests in `tests/unit/quickstart/test_quickstart_designs.py` if the design has special requirements
 4. If the design is a starting complex (auto-built on homeworld), add its design_id to `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py`

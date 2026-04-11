@@ -378,6 +378,7 @@ class DesignLibrary:
     def filter_designs(self,
                       ship_class: Optional[str] = None,
                       vehicle_type: Optional[str] = None,
+                      design_role: Optional[str] = None,
                       show_obsolete: bool = False) -> List[DesignMetadata]:
         """
         Filter designs by criteria.
@@ -385,6 +386,7 @@ class DesignLibrary:
         Args:
             ship_class: Filter by ship class (None = no filter)
             vehicle_type: Filter by vehicle type (None = no filter)
+            design_role: Filter by design role (None = no filter)
             show_obsolete: Whether to include obsolete designs
 
         Returns:
@@ -398,6 +400,9 @@ class DesignLibrary:
 
         if vehicle_type:
             designs = [d for d in designs if d.vehicle_type == vehicle_type]
+
+        if design_role:
+            designs = [d for d in designs if d.design_role == design_role]
 
         if not show_obsolete:
             designs = [d for d in designs if not d.is_obsolete]
@@ -421,6 +426,7 @@ class DesignLibrary:
         designs = self.filter_designs(
             ship_class=filters.get('ship_class'),
             vehicle_type=filters.get('vehicle_type'),
+            design_role=filters.get('design_role'),
             show_obsolete=filters.get('show_obsolete', False)
         )
 

@@ -120,6 +120,9 @@ def _make_selector_window(design_library=None, mode="load", on_select_callback=N
     window.type_dropdown = MagicMock()
     window.type_dropdown.selected_option = "All Types"
 
+    window.role_dropdown = MagicMock()
+    window.role_dropdown.selected_option = "All Roles"
+
     window.obsolete_button = MagicMock()
     window.apply_filters_button = MagicMock()
     window.select_button = MagicMock()

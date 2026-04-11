@@ -48,6 +48,7 @@ purpose typically go in **OUTER** (or **INNER** for protected placement).
   "team_id": 0,
   "color": [100, 100, 255],
   "ai_strategy": "standard_ranged",
+  "design_role": "resource_harvester",
   "layers": {
     "CORE": [
       {
@@ -124,6 +125,7 @@ purpose typically go in **OUTER** (or **INNER** for protected placement).
 | `team_id` | Yes | Default team (0) |
 | `color` | Yes | RGB color array |
 | `ai_strategy` | Yes | AI behavior key (standard for complexes: `"standard_ranged"`) |
+| `design_role` | Yes | Classification label from `data/design_roles.json`. Common complex roles: `resource_harvester`, `production_facility`, `planetary_modifier`, `stellar_protector`, `enrichment_facility`, `resupply_depot`, `construction_accelerator`, `defensive_platform` |
 | `layers` | Yes | Component layout (CORE, INNER, OUTER, ARMOR) |
 | `resources` | Yes | Initial resource levels |
 | `expected_stats` | Yes | Cached stat snapshot (recalculated at load) |
@@ -225,6 +227,9 @@ different `vehicle_type` values and combat-oriented components.
 Create `data/designs/qs_<name>.json` following the structure above. Use an existing
 complex as a template -- copy the infrastructure components (command, crew, life support)
 and replace the specialized component(s).
+
+Set the `design_role` field to an appropriate role from `data/design_roles.json`
+(must be a role that allows `"Planetary Complex"` in `allowed_vehicle_types`).
 
 Ensure the specialized component exists in `data/components.json` with
 `"Planetary Complex"` in `allowed_vehicle_types`.
