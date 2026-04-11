@@ -47,6 +47,7 @@ class ShipSerializer:
                 "team_id": ship.team_id,
                 "color": ship.color,
                 "ai_strategy": ship.ai_strategy,
+                "design_role": ship.design_role,
                 "layers": {},
                 "resources": {
                     "fuel": ship.resources.get_value("fuel"),
@@ -159,6 +160,7 @@ class ShipSerializer:
                 theme_id=data.get("theme_id", "Federation"),
                 registries=registries)
         s.ai_strategy = data.get("ai_strategy", "standard_ranged")
+        s.design_role = data.get("design_role", "general_purpose")
 
         ShipSerializer._load_components(s, data, registries)
         s.recalculate_stats()

@@ -1,0 +1,116 @@
+{
+    "_comment": "Design roles — classification labels for vehicle designs. Each role lists allowed vehicle types.",
+
+    "roles": {
+        "general_purpose": {
+            "name": "General Purpose",
+            "description": "No specific role specialization.",
+            "allowed_vehicle_types": ["Ship", "Fighter", "Satellite", "Planetary Complex", "Drop Pod"]
+        },
+
+        "line_combatant": {
+            "name": "Line Combatant",
+            "description": "Heavy firepower for capital ship engagement.",
+            "allowed_vehicle_types": ["Ship", "Satellite"]
+        },
+        "fleet_escort": {
+            "name": "Fleet Escort",
+            "description": "Anti-fighter/missile screening and fleet defense.",
+            "allowed_vehicle_types": ["Ship", "Fighter", "Satellite"]
+        },
+        "interceptor": {
+            "name": "Interceptor",
+            "description": "Fast pursuit and anti-small-craft.",
+            "allowed_vehicle_types": ["Ship", "Fighter"]
+        },
+        "assault_ship": {
+            "name": "Assault Ship",
+            "description": "Close-range brawler and boarding actions.",
+            "allowed_vehicle_types": ["Ship"]
+        },
+        "missile_platform": {
+            "name": "Missile Platform",
+            "description": "Long-range seeker/missile focus.",
+            "allowed_vehicle_types": ["Ship", "Satellite", "Planetary Complex"]
+        },
+        "raider": {
+            "name": "Raider",
+            "description": "Hit-and-run and commerce disruption.",
+            "allowed_vehicle_types": ["Ship", "Fighter"]
+        },
+
+        "carrier": {
+            "name": "Carrier",
+            "description": "Fighter/bomber launch platform.",
+            "allowed_vehicle_types": ["Ship", "Satellite", "Planetary Complex"]
+        },
+        "support_ship": {
+            "name": "Support Ship",
+            "description": "Repair, resupply, and fleet buffs.",
+            "allowed_vehicle_types": ["Ship", "Satellite"]
+        },
+        "scout": {
+            "name": "Scout",
+            "description": "Sensors, ECM, and reconnaissance.",
+            "allowed_vehicle_types": ["Ship", "Fighter", "Satellite"]
+        },
+        "command_ship": {
+            "name": "Command Ship",
+            "description": "Fleet coordination and C&C bonuses.",
+            "allowed_vehicle_types": ["Ship", "Satellite"]
+        },
+
+        "shield_projector": {
+            "name": "Shield Projector",
+            "description": "Projects shields to nearby vessels or across a region.",
+            "allowed_vehicle_types": ["Ship", "Satellite", "Planetary Complex"]
+        },
+        "sensor_platform": {
+            "name": "Sensor Platform",
+            "description": "Detection, tracking, and electronic warfare.",
+            "allowed_vehicle_types": ["Ship", "Satellite", "Planetary Complex"]
+        },
+        "stellar_protector": {
+            "name": "Stellar Protector",
+            "description": "Stabilizes stars, warp points, or geological features.",
+            "allowed_vehicle_types": ["Ship", "Satellite", "Planetary Complex"]
+        },
+
+        "resource_harvester": {
+            "name": "Resource Harvester",
+            "description": "Extracts planetary resources.",
+            "allowed_vehicle_types": ["Planetary Complex"]
+        },
+        "production_facility": {
+            "name": "Production Facility",
+            "description": "Ship construction and manufacturing.",
+            "allowed_vehicle_types": ["Planetary Complex", "Satellite"]
+        },
+        "defensive_platform": {
+            "name": "Defensive Platform",
+            "description": "Fixed defensive weapons emplacement.",
+            "allowed_vehicle_types": ["Satellite", "Planetary Complex"]
+        },
+        "planetary_modifier": {
+            "name": "Planetary Modifier",
+            "description": "Modifies planetary conditions (atmosphere, gravity, etc.).",
+            "allowed_vehicle_types": ["Planetary Complex"]
+        },
+        "research_facility": {
+            "name": "Research Facility",
+            "description": "Scientific research and technology development.",
+            "allowed_vehicle_types": ["Planetary Complex", "Satellite"]
+        },
+
+        "colony_pod": {
+            "name": "Colony Pod",
+            "description": "Colonization and population delivery.",
+            "allowed_vehicle_types": ["Drop Pod", "Ship"]
+        },
+        "assault_pod": {
+            "name": "Assault Pod",
+            "description": "Orbital assault and boarding delivery.",
+            "allowed_vehicle_types": ["Drop Pod"]
+        }
+    }
+}

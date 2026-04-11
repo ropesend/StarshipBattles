@@ -21,6 +21,7 @@ class TestBug04Display:
         builder.ship.get_missing_requirements.return_value = []
         builder.ship.get_validation_warnings.return_value = []
         builder.ship.ai_strategy = "standard_ranged"
+        builder.ship.design_role = "general_purpose"
         builder.ship.mass = 1000
         builder.ship.max_mass_budget = 2000
 

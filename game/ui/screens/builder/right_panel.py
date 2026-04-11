@@ -131,16 +131,22 @@ class BuilderRightPanel:
             ai_display = ai_options[0]
                 
         self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
-        
+        y += 40
+
+        # Role
+        UILabel(pygame.Rect(10, y, 60, 25), "Role:", manager=self.manager, container=self.panel)
+        role_options, curr_role_display = self._get_role_dropdown_data(curr_type)
+        self.role_dropdown = UIDropDownMenu(role_options, curr_role_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+
         # Portrait Image (Side by Side)
         self.portrait_image = None
         img_x = 280
         img_size = 200 # Approx match height of 5 rows (200px)
         self.portrait_rect = pygame.Rect(img_x, 10, img_size, img_size) # Fixed slot
-        
+
         self.update_portrait_image()
-        
-        y += 40 # Ends at 210
+
+        y += 40
         self.last_y = max(y, 10 + img_size) + 10
 
     def refresh_controls(self):
@@ -222,10 +228,16 @@ class BuilderRightPanel:
             self.ai_dropdown, ai_options, ai_display, self.manager, container=self.panel
         )
 
-        # 6. Update Portrait
+        # 6. Recreate Role
+        role_options, curr_role_display = self._get_role_dropdown_data(curr_type)
+        self.role_dropdown = recreate_dropdown(
+            self.role_dropdown, role_options, curr_role_display, self.manager, container=self.panel
+        )
+
+        # 7. Update Portrait
         self.update_portrait_image()
 
-        # 7. Rebuild Stats (Logic might satisfy dynamic resources)
+        # 8. Rebuild Stats
         self.rebuild_stats()
 
 
@@ -350,6 +362,42 @@ class BuilderRightPanel:
         self.vehicle_type_dropdown = recreate_dropdown(
             self.vehicle_type_dropdown, valid_types, new_type, self.manager, container=self.panel
         )
+
+    def update_role_dropdown(self, vehicle_type: str):
+        """Recreate role dropdown filtered for a new vehicle type.
+
+        Args:
+            vehicle_type: Current vehicle type to filter roles for.
+        """
+        role_options, curr_role_display = self._get_role_dropdown_data(vehicle_type)
+        self.role_dropdown = recreate_dropdown(
+            self.role_dropdown, role_options, curr_role_display, self.manager, container=self.panel
+        )
+
+    def _get_role_dropdown_data(self, vehicle_type: str):
+        """Get role dropdown options and current selection for a vehicle type.
+
+        Returns:
+            Tuple of (options_list, current_display_name).
+        """
+        from game.strategy.data.design_role import get_default_design_role_registry
+
+        registry = get_default_design_role_registry()
+        roles = registry.get_roles_for_vehicle_type(vehicle_type)
+
+        if not roles:
+            return ["General Purpose"], "General Purpose"
+
+        role_options = [r["name"] for r in roles]
+
+        # Find display name for ship's current role
+        curr_role_id = self.builder.ship.design_role
+        curr_display = registry.get_role_name(curr_role_id)
+
+        if curr_display not in role_options:
+            curr_display = role_options[0]
+
+        return role_options, curr_display
 
     def update_dropdowns_for_data_reload(self, default_class: str, vehicle_classes: dict):
         """Update dropdowns after a data reload with new vehicle class data.

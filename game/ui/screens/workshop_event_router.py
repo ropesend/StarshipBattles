@@ -412,7 +412,9 @@ class WorkshopEventRouter:
             return True
         elif event.ui_element == gui.right_panel.ai_dropdown:
             return self._handle_ai_dropdown(event)
-        
+        elif event.ui_element == gui.right_panel.role_dropdown:
+            return self._handle_role_dropdown(event)
+
         return False
     
     def _handle_class_dropdown(self, event) -> bool:
@@ -486,7 +488,20 @@ class WorkshopEventRouter:
                 f"available: {[s.get('name') for s in service.strategies.values()]}"
             )
         return True
-    
+
+    def _handle_role_dropdown(self, event) -> bool:
+        """Handle design role dropdown change."""
+        gui = self.gui
+        from game.strategy.data.design_role import get_default_design_role_registry
+
+        selected_name = event.text
+        registry = get_default_design_role_registry()
+        role_id = registry.get_role_id_by_name(selected_name)
+
+        if role_id:
+            gui.viewmodel.set_ship_design_role(role_id)
+        return True
+
     def _handle_confirmation(self, event) -> bool:
         """Handle confirmation dialog confirmed events."""
         gui = self.gui

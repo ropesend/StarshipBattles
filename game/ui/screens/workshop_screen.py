@@ -456,6 +456,7 @@ class DesignWorkshopScreen:
                     valid_class_names = ["Escort"]
 
                 self.right_panel.update_class_dropdown(data, valid_class_names)
+                self.right_panel.update_role_dropdown(new_type)
 
                 self.update_stats()
                 self.right_panel.update_portrait_image()

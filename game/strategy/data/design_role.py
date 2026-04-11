@@ -1,16 +1,24 @@
 """
-Design roles — classification labels for ship designs.
+Design roles — classification labels for vehicle designs.
 
-Roles are assigned at design time based on component loadout. They drive
+Roles are assigned at design time in the workshop. They drive
 auto-suggestion for fleet organization and UI grouping but have no direct
 combat behavior effect.
 
-Each ship design gets a suggested role via classify_design_role().
-Individual ShipInstances can override their role via role_override.
+Role definitions are loaded from data/design_roles.json. Each role
+specifies which vehicle types it can be applied to.
+
+Individual ShipInstances can override their design role via role_override.
 """
 
+import logging
 from enum import Enum
-from typing import Dict, Any, Optional, Set
+from typing import Dict, Any, List, Optional
+
+from game.core.json_utils import load_json
+from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 
 
 class DesignRole(Enum):
@@ -143,3 +151,100 @@ def classify_from_design_data(
                 total_mass += comp_mass
 
     return classify_design_role(abilities=all_abilities, mass=total_mass)
+
+
+# =============================================================================
+# Data-Driven Role Registry (loaded from JSON)
+# =============================================================================
+
+class DesignRoleRegistry:
+    """Registry of design roles loaded from data/design_roles.json.
+
+    Provides role definitions with vehicle type filtering for the UI.
+    """
+
+    def __init__(self):
+        self._roles: Dict[str, Dict[str, Any]] = {}
+        self._loaded = False
+
+    def load(self, file_path: Optional[str] = None) -> None:
+        """Load role definitions from JSON.
+
+        Args:
+            file_path: Path to design_roles.json. Defaults to Paths constant.
+        """
+        if file_path is None:
+            file_path = Paths.DESIGN_ROLES_FILE
+
+        data = load_json(file_path, default={})
+        self._roles = data.get("roles", {})
+        self._loaded = True
+
+        logger.info(f"DesignRoleRegistry loaded: {len(self._roles)} roles")
+
+    def ensure_loaded(self) -> None:
+        """Load if not already loaded."""
+        if not self._loaded:
+            self.load()
+
+    def get_roles_for_vehicle_type(self, vehicle_type: str) -> List[Dict[str, Any]]:
+        """Get roles allowed for a given vehicle type.
+
+        Args:
+            vehicle_type: e.g. "Ship", "Planetary Complex", "Satellite"
+
+        Returns:
+            List of role dicts with 'id', 'name', 'description' keys,
+            sorted by name. Only includes roles that allow this vehicle type.
+        """
+        self.ensure_loaded()
+        result = []
+        for role_id, role_def in self._roles.items():
+            allowed = role_def.get("allowed_vehicle_types", [])
+            if vehicle_type in allowed:
+                result.append({
+                    "id": role_id,
+                    "name": role_def.get("name", role_id),
+                    "description": role_def.get("description", ""),
+                })
+        result.sort(key=lambda r: r["name"])
+        return result
+
+    def get_role_name(self, role_id: str) -> str:
+        """Get the display name for a role ID.
+
+        Returns the role_id itself if not found.
+        """
+        self.ensure_loaded()
+        role_def = self._roles.get(role_id)
+        if role_def:
+            return role_def.get("name", role_id)
+        return role_id
+
+    def get_role_id_by_name(self, display_name: str) -> Optional[str]:
+        """Find a role ID from its display name.
+
+        Returns None if no match found.
+        """
+        self.ensure_loaded()
+        for role_id, role_def in self._roles.items():
+            if role_def.get("name") == display_name:
+                return role_id
+        return None
+
+    def get_all_role_ids(self) -> List[str]:
+        """Get all role IDs."""
+        self.ensure_loaded()
+        return list(self._roles.keys())
+
+
+# Module-level singleton
+_default_registry: Optional[DesignRoleRegistry] = None
+
+
+def get_default_design_role_registry() -> DesignRoleRegistry:
+    """Get the module-level DesignRoleRegistry, auto-creating on first access."""
+    global _default_registry
+    if _default_registry is None:
+        _default_registry = DesignRoleRegistry()
+    return _default_registry
