@@ -42,14 +42,6 @@ def mock_ship():
     ship.secondary_targets = []
     ship.layers = {}
 
-    # Formation attributes
-    ship.formation = MagicMock()
-    ship.formation.members = []
-    ship.formation.master = None
-    ship.formation.active = False
-    ship.formation.offset = None
-    ship.formation.rotation_mode = 'relative'
-
     # Methods
     ship.rotate = MagicMock()
     ship.thrust_forward = MagicMock()
@@ -251,110 +243,6 @@ class TestCombatMethods:
         assert result is layers
 
 
-class TestFormationMethods:
-    """Tests for formation-related methods."""
-
-    def test_get_formation_members(self, mock_ship):
-        """get_formation_members returns ship.formation.members."""
-        members = [MagicMock(), MagicMock()]
-        mock_ship.formation.members = members
-        adapter = ShipControllableAdapter(mock_ship)
-
-        result = adapter.get_formation_members()
-
-        assert result == members
-
-    def test_get_formation_members_none(self, mock_ship):
-        """get_formation_members returns empty list if members is None."""
-        mock_ship.formation.members = None
-        adapter = ShipControllableAdapter(mock_ship)
-
-        result = adapter.get_formation_members()
-
-        assert result == []
-
-    def test_get_formation_master(self, mock_ship):
-        """get_formation_master returns ship.formation.master."""
-        master = MagicMock()
-        mock_ship.formation.master = master
-        adapter = ShipControllableAdapter(mock_ship)
-
-        result = adapter.get_formation_master()
-
-        assert result is master
-
-    def test_is_in_formation(self, mock_ship):
-        """is_in_formation returns ship.formation.active."""
-        mock_ship.formation.active = True
-        adapter = ShipControllableAdapter(mock_ship)
-
-        result = adapter.is_in_formation()
-
-        assert result is True
-
-    def test_set_in_formation(self, mock_ship):
-        """set_in_formation sets ship.formation.active."""
-        adapter = ShipControllableAdapter(mock_ship)
-
-        adapter.set_in_formation(True)
-
-        assert mock_ship.formation.active is True
-
-    def test_set_formation_master(self, mock_ship):
-        """set_formation_master sets ship.formation.master."""
-        master = MagicMock()
-        adapter = ShipControllableAdapter(mock_ship)
-
-        adapter.set_formation_master(master)
-
-        assert mock_ship.formation.master is master
-
-
-class TestLeaveFormation:
-    """Tests for leave_formation edge cases."""
-
-    def test_leave_formation_removes_from_master(self, mock_ship):
-        """leave_formation removes ship from master's members list."""
-        master = MagicMock()
-        master.formation.members = [mock_ship]
-        mock_ship.formation.master = master
-
-        adapter = ShipControllableAdapter(mock_ship)
-        adapter.leave_formation()
-
-        assert mock_ship not in master.formation.members
-
-    def test_leave_formation_no_master(self, mock_ship):
-        """leave_formation handles no master gracefully."""
-        mock_ship.formation.master = None
-
-        adapter = ShipControllableAdapter(mock_ship)
-
-        # Should not raise
-        adapter.leave_formation()
-
-    def test_leave_formation_not_in_members(self, mock_ship):
-        """leave_formation handles ship not in members list."""
-        master = MagicMock()
-        master.formation.members = []  # Ship not in list
-        mock_ship.formation.master = master
-
-        adapter = ShipControllableAdapter(mock_ship)
-
-        # Should not raise
-        adapter.leave_formation()
-
-    def test_leave_formation_broken_formation_structure(self, mock_ship):
-        """leave_formation handles broken formation gracefully."""
-        master = MagicMock(spec=['name'])  # No formation attribute
-        mock_ship.formation.master = master
-
-        adapter = ShipControllableAdapter(mock_ship)
-
-        # Should not raise
-        adapter.leave_formation()
-
-
 class TestInterfaceCompleteness:
     """Tests to verify complete interface implementation."""
 
@@ -396,11 +284,6 @@ class TestInterfaceCompleteness:
         adapter.get_ai_strategy()
         adapter.get_vehicle_type()
         adapter.get_all_components()
-        adapter.get_formation_members()
-        adapter.get_formation_master()
-        adapter.is_in_formation()
-        adapter.get_formation_offset()
-        adapter.get_formation_rotation_mode()
 
         # Call each setter
         adapter.set_throttle(1.0)
@@ -413,9 +296,6 @@ class TestInterfaceCompleteness:
         adapter.set_current_target(None)
         adapter.set_secondary_targets([])
         adapter.get_components_by_ability('Test')
-        adapter.set_in_formation(False)
-        adapter.set_formation_master(None)
-        adapter.leave_formation()
 
 
 class TestIdentityAndState:

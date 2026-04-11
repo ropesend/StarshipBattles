@@ -84,7 +84,6 @@ class TestAIEvaluationCycle:
 
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ship1.comp_trigger_pulled = True  # Pre-set to verify it gets cleared
-        ship1.formation.active = False  # Not in formation
 
         ai_controller.update()
 

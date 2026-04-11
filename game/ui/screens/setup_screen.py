@@ -8,7 +8,6 @@ PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization
 to get registries from get_default_registry_provider() when first needed.
 """
 import os
-import uuid
 import pygame
 import tkinter as tk
 from tkinter import filedialog
@@ -22,10 +21,9 @@ from game.ui.colors import BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT
 logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
 from game.core.strategy_metadata import get_default_strategy_metadata_service
-from game.core.json_utils import load_json_required
 from game.core.paths import Paths
 from game.ui.screens.setup_data_io import (
-    scan_ship_designs, scan_formations,
+    scan_ship_designs,
     load_ships_from_entries, save_battle_setup, load_battle_setup
 )
 from game.ui.screens.setup_renderer import (
@@ -78,7 +76,6 @@ class BattleSetupScreen:
         self.scene_callback = scene_callback
 
         self.available_ship_designs = []
-        self.available_formations = []
         self.team1 = []
         self.team2 = []
         self.scroll = ScrollState()
@@ -88,7 +85,6 @@ class BattleSetupScreen:
     def start(self, preserve_teams=False):
         """Initialize or reset the setup screen."""
         self.available_ship_designs = scan_ship_designs()
-        self.available_formations = scan_formations()
 
         if not preserve_teams:
             self.team1 = []
@@ -144,110 +140,17 @@ class BattleSetupScreen:
             self.team2 = new_team2
             self.ai_dropdown_open = None
 
-    def add_formation_to_team(self, formation, team_idx):
-        """Add a formation to a specific team with a selected ship design."""
-        root = tk.Tk()
-        root.withdraw()
-
-        ships_dir = Paths.SHIPS_DIR
-
-        ship_path = filedialog.askopenfilename(
-            initialdir=ships_dir,
-            title=f"Select Ship for {formation['name']}",
-            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
-        )
-        root.destroy()
-
-        if not ship_path:
-            return
-
-        try:
-            arrows = formation['arrows']
-            if not arrows:
-                return
-
-            ship_data = load_json_required(ship_path)
-            # PROJ-43: Use factory to get radius without direct Ship import
-            # PROJ-211: Use getter for lazy-initialized factory
-            radius = _get_ship_factory().get_ship_radius(ship_data)
-            diameter = radius * 2
-
-            design_entry = self._find_or_create_design(ship_path, ship_data)
-            self._add_formation_entries(arrows, design_entry, diameter, formation['name'], team_idx)
-        except (KeyError, TypeError, ValueError, AttributeError) as e:
-            logger.error(f"Error adding formation: {e}")
-
-    def _find_or_create_design(self, ship_path, ship_data):
-        """Find existing design entry or create new one."""
-        for d in self.available_ship_designs:
-            if os.path.normpath(d['path']) == os.path.normpath(ship_path):
-                return d
-        return {
-            'path': ship_path,
-            'name': ship_data.get('name', 'Unknown'),
-            'ship_class': ship_data.get('ship_class', 'Unknown'),
-            'ai_strategy': ship_data.get('ai_strategy', 'standard_ranged')
-        }
-
-    def _add_formation_entries(self, arrows, design_entry, diameter, formation_name, team_idx):
-        """Add formation entries to the appropriate team."""
-        positions = [item['pos'] if isinstance(item, dict) else item for item in arrows]
-        min_x, max_x = min(p[0] for p in positions), max(p[0] for p in positions)
-        min_y, max_y = min(p[1] for p in positions), max(p[1] for p in positions)
-        center_x, center_y = (min_x + max_x) / 2, (min_y + max_y) / 2
-
-        formation_id = str(uuid.uuid4())
-        GRID_UNIT = 50.0
-        target_list = self.team1 if team_idx == 1 else self.team2
-
-        for item in arrows:
-            if isinstance(item, dict):
-                ax, ay = item['pos']
-                rot_mode = item.get('rotation_mode', 'relative')
-            else:
-                ax, ay = item
-                rot_mode = 'relative'
-
-            world_x = ((ax - center_x) / GRID_UNIT) * diameter
-            world_y = ((ay - center_y) / GRID_UNIT) * diameter
-
-            target_list.append({
-                'design': design_entry,
-                'strategy': design_entry.get('ai_strategy', 'standard_ranged'),
-                'relative_position': (world_x, world_y),
-                'formation_id': formation_id,
-                'formation_name': formation_name,
-                'rotation_mode': rot_mode
-            })
-
     def get_team_display_groups(self, team_list):
         """Group team entries for display."""
         display_items = []
-        processed_formation_ids = set()
-
         for i, entry in enumerate(team_list):
-            f_id = entry.get('formation_id')
-            if f_id:
-                if f_id in processed_formation_ids:
-                    continue
-                member_indices = [idx for idx, e in enumerate(team_list) if e.get('formation_id') == f_id]
-                display_items.append({
-                    'type': 'formation',
-                    'name': f"{entry.get('formation_name', 'Formation')}: {entry['design']['name']}",
-                    'count': len(member_indices),
-                    'indices': member_indices,
-                    'strategy': entry['strategy'],
-                    'entry_ref': entry
-                })
-                processed_formation_ids.add(f_id)
-            else:
-                display_items.append({
-                    'type': 'ship',
-                    'name': entry['design']['name'],
-                    'index': i,
-                    'strategy': entry['strategy'],
-                    'entry_ref': entry
-                })
+            display_items.append({
+                'type': 'ship',
+                'name': entry['design']['name'],
+                'index': i,
+                'strategy': entry['strategy'],
+                'entry_ref': entry
+            })
         return display_items
 
     def handle_event(self, event):
@@ -300,22 +203,14 @@ class BattleSetupScreen:
             self._handle_dropdown_click(mx, my, col2_x, col3_x)
 
     def _handle_ships_click(self, mx, my, button):
-        """Handle click on available ships/formations column."""
-        ships_end_y = 150
+        """Handle click on available ships column."""
         for i, design in enumerate(self.available_ship_designs):
             y = 150 + i * 40
-            ships_end_y = y + 40
             if y <= my < y + 35:
                 target = self.team1 if button == 1 else self.team2
                 target.append({'design': design, 'strategy': design.get('ai_strategy', 'standard_ranged')})
                 return True
 
-        form_start_y = ships_end_y + 40
-        for i, form in enumerate(self.available_formations):
-            y = form_start_y + i * 40
-            if y <= my < y + 35:
-                self.add_formation_to_team(form, 1 if button == 1 else 2)
-                return True
         return False
 
     def _handle_action_buttons(self, mx, my, sw, btn_y):
@@ -397,7 +292,7 @@ class BattleSetupScreen:
         btn_y = sh - 80
 
         draw_title(screen, sw)
-        draw_available_ships(screen, col1_x, self.available_ship_designs, self.available_formations, label_font, item_font)
+        draw_available_ships(screen, col1_x, self.available_ship_designs, [], label_font, item_font)
         draw_load_save_buttons(screen, btn_y, label_font)
         draw_team(screen, self.get_team_display_groups(self.team1), col2_x, "Team 1", TEAM_1_TEXT, label_font, item_font)
         draw_team(screen, self.get_team_display_groups(self.team2), col3_x, "Team 2", TEAM_2_TEXT, label_font, item_font)

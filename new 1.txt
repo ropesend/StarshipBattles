@@ -1,0 +1,137 @@
+Simulation Tests:
+
+For Catagories I want 1 catagory per ability.
+
+We Need the following:
+ - Armor Catagory - for simple armor,  Test the target, make sure that armor is hit 1st, and that other components are not affected till armor is at 0, additional armor should stack
+ 
+ - Emmisive Armor - Test the emmisive armor ability - 2 tests already exist these should be moved from the Defence Abilities Catagory to Emmisive Armor, emmisive ability should not stack in the same stacking group but can stack in different stacking groups
+ 
+ 
+ - ECM - reduces hit rate, show that it does not stack with the same stacking group but that it does with different stacking groups.
+		- Duplicate some BeamWeapon Tests with ECM
+ 
+ - Sensors - improves hit rate with beam weapons, should not stack in teh same stacking group but should stack in different stacking groups.
+ 
+ - Shields - should absorb damage before armor, or anything else
+ 
+ - shield Regenerator
+
+Lets do Shieldprojection next
+ - use two shiled components one with 1 billion shield points the other with 100, all other values that can be 0 should be 0 or not defined
+ Scenario 1: 
+ - Create a attacker design that simply has a beam weapon that does 1 unit of damage, and nothing else, similar to point blank beam weapon
+ - Create a target that has the large armor and the large shield 
+ - The test simply checks that the shield absorbs the damage and is reduced, but the armor is not touched
+ Scenario 2:
+ - Same Attacker
+ - Target now uses the small shield
+ - Test that the 1st 100 points are absorbesd by the shiled and the rest hit the armor.
+ 
+ Please ask questions, make suggestions about any other test cases
+ 
+ Now I want you to create a storage component that stores "metals", and a beam weapon, projectile weapon, and shiled that required metal as a resource.  Lets make sure there are no hardcoded assumptions about what resource is being used in any case.  each of these should go into their respective catagory, beam, projectile, and shield.  ask questions and make suggestions.
+ 
+ I want to create a new catagory for ShieldRegeneration
+  - Scenario 1 
+    - Similar to the point blank beam weapon test, but the target has a shield and regenerator, the regenerator should regenerate less that the expected damage.
+	- Will need to compare to a scenario with no regenerator as baseline
+  - Scenario 2 - regenerator requires resource - and 3 cases tested, 1) enough resources for full run, 2) no resources, 3) resources for half run
+    - make sure that a regenerator that requires a resource only works when the resource is present
+  Please ask questions, make suggestions about any other test cases
+  
+  Now lets take care of basic armor
+   - for the targets
+   - Use a  1B hitpoint armor in one design
+   - Use a  a 100 hitpoint armor in another
+   - Use 2 100 hitpoint armors in a 3rd
+   - Use no armor in a 4th
+   - all should have a simple very high hitpoint component that is not armor in the layer beneth the armor
+   - Put all 3 in the same situation - use a high accuracy beam weapon situation and measure the damage dealt and the damage taken to armor and the underlying componet
+   - Use comparison tests when it makes sense
+   Please make suggestions and ask questions
+   
+   Now lets take care of emmisive Armor
+   - 1)
+   
+   We need to work on the seeker weapon tests, there are a lot of variables so there will be a lot of tests, some tests will need to be high-tick
+    - 1) we need to verify that different projectile speeds result in different actual speeds - perhaps we launch a single seeker and measure time to impact, compare with different seeker speeds
+	- 2) endurance needs to be verified, we can compare different target distances with different endurance values
+	- 3) turn rate I think for this we take two identical seekers fire them directly away from the target, the one with faster steering should impact 1st since it will follow a shorter path
+	- 4) to_hit_defence can be checked by comparing hits with a PD weapon using different values for the defence
+	- 5) damage is easy we just compare the damage from a single impact with two different values
+	- 6) I do not remember what stealth level is supposed to be, please read the documentation and tell me.
+	- 7) We need a resource test - ensure that the missle doesn't fire when resources are absent - use the same appraoch as the beamweapon and the projectileweapon
+	- We may need to add more instrumentation to the simulation to measure everything we need to measure.
+	- There are definitly cases here that I am not considering
+	- Please carefully evaluare the code, consider all the other tests that we have doene and make suggestions for additional tests.
+	- Ask questions if anything is unclear.
+	
+
+Lets focus on resource storage
+1) pretty trivial, but I want all abilities to be tested, verify that different values result in different 
+
+
+Additional things to do in combat:
+
+- damage modifyer - Increase and decrease % - Scope: self, fleet, sector - Player, system - Player, Galaxy - Player
+- Shield modifyer - Increats and decrease % - Scope: self, fleet, sector, sector - Player, system,  system - Player, Galaxy - Player
+
+In CNC-006 the 1st and 2nd bridge components should be on different layers, and the second should have a lot of hitpoints to make it clear that it's survival keeps the ship operational.  currently both components are destroyed at almost the same time since they have the same hitpoints and are in the same layer.
+
+-------------------------
+
+In CNC-004 we should be testing movement, not the stats, I want the actual verified action in the simulation to show that the engines do not work without CNC
+
+I want to have Catagories and Subcatagories in the Combat Lab, currently almost all tests are ability specific, the only exception is the Damage Pipeline, and Modifyers, I want all ability specific catagories to be a subcatagory of abilities.  I will also want a modifyers catagory - this will have a bunch of sub catagories for each specific modifyer 
+
+
+Resource Transfer window doesn't resolve future-position colonies — When a fleet has a MOVE order queued and then a TRANSFER/COLONIZE is added, the transfer window doesn't show colonies at the fleet's destination, only at current position. Target dropdown is empty.
+
+Resource Transfer UI layout issues — Bottom buttons (Confirm All, Clear All, Cancel) clipped off screen; arrow buttons too narrow; need 5 arrow gradations per direction + Max button; insufficient space between left arrows and zero/right side for large numbers.
+
+Drop pods missing from transfer list — Drop pods should always appear as a transferable item even when none are currently loaded.
+
+No path-preview line during colonize target selection — When selecting a planet to colonize after a move order, no line draws from the fleet's projected position to the cursor (like move orders show).
+
+Order list needs an "Edit" button — LOAD/DROP orders should have a 4th button to re-open the transfer window and adjust amounts. MOVE orders should allow re-selecting a different hex.
+
+System Geologic Stabilizer not appearing in abilities list — After building the complex, it doesn't show up in the planet's activatable abilities panel.
+
+System effects not displayed in System view — Active stabilizers (Stellar, Geologic, Warp Field) don't show any indication in the System panel. Should show presence + active/inactive status.
+
+Activation tick timing issue — Stellar Stabilizer and Warp Field Stabilizer activated on the same turn show different remaining ticks, suggesting orders consume a tick each instead of being zero-tick instant dispatches that all process in the same tick.
+
+Shield event logging works — The event log correctly shows "activation started on Akkadia I" for all three stabilizers. (Positive feedback on work we just did!)
+
+Quality display needs 1 decimal place — Planet report shows quality as integer (e.g., "51"); user wants "51.X" to track incremental improvements.
+
+Atmosphere modification not working — Set nitrogen target to 150000 Pa, ran multiple turns, atmosphere stays at 0. Something is broken in the AtmosphereEngine or the target isn't being applied.
+
+Crash: ShipDTO has no attribute 'get_all_components' — Battle screen crash when clicking on a ship in the stats panel.
+
+Feature request: Construction Accelerator facilities — User wants new facility types: Sector Construction Accelerator and System Construction Accelerator.
+
+
+Expand Shied ShieldProjection to have fleet, Sector Player, Sector Allied, System Palyer, System Allied possible scopes
+Create two componenets and starter complexes: 
+Sector Shield Projector - projects 100 shield points to all playuer and allied vessels in the sector
+Ssytem Shield Projector - projects 50 shield points to all player and allied vessels in the sector
+
+
+Add Shield Modifyer Ability - simple value from 0 to infinity, all shields within the scope are multiplied by the value, so a 1.50 would change a ship with a normal 100pts shielding to 150pts
+Scopes should be: Self, Fleet, Sector (allied or player or enemy), system (allied or player or enemy)
+Create these components:
+System Shield Supressor: 0.75 value, system enemy scope - used to reduce the effectivness of enemy shield in system
+System Shield Booster: 1.25 value system allies scope - used to boost player and allied vessels shields in system
+Sector versions of both above - 0.50, and 1.50
+Fleet Versions of both - 0.95, and 1.05
+Create starter complexes for the system and sector versions (4 total complexes) - they do not start out constructed.
+
+Add Damage Modifyer Ability - similar to shield modifyer - 0 to infinitty, same scopes as Shiled modifyer
+Create 6 components similar to the Shield mopdifyers, same values and scopes
+Create 4 starter complexes  similar to above
+
+
+
+

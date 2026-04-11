@@ -11,11 +11,9 @@ from game.ai.interfaces.controllable import IControllable, ShipControllableAdapt
 from game.ai.protocols import (
     IGridEntity,
     IProjectile,
-    IFormationMaster,
     IComponentHealth,
     is_grid_entity,
     is_projectile,
-    is_formation_master,
     is_component_health,
 )
 
@@ -25,10 +23,8 @@ __all__ = [
     # PROJ-192 Protocols
     'IGridEntity',
     'IProjectile',
-    'IFormationMaster',
     'IComponentHealth',
     'is_grid_entity',
     'is_projectile',
-    'is_formation_master',
     'is_component_health',
 ]

@@ -10,7 +10,6 @@ import os
 import pytest
 import pygame
 
-from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.setup_data_io import load_ships_from_entries, scan_ship_designs
 
 
@@ -146,58 +145,3 @@ class TestFleetComposition:
         assert designs[0]['name'] == 'Valid Ship'
         assert designs[0]['path'] == os.path.join('ships', 'valid.json')
 
-    @patch('game.simulation.entities.ship.Ship.from_dict')
-    @patch('game.ui.screens.setup_screen.filedialog.askopenfilename')
-    @patch('game.ui.screens.setup_screen.tk.Tk')
-    @patch('game.ui.screens.setup_screen.uuid.uuid4')
-    @patch('game.ui.screens.setup_screen.load_json_required')
-    def test_add_formation_to_team(self, mock_load_json_required, mock_uuid, mock_tk, mock_dialog, mock_from_dict):
-        """Test adding a formation to a team.
-
-        PROJ-43: Updated to use ShipFactory mocking - patching Ship.from_dict.
-        """
-        # Setup
-        setup_screen = BattleSetupScreen(1920, 1080)
-        setup_screen.available_ship_designs = [
-            {'path': '/abs/path/to/ship.json', 'name': 'Test Ship', 'ai_strategy': 'test_strat'}
-        ]
-
-        formation = {
-            'name': 'Delta',
-            'arrows': [
-                {'pos': (0, 0)},        # Center
-                {'pos': (-100, -100)},  # Left
-                {'pos': (100, -100)}    # Right
-            ]
-        }
-
-        # Mock User selection
-        mock_dialog.return_value = '/abs/path/to/ship.json'
-
-        # Mock Ship loaded data
-        mock_load_json_required.return_value = {'name': 'Test Ship', 'ship_class': 'Frigate', 'ai_strategy': 'test_strat'}
-
-        # Mock Ship instance processing (now via ShipFactory.get_ship_radius)
-        mock_ship = MagicMock()
-        mock_ship.radius = 50
-        mock_from_dict.return_value = mock_ship
-
-        # Mock UUID
-        mock_uuid.return_value = 'form-uuid-123'
-
-        # Execute
-        setup_screen.add_formation_to_team(formation, team_idx=1)
-
-        # Assert
-        assert len(setup_screen.team1) == 3
-        assert len(setup_screen.team2) == 0
-
-        # Check entries
-        entry0 = setup_screen.team1[0]
-        assert entry0['formation_id'] == 'form-uuid-123'
-        assert entry0['formation_name'] == 'Delta'
-        assert entry0['design']['name'] == 'Test Ship'
-
-        # Just ensure they are all present and have correct IDs
-        for entry in setup_screen.team1:
-            assert entry['formation_id'] == 'form-uuid-123'

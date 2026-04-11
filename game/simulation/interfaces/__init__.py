@@ -22,14 +22,14 @@ Usage:
         IComponent,
 
         # Entity protocols
-        ICombatShip, IProjectile, IPhysicsShip, IFormationHost, ISerializableShip,
+        ICombatShip, IProjectile, IPhysicsShip, ISerializableShip,
 
         # TypeGuard functions
         is_ability, is_weapon, is_beam_weapon, is_seeker_weapon,
         is_projectile_weapon, is_resource_consumption, is_resource_storage,
         is_resource_generation, is_warp_jump,
         is_component,
-        is_combat_ship, is_projectile, is_physics_ship, is_formation_host,
+        is_combat_ship, is_projectile, is_physics_ship,
         is_serializable_ship,
     )
 
@@ -80,13 +80,11 @@ from game.simulation.interfaces.entity_protocols import (
     ICombatShip,
     IProjectile,
     IPhysicsShip,
-    IFormationHost,
     ISerializableShip,
     # TypeGuard functions
     is_combat_ship,
     is_projectile,
     is_physics_ship,
-    is_formation_host,
     is_serializable_ship,
 )
 
@@ -121,12 +119,10 @@ __all__ = [
     'ICombatShip',
     'IProjectile',
     'IPhysicsShip',
-    'IFormationHost',
     'ISerializableShip',
     # Entity TypeGuards
     'is_combat_ship',
     'is_projectile',
     'is_physics_ship',
-    'is_formation_host',
     'is_serializable_ship',
 ]

@@ -2,22 +2,20 @@
 AI Controller - Ship Combat AI Decision Making
 
 This module contains AIController, which provides autonomous behavior for
-ships during combat. Each ship gets an AIController that selects targets,
-chooses movement behaviors, and coordinates with formations.
+ships during combat. Each ship gets an AIController that selects targets
+and chooses movement behaviors.
 
 Behavior Selection Flowchart:
     1. Is ship alive? → No: Return (no action)
-    2. Is ship in formation with master? → Yes: Use 'formation' behavior
-    3. Check HP percentage against retreat threshold
+    2. Check HP percentage against retreat threshold
        - HP <= threshold → Use 'flee' behavior
-    4. Otherwise → Use behavior from movement policy (default: 'kite')
+    3. Otherwise → Use behavior from movement policy (default: 'kite')
 
 Available Behaviors:
     - kite: Maintain optimal range, close in or back off as needed
     - attack_run: Approach target, fire, retreat, repeat cycle
     - ram: Move directly toward target, no collision avoidance
     - flee: Move away from target (optionally fire while retreating)
-    - formation: Follow formation master, maintain offset position
     - orbit: Circle around target at fixed distance
     - stationary_fire: Don't move, just fire (for testing/satellites)
     - do_nothing: No movement or firing (for testing)
@@ -49,7 +47,6 @@ This module uses defensive programming for robustness during combat:
 - All errors include ship/target context for debugging
 """
 import logging
-import math
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -61,7 +58,7 @@ logger = logging.getLogger(__name__)
 from game.core.math import Vector2, angle_diff, angle_from_vector
 from game.core.config import AIConfig, BattleTuning
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
-                          FormationBehavior, DoNothingBehavior, StraightLineBehavior,
+                          DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
 from game.core.constants import AttackType, CombatConstants
 from game.core.protocols import is_combatant
@@ -93,7 +90,6 @@ class AIController:
             'flee': FleeBehavior(self),
             'kite': KiteBehavior(self),
             'attack_run': AttackRunBehavior(self),
-            'formation': FormationBehavior(self),
             # Test-specific behaviors
             'do_nothing': DoNothingBehavior(self),
             'stationary_fire': StationaryFireBehavior(self),
@@ -281,18 +277,18 @@ class AIController:
         return sorted_enemies[:count_needed]
 
     def update(self) -> None:
-        """Execute one AI update cycle (PROJ-255: decomposed into stages).
+        """Execute one AI update cycle.
 
         Stages:
-        1. Formation upkeep (throttle, master, integrity)
-        2. Target acquisition (primary + secondary)
-        3. Behavior selection (retreat threshold, formation override)
-        4. Behavior execution
+        1. Target acquisition (primary + secondary)
+        2. Behavior selection (retreat threshold)
+        3. Behavior execution
         """
         if not self.ship.is_alive():
             return
 
-        self._update_formation()
+        self.ship.set_turn_throttle(1.0)
+        self.ship.set_throttle(1.0)
 
         resolved = self.get_resolved_strategy()
         movement_policy = resolved['movement']
@@ -300,7 +296,7 @@ class AIController:
         target = self._acquire_targets()
 
         # No-target early exit for behaviors that require a target
-        if target is None and not self.ship.is_in_formation():
+        if target is None:
             self.ship.set_trigger_pulled(False)
             behavior_key = movement_policy.get('behavior', 'kite')
             if behavior_key not in _NO_TARGET_BEHAVIORS:
@@ -315,36 +311,16 @@ class AIController:
         behavior_key = self._select_behavior(movement_policy)
         self._execute_behavior(behavior_key, target, resolved, movement_policy)
 
-    # -- Stage 1: Formation upkeep ----------------------------------------
-
-    def _update_formation(self) -> None:
-        """Reset throttle and manage formation state."""
-        self.ship.set_turn_throttle(1.0)
-        self.ship.set_throttle(
-            AIConfig.FORMATION_ENGINE_THROTTLE
-            if self.ship.get_formation_members() else 1.0
-        )
-        if self.ship.get_formation_members():
-            self._handle_formation_master()
-        if self.ship.is_in_formation() and self.ship.get_formation_master():
-            self._check_formation_integrity()
-
-    # -- Stage 2: Target acquisition --------------------------------------
+    # -- Stage 1: Target acquisition --------------------------------------
 
     def _acquire_targets(self) -> Optional[Any]:
         """Acquire primary and secondary targets. Returns primary target or None."""
-        # Formation targeting sync
-        if self.ship.is_in_formation() and self.ship.get_formation_master():
-            master_target = self.ship.get_formation_master().current_target
-            if master_target and master_target.is_alive:
-                self.ship.set_current_target(master_target)
-
         target = self.ship.get_current_target()
         if target and not target.is_alive:
             target = None
             self.ship.set_current_target(None)
 
-        if not target and not (self.ship.is_in_formation() and self.ship.get_formation_master()):
+        if not target:
             target = self.find_target()
             self.ship.set_current_target(target)
 
@@ -356,13 +332,10 @@ class AIController:
 
         return target
 
-    # -- Stage 3: Behavior selection --------------------------------------
+    # -- Stage 2: Behavior selection --------------------------------------
 
     def _select_behavior(self, movement_policy: Dict[str, Any]) -> str:
-        """Select behavior key based on formation status, HP, and policy."""
-        if self.ship.is_in_formation() and self.ship.get_formation_master():
-            return 'formation'
-
+        """Select behavior key based on HP and policy."""
         hp_pct = get_hp_percent(self.ship)
         retreat_threshold = movement_policy.get('retreat_hp_threshold', 0.1)
 
@@ -392,64 +365,6 @@ class AIController:
             behavior_context.update(resolved.get('definition', {}))
             if target or behavior_key in _NO_TARGET_BEHAVIORS:
                 self.current_behavior.update(target, behavior_context)
-
-    def _handle_formation_master(self):
-        """Limit turn/throttle when leading a formation to keep members together."""
-        diam = self.ship.get_radius() * 2
-        max_radius = 0
-        # formation_members contains raw Ships, not adapters
-        for member in self.ship.get_formation_members():
-            if member.formation.offset:
-                r = member.formation.offset.length()
-                if r > max_radius:
-                    max_radius = r
-
-        if max_radius > 0:
-            max_speed = self.ship.get_max_speed()
-            max_w_rad = max_speed / max_radius
-            max_w_deg = math.degrees(max_w_rad)
-            base_turn = self.ship.get_turn_speed() / 100.0
-            if base_turn > 0:
-                turn_limit = max_w_deg / base_turn
-                # Turn throttle was just set to 1.0 at start of update()
-                self.ship.set_turn_throttle(min(1.0, turn_limit))
-
-        slow_down = False
-        # formation_members contains raw Ships, not adapters
-        for member in self.ship.get_formation_members():
-            if not member.is_alive or not member.formation.active:
-                continue
-            rotated_offset = member.formation.offset.rotate(self.ship.get_rotation())
-            target_pos = self.ship.get_position() + rotated_offset
-            d = member.position.distance_to(target_pos)
-            if d > 0.5 * diam:
-                slow_down = True
-                break
-
-        if slow_down:
-            self.ship.set_throttle(AIConfig.FORMATION_SLOWDOWN_THROTTLE)
-            # Turn throttle may have been limited by turn_limit above
-            self.ship.set_turn_throttle(AIConfig.FORMATION_SLOWDOWN_THROTTLE)
-
-    def _check_formation_integrity(self):
-        # Check if propulsion components are damaged
-        dmg = False
-        propulsion_comps = (
-            self.ship.get_components_by_ability('CombatPropulsion', operational_only=False) +
-            self.ship.get_components_by_ability('ManeuveringThruster', operational_only=False)
-        )
-        for comp in propulsion_comps:
-            # Component always has current_hp and max_hp attributes
-            if comp.current_hp < comp.max_hp:
-                dmg = True
-                break
-
-        if dmg:
-            self.ship.set_in_formation(False)
-            self.ship.leave_formation()
-            self.ship.set_formation_master(None)
-            self.ship.set_turn_throttle(1.0)
-            self.ship.set_throttle(1.0)
 
     def check_avoidance(self):
         """Check for nearby collisions."""

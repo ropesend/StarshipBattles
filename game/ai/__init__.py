@@ -15,7 +15,6 @@ Behaviors (game.ai.behaviors):
     AttackRunBehavior - Hit-and-run tactics
     RamBehavior - Direct collision course
     FleeBehavior - Retreat from combat
-    FormationBehavior - Follow formation master
     OrbitBehavior - Circle around target
     StationaryFireBehavior - Fire without moving (test/debug)
     DoNothingBehavior - No action (test/debug)
@@ -48,7 +47,6 @@ The AI package uses defensive programming for combat robustness:
 **Fallback Behaviors:**
 - Position access failures: Falls back to direct attribute
 - Target evaluation failures: Target is skipped
-- Formation dropout: Logged but continues combat
 - Missing data: Safe defaults used (e.g., distance = infinity)
 
 Example error handling::
@@ -75,7 +73,6 @@ from game.ai.behaviors import (
     AttackRunBehavior,
     RamBehavior,
     FleeBehavior,
-    FormationBehavior,
     OrbitBehavior,
     StationaryFireBehavior,
     DoNothingBehavior,
@@ -100,7 +97,6 @@ __all__ = [
     'AttackRunBehavior',
     'RamBehavior',
     'FleeBehavior',
-    'FormationBehavior',
     'OrbitBehavior',
     'StationaryFireBehavior',
     'DoNothingBehavior',

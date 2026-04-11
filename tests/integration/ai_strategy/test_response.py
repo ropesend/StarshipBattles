@@ -36,54 +36,6 @@ class TestAIResponse:
         ai_controller.update()
         assert ship1.current_target == enemy2
 
-    def test_enters_formation_mode(self, spatial_grid, create_test_ship):
-        """AI changes behavior when in formation."""
-        ship1 = create_test_ship("Leader", 0, 0, team_id=0)
-        ship2 = create_test_ship("Follower", 100, 0, team_id=0)
-        enemy = create_test_ship("Enemy", 1000, 0, team_id=1)
-
-        spatial_grid.insert(ship1)
-        spatial_grid.insert(ship2)
-        spatial_grid.insert(enemy)
-
-        # Set up formation with required offset
-        ship2.formation.active = True
-        ship2.formation.master = ship1
-        ship2.formation.offset = pygame.math.Vector2(100, 0)  # Required for formation behavior
-        ship1.formation.members = [ship2]
-
-        ai_controller = AIController(ShipControllableAdapter(ship2), spatial_grid, enemy_team_id=1)
-        ai_controller.update()
-
-        # Should use formation behavior
-        assert ai_controller.current_behavior is not None
-        assert 'formation' in str(type(ai_controller.current_behavior)).lower()
-
-    def test_syncs_target_with_formation_master(self, spatial_grid, create_test_ship):
-        """Formation members sync target with master."""
-        leader = create_test_ship("Leader", 0, 0, team_id=0)
-        follower = create_test_ship("Follower", 100, 0, team_id=0)
-        enemy1 = create_test_ship("Enemy1", 500, 0, team_id=1)
-        enemy2 = create_test_ship("Enemy2", 1000, 0, team_id=1)
-
-        spatial_grid.insert(leader)
-        spatial_grid.insert(follower)
-        spatial_grid.insert(enemy1)
-        spatial_grid.insert(enemy2)
-
-        # Set up formation with leader targeting enemy2
-        follower.formation.active = True
-        follower.formation.master = leader
-        follower.formation.offset = pygame.math.Vector2(100, 0)  # Required for formation
-        leader.formation.members = [follower]
-        leader.current_target = enemy2
-
-        ai_controller = AIController(ShipControllableAdapter(follower), spatial_grid, enemy_team_id=1)
-        ai_controller.update()
-
-        # Follower should sync to master's target
-        assert follower.current_target == enemy2
-
     def test_transitions_strategy_on_damage(self, spatial_grid, create_test_ship):
         """AI may switch strategy when damaged."""
         ship1 = create_test_ship("Ally", 0, 0, team_id=0)

@@ -101,7 +101,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage       | Description |
 |------------------|-------------|
-| `entities/`      | Ship (main entity, 11 delegates), ShipComponentManager, ShipCombatManager, ShipLayerManager, ShipResourceManager, ShipSerializer, ShipPhysics, ShipCombatEngine, ShipFormation, LayerData, Projectile, AbilityAggregator, ShipLoader, ShipStats, ShipStatQuerier |
+| `entities/`      | Ship (main entity, 10 delegates), ShipComponentManager, ShipCombatManager, ShipLayerManager, ShipResourceManager, ShipSerializer, ShipPhysics, ShipCombatEngine, LayerData, Projectile, AbilityAggregator, ShipLoader, ShipStats, ShipStatQuerier |
 | `components/`    | Component class (facade), create_component factory, 4 delegates (ModifierManager, AbilityManager, ComponentHealthManager, ComponentResourceManager), ComponentStatsCalculator (static) |
 | `components/abilities/` | Ability classes: weapons (beam, seeker, projectile), defense, propulsion, cargo, crew, resources, harvester, colonize, superweapons |
 | `systems/`       | BattleEngine (tick loop), BattleEndConditions, ResourceState, ResourceRegistry, TechPresetLoader |
@@ -133,8 +133,9 @@ Six layers with strict downward-only dependency flow:
 
 | Module               | Description |
 |----------------------|-------------|
-| `controller.py`      | AIController -- main decision loop per ship. **PROJ-255:** `update()` decomposed into `_update_formation()`, `_acquire_targets()`, `_select_behavior()`, `_execute_behavior()` stages. |
-| `behaviors.py`       | 12 behavior classes (Kite, AttackRun, Ram, Flee, Formation, Orbit, StationaryFire, DoNothing, StraightLine, RotateOnly, Erratic + base AIBehavior) |
+| `controller.py`      | AIController -- main decision loop per ship. `update()` decomposed into `_acquire_targets()`, `_select_behavior()`, `_execute_behavior()` stages. |
+| `behaviors.py`       | 11 behavior classes (Kite, AttackRun, Ram, Flee, Orbit, StationaryFire, DoNothing, StraightLine, RotateOnly, Erratic + base AIBehavior) |
+| `spatial_behaviors/`  | Spatial positioning system: BattleLine, Column, Screen, Escort, PatrolZone, FreeManeuver. Replaces old ShipFormation. |
 | `strategy_manager.py`| StrategyManager -- resolves AI strategy names to definitions |
 | `target_evaluator.py`| TargetEvaluator -- scores and prioritizes targets |
 | `ai_factory.py`      | AIControllerFactory -- creates controllers (moved from simulation layer) |
@@ -153,7 +154,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage       | Description |
 |------------------|-------------|
-| `screens/`       | BattleScreen, StrategyScreen, WorkshopScreen, MenuScene, SetupScreen, NewGameSetupScreen, FormationEditorScreen, TestLabScreen, GalaxyTestScreen, BuildQueueScreen, plus sub-screen packages (`builder/`, `formation/`, `test_lab/`, `galaxy_test/`) |
+| `screens/`       | BattleScreen, StrategyScreen, WorkshopScreen, MenuScene, SetupScreen, NewGameSetupScreen, TestLabScreen, GalaxyTestScreen, BuildQueueScreen, plus sub-screen packages (`builder/`, `test_lab/`, `galaxy_test/`) |
 | `renderer/`      | Camera, GameRenderer, SpriteManager |
 | `panels/`        | BattlePanels, BuilderWidgets |
 | `components/`    | Reusable UI components including `table/` subpackage |
@@ -199,9 +200,9 @@ Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, I
 
 Fleet, ShipInstance, OrderType, Order, HexCoord, TurnEngine, GameSession, GameConfig, StrategySessionFacade, FleetInfo, SystemInfo, PlanetInfo, EmpireInfo, IBattleResolver, BattleResult
 
-### `game.ai` (13 exports)
+### `game.ai` (12 exports)
 
-AIController, AIBehavior, KiteBehavior, AttackRunBehavior, RamBehavior, FleeBehavior, FormationBehavior, OrbitBehavior, StationaryFireBehavior, DoNothingBehavior, StrategyManager, TargetEvaluator, AIControllerFactory
+AIController, AIBehavior, KiteBehavior, AttackRunBehavior, RamBehavior, FleeBehavior, OrbitBehavior, StationaryFireBehavior, DoNothingBehavior, StrategyManager, TargetEvaluator, AIControllerFactory
 
 ### `game.ui` (7 module exports)
 
@@ -271,7 +272,7 @@ All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol clas
 
 ### Simulation-Internal Protocols (`game/simulation/interfaces/`)
 
-Ability: IAbility, IWeaponAbility, IBeamWeaponAbility, ISeekerWeaponAbility, IProjectileWeaponAbility, IResourceConsumptionAbility, IResourceStorageAbility, IResourceGenerationAbility, IWarpJumpAbility. Entity: ICombatShip, IProjectile, IPhysicsShip, IFormationHost, ISerializableShip. Component: IComponent. Each has a corresponding `is_*` TypeGuard function.
+Ability: IAbility, IWeaponAbility, IBeamWeaponAbility, ISeekerWeaponAbility, IProjectileWeaponAbility, IResourceConsumptionAbility, IResourceStorageAbility, IResourceGenerationAbility, IWarpJumpAbility. Entity: ICombatShip, IProjectile, IPhysicsShip, ISerializableShip. Component: IComponent. Each has a corresponding `is_*` TypeGuard function.
 
 ---
 
@@ -411,4 +412,4 @@ TICK_RATE=0.01s, DEFAULT_LINEAR_DRAG=0.5, DEFAULT_ANGULAR_DRAG=0.5, SPATIAL_GRID
 
 ## Entry Point
 
-`game/app.py` -- Pygame application loop. Initializes registries, creates scenes (implementing `IScene` protocol), and runs the main event/update/draw loop. Scene transitions are managed by the app, not by scenes themselves. Key screens: MenuScene, BattleScreen, StrategyScreen, WorkshopScreen (DesignWorkshopScreen), BattleSetupScreen, FormationEditorScreen, TestLabScreen, NewGameSetupScreen, KeybindingsScene.
+`game/app.py` -- Pygame application loop. Initializes registries, creates scenes (implementing `IScene` protocol), and runs the main event/update/draw loop. Scene transitions are managed by the app, not by scenes themselves. Key screens: MenuScene, BattleScreen, StrategyScreen, WorkshopScreen (DesignWorkshopScreen), BattleSetupScreen, TestLabScreen, NewGameSetupScreen, KeybindingsScene.

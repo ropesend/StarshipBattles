@@ -40,11 +40,6 @@ class TestIControllableAbstractContract:
         assert "get_current_target" in abstract_methods
         assert "set_current_target" in abstract_methods
 
-        # Formation methods
-        assert "get_formation_members" in abstract_methods
-        assert "get_formation_master" in abstract_methods
-        assert "is_in_formation" in abstract_methods
-
     def test_concrete_subclass_must_implement_all(self):
         """Partial implementation raises TypeError on instantiation."""
 
@@ -134,30 +129,6 @@ class TestMockImplementation:
             def get_layers(self):
                 return []
 
-            def get_formation_members(self):
-                return []
-
-            def get_formation_master(self):
-                return None
-
-            def is_in_formation(self):
-                return False
-
-            def get_formation_offset(self):
-                return (0, 0)
-
-            def set_in_formation(self, in_formation):
-                pass
-
-            def set_formation_master(self, master):
-                pass
-
-            def leave_formation(self):
-                pass
-
-            def get_formation_rotation_mode(self):
-                return "none"
-
             def set_trigger_pulled(self, pulled):
                 pass
 
@@ -223,14 +194,6 @@ class TestMockImplementation:
             def set_rotation(self, a): pass
             def adjust_position(self, o): pass
             def get_layers(self): return []
-            def get_formation_members(self): return []
-            def get_formation_master(self): return None
-            def is_in_formation(self): return False
-            def get_formation_offset(self): return (0, 0)
-            def set_in_formation(self, f): pass
-            def set_formation_master(self, m): pass
-            def leave_formation(self): pass
-            def get_formation_rotation_mode(self): return "none"
             def set_trigger_pulled(self, p): pass
             def get_current_target(self): return None
             def set_current_target(self, t): pass

@@ -71,8 +71,7 @@ class TestBattleSetupScreen:
         with patch('game.ui.screens.setup_screen.scan_ship_designs', return_value=[
             {'name': 'Fighter', 'path': '/path/fighter.json'}
         ]):
-            with patch('game.ui.screens.setup_screen.scan_formations', return_value=[]):
-                screen.start()
+            screen.start()
 
         assert len(screen.available_ship_designs) == 1
 
@@ -83,8 +82,7 @@ class TestBattleSetupScreen:
         screen.team2 = [{'design': MagicMock()}]
 
         with patch('game.ui.screens.setup_screen.scan_ship_designs', return_value=[]):
-            with patch('game.ui.screens.setup_screen.scan_formations', return_value=[]):
-                screen.start(preserve_teams=False)
+            screen.start(preserve_teams=False)
 
         assert screen.team1 == []
         assert screen.team2 == []
@@ -98,8 +96,7 @@ class TestBattleSetupScreen:
         screen.team2 = [entry2]
 
         with patch('game.ui.screens.setup_screen.scan_ship_designs', return_value=[]):
-            with patch('game.ui.screens.setup_screen.scan_formations', return_value=[]):
-                screen.start(preserve_teams=True)
+            screen.start(preserve_teams=True)
 
         assert screen.team1 == [entry1]
         assert screen.team2 == [entry2]
@@ -110,8 +107,7 @@ class TestBattleSetupScreen:
         screen.scroll.offset = 100
 
         with patch('game.ui.screens.setup_screen.scan_ship_designs', return_value=[]):
-            with patch('game.ui.screens.setup_screen.scan_formations', return_value=[]):
-                screen.start()
+            screen.start()
 
         assert screen.scroll.offset == 0
 
@@ -121,8 +117,7 @@ class TestBattleSetupScreen:
         screen.ai_dropdown_open = (1, 0)
 
         with patch('game.ui.screens.setup_screen.scan_ship_designs', return_value=[]):
-            with patch('game.ui.screens.setup_screen.scan_formations', return_value=[]):
-                screen.start()
+            screen.start()
 
         assert screen.ai_dropdown_open is None
 
@@ -333,75 +328,6 @@ class TestBattleSetupScreenFileIO:
 
         assert screen.team1 == new_team1
         assert screen.team2 == new_team2
-
-
-class TestBattleSetupScreenFormations:
-    """Tests for formation functionality."""
-
-    @pytest.fixture(autouse=True)
-    def setup_mocks(self):
-        """Set up mocks."""
-        self.mock_strategy_service = MagicMock()
-        self.mock_strategy_service.strategies = {'standard_ranged': MagicMock()}
-        self.mock_filedialog = MagicMock()
-
-        with patch('tkinter.Tk', return_value=MagicMock()):
-            with patch('tkinter.filedialog', self.mock_filedialog):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
-
-    def test_add_formation_to_team_cancelled_no_add(self):
-        """Test add_formation_to_team does nothing when dialog cancelled."""
-        screen = self.BattleSetupScreen(800, 600)
-
-        formation = {'name': 'Test Formation', 'arrows': [(0, 0), (1, 1)]}
-
-        # The code imports filedialog at module level with `from tkinter import filedialog`
-        # So we need to patch the reference in the setup_screen module
-        with patch('game.ui.screens.setup_screen.filedialog') as mock_fd:
-            mock_fd.askopenfilename.return_value = ''
-            screen.add_formation_to_team(formation, team_idx=1)
-
-        assert len(screen.team1) == 0
-
-    def test_get_team_display_groups_single_ships(self):
-        """Test get_team_display_groups with single ships."""
-        screen = self.BattleSetupScreen(800, 600)
-        screen.team1 = [
-            {'design': {'name': 'Fighter1'}, 'strategy': 'aggressive'},
-            {'design': {'name': 'Fighter2'}, 'strategy': 'defensive'},
-        ]
-
-        groups = screen.get_team_display_groups(screen.team1)
-
-        assert len(groups) == 2
-        assert groups[0]['type'] == 'ship'
-        assert groups[1]['type'] == 'ship'
-
-    def test_get_team_display_groups_formation(self):
-        """Test get_team_display_groups with formation ships."""
-        screen = self.BattleSetupScreen(800, 600)
-        formation_id = 'test-formation-id'
-        screen.team1 = [
-            {
-                'design': {'name': 'Fighter'}, 'strategy': 'aggressive',
-                'formation_id': formation_id, 'formation_name': 'Wedge'
-            },
-            {
-                'design': {'name': 'Fighter'}, 'strategy': 'aggressive',
-                'formation_id': formation_id, 'formation_name': 'Wedge'
-            },
-        ]
-
-        groups = screen.get_team_display_groups(screen.team1)
-
-        # Should consolidate into one formation group
-        assert len(groups) == 1
-        assert groups[0]['type'] == 'formation'
-        assert groups[0]['count'] == 2
 
 
 class TestBattleSetupScreenDropdown:

@@ -23,7 +23,7 @@ Major game states use **Screen**. Minor/modal states use **Scene**.
 
 | Suffix | Usage | Actual classes |
 |--------|-------|----------------|
-| **Screen** | Major game states: battle, strategy, workshop, setup | `BattleScreen`, `StrategyScreen`, `DesignWorkshopScreen`, `BuildQueueScreen`, `BattleSetupScreen`, `TestLabScreen`, `FormationEditorScreen`, `NewGameSetupScreen`, `RaceSetupScreen`, `GalaxyTestScreen` |
+| **Screen** | Major game states: battle, strategy, workshop, setup | `BattleScreen`, `StrategyScreen`, `DesignWorkshopScreen`, `BuildQueueScreen`, `BattleSetupScreen`, `TestLabScreen`, `NewGameSetupScreen`, `RaceSetupScreen`, `GalaxyTestScreen` |
 | **Scene** | Minor overlays: menus, settings | `MenuScene`, `KeybindingsScene` |
 
 - **DO:** Name new major game states with `Screen`.

@@ -18,7 +18,6 @@ Usage:
 from typing import (
     Protocol,
     runtime_checkable,
-    Optional,
     Any,
     TYPE_CHECKING,
     TypeGuard,
@@ -79,69 +78,6 @@ class IProjectile(IGridEntity, Protocol):
 
 
 # =============================================================================
-# Formation Master Protocol (Ship leading a formation)
-# =============================================================================
-
-@runtime_checkable
-class IFormationMaster(Protocol):
-    """
-    Protocol for entities that can lead formations.
-
-    Formation members follow their master's position, angle, and movement.
-    This protocol captures the properties needed for formation following logic.
-    """
-    @property
-    def position(self) -> Any:
-        """Master's position (Vector2)."""
-        ...
-
-    @property
-    def angle(self) -> float:
-        """Master's facing angle in degrees."""
-        ...
-
-    @property
-    def is_alive(self) -> bool:
-        """True if master is active (formation disbands if False)."""
-        ...
-
-    @property
-    def is_derelict(self) -> bool:
-        """True if master is destroyed but hull remains."""
-        ...
-
-    @property
-    def is_thrusting(self) -> bool:
-        """True if master is actively accelerating."""
-        ...
-
-    @property
-    def max_speed(self) -> float:
-        """Master's maximum speed capability."""
-        ...
-
-    @property
-    def engine_throttle(self) -> float:
-        """Current throttle setting (0.0 to 1.0)."""
-        ...
-
-    @property
-    def current_speed(self) -> float:
-        """Master's current velocity magnitude."""
-        ...
-
-    @property
-    def formation(self) -> Any:
-        """ShipFormation object for member coordination."""
-        ...
-
-    @property
-    def current_target(self) -> Optional[Any]:
-        """Master's current combat target (if any)."""
-        ...
-
-
-# =============================================================================
 # Component Health Protocol (for damage/armor calculations)
 # =============================================================================
 
@@ -182,11 +118,6 @@ def is_projectile(obj: Any) -> TypeGuard[IProjectile]:
     """Check if obj has projectile attributes (type, for AttackType classification)."""
     # Projectiles are grid entities with an attack type
     return _has_attrs(obj, 'position', 'type')
-
-
-def is_formation_master(obj: Any) -> TypeGuard[IFormationMaster]:
-    """Check if obj has formation master attributes (formation)."""
-    return _has_attrs(obj, 'formation')
 
 
 def is_component_health(obj: Any) -> TypeGuard[IComponentHealth]:
