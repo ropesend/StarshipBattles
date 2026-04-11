@@ -381,6 +381,12 @@ class BuilderLeftPanel:
                     item.set_selected(True)
                     self.selected_item = item
                     return ('select_component_type', item.component)
+                if event.ui_element == item.quick_add_button:
+                    return ('quick_add', {
+                        'component_id': item.component.id,
+                        'selected_layer': self._get_selected_layer(),
+                        'count': self.get_add_count(),
+                    })
 
 
 
@@ -448,6 +454,15 @@ class BuilderLeftPanel:
             return max(1, min(1000, val))
         except ValueError:
             return 1
+
+    def _get_selected_layer(self):
+        """Return the LayerType from the layer filter dropdown, or None if 'All Layers'."""
+        if self.current_layer_filter == "All Layers":
+            return None
+        for l_key in self.builder.ship.layers.keys():
+            if l_key.name == self.current_layer_filter:
+                return l_key
+        return None
         
     def get_hovered_component(self, mx, my):
         # Check if mouse is over any item button

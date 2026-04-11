@@ -13,6 +13,10 @@ ACTION_REMOVE_GROUP = 'remove_group'
 ACTION_TOGGLE_GROUP = 'toggle_group'
 ACTION_TOGGLE_LAYER = 'toggle_layer'
 ACTION_START_DRAG = 'start_drag'
+ACTION_MOVE_UP_INDIVIDUAL = 'move_up_individual'
+ACTION_MOVE_DOWN_INDIVIDUAL = 'move_down_individual'
+ACTION_MOVE_UP_GROUP = 'move_up_group'
+ACTION_MOVE_DOWN_GROUP = 'move_down_group'
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
@@ -86,50 +90,80 @@ class IndividualComponentItem:
         )
 
 
-        # Mass shifted right
+        # Mass (positioned left of button zone)
         self.mass_label = UILabel(
-            relative_rect=pygame.Rect(-160, 0, ctx.config.MASS_WIDTH, self.height),
+            relative_rect=pygame.Rect(-220, 0, ctx.config.MASS_WIDTH, self.height),
             text=f"{int(component.mass)}t",
             manager=ctx.manager,
             container=self.panel,
             anchors=ctx.config.ANCHOR_TOP_RIGHT.copy()
         )
-        self.mass_label.set_dimensions((ctx.config.MASS_WIDTH, self.height)) # Fix anchor adjustment if needed? pygame_gui usually handles it
 
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         self.pct_label = UILabel(
-            relative_rect=pygame.Rect(-100, 0, 50, self.height),
+            relative_rect=pygame.Rect(-170, 0, 50, self.height),
             text=f"{pct_val:.1f}%",
             manager=ctx.manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
 
-        # Add Button
-        self.add_button = UIButton(
-            relative_rect=pygame.Rect(-62, 5, 28, 20),
-            text="+",
-            manager=ctx.manager,
-            container=self.panel,
-            anchors=ctx.config.ANCHOR_TOP_RIGHT
-        )
+        # Buttons (right-aligned): ↑ ↓ ≡ + -
+        btn_w = 28
+        btn_h = 20
+        gap = 2
+        # Position from right edge: - at -32, + at -62, ≡ at -92, ↓ at -122, ↑ at -152
+        r = -(btn_w + gap)  # starting offset for rightmost button
 
         # Remove Button
         self.remove_button = UIButton(
-            relative_rect=pygame.Rect(-32, 5, 28, 20),
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
             text="-",
             manager=ctx.manager,
             container=self.panel,
             object_id='#delete_button',
             anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
+        r -= (btn_w + gap)
+
+        # Add Button
+        self.add_button = UIButton(
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
+            text="+",
+            manager=ctx.manager,
+            container=self.panel,
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
+        )
+        r -= (btn_w + gap)
 
         # Drag Handle
         self.drag_button = UIButton(
-            relative_rect=pygame.Rect(-92, 5, 28, 20),
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
             text="≡",
             manager=ctx.manager,
             container=self.panel,
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
+        )
+        r -= (btn_w + gap)
+
+        # Move Down Button
+        self.move_down_button = UIButton(
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
+            text="↓",
+            manager=ctx.manager,
+            container=self.panel,
+            object_id='#mini_arrow_btn',
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
+        )
+        r -= (btn_w + gap)
+
+        # Move Up Button
+        self.move_up_button = UIButton(
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
+            text="↑",
+            manager=ctx.manager,
+            container=self.panel,
+            object_id='#mini_arrow_btn',
             anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
         
@@ -183,9 +217,24 @@ class IndividualComponentItem:
                 return self.event_handler.handle_item_action(ACTION_ADD_INDIVIDUAL, (self.component, self.layer_type))
             elif event.ui_element == self.drag_button:
                 return self.event_handler.handle_item_action(ACTION_START_DRAG, self.component)
+            elif event.ui_element == self.move_up_button:
+                return self.event_handler.handle_item_action(ACTION_MOVE_UP_INDIVIDUAL, (self.component, self.layer_type))
+            elif event.ui_element == self.move_down_button:
+                return self.event_handler.handle_item_action(ACTION_MOVE_DOWN_INDIVIDUAL, (self.component, self.layer_type))
             elif event.ui_element == self.select_button:
                 return self.event_handler.handle_item_action(ACTION_SELECT_INDIVIDUAL, self.component)
         return False
+
+    def set_move_buttons_enabled(self, can_move_up: bool, can_move_down: bool):
+        """Enable/disable move buttons based on layer availability."""
+        if can_move_up:
+            self.move_up_button.enable()
+        else:
+            self.move_up_button.disable()
+        if can_move_down:
+            self.move_down_button.enable()
+        else:
+            self.move_down_button.disable()
 
     def kill(self):
         self.panel.kill()
@@ -272,9 +321,9 @@ class LayerComponentItem:
             object_id='#left_aligned_label'
         )
 
-        # Mass
+        # Mass (positioned left of button zone)
         self.mass_label = UILabel(
-            relative_rect=pygame.Rect(-160, 0, ctx.config.MASS_WIDTH, self.height),
+            relative_rect=pygame.Rect(-220, 0, ctx.config.MASS_WIDTH, self.height),
             text=f"{int(total_mass)}t",
             manager=ctx.manager,
             container=self.panel,
@@ -283,29 +332,58 @@ class LayerComponentItem:
 
         # Percent
         self.pct_label = UILabel(
-            relative_rect=pygame.Rect(-100, 0, ctx.config.PCT_WIDTH, self.height),
+            relative_rect=pygame.Rect(-170, 0, ctx.config.PCT_WIDTH, self.height),
             text=f"{total_pct:.1f}%",
             manager=ctx.manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
 
+        # Buttons (right-aligned): ↑ ↓ + -
+        btn_w = 28
+        btn_h = 30
+        gap = 2
+        r = -(btn_w + gap)
+
+        # Remove Button
+        self.remove_button = UIButton(
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
+            text="-",
+            manager=ctx.manager,
+            container=self.panel,
+            object_id='#delete_button',
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
+        )
+        r -= (btn_w + gap)
+
         # Add Button
         self.add_button = UIButton(
-            relative_rect=pygame.Rect(-62, 5, 28, 30),
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
             text="+",
             manager=ctx.manager,
             container=self.panel,
             anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
+        r -= (btn_w + gap)
 
-        # Remove Button
-        self.remove_button = UIButton(
-            relative_rect=pygame.Rect(-32, 5, 28, 30),
-            text="-",
+        # Move Down Button
+        self.move_down_button = UIButton(
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
+            text="↓",
             manager=ctx.manager,
             container=self.panel,
-            object_id='#delete_button',
+            object_id='#mini_arrow_btn',
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
+        )
+        r -= (btn_w + gap)
+
+        # Move Up Button
+        self.move_up_button = UIButton(
+            relative_rect=pygame.Rect(r - 1, 5, btn_w, btn_h),
+            text="↑",
+            manager=ctx.manager,
+            container=self.panel,
+            object_id='#mini_arrow_btn',
             anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
 
@@ -339,10 +417,25 @@ class LayerComponentItem:
                 return self.event_handler.handle_item_action(ACTION_REMOVE_GROUP, (self.group_key, self.layer_type))
             elif event.ui_element == self.add_button:
                 return self.event_handler.handle_item_action(ACTION_ADD_GROUP, (self.group_key, self.layer_type))
+            elif event.ui_element == self.move_up_button:
+                return self.event_handler.handle_item_action(ACTION_MOVE_UP_GROUP, (self.group_key, self.layer_type))
+            elif event.ui_element == self.move_down_button:
+                return self.event_handler.handle_item_action(ACTION_MOVE_DOWN_GROUP, (self.group_key, self.layer_type))
             elif event.ui_element == self.select_button:
                 return self.event_handler.handle_item_action(ACTION_SELECT_GROUP, self.group_key)
         return False
-    
+
+    def set_move_buttons_enabled(self, can_move_up: bool, can_move_down: bool):
+        """Enable/disable move buttons based on layer availability."""
+        if can_move_up:
+            self.move_up_button.enable()
+        else:
+            self.move_up_button.disable()
+        if can_move_down:
+            self.move_down_button.enable()
+        else:
+            self.move_down_button.disable()
+
     def get_abs_rect(self):
         return self.panel.get_abs_rect()
 

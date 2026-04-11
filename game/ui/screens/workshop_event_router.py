@@ -121,6 +121,15 @@ class WorkshopEventRouter:
         elif act_type == 'add_group' or act_type == 'add_individual':
             self._handle_add_component(act_type, data)
             
+        elif act_type == 'quick_add':
+            self._handle_quick_add(data)
+
+        elif act_type == 'move_individual':
+            self._handle_move_individual(data)
+
+        elif act_type == 'move_group':
+            self._handle_move_group(data)
+
         elif act_type == 'clear_settings':
             with profile_block("Builder: Clear Settings"):
                 gui.controller.selected_component = None
@@ -134,6 +143,72 @@ class WorkshopEventRouter:
             
         return True
     
+    def _handle_quick_add(self, data):
+        """Handle quick-add from component palette '+' button."""
+        gui = self.gui
+        with profile_block("Builder: Quick Add"):
+            component_id = data['component_id']
+            selected_layer = data.get('selected_layer')
+            count = data.get('count', 1)
+
+            success = gui.viewmodel.quick_add_component(
+                component_id,
+                selected_layer=selected_layer,
+                count=count,
+            )
+            if success:
+                gui.layer_panel.rebuild()
+                gui.update_stats()
+            else:
+                errors = gui.viewmodel.last_errors
+                if errors:
+                    gui.show_error(f"Cannot add: {', '.join(errors)}")
+
+    def _handle_move_individual(self, data):
+        """Handle moving a single component up/down between layers."""
+        gui = self.gui
+        with profile_block("Builder: Move Individual"):
+            component, source_layer, direction = data
+            target_layer = gui.viewmodel.resolve_move_target(component, source_layer, direction)
+            if target_layer is None:
+                return
+
+            # Find the component's index in its source layer
+            try:
+                idx = gui.ship.layers[source_layer].components.index(component)
+            except ValueError:
+                return
+
+            success = gui.viewmodel.move_component(source_layer, idx, target_layer)
+            if success:
+                gui.layer_panel.rebuild()
+                gui.update_stats()
+
+    def _handle_move_group(self, data):
+        """Handle moving a component group (stack) up/down between layers."""
+        gui = self.gui
+        with profile_block("Builder: Move Group"):
+            group_key, source_layer, direction = data
+
+            # Resolve target from the representative component
+            from game.ui.screens.builder.grouping_strategies import get_component_group_key
+            rep_comp = None
+            for c in gui.ship.layers[source_layer].components:
+                if get_component_group_key(c) == group_key:
+                    rep_comp = c
+                    break
+            if rep_comp is None:
+                return
+
+            target_layer = gui.viewmodel.resolve_move_target(rep_comp, source_layer, direction)
+            if target_layer is None:
+                return
+
+            success = gui.viewmodel.move_component_group(group_key, source_layer, target_layer)
+            if success:
+                gui.layer_panel.rebuild()
+                gui.update_stats()
+
     def _handle_select_component_type(self, data):
         """Handle component type selection from palette."""
         gui = self.gui

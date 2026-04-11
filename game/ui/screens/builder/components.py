@@ -14,9 +14,11 @@ from pygame_gui.elements import UIPanel, UILabel, UIButton, UIImage
 class ComponentListItem:
     """A single item in the component selection list.
 
-    Displays a component's icon, name, and mass with hover tooltips
-    showing detailed component statistics.
+    Displays a component's icon, name, mass, and a quick-add '+' button
+    with hover tooltips showing detailed component statistics.
     """
+
+    QUICK_ADD_BTN_WIDTH = 30
 
     def __init__(
         self,
@@ -32,7 +34,8 @@ class ComponentListItem:
         self.height = 40
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         self.is_hovered: bool = False
-        
+        btn_w = self.QUICK_ADD_BTN_WIDTH
+
         # Container panel for the item
         self.panel = UIPanel(
             relative_rect=self.rect,
@@ -44,17 +47,26 @@ class ComponentListItem:
 
         # Store tooltip data for custom rendering (not using pygame_gui's built-in)
         self.tooltip_text = self._generate_tooltip(component)
-        
-        # Button for interaction (covers the whole item) - NO tool_tip_text
+
+        # Button for interaction (covers item minus quick-add area) - NO tool_tip_text
         self.button = UIButton(
-            relative_rect=pygame.Rect(0, 0, width, self.height),
+            relative_rect=pygame.Rect(0, 0, width - btn_w - 4, self.height),
             text="",
             manager=manager,
             container=self.panel,
-            # tool_tip_text removed to allow custom tooltip handling
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
         )
-        
+
+        # Quick-add '+' button on the right edge (anchored to right)
+        self.quick_add_button = UIButton(
+            relative_rect=pygame.Rect(-btn_w - 4, 0, btn_w, self.height),
+            text="+",
+            manager=manager,
+            container=self.panel,
+            object_id='#quick_add_btn',
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+
         # Icon
         icon_size = 32
         sprite = sprite_mgr.get_sprite(component.sprite_index)
@@ -70,7 +82,7 @@ class ComponentListItem:
         # Label
         # Use component type if no pretty name
         display_name = component.name
-        
+
         # Dynamic Mass Calculation
         display_mass = component.mass
         if ship_context:
@@ -80,16 +92,16 @@ class ComponentListItem:
             class MockShip:
                 def __init__(self, mass_budget):
                     self.max_mass_budget = mass_budget
-            
+
             # Use real ship's max_mass_budget (always present on Ship after __init__)
             budget = ship_context.max_mass_budget
 
             temp_comp.ship = MockShip(budget)
             temp_comp.recalculate_stats()
             display_mass = temp_comp.mass
-            
+
         UILabel(
-            relative_rect=pygame.Rect(45, 0, width-50, self.height),
+            relative_rect=pygame.Rect(45, 0, width - 50 - btn_w, self.height),
             text=f"{display_name} ({display_mass:.1f}t)",
             manager=manager,
             container=self.panel,

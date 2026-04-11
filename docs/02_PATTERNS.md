@@ -635,6 +635,28 @@ View (panels) --[user action]--> ViewModel --[delegates]--> VehicleDesignService
                           View (panels) refresh via subscription
 ```
 
+### ViewModel Operations
+
+Beyond basic CRUD (add/remove/change class), the ViewModel provides higher-level
+operations that compose service calls with layer resolution logic:
+
+| Method | Purpose |
+|--------|---------|
+| `quick_add_component(component_id, selected_layer?, count?)` | Add via "+" button — auto-resolves target layer |
+| `resolve_target_layer(component, selected_layer?)` | Pure logic: find best layer for a component |
+| `move_component(source_layer, index, target_layer)` | Move a single component between layers |
+| `move_component_group(group_key, source_layer, target_layer)` | Move all components in a group between layers |
+
+**Quick-add layer resolution** (used by component palette "+" button):
+1. If `selected_layer` is valid for the component → use it
+2. If `selected_layer` is invalid → find nearest valid layer (prefer inner on ties)
+3. If no selection → use innermost valid layer
+4. HULL is never a quick-add target
+
+**Component movement** between layers uses remove + re-add of the same instance,
+preserving modifiers and state. The ViewModel resolves the target layer direction
+(up = toward inner, down = toward outer), skipping layers that reject the component.
+
 ### When to Use
 
 - Complex UI screens with multiple panels sharing state.
