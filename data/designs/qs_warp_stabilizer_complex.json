@@ -30,19 +30,6 @@
                 ]
             },
             {
-                "id": "warp_field_stabilizer",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 1.0
-                    },
-                    {
-                        "id": "hardened_mount",
-                        "value": 1.0
-                    }
-                ]
-            },
-            {
                 "id": "generator",
                 "modifiers": [
                     {
@@ -108,6 +95,22 @@
                 ]
             }
         ],
+        "INNER": [
+            {
+                "id": "warp_field_stabilizer",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [],
         "ARMOR": []
     },
     "resources": {

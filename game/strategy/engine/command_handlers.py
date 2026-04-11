@@ -875,11 +875,14 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
                 from game.strategy.services.design_validator import DesignValidator
                 validator = DesignValidator(session.registries)
                 result = validator.validate(load_result.data)
-                if not result.is_valid:
+                # Block on errors AND warnings (e.g., layer mass over budget)
+                if result.has_issues:
+                    issues = result.errors + result.warnings
                     logger.warning(
-                        f"Design '{design_id}' failed validation: {'; '.join(result.errors)}"
+                        f"Design '{design_id}' failed validation: {'; '.join(issues)}"
                     )
-                return result.is_valid
+                    return False
+                return True
 
             return True
         except (OSError, ValueError, KeyError):

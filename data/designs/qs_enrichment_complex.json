@@ -1,6 +1,6 @@
 {
     "name": "QS Enrichment Complex",
-    "ship_class": "Planetary Complex (Tier 2)",
+    "ship_class": "Planetary Complex (Tier 3)",
     "vehicle_type": "Planetary Complex",
     "theme_id": "Federation",
     "team_id": 0,
@@ -409,8 +409,8 @@
         "times_built": 0
     },
     "expected_stats": {
-        "max_hp": 3497,
-        "mass": 2790.710678118655,
+        "max_hp": 3790,
+        "mass": 2820.0,
         "resource_storage": {},
         "cargo_storage": {},
         "pod_storage_mass": 0.0,

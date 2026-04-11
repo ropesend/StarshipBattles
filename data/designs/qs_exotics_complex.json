@@ -238,8 +238,7 @@
                 ]
             }
         ],
-        "INNER": [],
-        "OUTER": [
+        "INNER": [
             {
                 "id": "exotic_harvester",
                 "modifiers": [
@@ -252,7 +251,9 @@
                         "value": 1.0
                     }
                 ]
-            },
+            }
+        ],
+        "OUTER": [
             {
                 "id": "exotic_harvester",
                 "modifiers": [

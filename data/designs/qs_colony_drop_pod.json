@@ -83,7 +83,9 @@
                         "value": 0.2
                     }
                 ]
-            },
+            }
+        ],
+        "INNER": [
             {
                 "id": "metal_harvester",
                 "modifiers": [
@@ -128,7 +130,9 @@
                         "value": 0.2
                     }
                 ]
-            },
+            }
+        ],
+        "OUTER": [
             {
                 "id": "resource_vault_metals",
                 "modifiers": [
@@ -174,7 +178,8 @@
                     }
                 ]
             }
-        ]
+        ],
+        "ARMOR": []
     },
     "initial_stockpile": {
         "metals": 200,

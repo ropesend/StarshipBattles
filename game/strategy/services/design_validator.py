@@ -5,7 +5,7 @@ Uses ShipStatsCalculator for stats and the component registry for ability checks
 """
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional, TYPE_CHECKING
+from typing import Dict, List, Any, TYPE_CHECKING
 
 from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import extract_abilities_from_component
@@ -29,6 +29,11 @@ class DesignValidationResult:
 
     def add_warning(self, msg: str) -> None:
         self.warnings.append(msg)
+
+    @property
+    def has_issues(self) -> bool:
+        """True if there are any errors or warnings."""
+        return bool(self.errors or self.warnings)
 
 
 class DesignValidator:
@@ -136,62 +141,67 @@ class DesignValidator:
                            f"(crew: {total_crew_required:.0f}, life support: {total_life_support:.0f}).")
 
     def _check_layer_mass(self, design_data: Dict, result: DesignValidationResult) -> None:
-        """Check that each layer's component mass is within budget."""
-        from game.simulation.components.modifiers import calculate_stat_multipliers
+        """Check that each layer's component mass is within budget.
 
+        Uses Ship instantiation to get accurate masses (handles formula-based
+        component masses like '=50 * sqrt(ship_class_mass / 1000)').
+        """
         ship_class = design_data.get('ship_class', '')
         vehicle_classes = self._registries.vehicle_classes
-        comp_registry = self._registries.components
-        modifier_registry = self._registries.modifiers
+        if not vehicle_classes:
+            return
 
-        # Find vehicle class definition for mass limits
-        class_def = vehicle_classes.get(ship_class) if vehicle_classes else None
+        class_def = vehicle_classes.get(ship_class)
         if class_def is None:
-            return  # Can't validate without class definition
+            return
 
-        # Extract layer mass limits from vehicle class definition
-        # Vehicle classes store layers as list of dicts or as a dict — handle both
-        layer_limits = {}
-        class_layers = None
-        if hasattr(class_def, 'layers'):
-            class_layers = class_def.layers
-        elif isinstance(class_def, dict):
-            class_layers = class_def.get('layers', {})
+        class_max_mass = class_def.get('max_mass', 0) if isinstance(class_def, dict) else 0
+        if class_max_mass <= 0:
+            return
 
-        if isinstance(class_layers, dict):
-            layer_limits = class_layers
-        elif isinstance(class_layers, list):
-            for layer_entry in class_layers:
-                if isinstance(layer_entry, dict) and 'name' in layer_entry:
-                    layer_limits[layer_entry['name']] = layer_entry
+        # Get layer definitions (list of {"type": "CORE", "max_mass_pct": 0.5, ...})
+        class_layers = class_def.get('layers', []) if isinstance(class_def, dict) else []
+        if not class_layers:
+            return
 
-        layers = design_data.get('layers', {})
-        for layer_name, components in layers.items():
-            if not isinstance(components, list):
+        # Build lookup: layer_type_name -> max_mass_pct
+        layer_pct_limits = {}
+        for layer_entry in class_layers:
+            if isinstance(layer_entry, dict) and 'type' in layer_entry:
+                layer_pct_limits[layer_entry['type']] = layer_entry.get('max_mass_pct', 1.0)
+
+        # Instantiate Ship to get accurate component masses (handles formulas)
+        try:
+            from game.simulation.entities.ship import Ship
+            ship = Ship.from_dict(design_data, registries=self._registries)
+            ship.recalculate_stats()
+        except Exception as e:
+            logger.warning(f"Could not instantiate ship for mass validation: {e}")
+            return
+
+        # Check total mass budget
+        if ship.mass > class_max_mass:
+            over = ship.mass - class_max_mass
+            result.add_warning(
+                f"Total mass over budget by {over:.0f}kg "
+                f"({ship.mass:.0f}/{class_max_mass})."
+            )
+
+        # Check per-layer mass budgets
+        for layer_type, layer_data in ship.layers.items():
+            layer_name = layer_type.name  # e.g., "CORE", "OUTER"
+            max_pct = layer_pct_limits.get(layer_name)
+            if max_pct is None:
                 continue
 
-            layer_def = layer_limits.get(layer_name, {})
-            max_mass = layer_def.get('max_mass', 0) if isinstance(layer_def, dict) else 0
-            if max_mass <= 0:
-                continue  # No limit defined
+            max_layer_mass = class_max_mass * max_pct
+            layer_mass = sum(c.mass for c in layer_data.components)
 
-            layer_mass = 0.0
-            for comp in components:
-                if not isinstance(comp, dict):
-                    continue
-                comp_id = comp.get('id', '')
-                comp_def = comp_registry.get(comp_id)
-                if comp_def is None:
-                    continue
-
-                raw_mass = comp_def.get('mass', 0) if isinstance(comp_def, dict) else getattr(comp_def, 'mass', 0)
-                base_mass = float(raw_mass) if isinstance(raw_mass, (int, float)) else 0
-                modifier_entries = comp.get('modifiers', [])
-                multipliers = calculate_stat_multipliers(modifier_entries, modifier_registry)
-                comp_mass = (base_mass + multipliers.get('mass_add', 0.0)) * multipliers.get('mass_mult', 1.0)
-                layer_mass += comp_mass
-
-            if layer_mass > max_mass:
-                over = layer_mass - max_mass
-                result.add_warning(f"{layer_name} layer over mass budget by {over:.0f}kg "
-                                 f"({layer_mass:.0f}/{max_mass:.0f}).")
+            if layer_mass > max_layer_mass + 0.5:  # small tolerance for float rounding
+                over = layer_mass - max_layer_mass
+                pct = (layer_mass / class_max_mass * 100) if class_max_mass > 0 else 0
+                result.add_warning(
+                    f"{layer_name} layer over mass budget by {over:.0f}kg "
+                    f"({layer_mass:.0f}/{max_layer_mass:.0f}, "
+                    f"{pct:.0f}% of {max_pct * 100:.0f}% limit)."
+                )

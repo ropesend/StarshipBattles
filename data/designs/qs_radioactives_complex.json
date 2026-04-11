@@ -1,6 +1,6 @@
 {
     "name": "QS Radioactives Complex",
-    "ship_class": "Planetary Complex (Tier 1)",
+    "ship_class": "Planetary Complex (Tier 2)",
     "vehicle_type": "Planetary Complex",
     "theme_id": "Federation",
     "team_id": 0,
@@ -262,8 +262,8 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 2700,
-        "mass": 1400.0,
+        "max_hp": 2907,
+        "mass": 1420.7106781186549,
         "resource_storage": {},
         "cargo_storage": {},
         "pod_storage_mass": 0.0,
