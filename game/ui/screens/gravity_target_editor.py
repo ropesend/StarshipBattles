@@ -1,14 +1,18 @@
 """Gravity Target Editor -- UI window for setting planet gravity targets.
 
 Provides a single slider for setting a target surface gravity in g-units,
-with conversion to m/s^2 for storage. Includes Species Ideal, Match Current,
-Clear, and Apply buttons.
+with conversion to m/s^2 for storage. Includes Species Ideal (with species
+dropdown for multi-species planets), Match Current, Clear, and Apply buttons.
 """
 import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UILabel, UIButton, UIHorizontalSlider
 from typing import Optional, Callable
+
+from game.ui.screens.species_selector_mixin import (
+    build_species_selector, get_selected_race_id, load_race_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,17 +36,6 @@ class GravityTargetEditor(UIWindow):
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
     ):
-        """Initialize gravity target editor.
-
-        Args:
-            rect: Window rectangle.
-            manager: UI manager.
-            planet: Planet object with surface_gravity attribute (in m/s^2).
-            on_apply_callback: Called with (planet_id, gravity_target_ms2) when Apply clicked.
-                gravity_target_ms2 is None when clearing.
-            on_close_callback: Called when window is closed.
-            race_config: Optional RaceConfig with gravity_ideal (in g-units).
-        """
         super().__init__(
             rect, manager,
             window_display_title=f"Gravity Target: {planet.name}",
@@ -53,18 +46,25 @@ class GravityTargetEditor(UIWindow):
         self.on_apply_callback = on_apply_callback
         self.on_close_callback = on_close_callback
         self.race_config = race_config
+        self._species_dropdown = None
+        self._default_race_id = None
 
         self.current_g = getattr(planet, 'surface_gravity', 0.0) / G_TO_MS2
 
         self._build_ui()
 
     def _build_ui(self):
-        """Build the editor UI with a single gravity slider and buttons."""
+        """Build the editor UI with species selector, gravity slider, and buttons."""
         content_rect = self.get_container().get_rect()
         container_w = content_rect.width
         container_h = content_rect.height
 
         y = 10
+
+        # Species selector (shown only if multiple species on planet)
+        self._species_dropdown, widgets, y, self._default_race_id = build_species_selector(
+            self.planet, self, self.ui_manager, y, container_w,
+        )
 
         # Current gravity display
         self.lbl_current = UILabel(
@@ -193,11 +193,12 @@ class GravityTargetEditor(UIWindow):
         self.kill()
 
     def _set_species_ideal(self):
-        """Set slider to the species' ideal gravity."""
-        if self.race_config is None:
+        """Set slider to the selected species' ideal gravity."""
+        rc = self._get_active_race_config()
+        if rc is None:
             return
 
-        ideal_g = getattr(self.race_config, 'gravity_ideal', None)
+        ideal_g = getattr(rc, 'gravity_ideal', None)
         if ideal_g is None:
             return
 
@@ -205,6 +206,23 @@ class GravityTargetEditor(UIWindow):
         self.slider.set_current_value(clamped)
         self.lbl_target.set_text(f"Target: {clamped:.2f} g")
         logger.debug("Set gravity to species ideal: %.2f g", clamped)
+
+    def _get_active_race_config(self):
+        """Get the race config for the currently selected species."""
+        # If dropdown exists, use the selected species
+        if self._species_dropdown is not None:
+            race_id = get_selected_race_id(self._species_dropdown)
+            if race_id:
+                rc = load_race_config(race_id)
+                if rc:
+                    return rc
+        # Fall back to default race_id from populations
+        if self._default_race_id:
+            rc = load_race_config(self._default_race_id)
+            if rc:
+                return rc
+        # Fall back to the race_config passed at construction
+        return self.race_config
 
     def _set_match_current(self):
         """Set slider to match current planet gravity."""

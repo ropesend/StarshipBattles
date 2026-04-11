@@ -3396,13 +3396,18 @@
             "type": "CombatModifier",
             "mass": 800,
             "hp": 500,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldModifier": {
                     "multiplier": 0.75,
                     "scope": "enemy_system",
-                    "stack_group": "shield_suppressor_system"
+                    "stack_group": "shield_suppressor_system",
+                    "energy_drain_rate": 50.0,
+                    "activation_time": 25,
+                    "deactivation_time": 10
                 },
                 "CrewRequired": 40
             },
@@ -3419,13 +3424,18 @@
             "type": "CombatModifier",
             "mass": 700,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldModifier": {
                     "multiplier": 1.25,
                     "scope": "allied_system",
-                    "stack_group": "shield_booster_system"
+                    "stack_group": "shield_booster_system",
+                    "energy_drain_rate": 50.0,
+                    "activation_time": 25,
+                    "deactivation_time": 10
                 },
                 "CrewRequired": 35
             },
@@ -3442,13 +3452,18 @@
             "type": "CombatModifier",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldModifier": {
-                    "multiplier": 0.50,
+                    "multiplier": 0.5,
                     "scope": "enemy_sector",
-                    "stack_group": "shield_suppressor_sector"
+                    "stack_group": "shield_suppressor_sector",
+                    "energy_drain_rate": 30.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5
                 },
                 "CrewRequired": 25
             },
@@ -3465,13 +3480,18 @@
             "type": "CombatModifier",
             "mass": 400,
             "hp": 250,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldModifier": {
-                    "multiplier": 1.50,
+                    "multiplier": 1.5,
                     "scope": "allied_sector",
-                    "stack_group": "shield_booster_sector"
+                    "stack_group": "shield_booster_sector",
+                    "energy_drain_rate": 30.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5
                 },
                 "CrewRequired": 20
             },
@@ -3488,7 +3508,9 @@
             "type": "CombatModifier",
             "mass": 200,
             "hp": 150,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldModifier": {
@@ -3510,7 +3532,9 @@
             "type": "CombatModifier",
             "mass": 200,
             "hp": 150,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldModifier": {
@@ -3532,13 +3556,18 @@
             "type": "CombatModifier",
             "mass": 800,
             "hp": 500,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "DamageModifier": {
                     "multiplier": 0.75,
                     "scope": "enemy_system",
-                    "stack_group": "damage_suppressor_system"
+                    "stack_group": "damage_suppressor_system",
+                    "energy_drain_rate": 50.0,
+                    "activation_time": 25,
+                    "deactivation_time": 10
                 },
                 "CrewRequired": 40
             },
@@ -3555,13 +3584,18 @@
             "type": "CombatModifier",
             "mass": 700,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "DamageModifier": {
                     "multiplier": 1.25,
                     "scope": "allied_system",
-                    "stack_group": "damage_booster_system"
+                    "stack_group": "damage_booster_system",
+                    "energy_drain_rate": 50.0,
+                    "activation_time": 25,
+                    "deactivation_time": 10
                 },
                 "CrewRequired": 35
             },
@@ -3578,13 +3612,18 @@
             "type": "CombatModifier",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "DamageModifier": {
-                    "multiplier": 0.50,
+                    "multiplier": 0.5,
                     "scope": "enemy_sector",
-                    "stack_group": "damage_suppressor_sector"
+                    "stack_group": "damage_suppressor_sector",
+                    "energy_drain_rate": 30.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5
                 },
                 "CrewRequired": 25
             },
@@ -3601,13 +3640,18 @@
             "type": "CombatModifier",
             "mass": 400,
             "hp": 250,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "DamageModifier": {
-                    "multiplier": 1.50,
+                    "multiplier": 1.5,
                     "scope": "allied_sector",
-                    "stack_group": "damage_booster_sector"
+                    "stack_group": "damage_booster_sector",
+                    "energy_drain_rate": 30.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5
                 },
                 "CrewRequired": 20
             },
@@ -3624,7 +3668,9 @@
             "type": "CombatModifier",
             "mass": 200,
             "hp": 150,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "DamageModifier": {
@@ -3646,7 +3692,9 @@
             "type": "CombatModifier",
             "mass": 200,
             "hp": 150,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "DamageModifier": {
@@ -3668,12 +3716,17 @@
             "type": "Shields",
             "mass": 400,
             "hp": 250,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldProjection": {
                     "value": 100,
-                    "scope": "allied_sector"
+                    "scope": "allied_sector",
+                    "energy_drain_rate": 30.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5
                 },
                 "CrewRequired": 20
             },
@@ -3690,12 +3743,17 @@
             "type": "Shields",
             "mass": 600,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ShieldProjection": {
                     "value": 50,
-                    "scope": "allied_system"
+                    "scope": "allied_system",
+                    "energy_drain_rate": 50.0,
+                    "activation_time": 25,
+                    "deactivation_time": 10
                 },
                 "CrewRequired": 30
             },
@@ -3712,7 +3770,9 @@
             "type": "Infrastructure",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "GravityModifier": {
@@ -3735,7 +3795,9 @@
             "type": "Terraforming",
             "mass": 400,
             "hp": 250,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "WaterModifier": {
@@ -3756,7 +3818,9 @@
             "type": "Infrastructure",
             "mass": 600,
             "hp": 350,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "RadiationShield": {

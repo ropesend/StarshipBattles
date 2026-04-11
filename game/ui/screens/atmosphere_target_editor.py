@@ -13,6 +13,9 @@ from pygame_gui.elements import (
 from typing import Dict, Optional, Callable
 
 from game.strategy.data.race_config import GAS_NAME_TO_FORMULA, GAS_FORMULA_TO_NAME
+from game.ui.screens.species_selector_mixin import (
+    build_species_selector, get_selected_race_id, load_race_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +72,8 @@ class AtmosphereTargetEditor(UIWindow):
         self.on_apply_callback = on_apply_callback
         self.on_close_callback = on_close_callback
         self.race_config = race_config
+        self._species_dropdown = None
+        self._default_race_id = None
 
         # Determine which gases to show (present on planet + in target)
         current_atmo = getattr(planet, 'atmosphere', {})
@@ -94,8 +99,13 @@ class AtmosphereTargetEditor(UIWindow):
         container_w = content_rect.width
         container_h = content_rect.height
 
-        # Info header
+        # Species selector (shown only if multiple species on planet)
         y = 10
+        self._species_dropdown, _widgets, y, self._default_race_id = build_species_selector(
+            self.planet, self, self.ui_manager, y, container_w,
+        )
+
+        # Info header
         UILabel(
             pygame.Rect(10, y, container_w - 20, 25),
             text=f"Total Pressure: {sum(self.planet.atmosphere.values()):.0f} Pa",
@@ -240,15 +250,16 @@ class AtmosphereTargetEditor(UIWindow):
         self.kill()
 
     def _set_species_ideal(self):
-        """Set sliders to the species' ideal atmosphere composition.
+        """Set sliders to the selected species' ideal atmosphere composition.
 
         Converts race atmosphere preferences (-100 to +100) into target Pa values.
         Positive preferences get proportional partial pressures targeting Earth-like total.
         """
-        if self.race_config is None:
+        rc = self._get_active_race_config()
+        if rc is None:
             return
 
-        prefs = getattr(self.race_config, 'atmosphere_preferences', {})
+        prefs = getattr(rc, 'atmosphere_preferences', {})
         if not prefs:
             return
 
@@ -292,3 +303,17 @@ class AtmosphereTargetEditor(UIWindow):
         for gas, slider in self.sliders.items():
             slider.set_current_value(0.0)
             self.value_labels[gas].set_text("0 Pa")
+
+    def _get_active_race_config(self):
+        """Get the race config for the currently selected species."""
+        if self._species_dropdown is not None:
+            race_id = get_selected_race_id(self._species_dropdown)
+            if race_id:
+                rc = load_race_config(race_id)
+                if rc:
+                    return rc
+        if self._default_race_id:
+            rc = load_race_config(self._default_race_id)
+            if rc:
+                return rc
+        return self.race_config

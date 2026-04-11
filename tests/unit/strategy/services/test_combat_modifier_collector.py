@@ -15,6 +15,15 @@ class MockFacility:
     is_operational: bool = True
     component_states: Dict[str, Any] = field(default_factory=dict)
 
+    def get_activation_state(self, comp_key: str):
+        from game.strategy.data.component_activation_state import ComponentActivationState
+        data = self.component_states.get(comp_key)
+        if data is None:
+            return ComponentActivationState()
+        if isinstance(data, ComponentActivationState):
+            return data
+        return ComponentActivationState.from_dict(data)
+
 
 @dataclass
 class MockPlanet:
@@ -61,13 +70,33 @@ class MockGalaxy:
         return self._systems.get("default")
 
 
-def _facility_with_ability(ability_name, data):
-    """Create a facility with a specific ability on a component."""
-    return MockFacility(design_data={
-        "layers": {"CORE": [
-            {"id": "test_comp", "abilities": {ability_name: data}}
-        ]}
-    })
+def _facility_with_ability(ability_name, data, active=True):
+    """Create a facility with a specific ability on a component.
+
+    Args:
+        ability_name: Ability registry key.
+        data: Ability data dict.
+        active: If True, set the component as ACTIVE in component_states.
+    """
+    from game.strategy.data.component_activation_state import (
+        ComponentActivationState, ActivationPhase,
+    )
+    comp_key = "CORE:0:test_comp"
+    component_states = {}
+    if active:
+        component_states[comp_key] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name=ability_name,
+            energy_drain_rate=data.get('energy_drain_rate', 0.0) if isinstance(data, dict) else 0.0,
+        )
+    return MockFacility(
+        design_data={
+            "layers": {"CORE": [
+                {"id": "test_comp", "abilities": {ability_name: data}}
+            ]}
+        },
+        component_states=component_states,
+    )
 
 
 class TestFleetCombatModifiers:

@@ -1,11 +1,12 @@
 """Planet Abilities Window — List and toggle all activatable abilities on a planet.
 
-Shows each toggleable ability with its current status and a toggle button.
+Shows environment editor buttons (Atmosphere, Gravity, Water, Radiation) at the top,
+followed by each toggleable ability with its current status and a toggle button.
 Status displays: Active, Inactive, Activating (ticks), Deactivating (ticks).
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, List, Dict, Any
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Callable
 import logging
 
 import pygame
@@ -25,11 +26,26 @@ TOGGLEABLE_ABILITIES = {
     'WarpFieldStabilizer': 'Warp Field Stabilizer',
     'GravityModifier': 'Gravity Modifier',
     'RadiationShield': 'Radiation Shield',
+    'ShieldModifier': 'Shield Modifier',
+    'DamageModifier': 'Damage Modifier',
+    'ShieldProjection': 'Shield Projector',
 }
+
+# Environment editor buttons — shown when planet has the corresponding ability
+_ENVIRONMENT_EDITORS = [
+    ('AtmosphereModifier', 'Atmosphere'),
+    ('GravityModifier', 'Gravity'),
+    ('WaterModifier', 'Water'),
+    ('RadiationShield', 'Radiation'),
+]
 
 
 class PlanetAbilitiesWindow(UIWindow):
-    """Window listing all toggleable abilities on a planet with toggle buttons."""
+    """Window listing all toggleable abilities on a planet with toggle buttons.
+
+    Also provides environment editor buttons at the top for setting atmosphere,
+    gravity, water, and radiation targets.
+    """
 
     ROW_HEIGHT = 36
 
@@ -40,7 +56,19 @@ class PlanetAbilitiesWindow(UIWindow):
         planet,
         facade,
         component_registry=None,
+        on_open_editor: Optional[Callable[[str, Any], None]] = None,
     ):
+        """Initialize the abilities window.
+
+        Args:
+            relative_rect: Window position and size.
+            manager: UI manager.
+            planet: Planet object.
+            facade: StrategySessionFacade for command dispatch.
+            component_registry: Component registry for ability lookup.
+            on_open_editor: Callback(editor_type, planet) to open environment editors.
+                editor_type is one of: 'atmosphere', 'gravity', 'water', 'radiation'.
+        """
         super().__init__(
             relative_rect,
             manager,
@@ -50,23 +78,55 @@ class PlanetAbilitiesWindow(UIWindow):
         self.planet = planet
         self.facade = facade
         self.component_registry = component_registry
+        self._on_open_editor = on_open_editor
         self._toggle_buttons: Dict[str, UIButton] = {}
+        self._editor_buttons: List[UIButton] = []
         self._status_labels: Dict[str, UILabel] = {}
         self._widgets = []
         self._build_ui()
 
     def _build_ui(self):
-        """Build ability rows — one per activatable component instance."""
+        """Build environment editor buttons and ability rows."""
         container = self.get_container()
         y = 10
 
-        # Scan planet facilities for toggleable abilities (per-component granularity)
+        # --- Environment editor buttons (conditional on facility presence) ---
+        available_editors = self._get_available_editors()
+        if available_editors:
+            btn_w = 100
+            btn_h = 30
+            gap = 8
+            x = 10
+            for ability_key, label in available_editors:
+                btn = UIButton(
+                    relative_rect=pygame.Rect(x, y, btn_w, btn_h),
+                    text=label,
+                    manager=self.ui_manager,
+                    container=container,
+                )
+                btn._editor_type = label.lower()
+                self._editor_buttons.append(btn)
+                self._widgets.append(btn)
+                x += btn_w + gap
+            y += btn_h + 10
+
+        # --- Toggleable ability rows ---
         abilities_found = self._scan_abilities()
+
+        if not abilities_found and not available_editors:
+            lbl = UILabel(
+                relative_rect=pygame.Rect(10, y, 350, 30),
+                text="No abilities on this planet.",
+                manager=self.ui_manager,
+                container=container,
+            )
+            self._widgets.append(lbl)
+            return
 
         if not abilities_found:
             lbl = UILabel(
                 relative_rect=pygame.Rect(10, y, 350, 30),
-                text="No toggleable abilities on this planet.",
+                text="No toggleable abilities.",
                 manager=self.ui_manager,
                 container=container,
             )
@@ -125,6 +185,25 @@ class PlanetAbilitiesWindow(UIWindow):
             self._toggle_buttons[row_key] = btn
 
             y += self.ROW_HEIGHT
+
+    def _get_available_editors(self) -> List[tuple]:
+        """Return list of (ability_key, label) for editors where the planet has the facility."""
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        from game.core.patterns.layer_iterator import iter_components
+
+        # Collect all ability keys present on operational facilities
+        present_abilities = set()
+        for facility in getattr(self.planet, 'facilities', []):
+            if not getattr(facility, 'is_operational', True):
+                continue
+            for comp in iter_components(facility.design_data):
+                abilities = extract_abilities_from_component(comp, self.component_registry)
+                present_abilities.update(abilities.keys())
+
+        return [
+            (key, label) for key, label in _ENVIRONMENT_EDITORS
+            if key in present_abilities
+        ]
 
     def _scan_abilities(self) -> List[Dict]:
         """Scan planet facilities for toggleable abilities at per-component granularity.
@@ -193,8 +272,14 @@ class PlanetAbilitiesWindow(UIWindow):
         return "Inactive"
 
     def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle toggle button clicks."""
+        """Handle toggle button clicks and editor button clicks."""
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            # Check editor buttons first
+            editor_type = getattr(event.ui_element, '_editor_type', None)
+            if editor_type and self._on_open_editor:
+                self._on_open_editor(editor_type, self.planet)
+                return True
+
             ability_name = getattr(event.ui_element, '_ability_name', None)
             facility_id = getattr(event.ui_element, '_facility_id', None)
             component_key = getattr(event.ui_element, '_component_key', None)

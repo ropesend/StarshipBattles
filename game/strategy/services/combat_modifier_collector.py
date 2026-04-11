@@ -81,7 +81,8 @@ def collect_combat_modifiers(
                 ("DamageModifier", damage_entries),
             ]:
                 found = find_abilities_in_scope(
-                    ability_key, ref_planet, galaxy, fleet_empire, scan_scope, registries
+                    ability_key, ref_planet, galaxy, fleet_empire, scan_scope, registries,
+                    require_active=True,
                 )
                 for entry in found:
                     if entry.get('scope', 'self') in valid_scopes:
@@ -89,7 +90,8 @@ def collect_combat_modifiers(
 
             # ShieldProjection at strategic scopes (flat bonus)
             sp_entries = find_abilities_in_scope(
-                "ShieldProjection", ref_planet, galaxy, fleet_empire, scan_scope, registries
+                "ShieldProjection", ref_planet, galaxy, fleet_empire, scan_scope, registries,
+                require_active=True,
             )
             for entry in sp_entries:
                 if entry.get('scope', 'self') in valid_scopes:
@@ -110,7 +112,8 @@ def collect_combat_modifiers(
                 ("DamageModifier", damage_entries),
             ]:
                 found = find_abilities_in_scope(
-                    ability_key, ref_planet, galaxy, opponent_empire, scan_scope, registries
+                    ability_key, ref_planet, galaxy, opponent_empire, scan_scope, registries,
+                    require_active=True,
                 )
                 # Only include abilities with enemy_* scope
                 for entry in found:

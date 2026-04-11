@@ -558,9 +558,27 @@ passes `require_active=True` to `find_abilities_in_scope()`, which checks
 A stabilizer that is installed but not activated provides **no protection**. Only the
 `ACTIVE` phase counts — `ACTIVATING` and `DEACTIVATING` do not protect.
 
-**UI abilities panel** shows one row per activatable component instance (no dedup by
-ability name). When multiple instances of the same ability exist, they get numbered
-labels (e.g., "Geologic Stabilizer (Facility #1)", "Geologic Stabilizer (Facility #2)").
+**UI abilities panel** (`game/ui/screens/planet_abilities_window.py`) shows one row per
+activatable component instance (no dedup by ability name). When multiple instances of
+the same ability exist, they get numbered labels (e.g., "Geologic Stabilizer (Facility #1)").
+
+The abilities panel also provides **environment editor buttons** at the top for setting
+planet modification targets. Buttons are shown conditionally based on facility presence:
+- **Atmosphere** — shown when planet has `AtmosphereModifier` facility
+- **Gravity** — shown when planet has `GravityModifier` facility
+- **Water** — shown when planet has `WaterModifier` facility
+- **Radiation** — shown when planet has `RadiationShield` facility
+
+Each button opens the corresponding target editor window. The editors open via a callback
+from `strategy_window_manager.py` which delegates to the event router's `_open_*_editor()`
+methods. The standalone atmosphere button was removed from the strategy detail panel —
+all environment editors are now accessed exclusively through the abilities window.
+
+**Species selector for multi-species planets:** All 4 editors include a dropdown
+(from `game/ui/screens/species_selector_mixin.py`) when the planet has multiple species
+populations. The dropdown lists species sorted by population count; "Species Ideal"
+uses the selected species' preferences from `RaceConfig`. Single-species planets show
+no dropdown.
 
 ### System Effects Display
 
@@ -571,7 +589,11 @@ colonies in a star system for system-scope abilities and returns structured effe
 data for UI display.
 
 **Supported ability types:** GeologicStabilizer, StellarStabilizer, WarpFieldStabilizer,
-ResourceHarvestBooster, BuildRateBooster, QualityImprovement.
+ResourceHarvestBooster, BuildRateBooster, QualityImprovement, ShieldModifier, DamageModifier.
+
+**Scope filter:** The collector accepts abilities with scopes in `_SYSTEM_RELEVANT_SCOPES`:
+`system`, `allied_system`, `player_system`, `enemy_system`, `sector`, `allied_sector`,
+`player_sector`, `enemy_sector`. Scopes `self`, `fleet`, and `planet` are excluded.
 
 **Two categories:**
 - **Activatable** (have activation_time): status from ComponentActivationState
@@ -659,6 +681,11 @@ Applied in `SimulationBattleResolver.resolve_battle()` after environmental effec
 2. Shield multiplier applied via `_apply_shield_interference()`
 3. Damage multiplier set on `ship.damage_output_mult`
 
+All `find_abilities_in_scope()` calls use `require_active=True` — only abilities in the
+ACTIVE activation phase contribute to combat modifiers. Inactive or activating abilities
+have no effect. This means planetary complex ShieldModifier/DamageModifier/ShieldProjection
+must be manually activated before they affect combat.
+
 Wired from `ConflictResolutionEngine._resolve_combat_simulated()` which collects modifiers for both fleets and passes them to the resolver.
 
 ### Activatable Abilities & Stabilizer Pattern
@@ -701,6 +728,9 @@ ACTIVE   --[deactivate order]--> DEACTIVATING --[N ticks]--> INACTIVE
 | `WarpFieldStabilizer` | OPEN_WARP_POINT, CLOSE_WARP_POINT | system | 250 ticks | 150 ticks | 150/turn |
 | `GravityModifier` | — (modifies planet gravity) | self | 15 ticks | 5 ticks | 30/turn |
 | `RadiationShield` | — (adds radiation shielding) | self | 15 ticks | 5 ticks | 20/turn |
+| `ShieldModifier` | — (modifies fleet shields in combat) | varies | 15-25 ticks | 5-10 ticks | 30-50/turn |
+| `DamageModifier` | — (modifies fleet damage in combat) | varies | 15-25 ticks | 5-10 ticks | 30-50/turn |
+| `ShieldProjection` | — (adds flat shields in combat) | varies | 15-25 ticks | 5-10 ticks | 30-50/turn |
 
 The list of activatable ability keys is maintained in `planet_energy_engine.py:_ACTIVATABLE_ABILITIES`.
 
@@ -729,10 +759,13 @@ All three stabilizers (Geologic, Stellar, WarpField) use a unified check in
 4. Add display name to `TOGGLEABLE_ABILITIES` dict in `planet_abilities_window.py`
 5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`
 6. If it blocks superweapons: add check method in `superweapon_order_processor.py` using `_is_stabilized()`
-7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system-scope
-8. Add keyboard toggle binding in `strategy_fleet_command_router.py`
-9. Create component in `components.json` and QS complex design in `data/designs/`
-10. Write tests in `tests/unit/simulation/components/abilities/` and `tests/unit/strategy/engine/`
+7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system/sector scope — the collector accepts scopes in `_SYSTEM_RELEVANT_SCOPES` (system*, sector*, planet)
+8. If it affects combat: add to `combat_modifier_collector.py` with `require_active=True`
+9. Add keyboard toggle binding in `strategy_fleet_command_router.py`
+10. Create component in `components.json` with `energy_drain_rate`, `activation_time`, `deactivation_time` in the ability data — these are required for the abilities window to show the ability
+11. Create QS complex design in `data/designs/` with `design_role` field
+12. Write tests in `tests/unit/simulation/components/abilities/` and `tests/unit/strategy/engine/`
+13. Update `docs/systems/ability_reference.md` and `docs/systems/strategy_layer.md` activatable abilities table
 
 ### Build Queue Source DI
 

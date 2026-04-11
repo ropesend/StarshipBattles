@@ -226,6 +226,9 @@ _ACTIVATABLE_DISPLAY_NAMES = {
     'WarpFieldStabilizer': 'Warp Field Stabilizer',
     'GravityModifier': 'Gravity Modifier',
     'RadiationShield': 'Radiation Shield',
+    'ShieldModifier': 'Shield Modifier',
+    'DamageModifier': 'Damage Modifier',
+    'ShieldProjection': 'Shield Projector',
 }
 
 
