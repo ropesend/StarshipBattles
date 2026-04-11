@@ -72,34 +72,6 @@ def scan_ship_designs():
     return designs
 
 
-def scan_formations():
-    """Scan for available formation JSON files in data/formations directory."""
-    formations_dir = Paths.FORMATIONS_DIR
-
-    if not os.path.exists(formations_dir):
-        os.makedirs(formations_dir)
-
-    json_files = glob.glob(os.path.join(formations_dir, "*.json"))
-
-    formations = []
-    for filepath in json_files:
-        filename = os.path.basename(filepath)
-        if filename == 'builder_theme.json':
-            continue
-
-        try:
-            data = load_json(filepath)
-            if data and 'arrows' in data:
-                formations.append({
-                    'path': filepath,
-                    'name': filename.replace('.json', ''),
-                    'arrows': data['arrows']
-                })
-        except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            logger.warning(f"Failed to load formation from '{filepath}': {e}")
-    return formations
-
-
 def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0):
     """
     Load ships from team entry list.

@@ -3,8 +3,6 @@ from unittest.mock import MagicMock
 import pygame
 
 from game.ai.behaviors import KiteBehavior, AttackRunBehavior, OrbitBehavior
-from game.ai.controller import AIController
-from game.ai.interfaces.controllable import ShipControllableAdapter
 
 
 @pytest.fixture
@@ -143,35 +141,3 @@ class TestAdvancedBehaviors:
         assert rel_move.x < 0  # Moving Left (Inward)
         assert rel_move.y < 0  # Moving Up (Orbit)
 
-    def test_formation_integrity__ability_check(self, advanced_setup):
-        """Verify formation breakdown checks operational propulsion abilities."""
-        # This logic is in AIController._check_formation_integrity
-        # But we can test it by manually creating a controller or moving logic to mixin?
-        # It's a method on AIController. Let's instanciate a real one with mocks.
-
-        mock_ship = advanced_setup['mock_controller'].ship
-        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
-        real_controller = AIController(ShipControllableAdapter(mock_ship), MagicMock(), 0)
-
-        # Setup Ship with Ability-based Logic (access through underlying ship)
-        mock_ship.formation.active = True
-        mock_ship.formation.master = MagicMock()
-        mock_ship.formation.master.formation.members = [mock_ship]  # Raw ships in list
-
-        # Case 1: Ability Healthy
-        comp = MagicMock()
-        comp.has_ability.side_effect = lambda x: x == 'CombatPropulsion'
-        comp.current_hp = 100
-        comp.max_hp = 100
-
-        # Mock the Ship helper methods to return our component
-        mock_ship.get_components_by_ability = MagicMock(return_value=[comp])
-
-        real_controller._check_formation_integrity()
-        assert mock_ship.formation.active is True
-
-        # Case 2: Ability Damaged
-        comp.current_hp = 50
-
-        real_controller._check_formation_integrity()
-        assert mock_ship.formation.active is False

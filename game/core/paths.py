@@ -65,7 +65,6 @@ class Paths:
     SETTINGS_DIR: str = os.path.join(OUTPUT_DIR, "settings")
 
     # === Data Subdirectories ===
-    FORMATIONS_DIR: str = os.path.join(DATA_DIR, "formations")
     BATTLES_DIR: str = os.path.join(DATA_DIR, "battles")
     TECH_PRESETS_DIR: str = os.path.join(DATA_DIR, "tech_presets")
     STARTER_DESIGNS_DIR: str = os.path.join(DATA_DIR, "designs")

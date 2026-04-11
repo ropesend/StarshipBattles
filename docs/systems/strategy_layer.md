@@ -293,6 +293,25 @@ AI controller navigates the ship there.
 Factory: `create_spatial_behavior(type_str, **kwargs)` creates behavior by
 type string. Unknown types default to `FreeManeuverBehavior`.
 
+### Deployment Zones
+
+**File:** `game/strategy/services/deployment_zone_calculator.py`
+
+Maps `BattleRole` to positions on the 100000x100000 battlefield.
+Team 0 deploys on the left, Team 1 mirrors on the right.
+
+| Role | Team 0 X | Y Offset | Purpose |
+|------|----------|----------|---------|
+| RESERVE | 10000 | 0 | Held back |
+| MAIN_BODY | 25000 | 0 | Primary battle line |
+| SCREEN | 35000 | 0 | Between vanguard and main |
+| VANGUARD | 42000 | 0 | Forward deployment |
+| FLANKER_LEFT | 25000 | -15000 | Wide left envelopment |
+| FLANKER_RIGHT | 25000 | +15000 | Wide right envelopment |
+
+- `DeploymentZoneCalculator.get_zone_center(role, team_id)` — zone center as Vector2
+- `DeploymentZoneCalculator.compute_positions(count, role, team_id)` — ship positions as (x,y) tuples
+
 ### Fleet Delegates
 
 Fleet uses composition with 4 delegates:

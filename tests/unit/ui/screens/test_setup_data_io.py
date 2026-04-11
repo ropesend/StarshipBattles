@@ -117,64 +117,6 @@ class TestScanShipDesigns:
         assert designs == []
 
 
-class TestScanFormations:
-    """Tests for scan_formations function."""
-
-    @patch('game.ui.screens.setup_data_io.os.path.exists')
-    @patch('game.ui.screens.setup_data_io.os.makedirs')
-    @patch('game.ui.screens.setup_data_io.glob.glob')
-    @patch('game.ui.screens.setup_data_io.load_json')
-    def test_returns_valid_formations(self, mock_load_json, mock_glob, mock_makedirs, mock_exists):
-        """Verify valid formations are returned."""
-        from game.ui.screens.setup_data_io import scan_formations
-
-        mock_exists.return_value = True
-        mock_glob.return_value = ['/formations/wedge.json', '/formations/line.json']
-        mock_load_json.side_effect = [
-            {'arrows': [{'x': 0, 'y': 0}]},
-            {'arrows': [{'x': 1, 'y': 1}]}
-        ]
-
-        formations = scan_formations()
-
-        assert len(formations) == 2
-        assert formations[0]['name'] == 'wedge'
-        assert formations[1]['name'] == 'line'
-
-    @patch('game.ui.screens.setup_data_io.os.path.exists')
-    @patch('game.ui.screens.setup_data_io.os.makedirs')
-    @patch('game.ui.screens.setup_data_io.glob.glob')
-    def test_creates_directory_if_missing(self, mock_glob, mock_makedirs, mock_exists):
-        """Verify formations directory is created if missing."""
-        from game.ui.screens.setup_data_io import scan_formations
-
-        mock_exists.return_value = False
-        mock_glob.return_value = []
-
-        scan_formations()
-
-        mock_makedirs.assert_called_once()
-
-    @patch('game.ui.screens.setup_data_io.os.path.exists')
-    @patch('game.ui.screens.setup_data_io.os.makedirs')
-    @patch('game.ui.screens.setup_data_io.glob.glob')
-    @patch('game.ui.screens.setup_data_io.load_json')
-    def test_skips_files_without_arrows(self, mock_load_json, mock_glob, mock_makedirs, mock_exists):
-        """Verify files without 'arrows' key are skipped."""
-        from game.ui.screens.setup_data_io import scan_formations
-
-        mock_exists.return_value = True
-        mock_glob.return_value = ['/formations/valid.json', '/formations/invalid.json']
-        mock_load_json.side_effect = [
-            {'arrows': []},
-            {'other_key': 'value'}
-        ]
-
-        formations = scan_formations()
-
-        assert len(formations) == 1
-
-
 class TestSaveBattleSetup:
     """Tests for save_battle_setup function."""
 

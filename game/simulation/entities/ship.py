@@ -17,7 +17,6 @@ from game.core.constants import CombatConstants
 
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
-from .ship_formation import ShipFormation
 from .ship_stat_querier import ShipStatQuerier
 from .ship_validator_helper import ShipValidatorHelper
 from game.simulation.systems.resource_manager import ResourceRegistry
@@ -42,7 +41,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         ShipSerializer: to_dict / from_dict
         ShipStatQuerier: Ability totals, sensor/ECM scores
         ShipValidatorHelper: Design validation
-        ShipFormation: Formation data
     """
 
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
@@ -172,8 +170,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.secondary_targets: List[Any] = []
         self.max_targets: int = CombatConstants.DEFAULT_MAX_TARGETS
 
-        # === Formation & Physics ===
-        self.formation = ShipFormation(self)
+        # === Physics ===
         self.turn_throttle: float = 1.0
         self.engine_throttle: float = 1.0
         self.current_speed: float = 0.0

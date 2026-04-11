@@ -31,12 +31,6 @@ Behavior Classes:
             - fire_while_retreating controls weapon usage
             - Triggered when HP below retreat_hp_threshold
 
-        FormationBehavior: Follow formation master
-            - Maintain formation.offset relative to master
-            - Match master's heading (relative or fixed mode)
-            - Apply correction forces to stay in position
-            - Dropout detection if master dies or drifts too far
-
         OrbitBehavior: Circle around target
             - Maintain fixed distance while strafing
             - Good for continuous fire weapons
@@ -64,9 +58,8 @@ import random
 from typing import Any, Dict, Optional
 
 from game.core.config import AIConfig, PhysicsConfig
-from game.core.math import Vector2, angle_diff as calc_angle_diff
+from game.core.math import Vector2
 import math
-from game.ai.protocols import IFormationMaster
 
 
 def _flee_direction(from_pos: Vector2, away_from_pos: Vector2) -> Vector2:
@@ -231,130 +224,6 @@ class AttackRunBehavior(AIBehavior):
 
             if self.attack_timer <= 0 and dist > retreat_dist:
                 self.attack_state = 'approach'
-
-class FormationBehavior(AIBehavior):
-    """Follow formation master, maintaining relative offset position.
-
-    State Machine:
-        IN_FORMATION (distance <= drift_threshold):
-            - Rotation: Match master's angle with feed-forward prediction
-              - If angle_diff small → snap to master angle
-              - Otherwise → rotate toward master angle
-            - Translation: Two-phase control
-              A) Velocity Sync: Match master's target speed via throttle
-              B) Position Correction: Spring-based drift correction
-                 - Deadband (< 2.0 units) → ignore micro-errors
-                 - Above deadband → apply 20% correction per tick
-                 - Capped to MAX_CORRECTION_FORCE to prevent wild jumps
-
-        OUT_OF_FORMATION (distance > drift_threshold):
-            - Calculate predicted master position (PREDICTION_TICKS ahead)
-            - Navigate to predicted offset position using standard navigation
-
-    Formation Offset Modes:
-        'relative': Offset rotates with master's heading (default)
-        'fixed': Offset maintains absolute direction regardless of master heading
-
-    Dropout Conditions:
-        - Master dies or becomes derelict → exit formation
-        - Ship propulsion damaged → AIController triggers dropout
-
-    Strategy Parameters:
-        (None directly - uses ship.formation.offset and ship.formation.rotation_mode)
-    """
-
-    DRIFT_THRESHOLD_FACTOR: float = AIConfig.FORMATION_DRIFT_THRESHOLD_FACTOR
-    DRIFT_THRESHOLD_DIAMETER_MULT: float = AIConfig.FORMATION_DRIFT_DIAMETER_MULT
-    TURN_SPEED_FACTOR: float = AIConfig.FORMATION_TURN_SPEED_FACTOR
-    TURN_PREDICT_FACTOR: float = AIConfig.FORMATION_TURN_PREDICT_FACTOR
-    DEADBAND_ERROR: float = AIConfig.FORMATION_DEADBAND_ERROR
-    CORRECTION_FACTOR: float = AIConfig.FORMATION_CORRECTION_FACTOR
-    MAX_CORRECTION_FORCE: int = AIConfig.MAX_CORRECTION_FORCE
-    PREDICTION_TICKS: int = AIConfig.FORMATION_PREDICTION_TICKS
-    NAVIGATE_STOP_DIST: int = AIConfig.FORMATION_NAVIGATE_STOP_DIST
-
-    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
-        ship = self.controller.ship
-        formation_master: Optional[IFormationMaster] = ship.get_formation_master()
-
-        if not formation_master or not formation_master.is_alive or formation_master.is_derelict:
-            ship.set_in_formation(False)
-            return
-
-        formation_offset = ship.get_formation_offset()
-        rotation_mode = ship.get_formation_rotation_mode()
-        target_pos = self._compute_offset_position(formation_master, formation_offset, rotation_mode)
-
-        dist = ship.get_position().distance_to(target_pos)
-        diameter = ship.get_radius() * 2
-        drift_threshold = max(
-            diameter * self.DRIFT_THRESHOLD_DIAMETER_MULT,
-            ship.get_acceleration_rate() * self.DRIFT_THRESHOLD_FACTOR,
-        )
-
-        if dist <= drift_threshold:
-            angle_diff = calc_angle_diff(ship.get_rotation(), formation_master.angle)
-            self._sync_rotation(ship, formation_master, angle_diff)
-            self._sync_velocity(ship, formation_master)
-            self._correct_position(ship, formation_master, formation_offset, rotation_mode)
-        else:
-            self._navigate_to_predicted(formation_master, formation_offset, rotation_mode)
-
-    # -- helpers ----------------------------------------------------------
-
-    @staticmethod
-    def _compute_offset_position(master, offset, rotation_mode):
-        """Compute world-space target position from master + offset."""
-        rel = offset if rotation_mode == 'fixed' else offset.rotate(master.angle)
-        return master.position + rel
-
-    def _sync_rotation(self, ship, master, angle_diff):
-        """Snap or rotate toward master's heading."""
-        turn_speed_per_tick = ship.get_turn_speed() / self.TURN_SPEED_FACTOR
-        if abs(angle_diff) < turn_speed_per_tick * self.TURN_PREDICT_FACTOR:
-            ship.set_rotation(master.angle)
-        else:
-            ship.rotate(1 if angle_diff > 0 else -1)
-
-    @staticmethod
-    def _sync_velocity(ship, master):
-        """Match master's throttle and thrust state."""
-        master_target_speed = 0
-        if master.is_thrusting:
-            master_target_speed = master.max_speed * master.engine_throttle
-
-        ship_max_speed = ship.get_max_speed()
-        if ship_max_speed > 0:
-            req_throttle = master_target_speed / ship_max_speed
-            ship.set_throttle(min(req_throttle, 1.0))
-            if req_throttle > 0:
-                ship.thrust_forward()
-
-    def _correct_position(self, ship, master, offset, rotation_mode):
-        """Spring-based positional correction within drift zone."""
-        target_pos = self._compute_offset_position(master, offset, rotation_mode)
-        vec_to_spot = target_pos - ship.get_position()
-        dist_error = vec_to_spot.length()
-
-        if dist_error > self.DEADBAND_ERROR:
-            correction = vec_to_spot * self.CORRECTION_FACTOR
-            if correction.length() > self.MAX_CORRECTION_FORCE:
-                correction.scale_to_length(self.MAX_CORRECTION_FORCE)
-            ship.adjust_position(correction)
-
-    def _navigate_to_predicted(self, master, offset, rotation_mode):
-        """Navigate toward master's predicted future position."""
-        predicted_master_pos = master.position + (
-            Vector2(0, -1).rotate(-master.angle)
-            * master.current_speed
-            * self.PREDICTION_TICKS
-            * PhysicsConfig.TICK_RATE
-        )
-        pred_offset = offset if rotation_mode == 'fixed' else offset.rotate(master.angle)
-        self.controller.navigate_to(
-            predicted_master_pos + pred_offset,
-            stop_dist=self.NAVIGATE_STOP_DIST,
-        )
 
 
 # =============================================================================

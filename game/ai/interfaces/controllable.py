@@ -211,53 +211,6 @@ class IControllable(ABC):
         """Get all components across all layers."""
         pass
 
-    # =========================================================================
-    # Formation
-    # =========================================================================
-
-    @abstractmethod
-    def get_formation_members(self) -> List[Any]:
-        """Get list of formation members (if this entity is formation master)."""
-        pass
-
-    @abstractmethod
-    def get_formation_master(self) -> Optional[Any]:
-        """Get the formation master (if this entity is in a formation)."""
-        pass
-
-    @abstractmethod
-    def is_in_formation(self) -> bool:
-        """Check if the entity is part of a formation."""
-        pass
-
-    @abstractmethod
-    def get_formation_offset(self) -> Optional[Any]:
-        """Get the formation offset relative to master."""
-        pass
-
-    @abstractmethod
-    def get_formation_rotation_mode(self) -> str:
-        """Get the formation rotation mode ('fixed' or 'relative')."""
-        pass
-
-    @abstractmethod
-    def set_in_formation(self, value: bool) -> None:
-        """Set whether the entity is in a formation."""
-        pass
-
-    @abstractmethod
-    def set_formation_master(self, master: Optional[Any]) -> None:
-        """Set the formation master."""
-        pass
-
-    @abstractmethod
-    def leave_formation(self) -> None:
-        """Remove this entity from its current formation.
-
-        Handles cleanup of formation state including removing self from
-        the formation master's member list.
-        """
-        pass
 
 
 class ShipControllableAdapter(IControllable):
@@ -292,10 +245,6 @@ class ShipControllableAdapter(IControllable):
     # Note: The adapter still exposes the underlying ship via:
     #   - adapter._ship (internal access)
     #   - adapter.ship (property, read-only)
-    #
-    # Formation methods (get_formation_master, get_formation_members) return
-    # raw Ship objects, not adapters. This is intentional - the AI code needs
-    # to access formation master's attributes directly.
 
     # =========================================================================
     # Position and Movement (Read)
@@ -433,48 +382,3 @@ class ShipControllableAdapter(IControllable):
         """Get all components across all layers."""
         return self._ship.get_all_components()
 
-    # =========================================================================
-    # Formation
-    # =========================================================================
-
-    def get_formation_members(self) -> List[Any]:
-        """Get list of formation members."""
-        return self._ship.formation.members or []
-
-    def get_formation_master(self) -> Optional[Any]:
-        """Get the formation master."""
-        return self._ship.formation.master
-
-    def is_in_formation(self) -> bool:
-        """Check if the ship is part of a formation."""
-        return self._ship.formation.active
-
-    def get_formation_offset(self) -> Optional[Any]:
-        """Get the formation offset relative to master."""
-        return self._ship.formation.offset
-
-    def get_formation_rotation_mode(self) -> str:
-        """Get the formation rotation mode ('fixed' or 'relative')."""
-        return self._ship.formation.rotation_mode
-
-    def set_in_formation(self, value: bool) -> None:
-        """Set whether the ship is in a formation."""
-        self._ship.formation.active = value
-
-    def set_formation_master(self, master: Optional[Any]) -> None:
-        """Set the formation master."""
-        self._ship.formation.master = master
-
-    def leave_formation(self) -> None:
-        """Remove this ship from its current formation.
-
-        Note: The master is always a Ship with .formation (ShipFormation) which has .members.
-        This is guaranteed by the formation system - no defensive hasattr needed.
-        """
-        try:
-            master = self._ship.formation.master
-            if master and self._ship in master.formation.members:
-                master.formation.members.remove(self._ship)
-        except (AttributeError, ValueError):
-            # Formation structure already broken or ship not in members
-            pass

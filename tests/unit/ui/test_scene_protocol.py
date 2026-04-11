@@ -71,12 +71,6 @@ class TestISceneProtocolCompliance:
         from game.ui.screens.galaxy_test import GalaxyTestScreen
         _assert_implements_iscene(GalaxyTestScreen)
 
-    def test_formation_editor_screen_implements_iscene(self):
-        """FormationEditorScreen implements IScene protocol."""
-        from game.ui.screens.formation_editor import FormationEditorScreen
-        _assert_implements_iscene(FormationEditorScreen)
-
-
 class TestSceneCallback:
     """Tests for scene_callback pattern.
 

@@ -415,24 +415,6 @@ class IPhysicsShip(Protocol):
 
 
 # =============================================================================
-# Formation Host Protocol
-# =============================================================================
-
-@runtime_checkable
-class IFormationHost(Protocol):
-    """
-    Protocol for entities that can host formations.
-
-    Ships can have formations of other ships following them.
-    """
-
-    @property
-    def formation(self) -> Any:
-        """ShipFormation instance managing formation members."""
-        ...
-
-
-# =============================================================================
 # Serializable Ship Protocol
 # =============================================================================
 
@@ -498,11 +480,6 @@ def is_projectile(obj: Any) -> TypeGuard[IProjectile]:
 def is_physics_ship(obj: Any) -> TypeGuard[IPhysicsShip]:
     """Check if obj has physics ship attributes (velocity, mass)."""
     return _has_attrs(obj, 'velocity', 'mass')
-
-
-def is_formation_host(obj: Any) -> TypeGuard[IFormationHost]:
-    """Check if obj has formation host attributes (formation)."""
-    return _has_attrs(obj, 'formation')
 
 
 def is_serializable_ship(obj: Any) -> TypeGuard[ISerializableShip]:

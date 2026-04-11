@@ -38,10 +38,6 @@ def mock_controllable():
     controllable.get_weapon_range.return_value = 500.0
     controllable.get_radius.return_value = 40.0
     controllable.get_current_speed.return_value = 50.0
-    controllable.get_formation_members.return_value = []
-    controllable.get_formation_master.return_value = None
-    controllable.is_in_formation.return_value = False
-    controllable.get_formation_offset.return_value = None
     controllable.get_current_target.return_value = None
     controllable.get_max_targets.return_value = 1
 
@@ -54,9 +50,6 @@ def mock_controllable():
     controllable.radius = 40.0
     controllable.turn_speed = 180.0
     controllable.current_target = None
-    controllable.formation.members = []
-    controllable.formation.active = False
-    controllable.formation.master = None
     controllable.ai_strategy = 'standard_ranged'
     controllable.max_targets = 1
     controllable.secondary_targets = []
@@ -85,10 +78,6 @@ def mock_ship():
     ship.comp_trigger_pulled = False
     ship.current_target = None
     ship.secondary_targets = []
-    ship.formation.members = []
-    ship.formation.master = None
-    ship.formation.active = False
-    ship.formation.offset = None
     ship.vehicle_type = 'Ship'
     ship.ai_strategy = 'standard_ranged'
     ship.max_targets = 1
@@ -257,56 +246,6 @@ class TestAIControllerUpdate:
 
 
 # =============================================================================
-# Test: AIController Formation Support
-# =============================================================================
-
-class TestAIControllerFormation:
-    """Tests for AIController formation handling with interface."""
-
-    def test_update_handles_formation_master(self, mock_ship, mock_grid):
-        """update() handles formation master ship."""
-        from game.ai.controller import AIController
-        from game.ai.interfaces.controllable import ShipControllableAdapter
-
-        member = MagicMock()
-        member.is_alive = True
-        member.formation.active = True
-        member.formation.offset = Vector2(50, 0)
-        member.position = Vector2(150, 200)
-
-        mock_ship.is_alive = True
-        mock_ship.formation.members = [member]
-        mock_ship.formation.active = False
-        mock_ship.radius = 40
-
-        adapter = ShipControllableAdapter(mock_ship)
-        controller = AIController(adapter, mock_grid, enemy_team_id=2)
-
-        # Should not raise
-        controller.update()
-
-    def test_update_handles_formation_member(self, mock_ship, mock_grid):
-        """update() handles ship in formation."""
-        from game.ai.controller import AIController
-        from game.ai.interfaces.controllable import ShipControllableAdapter
-
-        master = MagicMock()
-        master.is_alive = True
-        master.current_target = None
-
-        mock_ship.is_alive = True
-        mock_ship.formation.members = []
-        mock_ship.formation.active = True
-        mock_ship.formation.master = master
-
-        adapter = ShipControllableAdapter(mock_ship)
-        controller = AIController(adapter, mock_grid, enemy_team_id=2)
-
-        # Should not raise
-        controller.update()
-
-
-# =============================================================================
 # Test: AIController Avoidance Self-Skip (Fix 9.1)
 # =============================================================================
 
@@ -384,86 +323,3 @@ class TestAIControllerAvoidance:
         assert result is None, "Should not try to avoid itself"
 
 
-class TestFormationIntegrityWithAdapter:
-    """Tests for _check_formation_integrity with ShipControllableAdapter.
-
-    Fix 10.1: Verifies that formation member removal works correctly when
-    AIController.ship is a ShipControllableAdapter wrapping a raw Ship,
-    but formation_members list contains raw Ships.
-    """
-
-    def test_formation_member_removed_when_ship_damaged(self, mock_grid):
-        """When ship breaks formation due to damage, it should be removed from formation_members."""
-        from game.ai.interfaces.controllable import ShipControllableAdapter
-        from game.ai.controller import AIController
-
-        # Create a mock ship that is in a formation
-        mock_ship = MagicMock()
-        mock_ship.position = Vector2(100, 100)
-        mock_ship.velocity = Vector2(0, 0)
-        mock_ship.angle = 0.0
-        mock_ship.team_id = 1
-        mock_ship.is_alive = True
-        mock_ship.radius = 40
-        mock_ship.formation.active = True
-
-        # Create formation master with members list containing RAW ships (not adapters)
-        mock_master = MagicMock()
-        mock_master.formation.members = [mock_ship]  # Raw ship in list
-        mock_ship.formation.master = mock_master
-
-        # Create a damaged propulsion component
-        damaged_component = MagicMock()
-        damaged_component.current_hp = 50
-        damaged_component.max_hp = 100
-        # Code calls get_components_by_ability for 'CombatPropulsion' and 'ManeuveringThruster'
-        mock_ship.get_components_by_ability.return_value = [damaged_component]
-
-        # Wrap in adapter (as production does)
-        adapter = ShipControllableAdapter(mock_ship)
-        controller = AIController(adapter, mock_grid, enemy_team_id=2)
-
-        # Verify ship is in formation.members before
-        assert mock_ship in mock_master.formation.members
-
-        # Call _check_formation_integrity which should detect damage and remove from formation
-        controller._check_formation_integrity()
-
-        # Verify ship was removed from formation.members
-        assert mock_ship not in mock_master.formation.members, \
-            "Ship should be removed from formation.members when breaking formation"
-        # Verify formation state was cleared
-        assert mock_ship.formation.active is False
-
-    def test_formation_member_not_removed_when_undamaged(self, mock_grid):
-        """When ship is undamaged, it should stay in formation."""
-        from game.ai.interfaces.controllable import ShipControllableAdapter
-        from game.ai.controller import AIController
-
-        mock_ship = MagicMock()
-        mock_ship.position = Vector2(100, 100)
-        mock_ship.velocity = Vector2(0, 0)
-        mock_ship.angle = 0.0
-        mock_ship.team_id = 1
-        mock_ship.is_alive = True
-        mock_ship.radius = 40
-        mock_ship.formation.active = True
-
-        mock_master = MagicMock()
-        mock_master.formation.members = [mock_ship]
-        mock_ship.formation.master = mock_master
-
-        # Undamaged propulsion component
-        undamaged_component = MagicMock()
-        undamaged_component.current_hp = 100
-        undamaged_component.max_hp = 100
-        mock_ship.get_components_by_ability.return_value = [undamaged_component]
-
-        adapter = ShipControllableAdapter(mock_ship)
-        controller = AIController(adapter, mock_grid, enemy_team_id=2)
-
-        controller._check_formation_integrity()
-
-        # Ship should still be in formation
-        assert mock_ship in mock_master.formation.members
-        assert mock_ship.formation.active is True

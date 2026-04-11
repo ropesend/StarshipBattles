@@ -37,7 +37,6 @@ from game.ui.screens.battle_screen import BattleScreen
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
-from game.ui.screens.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
@@ -75,7 +74,6 @@ _SCREEN_TRANSITIONS = frozenset({
     (GameState.MENU, GameState.BUILDER),
     (GameState.MENU, GameState.BATTLE_SETUP),
     (GameState.MENU, GameState.STRATEGY),
-    (GameState.MENU, GameState.FORMATION),
     (GameState.MENU, GameState.TEST_LAB),
     (GameState.MENU, GameState.RESEARCH_TREE),
     (GameState.MENU, GameState.GALAXY_TEST),
@@ -86,7 +84,6 @@ _SCREEN_TRANSITIONS = frozenset({
     (GameState.BATTLE, GameState.STRATEGY),
     (GameState.BATTLE_SETUP, GameState.MENU),
     (GameState.BATTLE_SETUP, GameState.BATTLE),
-    (GameState.FORMATION, GameState.MENU),
     (GameState.TEST_LAB, GameState.MENU),
     (GameState.TEST_LAB, GameState.BATTLE),
     (GameState.RESEARCH_TREE, GameState.MENU),
@@ -206,7 +203,6 @@ class Game:
         self.battle_setup = BattleSetupScreen(self.width, self.height, self._handle_battle_setup_action)
         self.battle_scene = BattleScreen(self.width, self.height, self._handle_battle_action)
         self.strategy_scene = StrategyScreen(self.width, self.height, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
-        self.formation_scene = FormationEditorScreen(self.width, self.height, self.on_formation_return)
         self.test_lab_scene = TestLabScreen(self, scene_callback=self._handle_test_lab_action)
 
     def _get_menu_button_config(self):
@@ -219,7 +215,6 @@ class Game:
             ("Race Setup", self.start_race_setup),
             ("Design Workshop", self.start_builder),
             ("Battle Setup", self.start_battle_setup),
-            ("Formation Editor", self.start_formation_editor),
             ("Combat Lab", self.start_test_lab),
             ("Research Tree", self.start_research_tree),
             ("Galaxy Test", self.start_galaxy_test),
@@ -448,16 +443,6 @@ class Game:
         """Cancel load game."""
         self.showing_load_menu = False
         logger.debug("Load game cancelled")
-
-    @profile_action("App: Start Formation Editor")
-    def start_formation_editor(self):
-        """Enter formation editor."""
-        self.formation_scene.handle_resize(self.width, self.height)
-        self._switch_scene(GameState.FORMATION, self.formation_scene)
-
-    def on_formation_return(self):
-        """Return from formation editor."""
-        self._switch_scene(GameState.MENU, self._menu_scene)
 
     def start_test_lab(self):
         """Enter Combat Lab."""
