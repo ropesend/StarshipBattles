@@ -1018,7 +1018,7 @@ Replaces the old `PlanetaryEnergyGenerator` (PROJ-238). Old `PlanetaryEnergyStor
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Prevents planet-destroying superweapons (IMPLODE_PLANET) within scope. Requires energy and manual activation.
+Prevents planet-destroying superweapons (IMPLODE_PLANET) within scope. Requires energy and manual activation — only provides protection when in the ACTIVE phase (checked via `require_active=True` in the scanner).
 
 **Data Format:** Dict
 
@@ -1047,7 +1047,7 @@ Prevents planet-destroying superweapons (IMPLODE_PLANET) within scope. Requires 
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Prevents star-destroying superweapons (STELLERATE_STAR) and Dyson Sphere construction (CREATE_DYSON_SPHERE) within scope. Requires energy and manual activation.
+Prevents star-destroying superweapons (STELLERATE_STAR) and Dyson Sphere construction (CREATE_DYSON_SPHERE) within scope. Requires energy and manual activation — only provides protection when in the ACTIVE phase.
 
 **Data Format:** Dict
 
@@ -1074,7 +1074,7 @@ Prevents star-destroying superweapons (STELLERATE_STAR) and Dyson Sphere constru
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Prevents warp point creation (OPEN_WARP_POINT) and destruction (CLOSE_WARP_POINT) within scope. Requires energy and manual activation.
+Prevents warp point creation (OPEN_WARP_POINT) and destruction (CLOSE_WARP_POINT) within scope. Requires energy and manual activation — only provides protection when in the ACTIVE phase.
 
 **Data Format:** Dict
 

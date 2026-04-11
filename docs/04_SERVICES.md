@@ -579,6 +579,37 @@ cmd = CargoTransferService.build_transfer_command(
 
 ---
 
+### StrategicAbilityScanner
+
+**Location:** `game/strategy/services/strategic_ability_scanner.py`
+
+**Purpose:** Scoped ability queries for the strategy layer. Finds active instances of strategic abilities (stabilizers, harvest boosters, build rate boosters) across spatial scopes (planet, sector, system, empire). Provides aggregation using two-phase stacking (intra-group MAX, inter-group MULTIPLY).
+
+**Dependencies:** None (module-level functions). Uses `iter_keyed_components` from `game.core.patterns.layer_iterator` for component iteration with composite keys.
+
+**Key Functions:**
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `find_abilities_at_planet` | `(ability_key, planet, registries=None, require_active=False) -> List[Dict]` | Find all instances of an ability on a planet's operational facilities |
+| `find_abilities_in_scope` | `(ability_key, target_planet, galaxy, empire, scope, registries=None, require_active=False) -> List[Dict]` | Find abilities affecting a planet at a given spatial scope |
+| `aggregate_multipliers` | `(entries) -> float` | Two-phase stacking: intra-group MAX, inter-group MULTIPLY |
+
+**Scope resolution:** `find_abilities_in_scope` resolves which planets to scan based on the `scope` parameter:
+
+| Scope | Planets scanned |
+|-------|----------------|
+| `planet` / `self` | Target planet only |
+| `sector` | All empire-owned planets at the target's **global hex** (via `galaxy.get_planet_global_hex` + `galaxy.get_planets_at_global_hex`) |
+| `system` | All empire-owned planets in the target's **star system** (via `galaxy.get_system_of_planet`) |
+| `empire` | All empire colonies |
+
+**Activation filtering (`require_active`):** When `True`, only returns abilities from components whose `ComponentActivationState.phase` is `ACTIVE`. Used by `SuperweaponOrderProcessor._is_stabilized()` to ensure stabilizers must be manually activated before they provide protection. Always-on abilities (harvest boosters, build rate boosters) use the default `False`.
+
+**Used by:** `SuperweaponOrderProcessor` (stabilizer protection checks), `HarvestingEngine` (harvest rate boosters), `build_queue_source` (build rate boosters), `SystemEffectsCollector` (aggregation only).
+
+---
+
 ### SystemEffectsCollector
 
 **Location:** `game/strategy/services/system_effects_collector.py`

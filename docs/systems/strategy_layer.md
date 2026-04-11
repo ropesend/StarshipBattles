@@ -382,6 +382,12 @@ summary dict `{ability_name: True}`. This means:
 prevents activating the same component twice, but allows different components with
 the same ability name to be activated independently.
 
+**Stabilizer protection requires ACTIVE phase:** `SuperweaponOrderProcessor._is_stabilized()`
+passes `require_active=True` to `find_abilities_in_scope()`, which checks
+`facility.get_activation_state(comp_key).is_functionally_active` for each component.
+A stabilizer that is installed but not activated provides **no protection**. Only the
+`ACTIVE` phase counts — `ACTIVATING` and `DEACTIVATING` do not protect.
+
 **UI abilities panel** shows one row per activatable component instance (no dedup by
 ability name). When multiple instances of the same ability exist, they get numbered
 labels (e.g., "Geologic Stabilizer (Facility #1)", "Geologic Stabilizer (Facility #2)").
