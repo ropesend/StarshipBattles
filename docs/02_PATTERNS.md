@@ -646,6 +646,8 @@ operations that compose service calls with layer resolution logic:
 | `resolve_target_layer(component, selected_layer?)` | Pure logic: find best layer for a component |
 | `move_component(source_layer, index, target_layer)` | Move a single component between layers |
 | `move_component_group(group_key, source_layer, target_layer)` | Move all components in a group between layers |
+| `resolve_move_target(component, source_layer, direction)` | Find next valid layer in up/down direction |
+| `on_modifier_changed()` | Called after any modifier change — syncs multi-selection, recalculates ship stats |
 
 **Quick-add layer resolution** (used by component palette "+" button):
 1. If `selected_layer` is valid for the component → use it
