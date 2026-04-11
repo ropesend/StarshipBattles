@@ -155,7 +155,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage       | Description |
 |------------------|-------------|
-| `screens/`       | BattleScreen, StrategyScreen, WorkshopScreen, MenuScene, SetupScreen, NewGameSetupScreen, TestLabScreen, GalaxyTestScreen, BuildQueueScreen, plus sub-screen packages (`builder/`, `test_lab/`, `galaxy_test/`) |
+| `screens/`       | BattleScreen, StrategyScreen, WorkshopScreen, MenuScene, FleetBattleSetupScreen (aliased as BattleSetupScreen), NewGameSetupScreen, TestLabScreen, GalaxyTestScreen, BuildQueueScreen, BattleSetupState/BattleSetupSide (setup data model), plus sub-screen packages (`builder/`, `test_lab/`, `galaxy_test/`) |
 | `renderer/`      | Camera, GameRenderer, SpriteManager |
 | `panels/`        | BattlePanels, BuilderWidgets |
 | `components/`    | Reusable UI components including `table/` subpackage |
@@ -413,4 +413,4 @@ TICK_RATE=0.01s, DEFAULT_LINEAR_DRAG=0.5, DEFAULT_ANGULAR_DRAG=0.5, SPATIAL_GRID
 
 ## Entry Point
 
-`game/app.py` -- Pygame application loop. Initializes registries, creates scenes (implementing `IScene` protocol), and runs the main event/update/draw loop. Scene transitions are managed by the app, not by scenes themselves. Key screens: MenuScene, BattleScreen, StrategyScreen, WorkshopScreen (DesignWorkshopScreen), BattleSetupScreen, TestLabScreen, NewGameSetupScreen, KeybindingsScene.
+`game/app.py` -- Pygame application loop. Initializes registries, creates scenes (implementing `IScene` protocol), and runs the main event/update/draw loop. Scene transitions are managed by the app, not by scenes themselves. Key screens: MenuScene, BattleScreen, StrategyScreen, WorkshopScreen (DesignWorkshopScreen), FleetBattleSetupScreen (fleet-based battle setup with multi-fleet support, task force/squadron hierarchy, and complex effects — aliased as BattleSetupScreen), TestLabScreen, NewGameSetupScreen, KeybindingsScene.
