@@ -11,7 +11,7 @@ Checks each design for:
 Usage:
     python Tools/validate_designs/validate_designs.py [directory]
 
-Default directory: tests/fixtures/quickstart/designs/
+Default directory: data/designs/
 Exit code: 0 if all valid, 1 if any errors.
 """
 import json
@@ -80,7 +80,7 @@ def validate_design_file(filepath: Path, registries: GameRegistries) -> tuple:
 
 
 def main():
-    designs_dir = sys.argv[1] if len(sys.argv) > 1 else "tests/fixtures/quickstart/designs"
+    designs_dir = sys.argv[1] if len(sys.argv) > 1 else "data/designs"
     designs_path = Path(designs_dir)
 
     if not designs_path.exists():

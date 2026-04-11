@@ -16,6 +16,7 @@ from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.systems.design_library import DesignLibrary
 from game.core.json_utils import load_json, save_json
+from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
 
@@ -35,22 +36,14 @@ INITIAL_COMPLEXES = [
 ]
 
 
-def get_quickstart_fixtures_dir() -> Path:
-    """Return the quickstart fixtures directory."""
-    # Navigate from this file to project root, then to fixtures
-    current_dir = Path(__file__).resolve().parent
-    project_root = current_dir.parent.parent  # game/strategy -> game -> StarshipBattles
-    return project_root / "tests" / "fixtures" / "quickstart"
-
-
 def get_quickstart_races_dir() -> Path:
-    """Return the quickstart races fixtures directory."""
-    return get_quickstart_fixtures_dir() / "races"
+    """Return the starter races data directory."""
+    return Paths.get_starter_races_dir()
 
 
 def get_quickstart_designs_dir() -> Path:
-    """Return the quickstart designs fixtures directory."""
-    return get_quickstart_fixtures_dir() / "designs"
+    """Return the starter designs data directory."""
+    return Paths.get_starter_designs_dir()
 
 
 class QuickstartBuilder:
@@ -105,7 +98,7 @@ class QuickstartBuilder:
         logger.info(f"Building 1P quickstart: {save_name}")
 
         # Try to load test race fixture
-        race = QuickstartBuilder.load_test_race("test_emp1.json")
+        race = QuickstartBuilder.load_test_race("qs_empire_1.json")
 
         if race:
             player = PlayerConfig(
@@ -164,7 +157,7 @@ class QuickstartBuilder:
         players = []
 
         # Player 1
-        race1 = QuickstartBuilder.load_test_race("test_emp1.json")
+        race1 = QuickstartBuilder.load_test_race("qs_empire_1.json")
         if race1:
             players.append(PlayerConfig(
                 name=race1.name,
@@ -185,7 +178,7 @@ class QuickstartBuilder:
             ))
 
         # Player 2
-        race2 = QuickstartBuilder.load_test_race("test_emp2.json")
+        race2 = QuickstartBuilder.load_test_race("qs_empire_2.json")
         if race2:
             players.append(PlayerConfig(
                 name=race2.name,

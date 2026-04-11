@@ -1,34 +1,29 @@
 """
 Conftest for quickstart fixture tests.
 
-Provides path fixtures and utilities for loading quickstart test fixtures.
+Provides path fixtures and utilities for loading quickstart starter data files.
 """
 import pytest
 from pathlib import Path
 from typing import List, Tuple, Dict, Any
 
 from game.core.json_utils import load_json
-from tests.fixtures.paths import get_project_root
-
-
-def get_quickstart_fixtures_dir() -> Path:
-    """Return the quickstart fixtures directory."""
-    return get_project_root() / "tests" / "fixtures" / "quickstart"
+from game.core.paths import Paths
 
 
 def get_quickstart_races_dir() -> Path:
-    """Return the quickstart races fixtures directory."""
-    return get_quickstart_fixtures_dir() / "races"
+    """Return the starter races data directory."""
+    return Paths.get_starter_races_dir()
 
 
 def get_quickstart_designs_dir() -> Path:
-    """Return the quickstart designs fixtures directory."""
-    return get_quickstart_fixtures_dir() / "designs"
+    """Return the starter designs data directory."""
+    return Paths.get_starter_designs_dir()
 
 
 def load_all_quickstart_races() -> List[Tuple[str, Dict[str, Any]]]:
     """
-    Load all race fixtures from the quickstart races directory.
+    Load all race files from the starter races data directory.
 
     Returns:
         List of (race_name, race_data) tuples
@@ -45,7 +40,7 @@ def load_all_quickstart_races() -> List[Tuple[str, Dict[str, Any]]]:
 
 def load_all_quickstart_designs() -> List[Tuple[str, Dict[str, Any]]]:
     """
-    Load all design fixtures from the quickstart designs directory.
+    Load all design files from the starter designs data directory.
 
     Returns:
         List of (design_name, design_data) tuples
@@ -61,18 +56,12 @@ def load_all_quickstart_designs() -> List[Tuple[str, Dict[str, Any]]]:
 
 
 @pytest.fixture
-def quickstart_fixtures_dir() -> Path:
-    """Fixture providing the quickstart fixtures directory path."""
-    return get_quickstart_fixtures_dir()
-
-
-@pytest.fixture
 def quickstart_races_dir() -> Path:
-    """Fixture providing the quickstart races directory path."""
+    """Fixture providing the starter races directory path."""
     return get_quickstart_races_dir()
 
 
 @pytest.fixture
 def quickstart_designs_dir() -> Path:
-    """Fixture providing the quickstart designs directory path."""
+    """Fixture providing the starter designs directory path."""
     return get_quickstart_designs_dir()

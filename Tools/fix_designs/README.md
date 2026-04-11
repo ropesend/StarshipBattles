@@ -20,7 +20,7 @@ python Tools/fix_designs/fix_designs.py [directory]
 
 | Argument    | Description                                                                  |
 |-------------|------------------------------------------------------------------------------|
-| `directory` | Path to a directory containing `.json` design files. Optional; defaults to `tests/fixtures/quickstart/designs/`. |
+| `directory` | Path to a directory containing `.json` design files. Optional; defaults to `data/designs/`. |
 
 ## Fixes Applied
 

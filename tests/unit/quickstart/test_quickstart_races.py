@@ -32,13 +32,13 @@ class TestQuickstartRaceFixturesExist:
         """Should have at least one quickstart race fixture."""
         assert len(QUICKSTART_RACES) > 0, "Should have at least one quickstart race fixture"
 
-    def test_has_test_emp1(self, quickstart_races_dir):
-        """Should have test_emp1.json fixture."""
-        assert (quickstart_races_dir / "test_emp1.json").exists()
+    def test_has_qs_empire_1(self, quickstart_races_dir):
+        """Should have qs_empire_1.json."""
+        assert (quickstart_races_dir / "qs_empire_1.json").exists()
 
-    def test_has_test_emp2(self, quickstart_races_dir):
-        """Should have test_emp2.json fixture."""
-        assert (quickstart_races_dir / "test_emp2.json").exists()
+    def test_has_qs_empire_2(self, quickstart_races_dir):
+        """Should have qs_empire_2.json."""
+        assert (quickstart_races_dir / "qs_empire_2.json").exists()
 
 
 @pytest.mark.parametrize("race_name,race_data", QUICKSTART_RACES, ids=lambda x: x if isinstance(x, str) else x[0] if isinstance(x, tuple) else "unknown")
@@ -93,22 +93,22 @@ class TestQuickstartRaceSpecificContent:
 
     def test_emp1_uses_federation_theme(self, quickstart_races_dir):
         """TestEmp1 should use Federation theme."""
-        data = load_json(str(quickstart_races_dir / "test_emp1.json"))
+        data = load_json(str(quickstart_races_dir / "qs_empire_1.json"))
         assert data["theme_id"] == "Federation"
 
     def test_emp2_uses_atlantians_theme(self, quickstart_races_dir):
         """TestEmp2 should use Atlantians theme."""
-        data = load_json(str(quickstart_races_dir / "test_emp2.json"))
+        data = load_json(str(quickstart_races_dir / "qs_empire_2.json"))
         assert data["theme_id"] == "Atlantians"
 
     def test_emp1_and_emp2_have_different_flags(self, quickstart_races_dir):
         """TestEmp1 and TestEmp2 should have different flag IDs."""
-        emp1 = load_json(str(quickstart_races_dir / "test_emp1.json"))
-        emp2 = load_json(str(quickstart_races_dir / "test_emp2.json"))
+        emp1 = load_json(str(quickstart_races_dir / "qs_empire_1.json"))
+        emp2 = load_json(str(quickstart_races_dir / "qs_empire_2.json"))
         assert emp1["flag_id"] != emp2["flag_id"], "Empires should have different flags"
 
     def test_emp1_and_emp2_have_different_portraits(self, quickstart_races_dir):
         """TestEmp1 and TestEmp2 should have different portrait IDs."""
-        emp1 = load_json(str(quickstart_races_dir / "test_emp1.json"))
-        emp2 = load_json(str(quickstart_races_dir / "test_emp2.json"))
+        emp1 = load_json(str(quickstart_races_dir / "qs_empire_1.json"))
+        emp2 = load_json(str(quickstart_races_dir / "qs_empire_2.json"))
         assert emp1["portrait_id"] != emp2["portrait_id"], "Empires should have different portraits"

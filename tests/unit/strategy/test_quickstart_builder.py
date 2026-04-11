@@ -15,7 +15,6 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from game.strategy.quickstart_builder import (
-    get_quickstart_fixtures_dir,
     get_quickstart_races_dir,
     get_quickstart_designs_dir,
     QuickstartBuilder,
@@ -26,30 +25,22 @@ from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.design_library import DesignLoadResult
 
 
-class TestFixturePathFunctions:
-    """Tests for fixture directory path functions."""
+class TestStarterDataPathFunctions:
+    """Tests for starter data directory path functions."""
 
-    def test_get_quickstart_fixtures_dir_returns_path(self):
-        """get_quickstart_fixtures_dir returns a Path object."""
-        result = get_quickstart_fixtures_dir()
+    def test_get_quickstart_races_dir_returns_path(self):
+        """get_quickstart_races_dir returns a Path under data/."""
+        result = get_quickstart_races_dir()
 
         assert isinstance(result, Path)
+        assert result.name == "races"
 
-    def test_get_quickstart_races_dir_under_fixtures(self):
-        """get_quickstart_races_dir returns a subdir of fixtures."""
-        fixtures_dir = get_quickstart_fixtures_dir()
-        races_dir = get_quickstart_races_dir()
+    def test_get_quickstart_designs_dir_returns_path(self):
+        """get_quickstart_designs_dir returns a Path under data/."""
+        result = get_quickstart_designs_dir()
 
-        assert races_dir.parent == fixtures_dir
-        assert races_dir.name == "races"
-
-    def test_get_quickstart_designs_dir_under_fixtures(self):
-        """get_quickstart_designs_dir returns a subdir of fixtures."""
-        fixtures_dir = get_quickstart_fixtures_dir()
-        designs_dir = get_quickstart_designs_dir()
-
-        assert designs_dir.parent == fixtures_dir
-        assert designs_dir.name == "designs"
+        assert isinstance(result, Path)
+        assert result.name == "designs"
 
 
 class TestQuickstartBuilderLoadTestRace:
@@ -58,11 +49,11 @@ class TestQuickstartBuilderLoadTestRace:
     def test_load_test_race_valid_file(self):
         """load_test_race returns RaceConfig when file exists and is valid."""
         # Use the actual test fixture
-        result = QuickstartBuilder.load_test_race("test_emp1.json")
+        result = QuickstartBuilder.load_test_race("qs_empire_1.json")
 
         assert result is not None
         assert isinstance(result, RaceConfig)
-        assert result.race_id == "test_emp1"
+        assert result.race_id == "qs_empire_1"
         assert result.name == "TestEmp1"
 
     def test_load_test_race_missing_file(self):

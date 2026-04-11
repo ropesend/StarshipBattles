@@ -13,7 +13,6 @@ from unittest.mock import MagicMock
 
 from game.strategy.quickstart_builder import (
     QuickstartBuilder,
-    get_quickstart_fixtures_dir,
     get_quickstart_races_dir,
     get_quickstart_designs_dir,
     INITIAL_COMPLEXES,
@@ -23,20 +22,15 @@ from game.strategy.data.planet import PlanetaryFacility
 
 
 class TestQuickstartBuilderPaths:
-    """Test that fixture paths resolve correctly."""
-
-    def test_fixtures_dir_exists(self):
-        """Quickstart fixtures directory should exist."""
-        fixtures_dir = get_quickstart_fixtures_dir()
-        assert fixtures_dir.exists(), f"Fixtures dir not found: {fixtures_dir}"
+    """Test that starter data paths resolve correctly."""
 
     def test_races_dir_exists(self):
-        """Quickstart races directory should exist."""
+        """Starter races directory should exist."""
         races_dir = get_quickstart_races_dir()
         assert races_dir.exists(), f"Races dir not found: {races_dir}"
 
     def test_designs_dir_exists(self):
-        """Quickstart designs directory should exist."""
+        """Starter designs directory should exist."""
         designs_dir = get_quickstart_designs_dir()
         assert designs_dir.exists(), f"Designs dir not found: {designs_dir}"
 
@@ -46,14 +40,14 @@ class TestQuickstartBuilderRaceLoading:
 
     def test_load_test_emp1(self):
         """Should load test_emp1 race."""
-        race = QuickstartBuilder.load_test_race("test_emp1.json")
+        race = QuickstartBuilder.load_test_race("qs_empire_1.json")
         assert race is not None
         assert race.name == "TestEmp1"
         assert race.theme_id == "Federation"
 
     def test_load_test_emp2(self):
         """Should load test_emp2 race."""
-        race = QuickstartBuilder.load_test_race("test_emp2.json")
+        race = QuickstartBuilder.load_test_race("qs_empire_2.json")
         assert race is not None
         assert race.name == "TestEmp2"
         assert race.theme_id == "Atlantians"

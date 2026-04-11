@@ -161,8 +161,9 @@ the new names and import paths directly.
 | A new strategy system | `game/strategy/systems/` |
 | A new UI screen | `game/ui/screens/` |
 | A new builder panel | `game/ui/screens/builder/` |
-| JSON game data | `data/` (root level, not `game/data/`) |
-| Static game data (presets, names) | `game/data/` |
+| JSON game data | `data/` (root level) |
+| Starter ship/complex designs | `data/designs/` (`qs_*.json`) |
+| Starter race configurations | `data/races/` (`qs_*.json`) |
 
 ### 2.3 File Size
 
@@ -337,11 +338,27 @@ Key rules:
 
 | File | Contents |
 |------|----------|
-| `game/data/homeworld_presets.json` | Homeworld planet configuration presets |
-| `game/data/race_names.json` | Generated race name pools |
+| `data/homeworld_presets.json` | Homeworld planet configuration presets |
+| `data/race_names.json` | Generated race name pools |
 | `data/components.json` | All component definitions |
 
-### 5.3 Simulation Test Data
+### 5.3 Starter Designs and Races
+
+Starter designs (`data/designs/`) and starter races (`data/races/`) are shipped game data used by both quickstart and normal new games. All files use the `qs_` prefix.
+
+**Adding a new starter design:**
+1. Create `data/designs/qs_<name>.json` with required fields: `name`, `ship_class`, `vehicle_type`, `layers`, `expected_stats`, `_metadata`
+2. Run `python Tools/validate_designs/validate_designs.py` to validate
+3. Add tests in `tests/unit/quickstart/test_quickstart_designs.py` if the design has special requirements
+4. If the design is a starting complex (auto-built on homeworld), add its design_id to `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py`
+
+**Adding a new starter race:**
+1. Create `data/races/qs_<name>.json` with required fields: `race_id`, `name`, `flag_id`, `portrait_id`, `theme_id`, homeworld/environment preferences, and aptitudes
+2. Add tests in `tests/unit/quickstart/test_quickstart_races.py`
+
+**Note:** `data/races/` holds shipped starter races. User-created races are saved to `output/races/`.
+
+### 5.4 Simulation Test Data
 
 Test-specific data lives in `combat_lab/data/`:
 - `components.json` -- Test-only components (e.g., `TestS_2L` class ships)

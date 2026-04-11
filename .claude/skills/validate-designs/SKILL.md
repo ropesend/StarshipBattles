@@ -11,7 +11,7 @@ Run the design validator against a set of design JSON files and report results.
 
 The optional argument specifies which designs to validate:
 
-- **No argument**: Validates all quickstart designs in `tests/fixtures/quickstart/designs/`
+- **No argument**: Validates all quickstart designs in `data/designs/`
 - **Directory path**: Validates all `*.json` files in the given directory
 - **`all`**: Validates quickstart fixtures AND all save game designs found under `output/saves/`
 

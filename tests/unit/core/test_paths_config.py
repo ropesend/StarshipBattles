@@ -71,14 +71,22 @@ class TestPathConstants:
         assert Paths.SYSTEM_BLUEPRINTS_FILE == os.path.join(Paths.DATA_DIR, "system_blueprints.json")
         assert Paths.ASTROPHYSICS_FILE == os.path.join(Paths.DATA_DIR, "astrophysics.json")
         assert Paths.GALAXY_LAYOUTS_FILE == os.path.join(Paths.DATA_DIR, "galaxy_layouts.json")
-        assert Paths.HOMEWORLD_PRESETS_FILE == os.path.join(Paths.GAME_DIR, "data", "homeworld_presets.json")
-        assert Paths.RACE_NAMES_FILE == os.path.join(Paths.GAME_DIR, "data", "race_names.json")
+        assert Paths.HOMEWORLD_PRESETS_FILE == os.path.join(Paths.DATA_DIR, "homeworld_presets.json")
+        assert Paths.RACE_NAMES_FILE == os.path.join(Paths.DATA_DIR, "race_names.json")
 
     def test_new_asset_constants_defined(self):
         """PROJ-256: New asset directory constants point to correct locations."""
         assert Paths.COMPONENTS_IMAGES_DIR == os.path.join(Paths.ASSET_DIR, "Images", "Components")
         assert Paths.RESOURCE_PORTRAITS_DIR == os.path.join(Paths.ASSET_DIR, "Images", "Resource Portraits")
         assert Paths.DEFAULT_SHIP_PORTRAIT == os.path.join(Paths.ASSET_DIR, "Images", "Default_Ship_Portrait.png")
+
+    def test_starter_designs_dir_under_data(self):
+        """STARTER_DESIGNS_DIR must be under DATA_DIR."""
+        assert Paths.STARTER_DESIGNS_DIR == os.path.join(Paths.DATA_DIR, "designs")
+
+    def test_starter_races_dir_under_data(self):
+        """STARTER_RACES_DIR must be under DATA_DIR."""
+        assert Paths.STARTER_RACES_DIR == os.path.join(Paths.DATA_DIR, "races")
 
     def test_component_resolution_dirs_defined(self):
         """Component image resolution subdirectories point to correct locations."""
@@ -133,6 +141,18 @@ class TestPathlibAccessors:
         assert "output" in str(result)
         assert str(result).endswith("ships")
 
+    def test_get_starter_designs_dir_returns_path(self):
+        """get_starter_designs_dir() returns pathlib.Path."""
+        result = Paths.get_starter_designs_dir()
+        assert isinstance(result, Path)
+        assert result.is_dir()
+
+    def test_get_starter_races_dir_returns_path(self):
+        """get_starter_races_dir() returns pathlib.Path."""
+        result = Paths.get_starter_races_dir()
+        assert isinstance(result, Path)
+        assert result.is_dir()
+
     def test_get_logs_dir_returns_path(self):
         """get_logs_dir() returns pathlib.Path."""
         result = Paths.get_logs_dir()
@@ -158,3 +178,11 @@ class TestPathConsistency:
     def test_ships_dir_matches_get_ships_dir(self):
         """PROJ-256: SHIPS_DIR and get_ships_dir() point to same location."""
         assert Paths.SHIPS_DIR == str(Paths.get_ships_dir())
+
+    def test_starter_designs_dir_matches_get_starter_designs_dir(self):
+        """STARTER_DESIGNS_DIR and get_starter_designs_dir() point to same location."""
+        assert Paths.STARTER_DESIGNS_DIR == str(Paths.get_starter_designs_dir())
+
+    def test_starter_races_dir_matches_get_starter_races_dir(self):
+        """STARTER_RACES_DIR and get_starter_races_dir() point to same location."""
+        assert Paths.STARTER_RACES_DIR == str(Paths.get_starter_races_dir())

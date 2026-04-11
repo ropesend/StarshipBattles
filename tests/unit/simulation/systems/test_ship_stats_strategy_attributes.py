@@ -13,10 +13,10 @@ Attributes under test:
 import pytest
 from game.simulation.entities.ship import Ship
 from game.core.json_utils import load_json
-from tests.fixtures.paths import get_project_root
+from game.core.paths import Paths
 
 
-FIXTURES_DIR = get_project_root() / "tests" / "fixtures" / "quickstart" / "designs"
+FIXTURES_DIR = Paths.get_starter_designs_dir()
 
 
 class TestCargoStorageAttribute:

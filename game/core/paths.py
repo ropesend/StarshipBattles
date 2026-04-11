@@ -68,6 +68,8 @@ class Paths:
     FORMATIONS_DIR: str = os.path.join(DATA_DIR, "formations")
     BATTLES_DIR: str = os.path.join(DATA_DIR, "battles")
     TECH_PRESETS_DIR: str = os.path.join(DATA_DIR, "tech_presets")
+    STARTER_DESIGNS_DIR: str = os.path.join(DATA_DIR, "designs")
+    STARTER_RACES_DIR: str = os.path.join(DATA_DIR, "races")
 
     # === Asset Subdirectories ===
     SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "ShipThemes")
@@ -113,8 +115,8 @@ class Paths:
     STAR_SYSTEM_NAMES_FILE: str = os.path.join(DATA_DIR, "star_system_names.yaml")
     STORMS_FILE: str = os.path.join(DATA_DIR, "storms.json")
     STATS_LAYOUT_FILE: str = os.path.join(DATA_DIR, "stats_layout.json")
-    HOMEWORLD_PRESETS_FILE: str = os.path.join(GAME_DIR, "data", "homeworld_presets.json")
-    RACE_NAMES_FILE: str = os.path.join(GAME_DIR, "data", "race_names.json")
+    HOMEWORLD_PRESETS_FILE: str = os.path.join(DATA_DIR, "homeworld_presets.json")
+    RACE_NAMES_FILE: str = os.path.join(DATA_DIR, "race_names.json")
 
     # === Settings Files ===
     DEFAULT_KEYBINDINGS_FILE: str = os.path.join(DATA_DIR, "default_keybindings.json")
@@ -169,4 +171,12 @@ class Paths:
     @classmethod
     def get_stars_dir(cls) -> Path:
         return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Stars"
+
+    @classmethod
+    def get_starter_designs_dir(cls) -> Path:
+        return _PROJECT_ROOT / "data" / "designs"
+
+    @classmethod
+    def get_starter_races_dir(cls) -> Path:
+        return _PROJECT_ROOT / "data" / "races"
 

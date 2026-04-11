@@ -20,7 +20,7 @@ python Tools/validate_designs/validate_designs.py [directory]
 
 | Argument    | Description                                                                  |
 |-------------|------------------------------------------------------------------------------|
-| `directory` | Path to a directory containing `.json` design files. Optional; defaults to `tests/fixtures/quickstart/designs/`. |
+| `directory` | Path to a directory containing `.json` design files. Optional; defaults to `data/designs/`. |
 
 ## Checks Performed
 

@@ -4,7 +4,7 @@
 Usage:
     python Tools/fix_designs/fix_designs.py [directory]
 
-Default directory: tests/fixtures/quickstart/designs/
+Default directory: data/designs/
 """
 import json
 import math
@@ -124,7 +124,7 @@ def fix_design(filepath, registries):
 
 
 def main():
-    designs_dir = sys.argv[1] if len(sys.argv) > 1 else "tests/fixtures/quickstart/designs"
+    designs_dir = sys.argv[1] if len(sys.argv) > 1 else "data/designs"
     designs_path = Path(designs_dir)
 
     if not designs_path.exists():
