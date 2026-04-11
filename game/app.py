@@ -34,7 +34,7 @@ from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.ui.renderer.sprites import get_default_sprite_manager
 from game.ui.screens.battle_screen import BattleScreen
-from game.ui.screens.setup_screen import BattleSetupScreen
+from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen as BattleSetupScreen
 from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from game.ui.screens.test_lab import TestLabScreen
