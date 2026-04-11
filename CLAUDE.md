@@ -150,6 +150,13 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 - Optimized for: 4K (3840x2160)
 - All UI layout calculations should assume 2560px minimum width
 
+**Spatial Terminology (used throughout codebase and docs):**
+- **System (Star System):** A collection of hexes around a central star, radius 50 hexes (diameter 101). Contains stars, planets, warp points. Defined by `get_system_at_hex(radius=50)` in `game/strategy/data/pathfinding.py`.
+- **Sector:** A single hex on the galaxy map. A system contains many sectors.
+- **System scope:** Abilities/effects that apply across the entire star system (all ~8000 hexes).
+- **Sector scope:** Abilities/effects that apply to a single hex only.
+- The strategy UI has separate panels: the **System panel** (top) shows system-wide info including system effects; the **Sector panel** (middle) shows contents of the clicked hex including sector effects.
+
 ---
 
 ## Project Structure

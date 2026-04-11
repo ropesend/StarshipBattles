@@ -323,8 +323,8 @@ Strategic-layer abilities that appear in the game UI require additional registra
 2. Add to `_ACTIVATABLE_ABILITIES` in `game/strategy/engine/planet_energy_engine.py`
 3. Add to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py`
 
-**If the ability affects system/sector scope:**
-4. Add to `SYSTEM_EFFECT_ABILITIES` in `game/strategy/services/system_effects_collector.py`
+**If the ability affects system or sector scope:**
+4. Add to `SYSTEM_EFFECT_ABILITIES` in `game/strategy/services/system_effects_collector.py` — system-scoped abilities appear in the System panel (`_SYSTEM_SCOPES`), sector-scoped abilities appear in the Sector panel (`_SECTOR_SCOPES`)
 
 **If the ability modifies combat stats:**
 5. Add collection logic to `game/strategy/services/combat_modifier_collector.py` with `require_active=True`
