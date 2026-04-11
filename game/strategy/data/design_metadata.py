@@ -37,6 +37,9 @@ class DesignMetadata:
     # Validity
     mass_valid: bool = True  # False if design exceeds mass budget
 
+    # Design role classification
+    design_role: str = "general_purpose"
+
     # Thumbnail data (optional)
     theme_id: str = ""
 
@@ -55,7 +58,8 @@ class DesignMetadata:
             "is_obsolete": self.is_obsolete,
             "times_built": self.times_built,
             "theme_id": self.theme_id,
-            "mass_valid": self.mass_valid
+            "mass_valid": self.mass_valid,
+            "design_role": self.design_role
         }
 
     @classmethod
@@ -82,7 +86,8 @@ class DesignMetadata:
             is_obsolete=data.get("is_obsolete", False),
             times_built=data.get("times_built", 0),
             theme_id=data.get("theme_id", ""),
-            mass_valid=data.get("mass_valid", True)
+            mass_valid=data.get("mass_valid", True),
+            design_role=data.get("design_role", "general_purpose")
         )
 
     @classmethod
@@ -99,6 +104,7 @@ class DesignMetadata:
         name = data.get("name", "Unnamed")
         ship_class = data.get("ship_class", "Unknown")
         vehicle_type = data.get("vehicle_type", "Ship")
+        design_role = data.get("design_role", "general_purpose")
         theme_id = data.get("theme_id", "")
 
         # Mass and validity stored in expected_stats
@@ -133,7 +139,8 @@ class DesignMetadata:
             is_obsolete=embedded_metadata.get("is_obsolete", False),
             times_built=embedded_metadata.get("times_built", 0),
             mass_valid=mass_valid,
-            theme_id=theme_id
+            theme_id=theme_id,
+            design_role=design_role
         )
 
     @classmethod
@@ -164,7 +171,8 @@ class DesignMetadata:
             is_obsolete=False,
             times_built=0,
             mass_valid=getattr(ship, 'mass_limits_ok', True),
-            theme_id=ship.theme_id  # Ship always has theme_id
+            theme_id=ship.theme_id,  # Ship always has theme_id
+            design_role=getattr(ship, 'design_role', 'general_purpose')
         )
 
     @staticmethod
