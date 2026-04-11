@@ -48,6 +48,11 @@ class ShipInstanceSerializer:
             data['cargo_contents'] = ship.cargo_contents
         if ship.carried_items:
             data['carried_items'] = ship.carried_items
+        # Design role fields (omit when None for backward compat)
+        if ship.design_role is not None:
+            data['design_role'] = ship.design_role
+        if ship.role_override is not None:
+            data['role_override'] = ship.role_override
         return data
 
     @staticmethod
@@ -106,6 +111,9 @@ class ShipInstanceSerializer:
             serial=data.get('serial'),
         )
         instance._registries = registries
+        # Restore design role fields (absent in old saves → None)
+        instance.design_role = data.get('design_role')
+        instance.role_override = data.get('role_override')
         return instance
 
     @staticmethod

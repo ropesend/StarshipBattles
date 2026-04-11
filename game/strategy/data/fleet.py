@@ -16,6 +16,7 @@ from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 from game.strategy.data.fleet_pursuer_tracker import FleetPursuerTracker
 from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
+from game.strategy.data.fleet_hierarchy import CombatPolicy
 from game.strategy.data.ship_instance import ShipInstance
 
 # PROJ-212: OrderType, Order, and order type sets extracted to order_types.py
@@ -32,6 +33,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
     from game.strategy.data.planet import Planet
+    from game.strategy.data.task_force import TaskForce
 
 
 class Fleet:
@@ -52,8 +54,16 @@ class Fleet:
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
         self.location = location  # HexCoord
-        self.ships: List[ShipInstance] = []
         self._component_registry = component_registry
+
+        # Master ship list (flat, canonical list of all ships in the fleet)
+        self.ships: List[ShipInstance] = []
+
+        # Fleet hierarchy: organizational overlay for combat behavior
+        # Task forces and squadrons reference ships from self.ships.
+        # Ships not assigned to any task force fight with fleet-level defaults.
+        self._task_forces: List['TaskForce'] = []
+        self.fleet_policy: CombatPolicy = CombatPolicy()
 
         # Movement & Orders
         self.speed = float(speed)
@@ -75,6 +85,37 @@ class Fleet:
 
         # Delegate for pursuer tracking (PROJ-222)
         self._pursuer_tracker = FleetPursuerTracker(self)
+
+    # --- Fleet Hierarchy ---
+
+    @property
+    def task_forces(self) -> List['TaskForce']:
+        """Task forces in this fleet (organizational overlay for combat)."""
+        return self._task_forces
+
+    def add_task_force(self, task_force: 'TaskForce') -> None:
+        """Add a task force to this fleet."""
+        if task_force not in self._task_forces:
+            self._task_forces.append(task_force)
+
+    def remove_task_force(self, task_force: 'TaskForce') -> bool:
+        """Remove a task force. Returns True if found and removed."""
+        if task_force in self._task_forces:
+            self._task_forces.remove(task_force)
+            return True
+        return False
+
+    def get_unassigned_ships(self) -> List[ShipInstance]:
+        """Ships not assigned to any task force or squadron.
+
+        These are ships in self.ships whose instance_id does not appear
+        in any task force's hierarchy.
+        """
+        assigned_ids = set()
+        for tf in self._task_forces:
+            for ship in tf.all_ships:
+                assigned_ids.add(ship.instance_id)
+        return [s for s in self.ships if s.instance_id not in assigned_ids]
 
     @property
     def name(self) -> str:
@@ -334,6 +375,7 @@ class Fleet:
         # Transfer ships
         other_fleet.ships.extend(self.ships)
         self.ships.clear()
+        self._task_forces.clear()
 
         # Clear orders (this fleet is effectively gone)
         self.clear_orders()
@@ -351,7 +393,7 @@ class Fleet:
         elif isinstance(self.location, tuple):
             location_data = list(self.location)
 
-        return {
+        data: Dict[str, Any] = {
             'id': self.id,
             'owner_id': self.owner_id,
             'location': location_data,
@@ -361,6 +403,16 @@ class Fleet:
             'path': [{'q': p.q, 'r': p.r} if isinstance(p, HexCoord) else list(p) if isinstance(p, tuple) else p for p in self.path],
             'construction_queue': self.construction_queue,
         }
+
+        # Serialize hierarchy
+        if self._task_forces:
+            data['task_forces'] = [tf.to_dict() for tf in self._task_forces]
+
+        fleet_policy_data = self.fleet_policy.to_dict()
+        if fleet_policy_data:
+            data['fleet_policy'] = fleet_policy_data
+
+        return data
 
     @classmethod
     def from_dict(
@@ -415,6 +467,15 @@ class Fleet:
                     code=ErrorCode.CORRUPT_DATA.value,
                     context={"fleet_id": data.get('id'), "ship_index": i, "original_error": str(e)}
                 ) from e
+
+        # Restore fleet hierarchy
+        from game.strategy.data.task_force import TaskForce
+        for tf_data in data.get('task_forces', []):
+            fleet._task_forces.append(TaskForce.from_dict(tf_data))
+
+        # Restore fleet-level combat policy
+        if 'fleet_policy' in data:
+            fleet.fleet_policy = CombatPolicy.from_dict(data['fleet_policy'])
 
         # Restore path
         for p in data.get('path', []):

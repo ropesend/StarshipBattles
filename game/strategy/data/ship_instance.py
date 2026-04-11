@@ -75,6 +75,10 @@ class ShipInstance:
     is_derelict: bool = False
     is_operational: bool = True
 
+    # Design role classification
+    design_role: Optional[str] = None    # Auto-classified role (DesignRole value)
+    role_override: Optional[str] = None  # Player override (DesignRole value)
+
     # Strategy tracking
     experience: int = 0           # For future crew/veteran system
     kills: int = 0
@@ -135,6 +139,13 @@ class ShipInstance:
     def serial_number(self) -> Optional[int]:
         """Serial number alias (IShipInstance Protocol)."""
         return self.serial
+
+    @property
+    def effective_role(self) -> Optional[str]:
+        """The active role: role_override if set, else design_role."""
+        if self.role_override is not None:
+            return self.role_override
+        return self.design_role
 
     def __hash__(self) -> int:
         return hash(self.instance_id)

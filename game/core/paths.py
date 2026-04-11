@@ -117,6 +117,7 @@ class Paths:
     STATS_LAYOUT_FILE: str = os.path.join(DATA_DIR, "stats_layout.json")
     HOMEWORLD_PRESETS_FILE: str = os.path.join(DATA_DIR, "homeworld_presets.json")
     RACE_NAMES_FILE: str = os.path.join(DATA_DIR, "race_names.json")
+    GROUP_POLICIES_FILE: str = os.path.join(DATA_DIR, "group_policies.json")
 
     # === Settings Files ===
     DEFAULT_KEYBINDINGS_FILE: str = os.path.join(DATA_DIR, "default_keybindings.json")

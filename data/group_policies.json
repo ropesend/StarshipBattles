@@ -1,0 +1,131 @@
+{
+    "_comment": "Group-level combat policy presets for fleet hierarchy. Each axis is independent.",
+
+    "targeting": {
+        "focus_strongest": {
+            "name": "Focus Strongest",
+            "description": "Group coordinates fire on the strongest enemy in range.",
+            "mode": "focus",
+            "priority": "strongest"
+        },
+        "focus_nearest": {
+            "name": "Focus Nearest",
+            "description": "Group coordinates fire on the nearest enemy.",
+            "mode": "focus",
+            "priority": "nearest"
+        },
+        "focus_weakest": {
+            "name": "Focus Weakest",
+            "description": "Group coordinates fire on the most damaged enemy.",
+            "mode": "focus",
+            "priority": "most_damaged"
+        },
+        "distributed": {
+            "name": "Distributed",
+            "description": "Each ship picks its own target independently.",
+            "mode": "distributed",
+            "priority": null
+        },
+        "anti_fighter": {
+            "name": "Anti-Fighter",
+            "description": "Prioritize fighters, missiles, and small craft.",
+            "mode": "distributed",
+            "priority": "smallest"
+        },
+        "anti_capital": {
+            "name": "Anti-Capital",
+            "description": "Prioritize large ships, ignore fighters.",
+            "mode": "distributed",
+            "priority": "largest"
+        },
+        "opportunistic": {
+            "name": "Opportunistic",
+            "description": "Target whatever each ship can hit most effectively.",
+            "mode": "distributed",
+            "priority": "nearest"
+        }
+    },
+
+    "movement": {
+        "advance": {
+            "name": "Advance",
+            "description": "Move toward enemy, close distance aggressively.",
+            "per_ship_policy": "brawl_close"
+        },
+        "hold_range": {
+            "name": "Hold Range",
+            "description": "Maintain optimal weapon range (kiting).",
+            "per_ship_policy": "kite_max"
+        },
+        "hold_position": {
+            "name": "Hold Position",
+            "description": "Stay near deployment/anchor position, don't chase.",
+            "per_ship_policy": "hold_position"
+        },
+        "pursue": {
+            "name": "Pursue",
+            "description": "Chase fleeing or distant enemies at full speed.",
+            "per_ship_policy": "kite_medium"
+        },
+        "hit_and_run": {
+            "name": "Hit and Run",
+            "description": "Attack run cycles — approach, fire, retreat, repeat.",
+            "per_ship_policy": "strafe_run"
+        },
+        "ram": {
+            "name": "Ram",
+            "description": "Direct collision course.",
+            "per_ship_policy": "ramming_speed"
+        },
+        "evasive": {
+            "name": "Evasive",
+            "description": "Prioritize dodging over positioning.",
+            "per_ship_policy": "flee_panic"
+        }
+    },
+
+    "retreat": {
+        "group_25": {
+            "name": "Group 25%",
+            "description": "Group retreats when aggregate HP drops below 25%.",
+            "mode": "group",
+            "threshold": 0.25
+        },
+        "group_50": {
+            "name": "Group 50%",
+            "description": "Group retreats when aggregate HP drops below 50%.",
+            "mode": "group",
+            "threshold": 0.50
+        },
+        "individual_15": {
+            "name": "Individual 15%",
+            "description": "Each ship retreats independently at 15% HP.",
+            "mode": "individual",
+            "threshold": 0.15
+        },
+        "individual_30": {
+            "name": "Individual 30%",
+            "description": "Each ship retreats independently at 30% HP.",
+            "mode": "individual",
+            "threshold": 0.30
+        },
+        "flagship_lost": {
+            "name": "Flagship Lost",
+            "description": "Group retreats if flagship is destroyed with no successor.",
+            "mode": "flagship",
+            "threshold": 0.0
+        },
+        "ammo_depleted": {
+            "name": "Ammo Depleted",
+            "description": "Retreat when primary weapons are exhausted.",
+            "mode": "resource",
+            "threshold": 0.0
+        },
+        "never": {
+            "name": "Never",
+            "description": "Fight to destruction.",
+            "mode": "none",
+            "threshold": 0.0
+        }
+    }
+}

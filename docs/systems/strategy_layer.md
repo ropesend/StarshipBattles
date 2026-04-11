@@ -209,10 +209,69 @@ at WARNING level for profiling.
 
 Core state:
 - `id`, `owner_id`, `location: HexCoord`
-- `ships: List[ShipInstance]` -- full state tracking
+- `ships: List[ShipInstance]` -- canonical flat list of all ships
 - `orders: List[FleetOrder]`, `path: List[HexCoord]`
 - `speed: float` -- minimum of all combat-capable ships' speeds
 - `construction_queue: List[Dict]` -- for fleets with space yards
+
+Fleet hierarchy (organizational overlay for combat behavior):
+- `task_forces: List[TaskForce]` -- task forces containing squadrons
+- `fleet_policy: CombatPolicy` -- fleet-level combat policy defaults
+- `get_unassigned_ships()` -- ships not in any task force
+
+The hierarchy is a **3-level tree**: Fleet → TaskForce → Squadron → Ships.
+Task forces and squadrons reference ships from `fleet.ships` by `instance_id`.
+Ships can exist at any level (lone ships in a task force, or unassigned at
+fleet level). Each level can set independent policies for targeting, movement,
+and retreat. Unset policies inherit from the parent level.
+
+See `game/strategy/data/fleet_hierarchy.py` (BattleRole, CombatPolicy,
+FleetHierarchyNode), `game/strategy/data/task_force.py`, and
+`game/strategy/data/squadron.py`.
+
+### Design Roles
+
+**File:** `game/strategy/data/design_role.py`
+
+Design roles are classification labels assigned to ship designs based on
+component loadout. They drive auto-suggestion for fleet organization and
+UI grouping but have no direct combat behavior effect.
+
+10 starter roles: `LINE_COMBATANT`, `FLEET_ESCORT`, `INTERCEPTOR`,
+`ASSAULT_SHIP`, `MISSILE_PLATFORM`, `RAIDER`, `CARRIER`, `SUPPORT_SHIP`,
+`SCOUT`, `COMMAND_SHIP`.
+
+- `classify_design_role(abilities, mass)` — classify from ability set + mass
+- `classify_from_design_data(design_data, component_registry)` — classify from full design
+
+ShipInstance fields:
+- `design_role: Optional[str]` — auto-classified role (DesignRole value)
+- `role_override: Optional[str]` — player override
+- `effective_role` property — returns override if set, else design_role
+
+### Group Combat Policies
+
+**Data file:** `data/group_policies.json`
+**Registry:** `game/strategy/data/group_policy_registry.py`
+
+Group policies define combat behavior for fleet hierarchy nodes. Three
+independent axes, each with preset IDs:
+
+**Targeting** (7 presets): `focus_strongest`, `focus_nearest`, `focus_weakest`,
+`distributed`, `anti_fighter`, `anti_capital`, `opportunistic`.
+Focus modes coordinate group fire on one target; distributed lets ships
+pick independently.
+
+**Movement** (7 presets): `advance`, `hold_range`, `hold_position`, `pursue`,
+`hit_and_run`, `ram`, `evasive`. Each maps to a per-ship movement policy
+from `movement_policies.json`.
+
+**Retreat** (7 presets): `group_25`, `group_50`, `individual_15`, `individual_30`,
+`flagship_lost`, `ammo_depleted`, `never`. Group mode triggers when
+aggregate HP drops; individual mode uses per-ship thresholds.
+
+`GroupPolicyRegistry.validate_policy(combat_policy)` returns error messages
+for invalid preset IDs.
 
 ### Fleet Delegates
 
