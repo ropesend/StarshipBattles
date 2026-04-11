@@ -45,13 +45,13 @@ class TestStatsRender:
             vehicle_class_service=self.vehicle_class_service
         )
 
-        # Verify key stat sections exist
+        # Verify always-visible sections for Ship type exist
         assert 'mass' in panel.rows_map
-        assert 'max_speed' in panel.rows_map
-        assert 'shield_regen' in panel.rows_map
-        assert 'emissive_armor' in panel.rows_map
-        assert 'targeting' in panel.rows_map
-        assert 'crew_required' in panel.rows_map
+        assert 'max_speed' in panel.rows_map  # maneuvering is always-visible for Ship
+        assert 'crew_required' in panel.rows_map  # crew is always-visible for Ship
+
+        # Shields/armor/targeting only appear when abilities are present
+        # (bare ship has no shield/armor components)
 
         # Verify update runs without error
         panel.update_stats_display(self.ship)

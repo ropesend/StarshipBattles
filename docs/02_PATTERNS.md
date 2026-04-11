@@ -657,6 +657,12 @@ operations that compose service calls with layer resolution logic:
 preserving modifiers and state. The ViewModel resolves the target layer direction
 (up = toward inner, down = toward outer), skipping layers that reject the component.
 
+**Stats panel visibility** is data-driven via `data/stats_sections.json`:
+- Each section declares visibility rules (`"always"`, `ability_present`, or `dynamic`)
+- `always_visible` block per vehicle type overrides ability checks (e.g., Ships always show maneuvering)
+- `resolve_section_visibility()` in `stats_config.py` resolves which sections to display
+- Section headers are collapsible (click to toggle)
+
 ### When to Use
 
 - Complex UI screens with multiple panels sharing state.

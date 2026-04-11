@@ -117,6 +117,10 @@ class MockShip:
             'Volatiles': 150
         }
 
+    def get_all_components(self):
+        """Return empty component list for mock."""
+        return []
+
     def get_mass_display(self):
         return self.mass
 

@@ -1,9 +1,10 @@
-"""StatDefinition class for declarative stat display configuration.
+"""Declarative stat display configuration for the Design Workshop.
 
-Each stat row in the ship builder UI is described by a StatDefinition that maps
-a label to a ship attribute (via dynamic lookup or callable getter), with
-optional formatting, unit display, and validation.
+StatDefinition: Maps a label to a ship attribute with formatting, units, validation.
+SectionDefinition: Groups StatDefinitions into display sections with visibility rules.
 """
+from dataclasses import dataclass, field
+from typing import Any, List, Optional
 
 
 class StatDefinition:
@@ -51,3 +52,24 @@ class StatDefinition:
         if self.validator:
             return self.validator(ship, val)
         return (True, "")
+
+
+@dataclass
+class SectionDefinition:
+    """Defines a display section in the stats panel.
+
+    Each section groups related StatDefinitions and declares visibility rules
+    that determine when the section appears based on ship abilities and vehicle type.
+
+    Visibility types:
+        "always" — shown for all vehicle types
+        {"type": "ability_present", "abilities": ["X"]} — shown if ship has any listed ability
+        {"type": "dynamic", "generator": "name"} — shown if generator returns non-empty rows
+    """
+    key: str
+    title: str
+    column: int
+    order: int
+    visibility: Any
+    items: List[StatDefinition] = field(default_factory=list)
+    generator: Optional[str] = None

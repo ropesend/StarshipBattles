@@ -1,0 +1,264 @@
+{
+    "sections": {
+        "main": {
+            "title": "Main Systems",
+            "column": 1,
+            "order": 10,
+            "visibility": "always",
+            "items": [
+                {
+                    "id": "mass",
+                    "label": "Mass",
+                    "getter": "get_mass_display",
+                    "unit": "mass_unit",
+                    "validator": "mass_validator"
+                },
+                {
+                    "id": "strategic_speed",
+                    "label": "Strat Spd",
+                    "getter": "get_strategic_speed",
+                    "unit": " hex/turn"
+                },
+                {
+                    "id": "max_hp",
+                    "label": "Max HP"
+                },
+                {
+                    "id": "max_energy",
+                    "label": "Max Egy"
+                },
+                {
+                    "id": "energy_gen",
+                    "label": "Egy Gen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                }
+            ]
+        },
+        "maneuvering": {
+            "title": "Maneuvering",
+            "column": 1,
+            "order": 20,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["CombatPropulsion", "ManeuveringThruster"]
+            },
+            "items": [
+                {
+                    "id": "thrust",
+                    "label": "Thrust",
+                    "key": "total_thrust"
+                },
+                {
+                    "id": "acceleration",
+                    "label": "Accel",
+                    "key": "acceleration_rate",
+                    "formatter": "{:.2f}"
+                },
+                {
+                    "id": "max_speed",
+                    "label": "Top Spd"
+                },
+                {
+                    "id": "maneuver_points",
+                    "label": "Manv Pts",
+                    "getter": "get_maneuver_points",
+                    "formatter": "{:.0f}"
+                },
+                {
+                    "id": "turn_rate",
+                    "label": "Trn Rate",
+                    "key": "turn_speed",
+                    "unit": " deg/s"
+                }
+            ]
+        },
+        "shields": {
+            "title": "Shields",
+            "column": 1,
+            "order": 30,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["ShieldProjection"]
+            },
+            "items": [
+                {
+                    "id": "max_shields",
+                    "label": "Shields"
+                },
+                {
+                    "id": "shield_regen",
+                    "label": "Shld Rgn",
+                    "key": "shield_regen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "shield_cost",
+                    "label": "Rgn Cost",
+                    "key": "shield_regen_cost",
+                    "formatter": "fmt_decimal",
+                    "unit": " E/t"
+                }
+            ]
+        },
+        "armor": {
+            "title": "Armor",
+            "column": 1,
+            "order": 40,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["EmissiveArmor", "ShieldRegeneratingArmor", "Armor"]
+            },
+            "items": [
+                {
+                    "id": "armor_hp",
+                    "label": "Arm HP",
+                    "getter": "get_armor_hp"
+                },
+                {
+                    "id": "emissive_armor",
+                    "label": "Dm Ignr"
+                },
+                {
+                    "id": "shield_regenerating_armor",
+                    "label": "Rgn/Hit",
+                    "unit": "/hit",
+                    "formatter": "fmt_decimal"
+                }
+            ]
+        },
+        "targeting": {
+            "title": "Targeting",
+            "column": 1,
+            "order": 60,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["WeaponAbility", "ToHitAttackModifier", "ToHitDefenseModifier"]
+            },
+            "items": [
+                {
+                    "id": "targeting",
+                    "label": "Max Tgt",
+                    "getter": "get_max_targets",
+                    "formatter": "fmt_targeting"
+                },
+                {
+                    "id": "target_profile",
+                    "label": "Evasion",
+                    "key": "total_defense_score",
+                    "formatter": "fmt_score",
+                    "unit": ""
+                },
+                {
+                    "id": "scan_strength",
+                    "label": "Trgt Scr",
+                    "key": "baseline_to_hit_offense",
+                    "formatter": "fmt_score",
+                    "unit": ""
+                }
+            ]
+        },
+        "logistics": {
+            "title": "Logistics",
+            "column": 2,
+            "order": 10,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "logistics"
+            },
+            "generator": "logistics",
+            "items": []
+        },
+        "crewlogistics": {
+            "title": "Crew Logistics",
+            "column": 2,
+            "order": 20,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["CrewCapacity", "LifeSupportCapacity", "CrewRequired"]
+            },
+            "items": [
+                {
+                    "id": "crew_required",
+                    "label": "Crew Req",
+                    "getter": "get_crew_required"
+                },
+                {
+                    "id": "crew_housed",
+                    "label": "Crew Cap",
+                    "getter": "get_crew_capacity",
+                    "validator": "crew_validator"
+                },
+                {
+                    "id": "life_support",
+                    "label": "Life Sup",
+                    "getter": "get_life_support",
+                    "validator": "life_support_validator"
+                }
+            ]
+        },
+        "fightersupport": {
+            "title": "Fighter Support",
+            "column": 2,
+            "order": 30,
+            "visibility": {
+                "type": "ability_present",
+                "abilities": ["VehicleLaunch"]
+            },
+            "items": [
+                {
+                    "id": "fighter_capacity",
+                    "label": "Ftr Cap"
+                },
+                {
+                    "id": "fighters_per_wave",
+                    "label": "Ftr/Wave"
+                },
+                {
+                    "id": "fighter_time",
+                    "label": "Ftr Time",
+                    "key": "fighter_endurance",
+                    "formatter": "fmt_time"
+                }
+            ]
+        },
+        "buildcost": {
+            "title": "Build Cost",
+            "column": 2,
+            "order": 80,
+            "visibility": "always",
+            "generator": "construction",
+            "items": []
+        },
+        "colony_strategic": {
+            "title": "Colony / Strategic",
+            "column": 2,
+            "order": 90,
+            "visibility": {
+                "type": "dynamic",
+                "generator": "strategic"
+            },
+            "generator": "strategic",
+            "items": []
+        }
+    },
+    "always_visible": {
+        "Ship": [
+            "main", "maneuvering", "crewlogistics", "logistics"
+        ],
+        "Planetary Complex": [
+            "main", "crewlogistics", "buildcost"
+        ],
+        "Fighter": [
+            "main", "maneuvering"
+        ],
+        "Satellite": [
+            "main"
+        ],
+        "Drop Pod": [
+            "main"
+        ]
+    }
+}
