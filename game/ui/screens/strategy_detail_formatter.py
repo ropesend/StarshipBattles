@@ -279,6 +279,22 @@ class StrategyDetailFormatter:
 
     def _planet_has_atmosphere_modifier(self, planet) -> bool:
         """Check if a planet has any operational facility with AtmosphereModifier ability."""
+        return self._planet_has_ability(planet, 'AtmosphereModifier')
+
+    def _planet_has_gravity_modifier(self, planet) -> bool:
+        """Check if a planet has any operational facility with GravityModifier ability."""
+        return self._planet_has_ability(planet, 'GravityModifier')
+
+    def _planet_has_water_modifier(self, planet) -> bool:
+        """Check if a planet has any operational facility with WaterModifier ability."""
+        return self._planet_has_ability(planet, 'WaterModifier')
+
+    def _planet_has_radiation_shield(self, planet) -> bool:
+        """Check if a planet has any operational facility with RadiationShield ability."""
+        return self._planet_has_ability(planet, 'RadiationShield')
+
+    def _planet_has_ability(self, planet, ability_key: str) -> bool:
+        """Check if a planet has any operational facility with the given ability."""
         from game.strategy.services.component_inspector import extract_abilities_from_component
         from game.core.patterns.layer_iterator import iter_components
 
@@ -290,7 +306,7 @@ class StrategyDetailFormatter:
                 continue
             for comp in iter_components(facility.design_data):
                 abilities = extract_abilities_from_component(comp, registries)
-                if 'AtmosphereModifier' in abilities:
+                if ability_key in abilities:
                     return True
         return False
 

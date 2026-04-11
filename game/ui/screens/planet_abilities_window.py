@@ -23,6 +23,8 @@ TOGGLEABLE_ABILITIES = {
     'GeologicStabilizer': 'Geologic Stabilizer',
     'StellarStabilizer': 'Stellar Stabilizer',
     'WarpFieldStabilizer': 'Warp Field Stabilizer',
+    'GravityModifier': 'Gravity Modifier',
+    'RadiationShield': 'Radiation Shield',
 }
 
 

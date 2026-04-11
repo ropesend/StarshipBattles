@@ -304,7 +304,7 @@ def score_planet_for_race(planet: 'Planet', race_config: 'RaceConfig') -> float:
         temperature_k=planet.surface_temperature,
         water_coverage=planet.surface_water,
         atmosphere=planet.atmosphere,
-        magnetic_field=planet.magnetic_field,
+        magnetic_field=planet.magnetic_field + getattr(planet, 'radiation_shielding', 0.0),
         gravity_ideal=race_config.gravity_ideal,
         gravity_tolerance=race_config.gravity_tolerance,
         temp_ideal=race_config.temperature_ideal,

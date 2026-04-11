@@ -196,6 +196,19 @@ These are the starter facilities every empire's home planet receives.
 | `qs_system_geologic_stabilizer_complex` | System-wide geologic protection | 2 |
 | `qs_sector_construction_accelerator_complex` | Sector build rate boost | -- |
 | `qs_system_construction_accelerator_complex` | System build rate boost | -- |
+| `qs_system_shield_suppressor_complex` | System shield suppression (enemy) | 2 |
+| `qs_system_shield_booster_complex` | System shield boost (allied) | 2 |
+| `qs_sector_shield_suppressor_complex` | Sector shield suppression (enemy) | 1 |
+| `qs_sector_shield_booster_complex` | Sector shield boost (allied) | 1 |
+| `qs_system_damage_suppressor_complex` | System damage suppression (enemy) | 2 |
+| `qs_system_damage_booster_complex` | System damage boost (allied) | 2 |
+| `qs_sector_damage_suppressor_complex` | Sector damage suppression (enemy) | 1 |
+| `qs_sector_damage_booster_complex` | Sector damage boost (allied) | 1 |
+| `qs_sector_shield_projector_complex` | Sector shield projection (allied) | 1 |
+| `qs_system_shield_projector_complex` | System shield projection (allied) | 2 |
+| `qs_gravity_modifier_complex` | Planet gravity modification | 1 |
+| `qs_water_modifier_complex` | Planet water terraforming | 1 |
+| `qs_radiation_shield_complex` | Planet radiation shielding | 1 |
 
 ### Non-Complex QS Designs
 

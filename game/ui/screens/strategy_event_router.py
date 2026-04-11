@@ -232,6 +232,84 @@ class StrategyEventRouter:
             race_config=race_config,
         )
 
+    def _open_gravity_editor(self, planet) -> None:
+        """Open gravity target editor for a planet."""
+        from game.ui.screens.gravity_target_editor import GravityTargetEditor
+        from game.strategy.engine.commands import SetGravityTargetCommand
+        from game.ui.utils import create_centered_rect
+
+        ui = self.ui
+        scene = ui.scene
+        race_config = self._get_race_config(planet)
+
+        def on_apply(planet_id, gravity_target):
+            cmd = SetGravityTargetCommand(planet_id=planet_id, gravity_target=gravity_target)
+            scene.facade.handle_command(cmd)
+
+        rect = create_centered_rect(400, 300, ui.width, ui.height)
+        GravityTargetEditor(
+            rect=rect, manager=ui.manager, planet=planet,
+            on_apply_callback=on_apply, race_config=race_config,
+        )
+
+    def _open_water_editor(self, planet) -> None:
+        """Open water target editor for a planet."""
+        from game.ui.screens.water_target_editor import WaterTargetEditor
+        from game.strategy.engine.commands import SetWaterTargetCommand
+        from game.ui.utils import create_centered_rect
+
+        ui = self.ui
+        scene = ui.scene
+        race_config = self._get_race_config(planet)
+
+        def on_apply(planet_id, water_target):
+            cmd = SetWaterTargetCommand(planet_id=planet_id, water_target=water_target)
+            scene.facade.handle_command(cmd)
+
+        rect = create_centered_rect(400, 300, ui.width, ui.height)
+        WaterTargetEditor(
+            rect=rect, manager=ui.manager, planet=planet,
+            on_apply_callback=on_apply, race_config=race_config,
+        )
+
+    def _open_radiation_shield_editor(self, planet) -> None:
+        """Open radiation shield editor for a planet."""
+        from game.ui.screens.radiation_shield_editor import RadiationShieldEditor
+        from game.strategy.engine.commands import SetRadiationShieldTargetCommand
+        from game.ui.utils import create_centered_rect
+
+        ui = self.ui
+        scene = ui.scene
+        race_config = self._get_race_config(planet)
+
+        def on_apply(planet_id, shielding_target):
+            cmd = SetRadiationShieldTargetCommand(planet_id=planet_id, shielding_target=shielding_target)
+            scene.facade.handle_command(cmd)
+
+        rect = create_centered_rect(400, 300, ui.width, ui.height)
+        RadiationShieldEditor(
+            rect=rect, manager=ui.manager, planet=planet,
+            on_apply_callback=on_apply, race_config=race_config,
+        )
+
+    def _get_race_config(self, planet):
+        """Get the race config for the planet's owning empire."""
+        ui = self.ui
+        scene = ui.scene
+        try:
+            empire = scene.session.get_empire(planet.owner_id)
+            if empire and hasattr(empire, 'race_config'):
+                return empire.race_config
+            elif empire:
+                from game.strategy.systems.race_library import RaceLibrary
+                race_lib = RaceLibrary()
+                race_id = getattr(empire, 'race_id', None)
+                if race_id:
+                    return race_lib.get_race(race_id)
+        except Exception:
+            pass
+        return None
+
     def _handle_colonize_button(self) -> None:
         """Handle the Colonize button press.
 

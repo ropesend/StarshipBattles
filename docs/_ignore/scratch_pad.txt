@@ -3,10 +3,9 @@ Starship Battles - Scratch Pad
 Personal notes and concept ideas. Not documentation.
 Add new ideas below.
 
----
+---------------------------------------------------------------------------------------------------------------------
 Here are are a few new abilities, components and complexes that I want added to the game, none of the complexes start out constructed.
 
----------------------------------------------------------------------------------------------------------------------
 Expand Shied ShieldProjection to have fleet, Sector Player, Sector Allied, System Palyer, System Allied possible scopes
 Create two componenets and starter complexes: 
 Sector Shield Projector - projects 100 shield points to all playuer and allied vessels in the sector
@@ -40,4 +39,22 @@ WE need
  - Add: Resouce recovery ability with the following scopes: Fleet, Player Sector, Player System, Planet, Empire
  - When not in the same stacking group, the resource recovery ability are sort of cumulative, if there is a system ability of 50% and a fleet ability of 50% then the total resource recovery is 75% (1 - (1 - 0.5) * (1 - 0.5))
  - Note that there must be local storage in the sector for the resources to go to, if there is no local storage then the resources are lost.
+
+- Habitability calculator based on all conditions on the planets and the preferences/tolerence of the species on the planet.
+ - This should factor in the following conditions: 
+  - Temperature
+  - Gravity
+  - Radiation
+  - Water
+  - Atmosphere
+  - Anything else I am forgetting - please remind me and ask about it.
+
+- We need population growth rate, a base level should be set for each species at the start, and then modified by habitability and other factors.
+- We need population happiness, a base level should be set for each species at the start, and then modified by habitability and other factors.
+
+  - Habitability should impact the following:
+   - Population growth rate
+   - Population happiness
+   - Production - rates of all types
  
+ - There should be a slider for each colony that allows you to set the amount of organics per population, higher values increase hapiness and reproduction, but also increase the amount of resources consumed by the population.  This slider should be set for each species on the planet.  The slider should range from 0 to infinity.  The default value should be 1.  Less base happiness and reproduction is multiplied by the value, more is multiplied by the value.  So 0.5 would be half the base happiness and reproduction, and 2 would be double the base happiness and reproduction.

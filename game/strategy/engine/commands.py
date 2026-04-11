@@ -414,3 +414,24 @@ class SetAtmosphereTargetCommand(Command):
     """Command to set or clear a planet's atmosphere modification target."""
     planet_id: int
     atmosphere_target: Dict[str, float]  # gas formula -> target Pa (empty dict = clear)
+
+
+@dataclass
+class SetGravityTargetCommand(Command):
+    """Command to set or clear a planet's gravity modification target."""
+    planet_id: int
+    gravity_target: Optional[float]  # m/s², None = clear
+
+
+@dataclass
+class SetWaterTargetCommand(Command):
+    """Command to set or clear a planet's water modification target."""
+    planet_id: int
+    water_target: Optional[float]  # 0.0-1.0, None = clear
+
+
+@dataclass
+class SetRadiationShieldTargetCommand(Command):
+    """Command to set or clear a planet's radiation shielding target."""
+    planet_id: int
+    shielding_target: Optional[float]  # 0.0+, None = clear

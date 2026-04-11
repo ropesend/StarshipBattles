@@ -135,6 +135,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.baseline_to_hit_offense: float = 0.0
         self.fleet_attack_bonus: float = 0.0   # Set by FleetAuraManager._recalculate()
         self.fleet_defense_bonus: float = 0.0  # Set by FleetAuraManager._recalculate()
+        self.damage_output_mult: float = 1.0   # Strategic damage modifier (pre-battle)
         self.total_maneuver_points: int = 0
 
         # === Strategic Stats (populated by ShipStatsCalculator) ===

@@ -48,6 +48,11 @@ class PlanetModifierEffectEngine:
         """Apply or revert gravity modifier effect."""
         gravity_target = getattr(planet, 'gravity_target', None)
         gravity_original = getattr(planet, 'gravity_original', None)
+        # Guard against MagicMock objects in tests
+        if not isinstance(gravity_target, (int, float, type(None))):
+            return
+        if not isinstance(gravity_original, (int, float, type(None))):
+            return
 
         # Check if any active GravityModifier exists
         has_active = self._has_active_ability(planet, 'GravityModifier')
@@ -74,7 +79,7 @@ class PlanetModifierEffectEngine:
         elif not has_active:
             # Revert: no active shield means no artificial shielding
             current = getattr(planet, 'radiation_shielding', 0.0)
-            if current > 0:
+            if isinstance(current, (int, float)) and current > 0:
                 planet.radiation_shielding = 0.0
 
     def _has_active_ability(self, planet, ability_name: str) -> bool:

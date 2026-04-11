@@ -408,3 +408,141 @@ class TestSetAtmosphereTargetCommandHandler:
 
         assert result.is_valid
         assert mock_planet.atmosphere_target == {}
+
+
+# =============================================================================
+# SetGravityTargetCommandHandler Tests
+# =============================================================================
+
+
+class TestSetGravityTargetCommandHandler:
+    """Tests for SetGravityTargetCommandHandler.execute()."""
+
+    def _make_cmd(self, planet_id=100, gravity_target=5.0):
+        cmd = MagicMock()
+        cmd.planet_id = planet_id
+        cmd.gravity_target = gravity_target
+        return cmd
+
+    def test_planet_not_found(self, mock_session):
+        from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
+        handler = SetGravityTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd())
+        assert not result.is_valid
+
+    def test_wrong_owner(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
+        mock_planet.owner_id = 99
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetGravityTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd())
+        assert not result.is_valid
+
+    def test_success_sets_gravity_target(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetGravityTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(gravity_target=5.0))
+        assert result.is_valid
+        assert mock_planet.gravity_target == 5.0
+
+    def test_success_clear_gravity_target(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
+        mock_planet.gravity_target = 5.0
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetGravityTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(gravity_target=None))
+        assert result.is_valid
+        assert mock_planet.gravity_target is None
+
+
+# =============================================================================
+# SetWaterTargetCommandHandler Tests
+# =============================================================================
+
+
+class TestSetWaterTargetCommandHandler:
+    """Tests for SetWaterTargetCommandHandler.execute()."""
+
+    def _make_cmd(self, planet_id=100, water_target=0.5):
+        cmd = MagicMock()
+        cmd.planet_id = planet_id
+        cmd.water_target = water_target
+        return cmd
+
+    def test_planet_not_found(self, mock_session):
+        from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
+        handler = SetWaterTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd())
+        assert not result.is_valid
+
+    def test_wrong_owner(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
+        mock_planet.owner_id = 99
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetWaterTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd())
+        assert not result.is_valid
+
+    def test_success_sets_water_target(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetWaterTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(water_target=0.7))
+        assert result.is_valid
+        assert mock_planet.water_target == 0.7
+
+    def test_success_clear_water_target(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
+        mock_planet.water_target = 0.5
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetWaterTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(water_target=None))
+        assert result.is_valid
+        assert mock_planet.water_target is None
+
+
+# =============================================================================
+# SetRadiationShieldTargetCommandHandler Tests
+# =============================================================================
+
+
+class TestSetRadiationShieldTargetCommandHandler:
+    """Tests for SetRadiationShieldTargetCommandHandler.execute()."""
+
+    def _make_cmd(self, planet_id=100, shielding_target=1.0):
+        cmd = MagicMock()
+        cmd.planet_id = planet_id
+        cmd.shielding_target = shielding_target
+        return cmd
+
+    def test_planet_not_found(self, mock_session):
+        from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler
+        handler = SetRadiationShieldTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd())
+        assert not result.is_valid
+
+    def test_wrong_owner(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler
+        mock_planet.owner_id = 99
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetRadiationShieldTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd())
+        assert not result.is_valid
+
+    def test_success_sets_shielding_target(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetRadiationShieldTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(shielding_target=1.5))
+        assert result.is_valid
+        assert mock_planet.radiation_shielding_target == 1.5
+
+    def test_success_clear_shielding_target(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler
+        mock_planet.radiation_shielding_target = 1.0
+        _session_with_planet(mock_session, mock_planet)
+        handler = SetRadiationShieldTargetCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(shielding_target=None))
+        assert result.is_valid
+        assert mock_planet.radiation_shielding_target is None

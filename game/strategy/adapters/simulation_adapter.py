@@ -61,7 +61,9 @@ class SimulationBattleResolver(IBattleResolver):
         fleet2: 'Fleet',
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
-        environmental_effects: Optional['EnvironmentalEffects'] = None
+        environmental_effects: Optional['EnvironmentalEffects'] = None,
+        team0_modifiers: Optional['FleetCombatModifiers'] = None,
+        team1_modifiers: Optional['FleetCombatModifiers'] = None,
     ) -> BattleResult:
         """
         Resolve a battle between two fleets using the battle simulation.
@@ -89,6 +91,12 @@ class SimulationBattleResolver(IBattleResolver):
             self._apply_shield_interference(team0_ships, environmental_effects.shield_capacity_mult)
             self._apply_shield_interference(team1_ships, environmental_effects.shield_capacity_mult)
             logger.info(f"Storm shield interference applied: {environmental_effects.shield_capacity_mult}")
+
+        # Apply strategic combat modifiers (shield/damage boosters/suppressors)
+        if team0_modifiers is not None:
+            self._apply_strategic_modifiers(team0_ships, team0_modifiers)
+        if team1_modifiers is not None:
+            self._apply_strategic_modifiers(team1_ships, team1_modifiers)
 
         # Handle edge cases
         if not team0_ships and not team1_ships:
@@ -199,3 +207,23 @@ class SimulationBattleResolver(IBattleResolver):
                 ship.max_shields = new_max
                 # Cap current shields to new max
                 ship.current_shields = min(ship.current_shields, new_max)
+
+    def _apply_strategic_modifiers(self, ships: List[Any], modifiers) -> None:
+        """Apply strategic combat modifiers to ships pre-battle.
+
+        Args:
+            ships: List of Ship objects to modify.
+            modifiers: FleetCombatModifiers with shield/damage multipliers and flat bonus.
+        """
+        if modifiers.flat_shield_bonus > 0:
+            bonus = int(modifiers.flat_shield_bonus)
+            for ship in ships:
+                ship.max_shields += bonus
+                ship.current_shields += bonus
+
+        if modifiers.shield_mult != 1.0:
+            self._apply_shield_interference(ships, modifiers.shield_mult)
+
+        if modifiers.damage_mult != 1.0:
+            for ship in ships:
+                ship.damage_output_mult = modifiers.damage_mult

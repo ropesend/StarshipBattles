@@ -176,6 +176,8 @@ class ConflictResolutionEngine(IConflictEngine):
         self._validate_tick_inputs(empires)
         # PROJ-189: Store galaxy reference for effect lookup in combat resolution
         self._galaxy = galaxy
+        # Store empires for combat modifier collection
+        self._empires = empires
 
         # Track stats during resolution
         self._combats_resolved = 0
@@ -299,14 +301,45 @@ class ConflictResolutionEngine(IConflictEngine):
                 self._galaxy, f1.location
             )
 
+        # Collect strategic combat modifiers for both fleets
+        team0_mods = None
+        team1_mods = None
+        if self._galaxy is not None:
+            try:
+                from game.strategy.services.combat_modifier_collector import collect_combat_modifiers
+                all_empires = getattr(self, '_empires', [])
+                team0_mods = collect_combat_modifiers(
+                    f1, f2, self._galaxy, all_empires, self._registries
+                )
+                team1_mods = collect_combat_modifiers(
+                    f2, f1, self._galaxy, all_empires, self._registries
+                )
+            except Exception as e:
+                logger.warning(f"Failed to collect combat modifiers: {e}")
+
         # Use the injected battle resolver
         # PROJ-50: Pass registries for strict DI compliance
         # PROJ-189: Pass environmental effects for storm shield interference
         seed = self._generate_battle_seed()
-        result = self._battle_resolver.resolve_battle(
-            f1, f2, seed=seed, registries=self._registries,
-            environmental_effects=environmental_effects
+        # Build kwargs — only include modifiers if non-default to stay compatible
+        # with resolvers that don't accept the new parameters
+        resolve_kwargs = dict(
+            seed=seed, registries=self._registries,
+            environmental_effects=environmental_effects,
         )
+        if team0_mods is not None:
+            resolve_kwargs['team0_modifiers'] = team0_mods
+        if team1_mods is not None:
+            resolve_kwargs['team1_modifiers'] = team1_mods
+
+        try:
+            result = self._battle_resolver.resolve_battle(f1, f2, **resolve_kwargs)
+        except TypeError:
+            # Fallback: resolver doesn't accept modifier params (e.g., test mocks)
+            result = self._battle_resolver.resolve_battle(
+                f1, f2, seed=seed, registries=self._registries,
+                environmental_effects=environmental_effects,
+            )
 
         # Apply results to fleets (PROJ-210: use battle adapter property)
         f1.battle.update_from_battle_results(result.team0_survivors)

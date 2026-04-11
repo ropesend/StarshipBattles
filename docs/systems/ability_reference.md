@@ -1195,6 +1195,139 @@ Permanently improves resource deposit quality on a planet. Each turn, adds `impr
 
 ---
 
+## Combat Modifiers
+
+### ShieldModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ShieldModifier` |
+| Class | `ShieldModifierAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Multiplies shield capacity for entities within scope. Values below 1.0 suppress shields; values above 1.0 boost them. Applied pre-battle by the combat modifier collector in `game/strategy/services/combat_modifier_collector.py`. Uses two-phase aggregation (intra-group MAX, inter-group MULTIPLY).
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `multiplier` | float | No | 1.0 | Shield capacity multiplier |
+| `scope` | string | No | `"allied_system"` | Effect range |
+| `stack_group` | string | No | None | Stacking group |
+
+**Allowed Scopes:** SELF, FLEET, SECTOR, ALLIED_SECTOR, PLAYER_SECTOR, ENEMY_SECTOR, SYSTEM, ALLIED_SYSTEM, PLAYER_SYSTEM, ENEMY_SYSTEM
+
+**Stat Bindings:** None
+
+---
+
+### DamageModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `DamageModifier` |
+| Class | `DamageModifierAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Multiplies damage output for entities within scope. Same structure and aggregation as ShieldModifier. Applied pre-battle via `ship.damage_output_mult`.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `multiplier` | float | No | 1.0 | Damage output multiplier |
+| `scope` | string | No | `"allied_system"` | Effect range |
+| `stack_group` | string | No | None | Stacking group |
+
+**Allowed Scopes:** SELF, FLEET, SECTOR, ALLIED_SECTOR, PLAYER_SECTOR, ENEMY_SECTOR, SYSTEM, ALLIED_SYSTEM, PLAYER_SYSTEM, ENEMY_SYSTEM
+
+**Stat Bindings:** None
+
+---
+
+## Planet Modifiers
+
+### GravityModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `GravityModifier` |
+| Class | `GravityModifierAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Modifies planet gravity when active. Requires energy and manual activation via ComponentActivationEngine. NOT permanent — gravity reverts to original when facility is deactivated or destroyed. Target set via `SetGravityTargetCommand`. Effect applied by `PlanetModifierEffectEngine`.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
+| `activation_time` | int | No | 1 | Ticks to activate |
+| `deactivation_time` | int | No | 1 | Ticks to deactivate |
+
+**Allowed Scopes:** SELF only
+
+**Stat Bindings:** None
+
+---
+
+### WaterModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `WaterModifier` |
+| Class | `WaterModifierAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Gradually changes planet water level toward target. PERMANENT — changes persist even if facility removed. Processed once per turn by `WaterEngine`, similar to AtmosphereEngine.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `modification_rate` | float | No | 0.0 | Fraction of water coverage change per turn |
+
+**Allowed Scopes:** SELF only
+
+**Stat Bindings:** None
+
+---
+
+### RadiationShield
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `RadiationShield` |
+| Class | `RadiationShieldAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Provides artificial radiation shielding when active. NOT permanent — reverts to zero on deactivation. The `radiation_shielding` value is additive with the planet's natural `magnetic_field` in habitability calculations. Effect applied by `PlanetModifierEffectEngine`.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
+| `activation_time` | int | No | 1 | Ticks to activate |
+| `deactivation_time` | int | No | 1 | Ticks to deactivate |
+| `max_shielding` | float | No | 1.0 | Maximum shielding strength |
+
+**Allowed Scopes:** SELF only
+
+**Stat Bindings:** None
+
+---
+
 ## Superweapons
 
 All superweapons share the same structure: boolean or dict with optional `action_time`. All are STRATEGIC layer, SELF scope only.
@@ -1342,6 +1475,11 @@ Self-Destruct Device. Schedules ship for destruction.
 | `BuildRateBooster` | BuildRateBoosterAbility | Planetary |
 | `AtmosphereModifier` | AtmosphereModifierAbility | Planetary |
 | `QualityImprovement` | QualityImprovementAbility | Planetary |
+| `ShieldModifier` | ShieldModifierAbility | Combat Modifiers |
+| `DamageModifier` | DamageModifierAbility | Combat Modifiers |
+| `GravityModifier` | GravityModifierAbility | Planet Modifiers |
+| `WaterModifier` | WaterModifierAbility | Planet Modifiers |
+| `RadiationShield` | RadiationShieldAbility | Planet Modifiers |
 | `DestroyPlanet` | DestroyPlanet | Superweapons |
 | `DestroyStar` | DestroyStar | Superweapons |
 | `OpenWarpPoint` | OpenWarpPoint | Superweapons |

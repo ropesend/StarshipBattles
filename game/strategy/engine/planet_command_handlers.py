@@ -155,3 +155,66 @@ class SetAtmosphereTargetCommandHandler:
         else:
             logger.info(f"Planet {planet.name}: atmosphere target cleared")
         return ValidationResult.success()
+
+
+class SetGravityTargetCommandHandler:
+    """Handler for SetGravityTargetCommand."""
+
+    def execute(self, session: 'GameSession', cmd: 'SetGravityTargetCommand') -> ValidationResult:
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        if error:
+            return error
+
+        if planet.owner_id != session.player_empire.id:
+            return ValidationResult.error("Planet does not belong to this empire.")
+
+        planet.gravity_target = cmd.gravity_target
+        if cmd.gravity_target is not None:
+            logger.info(f"Planet {planet.name}: gravity target set to {cmd.gravity_target:.2f} m/s²")
+        else:
+            logger.info(f"Planet {planet.name}: gravity target cleared")
+        return ValidationResult.success()
+
+
+class SetWaterTargetCommandHandler:
+    """Handler for SetWaterTargetCommand."""
+
+    def execute(self, session: 'GameSession', cmd: 'SetWaterTargetCommand') -> ValidationResult:
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        if error:
+            return error
+
+        if planet.owner_id != session.player_empire.id:
+            return ValidationResult.error("Planet does not belong to this empire.")
+
+        planet.water_target = cmd.water_target
+        if cmd.water_target is not None:
+            logger.info(f"Planet {planet.name}: water target set to {cmd.water_target:.2f}")
+        else:
+            logger.info(f"Planet {planet.name}: water target cleared")
+        return ValidationResult.success()
+
+
+class SetRadiationShieldTargetCommandHandler:
+    """Handler for SetRadiationShieldTargetCommand."""
+
+    def execute(self, session: 'GameSession', cmd: 'SetRadiationShieldTargetCommand') -> ValidationResult:
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        if error:
+            return error
+
+        if planet.owner_id != session.player_empire.id:
+            return ValidationResult.error("Planet does not belong to this empire.")
+
+        planet.radiation_shielding_target = cmd.shielding_target
+        if cmd.shielding_target is not None:
+            logger.info(f"Planet {planet.name}: radiation shielding target set to {cmd.shielding_target:.2f}")
+        else:
+            logger.info(f"Planet {planet.name}: radiation shielding target cleared")
+        return ValidationResult.success()

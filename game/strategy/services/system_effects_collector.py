@@ -34,6 +34,8 @@ SYSTEM_EFFECT_ABILITIES = {
     'ResourceHarvestBooster': None,  # Display name derived from resource_type
     'BuildRateBooster': 'Construction Acceleration',
     'QualityImprovement': 'Quality Enrichment',
+    'ShieldModifier': 'Shield Modifier',
+    'DamageModifier': 'Damage Modifier',
 }
 
 

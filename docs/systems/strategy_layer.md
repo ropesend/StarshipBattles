@@ -596,6 +596,40 @@ population growth and quality improvement.
 
 **Related:** `AtmosphereModifier` ability in [ability_reference.md](ability_reference.md#atmospheremodifier), race atmosphere preferences in `game/strategy/data/race_config.py` (`GAS_NAME_TO_FORMULA`, `GAS_FORMULA_TO_NAME`).
 
+### Water Modification Pipeline
+
+**File:** `game/strategy/engine/water_engine.py`
+
+Same pattern as AtmosphereEngine but simpler — a single float (`surface_water`) instead of a gas dict. Runs once per turn after the 100-tick loop.
+
+- Target: `planet.water_target` (0.0-1.0, None = no modification)
+- Rate: sum of `modification_rate` from operational `WaterModifier` facilities
+- Change: moves `surface_water` toward target, clamped to [0.0, 1.0], no overshoot
+- Permanent: changes persist even if facility removed
+
+### Planet Modifier Effect Engine
+
+**File:** `game/strategy/engine/planet_modifier_effect_engine.py`
+
+Handles instant-apply/revert for activatable planet modifiers (GravityModifier, RadiationShield). Runs once per tick as Phase 1.8 after ComponentActivationEngine:
+
+- **GravityModifier:** When ACTIVE + `gravity_target` set, stores original in `gravity_original` and overrides `surface_gravity`. Reverts when INACTIVE or facility destroyed.
+- **RadiationShield:** When ACTIVE + `radiation_shielding_target` set, applies to `radiation_shielding`. Reverts to 0.0 when INACTIVE or facility destroyed.
+- **Habitability:** `score_planet_for_race()` uses `magnetic_field + radiation_shielding` for the radiation factor. Gravity and water read directly from the (possibly modified) planet fields.
+
+### Strategic-to-Combat Bridge
+
+**File:** `game/strategy/services/combat_modifier_collector.py`
+
+Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`.
+
+Applied in `SimulationBattleResolver.resolve_battle()` after environmental effects:
+1. Flat shield bonus added to `max_shields` and `current_shields`
+2. Shield multiplier applied via `_apply_shield_interference()`
+3. Damage multiplier set on `ship.damage_output_mult`
+
+Wired from `ConflictResolutionEngine._resolve_combat_simulated()` which collects modifiers for both fleets and passes them to the resolver.
+
 ### Activatable Abilities & Stabilizer Pattern
 
 **Files:**
@@ -634,6 +668,8 @@ ACTIVE   --[deactivate order]--> DEACTIVATING --[N ticks]--> INACTIVE
 | `GeologicStabilizer` | IMPLODE_PLANET | planet/sector/system | varies | varies | varies |
 | `StellarStabilizer` | STELLERATE_STAR, CREATE_DYSON_SPHERE | system | 250 ticks | 150 ticks | 250/turn |
 | `WarpFieldStabilizer` | OPEN_WARP_POINT, CLOSE_WARP_POINT | system | 250 ticks | 150 ticks | 150/turn |
+| `GravityModifier` | — (modifies planet gravity) | self | 15 ticks | 5 ticks | 30/turn |
+| `RadiationShield` | — (adds radiation shielding) | self | 15 ticks | 5 ticks | 20/turn |
 
 The list of activatable ability keys is maintained in `planet_energy_engine.py:_ACTIVATABLE_ABILITIES`.
 
