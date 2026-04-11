@@ -59,7 +59,7 @@ class ComponentListItem:
 
         # Quick-add '+' button on the right edge (anchored to right)
         self.quick_add_button = UIButton(
-            relative_rect=pygame.Rect(-btn_w - 4, 0, btn_w, self.height),
+            relative_rect=pygame.Rect(-btn_w - 14, 0, btn_w, self.height),
             text="+",
             manager=manager,
             container=self.panel,
