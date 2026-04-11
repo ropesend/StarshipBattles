@@ -102,8 +102,10 @@ def main():
         status = "OK" if not errors else "FAIL"
         if mass_mismatch:
             status = "FAIL"
+        if status == "OK" and warnings:
+            status = "WARN"
 
-        icon = "PASS" if status == "OK" else "FAIL"
+        icon = {"OK": "PASS", "FAIL": "FAIL", "WARN": "WARN"}[status]
         print(f"  [{icon}] {name} ({filepath.name})")
 
         for err in errors:
