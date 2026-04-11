@@ -5,3 +5,23 @@ Add new ideas below.
 
 ---
 
+Expand Shied ShieldProjection to have fleet, Sector Player, Sector Allied, System Palyer, System Allied possible scopes
+Create two componenets and starter complexes: 
+Sector Shield Projector - projects 100 shield points to all playuer and allied vessels in the sector
+Ssytem Shield Projector - projects 50 shield points to all player and allied vessels in the sector
+
+Add Shield Modifyer Ability - simple value from 0 to infinity, all shields within the scope are multiplied by the value, so a 1.50 would change a ship with a normal 100pts shielding to 150pts
+Scopes should be: Self, Fleet, Sector (allied or player or enemy), system (allied or player or enemy)
+Create these components:
+System Shield Supressor: 0.75 value, system enemy scope - used to reduce the effectivness of enemy shield in system
+System Shield Booster: 1.25 value system allies scope - used to boost player and allied vessels shields in system
+Sector versions of both above - 0.50, and 1.50
+Fleet Versions of both - 0.95, and 1.05
+Create starter complexes for the system and sector versions (4 total complexes) - they do not start out constructed.
+
+Add Damage Modifyer Ability - similar to shield modifyer - 0 to infinitty, same scopes as Shiled modifyer
+Create 6 components similar to the Shield mopdifyers, same values and scopes
+Create 4 starter complexes  similar to above
+
+Add Planet Modifyer abililities:
+Gavity Modifyer - provides a different level of gavity for the planet, can be set for the species on the planet, facility does not permanently change the gravity, if it is destroyed/removed then the gravity reverts to the original gravity
