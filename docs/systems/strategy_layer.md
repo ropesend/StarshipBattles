@@ -312,6 +312,46 @@ Team 0 deploys on the left, Team 1 mirrors on the right.
 - `DeploymentZoneCalculator.get_zone_center(role, team_id)` — zone center as Vector2
 - `DeploymentZoneCalculator.compute_positions(count, role, team_id)` — ship positions as (x,y) tuples
 
+### Group Coordination
+
+**File:** `game/ai/group_target_coordinator.py`
+
+Stateless utility for group-level combat decisions:
+
+- `select_focus_target(enemies, priority, reference_position)` — pick one target for focus fire
+  - Priorities: `strongest` (mass), `most_damaged` (HP ratio), `nearest` (distance), `largest`
+- `compute_group_hp_ratio(ships)` — aggregate HP/maxHP for a group
+- `should_commit_reserve(main_body_ships, threshold)` — True when main body HP <= threshold
+- `find_flagship_successor(ships, has_cnc_check)` — heaviest alive ship with C&C
+
+### Auto-Suggestion
+
+**File:** `game/strategy/services/task_group_suggester.py`
+
+`suggest_task_groups(ships)` examines `effective_role` on each ship and groups them:
+
+| Role | Suggested Group | Battle Role |
+|------|----------------|-------------|
+| line_combatant, assault_ship, command_ship | Battle Line | MAIN_BODY |
+| fleet_escort, interceptor | Escort Screen | SCREEN |
+| raider, scout | Vanguard | VANGUARD |
+| carrier, support_ship | Support Group | RESERVE |
+
+Each group gets default targeting and movement policies matching its role.
+
+### Fleet Hierarchy DTOs
+
+**File:** `game/strategy/facade/dto/fleet_hierarchy_dto.py`
+
+Immutable DTOs for UI display of the fleet hierarchy:
+
+- `TaskForceInfo` — name, battle_role, policies, squadrons tuple, ship counts
+- `SquadronInfo` — name, battle_role, policies, spatial_behavior, ship count
+- `ShipInfoExtended` — extends ShipInfo with `effective_role`
+
+Factory methods: `TaskForceInfo.from_task_force()`, `SquadronInfo.from_squadron()`,
+`ShipInfoExtended.from_ship_instance()`.
+
 ### Fleet Delegates
 
 Fleet uses composition with 4 delegates:
