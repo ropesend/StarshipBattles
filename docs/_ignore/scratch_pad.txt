@@ -6,6 +6,7 @@ Add new ideas below.
 ---
 Here are are a few new abilities, components and complexes that I want added to the game, none of the complexes start out constructed.
 
+---------------------------------------------------------------------------------------------------------------------
 Expand Shied ShieldProjection to have fleet, Sector Player, Sector Allied, System Palyer, System Allied possible scopes
 Create two componenets and starter complexes: 
 Sector Shield Projector - projects 100 shield points to all playuer and allied vessels in the sector
@@ -31,3 +32,12 @@ Radiation Shiled - provides protection from radiation and reduces its effects on
 I want a component for each of the planet modifyer abilities, and a starter complex for each of them - 3 starter complexes.
 
 Please ask questions and make suggestions.  I want to try and have uniform ways of managing the various planete and system wide effects, try to use existing systems when possible, Or consider modifying the exisitng systems to integrate or expand them to allow the new abilities.  New standalone systems should only be considered it it seems like the best approach even if it was a clean sheet design.
+
+---------------------------------------------------------------------------------------------------------------------
+
+WE need 
+ - scrap option for complexes + Ships + Pods + fighters - ddefaults to 0% of value, should be a command that is given, can only be executed in a location that the player has an appropriate build yard, so complexes or cargo on a planet can be scraped on the planet with a planetary build yard or a space build yard, Ships or fighters or cargo in space can only be scraped in space with a space build yard.
+ - Add: Resouce recovery ability with the following scopes: Fleet, Player Sector, Player System, Planet, Empire
+ - When not in the same stacking group, the resource recovery ability are sort of cumulative, if there is a system ability of 50% and a fleet ability of 50% then the total resource recovery is 75% (1 - (1 - 0.5) * (1 - 0.5))
+ - Note that there must be local storage in the sector for the resources to go to, if there is no local storage then the resources are lost.
+ 

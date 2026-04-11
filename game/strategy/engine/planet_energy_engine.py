@@ -80,6 +80,8 @@ _ACTIVATABLE_ABILITIES = [
     'GeologicStabilizer',
     'StellarStabilizer',
     'WarpFieldStabilizer',
+    'GravityModifier',
+    'RadiationShield',
 ]
 
 

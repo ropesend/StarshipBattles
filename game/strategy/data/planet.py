@@ -121,6 +121,13 @@ class Planet:
     # Atmosphere modification target (gas formula -> target Pa)
     atmosphere_target: Dict[str, float] = field(default_factory=dict)
 
+    # Planet modifier targets (gravity, water, radiation)
+    gravity_target: Optional[float] = None       # Target gravity m/s² (None = no modification)
+    gravity_original: Optional[float] = None     # Original gravity before modifier (None = unmodified)
+    water_target: Optional[float] = None         # Target water level 0.0-1.0 (None = no modification)
+    radiation_shielding: float = 0.0             # Active artificial radiation shielding
+    radiation_shielding_target: Optional[float] = None  # Target shielding (None = no modification)
+
     # Order queue (PROJ-238: renamed from planet_orders, unified with Fleet.orders)
     orders: List['Order'] = field(default_factory=list)
 
@@ -410,6 +417,12 @@ class Planet:
             'energy_capacity': self.energy_capacity,
             'energy_generation': self.energy_generation,
             'atmosphere_target': dict(self.atmosphere_target),
+            # Planet modifier targets
+            'gravity_target': self.gravity_target,
+            'gravity_original': self.gravity_original,
+            'water_target': self.water_target,
+            'radiation_shielding': self.radiation_shielding,
+            'radiation_shielding_target': self.radiation_shielding_target,
             'orders': [o.to_dict() for o in self.orders],
         }
 
@@ -515,6 +528,12 @@ class Planet:
             energy_capacity=data.get('energy_capacity', 0.0),
             energy_generation=data.get('energy_generation', 0.0),
             atmosphere_target=data.get('atmosphere_target', {}),
+            # Planet modifier targets (safe defaults for old saves)
+            gravity_target=data.get('gravity_target'),
+            gravity_original=data.get('gravity_original'),
+            water_target=data.get('water_target'),
+            radiation_shielding=data.get('radiation_shielding', 0.0),
+            radiation_shielding_target=data.get('radiation_shielding_target'),
             orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
         )
 

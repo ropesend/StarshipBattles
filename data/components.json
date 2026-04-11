@@ -3389,6 +3389,390 @@
                 "radioactives": 1000,
                 "exotics": 500
             }
+        },
+        {
+            "id": "shield_suppressor_system",
+            "name": "System Shield Suppressor",
+            "type": "CombatModifier",
+            "mass": 800,
+            "hp": 500,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 0.75,
+                    "scope": "enemy_system",
+                    "stack_group": "shield_suppressor_system"
+                },
+                "CrewRequired": 40
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 2000,
+                "exotics": 500,
+                "radioactives": 300
+            }
+        },
+        {
+            "id": "shield_booster_system",
+            "name": "System Shield Booster",
+            "type": "CombatModifier",
+            "mass": 700,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 1.25,
+                    "scope": "allied_system",
+                    "stack_group": "shield_booster_system"
+                },
+                "CrewRequired": 35
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1500,
+                "exotics": 400,
+                "radioactives": 200
+            }
+        },
+        {
+            "id": "shield_suppressor_sector",
+            "name": "Sector Shield Suppressor",
+            "type": "CombatModifier",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 0.50,
+                    "scope": "enemy_sector",
+                    "stack_group": "shield_suppressor_sector"
+                },
+                "CrewRequired": 25
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1200,
+                "exotics": 300,
+                "radioactives": 200
+            }
+        },
+        {
+            "id": "shield_booster_sector",
+            "name": "Sector Shield Booster",
+            "type": "CombatModifier",
+            "mass": 400,
+            "hp": 250,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 1.50,
+                    "scope": "allied_sector",
+                    "stack_group": "shield_booster_sector"
+                },
+                "CrewRequired": 20
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1000,
+                "exotics": 250,
+                "radioactives": 150
+            }
+        },
+        {
+            "id": "shield_suppressor_fleet",
+            "name": "Fleet Shield Suppressor",
+            "type": "CombatModifier",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 0.95,
+                    "scope": "enemy_sector",
+                    "stack_group": "shield_suppressor_fleet"
+                },
+                "CrewRequired": 10
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 500,
+                "exotics": 100
+            }
+        },
+        {
+            "id": "shield_booster_fleet",
+            "name": "Fleet Shield Booster",
+            "type": "CombatModifier",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 1.05,
+                    "scope": "fleet",
+                    "stack_group": "shield_booster_fleet"
+                },
+                "CrewRequired": 10
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 500,
+                "exotics": 100
+            }
+        },
+        {
+            "id": "damage_suppressor_system",
+            "name": "System Damage Suppressor",
+            "type": "CombatModifier",
+            "mass": 800,
+            "hp": 500,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "DamageModifier": {
+                    "multiplier": 0.75,
+                    "scope": "enemy_system",
+                    "stack_group": "damage_suppressor_system"
+                },
+                "CrewRequired": 40
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 2000,
+                "exotics": 500,
+                "radioactives": 300
+            }
+        },
+        {
+            "id": "damage_booster_system",
+            "name": "System Damage Booster",
+            "type": "CombatModifier",
+            "mass": 700,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "DamageModifier": {
+                    "multiplier": 1.25,
+                    "scope": "allied_system",
+                    "stack_group": "damage_booster_system"
+                },
+                "CrewRequired": 35
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1500,
+                "exotics": 400,
+                "radioactives": 200
+            }
+        },
+        {
+            "id": "damage_suppressor_sector",
+            "name": "Sector Damage Suppressor",
+            "type": "CombatModifier",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "DamageModifier": {
+                    "multiplier": 0.50,
+                    "scope": "enemy_sector",
+                    "stack_group": "damage_suppressor_sector"
+                },
+                "CrewRequired": 25
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1200,
+                "exotics": 300,
+                "radioactives": 200
+            }
+        },
+        {
+            "id": "damage_booster_sector",
+            "name": "Sector Damage Booster",
+            "type": "CombatModifier",
+            "mass": 400,
+            "hp": 250,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "DamageModifier": {
+                    "multiplier": 1.50,
+                    "scope": "allied_sector",
+                    "stack_group": "damage_booster_sector"
+                },
+                "CrewRequired": 20
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1000,
+                "exotics": 250,
+                "radioactives": 150
+            }
+        },
+        {
+            "id": "damage_suppressor_fleet",
+            "name": "Fleet Damage Suppressor",
+            "type": "CombatModifier",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 0,
+            "abilities": {
+                "DamageModifier": {
+                    "multiplier": 0.95,
+                    "scope": "enemy_sector",
+                    "stack_group": "damage_suppressor_fleet"
+                },
+                "CrewRequired": 10
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 500,
+                "exotics": 100
+            }
+        },
+        {
+            "id": "damage_booster_fleet",
+            "name": "Fleet Damage Booster",
+            "type": "CombatModifier",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 0,
+            "abilities": {
+                "DamageModifier": {
+                    "multiplier": 1.05,
+                    "scope": "fleet",
+                    "stack_group": "damage_booster_fleet"
+                },
+                "CrewRequired": 10
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 500,
+                "exotics": 100
+            }
+        },
+        {
+            "id": "sector_shield_projector",
+            "name": "Sector Shield Projector",
+            "type": "Shields",
+            "mass": 400,
+            "hp": 250,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldProjection": {
+                    "value": 100,
+                    "scope": "allied_sector"
+                },
+                "CrewRequired": 20
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 800,
+                "exotics": 200,
+                "vapors": 100
+            }
+        },
+        {
+            "id": "system_shield_projector",
+            "name": "System Shield Projector",
+            "type": "Shields",
+            "mass": 600,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ShieldProjection": {
+                    "value": 50,
+                    "scope": "allied_system"
+                },
+                "CrewRequired": 30
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1200,
+                "exotics": 400,
+                "vapors": 200
+            }
+        },
+        {
+            "id": "gravity_modifier",
+            "name": "Graviton Manipulator",
+            "type": "Infrastructure",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "GravityModifier": {
+                    "energy_drain_rate": 30.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5
+                },
+                "CrewRequired": 30
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 1000,
+                "exotics": 300,
+                "radioactives": 200
+            }
+        },
+        {
+            "id": "water_modifier",
+            "name": "Hydro Processor",
+            "type": "Terraforming",
+            "mass": 400,
+            "hp": 250,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "WaterModifier": {
+                    "modification_rate": 0.005
+                },
+                "CrewRequired": 25
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 800,
+                "organics": 200,
+                "vapors": 300
+            }
+        },
+        {
+            "id": "radiation_shield",
+            "name": "Magnetosphere Generator",
+            "type": "Infrastructure",
+            "mass": 600,
+            "hp": 350,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "RadiationShield": {
+                    "energy_drain_rate": 20.0,
+                    "activation_time": 15,
+                    "deactivation_time": 5,
+                    "max_shielding": 1.0
+                },
+                "CrewRequired": 30
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 1200,
+                "exotics": 400,
+                "radioactives": 300
+            }
         }
     ]
 }

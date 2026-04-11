@@ -354,8 +354,8 @@ class DesignWorkshopScreen:
         self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.selected_component)
 
     def _on_modifier_change(self):
-        # Delegate to ViewModel - syncs modifiers across selection and emits SHIP_UPDATED
-        self.viewmodel.sync_modifiers_to_selection()
+        # Delegate to ViewModel - syncs modifiers across selection and recalculates ship stats
+        self.viewmodel.on_modifier_changed()
 
     def rebuild_modifier_ui(self):
         editing_component = self.selected_component[2] if self.selected_component else None

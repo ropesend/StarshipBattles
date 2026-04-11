@@ -447,3 +447,84 @@ class TestWorkshopViewModel:
 
         events = event_bus.get_events('SHIP_UPDATED')
         assert len(events) == 0
+
+    # ─────────────────────────────────────────────────────────────────
+    # on_modifier_changed Tests
+    # ─────────────────────────────────────────────────────────────────
+
+    def test_on_modifier_changed_single_selection_emits_ship_updated(self, viewmodel_setup, mock_registries):
+        """Single component modifier change emits SHIP_UPDATED."""
+        from game.simulation.entities.ship import Ship, LayerType
+        from game.simulation.components.component import create_component
+
+        viewmodel, event_bus = viewmodel_setup
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        viewmodel._ship = ship
+
+        comp = create_component('armor_plate', registries=mock_registries)
+        ship.add_component(comp, LayerType.ARMOR)
+        ship.recalculate_stats()
+
+        viewmodel.select_component((LayerType.ARMOR, 0, comp))
+        event_bus.clear()
+
+        # Simulate modifier change (modifier panel sets value then calls this)
+        comp.add_modifier('hardened')
+        comp.recalculate_stats()
+        viewmodel.on_modifier_changed()
+
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) >= 1, "on_modifier_changed must emit SHIP_UPDATED for single selection"
+
+    def test_on_modifier_changed_multi_selection_syncs_and_emits(self, viewmodel_setup, mock_registries):
+        """Multi-selection modifier change syncs modifiers and emits SHIP_UPDATED."""
+        from game.simulation.entities.ship import Ship, LayerType
+        from game.simulation.components.component import create_component
+
+        viewmodel, event_bus = viewmodel_setup
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        viewmodel._ship = ship
+
+        comp1 = create_component('armor_plate', registries=mock_registries)
+        comp2 = create_component('armor_plate', registries=mock_registries)
+        ship.add_component(comp1, LayerType.ARMOR)
+        ship.add_component(comp2, LayerType.ARMOR)
+        ship.recalculate_stats()
+
+        viewmodel.select_component((LayerType.ARMOR, 0, comp1))
+        viewmodel.select_component((LayerType.ARMOR, 1, comp2), append=True)
+
+        # Modify primary selection's modifier
+        comp2.add_modifier('hardened')
+        comp2.recalculate_stats()
+        event_bus.clear()
+
+        viewmodel.on_modifier_changed()
+
+        # Should sync modifier to comp1
+        assert len(comp1.modifier_manager.modifiers) > 0, "Modifier should sync to other selected components"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) >= 1, "on_modifier_changed must emit SHIP_UPDATED for multi-selection"
+
+    def test_on_modifier_changed_no_selection_is_noop(self, viewmodel_setup, mock_registries):
+        """No selection: on_modifier_changed is a safe no-op."""
+        from game.simulation.entities.ship import Ship
+
+        viewmodel, event_bus = viewmodel_setup
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        viewmodel._ship = ship
+        viewmodel._selected_components = []
+        event_bus.clear()
+
+        viewmodel.on_modifier_changed()
+
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0, "No events should be emitted with no selection"
+
+    def test_on_modifier_changed_no_ship_is_safe(self, viewmodel_setup):
+        """No ship loaded: on_modifier_changed does not crash."""
+        viewmodel, event_bus = viewmodel_setup
+        viewmodel._ship = None
+        viewmodel._selected_components = []
+
+        viewmodel.on_modifier_changed()  # Should not raise

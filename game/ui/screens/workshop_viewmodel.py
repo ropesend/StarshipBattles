@@ -288,31 +288,35 @@ class WorkshopViewModel:
     # Modifier Synchronization
     # ─────────────────────────────────────────────────────────────────
     
-    def sync_modifiers_to_selection(self):
+    def on_modifier_changed(self):
+        """Called when any modifier changes on the primary selected component.
+
+        Syncs modifiers to other selected components (multi-selection),
+        then always triggers ship stat recalculation and SHIP_UPDATED event.
         """
-        Synchronize modifiers from primary selection to all selected components.
-        
-        Called when modifiers change on the primary selected component.
-        """
-        if not self._selected_components or len(self._selected_components) <= 1:
+        if not self._selected_components:
             return
-            
+
+        if len(self._selected_components) > 1:
+            self._sync_modifiers_to_selection()
+
+        self.notify_ship_changed()
+
+    def _sync_modifiers_to_selection(self):
+        """Copy modifiers from primary to all other selected components."""
         primary = self.primary_selection
         if not primary:
             return
-            
+
         editing_comp = primary[2]
-        
+
         for item in self._selected_components:
             comp = item[2]
             if comp is editing_comp:
                 continue
-                
+
             from game.ui.screens.builder.modifier_utils import copy_modifiers
             copy_modifiers(editing_comp, comp)
-            
-        editing_comp.recalculate_stats()
-        self.notify_ship_changed()
         
     # ─────────────────────────────────────────────────────────────────
     # Ship Operations (Service-backed)

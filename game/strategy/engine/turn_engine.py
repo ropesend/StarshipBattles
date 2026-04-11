@@ -474,6 +474,10 @@ class TurnEngine:
             QualityEngine(registries=self._registries).process_quality_improvement(empires)
             AtmosphereEngine(registries=self._registries).process_atmosphere(empires)
 
+            # 4. Water Modification (once per turn)
+            from game.strategy.engine.water_engine import WaterEngine
+            WaterEngine(registries=self._registries).process_water_modification(empires)
+
         except EnginePhaseError as e:
             # PROJ-251: Rollback state and re-raise
             logger.error(
@@ -605,6 +609,10 @@ class TurnEngine:
         self._time_phase('activation_timers',
                          self.component_activation_engine.process_activation_tick,
                          tick, empires)
+
+        # --- Phase 1.8: Planet Modifier Effects (gravity/radiation apply/revert) ---
+        from game.strategy.engine.planet_modifier_effect_engine import PlanetModifierEffectEngine
+        PlanetModifierEffectEngine(registries=self._registries).process_modifier_effects_tick(tick, empires)
 
         # --- Phase 2: Calculate Moves ---
         move_queue = self._time_phase('movement_calc', self.movement_engine.collect_movements, empires, galaxy, tick)

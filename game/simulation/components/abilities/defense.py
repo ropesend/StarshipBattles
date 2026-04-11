@@ -1,6 +1,6 @@
 from typing import List
 
-from .base import SimpleMultiplierAbility, StaticValueAbility, AbilityScope
+from .base import SimpleMultiplierAbility, StaticValueAbility, AbilityLayer, AbilityScope
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_SHIELD_CAP, HINT_SHIELD_REGEN, HINT_DAMAGE, HINT_EVASION, HINT_ACCURACY
 
@@ -13,7 +13,19 @@ class ShieldProjection(SimpleMultiplierAbility):
     - SHIELD_CAPACITY_MULT: Shield-specific modifiers (from environmental effects)
 
     Both multipliers stack multiplicatively.
+
+    Supports both combat (SELF scope) and strategic scopes (fleet/sector/system).
+    Strategic-scope ShieldProjection adds flat shield points to ships pre-battle
+    via the combat modifier collector.
     """
+
+    layer = AbilityLayer.BOTH
+    allowed_scopes = [
+        AbilityScope.SELF,
+        AbilityScope.FLEET,
+        AbilityScope.PLAYER_SECTOR, AbilityScope.ALLIED_SECTOR,
+        AbilityScope.PLAYER_SYSTEM, AbilityScope.ALLIED_SYSTEM,
+    ]
 
     stat_key = 'capacity_mult'
     value_attr = 'capacity'
