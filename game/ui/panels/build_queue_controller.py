@@ -66,6 +66,7 @@ class BuildQueueController:
         empire: Optional['Empire'] = None,
         on_planet_selection_needed: Optional[Callable] = None,
         add_to_queue_callback: Optional['AddToQueueCallback'] = None,
+        registries=None,
     ):
         """
         Initialize the controller.
@@ -81,9 +82,11 @@ class BuildQueueController:
             empire: Empire instance for ownership check (PROJ-79)
             on_planet_selection_needed: Callback when planet selection is needed (PROJ-79)
             add_to_queue_callback: PROJ-208 callback to dispatch AddToConstructionQueueCommand
+            registries: GameRegistries for design validation
         """
         self.build_context = build_context
         self.design_library = design_library
+        self._registries = registries
         self.design_loader = design_loader
         self.design_report = design_report
         self.on_queue_changed = on_queue_changed
@@ -154,7 +157,11 @@ class BuildQueueController:
         target_type = type_map.get(category, "Ship")
         logger.debug(f"BuildQueue: Filtering for category '{category}' (vehicle_type='{target_type}')")
 
-        filtered = [d for d in all_designs if d.vehicle_type == target_type and d.mass_valid]
+        filtered = [d for d in all_designs if d.vehicle_type == target_type]
+
+        # Mark designs as valid/invalid using full validation
+        self._validate_designs(filtered)
+
         logger.debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}'")
 
         if filtered:
@@ -162,6 +169,33 @@ class BuildQueueController:
                 logger.debug(f"  - {d.name} (vehicle_type={d.vehicle_type}, design_id={d.design_id})")
 
         return filtered
+
+    def _validate_designs(self, designs) -> None:
+        """Run full validation on each design and set design_valid flag.
+
+        Loads each design's data and runs DesignValidator to check all rules
+        (crew, C&C, combat movement, mass budgets, etc.). Sets a `design_valid`
+        attribute on each DesignMetadata object.
+        """
+        if not self._registries:
+            for d in designs:
+                d.design_valid = True
+            return
+
+        from game.strategy.services.design_validator import DesignValidator
+        validator = DesignValidator(self._registries)
+
+        for d in designs:
+            try:
+                load_result = self.design_library.load_design_data(d.design_id)
+                if not load_result.success:
+                    d.design_valid = False
+                    continue
+
+                result = validator.validate(load_result.data)
+                d.design_valid = not result.has_issues
+            except Exception:
+                d.design_valid = True  # Can't validate, assume valid
 
     def set_category(self, category: str):
         """

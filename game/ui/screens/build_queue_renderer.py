@@ -89,9 +89,13 @@ class BuildQueueRenderer:
                     container=row_panel
                 )
 
+            display_name = design.name
+            if not getattr(design, 'design_valid', True):
+                display_name = f"{design.name} (INVD)"
+
             btn = ui.UIButton(
                 relative_rect=pygame.Rect(icon_size + 4, 0, 260 - icon_size - 8, btn_height),
-                text=design.name,
+                text=display_name,
                 manager=self.manager,
                 container=row_panel
             )

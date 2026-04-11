@@ -6,3 +6,6 @@ Build yard
 - 4) Put available designs where the Build Yards Were, available designs can now be 2X as wide
 - 5) similar to the components interface in the design workshop, add a + button to the right of each of the available designs, pressing this should add the design to the queue
 - 6) In the build queue, add a + and - button to add or remove that designe and a up and down arrow button to move it up or down in the queue. - The +- and up/down should be at the left most portion of the interface.  
+
+For the planet view in the strategy layer:
+- the images for each individual planet are supposed to be rotated a random amount, this is supposed to be set at galaxy creation and then persist throughout.  I frequently see scenes where several differnt planets all have the exact same image with the same rotation.  I don't think that the planet images are being randomized the way they are supposed to be.  DEfinitly the rotation is not being properly randomized.  I think that there may only be a single image used for ice dwarf planets.  Please look into this.

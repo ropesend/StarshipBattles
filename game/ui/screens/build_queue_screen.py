@@ -140,6 +140,7 @@ class BuildQueueScreen:
             empire=self.empire,
             on_planet_selection_needed=self._prompt_target_planet,
             add_to_queue_callback=self._dispatch_add_to_queue_command,
+            registries=getattr(self.session, 'registries', None),
         )
 
         # Sync controller with initial queue selection
