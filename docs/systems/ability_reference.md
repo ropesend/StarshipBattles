@@ -1144,6 +1144,57 @@ Increases construction/production rate within scope. Multiplies all build queue 
 
 ---
 
+### AtmosphereModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `AtmosphereModifier` |
+| Class | `AtmosphereModifierAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Modifies a planet's atmosphere toward target gas compositions. Slowly adds or removes atmospheric gases each turn. The rate is in kg of gas that can be processed per turn; conversion to pressure change depends on the planet's surface area and gravity (`Pa_per_kg = gravity / surface_area`). Multiple facilities on the same planet stack their rates additively.
+
+Processed once per turn (not per tick) by `AtmosphereEngine`, after the 100-tick loop. See the [Atmosphere Modification Pipeline](strategy_layer.md#atmosphere-modification-pipeline) section in strategy_layer.md for the full processing algorithm.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `modification_rate` | float | No | 0.0 | kg of atmosphere added/removed per turn |
+
+**Allowed Scopes:** SELF only
+
+**Stat Bindings:** None
+
+---
+
+### QualityImprovement
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `QualityImprovement` |
+| Class | `QualityImprovementAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Permanently improves resource deposit quality on a planet. Each turn, adds `improvement_rate` to the quality value of the specified resource. The change is permanent — persists even if the facility is later removed. Quality caps at 100.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `resource_type` | string | No | `""` | Which resource to improve (e.g., "metals") |
+| `improvement_rate` | float | No | 0.0 | Quality increase per turn |
+
+**Allowed Scopes:** SELF only
+
+**Stat Bindings:** None
+
+---
+
 ## Superweapons
 
 All superweapons share the same structure: boolean or dict with optional `action_time`. All are STRATEGIC layer, SELF scope only.
@@ -1289,6 +1340,8 @@ Self-Destruct Device. Schedules ship for destruction.
 | `WarpFieldStabilizer` | WarpFieldStabilizerAbility | Planetary |
 | `ResourceHarvestBooster` | ResourceHarvestBoosterAbility | Planetary |
 | `BuildRateBooster` | BuildRateBoosterAbility | Planetary |
+| `AtmosphereModifier` | AtmosphereModifierAbility | Planetary |
+| `QualityImprovement` | QualityImprovementAbility | Planetary |
 | `DestroyPlanet` | DestroyPlanet | Superweapons |
 | `DestroyStar` | DestroyStar | Superweapons |
 | `OpenWarpPoint` | OpenWarpPoint | Superweapons |

@@ -555,6 +555,118 @@ via `aggregate_multipliers()` from `strategic_ability_scanner.py`.
 Each effect type is a group header with aggregate status and value. Expanding shows
 individual provider facilities with their planet location, individual value, and status.
 
+### Atmosphere Modification Pipeline
+
+**Files:**
+- `game/strategy/engine/atmosphere_engine.py` -- per-turn atmosphere processing
+- `game/strategy/engine/commands.py` -- `SetAtmosphereTargetCommand`
+- `game/strategy/engine/planet_command_handlers.py` -- `SetAtmosphereTargetCommandHandler`
+- `game/ui/screens/atmosphere_target_editor.py` -- gas slider UI
+- `game/strategy/data/planet.py` -- `atmosphere`, `atmosphere_target`, `surface_pressure` fields
+
+Atmosphere modification is a once-per-turn system that gradually changes a planet's
+gas composition toward a player-set target. It runs after the 100-tick loop, alongside
+population growth and quality improvement.
+
+**Data model:**
+- `planet.atmosphere: Dict[str, float]` -- gas formula (e.g., "O2") to partial pressure (Pa)
+- `planet.atmosphere_target: Dict[str, float]` -- target partial pressures per gas
+- `planet.surface_pressure: float` -- total atmospheric pressure (sum of all partial pressures)
+
+**Command flow:**
+1. Player opens Atmosphere Target Editor from planet detail (button shown only if planet has operational `AtmosphereModifier` facility)
+2. Editor provides sliders for 10 gases (N2, O2, CO2, H2O, CH4, H2, He, Ar, NH3, SO2), range 0-150 kPa
+3. Presets: "Species Ideal" (from race atmosphere preferences), "Match Current", "Clear Target"
+4. "Apply" dispatches `SetAtmosphereTargetCommand(planet_id, atmosphere_target)` via facade
+5. Handler validates ownership, sets `planet.atmosphere_target` (empty dict clears target)
+
+**Per-turn processing algorithm** (`AtmosphereEngine.process_atmosphere()`):
+1. For each empire's colony, check if `atmosphere_target` is set
+2. Sum `modification_rate` (kg/turn) from all operational facilities with `AtmosphereModifier`
+3. Convert between mass and pressure using planet physics: `Pa_per_kg = gravity / surface_area`
+4. Calculate delta (target - current) for each gas, convert to mass
+5. Distribute available modification rate proportionally across gases by mass delta
+6. Apply changes without overshooting target values
+7. Update `surface_pressure` as sum of all partial pressures
+
+**Physics notes:**
+- Small planets change atmosphere faster than large planets (less mass per Pa)
+- Earth-like planet at default rate (7.8e15 kg/turn): ~150 Pa/turn, ~1000 turns to reach 150 kPa
+- Multiple facilities stack additively
+
+**Related:** `AtmosphereModifier` ability in [ability_reference.md](ability_reference.md#atmospheremodifier), race atmosphere preferences in `game/strategy/data/race_config.py` (`GAS_NAME_TO_FORMULA`, `GAS_FORMULA_TO_NAME`).
+
+### Activatable Abilities & Stabilizer Pattern
+
+**Files:**
+- `game/strategy/engine/component_activation_engine.py` -- tick-based activation state machine
+- `game/strategy/engine/planet_energy_engine.py` -- energy drain for active abilities
+- `game/strategy/services/strategic_ability_scanner.py` -- scope-based ability discovery
+- `game/strategy/engine/superweapon_order_processor.py` -- stabilizer protection checks
+- `game/ui/screens/planet_abilities_window.py` -- activation toggle UI
+
+Some strategic abilities require manual activation, consume energy while active, and
+take multiple ticks to transition between states. These share a common architecture.
+
+**Activation state machine** (`ComponentActivationEngine`):
+
+```
+INACTIVE --[activate order]--> ACTIVATING --[N ticks]--> ACTIVE
+ACTIVE   --[deactivate order]--> DEACTIVATING --[N ticks]--> INACTIVE
+```
+
+- State tracked per component instance in `facility.component_states[component_key]`
+- `component_key` format: `"LAYER:INDEX:COMP_ID"` (e.g., `"CORE:0:stellar_stabilizer"`)
+- Each tick, `ComponentActivationEngine` increments `progress_ticks` for ACTIVATING/DEACTIVATING components
+- Transition to ACTIVE/INACTIVE when `progress_ticks >= required_ticks`
+- ACTIVATING and DEACTIVATING phases provide **no protection** -- only ACTIVE counts
+
+**Energy system integration:**
+- `PlanetEnergyEngine` sums `energy_drain_rate / 100` per tick from all ACTIVE draining components
+- If energy depletes, active abilities auto-deactivate
+- Energy generation comes from `StrategicResourceGeneration` abilities, storage from `ResourceStorage`
+
+**Current activatable abilities:**
+
+| Ability | Blocks | Default Scope | Activation | Deactivation | Energy Drain |
+|---------|--------|---------------|------------|--------------|--------------|
+| `PlanetaryShield` | Planet bombardment | system | varies | varies | varies |
+| `GeologicStabilizer` | IMPLODE_PLANET | planet/sector/system | varies | varies | varies |
+| `StellarStabilizer` | STELLERATE_STAR, CREATE_DYSON_SPHERE | system | 250 ticks | 150 ticks | 250/turn |
+| `WarpFieldStabilizer` | OPEN_WARP_POINT, CLOSE_WARP_POINT | system | 250 ticks | 150 ticks | 150/turn |
+
+The list of activatable ability keys is maintained in `planet_energy_engine.py:_ACTIVATABLE_ABILITIES`.
+
+**Stabilizer protection pattern:**
+
+All three stabilizers (Geologic, Stellar, WarpField) use a unified check in
+`SuperweaponOrderProcessor._is_stabilized(ability_name, scopes, reference_entity, galaxy, empires)`:
+
+1. Superweapon order targets a location (planet/system)
+2. Processor calls the appropriate `_is_system_*_stabilized()` wrapper
+3. Wrapper finds a reference planet at the target location
+4. `_is_stabilized()` delegates to `find_abilities_in_scope()` from `strategic_ability_scanner.py`
+5. Scanner checks all empire colonies in scope for ACTIVE instances of the ability
+6. If any active instance found, superweapon order is cancelled with a protection message
+
+**Scope resolution** (`strategic_ability_scanner.py`):
+- `find_abilities_in_scope()` accepts `require_active=True` to filter to ACTIVE phase only
+- SYSTEM scope: all empire-owned planets in the star system
+- SECTOR scope: all planets in the same hex
+- Returns ability data dicts with scope metadata for aggregation
+
+**Adding a new activatable ability:**
+1. Define ability class in `planetary.py` with `energy_drain_rate`, `activation_time`, `deactivation_time`, `scope` parameters
+2. Register in `ABILITY_REGISTRY` (`abilities/__init__.py`)
+3. Add to `_ACTIVATABLE_ABILITIES` list in `planet_energy_engine.py`
+4. Add display name to `TOGGLEABLE_ABILITIES` dict in `planet_abilities_window.py`
+5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`
+6. If it blocks superweapons: add check method in `superweapon_order_processor.py` using `_is_stabilized()`
+7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system-scope
+8. Add keyboard toggle binding in `strategy_fleet_command_router.py`
+9. Create component in `components.json` and QS complex design in `data/designs/`
+10. Write tests in `tests/unit/simulation/components/abilities/` and `tests/unit/strategy/engine/`
+
 ### Build Queue Source DI
 
 **File:** `game/strategy/data/build_queue_source.py`

@@ -51,6 +51,7 @@
 | Add a new ability | [adding_abilities.md](guides/adding_abilities.md) |
 | Understand modifiers | [modifier_system.md](guides/modifier_system.md) |
 | Add a new modifier | [adding_modifiers.md](guides/adding_modifiers.md) |
+| Create/modify QS complexes | [qs_complex_design.md](guides/qs_complex_design.md) |
 | Write simulation tests | [simulation_testing.md](guides/simulation_testing.md) |
 | Understand test infrastructure | [testing_infrastructure.md](guides/testing_infrastructure.md) |
 
@@ -75,6 +76,7 @@ docs/
 │   ├── adding_abilities.md        Step-by-step: add a new ability
 │   ├── modifier_system.md         Modifier system overview
 │   ├── adding_modifiers.md        Step-by-step: add a new modifier
+│   ├── qs_complex_design.md       QS complex design: JSON structure, initial complexes, crew budgets
 │   ├── simulation_testing.md      Simulation test scenarios
 │   └── testing_infrastructure.md  DI fixtures, conftest, test helpers
 │

@@ -4,6 +4,7 @@ Personal notes and concept ideas. Not documentation.
 Add new ideas below.
 
 ---
+Here are are a few new abilities, components and complexes that I want added to the game, none of the complexes start out constructed.
 
 Expand Shied ShieldProjection to have fleet, Sector Player, Sector Allied, System Palyer, System Allied possible scopes
 Create two componenets and starter complexes: 
@@ -23,5 +24,10 @@ Add Damage Modifyer Ability - similar to shield modifyer - 0 to infinitty, same 
 Create 6 components similar to the Shield mopdifyers, same values and scopes
 Create 4 starter complexes  similar to above
 
-Add Planet Modifyer abililities:
+Add Planet Modifyer abililities: - All require an interface to set the levels, Gavity and Radiation are not permanent, Water is permanent - similar to atmosphere modifyer.  Water takes time similar to atmosphere to change system, Gravity and Radiation are near instant I want a timer system like there is for the system sterllar stabilizer and warp field stabilizer.
 Gavity Modifyer - provides a different level of gavity for the planet, can be set for the species on the planet, facility does not permanently change the gravity, if it is destroyed/removed then the gravity reverts to the original gravity
+Water Modifyer - provides a different level of water for the planet, this is similar to the atmospheric modifyer but for water, it permanentlky alters the amount of water on the planet.
+Radiation Shiled - provides protection from radiation and reduces its effects on the planet, this is similar to the gavity modifyer in that it is not permanent and can be reversed.
+I want a component for each of the planet modifyer abilities, and a starter complex for each of them - 3 starter complexes.
+
+Please ask questions and make suggestions.  I want to try and have uniform ways of managing the various planete and system wide effects, try to use existing systems when possible, Or consider modifying the exisitng systems to integrate or expand them to allow the new abilities.  New standalone systems should only be considered it it seems like the best approach even if it was a clean sheet design.
