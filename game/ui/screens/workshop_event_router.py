@@ -78,6 +78,16 @@ class WorkshopEventRouter:
         # Pass to detail panel
         gui.detail_panel.handle_event(event)
 
+        # Pass to stats panel (collapse/expand headers) — only for mouse clicks
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            from game.ui.panels.design_stats_panel import DesignStatsPanel
+            stats_panel = getattr(getattr(gui, 'right_panel', None), 'stats_panel', None)
+            if isinstance(stats_panel, DesignStatsPanel) and stats_panel.handle_event(event):
+                stats_panel.rebuild(gui.ship)
+                gui.right_panel._sync_from_stats_panel()
+                gui.right_panel.update_stats_display(gui.ship)
+                return True
+
         # Pass to controller
         gui.controller.handle_event(event)
         

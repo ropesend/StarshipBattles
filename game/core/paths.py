@@ -114,6 +114,7 @@ class Paths:
     STAR_SYSTEM_NAMES_FILE: str = os.path.join(DATA_DIR, "star_system_names.yaml")
     STORMS_FILE: str = os.path.join(DATA_DIR, "storms.json")
     STATS_LAYOUT_FILE: str = os.path.join(DATA_DIR, "stats_layout.json")
+    STATS_SECTIONS_FILE: str = os.path.join(DATA_DIR, "stats_sections.json")
     HOMEWORLD_PRESETS_FILE: str = os.path.join(DATA_DIR, "homeworld_presets.json")
     RACE_NAMES_FILE: str = os.path.join(DATA_DIR, "race_names.json")
     GROUP_POLICIES_FILE: str = os.path.join(DATA_DIR, "group_policies.json")

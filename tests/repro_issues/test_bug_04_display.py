@@ -54,6 +54,8 @@ class TestBug04Display:
              patch('game.ui.screens.builder.stats_config.get_logistics_rows') as mock_get_inv, \
              patch('game.ui.screens.builder.stats_config.get_construction_rows', return_value=[]), \
              patch('game.ui.screens.builder.stats_config.STATS_CONFIG', new={}), \
+             patch('game.ui.screens.builder.stats_config.SECTIONS_CONFIG', new={}), \
+             patch('game.ui.screens.builder.stats_config.ALWAYS_VISIBLE', new={}), \
              patch('game.ui.screens.builder.right_panel.BuilderRightPanel.update_portrait_image'):
 
             # Import here to avoid circular import at collection time
