@@ -47,6 +47,12 @@ from game.simulation.battle_outcome import (
     WeaponSummary,
 )
 from game.simulation.battle_spec import BattleSpec, ComponentStateSpec, ShipSpec
+from game.simulation.combat.telemetry import (
+    HitLogRecorder,
+    ShipStatsAggregator,
+    TelemetryLevel,
+    WeaponSummaryAggregator,
+)
 from game.simulation.systems.battle_end_conditions import (
     AllCondition,
     AnyCondition,
@@ -185,6 +191,11 @@ def run_battle(
     if engine is None:
         raise RuntimeError("Engine missing after controller.start()")
 
+    # PROJ-269 Phase 5: attach telemetry subscribers based on spec level.
+    weapon_aggregator, stats_aggregator, hit_log_recorder = _attach_telemetry(
+        engine, spec
+    )
+
     # One-shot pre-tick-loop hook — runs after engine.start() but before
     # the first update. Combat Lab scenarios use this to invoke
     # `custom_setup(engine)` without introducing a dedicated setup-phase.
@@ -193,10 +204,18 @@ def run_battle(
 
     while not engine.is_battle_over():
         engine.update()
+        if stats_aggregator is not None:
+            stats_aggregator.sample_tick(engine)
         if per_tick_callback is not None:
             per_tick_callback(engine)
 
-    outcome = extract_outcome(engine, spec)
+    outcome = extract_outcome(
+        engine,
+        spec,
+        weapon_aggregator=weapon_aggregator,
+        stats_aggregator=stats_aggregator,
+        hit_log_recorder=hit_log_recorder,
+    )
 
     if spec.post_battle_hook is not None:
         spec.post_battle_hook(outcome)
@@ -204,16 +223,69 @@ def run_battle(
     return outcome
 
 
-def extract_outcome(engine: "BattleEngine", spec: BattleSpec) -> BattleOutcome:
-    """Build a `BattleOutcome` from the engine's final state.
+def _attach_telemetry(engine: "BattleEngine", spec: BattleSpec):
+    """Instantiate + subscribe telemetry aggregators per `spec.telemetry_level`.
 
-    Phase 1 version:
-      - Uses instance_id to match engine ships back to spec ships.
-      - Populates pose, status, and per-weapon summaries.
-      - Leaves `hits_taken` empty (DETAILED telemetry lands in Phase 5).
-      - `components` mirrors the input ShipSpec.components (unchanged
-        until Phase 2 wires per-component HP writeback).
+    Returns a `(weapon, stats, hit_log)` tuple with each element set to
+    its aggregator instance or None. MINIMAL = (None, None, None).
     """
+    level = spec.telemetry_level
+    # Be tolerant of placeholder objects from early-phase tests.
+    if not isinstance(level, TelemetryLevel):
+        return None, None, None
+
+    weapon_aggregator = None
+    stats_aggregator = None
+    hit_log_recorder = None
+
+    # Raise event-bus detail so the subscribers actually see their events.
+    # NORMAL bus emits shield/component-destroyed; DETAILED emits everything.
+    from game.simulation.combat.combat_events import EventDetailLevel
+
+    if level >= TelemetryLevel.NORMAL:
+        engine.combat_events.detail_level = EventDetailLevel.NORMAL
+        weapon_aggregator = WeaponSummaryAggregator()
+        stats_aggregator = ShipStatsAggregator(engine.combat_events)
+
+    if level >= TelemetryLevel.DETAILED:
+        engine.combat_events.detail_level = EventDetailLevel.DETAILED
+        hit_log_recorder = HitLogRecorder(
+            engine.combat_events,
+            tick_provider=lambda: engine.tick_counter,
+        )
+
+    return weapon_aggregator, stats_aggregator, hit_log_recorder
+
+
+def extract_outcome(
+    engine: "BattleEngine",
+    spec: BattleSpec,
+    *,
+    weapon_aggregator=None,
+    stats_aggregator=None,
+    hit_log_recorder=None,
+) -> BattleOutcome:
+    """Build a `BattleOutcome` from the engine's final state + telemetry.
+
+    PROJ-269 Phases 1-5:
+      - Uses instance_id to match engine ships back to spec ships.
+      - Populates pose, status, and per-component HP (Phase 2).
+      - `status=RETREATED` for ships in `engine.retreated_ships` (Phase 3).
+      - Telemetry fields (`weapons`, `hits_taken`, `stats`) populated
+        from the aggregators when supplied (NORMAL+); empty/zero when
+        aggregator is None (MINIMAL).
+    """
+    # Snapshot aggregator output once so per-ship assembly is fast.
+    weapon_snapshot = (
+        weapon_aggregator.snapshot(engine) if weapon_aggregator is not None else {}
+    )
+    stats_snapshot = (
+        stats_aggregator.snapshot() if stats_aggregator is not None else {}
+    )
+    hit_snapshot = (
+        hit_log_recorder.snapshot() if hit_log_recorder is not None else {}
+    )
+
     ships_by_instance_id: Dict[str, "Ship"] = {
         ship.instance_id: ship for ship in engine.ships if ship.instance_id
     }
@@ -238,7 +310,12 @@ def extract_outcome(engine: "BattleEngine", spec: BattleSpec) -> BattleOutcome:
                 for ship_spec in squadron.ships:
                     ship_outcomes.append(
                         _build_ship_outcome(
-                            ship_spec, ships_by_instance_id, retreated_ids
+                            ship_spec,
+                            ships_by_instance_id,
+                            retreated_ids,
+                            weapon_snapshot=weapon_snapshot,
+                            stats_snapshot=stats_snapshot,
+                            hit_snapshot=hit_snapshot,
                         )
                     )
         team_outcomes.append(
@@ -261,12 +338,34 @@ def extract_outcome(engine: "BattleEngine", spec: BattleSpec) -> BattleOutcome:
     )
 
 
+_ZERO_STATS = ShipStats(
+    total_damage_taken=0.0,
+    peak_speed=0.0,
+    ticks_derelict=0,
+    ticks_alive=0,
+)
+
+
 def _build_ship_outcome(
     ship_spec: ShipSpec,
     ships_by_instance_id: Dict[str, "Ship"],
     retreated_ids: Optional[set] = None,
+    *,
+    weapon_snapshot: Optional[Dict] = None,
+    stats_snapshot: Optional[Dict] = None,
+    hit_snapshot: Optional[Dict] = None,
 ) -> ShipOutcome:
+    weapon_snapshot = weapon_snapshot or {}
+    stats_snapshot = stats_snapshot or {}
+    hit_snapshot = hit_snapshot or {}
+
     engine_ship = ships_by_instance_id.get(ship_spec.instance_id)
+
+    # Telemetry-level populated fields — empty/zero when aggregators are
+    # None (MINIMAL level) and filled when the snapshots contain the id.
+    weapons = weapon_snapshot.get(ship_spec.instance_id, ())
+    hits_taken = hit_snapshot.get(ship_spec.instance_id, ())
+    stats = stats_snapshot.get(ship_spec.instance_id, _ZERO_STATS)
 
     if engine_ship is None:
         # Ship was removed mid-battle (retreat / boundary exit). Phase 1
@@ -278,14 +377,9 @@ def _build_ship_outcome(
             final_angle=ship_spec.angle,
             final_velocity=ship_spec.velocity,
             components=ship_spec.components,
-            weapons=(),
-            hits_taken=(),
-            stats=ShipStats(
-                total_damage_taken=0.0,
-                peak_speed=0.0,
-                ticks_derelict=0,
-                ticks_alive=0,
-            ),
+            weapons=weapons,
+            hits_taken=hits_taken,
+            stats=stats,
         )
 
     # Alive-status resolution
@@ -298,6 +392,9 @@ def _build_ship_outcome(
     else:
         status = ShipStatus.SURVIVED
 
+    # Fall back to direct component scan for weapons if no aggregator
+    # supplied — keeps legacy/MINIMAL path compatible with MINIMAL
+    # (weapons=()) vs NORMAL+ (weapons from aggregator).
     return ShipOutcome(
         instance_id=ship_spec.instance_id,
         status=status,
@@ -306,14 +403,9 @@ def _build_ship_outcome(
         final_velocity=Vector2(engine_ship.velocity),
         # PROJ-269 Phase 2: read per-component final HP from engine Ship.
         components=_extract_component_states(engine_ship),
-        weapons=tuple(_extract_weapon_summaries(engine_ship)),
-        hits_taken=(),  # Phase 5 populates at DETAILED telemetry
-        stats=ShipStats(
-            total_damage_taken=0.0,       # Phase 5 tracks via ShipStatsAggregator
-            peak_speed=0.0,
-            ticks_derelict=0,
-            ticks_alive=0,
-        ),
+        weapons=weapons,
+        hits_taken=hits_taken,
+        stats=stats,
     )
 
 

@@ -100,6 +100,11 @@ class TestMetadata:
     seed: int = 42
     ui_priority: int = 0
     tags: List[str] = field(default_factory=list)
+    # PROJ-269 Phase 5: optional telemetry override. Default string
+    # "DETAILED" means the Combat Lab compiler resolves to
+    # `TelemetryLevel.DETAILED`. Scenarios can set "MINIMAL" or "NORMAL"
+    # for faster batch runs at reduced instrumentation.
+    telemetry_level: str = "DETAILED"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert metadata to dictionary for serialization."""

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Formations become a first-class property of `TaskForce`. `FormationResolver` deterministically converts `(formation, entry_vector, boundary, ships)` → per-ship `(position, angle)`. Each context's spec compiler calls the resolver while building `ShipSpec.position`/`angle`, replacing today's ad-hoc positioning. Defaults are chosen by the dominant `design_role` in a task force when `TaskForce.formation` is `None`. Player UI for authoring is out of scope; the resolver + defaults + round-trip through saves land here.
 
 ---
@@ -235,11 +235,11 @@ the PROJ-269 section block right before the Phase-2 components entry.
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/ --testmon` fully green
-- [ ] `python -m combat_lab.run_tests --fast` — 162+ passing (regression gate)
-- [ ] Each formation shape has at least one test with asserted positions
-- [ ] Rotation-invariance test passes
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5 Task 5.1
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/` fully green (14670 passed; same 3 pre-existing unrelated failures + 3 pre-existing unrelated ImportErrors as baseline)
+- [x] `python -m combat_lab.run_tests --fast` — 162 passed (baseline maintained)
+- [x] Each formation shape has at least one test with asserted positions (8 shape tests in `test_formation_resolver.py`)
+- [x] Rotation-invariance test passes
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 5 Task 5.1

@@ -50,11 +50,56 @@ outcome = run_battle(
 )
 ```
 
-Phase 1 hooks not yet enforced by the engine: `modifier_stack`,
-`telemetry_level`. They round-trip through the spec/outcome but the
-engine does not interpret them yet. Phase 5 wires telemetry
-subscribers and modifier-stack application. `boundary` is fully
-enforced as of Phase 3 (see below).
+Phase 1 hook not fully wired: `modifier_stack`. It round-trips
+through the spec/outcome and each compiler builds entries for relevant
+modifiers (system/sector/empire/species/complexes), but
+`DamageCalculator` does not yet consume the stack — compilers emit
+placeholder effects. A follow-up project will wire real effect
+evaluation through the damage pipeline and the existing two-phase
+aggregator. `boundary` is fully enforced as of Phase 3;
+`telemetry_level` is fully wired as of Phase 5 (see below).
+
+### Telemetry (Phase 5)
+
+`BattleSpec.telemetry_level` is an `IntEnum` at
+[game/simulation/combat/telemetry.py](../../game/simulation/combat/telemetry.py)
+with three values: `MINIMAL` (1), `NORMAL` (2), `DETAILED` (3).
+`run_battle` attaches opt-in aggregators based on the level:
+
+| Level | Attached aggregators | `BattleOutcome` fields populated |
+|-------|----------------------|---------------------------------|
+| `MINIMAL` | (none) | only `end_reason` / `duration_ticks` / `seed` + per-ship `status` / `components` / pose |
+| `NORMAL` | `WeaponSummaryAggregator`, `ShipStatsAggregator` | above + `ShipOutcome.weapons` (per-weapon shots/hits) + `ShipOutcome.stats` (damage / speed / ticks) |
+| `DETAILED` | above + `HitLogRecorder` | above + `ShipOutcome.hits_taken` (one `HitRecord` per damage event) |
+
+**How it works:** `_attach_telemetry(engine, spec)` raises
+`engine.combat_events.detail_level` to match the telemetry level so
+the `CombatEventBus` actually emits the events the aggregators subscribe
+to. MINIMAL runs at whatever the bus default is (no new subscribers).
+NORMAL / DETAILED raise the bus level so all damage events reach
+the aggregators.
+
+**Per-tick sampling:** `ShipStatsAggregator.sample_tick(engine)` is
+called each tick from the tick loop to update peak_speed / ticks_alive
+/ ticks_derelict. Not event-driven because the engine doesn't emit
+"tick complete" events today.
+
+**Defaults per context (set by each compiler):**
+- Strategy: `NORMAL`
+- Battle Setup: `NORMAL`
+- Combat Lab: `DETAILED` (individual scenarios may override via
+  `TestMetadata.telemetry_level = "MINIMAL" | "NORMAL" | "DETAILED"`)
+
+**Overhead (as of 2026-04-12 reference measurement):** On a 500-tick
+1v1 smoke battle (ships at 1000px, minimal event traffic):
+MINIMAL ≈ NORMAL ≈ DETAILED ≈ 28-30ms. See
+`tests/performance/test_telemetry_overhead.py` for the regression gate
+and `Projects/active_projects/PROJ-269/decisions.md` for updated
+baselines.
+
+**`HitRecord.modifiers_applied`** is an empty tuple in the MVP — real
+modifier-trace provenance requires wiring the ModifierStack through
+the damage pipeline, deferred to a follow-up.
 
 ### Boundary Region (Phase 3)
 

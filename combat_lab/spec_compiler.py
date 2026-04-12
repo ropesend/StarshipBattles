@@ -184,9 +184,13 @@ def build_test_battle_spec(
     # ceiling is only relevant when callers wire composite conditions.
     absolute_max = max(scenario.metadata.max_ticks * 10, 1000)
 
+    # PROJ-269 Phase 5: metadata can override the Combat Lab default via
+    # `metadata.telemetry_level` ("MINIMAL" | "NORMAL" | "DETAILED").
+    telemetry_level = _resolve_telemetry_level(scenario.metadata)
+
     return BattleSpec(
         seed=scenario.metadata.seed,
-        telemetry_level=TelemetryLevel.DETAILED,
+        telemetry_level=telemetry_level,
         boundary=UnboundedRegion(),
         end_condition=scenario._create_end_condition(),
         absolute_max_ticks=absolute_max,
@@ -194,6 +198,23 @@ def build_test_battle_spec(
         modifier_stack=ModifierStack.empty(),
         post_battle_hook=None,
     )
+
+
+def _resolve_telemetry_level(metadata) -> TelemetryLevel:
+    """Parse `metadata.telemetry_level` (str) into a `TelemetryLevel`.
+
+    Default when unset or unrecognized: DETAILED (Combat Lab default).
+    """
+    raw = getattr(metadata, "telemetry_level", None)
+    if isinstance(raw, TelemetryLevel):
+        return raw
+    if isinstance(raw, str):
+        name = raw.strip().upper()
+        try:
+            return TelemetryLevel[name]
+        except KeyError:
+            pass
+    return TelemetryLevel.DETAILED
 
 
 # ---------------------------------------------------------------------------

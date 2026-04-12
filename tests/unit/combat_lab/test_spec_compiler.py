@@ -191,3 +191,59 @@ def test_compiler_raises_on_unsupported_scenario_type():
     scenario = _RawScenario()
     with pytest.raises(NotImplementedError):
         build_test_battle_spec(scenario, registries=None)
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 Task 5.6: metadata.telemetry_level override
+# ---------------------------------------------------------------------------
+
+
+def test_compiler_respects_metadata_telemetry_level_override():
+    class _MinimalLevelScenario(_MinimalStaticScenario):
+        metadata = TestMetadata(
+            test_id="SPEC-MINIMAL-TELEM",
+            category="SpecCompiler",
+            subcategory="Telemetry",
+            name="Minimal-telemetry scenario",
+            summary="",
+            conditions=[],
+            edge_cases=[],
+            expected_outcome="",
+            pass_criteria="",
+            max_ticks=100,
+            seed=1,
+            telemetry_level="MINIMAL",
+        )
+
+    scenario = _MinimalLevelScenario()
+    spec = build_test_battle_spec(scenario, registries=None)
+    assert spec.telemetry_level == TelemetryLevel.MINIMAL
+
+
+def test_compiler_metadata_default_telemetry_is_detailed():
+    # _MinimalStaticScenario has no telemetry_level set — it's DETAILED by default.
+    scenario = _MinimalStaticScenario()
+    spec = build_test_battle_spec(scenario, registries=None)
+    assert spec.telemetry_level == TelemetryLevel.DETAILED
+
+
+def test_compiler_unrecognized_telemetry_level_string_falls_back_to_detailed():
+    class _GarbledScenario(_MinimalStaticScenario):
+        metadata = TestMetadata(
+            test_id="SPEC-GARBLED",
+            category="SpecCompiler",
+            subcategory="Telemetry",
+            name="Garbled telemetry string",
+            summary="",
+            conditions=[],
+            edge_cases=[],
+            expected_outcome="",
+            pass_criteria="",
+            max_ticks=100,
+            seed=1,
+            telemetry_level="HIGHER_THAN_DETAILED",  # unknown
+        )
+
+    scenario = _GarbledScenario()
+    spec = build_test_battle_spec(scenario, registries=None)
+    assert spec.telemetry_level == TelemetryLevel.DETAILED

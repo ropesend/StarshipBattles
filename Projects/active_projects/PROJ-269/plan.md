@@ -16,13 +16,13 @@
 | 1. DTO boundary + spec compilers | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Component HP persistence | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Boundary + N-team engine support | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Formation system | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Telemetry levels | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 4. Formation system | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Telemetry levels | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Delete legacy paths | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-12
-**Active Phase:** Phase 3 Complete — Phase 4 Task 4.1 next
+**Active Phase:** Phase 5 Complete — Phase 6 Task 6.1 next (final legacy-deletion phase)
 **Last Action:** Phase 1 complete. All 11 tasks checked off. `validate_phase.py PROJ-269 1` PASSED.
 
 **Phase 1 deliverables shipped:**
@@ -40,14 +40,41 @@
 - `docs/systems/combat_simulation.md` §0 "Unified Entry (in progress — PROJ-269)" added
 - Full regression: **14576 passed** (+108 from baseline 14468); same 3 pre-existing unrelated failures + 3 pre-existing unrelated ImportErrors; combat_lab fast: 162 passed
 
-**Next Action:** Phase 4 Task 4.1. Read `phase_4_checklist.md` for the first task. Phase 4 adds:
-- `FormationResolver` — converts `(formation, entry_vector, boundary, ship_list, design_roles) → Dict[ship_instance_id, (position, angle)]`
-- `TaskForce.formation: Optional[FormationSpec]` field
-- Design-role-based formation defaults (Strike→WEDGE, Carrier→CARRIER_PROTECTED, Defender→LINE_ABREAST, Scout/Skirmisher→LINE_ASTERN, Mixed→LINE_ABREAST)
-- Compilers invoke FormationResolver at spec-build time to produce ShipSpec poses
-- Per-shape tests (rotation invariance, spacing, custom positions)
+**Next Action:** Phase 6 Task 6.1. Read `phase_6_checklist.md` for the deletion list. Phase 6 is the legacy cleanup:
+- Delete `BattleMode` enum + `BattleModeHandler` hierarchy
+- Delete `create_*_battle` half-factories from `game/ui/services/battle_factories.py`
+- Delete `FleetBattleAdapter.update_from_battle_results` (replaced by `PostBattleHook`)
+- Migrate all remaining callers off the legacy path onto `run_battle`
+- Remove the `SB_USE_BATTLE_RUNNER` flag (Combat Lab becomes unified-only)
+- Delete the `_is_started` hack from `combat_lab/services/test_execution_service.py`
+- Delete `SimulationBattleResolver` ship-mutation side channels
+- Audit `no occurrences of BattleMode / BattleModeHandler / create_*_battle` anywhere in the codebase
 
 **Blockers:** None
+
+**Phase 5 deliverables shipped:**
+- `WeaponSummaryAggregator` — snapshot-based per-weapon stats from existing `Component.shots_fired`/`shots_hit` counters
+- `ShipStatsAggregator` — subscribes to damage events for `total_damage_taken`; per-tick sampling for `peak_speed` / `ticks_alive` / `ticks_derelict`
+- `HitLogRecorder` — subscribes to SHIELD_HIT / ARMOR_ABSORBED / COMPONENT_HIT, emits `HitRecord` per hit (modifiers_applied empty in MVP)
+- `run_battle` attaches aggregators based on `spec.telemetry_level`; raises `engine.combat_events.detail_level` so events reach subscribers
+- `extract_outcome` pulls per-ship `weapons` / `hits_taken` / `stats` from the aggregator snapshots; MINIMAL produces empty/zero defaults
+- `TestMetadata.telemetry_level: str = "DETAILED"` override so Combat Lab scenarios can opt into MINIMAL / NORMAL
+- Performance smoke at `tests/performance/test_telemetry_overhead.py` (baseline: ~28-30ms for 500-tick 1v1 at all levels on current hardware)
+- `docs/systems/combat_simulation.md` §0 "Telemetry (Phase 5)" subsection
+
+**Baselines going into Phase 6:** pytest **14695 passed** (up from post-Phase-4 14670; +25 new Phase-5 tests). combat_lab fast **162 passed** (maintained).
+
+**Phase 4 deliverables shipped:**
+- `TaskForce.formation: Optional[FormationSpec]` field with `to_dict`/`from_dict` serialization (legacy-save graceful degradation)
+- `FormationResolver.resolve(formation, entry_vector, boundary, ships)` — stateless deterministic (position, angle) per-ship solver
+- 8 formation shapes implemented (LINE_ABREAST / LINE_ASTERN / WEDGE / ECHELON_LEFT/RIGHT / SCREEN / CARRIER_PROTECTED / CUSTOM)
+- World-space pipeline: local → rotate by facing → translate by origin → optional boundary clamp
+- `resolve_default_for_task_force(ships)` — dominant-design_role → default formation (5 archetype buckets)
+- All 3 compilers (strategy, Battle Setup, Combat Lab) route through the resolver; TaskForceSpec.formation is populated (no more None placeholders)
+- `ShipInstance.create()` now mirrors `design_data["design_role"]` onto `instance.design_role` so the resolver's default selector sees it
+- `docs/systems/combat_simulation.md` §0 "Formation System (Phase 4)" + `docs/systems/strategy_layer.md` TaskForce.formation subsection
+
+**Baselines going into Phase 5:** pytest **14670 passed** (up from post-Phase-3 14635; +35 new Phase-4 tests). combat_lab fast **162 passed** (maintained).
 
 **Phase 3 deliverables shipped:**
 - `BattleEngine.boundary` per-tick enforcement via new `BoundaryEnforcementPhase` (priority 250). All four ExitPolicy values implemented (DESTROY kills, RETREAT removes + tracks, BOUNCE clamps + reflects, NONE no-op). `run_battle` threads `spec.boundary` to the engine.
@@ -75,18 +102,30 @@
 
 **Baselines going into Phase 3:** pytest **14603 passed** (up from post-Phase-1 14576; +27 new Phase-2 tests). combat_lab fast **162 passed**.
 
-**Context for Next Agent (Phase 4):**
-- **`FormationSpec` + `FormationShape` enum already exist** in `game/simulation/combat/formation.py` from Phase 1 Task 1.4. Phase 4 adds the resolver that turns a formation into actual per-ship poses.
-- **`TaskForceSpec.formation` field exists** but is always `None` in today's compilers — the Phase 1 scaffold. Phase 4 populates it + consumes it.
-- **Design-role defaults** (per `decisions.md`): Strike→WEDGE, Carrier→CARRIER_PROTECTED, Defender→LINE_ABREAST, Scout/Skirmisher→LINE_ASTERN, Mixed→LINE_ABREAST. Dominant design_role logic required.
-- **Entry vectors** are already on `TeamSpec.entry_vector` (Phase 1); Phase 4 is where the resolver consumes `entry_vector.origin + facing` to rotate formation-local positions into world-space.
-- **Strategy compiler's hex-edge entry** lands in Phase 4 too (today it uses hex center as origin, arbitrary facing).
-- **Pre-existing pytest failures/errors** (3 build-queue + 3 AI/strategy imports) still unchanged — not PROJ-269's responsibility.
-- **Transitional concerns still open:**
-  - `ship_builder` kwarg on `run_battle` — Phase 6 subsumes.
-  - DTO annotations still use `object` for `FormationSpec` on `TaskForceSpec.formation` — can tighten as part of Phase 4.
-  - Legacy `ShipInstance.component_damage` coexists with `components`.
-  - Empty TaskForce / Squadron pruning still NOT done. Phase 4 is the natural spot if it becomes relevant.
+**Context for Next Agent (Phase 6 — final legacy cleanup):**
+- **Phase 6 deletes legacy code.** Every prior phase added new paths while keeping old ones working. Phase 6 removes the old paths.
+- **Files to delete:**
+  - `game/simulation/combat/battle_mode_handler.py` — `BattleModeHandler` ABC + 4 concrete subclasses
+  - `BattleMode` enum inside `game/simulation/battle_config.py`
+  - `create_manual_battle` / `create_test_battle` / `create_strategy_battle` / `create_hypothetical_battle` from `game/ui/services/battle_factories.py`
+- **Files to shrink:**
+  - `game/strategy/adapters/simulation_adapter.py::SimulationBattleResolver.resolve_battle` — collapse to `spec = build_strategy_battle_spec(...); return run_battle(spec, ...)`. Drop `_apply_shield_interference` / `_apply_strategic_modifiers` (ModifierStack replacement is a post-PROJ-269 follow-up, but SimulationBattleResolver MUST stop mutating ships).
+  - `game/ui/screens/battle_setup_screen.py` — remove `_apply_complex_modifiers` in-place ship mutation.
+  - `game/ui/screens/test_lab/test_executor.py` — all 4 paths (visual/headless/batch/baseline) go through `run_battle`.
+  - `combat_lab/runner.py` — remove `USE_BATTLE_RUNNER` flag + legacy branch + `_run_scenario_legacy` helper.
+  - `combat_lab/services/test_execution_service.py` — remove `_is_started=True` hack.
+- **Callers that still use `create_*_battle`** must be migrated to `run_battle`. Audit: `grep -r 'create_.*_battle'`.
+- **After Phase 6, grep returns zero hits for:** `BattleMode`, `BattleModeHandler`, `create_manual_battle`, `create_test_battle`, `create_strategy_battle`, `create_hypothetical_battle` (excluding archived docs).
+- **Transitional concerns Phase 6 resolves:**
+  - `ship_builder` kwarg on `run_battle` — Phase 6 subsumes by making `Ship.from_spec(spec, registries)` the internal path.
+  - Legacy `_is_started=True` hack — deleted.
+- **Transitional concerns Phase 6 does NOT resolve (post-PROJ-269 follow-ups):**
+  - Full `ModifierStack` effect evaluation through the damage pipeline.
+  - `HitRecord.modifiers_applied` population.
+  - `ShipInstance.component_damage` consolidation with `components`.
+  - Hex-edge entry math.
+- **Pre-existing pytest failures/errors** (3 build-queue + 3 AI/strategy imports) unchanged — not PROJ-269's responsibility.
+- **Final acceptance:** full pytest green with baselines maintained, full combat_lab fast suite green (162+), manual launcher smoke across all 3 entry paths, audit passes.
 
 ## Overview
 
