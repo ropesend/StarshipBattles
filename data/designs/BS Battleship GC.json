@@ -2585,6 +2585,12 @@
         "energy": 194800.0,
         "ammo": 65000.0
     },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 0,
+        "created_date": "2026-04-11T00:00:00.000000",
+        "last_modified": "2026-04-11T00:00:00.000000"
+    },
     "expected_stats": {
         "max_hp": 219014,
         "max_fuel": 200000.0,

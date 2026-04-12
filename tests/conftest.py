@@ -200,6 +200,32 @@ def mock_registries(minimal_registries) -> 'GameRegistries':
     return minimal_registries
 
 
+@pytest.fixture
+def stable_component_registries(session_registries) -> 'GameRegistries':
+    # Production data is considered mod-able balance. Logic/modifier regression
+    # tests must not break when data/components.json is rebalanced, so this
+    # fixture overlays stable test values for components whose balance has
+    # historically drifted. Other components (modifiers, engines, etc.) are
+    # inherited unchanged from the session registries.
+    from pathlib import Path
+    from game.core.registry import GameRegistries
+    from game.simulation.components.component_loader import load_components_data
+
+    registries = GameRegistries(
+        components=copy.deepcopy(session_registries.components),
+        modifiers=copy.deepcopy(session_registries.modifiers),
+        vehicle_classes=copy.deepcopy(session_registries.vehicle_classes),
+        resources=copy.deepcopy(session_registries.resources),
+        resource_catalog=session_registries.resource_catalog,
+    )
+
+    fixture_path = Path(__file__).parent / "fixtures" / "test_components.json"
+    test_components = load_components_data(str(fixture_path), registries=registries)
+    registries.components.update(test_components)
+
+    return registries
+
+
 # =============================================================================
 # PROJ-48: Assertion Helper Functions
 # =============================================================================

@@ -1,6 +1,7 @@
 """
 Shared fixtures for collision edge case tests.
 """
+import random
 import pytest
 from unittest.mock import MagicMock
 from pygame.math import Vector2
@@ -17,8 +18,10 @@ def projectile_manager():
 
 @pytest.fixture
 def collision_system():
-    """Create a CollisionSystem instance."""
-    return CollisionSystem()
+    # Seed the injected RNG so tests can patch collision_system.rng.random
+    # deterministically. CollisionSystem owns its own random.Random instance,
+    # so patching the global `random.random` has no effect.
+    return CollisionSystem(rng=random.Random(12345))
 
 
 @pytest.fixture

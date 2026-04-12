@@ -428,7 +428,7 @@ class TestBeamRaycastingGeometry:
             'source': source_ship
         }
 
-        with patch('random.random', return_value=0.5):  # 0.5 < 0.8 = hit
+        with patch.object(collision_system.rng, 'random', return_value=0.5):  # 0.5 < 0.8 = hit
             collision_system.process_beam_attack(attack, recent_beams)
 
         # Verify hit chance was called with correct scores

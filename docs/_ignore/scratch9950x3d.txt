@@ -1,7 +1,7 @@
 UI Improvements:
 Build yard 
 - 1) Remove the Actions column. 
-- 2) add a Roles colum to filter by roles, defaults to any, this should go where the existing Available Designs Are.  If a filter would result in 0 ships showing, then it should not be present as an option.
+- 2) add a Roles column to filter by roles, defaults to any, this should go where the existing Available Designs Are.  If a filter would result in 0 ships showing, then it should not be present as an option.
 - 3) Move the Build Yard column to under Catagories and Roles, 
 - 4) Put available designs where the Build Yards Were, available designs can now be 2X as wide
 - 5) similar to the components interface in the design workshop, add a + button to the right of each of the available designs, pressing this should add the design to the queue

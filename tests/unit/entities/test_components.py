@@ -17,15 +17,17 @@ class TestComponents:
         assert bridge.name == "Bridge"
         assert bridge.mass == 50
 
-    def test_create_component_types(self, fresh_registries):
-        railgun = create_component('railgun', registries=fresh_registries)
+    def test_create_component_types(self, stable_component_registries):
+        # Uses stable test values (railgun damage=40) instead of production
+        # data so the assertion is stable against balance rebalancing.
+        railgun = create_component('railgun', registries=stable_component_registries)
         # Phase 7: Check weapon has ability, not legacy class
         assert railgun.has_ability('WeaponAbility') is True
         weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
         assert weapon_ab is not None
         assert weapon_ab.damage == 40
 
-        tank = create_component('fuel_tank', registries=fresh_registries)
+        tank = create_component('fuel_tank', registries=stable_component_registries)
 
         # Verify ResourceStorage ability exists
         from game.simulation.components.abilities.resources import ResourceStorage

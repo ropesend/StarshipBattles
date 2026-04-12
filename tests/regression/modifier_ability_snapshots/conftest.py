@@ -202,21 +202,17 @@ def save_snapshot(name: str, data: Dict):
 # FIXTURES
 # =============================================================================
 
-@pytest.fixture(scope="module")
-def setup_registries(session_registries):
+@pytest.fixture
+def setup_registries(stable_component_registries):
     """
     Provide registries for snapshot tests.
 
-    PROJ-50: Updated to use session_registries from root conftest.py for
-    strict DI compliance. Returns the registries so tests can pass them
-    to create_component().
-
-    PROJ-211: Removed redundant load_modifiers/load_components calls.
-    The session_registries fixture (via SessionRegistryCache) already
-    loads all data. No need to reload here.
+    Uses stable_component_registries (from root conftest.py) so snapshot
+    expectations do not couple to mod-able balance values in
+    data/components.json. Railgun/laser_cannon/thruster values are loaded
+    from tests/fixtures/test_components.json; other components inherit
+    from production registries.
     """
-    # Reset caches to ensure clean state
     reset_component_caches()
-    # Data is already loaded by session_registries via SessionRegistryCache
-    yield session_registries
+    yield stable_component_registries
     reset_component_caches()
