@@ -341,9 +341,9 @@ class ConflictResolutionEngine(IConflictEngine):
                 environmental_effects=environmental_effects,
             )
 
-        # Apply results to fleets (PROJ-210: use battle adapter property)
-        f1.battle.update_from_battle_results(result.team0_survivors)
-        f2.battle.update_from_battle_results(result.team1_survivors)
+        # PROJ-269 Phase 6: fleet updates happen via the compiler's
+        # `PostBattleHook` inside `run_battle` — the caller treats the
+        # BattleResult as a read-only report.
 
         # Determine winner
         if result.winner == 0:

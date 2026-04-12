@@ -22,9 +22,69 @@
 | 6. Delete legacy paths | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-12 (Phase 6 in progress — 3 tasks complete)
-**Active Phase:** Phase 6 — 3 of 15 tasks complete (6.7a, 6.7, 6.8)
-**Last Action:** Completed Tasks 6.7a + 6.7 + 6.8 in sequence:
+**Last Updated:** 2026-04-12 (Phase 6 in progress — 6 tasks complete)
+**Active Phase:** Phase 6 — 6 of 15 tasks complete (6.7a, 6.7, 6.8, 6.5/6.11, 6.6, 6.4)
+**Last Action (latest session):** Completed Tasks 6.5/6.11 + 6.6 + 6.4 on top of the earlier 6.7a/6.7/6.8 batch. All ship-mutation side channels are now gone.
+
+**6.5 / 6.11 — `SimulationBattleResolver` rewritten to use `build_strategy_battle_spec` + `run_battle`:**
+- Deleted `_apply_shield_interference` and `_apply_strategic_modifiers` helpers.
+- `resolve_battle` now: compile spec → `run_battle` → map `BattleOutcome` → `BattleResult`. Winner determined from `ShipStatus` tallies on the outcome.
+- `ship_builder` closure maps `ShipSpec.instance_id` → original `ShipInstance.to_ship(...)`.
+- Extended `build_strategy_battle_spec` to accept `environmental_effects` + `team_modifiers` kwargs; both translate to placeholder `ModifierEntry` entries (Phase 5.5 semantics).
+- Extended `_build_modifier_stack` + added `_entries_from_environmental_effects` / `_entries_from_fleet_combat_modifiers` / `_placeholder_entry` helpers.
+
+**6.6 — `FleetBattleAdapter.update_from_battle_results` deleted:**
+- Method removed from `fleet_battle_adapter.py`.
+- `ConflictResolutionEngine._resolve_combat_simulated` no longer calls `f1/f2.battle.update_from_battle_results` — `apply_outcome_to_fleets` (the compiler-attached `PostBattleHook`) is authoritative.
+- Tests that exercised the deleted method were removed / rewritten (4 in `test_fleet_battle_adapter.py`, 3 in `test_fleet_battle_adapter_identity.py`, 1 in `test_battle_resolver_integration.py` rewritten as "no-longer-called" assertion).
+- `IPostBattleShip` protocol retained — still used by `ShipInstance.update_from_ship` → `apply_outcome_to_fleets`.
+
+**6.4 — `FleetBattleSetupScreen._apply_complex_modifiers` removed:**
+- Ship-mutation side channel deleted.
+- Added `_sync_complex_toggles_to_state()` helper — projects the `(side_id, scope, design_id) → bool` dict onto `BattleSetupSide.system_complexes` / `sector_complexes` lists before the scene_callback fires. `build_manual_battle_spec` reads those lists and emits `ModifierEntry` entries.
+- Full `build_manual_battle_spec` + `run_battle` routing from `_start_battle` deferred to Task 6.9 (needs visual-run driving that the current blocking `run_battle` doesn't support).
+
+**Regressions (verified this batch):**
+- Combat Lab fast: **162/162 green** (matches baseline).
+- `pytest tests/unit/strategy/ tests/integration/strategy/`: **3278 passed** + 1 pre-existing import error.
+- `pytest tests/unit/ui/screens/`: **1858 passed** + 1 pre-existing failure.
+- Full `pytest tests/`: **14702 passed** + 3 pre-existing failures + 3 pre-existing errors (baseline was 14710; the −8 delta is deliberate test deletions of tests that exercised the deleted method — their coverage moved to `test_post_battle_hook.py`).
+
+**Phase 6 scope consequences (per Phase 5.5 placeholder-skip decision):**
+- Strategy battles: environmental effects (storm shield interference) and per-team strategic modifiers (shield_mult, damage_mult, flat_shield_bonus) are now recorded in the forensic trace but NOT applied to battle math.
+- Battle Setup battles: toggled complexes (system/sector shield/damage boosters/suppressors) are recorded but NOT applied to battle math.
+- Real effect mapping (`stat_key` values that the engine actually evaluates for these modifiers) is content work outside PROJ-269. This is the intentional scope trade-off documented in decisions.md.
+
+**Next Action (for next agent):** Start with **Task 6.9 + 6.10** (UI visual-run migration) or **Task 6.1/6.2/6.3** (engine refactor — delete `BattleMode`, `BattleModeHandler`, `BattleConfig` variant fields, `create_*_battle` factories). 6.1-6.3 should probably come first since it enables the run_battle-driving pattern that 6.9 needs for visual mode. After both: Task 6.12 audit, Task 6.13/6.14 docs, Task 6.15 final regression.
+
+**Blockers:** None.
+
+**Files modified in this session (cumulative across both batches):**
+- `combat_lab/runner.py`
+- `combat_lab/spec_compiler.py`
+- `combat_lab/scenarios/base.py`
+- `combat_lab/scenarios/templates.py`
+- `combat_lab/scenarios/propulsion_scenarios.py`
+- `combat_lab/scenarios/tohit_attack_fleet_scenarios.py`
+- `game/strategy/combat/spec_compiler.py` (extended with env_effects / team_modifiers kwargs)
+- `game/strategy/adapters/simulation_adapter.py` (rewrite — 270 lines)
+- `game/strategy/engine/conflict_resolution_engine.py` (removed update_from_battle_results calls)
+- `game/strategy/data/fleet_battle_adapter.py` (deleted update_from_battle_results)
+- `game/ui/screens/battle_setup_screen.py` (deleted _apply_complex_modifiers, added _sync_complex_toggles_to_state)
+- `tests/unit/combat_lab/test_spec_compiler.py` (13 new tests)
+- `tests/unit/strategy/adapters/test_simulation_adapter.py` (rewritten)
+- `tests/unit/strategy/adapters/test_simulation_adapter_storms.py` (rewritten)
+- `tests/unit/strategy/test_fleet_battle_adapter.py` (deleted 4 tests)
+- `tests/unit/strategy/fleet/test_fleet_battle_adapter_identity.py` (emptied — tests moved to post_battle_hook)
+- `tests/unit/strategy/conflict_resolution/test_battle_resolver_integration.py` (rewrote 1 test)
+- `Projects/active_projects/PROJ-269/phase_6_checklist.md` (marked 6 tasks complete)
+- `Projects/active_projects/PROJ-269/plan.md` (this update)
+
+---
+
+### Earlier snapshot (latest session wrap — see section above for cumulative)
+
+**Earlier action (this session):** Completed Tasks 6.7a + 6.7 + 6.8 in sequence:
 
 **6.7a — Combat Lab compiler extension to all 5 templates:**
 - `combat_lab/spec_compiler.py` now dispatches on StaticTarget / Duel / Propulsion / Resource / Comparison

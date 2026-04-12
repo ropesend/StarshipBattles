@@ -1,15 +1,59 @@
-"""
-Tests for SimulationBattleResolver storm shield interference (PROJ-189 Phase 7).
+"""Tests for SimulationBattleResolver environmental effects (PROJ-189 + PROJ-269).
 
-Tests that environmental effects reduce shield capacity during combat.
+PROJ-269 Phase 6 Task 6.5/6.11: the adapter no longer mutates ship
+shields pre-battle. Environmental effects flow through the
+`ModifierStack` on the compiled `BattleSpec` as global entries with
+placeholder effects (Phase 5.5 semantics — real effect evaluation is
+post-PROJ-269 content work).
 """
+
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch
+
+
+class _MockShipInstance:
+    def __init__(self, instance_id="i"):
+        self.instance_id = instance_id
+        self.design_id = f"design-{instance_id}"
+        self.design_data = {"theme_id": "Federation"}
+        self.name = f"Ship-{instance_id}"
+        self.components = {}
+
+    def is_combat_capable(self):
+        return True
+
+    def to_ship(self, pos, team_id=0, registries=None):
+        ship = MagicMock()
+        ship.instance_id = self.instance_id
+        return ship
+
+
+def _make_fleet(fleet_id, ships):
+    fleet = MagicMock()
+    fleet.id = fleet_id
+    fleet.ships = ships
+    fleet.task_forces = []
+    return fleet
+
+
+def _make_outcome():
+    from game.simulation.battle_outcome import ShipStatus
+
+    outcome = MagicMock()
+    outcome.duration_ticks = 100
+    team0 = MagicMock()
+    team0.team_id = 0
+    team0.ships = []
+    team1 = MagicMock()
+    team1.team_id = 1
+    team1.ships = [MagicMock(status=ShipStatus.SURVIVED)]
+    outcome.teams = (team0, team1)
+    return outcome
 
 
 class TestSimulationBattleResolverEnvironmentalEffects:
-    """Tests for environmental_effects parameter in resolve_battle."""
+    """Environmental effects flow through the ModifierStack on the spec."""
 
     def test_resolve_battle_accepts_environmental_effects(self):
         """resolve_battle accepts optional environmental_effects parameter."""
@@ -17,167 +61,104 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-
-        # Create fleets with no ships (triggers early return)
-        # PROJ-210: to_battle_ships accessed via fleet.battle property
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.battle = MagicMock()
-        fleet1.battle.to_battle_ships.return_value = []
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.battle = MagicMock()
-        fleet2.battle.to_battle_ships.return_value = []
+        fleet1 = _make_fleet(1, [])
+        fleet2 = _make_fleet(2, [])
 
         effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
 
-        # Should not raise
+        # Both fleets empty → short-circuit; effects ignored but no crash.
         result = resolver.resolve_battle(fleet1, fleet2, environmental_effects=effects)
-
         assert result is not None
 
-    def test_resolve_battle_with_shield_interference_in_storm(self):
-        """resolve_battle applies shield_capacity_mult to ships in storm."""
+    def test_resolve_battle_emits_storm_modifier_on_spec(self):
+        """shield_capacity_mult < 1.0 → a placeholder ModifierEntry with
+        source='environment:storm_shield_interference' on the compiled spec."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
 
-        # Create mock battle ships with real shield values
-        mock_ship1 = MagicMock()
-        mock_ship1.max_shields = 1000
-        mock_ship1.current_shields = 1000
-
-        mock_ship2 = MagicMock()
-        mock_ship2.max_shields = 500
-        mock_ship2.current_shields = 400
-
-        # PROJ-210: to_battle_ships accessed via fleet.battle property
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.battle = MagicMock()
-        fleet1.battle.to_battle_ships.return_value = [mock_ship1]
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.battle = MagicMock()
-        fleet2.battle.to_battle_ships.return_value = [mock_ship2]
-
-        # Storm with 50% shield reduction
         effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
 
-        with patch('game.strategy.adapters.simulation_adapter.BattleController') as mock_controller_cls:
-            mock_controller = MagicMock()
-            mock_controller_cls.return_value = mock_controller
+        seen = {}
 
-            mock_results = MagicMock()
-            mock_results.winner = 0
-            mock_results.tick_count = 100
-            mock_results.surviving_ships = []
-            mock_controller.run_headless.return_value = mock_results
+        def _fake_run_battle(spec, **_):
+            seen["stack"] = spec.modifier_stack
+            return _make_outcome()
 
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=_fake_run_battle,
+        ):
             resolver.resolve_battle(fleet1, fleet2, environmental_effects=effects)
 
-            # Verify shield interference was applied - max_shields reduced by 50%
-            assert mock_ship1.max_shields == 500  # 1000 * 0.5
-            assert mock_ship2.max_shields == 250  # 500 * 0.5
-            # Current shields capped to new max
-            assert mock_ship1.current_shields == 500  # min(1000, 500)
-            assert mock_ship2.current_shields == 250  # min(400, 250)
+        storm_entries = [
+            e for e in seen["stack"].global_
+            if e.source == "environment:storm_shield_interference"
+        ]
+        assert len(storm_entries) == 1
+        # Per Phase 5.5, effects flow as placeholders — engine silently skips.
+        assert storm_entries[0].effect.stat_key == "placeholder"
 
-    def test_resolve_battle_no_shield_interference_without_storm(self):
-        """resolve_battle does not modify shields when not in storm."""
+    def test_resolve_battle_no_storm_modifier_when_neutral(self):
+        """shield_capacity_mult == 1.0 → no storm ModifierEntry emitted."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
 
-        mock_ship1 = MagicMock()
-        mock_ship1.max_shields = 1000
-        mock_ship1.current_shields = 1000
-
-        mock_ship2 = MagicMock()
-        mock_ship2.max_shields = 500
-        mock_ship2.current_shields = 500
-
-        # PROJ-210: to_battle_ships accessed via fleet.battle property
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.battle = MagicMock()
-        fleet1.battle.to_battle_ships.return_value = [mock_ship1]
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.battle = MagicMock()
-        fleet2.battle.to_battle_ships.return_value = [mock_ship2]
-
-        # No storm - neutral effects
         effects = EnvironmentalEffects()
 
-        with patch('game.strategy.adapters.simulation_adapter.BattleController') as mock_controller_cls:
-            mock_controller = MagicMock()
-            mock_controller_cls.return_value = mock_controller
+        seen = {}
 
-            mock_results = MagicMock()
-            mock_results.winner = 0
-            mock_results.tick_count = 100
-            mock_results.surviving_ships = []
-            mock_controller.run_headless.return_value = mock_results
+        def _fake_run_battle(spec, **_):
+            seen["stack"] = spec.modifier_stack
+            return _make_outcome()
 
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=_fake_run_battle,
+        ):
             resolver.resolve_battle(fleet1, fleet2, environmental_effects=effects)
 
-            # Shield values unchanged (mult is 1.0)
-            assert mock_ship1.max_shields == 1000
-            assert mock_ship2.max_shields == 500
+        assert not any(
+            e.source == "environment:storm_shield_interference"
+            for e in seen["stack"].global_
+        )
 
-    def test_resolve_battle_none_effects_no_interference(self):
-        """resolve_battle with None effects does not modify shields."""
+    def test_resolve_battle_none_effects_emits_no_storm_modifier(self):
+        """None effects → no storm ModifierEntry emitted."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
 
-        mock_ship1 = MagicMock()
-        mock_ship1.max_shields = 1000
-        mock_ship1.current_shields = 1000
+        seen = {}
 
-        mock_ship2 = MagicMock()
-        mock_ship2.max_shields = 500
-        mock_ship2.current_shields = 500
+        def _fake_run_battle(spec, **_):
+            seen["stack"] = spec.modifier_stack
+            return _make_outcome()
 
-        # PROJ-210: to_battle_ships accessed via fleet.battle property
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.battle = MagicMock()
-        fleet1.battle.to_battle_ships.return_value = [mock_ship1]
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.battle = MagicMock()
-        fleet2.battle.to_battle_ships.return_value = [mock_ship2]
-
-        with patch('game.strategy.adapters.simulation_adapter.BattleController') as mock_controller_cls:
-            mock_controller = MagicMock()
-            mock_controller_cls.return_value = mock_controller
-
-            mock_results = MagicMock()
-            mock_results.winner = 0
-            mock_results.tick_count = 100
-            mock_results.surviving_ships = []
-            mock_controller.run_headless.return_value = mock_results
-
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=_fake_run_battle,
+        ):
             resolver.resolve_battle(fleet1, fleet2, environmental_effects=None)
 
-            # Shield values unchanged
-            assert mock_ship1.max_shields == 1000
-            assert mock_ship2.max_shields == 500
+        assert not any(
+            e.source.startswith("environment:") for e in seen["stack"].global_
+        )
 
 
 class TestBattleResolverInterfaceUpdate:
     """Tests that IBattleResolver interface supports environmental_effects."""
 
     def test_ibattle_resolver_accepts_environmental_effects(self):
-        """IBattleResolver.resolve_battle accepts environmental_effects parameter."""
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
@@ -187,11 +168,9 @@ class TestBattleResolverInterfaceUpdate:
 
         resolver = TestResolver()
         effects = EnvironmentalEffects(shield_capacity_mult=0.5)
-
-        # Should work without error
         result = resolver.resolve_battle(MagicMock(), MagicMock(), environmental_effects=effects)
         assert result is not None
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

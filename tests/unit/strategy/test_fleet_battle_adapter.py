@@ -174,66 +174,9 @@ class TestFleetBattleAdapter:
             call_kwargs = mock_to_ship.call_args[1]
             assert call_kwargs.get('registries') is mock_registries
 
-    def test_update_from_battle_results_survivors(self, fresh_registries):
-        """Survivors are kept and updated."""
-        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
-        fleet = Fleet(1, 0, HexCoord(0, 0))
-        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
-        ship1 = make_ship_instance(name="Survivor", design_data={}, registries=fresh_registries)
-        ship2 = make_ship_instance(name="Destroyed", design_data={}, registries=fresh_registries)
-        fleet.add_ship(ship1)
-        fleet.add_ship(ship2)
-        adapter = FleetBattleAdapter(fleet)
-
-        # Only ship1 survives — PROJ-254: match by instance_id
-        survivor_sim = MagicMock()
-        survivor_sim.name = "Survivor"
-        survivor_sim.instance_id = ship1.instance_id
-
-        with patch.object(ship1, 'update_from_ship') as mock_update:
-            adapter.update_from_battle_results([survivor_sim])
-
-            # Ship1 should be updated
-            mock_update.assert_called_once_with(survivor_sim)
-
-            # Only survivor remains
-            assert len(fleet.ships) == 1
-            assert fleet.ships[0].name == "Survivor"
-
-    def test_update_from_battle_results_all_destroyed(self, fresh_registries):
-        """All ships destroyed leaves empty fleet."""
-        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
-        fleet = Fleet(1, 0, HexCoord(0, 0))
-        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
-        ship = make_ship_instance(name="Victim", design_data={}, registries=fresh_registries)
-        fleet.add_ship(ship)
-        adapter = FleetBattleAdapter(fleet)
-
-        adapter.update_from_battle_results([])
-
-        assert len(fleet.ships) == 0
-
-    def test_update_from_battle_results_triggers_speed_recalc(self, fresh_registries):
-        """Speed is recalculated after battle."""
-        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
-        fleet = Fleet(1, 0, HexCoord(0, 0))
-        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
-        ship = make_ship_instance(name="Ship", design_data={}, registries=fresh_registries)
-        fleet.add_ship(ship)
-        adapter = FleetBattleAdapter(fleet)
-
-        with patch.object(fleet, 'trigger_speed_recalculation') as mock_recalc:
-            adapter.update_from_battle_results([])
-            mock_recalc.assert_called_once()
+    # PROJ-269 Phase 6 Task 6.6: tests for `update_from_battle_results`
+    # were deleted alongside the method. Equivalent coverage lives in
+    # `tests/unit/strategy/combat/test_post_battle_hook.py`.
 
 
 class TestFleetBattleAdapterDelegation:
@@ -248,17 +191,3 @@ class TestFleetBattleAdapterDelegation:
         # Empty fleet should work - use fleet.battle.to_battle_ships (PROJ-210)
         result = fleet.battle.to_battle_ships(team_id=0)
         assert result == []
-
-    def test_fleet_update_from_battle_results_delegates(self, fresh_registries):
-        """Fleet.battle.update_from_battle_results delegates to adapter."""
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
-        fleet = Fleet(1, 0, HexCoord(0, 0))
-        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
-        ship = make_ship_instance(name="Ship", design_data={}, registries=fresh_registries)
-        fleet.add_ship(ship)
-
-        # Simulate battle with no survivors - use fleet.battle.* (PROJ-210)
-        fleet.battle.update_from_battle_results([])
-        assert len(fleet.ships) == 0

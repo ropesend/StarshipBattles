@@ -1022,6 +1022,16 @@ class FleetBattleSetupScreen:
     def _start_battle(self, headless: bool = False):
         registries = _get_registries()
 
+        # PROJ-269 Phase 6 Task 6.4: sync `_complex_toggles` dict onto
+        # `BattleSetupSide.system_complexes` / `sector_complexes` so the
+        # Battle Setup spec compiler (`build_manual_battle_spec`) can
+        # translate toggled complexes into `ModifierStack` entries. Per
+        # Phase 5.5 placeholder semantics the engine currently records
+        # but does not evaluate these effects — real content mapping is
+        # post-PROJ-269 work. This replaces the deleted ship-mutation
+        # side channel (`_apply_complex_modifiers`).
+        self._sync_complex_toggles_to_state()
+
         team0_ships = []
         team1_ships = []
 
@@ -1046,8 +1056,6 @@ class FleetBattleSetupScreen:
             ships = fleet.battle.to_battle_ships(
                 team_id=0, formation_positions=positions, registries=registries
             )
-            # Apply complex modifiers to these ships
-            self._apply_complex_modifiers(ships, side_id=0)
             team0_ships.extend(ships)
 
         for fi, fleet in enumerate(self.state.side_1.fleets):
@@ -1067,7 +1075,6 @@ class FleetBattleSetupScreen:
             ships = fleet.battle.to_battle_ships(
                 team_id=1, formation_positions=positions, registries=registries
             )
-            self._apply_complex_modifiers(ships, side_id=1)
             team1_ships.extend(ships)
 
         if not team0_ships or not team1_ships:
@@ -1111,42 +1118,36 @@ class FleetBattleSetupScreen:
 
         return AnyCondition(conditions)
 
-    def _apply_complex_modifiers(self, ships, side_id: int):
-        """Apply toggled complex effects to ships."""
-        # Collect active modifiers for this side
-        shield_mult = 1.0
-        damage_mult = 1.0
-        shield_add = 0.0
+    def _sync_complex_toggles_to_state(self) -> None:
+        """Project `_complex_toggles` dict onto `BattleSetupSide.*_complexes`.
 
-        for scope in ("system", "sector"):
-            complexes = _SYSTEM_SCOPE_COMPLEXES if scope == "system" else _SECTOR_SCOPE_COMPLEXES
-            for design_id, display_name in complexes:
-                key = (side_id, scope, design_id)
-                if not self._complex_toggles.get(key, False):
-                    continue
+        PROJ-269 Phase 6 Task 6.4: the Battle Setup spec compiler
+        (`build_manual_battle_spec`) reads `side.system_complexes` /
+        `side.sector_complexes` (lists of `{design_id, display_name}` dicts)
+        and emits one `ModifierEntry` per toggled complex. We flatten the
+        UI's `{(side_id, scope, design_id): bool}` dict into those lists
+        each time a battle starts, so the compiler sees the latest
+        selection.
+        """
+        complexes_by_scope = {
+            "system": _SYSTEM_SCOPE_COMPLEXES,
+            "sector": _SECTOR_SCOPE_COMPLEXES,
+        }
 
-                # Apply based on design type
-                if "shield_booster" in design_id:
-                    shield_mult *= 1.25 if "system" in design_id else 1.50
-                elif "shield_suppressor" in design_id:
-                    shield_mult *= 0.75 if "system" in design_id else 0.50
-                elif "shield_projector" in design_id:
-                    shield_add += 50 if "system" in design_id else 100
-                elif "damage_booster" in design_id:
-                    damage_mult *= 1.25 if "system" in design_id else 1.50
-                elif "damage_suppressor" in design_id:
-                    damage_mult *= 0.75 if "system" in design_id else 0.50
+        def _collect(side_id: int, scope: str) -> list:
+            out = []
+            for design_id, display_name in complexes_by_scope[scope]:
+                if self._complex_toggles.get((side_id, scope, design_id), False):
+                    out.append({
+                        "design_id": design_id,
+                        "display_name": display_name,
+                    })
+            return out
 
-        # Apply to ships
-        for ship in ships:
-            if shield_mult != 1.0:
-                ship.max_shields = int(ship.max_shields * shield_mult)
-                ship.current_shields = min(ship.current_shields, ship.max_shields)
-            if shield_add > 0:
-                ship.max_shields += int(shield_add)
-                ship.current_shields += int(shield_add)
-            if damage_mult != 1.0:
-                ship.damage_output_mult = damage_mult
+        self.state.side_0.system_complexes = _collect(0, "system")
+        self.state.side_0.sector_complexes = _collect(0, "sector")
+        self.state.side_1.system_complexes = _collect(1, "system")
+        self.state.side_1.sector_complexes = _collect(1, "sector")
 
     # === Save/Load ===
 

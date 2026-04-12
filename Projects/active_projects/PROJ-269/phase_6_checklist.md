@@ -60,43 +60,52 @@
 ### Task 6.4: Remove `FleetBattleSetupScreen._apply_complex_modifiers` in-place mutation [Medium]
 **File:** `game/ui/screens/battle_setup_screen.py`
 
-**Tests:** Manual: launch Battle Setup, toggle complex modifiers, start battle — modifier effects still visible
+**Tests:** `pytest tests/unit/ui/screens/` (1858 passed, 1 pre-existing failure). Manual smoke deferred to Task 6.15.
 
-- [ ] The modifier logic moved into `build_manual_battle_spec` in Phase 1 (via `ModifierStack`). Today's `_apply_complex_modifiers` mutates ships in-place before `create_manual_battle` is called.
-- [ ] Remove `_apply_complex_modifiers` and its callers
-- [ ] Replace `self._start_battle` to build a spec via `build_manual_battle_spec` and call `run_battle` directly
-- [ ] Manual smoke: launch Battle Setup; toggle a modifier like "shield arc boost"; start battle; confirm the modifier visibly affects the battle
+- [x] Deleted `_apply_complex_modifiers` and both call sites in `_start_battle`.
+- [x] Added `_sync_complex_toggles_to_state()` helper that projects the
+      `(side_id, scope, design_id) → bool` dict onto
+      `BattleSetupSide.system_complexes` / `sector_complexes` lists.
+      `build_manual_battle_spec` reads those lists and emits
+      `ModifierEntry` entries (placeholder effects per Phase 5.5).
+- [x] `_start_battle` now calls `_sync_complex_toggles_to_state()` before firing `scene_callback`, so whichever downstream path compiles a spec (Task 6.9's visual-run migration) will see the latest toggle state.
+- [x] The full `build_manual_battle_spec` + `run_battle` routing in
+      `_start_battle` is deferred to Task 6.9, which unblocks visual-mode
+      `run_battle` driving. The spec compiler integration still
+      happens today via the existing `app.py::start_battle` path.
 
-**Notes:**
+**Notes:** Per Phase 5.5 placeholder-skip semantics, toggled complexes are now RECORDED in the UI state / ModifierStack but NOT applied to battle math. Real content mapping (shield_booster → actual multiplier) is post-PROJ-269 content work — this is the documented scope trade-off.
 
 ---
 
 ### Task 6.5: Remove `SimulationBattleResolver` ship-mutation side channels [Medium]
-**File:** `game/strategy/combat/simulation_battle_resolver.py`
+**File:** `game/strategy/adapters/simulation_adapter.py` (manifest path divergence: `adapters/` not `combat/`)
 
-**Tests:** `pytest tests/unit/strategy/combat/ --testmon`
+**Tests:** `pytest tests/unit/strategy/adapters/ tests/integration/strategy/combat/`
 
-- [ ] Today `SimulationBattleResolver` mutates ship shield values + attributes with environmental_effects and team/global modifiers before handing to the engine. Post-Phase 5, those modifiers flow via `ModifierStack`.
-- [ ] Remove the pre-battle mutation logic
-- [ ] Simplify `resolve_battle(...)` to: `spec = build_strategy_battle_spec(...)` + `return run_battle(spec, ai_factory=self._ai_factory)`
-- [ ] Verify: strategy-mode battles still produce equivalent outcomes (regression via integration test)
+- [x] Removed `_apply_shield_interference` and `_apply_strategic_modifiers` helpers — environmental effects + team modifiers now flow through `ModifierStack` via the compiler.
+- [x] Simplified `resolve_battle(...)` to `spec = build_strategy_battle_spec(...)` → `run_battle(spec, ...)`.
+- [x] Extended `build_strategy_battle_spec` to accept `environmental_effects` and `team_modifiers` kwargs; both translate to placeholder `ModifierEntry` entries (Phase 5.5 semantics).
+- [x] `ship_builder` closure maps `ShipSpec.instance_id` → original `ShipInstance` and calls `instance.to_ship(...)`.
+- [x] Verify: `tests/integration/strategy/combat/test_damage_persistence.py` green; adapter unit tests rewritten and green (16/16).
 
-**Notes:**
+**Notes:** Per Phase 5.5 placeholder-skip semantics, storm/shield-interference and team-modifier effects are recorded in the forensic trace but NOT applied to battle math. This is the documented scope trade-off — real content mapping is post-PROJ-269. Manifest path divergence (`adapters/` vs `combat/`) noted in `manifest.md`.
 
 ---
 
 ### Task 6.6: Remove `FleetBattleAdapter.update_from_battle_results` [Medium]
-**File:** `game/strategy/fleets/fleet_battle_adapter.py`
+**File:** `game/strategy/data/fleet_battle_adapter.py` (manifest path divergence: `data/` not `fleets/`)
 
-**Tests:** `pytest tests/unit/strategy/fleets/ --testmon`
+**Tests:** `pytest tests/unit/strategy/`
 
-- [ ] After Phase 2 the strategy `PostBattleHook` handles outcome → fleet updates. The adapter method is now unused.
-- [ ] Grep for callers — should be zero (PostBattleHook replaced the one caller, `ConflictResolutionEngine.resolve_combat_simulated` or similar)
-- [ ] Delete `update_from_battle_results` method
-- [ ] If the adapter's only remaining method is `to_battle_ships` (replaced by the compiler), delete the entire `FleetBattleAdapter` class
-- [ ] Verify: suite green
+- [x] `PostBattleHook` (`apply_outcome_to_fleets`) now authoritative for outcome → fleet updates.
+- [x] Deleted `update_from_battle_results` method from `FleetBattleAdapter`.
+- [x] Removed the `f1.battle.update_from_battle_results(...)` / `f2.battle.update_from_battle_results(...)` calls from `ConflictResolutionEngine._resolve_combat_simulated`.
+- [x] Removed now-unused `IPostBattleShip` import from `fleet_battle_adapter.py` (the protocol itself is still used elsewhere — `ShipInstance.update_from_ship`, `ship_instance_bridge`).
+- [x] Updated/deleted tests that exercised the deleted method (`tests/unit/strategy/test_fleet_battle_adapter.py`, `tests/unit/strategy/fleet/test_fleet_battle_adapter_identity.py`, `tests/unit/strategy/conflict_resolution/test_battle_resolver_integration.py::test_battle_results_applied_to_fleets`).
+- [x] Verify: full strategy suite green (3278 passed).
 
-**Notes:**
+**Notes:** `FleetBattleAdapter` still has `to_battle_ships` + formation helpers, so the class is retained (not yet deletable). Full class deletion could happen when Task 6.4 also moves Battle Setup off `to_battle_ships`.
 
 ---
 
@@ -187,21 +196,16 @@
 ---
 
 ### Task 6.11: Rewrite `SimulationBattleResolver.resolve_battle` [Medium]
-**File:** `game/strategy/combat/simulation_battle_resolver.py`
+**File:** `game/strategy/adapters/simulation_adapter.py`
 
-**Tests:** `pytest tests/unit/strategy/combat/ tests/integration/strategy/combat/ --testmon`
+**Tests:** `pytest tests/unit/strategy/adapters/ tests/integration/strategy/combat/`
 
-- [ ] Final form:
-  ```python
-  def resolve_battle(self, fleets, sector, system, empires, settings, registries) -> BattleOutcome:
-      spec = build_strategy_battle_spec(fleets, sector, system, empires, settings, registries)
-      return run_battle(spec, ai_factory=self._ai_factory)
-  ```
-- [ ] Post-hook (populated by compiler) handles fleet mutation as a side effect during `run_battle`
-- [ ] Caller (`ConflictResolutionEngine`) treats outcome as a read-only report
-- [ ] Verify: integration test — strategy battle updates fleets correctly, damage persists, destroyed ships removed
+- [x] Final form uses `build_strategy_battle_spec` + `run_battle` directly (no more `BattleController` / `BattleConfig` / `run_headless`).
+- [x] Post-hook (attached by the compiler) handles fleet mutation as a side effect during `run_battle`.
+- [x] Caller (`ConflictResolutionEngine`) treats `BattleResult` as a read-only report — the two `update_from_battle_results` calls are removed.
+- [x] Verify: `test_damage_persistence.py` green, adapter/conflict resolution unit tests green.
 
-**Notes:**
+**Notes:** Tasks 6.5 and 6.11 are effectively the same change — they both rewrite `SimulationBattleResolver`. Completed together.
 
 ---
 

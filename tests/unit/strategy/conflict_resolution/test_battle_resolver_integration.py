@@ -85,21 +85,24 @@ class TestBattleResolverIntegration:
 
         assert winner == fleet1
 
-    def test_battle_results_applied_to_fleets(self):
-        """Battle results should be applied to fleet ship states."""
+    def test_battle_results_not_applied_via_adapter(self):
+        """PROJ-269 Phase 6: ConflictResolutionEngine no longer calls
+        `fleet.battle.update_from_battle_results` — fleet updates flow
+        via the compiler-attached `PostBattleHook` inside `run_battle`.
+
+        This test confirms the caller treats the BattleResult as a
+        read-only report and does NOT invoke any adapter-level update.
+        """
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
-
-        survivor0 = MagicMock()
-        survivor1 = MagicMock()
 
         class ResultResolver(IBattleResolver):
             def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 return BattleResult(
                     winner=0,
                     tick_count=100,
-                    team0_survivors=[survivor0],
-                    team1_survivors=[survivor1]
+                    team0_survivors=[MagicMock()],
+                    team1_survivors=[MagicMock()],
                 )
 
         engine = ConflictResolutionEngine(battle_resolver=ResultResolver())
@@ -107,20 +110,18 @@ class TestBattleResolverIntegration:
         fleet1 = MagicMock()
         fleet1.id = 1
         fleet1.has_ship_instances.return_value = True
-        fleet1.battle = MagicMock()
-        fleet1.battle.update_from_battle_results = MagicMock()
+        fleet1.battle = MagicMock(spec=[])  # Adapter exposes NO update method
 
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.has_ship_instances.return_value = True
-        fleet2.battle = MagicMock()
-        fleet2.battle.update_from_battle_results = MagicMock()
+        fleet2.battle = MagicMock(spec=[])
 
-        engine._resolve_combat_simulated(fleet1, fleet2)
-
-        # Verify fleet.battle.update_from_battle_results was called with survivors (PROJ-210)
-        fleet1.battle.update_from_battle_results.assert_called_once_with([survivor0])
-        fleet2.battle.update_from_battle_results.assert_called_once_with([survivor1])
+        # Would raise AttributeError if the engine tried to call
+        # fleet.battle.update_from_battle_results — so the fact that
+        # this completes confirms the call path is gone.
+        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+        assert winner is fleet1
 
     def test_draw_returns_fleet_with_more_survivors(self):
         """Draw (winner=None) returns fleet with more survivors."""

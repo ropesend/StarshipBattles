@@ -75,6 +75,8 @@ def build_strategy_battle_spec(
     seed: Optional[int] = None,
     end_condition: Optional["IEndCondition"] = None,
     post_battle_hook: Optional[Any] = None,
+    environmental_effects: Any = None,
+    team_modifiers: Optional[Mapping[int, Any]] = None,
 ) -> BattleSpec:
     """Compile fleets-on-hex + environment into a `BattleSpec`.
 
@@ -97,6 +99,16 @@ def build_strategy_battle_spec(
             to supply a turn-derived seed in practice.
         end_condition: Optional custom end condition. Defaults to
             `TeamEliminatedCondition()` — matches today's strategy combat.
+        environmental_effects: Optional `EnvironmentalEffects` object
+            carrying per-battle environmental multipliers (e.g. storm
+            shield interference). Translated to global ModifierStack
+            entries. PROJ-269 Phase 5.5 semantics apply — placeholder
+            effects are emitted for the engine's forensic trace; real
+            effect evaluation is post-PROJ-269 content work.
+        team_modifiers: Optional mapping `{team_id: FleetCombatModifiers}`
+            carrying per-team strategic modifiers (shield/damage
+            multipliers, flat shield bonus). Translated to per-team
+            ModifierStack entries with placeholder effects.
 
     Returns:
         Populated `BattleSpec`. The caller (`SimulationBattleResolver`
@@ -113,7 +125,12 @@ def build_strategy_battle_spec(
         teams.append(_team_spec_for_fleet(fleet, team_id=team_id))
 
     modifier_stack = _build_modifier_stack(
-        sector=sector, system=system, empires=empires, team_count=len(teams)
+        sector=sector,
+        system=system,
+        empires=empires,
+        team_count=len(teams),
+        environmental_effects=environmental_effects,
+        team_modifiers=team_modifiers,
     )
 
     boundary = None
@@ -296,6 +313,8 @@ def _build_modifier_stack(
     system: Any,
     empires: Mapping[Any, Any],
     team_count: int,
+    environmental_effects: Any = None,
+    team_modifiers: Optional[Mapping[int, Any]] = None,
 ) -> ModifierStack:
     global_entries: List[ModifierEntry] = []
     if system is not None:
@@ -306,23 +325,115 @@ def _build_modifier_stack(
         global_entries.extend(
             _entries_from_modifier_source(sector, source_prefix="sector")
         )
+    if environmental_effects is not None:
+        global_entries.extend(
+            _entries_from_environmental_effects(environmental_effects)
+        )
 
     per_team: Dict[int, Tuple[ModifierEntry, ...]] = {}
     # Empire modifiers — empires is keyed by team_id (or empire id).
     # Phase 1 matches them positionally.
     for team_id in range(team_count):
         empire = empires.get(team_id)
-        if empire is None:
-            continue
-        empire_entries = list(
-            _entries_from_modifier_source(
-                empire, source_prefix="empire", attr_name="combat_modifiers"
+        entries: List[ModifierEntry] = []
+        if empire is not None:
+            entries.extend(
+                _entries_from_modifier_source(
+                    empire, source_prefix="empire", attr_name="combat_modifiers"
+                )
             )
-        )
-        if empire_entries:
-            per_team[team_id] = tuple(empire_entries)
+        if team_modifiers is not None and team_id in team_modifiers:
+            entries.extend(
+                _entries_from_fleet_combat_modifiers(
+                    team_modifiers[team_id], team_id=team_id
+                )
+            )
+        if entries:
+            per_team[team_id] = tuple(entries)
 
     return ModifierStack(per_team=per_team, global_=tuple(global_entries))
+
+
+def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
+    """Translate an `EnvironmentalEffects` value into placeholder entries.
+
+    PROJ-269 Phase 5.5 semantics: each relevant multiplier / bonus is
+    recorded as a `ModifierEntry` with `stat_key="placeholder"` so the
+    engine silently skips real-effect application. The entries still
+    appear in `HitRecord.modifiers_applied` for forensic traces — real
+    content mapping (`shield_capacity_mult` → effective stat) is
+    post-PROJ-269 work.
+    """
+    entries: List[ModifierEntry] = []
+    shield_mult = getattr(effects, "shield_capacity_mult", 1.0)
+    if shield_mult is not None and shield_mult != 1.0:
+        entries.append(
+            _placeholder_entry(
+                source="environment:storm_shield_interference",
+                display_name=f"Storm Shield x{shield_mult:.2f}",
+                design_id="storm_shield_interference",
+            )
+        )
+    return entries
+
+
+def _entries_from_fleet_combat_modifiers(
+    modifiers: Any, *, team_id: int
+) -> List[ModifierEntry]:
+    """Translate a `FleetCombatModifiers` value into placeholder entries.
+
+    Emits one entry per non-default field (shield_mult, damage_mult,
+    flat_shield_bonus). Each carries the team_id and a named source so
+    forensic traces can distinguish team-0 vs team-1 modifiers.
+    """
+    entries: List[ModifierEntry] = []
+    shield_mult = getattr(modifiers, "shield_mult", 1.0)
+    damage_mult = getattr(modifiers, "damage_mult", 1.0)
+    flat_shield = getattr(modifiers, "flat_shield_bonus", 0.0)
+    if shield_mult != 1.0:
+        entries.append(
+            _placeholder_entry(
+                source=f"team{team_id}:shield_mult",
+                display_name=f"Shield x{shield_mult:.2f}",
+                design_id="team_shield_mult",
+            )
+        )
+    if damage_mult != 1.0:
+        entries.append(
+            _placeholder_entry(
+                source=f"team{team_id}:damage_mult",
+                display_name=f"Damage x{damage_mult:.2f}",
+                design_id="team_damage_mult",
+            )
+        )
+    if flat_shield:
+        entries.append(
+            _placeholder_entry(
+                source=f"team{team_id}:flat_shield_bonus",
+                display_name=f"Shield +{flat_shield}",
+                design_id="team_flat_shield_bonus",
+            )
+        )
+    return entries
+
+
+def _placeholder_entry(*, source: str, display_name: str, design_id: str) -> ModifierEntry:
+    """Build a PROJ-269 Phase 5.5 placeholder `ModifierEntry`.
+
+    The engine filters these out of the effect application pipeline but
+    retains them in forensic traces (`HitRecord.modifiers_applied`).
+    """
+    effect = ModifierEffect(
+        stat_key="placeholder",
+        value=0.0,
+        operation="multiply",
+        target_ability=None,
+        source_modifier_id=design_id,
+        source_modifier_name=display_name,
+        formula_str="",
+        param_value=0.0,
+    )
+    return ModifierEntry(source=source, stack_group=None, effect=effect)
 
 
 def _entries_from_modifier_source(

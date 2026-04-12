@@ -4,12 +4,14 @@ PROJ-87 Phase 4: Bridges strategy layer Fleet with simulation layer Ship
 for battle conversion.
 
 PROJ-90 Phase 4: Uses IPostBattleShip protocol for strategy-simulation boundary.
+
+PROJ-269 Phase 6 Task 6.6: `update_from_battle_results` deleted — fleet
+updates now flow via `game.strategy.combat.post_battle_hook.apply_outcome_to_fleets`
+invoked by `run_battle` as part of the compiler-attached PostBattleHook.
 """
 
 import logging
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
-
-from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -185,28 +187,7 @@ class FleetBattleAdapter:
 
         return positions
 
-    def update_from_battle_results(
-        self,
-        surviving_ships: List[IPostBattleShip],
-    ) -> None:
-        """
-        Update fleet ships from battle results.
-
-        Args:
-            surviving_ships: Ships that survived the battle (IPostBattleShip protocol)
-        """
-        # PROJ-254: Match by instance_id (unique), not name (may have duplicates)
-        survivors_by_id = {s.instance_id: s for s in surviving_ships if s.instance_id}
-
-        # Update each ShipInstance - ships not in survivors were destroyed
-        new_ships = []
-        for s in self._fleet.ships:
-            if s.instance_id in survivors_by_id:
-                s.update_from_ship(survivors_by_id[s.instance_id])
-                new_ships.append(s)
-            # else: ship was destroyed, don't include
-
-        self._fleet.ships = new_ships
-
-        # Recalculate speed (ships may have been destroyed or damaged)
-        self._fleet.trigger_speed_recalculation()
+    # PROJ-269 Phase 6 Task 6.6: `update_from_battle_results` removed.
+    # Fleet updates now flow via `game.strategy.combat.post_battle_hook.
+    # apply_outcome_to_fleets`, invoked by `run_battle` through the
+    # `PostBattleHook` that `build_strategy_battle_spec` attaches.
