@@ -157,12 +157,21 @@ class TestFreezeFunctionality:
 
         assert registry._frozen is True
 
-    def test_set_validator_raises_when_frozen(self, registry):
-        """set_validator() should raise FrozenStateException when frozen."""
-        registry.freeze()
+    def test_set_validator_allowed_when_frozen(self, registry):
+        """set_validator() caches a derived helper, not source data.
 
-        with pytest.raises(FrozenStateException, match="frozen"):
-            registry.set_validator(MagicMock())
+        The freeze contract protects source-of-truth registries (components,
+        modifiers, vehicle_classes, resources) from accidental mutation.
+        The validator is a lazily-initialized cache of a DesignValidator
+        that is reconstructible from those registries at any time, so it
+        sits outside the freeze boundary.
+        """
+        registry.freeze()
+        validator = MagicMock()
+
+        registry.set_validator(validator)  # must not raise
+
+        assert registry.get_validator() is validator
 
     def test_freeze_allows_reads(self, registry):
         """Frozen registry should still allow reads."""

@@ -209,6 +209,7 @@ class TestFuelScenarioResults:
         ship.is_alive = True
         ship.engine_throttle = 1.0
         ship.layers = {}
+        ship.total_shots_fired = 0
         ship.mass = 400.0
         ship.hp = 100
         ship.max_hp = 100
@@ -219,6 +220,7 @@ class TestFuelScenarioResults:
         """Create mock battle engine."""
         engine = Mock()
         engine.tick_counter = 500
+        engine.projectiles = []
         return engine
 
     def test_fuel_consumption_stores_initial_value(self, mock_ship, mock_battle_engine):
@@ -278,6 +280,7 @@ class TestEnergyScenarioResults:
         target.hp = 100
         target.max_hp = 200
         target.layers = {}
+        target.total_shots_fired = 0
         target.mass = 400.0
         return target
 
@@ -291,6 +294,7 @@ class TestEnergyScenarioResults:
         ship.angle = 0
         ship.is_alive = True
         ship.layers = {}
+        ship.total_shots_fired = 0
         ship.mass = 400.0
         ship.hp = 100
         ship.max_hp = 100
@@ -301,6 +305,7 @@ class TestEnergyScenarioResults:
         """Create mock battle engine."""
         engine = Mock()
         engine.tick_counter = 100
+        engine.projectiles = []
         return engine
 
     def test_energy_consumption_stores_shots_fired(self, mock_ship, mock_target, mock_battle_engine):
@@ -359,6 +364,7 @@ class TestAmmoScenarioResults:
         target.hp = 100
         target.max_hp = 200
         target.layers = {}
+        target.total_shots_fired = 0
         target.mass = 400.0
         return target
 
@@ -372,6 +378,7 @@ class TestAmmoScenarioResults:
         ship.angle = 0
         ship.is_alive = True
         ship.layers = {}
+        ship.total_shots_fired = 0
         ship.mass = 400.0
         ship.hp = 100
         ship.max_hp = 100
@@ -382,6 +389,7 @@ class TestAmmoScenarioResults:
         """Create mock battle engine."""
         engine = Mock()
         engine.tick_counter = 100
+        engine.projectiles = []
         return engine
 
     def test_projectile_consumption_stores_initial_value(self, mock_ship, mock_target, mock_battle_engine):

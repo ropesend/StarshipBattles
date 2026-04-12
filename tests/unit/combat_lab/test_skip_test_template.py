@@ -1,12 +1,13 @@
 """
 Regression test for skip_test support in StaticTargetScenario template.
 
-Verifies that scenarios with skip_test=True don't crash during setup() or update()
-when ship files don't exist and self.attacker is never initialized.
+Verifies that scenarios with skip_test=True don't crash during setup() or
+update() when ship files don't exist and self.attacker is never
+initialized, and that TestRunner records the skip in the results dict.
 """
-import pytest
 from unittest.mock import Mock
 
+from combat_lab.runner import TestRunner
 from combat_lab.scenarios.templates import StaticTargetScenario
 from combat_lab.scenarios.base import TestMetadata
 
@@ -56,12 +57,11 @@ class TestSkipTestTemplate:
         # This was the original crash: update() accessing self.attacker on a skipped scenario
         scenario.update(engine)
 
-    def test_verify_marks_as_skipped(self):
-        """verify() should mark results as skipped."""
-        scenario = SkippedPlaceholderScenario()
-        engine = Mock()
-        scenario.setup(engine)
-        result = scenario.verify(engine)
-        assert result is False
-        assert scenario.results['skipped'] is True
-        assert scenario.results['skip_reason'] == "Placeholder - not yet implemented"
+    def test_runner_records_skip_in_results(self):
+        """TestRunner.run_scenario marks a skipped scenario without running it."""
+        runner = TestRunner()
+        result = runner.run_scenario(SkippedPlaceholderScenario, headless=True, log_results=False)
+
+        assert result.passed is False
+        assert result.results['skipped'] is True
+        assert result.results['skip_reason'] == "Placeholder - not yet implemented"

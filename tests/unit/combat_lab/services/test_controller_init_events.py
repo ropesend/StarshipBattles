@@ -4,8 +4,7 @@ Unit tests for TestLabUIController - initialization and event handling.
 PROJ-48: Split from test_test_lab_controller.py
 """
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from combat_lab.services.test_lab_controller import TestLabUIController
 
 
@@ -22,7 +21,6 @@ class TestTestLabUIControllerInit:
         assert controller.test_execution is not None
         assert controller.ui_state is not None
         assert controller.test_results is not None
-        assert controller.metadata_mgmt is not None
         assert controller.output_log == []
 
     def test_init_loads_scenarios(self, mock_game, mock_test_registry, mock_test_history):
@@ -30,23 +28,6 @@ class TestTestLabUIControllerInit:
         controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
 
         mock_test_registry.get_all_scenarios.assert_called_once()
-
-    @patch('combat_lab.services.test_lab_controller.MetadataManagementService')
-    def test_init_runs_static_validation(
-        self,
-        mock_metadata_service,
-        mock_game,
-        mock_test_registry,
-        mock_test_history
-    ):
-        """Test that static validation runs on init."""
-        mock_metadata_instance = Mock()
-        mock_metadata_service.return_value = mock_metadata_instance
-        mock_metadata_instance.validate_all_scenarios = Mock(return_value={})
-
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-
-        mock_metadata_instance.validate_all_scenarios.assert_called_once()
 
 
 class TestHistoryLoadedOnInit:

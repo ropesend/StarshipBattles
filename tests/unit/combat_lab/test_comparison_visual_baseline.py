@@ -31,7 +31,6 @@ class _DummyComparisonScenario(ComparisonScenario):
         pass_criteria="No AttributeError",
         max_ticks=10,
         seed=42,
-        battle_end_mode="time_based",
         tags=["test"],
     )
 

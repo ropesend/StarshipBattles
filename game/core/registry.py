@@ -250,15 +250,20 @@ class RegistryManager:
 
     def set_validator(self, validator: Any) -> None:
         """
-        Set the ship design validator.
+        Cache the ship design validator on the registry.
+
+        The validator is a lazily-initialized helper derived from the
+        source registries (components, modifiers, vehicle_classes,
+        resources). It is reconstructible from those dicts at any time
+        and sits OUTSIDE the freeze boundary — the freeze contract
+        protects source-of-truth data from accidental mutation, not
+        derived caches. ``set_validator`` is therefore allowed on a
+        frozen registry so that ship loading and validator
+        initialization can proceed at any point in the lifecycle.
 
         Args:
             validator: ShipDesignValidator instance
-
-        Raises:
-            FrozenStateException: If the registry is frozen
         """
-        self._check_frozen()
         self._validator = validator
 
     def _check_frozen(self) -> None:

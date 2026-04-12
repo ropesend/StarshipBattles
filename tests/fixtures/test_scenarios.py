@@ -76,7 +76,6 @@ def create_test_metadata(
         pass_criteria=pass_criteria,
         max_ticks=max_ticks,
         seed=seed,
-        battle_end_mode=battle_end_mode,
         ui_priority=ui_priority,
         tags=tags or [],
     )

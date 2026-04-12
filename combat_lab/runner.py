@@ -89,68 +89,65 @@ class TestRunner:
             logger.info(f"Skipping scenario: {scenario.name} - {skip_reason}")
             return scenario
 
-        registry = get_default_registry_manager()
-        # Unfreeze registry for the duration of this scenario (reload, ship
-        # loading, any validator setup). Registry is re-frozen to its prior
-        # state on exit, including on exceptions.
-        with registry.unfrozen():
-            # 1. Load Data
-            self.load_data_for_scenario(scenario)
+        # 1. Load Data (manages its own unfrozen() scope for clear + hydrate)
+        self.load_data_for_scenario(scenario)
 
-            # 2. Setup Engine
-            from game.simulation.systems.battle_engine import BattleLogger
-            battle_logger = BattleLogger(enabled=True)
-            # PROJ-126: Create AI factory, then inject into engine (engine calls set_grid automatically)
-            ai_factory = AIControllerFactory()
-            self.engine = BattleEngine(logger=battle_logger, ai_factory=ai_factory)
+        # 2. Setup Engine
+        from game.simulation.systems.battle_engine import BattleLogger
+        battle_logger = BattleLogger(enabled=True)
+        # PROJ-126: Create AI factory, then inject into engine (engine calls set_grid automatically)
+        ai_factory = AIControllerFactory()
+        self.engine = BattleEngine(logger=battle_logger, ai_factory=ai_factory)
 
-            # 3. Scenario Setup
-            scenario.setup(self.engine)
+        # 3. Scenario Setup — ship loading and validator caching are
+        # safe on a frozen registry; only source-data mutations need
+        # the unfrozen() scope, and those live inside load_data_for_scenario.
+        scenario.setup(self.engine)
 
-            # 4. Loop
-            logger.info(f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})")
-            start_time = time.time()
+        # 4. Loop
+        logger.info(f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})")
+        start_time = time.time()
 
-            try:
-                for tick in range(scenario.max_ticks):
-                    # Update
-                    self.engine.update()
-                    scenario.update(self.engine)
+        try:
+            for tick in range(scenario.max_ticks):
+                # Update
+                self.engine.update()
+                scenario.update(self.engine)
 
-                    # Check for early exit?
-                    if self.engine.is_battle_over():
-                         logger.info(f"Battle ended at tick {tick}")
-                         break
+                # Check for early exit?
+                if self.engine.is_battle_over():
+                     logger.info(f"Battle ended at tick {tick}")
+                     break
 
-                    # Render if needed
-                    if render_callback:
-                        render_callback(self.engine)
+                # Render if needed
+                if render_callback:
+                    render_callback(self.engine)
 
-            except Exception as e:
-                logger.error(f"Scenario Crash: {e}", exc_info=True)
-                scenario.passed = False
-                scenario.results['error'] = str(e)
-                if log_results:
-                    self.log_test_execution(scenario, headless)
-                return scenario
-
-            end_time = time.time()
-            duration = end_time - start_time
-
-            # 5. Validate
-            report = scenario._run_validation(self.engine)
-            scenario.passed = report.passed
-            scenario.results['duration_real'] = duration
-            scenario.results['ticks'] = self.engine.tick_counter
-
-            status = "PASSED" if scenario.passed else "FAILED"
-            logger.info(f"Result: {status} in {duration:.2f}s")
-
-            # 6. Log results if enabled
+        except Exception as e:
+            logger.error(f"Scenario Crash: {e}", exc_info=True)
+            scenario.passed = False
+            scenario.results['error'] = str(e)
             if log_results:
                 self.log_test_execution(scenario, headless)
-
             return scenario
+
+        end_time = time.time()
+        duration = end_time - start_time
+
+        # 5. Validate
+        report = scenario._run_validation(self.engine)
+        scenario.passed = report.passed
+        scenario.results['duration_real'] = duration
+        scenario.results['ticks'] = self.engine.tick_counter
+
+        status = "PASSED" if scenario.passed else "FAILED"
+        logger.info(f"Result: {status} in {duration:.2f}s")
+
+        # 6. Log results if enabled
+        if log_results:
+            self.log_test_execution(scenario, headless)
+
+        return scenario
 
     def log_test_execution(self, scenario, headless):
         """

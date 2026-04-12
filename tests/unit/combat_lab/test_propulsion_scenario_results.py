@@ -30,7 +30,6 @@ class MockPropulsionScenario(PropulsionScenario):
         expected_outcome="Pass",
         pass_criteria="True",
         max_ticks=50,
-        battle_end_mode="time_based"
     )
 
     ship_file = "Test_Engine_1x_LowMass.json"
@@ -51,7 +50,6 @@ class MockTurnScenario(PropulsionScenario):
         expected_outcome="Pass",
         pass_criteria="True",
         max_ticks=50,
-        battle_end_mode="time_based"
     )
 
     ship_file = "Test_Thruster_Simple.json"
