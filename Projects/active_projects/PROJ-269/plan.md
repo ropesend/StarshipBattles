@@ -18,11 +18,12 @@
 | 3. Boundary + N-team engine support | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Formation system | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Telemetry levels | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5.5. ModifierStack engine application | Complete | [phase_5_5_checklist.md](phase_5_5_checklist.md) |
 | 6. Delete legacy paths | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-12
-**Active Phase:** Phase 5 Complete — Phase 6 Task 6.1 next (final legacy-deletion phase)
+**Active Phase:** Phase 5.5 Complete — Phase 6 Task 6.1 next (final legacy-deletion phase)
 **Last Action:** Phase 1 complete. All 11 tasks checked off. `validate_phase.py PROJ-269 1` PASSED.
 
 **Phase 1 deliverables shipped:**
@@ -47,10 +48,21 @@
 - Migrate all remaining callers off the legacy path onto `run_battle`
 - Remove the `SB_USE_BATTLE_RUNNER` flag (Combat Lab becomes unified-only)
 - Delete the `_is_started` hack from `combat_lab/services/test_execution_service.py`
-- Delete `SimulationBattleResolver` ship-mutation side channels
-- Audit `no occurrences of BattleMode / BattleModeHandler / create_*_battle` anywhere in the codebase
+- Delete `SimulationBattleResolver` ship-mutation side channels (Phase 5.5 plumbing replaces them)
+- Audit: no occurrences of `BattleMode` / `BattleModeHandler` / `create_*_battle` anywhere in the codebase
 
 **Blockers:** None
+
+**Phase 5.5 deliverables shipped:**
+- `BattleEngine.modifier_stack` field + `run_battle` threads `spec.modifier_stack` into the engine
+- `FleetAuraManager.initialize(ships, config=None, *, modifier_stack=None)` translates ModifierStack entries into its existing ExternalModifier pipeline
+- Placeholder effects (`stat_key == "placeholder"`) are silently skipped; real effects apply via the existing aura pipeline
+- `HitLogRecorder.modifiers_applied` populated at DETAILED telemetry with active-at-hit-time set (globals + attacker-team entries, placeholders filtered)
+- Telemetry-overhead smoke test thresholds loosened (3x / 10x) to be robust to full-suite load variance
+- `decisions.md` updated with 3 new entries (Phase 5.5 insertion rationale, placeholder-skip semantics, modifiers_applied MVP semantics)
+- `docs/systems/combat_simulation.md` §0 updated — all four Phase-1 hooks are now fully wired
+
+**Baselines going into Phase 6:** pytest **14709 passed** (up from post-Phase-5 14695; +14 new Phase-5.5 tests + threshold-fixed smoke). combat_lab fast **162 passed** (maintained).
 
 **Phase 5 deliverables shipped:**
 - `WeaponSummaryAggregator` — snapshot-based per-weapon stats from existing `Component.shots_fired`/`shots_hit` counters
