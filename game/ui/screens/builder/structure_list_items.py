@@ -208,10 +208,13 @@ class IndividualComponentItem:
         if not modified_ids:
             return
 
-        # Start position: Right of name label
-        start_x = self.ctx.config.LABEL_OFFSET_X + self.ctx.config.NAME_WIDTH + 5
         icon_size = self.ctx.config.MODIFIER_ICON_SIZE
         icon_y = (self.height - icon_size) // 2
+
+        # Anchor from the right side, starting left of the mass label (-220)
+        total_width = len(modified_ids) * (icon_size + self.ctx.config.MODIFIER_ICON_SPACING)
+        start_x_from_right = -220 - total_width
+        current_x = start_x_from_right
 
         for mod_id, mod_name, mod_value in modified_ids:
             surf = self.ctx.modifier_icon_service.get_icon(mod_id)
@@ -219,14 +222,15 @@ class IndividualComponentItem:
                 # Format value for tooltip
                 val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
                 icon_image = UIImage(
-                    relative_rect=pygame.Rect(start_x, icon_y, icon_size, icon_size),
+                    relative_rect=pygame.Rect(current_x, icon_y, icon_size, icon_size),
                     image_surface=surf,
                     manager=self.ctx.manager,
                     container=self.panel,
-                    tool_tip_text=f"{mod_name}: {val_str}"
+                    tool_tip_text=f"{mod_name}: {val_str}",
+                    anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
                 )
                 self.modifier_icons.append(icon_image)
-                start_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
+                current_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
 
     def _create_tree_line(self, is_last, config):
         surf = pygame.Surface((20, self.height), pygame.SRCALPHA)
@@ -482,10 +486,13 @@ class LayerComponentItem:
         if not modified_ids:
             return
 
-        # Start position: Right of name label
-        start_x = self.ctx.config.LAYER_NAME_OFFSET_X + self.ctx.config.NAME_WIDTH + 5
         icon_size = self.ctx.config.MODIFIER_ICON_SIZE
         icon_y = (self.height - icon_size) // 2
+
+        # Anchor from the right side, starting left of the mass label (-220)
+        total_width = len(modified_ids) * (icon_size + self.ctx.config.MODIFIER_ICON_SPACING)
+        start_x_from_right = -220 - total_width
+        current_x = start_x_from_right
 
         for mod_id, mod_name, mod_value in modified_ids:
             surf = self.ctx.modifier_icon_service.get_icon(mod_id)
@@ -493,14 +500,15 @@ class LayerComponentItem:
                 # Format value for tooltip
                 val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
                 icon_image = UIImage(
-                    relative_rect=pygame.Rect(start_x, icon_y, icon_size, icon_size),
+                    relative_rect=pygame.Rect(current_x, icon_y, icon_size, icon_size),
                     image_surface=surf,
                     manager=self.ctx.manager,
                     container=self.panel,
-                    tool_tip_text=f"{mod_name}: {val_str}"
+                    tool_tip_text=f"{mod_name}: {val_str}",
+                    anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
                 )
                 self.modifier_icons.append(icon_image)
-                start_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
+                current_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
