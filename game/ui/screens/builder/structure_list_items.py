@@ -39,8 +39,11 @@ class IndividualComponentItem:
         self.is_selected = is_selected
         self.is_last = is_last
         self.config = ctx.config
+        self.ctx = ctx
         self.height = ctx.config.ROW_HEIGHT
         self.rect = pygame.Rect(0, y_pos, ctx.width, self.height)
+
+        self.modifier_icons = []
 
         self.panel = UIPanel(
             relative_rect=self.rect,
@@ -88,6 +91,8 @@ class IndividualComponentItem:
             container=self.panel,
             object_id='#left_aligned_label'
         )
+
+        self._rebuild_modifier_icons()
 
 
         # Mass (positioned left of button zone)
@@ -182,6 +187,47 @@ class IndividualComponentItem:
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         self.pct_label.set_text(f"{pct_val:.1f}%")
 
+        self._rebuild_modifier_icons()
+
+    def _rebuild_modifier_icons(self):
+        """Build modifier icons for non-default values."""
+        # Clear existing
+        for icon in self.modifier_icons:
+            icon.kill()
+        self.modifier_icons = []
+
+        if not self.ctx.modifier_icon_service:
+            return
+
+        component = self.component
+        modified_ids = []
+        for mod in component.modifiers:
+            if mod.value != mod.definition.default_val:
+                modified_ids.append((mod.definition.id, mod.definition.name, mod.value))
+
+        if not modified_ids:
+            return
+
+        # Start position: Right of name label
+        start_x = self.ctx.config.LABEL_OFFSET_X + self.ctx.config.NAME_WIDTH + 5
+        icon_size = self.ctx.config.MODIFIER_ICON_SIZE
+        icon_y = (self.height - icon_size) // 2
+
+        for mod_id, mod_name, mod_value in modified_ids:
+            surf = self.ctx.modifier_icon_service.get_icon(mod_id)
+            if surf:
+                # Format value for tooltip
+                val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
+                icon_image = UIImage(
+                    relative_rect=pygame.Rect(start_x, icon_y, icon_size, icon_size),
+                    image_surface=surf,
+                    manager=self.ctx.manager,
+                    container=self.panel,
+                    tool_tip_text=f"{mod_name}: {val_str}"
+                )
+                self.modifier_icons.append(icon_image)
+                start_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
+
     def _create_tree_line(self, is_last, config):
         surf = pygame.Surface((20, self.height), pygame.SRCALPHA)
         color = pygame.Color(config.TREE_LINE_COLOR)
@@ -264,8 +310,11 @@ class LayerComponentItem:
         self.count = count
         self.is_selected = is_selected
         self.config = ctx.config
+        self.ctx = ctx
         self.height = ctx.config.LAYER_ROW_HEIGHT
         self.rect = pygame.Rect(0, y_pos, ctx.width, self.height)
+
+        self.modifier_icons = []
 
         self.panel = UIPanel(
             relative_rect=self.rect,
@@ -320,6 +369,9 @@ class LayerComponentItem:
             container=self.panel,
             object_id='#left_aligned_label'
         )
+
+        self.component = component
+        self._rebuild_modifier_icons()
 
         # Mass (positioned left of button zone)
         self.mass_label = UILabel(
@@ -407,6 +459,48 @@ class LayerComponentItem:
             self.expand_button.show()
             arrow = "▲" if is_expanded else "▼"
             self.expand_button.set_text(arrow)
+
+        self._rebuild_modifier_icons()
+
+    def _rebuild_modifier_icons(self):
+        """Build modifier icons for non-default values."""
+        # Clear existing
+        for icon in self.modifier_icons:
+            icon.kill()
+        self.modifier_icons = []
+
+        if not self.ctx.modifier_icon_service:
+            return
+
+        component = self.component
+        modified_ids = []
+        # Group items always have identical modifiers for all members
+        for mod in component.modifiers:
+            if mod.value != mod.definition.default_val:
+                modified_ids.append((mod.definition.id, mod.definition.name, mod.value))
+
+        if not modified_ids:
+            return
+
+        # Start position: Right of name label
+        start_x = self.ctx.config.LAYER_NAME_OFFSET_X + self.ctx.config.NAME_WIDTH + 5
+        icon_size = self.ctx.config.MODIFIER_ICON_SIZE
+        icon_y = (self.height - icon_size) // 2
+
+        for mod_id, mod_name, mod_value in modified_ids:
+            surf = self.ctx.modifier_icon_service.get_icon(mod_id)
+            if surf:
+                # Format value for tooltip
+                val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
+                icon_image = UIImage(
+                    relative_rect=pygame.Rect(start_x, icon_y, icon_size, icon_size),
+                    image_surface=surf,
+                    manager=self.ctx.manager,
+                    container=self.panel,
+                    tool_tip_text=f"{mod_name}: {val_str}"
+                )
+                self.modifier_icons.append(icon_image)
+                start_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:

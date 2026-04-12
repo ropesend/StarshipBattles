@@ -22,6 +22,7 @@ class ComponentItemContext:
     width: int
     sprite_mgr: Any  # SpriteManager
     event_handler: Any  # Event handler with handle_item_action method
+    modifier_icon_service: Any = None  # ModifierIconService
     config: 'StructurePanelLayoutConfig' = None
 
     def __post_init__(self):
@@ -41,6 +42,8 @@ class StructurePanelLayoutConfig:
     # Icons
     ICON_SIZE: int = 20
     LAYER_ICON_SIZE: int = 32
+    MODIFIER_ICON_SIZE: int = 26
+    MODIFIER_ICON_SPACING: int = 2
     
     # Indentation and Spacing
     INDENT_STEP: int = 25

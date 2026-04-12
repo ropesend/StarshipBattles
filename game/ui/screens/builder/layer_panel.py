@@ -44,6 +44,10 @@ class LayerPanel(DropTarget):
         # Key: Unique Identifier (str or tuple), Value: UI Item Instance
         self.ui_cache = {}
 
+        # Modifier Icon Service
+        from game.ui.services.modifier_icon_service import ModifierIconService
+        self.modifier_icon_service = ModifierIconService(icon_size=self.config.MODIFIER_ICON_SIZE)
+
         # State
         self.selected_group_key = None
         self.selected_component_id = None
@@ -157,6 +161,7 @@ class LayerPanel(DropTarget):
                     width=content_width,
                     sprite_mgr=self.builder.sprite_mgr,
                     event_handler=self,
+                    modifier_icon_service=self.modifier_icon_service,
                     config=self.config
                 )
                 header = LayerHeaderItem(

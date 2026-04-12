@@ -20,6 +20,7 @@ from game.ui.services.battle_factories import (
     create_strategy_battle,
     create_hypothetical_battle,
 )
+from game.ui.services.modifier_icon_service import ModifierIconService
 
 __all__ = [
     'ShipFactory',
@@ -29,6 +30,7 @@ __all__ = [
     'ShipIOAdapter',
     'DesignLoaderAdapter',
     'BattleUIService',
+    'ModifierIconService',
     'create_manual_battle',
     'create_test_battle',
     'create_strategy_battle',
