@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-05 against 473 source files.
+> **Last verified:** 2026-04-12 — PROJ-269 Phase 6 (unified `run_battle(spec)` entry; `BattleMode` / `BattleModeHandler` / `create_*_battle` factories deleted).
 
 ---
 

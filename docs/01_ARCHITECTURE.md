@@ -336,29 +336,41 @@ IRegistryProvider (injected into services)
        └──► VehicleDesignService            (game/simulation/services/)
 ```
 
-### Battle Flow
+### Battle Flow (post-PROJ-269 unified path)
 
 ```
-UI (BattleScreen) or Strategy (IBattleResolver)
+caller (Combat Lab / Battle Setup / Strategy IBattleResolver)
        │
        ▼
-BattleService.create_battle(ai_factory=...)
-       │  returns BattleServiceResult(engine=BattleEngine)
+context-specific spec compiler (build_*_battle_spec)
+       │  emits a BattleSpec frozen DTO
+       ▼
+run_battle(spec, ai_factory, ship_builder, ...)   (game/simulation/battle_runner.py)
+       │  - constructs BattleEngine directly (no BattleController)
+       │  - threads spec.boundary + spec.modifier_stack onto the engine
+       │  - calls engine.start_teams(teams_by_id, seed, end_condition)
+       │  - drives the tick loop until is_battle_over()
+       │  - attaches telemetry aggregators per spec.telemetry_level
        ▼
 BattleEngine.tick()  (game/simulation/systems/battle_engine.py)
        │  runs: AI decisions → weapon firing → damage calc → physics → end checks
-       │
        ▼
-BattleState (game/simulation/battle_state.py)
-       │  holds: ships[], tick_count, results
+extract_outcome(engine, spec) → BattleOutcome
+       │  per-team / per-ship / per-component results
        ▼
-Post-battle: Ship instances satisfy IPostBattleShip protocol
-       │
-       ▼
-Strategy layer reads survivors via IPostBattleShip
-  ShipInstance.update_from_ship(survivor)
-  Fleet.update_from_battle_results(survivors)
+spec.post_battle_hook(outcome)  (optional)
+       │  Strategy attaches `apply_outcome_to_fleets` — writes
+       │  ShipOutcome.components back into ShipInstance.components
+       │  and prunes destroyed/retreated ships from fleets.
 ```
+
+**Visual mode (Combat Lab UI, Battle Setup screen):** still uses
+`BattleController` as a thin per-frame tick-loop driver around
+`BattleEngine`. Construction goes through the spec compiler +
+`materialize_spec_ships(spec, ship_builder)` + `controller.add_ships`
++ `controller.start()`. PROJ-269 Phase 6 deleted the `BattleMode` /
+`BattleModeHandler` / `create_*_battle` factory machinery; the
+controller is now config-flag-driven only.
 
 ### Strategy Turn Flow
 

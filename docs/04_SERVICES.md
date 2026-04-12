@@ -55,6 +55,14 @@ game/strategy/services/
 
 **Purpose:** Abstraction layer between UI and BattleEngine. Manages the full battle lifecycle: creation, ship assignment, simulation execution, and state queries.
 
+> **PROJ-269 Phase 6:** For headless callers, prefer
+> `game.simulation.battle_runner.run_battle(spec)` — it constructs +
+> drives `BattleEngine` directly, no `BattleService` wrapper. The
+> service is now used only by the visual-mode `BattleController` for
+> per-frame ticking. See `combat_simulation.md` §0–§1 for the
+> spec-compiler-driven flow that has replaced the legacy
+> `create_*_battle` factories.
+
 **Dependencies:** None (no constructor args). Internally creates `BattleEngine` and `BattleLogger`. AI factory is injected at battle creation time via the `ai_factory` parameter.
 
 **Result Object:**

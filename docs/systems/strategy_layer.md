@@ -470,13 +470,17 @@ Bridges strategy Fleet with simulation Ship for combat:
   `ShipInstance` list to simulation `Ship` objects with deployment positions
   (default: Team 0 at x=20000, Team 1 at x=80000, 2000px vertical spacing;
   use `DeploymentZoneCalculator` for hierarchy-aware positioning)
-- `update_from_battle_results(surviving_ships)` -- updates fleet from
-  `IPostBattleShip` protocol; ships not in survivors are removed (destroyed)
 
-Used by both `ConflictResolutionEngine` (strategy-layer auto battles) and
-`FleetBattleSetupScreen` (manual battle setup). The setup screen creates
-real Fleet objects with ShipInstance ships, then calls `to_battle_ships()`
-to convert them for the simulation layer.
+PROJ-269 Phase 6 deleted `update_from_battle_results`. Fleet updates
+now flow via `game.strategy.combat.post_battle_hook.apply_outcome_to_fleets`,
+which the strategy spec compiler attaches to the `BattleSpec` and
+`run_battle` invokes after `extract_outcome`. Callers (the strategy
+adapter, `ConflictResolutionEngine`) treat the returned `BattleResult`
+as a read-only report.
+
+`to_battle_ships` is still used by `FleetBattleSetupScreen` (manual
+battle setup); the strategy adapter's `_make_ship_builder` closure
+materializes ships per-`ShipSpec` via `ShipInstance.to_ship` directly.
 
 #### FleetPursuerTracker (`fleet.pursuer_tracker`)
 
@@ -728,10 +732,24 @@ Handles instant-apply/revert for activatable planet modifiers (GravityModifier, 
 
 Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`.
 
-Applied in `SimulationBattleResolver.resolve_battle()` after environmental effects:
-1. Flat shield bonus added to `max_shields` and `current_shields`
-2. Shield multiplier applied via `_apply_shield_interference()`
-3. Damage multiplier set on `ship.damage_output_mult`
+Passed into `SimulationBattleResolver.resolve_battle(...,
+team0_modifiers=..., team1_modifiers=..., environmental_effects=...)`.
+
+PROJ-269 Phase 6 changed how these effects flow into the engine:
+
+- Pre-Phase-6: the resolver mutated ship attributes directly
+  (`_apply_shield_interference` raised `ship.max_shields *= mult`,
+  `_apply_strategic_modifiers` set `ship.damage_output_mult`, etc.) BEFORE
+  handing ships to the engine.
+- Post-Phase-6: the resolver passes `environmental_effects` and
+  `team_modifiers={0: team0_mods, 1: team1_mods}` into
+  `build_strategy_battle_spec`, which translates each into
+  `ModifierEntry` records on the spec's `ModifierStack`. Per the Phase
+  5.5 placeholder-skip semantics, the engine RECORDS these modifiers in
+  the forensic trace (`HitRecord.modifiers_applied`) but does NOT
+  evaluate them against battle math today — real `stat_key` mapping for
+  shield_mult / damage_mult / flat_shield_bonus / shield_capacity_mult
+  is post-PROJ-269 content work.
 
 All `find_abilities_in_scope()` calls use `require_active=True` — only abilities in the
 ACTIVE activation phase contribute to combat modifiers. Inactive or activating abilities

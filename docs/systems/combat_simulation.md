@@ -4,12 +4,15 @@ System documentation for the real-time combat simulation layer.
 
 ---
 
-## 0. Unified Entry (in progress — PROJ-269)
+## 0. Unified Entry (PROJ-269 — complete)
 
-> **Status:** Phase 1 in progress. The legacy `BattleController` + `BattleMode`
-> path documented in §1–§2 still works and is the default. The new unified
-> entry runs alongside it and is exercised by one smoke-test caller in Phase 1;
-> Phases 2–6 migrate the remaining callers and delete the legacy code.
+> **Status:** Implementation complete. Every battle (Combat Lab, Battle
+> Setup, Strategy combat) now compiles a `BattleSpec` via its
+> context-specific compiler and routes through `run_battle(spec)`. The
+> legacy `BattleMode` enum + `BattleModeHandler` hierarchy + the four
+> `create_*_battle` factories are deleted. `BattleController` remains
+> only as a thin per-frame tick driver for visual-mode UI; headless
+> callers go through `run_battle` directly. See §1 for the full flow.
 
 `run_battle(spec: BattleSpec) -> BattleOutcome` at
 [`game/simulation/battle_runner.py`](../../game/simulation/battle_runner.py)

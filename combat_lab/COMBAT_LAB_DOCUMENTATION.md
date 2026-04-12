@@ -1,5 +1,19 @@
 # Combat Lab - Comprehensive Documentation
 
+> **PROJ-269 Phase 6 (2026-04-12):** Combat Lab now routes every
+> scenario through `run_battle(spec)` via `combat_lab/spec_compiler.py`
+> instead of the legacy `scenario.setup(engine)` + raw `BattleEngine(...)`
+> path. Each `TestScenario` template (StaticTarget / Duel /
+> Propulsion / Resource / Comparison) compiles to a `BattleSpec`; the
+> runner materializes ships via the spec, then the unified entry drives
+> the tick loop. Scenarios that don't fit a template provide their own
+> `to_spec()` override (see `tohit_attack_fleet_scenarios.py` and the
+> 3-ship propulsion tests for examples). The flow diagrams in §3 below
+> still show the high-level component relationships, but the
+> "scenario.setup(engine)" arrows are now "scenario.to_spec()" /
+> "scenario.wire_ships(...)" / "scenario.custom_setup(engine)" — see
+> `docs/systems/combat_simulation.md` §0–§1 for the canonical flow.
+
 ## Table of Contents
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
