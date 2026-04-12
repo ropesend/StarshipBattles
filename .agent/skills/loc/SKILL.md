@@ -45,6 +45,6 @@ Count and report lines of code across the Starship Battles project using the `To
 
 ## Notes
 
-- The script handles all exclusions (\_\_pycache\_\_, .pyc, test_history.json, output dirs).
+- The script handles all exclusions (\_\_pycache\_\_, .pyc, combat_lab/test_history/ shards, output dirs).
 - The script counts all file types accurately using Python's file I/O (no wc -l batching issues).
 - `python Tools/loc/loc.py` (without --detailed) prints the original simple summary if needed.

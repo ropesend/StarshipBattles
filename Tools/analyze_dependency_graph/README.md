@@ -22,7 +22,7 @@ No arguments. Entry points and project root are auto-detected.
 
 1. **Entry points** -- Starts from `launcher.py` and `game/app.py`.
 2. **BFS traversal** -- Parses each file's AST to extract `import` and `from ... import` statements, resolves them to file paths, and follows the chain.
-3. **All source files** -- Collects every `.py` file under the project root (excluding `tests/`, `simulation_tests/`, `venv/`, `.git/`, `__pycache__/`).
+3. **All source files** -- Collects every `.py` file under the project root (excluding `tests/`, `combat_lab/`, `venv/`, `.git/`, `__pycache__/`).
 4. **Diff** -- Files present on disk but not reached by the import graph are flagged as potentially dead.
 
 ## Output

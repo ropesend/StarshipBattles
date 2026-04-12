@@ -18,7 +18,8 @@ Simulation tests validate game mechanics (weapons, propulsion, shields, etc.) by
 combat_lab/
 ├── run_tests.py                     # CLI test runner (auto-discovery)
 ├── test_constants.py                # Shared constants
-├── test_history.json                # Historical test run data
+├── test_history.py                  # TestHistory (per-test-id shards, lazy load)
+├── test_history/                    # Per-test-id shard files ({test_id}.json)
 ├── logging_config.py                # Logging setup
 ├── ABILITY_TEST_COVERAGE_PLAN.md    # Coverage tracking
 ├── data/                            # Test-only data (isolated from production)
@@ -97,15 +98,17 @@ python -m combat_lab.run_tests --list
 # Skip high-tick (-HT) tests for quick validation
 python -m combat_lab.run_tests --fast
 
-# Don't record to test_history.json
+# Don't record to combat_lab/test_history/ shards
 python -m combat_lab.run_tests --no-history
 ```
 
 ### Key Features
 
 - **Auto-discovery**: Globs `scenarios/*_scenarios.py` — new files found automatically
-- **History recording**: CLI runs write to `test_history.json` by default (same file
-  as Combat Lab UI). Pass `--no-history` to skip.
+- **History recording**: CLI runs write a per-test-id shard at
+  `combat_lab/test_history/{test_id}.json` by default (same storage as the
+  Combat Lab UI). Shards are loaded lazily and written atomically. Pass
+  `--no-history` to skip.
 - **`--fast` mode**: Filters out `-HT` (high-tick 100k) tests for quick validation
 
 ### Combat Lab Integration
@@ -114,7 +117,7 @@ The Combat Lab UI supports ability-specific test categories:
 - TestRegistry auto-discovers scenarios and groups by category
 - ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
 - Selecting a test auto-selects the most recent run and shows detailed results
-- Test run history persists across sessions (shared with CLI via test_history.json)
+- Test run history persists across sessions (shared with CLI via `combat_lab/test_history/` shards)
 
 ---
 

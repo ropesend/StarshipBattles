@@ -35,7 +35,7 @@ python Tools/loc/loc.py --detailed  # JSON output with per-section, per-type bre
 - `combat_lab/`
 - `conftest.py`
 
-**Excluded**: `__pycache__`, `.git`, `venv`, `node_modules`, `.VSCodeCounter`, `output/` directories, `test_history.json`, `.pyc` files.
+**Excluded**: `__pycache__`, `.git`, `venv`, `node_modules`, `.VSCodeCounter`, `output/` directories, `combat_lab/test_history/` shards, legacy `test_history.json.migrated`, `.pyc` files.
 
 ## Output
 

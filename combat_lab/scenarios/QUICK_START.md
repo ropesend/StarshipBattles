@@ -133,7 +133,7 @@ python -m combat_lab.run_tests --fast
 # List all registered tests
 python -m combat_lab.run_tests --list
 
-# Skip writing to test_history.json
+# Skip writing to combat_lab/test_history/ shards
 python -m combat_lab.run_tests --no-history
 ```
 

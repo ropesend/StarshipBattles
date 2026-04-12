@@ -21,8 +21,8 @@ def _find_project_root():
 
 
 ROOT = _find_project_root()
-SKIP_DIRS = {"__pycache__", ".git", "venv", ".venv", "node_modules", ".VSCodeCounter"}
-SKIP_FILES = {"test_history.json"}
+SKIP_DIRS = {"__pycache__", ".git", "venv", ".venv", "node_modules", ".VSCodeCounter", "test_history"}
+SKIP_FILES = {"test_history.json", "test_history.json.migrated"}
 
 # -- Production sections (subdirs of game/) ----------------------------------
 PROD_SECTIONS = ["ai", "assets", "core", "data", "engine", "research", "simulation", "strategy", "ui"]

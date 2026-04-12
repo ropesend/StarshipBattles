@@ -84,7 +84,7 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
         # Store initial state
         self.initial_hp = self.target.hp
 
-        # Create end condition (TIME_BASED: runs for full duration)
+        # Create end condition (TickLimitCondition: runs for full duration)
         end_condition = self._create_end_condition()
 
         # Start battle with time-based end condition

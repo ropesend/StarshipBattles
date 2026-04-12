@@ -360,11 +360,12 @@ python -m combat_lab.run_tests BEAM           # Filter by ID prefix
 python -m combat_lab.run_tests PROP-001       # Run specific test
 python -m combat_lab.run_tests --list         # List all tests
 python -m combat_lab.run_tests --fast         # Skip high-tick (-HT) tests (~2min → ~30s)
-python -m combat_lab.run_tests --no-history   # Don't record results to test_history.json
+python -m combat_lab.run_tests --no-history   # Don't record results to test_history/
 ```
 
-By default, CLI runs record results to `combat_lab/test_history.json`
-(same file the Combat Lab UI uses). Use `--no-history` to skip recording.
+By default, CLI runs record results into `combat_lab/test_history/{test_id}.json`
+(per-test-id shards — same storage the Combat Lab UI uses). Use `--no-history`
+to skip recording.
 
 ### Headless (Python)
 
@@ -446,13 +447,12 @@ class MyAbilityBasicEffectScenario(ComparisonScenario):
         return checks
 ```
 
-**5. Export the scenarios** in `combat_lab/scenarios/__init__.py`:
-```python
-from combat_lab.scenarios.myability_scenarios import (
-    MyAbilityBasicEffectScenario,
-    ...
-)
-```
+**5. No manual export needed.** ``combat_lab.registry.TestRegistry`` and
+``combat_lab.run_tests`` both auto-discover every ``TestScenario`` subclass in
+``combat_lab/scenarios/*.py`` with a non-``None`` ``metadata`` attribute.
+``scenarios/__init__.py`` only re-exports the shared types (``TestScenario``,
+``TestMetadata``, ``Check``, check functions, templates), not individual
+scenarios.
 
 **6. Run and verify:**
 ```bash
@@ -620,9 +620,9 @@ Starship Battles/
 | **Same start position** | PROJ-002/003 both start (100,-1200) — only speed differs for clean comparison |
 | **High agility thruster** | test_thruster_high (raw=500) for erratic targets to stay within leash |
 | **Generic arc_set detection** | Modifier arc defaults based on effect type, not hardcoded modifier IDs |
-| **History on startup** | Combat Lab loads test_history.json into registry so status dots show immediately |
-| **Atomic JSON writes** | `save_json()` writes to .tmp then renames — original file survives interrupted writes |
-| **Corrupt file recovery** | Corrupt test_history.json is backed up to .corrupt and system starts fresh |
+| **History on startup** | Combat Lab loads per-test-id shards from `test_history/` into the registry so status dots show immediately |
+| **Atomic JSON writes** | `save_json()` writes to .tmp then renames — original shard survives interrupted writes |
+| **Corrupt file recovery** | Corrupt shards are backed up to `<test_id>.json.corrupt` and that one shard starts fresh (others unaffected) |
 | **Always-visible ships** | Colored dot always drawn in battle view — prevents transparent-image invisibility |
 | **Verify assumptions** | Preconditions check movement, speed, distance — not just outcomes |
 | **ComparisonScenario** | A/B template runs baseline + variant battles, compares measured outcomes |
@@ -630,7 +630,7 @@ Starship Battles/
 | **Additive ability stacking** | All numeric abilities use intra-group MAX, inter-group SUM — no multiplicative exceptions |
 | **One category per ability** | Each combat ability gets a dedicated scenario file with basic effect + stacking + negative tests |
 | **Auto-discovery** | `run_tests.py` globs `*_scenarios.py` — new scenario files are found automatically |
-| **CLI records history** | `run_tests.py` writes results to `test_history.json` by default — Combat Lab UI sees CLI results |
+| **CLI records history** | `run_tests.py` writes results to `test_history/{test_id}.json` shards by default — Combat Lab UI sees CLI results |
 | **`--fast` flag** | Skips `-HT` (high-tick) tests for quick validation during development |
 | **`_`-prefixed JSON keys skipped** | Component loader skips keys like `_comment` during formula parsing to avoid spam |
 

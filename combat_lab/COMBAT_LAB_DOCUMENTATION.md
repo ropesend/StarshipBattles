@@ -51,15 +51,14 @@ Starship Battles/
 ├── combat_lab/
 │   ├── registry.py                     # TestRegistry - scenario discovery
 │   ├── runner.py                       # TestRunner - execution engine
-│   ├── scenario.py                     # CombatScenario base class
-│   ├── test_history.py                 # Test execution history
+│   ├── test_history.py                 # TestHistory - per-test-id shards
+│   ├── test_history/                   # Per-test-id shard files (one JSON per test)
 │   └── services/
 │       ├── test_lab_controller.py      # UI controller (coordinates services)
 │       ├── scenario_data_service.py    # Ship/component data loading
 │       ├── test_execution_service.py   # Test execution orchestration
 │       ├── test_results_service.py     # Results storage and retrieval
-│       ├── ui_state_service.py         # UI state management
-│       └── metadata_management_service.py  # Metadata validation
+│       └── ui_state_service.py         # UI state management
 │
 ├── combat_lab/
 │   ├── COMBAT_LAB_DOCUMENTATION.md     # This file
@@ -148,7 +147,7 @@ Starship Battles/
 │  - Load data    │  │  - Auto-scan    │  │  - TestExecutionService         │
 │  - Run loop     │  │    scenarios/   │  │  - TestResultsService           │
 │  - Log results  │  │  - Filter by    │  │  - UIStateService               │
-│  - Handle       │  │    category/tag │  │  - MetadataManagementService    │
+│  - Handle       │  │    category/tag │  │                                 │
 │    errors       │  │  - Singleton    │  │                                 │
 └────────┬────────┘  └────────┬────────┘  └─────────────────────────────────┘
          │                    │
@@ -257,7 +256,7 @@ Starship Battles/
 All tests inherit from `TestScenario` (`combat_lab/scenarios/base.py`):
 
 ```python
-class TestScenario(CombatScenario):
+class TestScenario:
     """Base class for all test scenarios."""
 
     metadata: TestMetadata          # Test identification and description
@@ -1014,16 +1013,19 @@ python -m combat_lab.run_tests BEAM           # Filter by ID prefix
 python -m combat_lab.run_tests PROP-001       # Run specific test
 python -m combat_lab.run_tests --list         # List all tests
 python -m combat_lab.run_tests --fast         # Skip high-tick (-HT) tests
-python -m combat_lab.run_tests --no-history   # Don't record to test_history.json
+python -m combat_lab.run_tests --no-history   # Don't record to test_history/
 ```
 
 **Auto-discovery**: The runner automatically finds all `*_scenarios.py` files
 in the `scenarios/` directory — no need to register new scenario files manually.
 
-**Test history**: By default, CLI runs record results to
-`combat_lab/test_history.json` (the same file the Combat Lab UI uses).
-This means `--fast` runs during development will populate the UI's pass/fail
-status dots. Use `--no-history` to skip recording when debugging.
+**Test history**: By default, CLI runs record results into
+`combat_lab/test_history/{test_id}.json` — one shard per test, shared with the
+Combat Lab UI. This means `--fast` runs during development will populate the
+UI's pass/fail status dots. Use `--no-history` to skip recording when debugging.
+Shards are loaded lazily on first query and written atomically via
+``save_json`` (temp + rename) so an interrupted write can only affect the one
+shard being updated.
 
 ---
 
@@ -1090,25 +1092,26 @@ see ``SimulationConstants.ABSOLUTE_MAX_TICKS``. Either set a lower
 ``max_ticks`` in metadata, or build a proper terminating condition in
 ``setup()``.
 
-#### Test history lost between sessions
+#### Test history lost for a single test
 
-**Cause**: `test_history.json` was corrupted (truncated mid-write).
+**Cause**: The shard file for that test (`combat_lab/test_history/{test_id}.json`)
+was corrupted.
 
-**Background**: Prior to the atomic write fix, `save_json()` wrote directly to
-the target file. If the process was interrupted (crash, forced close, file lock),
-the file was left truncated with invalid JSON. On next load, the corrupt file
-silently returned `None`, and history was lost.
+**Current safeguards**:
+1. **Per-test-id shards**: Each test writes its own JSON file. Corruption in
+   one shard cannot affect the others.
+2. **Atomic writes**: ``save_json()`` writes to a `.tmp` file first, then renames.
+   An interrupted write leaves the previous shard intact.
+3. **Corrupt shard recovery**: ``TestHistory._load_test()`` detects an invalid
+   JSON shard, backs it up to `{test_id}.json.corrupt`, and starts that shard
+   fresh with a warning logged.
+4. **History loaded on demand**: The Combat Lab UI and controller load each
+   shard lazily on first access, so unaffected tests continue to show their
+   history.
 
-**Current safeguards** (these should prevent recurrence):
-1. **Atomic writes**: `save_json()` writes to a `.tmp` file first, then renames.
-   If the write fails, the original file is untouched.
-2. **Corrupt file recovery**: `TestHistory._load()` detects corrupt JSON, backs
-   it up to `.corrupt`, and starts fresh with a warning.
-3. **History loaded on startup**: `_load_history_into_registry()` populates
-   pass/fail dots from the history file when Combat Lab opens.
-
-If you see a `.corrupt` backup file, it means a previous session's write was
-interrupted — check the log for details.
+If you see a `.corrupt` backup file under ``combat_lab/test_history/``, it means
+a previous session's write to that one shard was interrupted — check the log
+for details.
 
 ---
 
@@ -1189,22 +1192,32 @@ Isolates mass calculations to hull only. This ensures predictable defense scores
 
 ### Why Absolute Max Ticks Safety Ceiling?
 
-**Problem**: A misconfigured test (MANUAL mode with no explicit end condition) could run forever.
+**Problem**: A misconfigured scenario (e.g. ``NeverCondition`` or a composite
+that cannot be satisfied) could run forever.
 
-**Solution**: All modes respect `absolute_max_ticks` (default 1,000,000) as a hard ceiling.
+**Solution**: ``BattleEngine`` enforces a hard ``absolute_max_ticks`` ceiling
+via ``SimulationConstants.ABSOLUTE_MAX_TICKS`` regardless of the scenario's
+end condition.
 
-**Trade-off**: Very long tests must explicitly set a higher ceiling, but infinite loops are prevented.
+**Trade-off**: Very long tests must override the ceiling explicitly at the
+engine level, but infinite loops are prevented.
 
-### Why TIME_BASED for Single-Ship Tests?
+### Why TickLimit by Default for Single-Ship Tests?
 
-**Problem**: Single-ship tests (propulsion, physics) using HP_BASED mode report "victory" immediately because there's no enemy team.
+**Problem**: Single-ship tests (propulsion, physics) using a
+``TeamEliminatedCondition`` would report "victory" immediately because
+there is no enemy team.
 
-**Solution**: Use `TIME_BASED` mode which runs for exactly `max_ticks` regardless of team status.
+**Solution**: ``TestScenario._create_end_condition()`` defaults to
+``TickLimitCondition(max_ticks=self.metadata.max_ticks)``, which runs for
+exactly ``max_ticks`` regardless of team status. Scenarios that need a
+different condition build one explicitly in ``setup()`` and pass it to
+``battle_engine.start()``.
 
 **Pattern**:
-- Single-ship physics tests: `TIME_BASED`
-- Combat outcome tests: `HP_BASED`
-- Hit rate statistics: `TIME_BASED` (need full duration)
+- Single-ship physics tests: ``TickLimitCondition`` (the default)
+- Combat outcome tests: ``TeamEliminatedCondition``
+- Hit rate statistics: ``TickLimitCondition`` (need full duration)
 
 ### Why 1 Billion HP?
 
