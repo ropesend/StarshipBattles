@@ -35,7 +35,7 @@ Please ask questions and make suggestions.  I want to try and have uniform ways 
 ---------------------------------------------------------------------------------------------------------------------
 
 WE need 
- - scrap option for complexes + Ships + Pods + fighters - ddefaults to 0% of value, should be a command that is given, can only be executed in a location that the player has an appropriate build yard, so complexes or cargo on a planet can be scraped on the planet with a planetary build yard or a space build yard, Ships or fighters or cargo in space can only be scraped in space with a space build yard.
+ - scrap option for complexes + Ships + Pods + fighters - defaults to 0% of value, should be a command that is given, can only be executed in a location that the player has an appropriate build yard, so complexes or cargo on a planet can be scraped on the planet with a planetary build yard or a space build yard, Ships or fighters or cargo in space can only be scraped in space with a space build yard.
  - Add: Resouce recovery ability with the following scopes: Fleet, Player Sector, Player System, Planet, Empire
  - When not in the same stacking group, the resource recovery ability are sort of cumulative, if there is a system ability of 50% and a fleet ability of 50% then the total resource recovery is 75% (1 - (1 - 0.5) * (1 - 0.5))
  - Note that there must be local storage in the sector for the resources to go to, if there is no local storage then the resources are lost.
