@@ -87,16 +87,16 @@ class BuildQueueSelector:
         self.refresh()
 
     def refresh(self) -> None:
-        """Rebuild queue selector UI elements to reflect current selection state."""
-        # Clear existing selector entries
+        """Refresh the visible queues."""
         elements_to_kill = list(self.scrollable.get_container().elements)
         for element in elements_to_kill:
             element.kill()
         self.buttons.clear()
         self._button_index_map.clear()
 
+        y_offset = 0
         row_height = 30
-        row_width = self.panel.get_relative_rect().width - 20
+        row_width = self.panel.get_relative_rect().width - 30
         y_offset = 0
 
         for idx, source in enumerate(self.queue_sources):
@@ -130,6 +130,8 @@ class BuildQueueSelector:
                 manager=self.manager,
                 container=self.scrollable
             )
+
+        self.scrollable.set_scrollable_area_dimensions((row_width, y_offset + 5))
 
     def handle_button_click(self, button: ui.UIButton, ctrl_held: bool) -> bool:
         """Handle click on a queue selector button.

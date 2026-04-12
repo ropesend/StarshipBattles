@@ -171,7 +171,7 @@ class BuildQueuePanelFactory:
         Returns:
             Tuple of (context_report panel, planet_report or None).
         """
-        report_width = 480
+        report_width = 600
         report_height = int((self.screen_height - 20) / 3)
         if report_height < 350:
             report_height = 350
@@ -235,10 +235,12 @@ class BuildQueuePanelFactory:
         planet_report_height = int((self.screen_height - 20) / 3)
         if planet_report_height < 350:
             planet_report_height = 350
-        
+        filter_y = 10 + planet_report_height + 10
+        filter_height = min(600, self.screen_height - filter_y - 200)
+
         panel_x = 10
-        panel_y = 10 + planet_report_height + 10 + 300 + 10
-        panel_width = 480
+        panel_y = filter_y + filter_height + 10
+        panel_width = 600
         panel_height = self.screen_height - panel_y - 80
 
         return BuildQueueSelector(
@@ -267,8 +269,8 @@ class BuildQueuePanelFactory:
         Returns:
             Tuple of (panel, scrollable_container).
         """
-        panel_left = 10 + 480 + 10
-        panel_width = 700
+        panel_left = 10 + 600 + 10
+        panel_width = 580
 
         panel_top = 10
         panel_height = self.screen_height - panel_top - 80
@@ -302,7 +304,7 @@ class BuildQueuePanelFactory:
         Returns:
             Tuple of (panel, header_text, virtual_table, column_manager, data_source).
         """
-        panel_left = 10 + 480 + 10 + 700 + 10
+        panel_left = 10 + 600 + 10 + 580 + 10
         design_details_width = 750
         panel_width = self.screen_width - panel_left - design_details_width - 20
         if panel_width < 250:
@@ -361,14 +363,16 @@ class BuildQueuePanelFactory:
         Returns:
             Tuple of (panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, roles_scrollable).
         """
-        panel_width = 480
+        panel_width = 600
         panel_left = 10
 
         planet_report_height = int((self.screen_height - 20) / 3)
         if planet_report_height < 350:
             planet_report_height = 350
         panel_top = 10 + planet_report_height + 10
-        panel_height = 300
+        
+        # Dynamically scale filter height (target 600) leaving at least 200px for below layout constraints
+        panel_height = min(600, self.screen_height - panel_top - 200)
 
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
@@ -377,56 +381,64 @@ class BuildQueuePanelFactory:
         )
 
         ui.UITextBox(
-            relative_rect=pygame.Rect(10, 10, 220, 30),
+            relative_rect=pygame.Rect(10, 10, 280, 30),
             html_text="<b>Categories</b>",
             manager=self.manager,
             container=panel
         )
 
-        btn_complex = ui.UIButton(
-            relative_rect=pygame.Rect(10, 45, 220, 40),
-            text="Complexes",
+        categories_scrollable = ui.UIScrollingContainer(
+            relative_rect=pygame.Rect(10, 45, 280, panel_height - 55),
             manager=self.manager,
             container=panel
+        )
+
+        btn_complex = ui.UIButton(
+            relative_rect=pygame.Rect(0, 0, 260, 40),
+            text="Complexes",
+            manager=self.manager,
+            container=categories_scrollable
         )
 
         btn_ship = ui.UIButton(
-            relative_rect=pygame.Rect(10, 95, 220, 40),
+            relative_rect=pygame.Rect(0, 45, 260, 40),
             text="Ships",
             manager=self.manager,
-            container=panel
+            container=categories_scrollable
         )
 
         btn_satellite = ui.UIButton(
-            relative_rect=pygame.Rect(10, 145, 220, 40),
+            relative_rect=pygame.Rect(0, 90, 260, 40),
             text="Satellites",
             manager=self.manager,
-            container=panel
+            container=categories_scrollable
         )
 
         btn_fighter = ui.UIButton(
-            relative_rect=pygame.Rect(10, 195, 220, 40),
+            relative_rect=pygame.Rect(0, 135, 260, 40),
             text="Fighters",
             manager=self.manager,
-            container=panel
+            container=categories_scrollable
         )
 
         btn_drop_pod = ui.UIButton(
-            relative_rect=pygame.Rect(10, 245, 220, 40),
+            relative_rect=pygame.Rect(0, 180, 260, 40),
             text="Drop Pods",
             manager=self.manager,
-            container=panel
+            container=categories_scrollable
         )
 
+        categories_scrollable.set_scrollable_area_dimensions((260, 225))
+
         ui.UITextBox(
-            relative_rect=pygame.Rect(240, 10, 220, 30),
+            relative_rect=pygame.Rect(300, 10, 280, 30),
             html_text="<b>Roles</b>",
             manager=self.manager,
             container=panel
         )
 
         roles_scrollable = ui.UIScrollingContainer(
-            relative_rect=pygame.Rect(240, 45, 220, panel_height - 55),
+            relative_rect=pygame.Rect(300, 45, 280, panel_height - 55),
             manager=self.manager,
             container=panel
         )

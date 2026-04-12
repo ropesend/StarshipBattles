@@ -69,7 +69,7 @@ class BuildQueueRenderer:
         btn_height = 40
 
         scrollable_width = scrollable.get_relative_rect().width
-        panel_width = scrollable_width - 10
+        panel_width = scrollable_width - 30
         btn_width = panel_width - icon_size - 8 - 40 # 40 for the + button
 
         for design in designs:
@@ -135,6 +135,8 @@ class BuildQueueRenderer:
                 container=scrollable
             )
 
+        scrollable.set_scrollable_area_dimensions((scrollable_width - 30, y_offset + 5))
+
     def refresh_queue_display(
         self,
         queue: List[dict],
@@ -183,7 +185,7 @@ class BuildQueueRenderer:
             
         y_offset = 0
         btn_height = 40
-        panel_width = scrollable.get_relative_rect().width - 10
+        panel_width = scrollable.get_relative_rect().width - 30
         btn_width = panel_width - 8
         if btn_width < 0:
             btn_width = 100
@@ -201,6 +203,8 @@ class BuildQueueRenderer:
             )
             btn.role_filter = role
             y_offset += btn_height + 5
+
+        scrollable.set_scrollable_area_dimensions((scrollable.get_relative_rect().width - 30, y_offset + 5))
 
     def update_queue_header(self, active_source) -> None:
         """Update build queue header text.
