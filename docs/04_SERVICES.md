@@ -884,7 +884,8 @@ for warning in result.warnings:
 |              FleetSpeedCalculator, ComponentInspector,   |
 |              ActionTimeResolver, CargoTransferService,   |
 |              DesignCostCalculator, FleetCargoProjector,  |
-|              AreaEffectManager, SystemEffectsCollector    |
+|              AreaEffectManager, SystemEffectsCollector,  |
+|              BuildQueueController, BuildQueueRenderer    |
 +----------------------------+----------------------------+
                              | Uses
                              v

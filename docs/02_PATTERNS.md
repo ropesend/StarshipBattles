@@ -598,14 +598,18 @@ def create_default_registry() -> CommandHandlerRegistry:
 
 ---
 
-## 8. MVVM (Workshop)
+## 8. MVVM (Workshop & Build Queue)
 
 ### Where
 
-- ViewModel: `game/ui/screens/workshop_viewmodel.py` -- `WorkshopViewModel`
-- EventBus: `game/ui/screens/builder/event_bus.py` -- `EventBus`
-- Events: `game/ui/screens/builder_utils.py` -- `BuilderEvents`
-- Service: `game/simulation/services/vehicle_design_service.py` -- `VehicleDesignService`
+- **Design Workshop:**
+    - ViewModel: `game/ui/screens/workshop_viewmodel.py` -- `WorkshopViewModel`
+    - EventBus: `game/ui/screens/builder/event_bus.py` -- `EventBus`
+- **Build Queue Screen:**
+    - Controller (Business Logic): `game/ui/panels/build_queue_controller.py` -- `BuildQueueController`
+    - Renderer (View Management): `game/ui/screens/build_queue_renderer.py` -- `BuildQueueRenderer`
+    - Panel Factory: `game/ui/screens/build_queue_panel_factory.py` -- `BuildQueuePanelFactory`
+    - Drag Handler: `game/ui/panels/build_queue_drag_handler.py` -- `BuildQueueDragHandler`
 
 ### How It Works
 

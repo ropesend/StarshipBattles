@@ -277,6 +277,7 @@ used by `DesignSelectorWindow` role filter dropdown.
 **UI integration:**
 - **Design Workshop** right panel: "Role:" dropdown after "AI:" dropdown, filtered by current vehicle type. Updates when vehicle type changes.
 - **Design Selector** (load dialog): "Design Role:" filter dropdown in sidebar. Defaults to "All Roles", filters design list when a specific role is selected.
+- **Build Queue Screen**: "Roles" panel in the left column provides a scrollable list of all roles for the current category. Selecting a role filters the "Available Designs" center list.
 
 All 25 QS starter designs have `design_role` assigned.
 

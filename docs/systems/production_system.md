@@ -225,12 +225,23 @@ Six components restricted to `"Planetary Complex"` vehicle type, defined in `dat
 
 **File:** `game/ui/screens/build_queue_screen.py`
 
-Full-screen UI with three panels:
-- **Items List** (left) -- available designs filtered by category
-- **Build Queue** (center) -- VirtualTable displaying order, item name, turns, per-turn spend, and remaining cost columns (PROJ-221)
-- **Filter Panel** (right) -- category buttons (Complexes, Ships, Satellites, Fighters, Drop Pods) plus Add/Remove
+Full-screen UI with a multi-column refactored layout designed for high-density information and filtering:
 
-Accessed from the strategy screen via the "Build Yard" button on owned planets.
+- **Left Column (600px width):**
+    - **Context Report:** Planet details (population, production rates, complexes) or fleet info (top).
+    - **Categories & Roles Filter Panel:** Scrollable vertical lists for category filtering (Ships, Complexes, etc.) and design role filtering (Any, Line Combatant, etc.).
+    - **Build Yards Selector:** Scrollable list of available build yards at the current location (Planetary Yard, Shipyards, etc.) to switch between active queues.
+- **Available Designs (580px width):**
+    - Scrollable list of designs filtered by the selected category and role.
+    - Each design row includes a **"+" button** to instantly add it to the active build queue.
+- **Build Queue Panel:**
+    - `VirtualTable` displaying the active queue.
+    - **Leftmost Controls:** Each row includes **"+" / "-"** buttons to adjust quantity and **"Up" / "Down"** arrows for immediate reordering. The original "Actions" column has been removed in favor of these integrated controls.
+    - Display columns: Order, Item Name, Turns, Per-turn spend, and Remaining cost.
+- **Design Report (Far Right):**
+    - Detailed breakdown of stats, abilities, and costs for the selected design.
+
+Accessed from the strategy screen via the "Build Yard" button on owned planets or the keyboard shortcut. All columns support vertical scrollbars via `UIScrollingContainer` when content exceeds visible bounds.
 
 ---
 
