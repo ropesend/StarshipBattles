@@ -955,6 +955,21 @@ Key characteristics:
 
 ## 13. Battle Mode Strategy
 
+> **DEPRECATED — slated for Phase-6 deletion (PROJ-269).**
+> Replaced by the **Spec Compiler + `run_battle` pattern**: each context
+> (Combat Lab, Battle Setup, Strategy) has a context-specific compiler
+> that translates its domain inputs into a `BattleSpec`, then calls
+> `run_battle(spec) -> BattleOutcome`. The engine is context-blind.
+> Variance moves from a switch (mode=TEST/STRATEGY/...) to named fields
+> on `BattleSpec` (`boundary`, `end_condition`, `modifier_stack`,
+> `telemetry_level`, `post_battle_hook`).
+>
+> Files: `game/simulation/battle_runner.py`, `game/simulation/battle_spec.py`,
+> `game/simulation/battle_outcome.py`, the three compilers under
+> `combat_lab/spec_compiler.py`, `game/ui/screens/battle_setup/spec_compiler.py`,
+> `game/strategy/combat/spec_compiler.py`. See `docs/systems/combat_simulation.md`
+> §0 for the full description.
+
 ### Where
 
 `game/simulation/combat/battle_mode_handler.py` -- `BattleModeHandler` ABC and four concrete handlers.

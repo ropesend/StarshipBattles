@@ -2,6 +2,16 @@
 
 > Generated during project initialization. Used by parallel-execution protocols for conflict detection.
 > Updated if implementation discovers additional files.
+>
+> **Status (post Phase 5.5):** All planned new production files exist EXCEPT note
+> the path divergences below. Test files exceeded the planned set; see "Tests added beyond plan" section.
+
+### Path divergences from the plan
+
+| Plan said | Actual location | Reason |
+|-----------|-----------------|--------|
+| `game/strategy/fleets/component_state.py` | `game/strategy/data/component_state.py` | `data/` is where existing `ship_instance.py` etc. live; no `fleets/` dir exists |
+| `tests/unit/strategy/fleets/test_*.py` | `tests/unit/strategy/fleets/test_*.py` (created) AND additional Phase 4 tests live in `tests/unit/strategy/combat/` | followed compiler/test mirror convention |
 
 ## Production files — new
 

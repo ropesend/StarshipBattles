@@ -105,11 +105,11 @@ Six layers with strict downward-only dependency flow:
 | `components/abilities/` | Ability classes: weapons (beam, seeker, projectile), defense, propulsion, cargo, crew, resources, harvester, colonize, superweapons |
 | `systems/`       | BattleEngine (tick loop), BattleEndConditions, ResourceState, ResourceRegistry, TechPresetLoader |
 | `services/`      | BattleService (high-level API), RegistryLoader, ModifierService, DesignLoader, VehicleDesignService |
-| `combat/`        | DamageCalculator, TargetingSystem, WeaponFiringSystem, BattleModeHandler |
+| `combat/`        | DamageCalculator, TargetingSystem, WeaponFiringSystem, BoundaryRegion (PROJ-269), FormationResolver (PROJ-269), ModifierStack (PROJ-269), TelemetryLevel + aggregators (PROJ-269), BattleModeHandler (deprecated, slated for Phase-6 deletion) |
 | `managers/`      | BattleStateManager, RetreatManager |
 | `interfaces/`    | Simulation-internal protocols: IAIController, IAbility, IWeaponAbility, IComponent, ICombatShip, etc. |
 | `validation/`    | ShipDesignValidator |
-| (root modules)  | BattleState, BattleTuning/BattleMode, BattleController, formula_system.py (re-export shim → game.core.formula_evaluator), ProjectileManager |
+| (root modules)  | BattleState, BattleTuning/BattleMode (BattleMode deprecated, slated for Phase-6 deletion), BattleController, BattleSpec / BattleOutcome (PROJ-269), battle_runner.run_battle (PROJ-269 unified entry), formula_system.py (re-export shim → game.core.formula_evaluator), ProjectileManager |
 
 ### `game/strategy/` -- 4X strategy layer
 
@@ -192,9 +192,15 @@ Exports defined in each package's `__init__.py` via `__all__`.
 
 PhysicsBody, CollisionSystem, SpatialGrid
 
-### `game.simulation` (14 exports)
+### `game.simulation` (34 exports)
 
-Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, IEndCondition, TeamEliminatedCondition, TickLimitCondition, end_condition_from_dict, BattleService, BattleServiceResult, BattleState, ShipDesignValidator
+Existing: Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, IEndCondition, TeamEliminatedCondition, TickLimitCondition, end_condition_from_dict, BattleService, BattleServiceResult, BattleState, ShipDesignValidator.
+
+PROJ-269 BattleSpec DTOs: AIPolicy, BattleSpec, CombatPolicies, ComponentStateSpec, EntryVector, PostBattleHook, ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec.
+
+PROJ-269 BattleOutcome DTOs: BattleOutcome, EndReason, HitRecord, ModifierApplication, ShipOutcome, ShipStats, ShipStatus, TaskForceOutcome, TeamOutcome, WeaponSummary.
+
+PROJ-269 entry: `game.simulation.battle_runner.run_battle(spec, ai_factory, ship_builder, ...) -> BattleOutcome`.
 
 ### `game.strategy` (16 exports)
 
