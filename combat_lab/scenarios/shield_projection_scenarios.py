@@ -83,7 +83,6 @@ class ShieldAbsorbsDamageComparisonScenario(ComparisonScenario):
         pass_criteria="variant armor damage == 0, variant shield decreased, baseline took damage",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "absorption", "shield-projection", "comparison"],
     )
 
@@ -164,7 +163,6 @@ class ShieldDepletionOverflowScenario(ComparisonScenario):
         pass_criteria="variant shield == 0, damage_difference == shield_capacity",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "depletion", "overflow", "shield-projection", "comparison"],
     )
 
@@ -248,7 +246,6 @@ class MultipleShieldsStackScenario(ComparisonScenario):
         pass_criteria="variant max_shields == 200, variant took less armor damage than baseline",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "stacking", "additive", "shield-projection", "comparison"],
     )
 
@@ -344,7 +341,6 @@ class SingleHitOverflowScenario(ComparisonScenario):
         pass_criteria="variant shield == 0, baseline damage == 150, variant damage == 50",
         max_ticks=SHIELD_PROJ_SINGLE_SHOT_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "overflow", "single-hit", "shield-projection", "comparison"],
     )
 
@@ -444,7 +440,6 @@ class ShieldWithSufficientEnergyScenario(ComparisonScenario):
         pass_criteria="variant took ~100 less armor damage than baseline, shield depleted",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "energy", "battery", "shield-projection", "comparison"],
     )
 
@@ -525,7 +520,6 @@ class ShieldWithEnergyZeroDamageScenario(ComparisonScenario):
         pass_criteria="variant armor damage == 0, baseline took damage",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "energy", "battery", "zero-damage", "shield-projection", "comparison"],
     )
 
@@ -606,7 +600,6 @@ class ShieldFailsOnEnergyDepletionScenario(ComparisonScenario):
         pass_criteria="baseline armor damage == 0, variant armor damage > 0",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "energy", "depletion", "shield-projection", "comparison"],
     )
 
@@ -689,7 +682,6 @@ class ShieldWithoutEnergyScenario(ComparisonScenario):
         pass_criteria="variant damage >= baseline damage - 1",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "energy", "no-power", "shield-projection", "comparison"],
     )
 
@@ -767,7 +759,6 @@ class ShieldWithMetalsProtects(ComparisonScenario):
         pass_criteria="variant took less damage than baseline, shield depleted",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "metals", "generic-resource", "shield-projection", "comparison"],
     )
 
@@ -845,7 +836,6 @@ class ShieldWithoutMetalsNoProtection(ComparisonScenario):
         pass_criteria="damage_diff <= 1",
         max_ticks=SHIELD_PROJ_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "metals", "generic-resource", "no-power", "shield-projection", "comparison"],
     )
 

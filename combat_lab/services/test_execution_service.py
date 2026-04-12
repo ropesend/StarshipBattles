@@ -163,12 +163,9 @@ class TestExecutionService:
             ticks_per_sec = tick_count / elapsed_time if elapsed_time > 0 else 0
             logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({ticks_per_sec:.0f} ticks/sec)")
 
-            # Validate results (new system) or verify (legacy fallback)
-            try:
-                report = scenario._run_validation(battle_engine)
-                scenario.passed = report.passed
-            except NotImplementedError:
-                scenario.passed = scenario.verify(battle_engine)
+            # Validate results
+            report = scenario._run_validation(battle_engine)
+            scenario.passed = report.passed
             logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
             # Store results

@@ -1,0 +1,2652 @@
+[
+  {
+    "timestamp": "2026-04-06T20:14:04.786281",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.09172725677490234,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:32:10.159527",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.09314131736755371,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:48:04.972866",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08946824073791504,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:59:40.540943",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08950638771057129,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:15:27.090125",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08907699584960938,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:07:04.119860",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08906435966491699,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:17:46.766255",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08172464370727539,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:01:07.168816",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999846.0,
+      "damage_dealt": 254.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.508,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.508,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.0847311019897461,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.508,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5080 (254/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:02:17.660464",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999844.0,
+      "damage_dealt": 256.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.512,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.512,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5120 (256/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08588719367980957,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.512,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5120 (256/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\BEAMWEAPON-001_2026-04-11T15-02-14-439522_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\BEAMWEAPON-001_2026-04-11T15-02-14-439522_final.json",
+    "seed": 1141998214
+  },
+  {
+    "timestamp": "2026-04-11T19:46:32.247914",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "BEAMWEAPON-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999847.0,
+      "damage_dealt": 253.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.506,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 253
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 253,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 0.5,
+            "actual": 0.5,
+            "passed": true,
+            "detail": "expected=0.5, actual=0.5"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.002,
+            "actual": 0.002,
+            "passed": true,
+            "detail": "expected=0.002, actual=0.002"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Range",
+            "expected": 800,
+            "actual": 800.0,
+            "passed": true,
+            "detail": "expected=800, actual=800.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Surface Distance",
+            "expected": 70.5277480108769,
+            "actual": 70.5277480108769,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Weapon Range Covers Distance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "surface_distance=70.53, beam.range=800.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate",
+            "expected": 0.5068315323716187,
+            "actual": 0.506,
+            "passed": true,
+            "detail": "TOST p=0.0000, observed=0.5060 (253/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+          }
+        ]
+      },
+      "duration_real": 0.08458566665649414,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 0.5,
+        "actual": 0.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.5, actual=0.5"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.002,
+        "actual": 0.002,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.002, actual=0.002"
+      },
+      {
+        "name": "Beam Range",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Surface Distance",
+        "status": "PASS",
+        "expected": 70.5277480108769,
+        "actual": 70.5277480108769,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Weapon Range Covers Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "surface_distance=70.53, beam.range=800.0"
+      },
+      {
+        "name": "Hit Rate",
+        "status": "PASS",
+        "expected": 0.5068315323716187,
+        "actual": 0.506,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "TOST p=0.0000, observed=0.5060 (253/500), margin=+/-10.00%, bounds=[0.4068, 0.6068]"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\BEAMWEAPON-001_2026-04-11T19-46-29-463788_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\BEAMWEAPON-001_2026-04-11T19-46-29-463788_final.json",
+    "seed": 430109972
+  }
+]

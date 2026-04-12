@@ -72,7 +72,6 @@ class CNCBeamDisabledScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["cnc", "command-control", "beam", "comparison"],
     )
 
@@ -131,7 +130,6 @@ class CNCProjectileDisabledScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["cnc", "command-control", "projectile", "comparison"],
     )
 
@@ -191,7 +189,6 @@ class CNCShieldDisabledScenario(ComparisonScenario):
         pass_criteria="variant takes more hull damage than baseline",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["cnc", "command-control", "shield", "comparison"],
     )
 
@@ -268,7 +265,6 @@ class CNCEngineDisabledScenario(ComparisonScenario):
         pass_criteria="variant position unchanged, baseline position changed significantly",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["cnc", "command-control", "engine", "movement", "comparison"],
     )
 
@@ -382,7 +378,6 @@ class CNCBridgeDestroyedScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt > 0 AND variant_damage_dealt < baseline_damage_dealt",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["cnc", "command-control", "destruction", "mid-battle", "comparison"],
     )
 
@@ -518,7 +513,6 @@ class CNCBridgeRedundancyScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt > baseline_damage_dealt, both > 0",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["cnc", "command-control", "redundancy", "bridge", "comparison"],
     )
 

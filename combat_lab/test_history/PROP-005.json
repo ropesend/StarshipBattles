@@ -1,0 +1,1892 @@
+[
+  {
+    "timestamp": "2026-04-06T20:16:09.019923",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.1206655502319336,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:16.839167",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.1296846866607666,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:09.064538",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.11896252632141113,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:01:46.598820",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.11925888061523438,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:36.396674",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.11854028701782227,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:09:12.945399",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.11861515045166016,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:19:54.232672",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.1184546947479248,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:15.916735",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.11928272247314453,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:05:30.896962",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.12468767166137695,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROP-005_2026-04-11T15-05-30-771276_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROP-005_2026-04-11T15-05-30-771276_final.json",
+    "seed": 1375425452
+  },
+  {
+    "timestamp": "2026-04-11T19:49:38.431470",
+    "ticks_run": 50,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROP-005",
+      "ticks_run": 50,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 50,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Low Mass Ship Mass",
+            "expected": 400,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400, actual=400.0"
+          },
+          {
+            "phase": "data",
+            "name": "High Mass Ship Mass",
+            "expected": 3000,
+            "actual": 3000.0,
+            "passed": true,
+            "detail": "expected=3000, actual=3000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Turn Speed",
+            "expected": 15.625,
+            "actual": 15.625,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Turn Speed",
+            "expected": 0.7607257743127307,
+            "actual": 0.7607257743127307,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+          },
+          {
+            "phase": "outcome",
+            "name": "Low Mass Final Angle",
+            "expected": 7.8125,
+            "actual": 7.8125,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "High Mass Final Angle",
+            "expected": 0.38036288715636535,
+            "actual": 0.3803628871563656,
+            "passed": true,
+            "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Turn Speed Ratio",
+            "expected": 20.53959590644373,
+            "actual": 20.53959590644373,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+          }
+        ]
+      },
+      "duration_real": 0.12241172790527344,
+      "ticks": 50
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 50,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Low Mass Ship Mass",
+        "status": "PASS",
+        "expected": 400,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400, actual=400.0"
+      },
+      {
+        "name": "High Mass Ship Mass",
+        "status": "PASS",
+        "expected": 3000,
+        "actual": 3000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=3000, actual=3000.0"
+      },
+      {
+        "name": "Low Mass Turn Speed",
+        "status": "PASS",
+        "expected": 15.625,
+        "actual": 15.625,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      },
+      {
+        "name": "High Mass Turn Speed",
+        "status": "PASS",
+        "expected": 0.7607257743127307,
+        "actual": 0.7607257743127307,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-06"
+      },
+      {
+        "name": "Low Mass Final Angle",
+        "status": "PASS",
+        "expected": 7.8125,
+        "actual": 7.8125,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "High Mass Final Angle",
+        "status": "PASS",
+        "expected": 0.38036288715636535,
+        "actual": 0.3803628871563656,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=7.30e-16, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Turn Speed Ratio",
+        "status": "PASS",
+        "expected": 20.53959590644373,
+        "actual": 20.53959590644373,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1e-09"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROP-005_2026-04-11T19-49-38-309058_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROP-005_2026-04-11T19-49-38-309058_final.json",
+    "seed": 480341200
+  }
+]

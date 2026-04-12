@@ -101,7 +101,6 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
         pass_criteria="damage_dealt > 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["accuracy", "projectile", "stationary-target", "point-blank"]
     )
@@ -195,7 +194,6 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
         pass_criteria="damage_dealt > 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["accuracy", "projectile", "moving-target", "linear", "slow", "leading", "crossing"]
     )
@@ -304,7 +302,6 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=7,
         tags=["accuracy", "projectile", "moving-target", "linear", "fast", "leading", "crossing"]
     )
@@ -406,7 +403,6 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=6,
         tags=["accuracy", "projectile", "moving-target", "erratic", "small", "difficult"]
     )
@@ -501,7 +497,6 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=5,
         tags=["accuracy", "projectile", "moving-target", "erratic", "large"]
     )
@@ -600,7 +595,6 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
         pass_criteria="damage_dealt == 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=9,
         tags=["range-limit", "out-of-range", "projectile"]
     )
@@ -676,7 +670,6 @@ class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
         pass_criteria="damage_dealt > 0",
         max_ticks=200,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["damage", "projectile", "close-range", "consistency"]
     )
@@ -755,7 +748,6 @@ class ProjectileDamageMidRangeScenario(StaticTargetScenario):
         pass_criteria="damage_dealt > 0",
         max_ticks=300,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=9,
         tags=["damage", "projectile", "mid-range", "consistency"]
     )
@@ -835,7 +827,6 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=400,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["damage", "projectile", "long-range", "max-range", "consistency"]
     )
@@ -924,7 +915,6 @@ class ProjectileStopsWithoutAmmoScenario(ComparisonScenario):
         pass_criteria="variant damage == 0, variant shots_fired == 0",
         max_ticks=PROJ_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["projectile", "ammo", "resource", "no-ammo", "comparison"],
     )
 
@@ -993,7 +983,6 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
         pass_criteria="variant damage < baseline, variant shots ≈ 250",
         max_ticks=PROJ_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["projectile", "ammo", "resource", "depletion", "comparison"],
     )
 
@@ -1078,7 +1067,6 @@ class ProjectileControlWithAmmoScenario(ComparisonScenario):
         pass_criteria="variant damage == baseline damage",
         max_ticks=PROJ_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["projectile", "ammo", "resource", "control", "comparison"],
     )
 
@@ -1139,7 +1127,6 @@ class ProjectileWithMetalsFires(ComparisonScenario):
         pass_criteria="baseline damage > 0, variant damage == 0, variant shots == 0",
         max_ticks=PROJ_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["projectile", "metals", "generic-resource", "comparison"],
     )
 
@@ -1198,7 +1185,6 @@ class ProjectileWithMetalsControl(ComparisonScenario):
         pass_criteria="variant damage == baseline damage",
         max_ticks=PROJ_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["projectile", "metals", "generic-resource", "control", "comparison"],
     )
 

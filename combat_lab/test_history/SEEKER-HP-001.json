@@ -1,0 +1,2632 @@
+[
+  {
+    "timestamp": "2026-04-06T20:16:24.208987",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.030148744583129883,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:32.606482",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.029810190200805664,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:24.259213",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.02865886688232422,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:01.970857",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.04816102981567383,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:52.020496",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.029069900512695312,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:09:28.685419",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.028635025024414062,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:20:10.005166",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.02615809440612793,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:32.001044",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.027237653732299805,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:05:48.598219",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 14,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 14,
+          "shots_hit": 14
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 14,
+      "baseline_target_resolved_hits": 14,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 40
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 40,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.03070068359375,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-HP-001_2026-04-11T15-05-48-567519_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-HP-001_2026-04-11T15-05-48-567519_final.json",
+    "seed": 1373974648
+  },
+  {
+    "timestamp": "2026-04-11T19:49:55.109269",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-HP-001",
+      "baseline_attacker_total_shots_fired": 10,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 1)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 10,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 17,
+      "baseline_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 17,
+          "shots_hit": 10
+        }
+      ],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 17,
+      "baseline_target_resolved_hits": 10,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000130,
+      "baseline_final_hp": 1000000130,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000130,
+      "variant_final_hp": 999999130.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 10,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (HP 10)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 10,
+          "shots_hit": 10
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 10,
+      "variant_attacker_resolved_hits": 10,
+      "variant_target_total_shots_fired": 40,
+      "variant_target_weapons": [
+        {
+          "name": "Test PDC Beam (Medium Accuracy)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 40,
+          "shots_hit": 26
+        }
+      ],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 40,
+      "variant_target_resolved_hits": 26,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000130"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=1000.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=10"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Seekers Deal Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant_damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "High HP Survives Better Than Low HP",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=1000.0, baseline=0"
+          }
+        ]
+      },
+      "duration_real": 0.028825044631958008,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000130"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=1000.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=10"
+      },
+      {
+        "name": "High HP Seekers Deal Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant_damage=1000.0"
+      },
+      {
+        "name": "High HP Survives Better Than Low HP",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=1000.0, baseline=0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-HP-001_2026-04-11T19-49-55-078935_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-HP-001_2026-04-11T19-49-55-078935_final.json",
+    "seed": 1278354704
+  }
+]

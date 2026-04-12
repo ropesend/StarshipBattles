@@ -1,0 +1,1622 @@
+[
+  {
+    "timestamp": "2026-04-01T22:07:09.076702",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7034111022949219,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T06:07:54.061768",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7671473026275635,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T06:14:41.504712",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7046163082122803,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T06:27:23.675963",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7283341884613037,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T20:59:15.234400",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7190396785736084,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T03:56:57.021845",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.6945083141326904,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T04:23:09.051886",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.709975004196167,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T04:26:31.951154",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7116901874542236,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T04:50:00.101884",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.698192834854126,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T07:34:30.762219",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-002",
+      "initial_hp": 3050,
+      "final_hp": 2657.0,
+      "damage_dealt": 393.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.786,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_range": 800,
+      "expected_beam_range": 1600,
+      "actual_beam_range": 1600.0,
+      "modifier_applied_correctly": true,
+      "distance": 1200,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Beam Range (from JSON)",
+            "expected": 800,
+            "actual": 800,
+            "passed": true,
+            "detail": "expected=800, actual=800"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Beam Range",
+            "expected": 1600,
+            "actual": 1600.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt at Extended Range",
+            "expected": true,
+            "actual": 393.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7265005111694336,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Beam Range (from JSON)",
+        "status": "PASS",
+        "expected": 800,
+        "actual": 800,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=800, actual=800"
+      },
+      {
+        "name": "Modified Beam Range",
+        "status": "PASS",
+        "expected": 1600,
+        "actual": 1600.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt at Extended Range",
+        "status": "PASS",
+        "expected": true,
+        "actual": 393.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

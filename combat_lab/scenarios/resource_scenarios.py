@@ -228,7 +228,6 @@ class EngineFuelConsumptionScenario(ResourceScenario):
         pass_criteria=f"final_fuel = {RES001_EXPECTED_FINAL_FUEL}, final_velocity > 0",
         max_ticks=RES001_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["resource", "fuel", "consumption", "engine"],
     )
@@ -286,7 +285,6 @@ class EngineFuelDepletionScenario(ResourceScenario):
         pass_criteria=f"final_fuel = 0, final_velocity = 0, distance_traveled > 0",
         max_ticks=RES002_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["resource", "fuel", "depletion", "starvation", "engine"],
     )
@@ -342,7 +340,6 @@ class EngineFuelRegenerationScenario(ResourceScenario):
         pass_criteria=f"final_fuel ≈ initial_fuel, final_velocity > 0",
         max_ticks=RES003_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["resource", "fuel", "regeneration", "engine"],
     )
@@ -403,7 +400,6 @@ class BeamEnergyConsumptionScenario(ResourceScenario):
         pass_criteria=f"energy_consumed = {RES004_EXPECTED_ENERGY_CONSUMED}, shots_fired = {RES004_EXPECTED_SHOTS}",
         max_ticks=RES004_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=9,
         tags=["resource", "energy", "consumption", "beam-weapons"],
     )
@@ -461,7 +457,6 @@ class BeamEnergyDepletionScenario(ResourceScenario):
         pass_criteria=f"final_energy = 0, shots_fired = {RES005_EXPECTED_SHOTS}",
         max_ticks=RES005_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=9,
         tags=["resource", "energy", "depletion", "beam-weapons"],
     )
@@ -520,7 +515,6 @@ class BeamEnergyRegenerationScenario(ResourceScenario):
         pass_criteria=f"shots_fired ≈ {RES005A_EXPECTED_SHOTS}, final_energy >= 0",
         max_ticks=RES005A_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=9,
         tags=["resource", "energy", "regeneration", "beam-weapons"],
     )
@@ -587,7 +581,6 @@ class ProjectileAmmoConsumptionScenario(ResourceScenario):
         pass_criteria=f"ammo_consumed = {RES006_EXPECTED_AMMO_CONSUMED}, shots_fired = {RES006_EXPECTED_SHOTS}",
         max_ticks=RES006_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["resource", "ammo", "consumption", "projectile-weapons"],
     )
@@ -645,7 +638,6 @@ class ProjectileAmmoDepletionScenario(ResourceScenario):
         pass_criteria=f"final_ammo = 0, shots_fired = {RES007_EXPECTED_SHOTS}",
         max_ticks=RES007_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["resource", "ammo", "depletion", "projectile-weapons"],
     )
@@ -704,7 +696,6 @@ class SeekerAmmoConsumptionScenario(ResourceScenario):
         pass_criteria=f"ammo_consumed = {RES008_EXPECTED_AMMO_CONSUMED}, launches = {RES008_EXPECTED_LAUNCHES}",
         max_ticks=RES008_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=7,
         tags=["resource", "ammo", "consumption", "seeker-weapons", "missiles"],
     )
@@ -772,7 +763,6 @@ class EnergyContentionBeamRegenScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt < baseline_damage_dealt, both > 0",
         max_ticks=RES009_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         tags=["resource", "energy", "contention", "beam", "shield-regen", "comparison"],
     )
 

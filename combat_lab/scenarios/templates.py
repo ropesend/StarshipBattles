@@ -19,8 +19,13 @@ Usage Example:
         target_ship = "Test_Target.json"
         distance = 500
 
-        def verify(self, battle_engine):
-            return self.damage_dealt > 100
+        def validate(self, engine):
+            checks = self._template_preconditions()
+            checks.append(check_true(
+                "Damage dealt", self.damage_dealt > 100,
+                detail=f"damage={self.damage_dealt}", phase="outcome",
+            ))
+            return checks
 """
 
 import pygame
@@ -76,8 +81,13 @@ class StaticTargetScenario(TestScenario):
             target_ship = "Test_Target_Stationary.json"
             distance = 50
 
-            def verify(self, battle_engine):
-                return self.damage_dealt > 0
+            def validate(self, engine):
+                checks = self._template_preconditions()
+                checks.append(check_true(
+                    "Damage dealt", self.damage_dealt > 0,
+                    detail=f"damage={self.damage_dealt}", phase="outcome",
+                ))
+                return checks
     """
 
     # Configuration - subclasses must set these
@@ -159,9 +169,8 @@ class StaticTargetScenario(TestScenario):
             self.attacker.movement_policy = 'test_do_nothing'
         self.target.movement_policy = 'test_do_nothing'
 
-        # Call custom setup hook if defined
-        if hasattr(self, 'custom_setup'):
-            self.custom_setup(battle_engine)
+        # Scenario-specific setup hook
+        self.custom_setup(battle_engine)
 
     def update(self, battle_engine):
         """Per-tick update. AI handles firing and movement via strategies."""
@@ -201,9 +210,8 @@ class StaticTargetScenario(TestScenario):
             if hasattr(self, key):
                 self.results[key] = getattr(self, key)
 
-        # Hook for subclasses to add extra results
-        if hasattr(self, '_collect_extra_results'):
-            self._collect_extra_results(engine)
+        # Scenario-specific extra-results hook
+        self._collect_extra_results(engine)
 
     def _template_preconditions(self):
         """
@@ -222,34 +230,6 @@ class StaticTargetScenario(TestScenario):
             actual=ticks,
         ))
         return checks
-
-    def verify(self, battle_engine) -> bool:
-        """
-        Legacy pass/fail for un-migrated scenarios.
-
-        Calls collect_results() then applies flag-based pass criteria.
-        New scenarios should implement validate() instead.
-        """
-        if self.skip_test:
-            self.results['skipped'] = True
-            self.results['skip_reason'] = self.skip_reason
-            return False
-
-        self.collect_results(battle_engine)
-
-        if self.measurement_mode:
-            return battle_engine.tick_counter > 0
-        elif self.expect_no_damage:
-            return self.damage_dealt == 0
-        elif self.min_damage_threshold > 0:
-            return self.damage_dealt >= self.min_damage_threshold
-        elif self.verify_damage_dealt:
-            return self.damage_dealt > 0
-        else:
-            raise NotImplementedError(
-                f"{self.__class__.__name__} must implement validate() or verify()"
-            )
-
 
 # ============================================================================
 # DUEL SCENARIO TEMPLATE
@@ -301,8 +281,13 @@ class DuelScenario(TestScenario):
             ship2_file = "Test_Ship2.json"
             distance = 500
 
-            def verify(self, battle_engine):
-                return self.winner == 'ship1'
+            def validate(self, engine):
+                checks = self._template_preconditions()
+                checks.append(check_true(
+                    "Ship1 wins", self.winner == 'ship1',
+                    detail=f"winner={self.winner}", phase="outcome",
+                ))
+                return checks
     """
 
     # Configuration - subclasses must set these
@@ -368,9 +353,8 @@ class DuelScenario(TestScenario):
             self.ship1.movement_policy = 'test_do_nothing'
             self.ship2.movement_policy = 'test_do_nothing'
 
-        # Call custom setup hook if defined
-        if hasattr(self, 'custom_setup'):
-            self.custom_setup(battle_engine)
+        # Scenario-specific setup hook
+        self.custom_setup(battle_engine)
 
     def update(self, battle_engine):
         """
@@ -428,14 +412,6 @@ class DuelScenario(TestScenario):
         checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
         return checks
 
-    def verify(self, battle_engine) -> bool:
-        """Legacy pass/fail. New scenarios should implement validate()."""
-        self.collect_results(battle_engine)
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate() or verify()"
-        )
-
-
 # ============================================================================
 # PROPULSION SCENARIO TEMPLATE
 # ============================================================================
@@ -483,8 +459,14 @@ class PropulsionScenario(TestScenario):
             ship_file = "Test_Engine_Ship.json"
             thrust_forward = True
 
-            def verify(self, battle_engine):
-                return self.final_velocity.length() > self.initial_velocity.length()
+            def validate(self, engine):
+                checks = self._template_preconditions()
+                checks.append(check_true(
+                    "Accelerated",
+                    self.final_velocity.length() > self.initial_velocity.length(),
+                    phase="outcome",
+                ))
+                return checks
     """
 
     # Configuration - subclasses must set these
@@ -544,9 +526,8 @@ class PropulsionScenario(TestScenario):
         else:
             self.ship.movement_policy = 'test_do_nothing'
 
-        # Call custom setup hook if defined
-        if hasattr(self, 'custom_setup'):
-            self.custom_setup(battle_engine)
+        # Scenario-specific setup hook
+        self.custom_setup(battle_engine)
 
     def update(self, battle_engine):
         """
@@ -651,18 +632,6 @@ class PropulsionScenario(TestScenario):
         if expected_distance is not None:
             checks.append(check_approx("Distance", expected_distance, self.distance_traveled, tolerance=0.02))
         return checks
-
-    def verify(self, battle_engine) -> bool:
-        """
-        Legacy pass/fail for un-migrated scenarios.
-
-        New scenarios should implement validate() instead.
-        """
-        self.collect_results(battle_engine)
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate() or verify()"
-        )
-
 
 # ============================================================================
 # RESOURCE SCENARIO TEMPLATE
@@ -800,9 +769,8 @@ class ResourceScenario(TestScenario):
         if self.target is not None:
             self.target.movement_policy = 'test_do_nothing'
 
-        # Call custom setup hook if defined
-        if hasattr(self, 'custom_setup'):
-            self.custom_setup(battle_engine)
+        # Scenario-specific setup hook
+        self.custom_setup(battle_engine)
 
     def update(self, battle_engine):
         """
@@ -844,9 +812,8 @@ class ResourceScenario(TestScenario):
 
         self._finalize_tracking()
 
-        # Hook for subclasses to add extra results
-        if hasattr(self, '_collect_extra_results'):
-            self._collect_extra_results(engine)
+        # Scenario-specific extra-results hook
+        self._collect_extra_results(engine)
 
     def _template_preconditions(self):
         """
@@ -864,14 +831,6 @@ class ResourceScenario(TestScenario):
             actual=ticks,
         ))
         return checks
-
-    def verify(self, battle_engine) -> bool:
-        """Legacy pass/fail. New scenarios should implement validate()."""
-        self.collect_results(battle_engine)
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate() or verify()"
-        )
-
 
 # ============================================================================
 # COMPARISON SCENARIO TEMPLATE
@@ -1158,8 +1117,7 @@ class ComparisonScenario(TestScenario):
 
         self._finalize_tracking()
 
-        if hasattr(self, '_collect_extra_results'):
-            self._collect_extra_results(engine)
+        self._collect_extra_results(engine)
 
     def _run_validation(self, engine):
         """
@@ -1254,9 +1212,3 @@ class ComparisonScenario(TestScenario):
                 ))
         return checks
 
-    def verify(self, battle_engine) -> bool:
-        """Legacy pass/fail. Implement validate() instead."""
-        self.collect_results(battle_engine)
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate()"
-        )

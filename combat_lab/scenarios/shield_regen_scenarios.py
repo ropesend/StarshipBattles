@@ -86,7 +86,6 @@ class RegenReducesNetDamageScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt < baseline_damage_dealt",
         max_ticks=SHIELD_REGEN_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "shield-regeneration", "comparison"],
     )
 
@@ -183,7 +182,6 @@ class RegenExceedsDamageScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, shields still up",
         max_ticks=SHIELD_REGEN_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "zero-damage", "shield-regeneration", "comparison"],
     )
 
@@ -257,7 +255,6 @@ class RegenStackingScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt < baseline_damage_dealt",
         max_ticks=SHIELD_REGEN_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "stacking", "shield-regeneration", "comparison"],
     )
 
@@ -337,7 +334,6 @@ class RegenWithFullEnergyScenario(ComparisonScenario):
         pass_criteria="baseline_damage_dealt == variant_damage_dealt",
         max_ticks=SHIELD_REGEN_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "energy", "resource", "shield-regeneration", "comparison"],
     )
 
@@ -410,7 +406,6 @@ class RegenWithNoEnergyScenario(ComparisonScenario):
         pass_criteria="baseline_damage_dealt == variant_damage_dealt",
         max_ticks=SHIELD_REGEN_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "energy", "starved", "shield-regeneration", "comparison"],
     )
 
@@ -481,7 +476,6 @@ class RegenStopsMidBattleScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt > baseline_damage_dealt",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "energy", "depletion", "shield-regeneration", "comparison"],
     )
 
@@ -563,7 +557,6 @@ class RegenEqualsDamageRateScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0, variant shields > 0",
         max_ticks=SHIELD_REGEN_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["shield", "regen", "boundary", "exact-match", "shield-regeneration", "comparison"],
     )
 

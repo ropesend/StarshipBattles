@@ -110,7 +110,6 @@ class ModDmg001_StatGateScenario(StaticTargetScenario):
         pass_criteria=f"damage == {BOOSTED_DAMAGE} AND damage_dealt > 10",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "damage_mult", "stat_gate"],
     )
 
@@ -182,7 +181,6 @@ class ModDmg002_BoostRatioScenario(ComparisonScenario):
         pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {DAMAGE_BOOST_PARAM}",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "damage_mult", "ratio", "behavioral"],
     )
 
@@ -244,7 +242,6 @@ class ModDmg003_ExtremeRatioScenario(ComparisonScenario):
         pass_criteria="ratio within ±0.5 of 10.0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "damage_mult", "extreme", "behavioral"],
     )
 
@@ -310,7 +307,6 @@ class ModDmg004_PenaltyScenario(ComparisonScenario):
         pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {PENALTY_PARAM}",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "damage_mult", "penalty", "behavioral"],
     )
 
@@ -402,7 +398,6 @@ class ModDmg005_RangeIndependentScenario(ComparisonScenario):
         pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {DAMAGE_BOOST_PARAM}",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "damage_mult", "range_independent", "behavioral"],
     )
 

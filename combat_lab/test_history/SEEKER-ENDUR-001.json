@@ -1,0 +1,2492 @@
+[
+  {
+    "timestamp": "2026-04-06T20:16:23.164493",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.015579938888549805,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:31.491699",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.01612091064453125,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:23.197040",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.015640974044799805,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:00.906118",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.014635324478149414,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:50.934644",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.015619993209838867,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:09:27.584744",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.01608872413635254,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:20:08.901121",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.014286041259765625,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:30.892113",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.01556253433227539,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:05:47.386355",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.01665472984313965,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-ENDUR-001_2026-04-11T15-05-47-369700_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-ENDUR-001_2026-04-11T15-05-47-369700_final.json",
+    "seed": 100169185
+  },
+  {
+    "timestamp": "2026-04-11T19:49:53.958236",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-ENDUR-001",
+      "baseline_attacker_total_shots_fired": 1,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 2.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 0
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 100.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000000.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 1,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance 5.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1,
+      "variant_attacker_resolved_hits": 1,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=0, variant_dmg=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Attacker Fired",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shots=1"
+          },
+          {
+            "phase": "outcome",
+            "name": "Long Endurance Seeker Hit",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=100.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Short Endurance Seeker Expired",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.015295028686523438,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=0, variant_dmg=100.0"
+      },
+      {
+        "name": "Baseline Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Variant Attacker Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "shots=1"
+      },
+      {
+        "name": "Long Endurance Seeker Hit",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=100.0"
+      },
+      {
+        "name": "Short Endurance Seeker Expired",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-ENDUR-001_2026-04-11T19-49-53-942940_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SEEKER-ENDUR-001_2026-04-11T19-49-53-942940_final.json",
+    "seed": 963518898
+  }
+]

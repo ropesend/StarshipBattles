@@ -1,0 +1,2492 @@
+[
+  {
+    "timestamp": "2026-04-06T20:17:00.040674",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.024719953536987305,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:35:08.983001",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.022998571395874023,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:59.923382",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.023052692413330078,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:37.993992",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.022954225540161133,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:18:28.573149",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.02099156379699707,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:10:05.529695",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.022071123123168945,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:20:45.705720",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.021644115447998047,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:04:08.013155",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.021665573120117188,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:06:28.317217",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.02424335479736328,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-REGEN-007_2026-04-11T15-06-28-292974_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-REGEN-007_2026-04-11T15-06-28-292974_final.json",
+    "seed": 1494968851
+  },
+  {
+    "timestamp": "2026-04-11T19:50:32.860720",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-REGEN-007",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 300.0,
+      "baseline_initial_hp": 1000000150,
+      "baseline_final_hp": 999999850.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000200,
+      "variant_final_hp": 1000000200,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=300.0, variant_dmg=0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Regen Rate",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Hull Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=300.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Hull Damage (Regen == Damage)",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shields Still Active",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "shields=199.0/200.0"
+          }
+        ]
+      },
+      "duration_real": 0.022601842880249023,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=300.0, variant_dmg=0"
+      },
+      {
+        "name": "Variant Regen Rate",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100.0, actual=100.0"
+      },
+      {
+        "name": "Baseline Took Hull Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=300.0"
+      },
+      {
+        "name": "Zero Hull Damage (Regen == Damage)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shields Still Active",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "shields=199.0/200.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-REGEN-007_2026-04-11T19-50-32-838119_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-REGEN-007_2026-04-11T19-50-32-838119_final.json",
+    "seed": 852945594
+  }
+]

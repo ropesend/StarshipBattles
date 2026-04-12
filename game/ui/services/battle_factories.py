@@ -20,6 +20,7 @@ from game.simulation.entities.ship_serialization import ShipSerializer
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from combat_lab.scenarios.base import TestScenario
 
 
 def _create_default_ai_factory() -> AIControllerFactory:
@@ -132,7 +133,7 @@ def create_manual_battle(
 
 
 def create_test_battle(
-    scenario: 'CombatScenario',
+    scenario: 'TestScenario',
     headless: bool = True,
     seed: Optional[int] = None,
 ) -> BattleController:

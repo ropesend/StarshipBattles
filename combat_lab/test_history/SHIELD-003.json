@@ -1,0 +1,787 @@
+[
+  {
+    "timestamp": "2026-03-30T22:34:34.493895",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-003",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000035.9000047,
+      "damage_dealt": 164.09999525547028,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.32819999051094056,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Shield Capacity",
+            "expected": 200,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "expected=200, actual=200.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hull Damage Dealt",
+            "expected": true,
+            "actual": 164.09999525547028,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15352797508239746,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Shield Capacity",
+        "status": "PASS",
+        "expected": 200,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=200, actual=200.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Hull Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 164.09999525547028,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:08.663850",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-003",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000035.9000047,
+      "damage_dealt": 164.09999525547028,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.32819999051094056,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Shield Capacity",
+            "expected": 200,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "expected=200, actual=200.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hull Damage Dealt",
+            "expected": true,
+            "actual": 164.09999525547028,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.1540083885192871,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Shield Capacity",
+        "status": "PASS",
+        "expected": 200,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=200, actual=200.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Hull Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 164.09999525547028,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:49.370675",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-003",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000035.9000047,
+      "damage_dealt": 164.09999525547028,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.32819999051094056,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Shield Capacity",
+            "expected": 200,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "expected=200, actual=200.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hull Damage Dealt",
+            "expected": true,
+            "actual": 164.09999525547028,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15285181999206543,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Shield Capacity",
+        "status": "PASS",
+        "expected": 200,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=200, actual=200.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Hull Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 164.09999525547028,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:22:10.647512",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-003",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000035.9000047,
+      "damage_dealt": 164.09999525547028,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.32819999051094056,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Shield Capacity",
+            "expected": 200,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "expected=200, actual=200.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hull Damage Dealt",
+            "expected": true,
+            "actual": 164.09999525547028,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15476012229919434,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Shield Capacity",
+        "status": "PASS",
+        "expected": 200,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=200, actual=200.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Hull Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 164.09999525547028,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:45:49.454663",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-003",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000035.9000047,
+      "damage_dealt": 164.09999525547028,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.32819999051094056,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Shield Capacity",
+            "expected": 200,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "expected=200, actual=200.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hull Damage Dealt",
+            "expected": true,
+            "actual": 164.09999525547028,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15488219261169434,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Shield Capacity",
+        "status": "PASS",
+        "expected": 200,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=200, actual=200.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Hull Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 164.09999525547028,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

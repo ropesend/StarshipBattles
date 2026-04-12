@@ -39,6 +39,7 @@ __all__ = [
     'clear_registry',
     'set_validator',
 ]
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
@@ -150,12 +151,37 @@ class RegistryManager:
     def freeze(self):
         """
         Prevent further modifications to the registry.
-        
+
         Call this after game initialization to catch accidental mutations
         during gameplay. Useful for detecting bugs where code tries to
         modify registry data at runtime.
         """
         self._frozen = True
+
+    def unfreeze(self):
+        """Allow modifications to the registry.
+
+        Used for test data reloads and other controlled reinitialisation.
+        Prefer ``unfrozen()`` for scoped mutations so the registry is
+        always re-frozen to its prior state on exit.
+        """
+        self._frozen = False
+
+    @contextmanager
+    def unfrozen(self):
+        """Scoped unfreeze that restores the prior frozen state on exit.
+
+        Used by the Combat Lab runner and test fixtures to temporarily
+        allow registry mutations (clear, hydrate, reload) without leaving
+        the registry writable after the scope ends — including when the
+        scope exits via an exception.
+        """
+        was_frozen = self._frozen
+        self._frozen = False
+        try:
+            yield self
+        finally:
+            self._frozen = was_frozen
 
     def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any], resources_data: Optional[Dict[str, Any]] = None):
         """

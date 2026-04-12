@@ -1,0 +1,2132 @@
+[
+  {
+    "timestamp": "2026-04-06T20:14:38.967907",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.43183016777038574,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:32:45.038370",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.4427981376647949,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:48:39.282313",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.4241647720336914,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:15.385191",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.42339468002319336,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:16:03.513426",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.43410515785217285,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:07:39.646039",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.42112088203430176,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:18:21.634036",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.37001681327819824,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:01:42.259011",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.3702714443206787,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:03:46.996720",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.37949061393737793,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\EMISSIVE-006_2026-04-11T15-03-46-617229_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\EMISSIVE-006_2026-04-11T15-03-46-617229_final.json",
+    "seed": 894900028
+  },
+  {
+    "timestamp": "2026-04-11T19:47:59.479586",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "EMISSIVE-006",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 2500.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 999997700.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 2500.0,
+      "variant_initial_hp": 1000000400,
+      "variant_final_hp": 999997900.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (10 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000400"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Emissive Armor",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=2500.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Damage (3x No Stack Benefit)",
+            "expected": 2500.0,
+            "actual": 2500.0,
+            "passed": true,
+            "detail": "expected=2500.0, actual=2500.0"
+          }
+        ]
+      },
+      "duration_real": 0.374924898147583,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 7,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000400"
+      },
+      {
+        "name": "Variant Emissive Armor",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Baseline Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=2500.0"
+      },
+      {
+        "name": "Same Damage (3x No Stack Benefit)",
+        "status": "PASS",
+        "expected": 2500.0,
+        "actual": 2500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=2500.0, actual=2500.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\EMISSIVE-006_2026-04-11T19-47-59-104661_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\EMISSIVE-006_2026-04-11T19-47-59-104661_final.json",
+    "seed": 219453558
+  }
+]

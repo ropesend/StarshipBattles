@@ -98,7 +98,6 @@ class ModArc001_StatGateScenario(StaticTargetScenario):
         pass_criteria=f"firing_arc == {ARC_180} AND damage > 10",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "arc_set", "stat_gate"],
     )
 
@@ -166,7 +165,6 @@ class ModArc002_ForwardTargetScenario(ComparisonScenario):
         pass_criteria="both damage > 10, damage ratio ≈ 1.0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "arc_set", "forward"],
     )
 
@@ -243,7 +241,6 @@ class ModArc003_TargetOutsideArcScenario(StaticTargetScenario):
         pass_criteria="damage_dealt == 0 AND shots_fired == 0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "arc_set", "outside_arc", "behavioral"],
     )
 
@@ -318,7 +315,6 @@ class ModArc004_ArcRestrictionScenario(ComparisonScenario):
         pass_criteria="baseline_damage > 0 AND variant_damage == 0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "arc_set", "restriction", "binary"],
     )
 
@@ -386,7 +382,6 @@ class ModArc005_SetSemanticsScenario(StaticTargetScenario):
         pass_criteria=f"firing_arc == {ARC_180} AND != {BASE_ARC * TURRET_ARC_PARAM} AND != {BASE_ARC + TURRET_ARC_PARAM}",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "arc_set", "set_semantics"],
     )
 

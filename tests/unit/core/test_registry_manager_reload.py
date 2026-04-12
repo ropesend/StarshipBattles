@@ -114,7 +114,7 @@ class TestReloadAllFromDirectory:
                 reload_registries_from_directory(fresh_registry, test_dir)
         finally:
             # Clean up: unfreeze by resetting (registry fixture will restore)
-            fresh_registry._frozen = False
+            fresh_registry.unfreeze()
 
     def test_reload_accepts_string_path(self, fresh_registry):
         """reload_registries_from_directory() should accept string path as well as Path."""

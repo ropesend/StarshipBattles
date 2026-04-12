@@ -85,7 +85,6 @@ class ModThrustStaticScenario(PropulsionScenario):
         pass_criteria=f"total_thrust == {THRUST_BOOST_MODIFIED_THRUST} AND max_speed == {THRUST_BOOST_MAX_SPEED} AND reaches that speed",
         max_ticks=MOD_THRUST_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=30,
         tags=["modifier", "thrust_mult"],
     )
@@ -148,7 +147,6 @@ class ModThrustBaselineScenario(PropulsionScenario):
         pass_criteria=f"total_thrust == {BASELINE_THRUST}",
         max_ticks=MOD_THRUST_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=31,
         tags=["modifier", "thrust_mult"],
     )
@@ -212,7 +210,6 @@ class ModThrustDynamicVelocityScenario(PropulsionScenario):
         pass_criteria="velocity.length() >= 60.0 within 500 ticks",
         max_ticks=MOD_THRUST_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=32,
         tags=["modifier", "thrust_mult"],
     )
@@ -281,7 +278,6 @@ class ModThrustAccelerationScenario(PropulsionScenario):
         pass_criteria=f"acceleration_rate == {THRUST_BOOST_ACCEL}",
         max_ticks=MOD_THRUST_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=33,
         tags=["modifier", "thrust_mult"],
     )
@@ -360,7 +356,6 @@ class ModThrustPenaltyScenario(PropulsionScenario):
         pass_criteria=f"total_thrust == {THRUST_PENALTY_MODIFIED_THRUST} AND max_speed ~= {THRUST_PENALTY_MAX_SPEED} AND reaches near that speed",
         max_ticks=MOD_THRUST_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=34,
         tags=["modifier", "thrust_mult", "penalty"],
     )

@@ -1,0 +1,2312 @@
+[
+  {
+    "timestamp": "2026-04-06T20:16:42.564307",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.04333305358886719,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:51.281365",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.0452423095703125,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:42.508094",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.042731285095214844,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:20.471886",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.04289579391479492,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:18:10.820297",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.041726112365722656,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:09:47.641965",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.0419614315032959,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:20:28.514844",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.042389869689941406,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:50.694873",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.04217863082885742,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:06:09.298099",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.04526853561401367,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-005B_2026-04-11T15-06-09-252830_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-005B_2026-04-11T15-06-09-252830_final.json",
+    "seed": 1164910876
+  },
+  {
+    "timestamp": "2026-04-11T19:50:14.780327",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-005B",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000170,
+      "variant_final_hp": 1000000170,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000170"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=1000.0, variant_dmg=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Armor Damage",
+            "expected": 0.0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shield Absorbed All Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "absorbed=1000.0"
+          }
+        ]
+      },
+      "duration_real": 0.04353928565979004,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000170"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=1000.0, variant_dmg=0"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Zero Armor Damage",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0"
+      },
+      {
+        "name": "Shield Absorbed All Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "absorbed=1000.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-005B_2026-04-11T19-50-14-736788_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-005B_2026-04-11T19-50-14-736788_final.json",
+    "seed": 560960714
+  }
+]

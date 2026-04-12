@@ -1,0 +1,1412 @@
+[
+  {
+    "timestamp": "2026-04-06T20:16:19.876417",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.047202110290527344,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:28.151035",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.047870635986328125,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:19.915811",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.04662370681762695,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:01:57.583442",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.045786142349243164,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:47.554612",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.045770883560180664,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:09:24.169343",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.04772686958312988,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:20:05.502229",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.044919490814208984,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:27.415548",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.04540085792541504,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:05:43.479285",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.04948091506958008,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\RESOURCE-008_2026-04-11T15-05-43-429804_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\RESOURCE-008_2026-04-11T15-05-43-429804_final.json",
+    "seed": 345576748
+  },
+  {
+    "timestamp": "2026-04-11T19:49:50.319135",
+    "ticks_run": 100,
+    "passed": true,
+    "metrics": {
+      "test_id": "RESOURCE-008",
+      "ticks_run": 100,
+      "initial_value": 100000.0,
+      "final_value": 99900.0,
+      "value_consumed": 100.0,
+      "final_velocity": 0.0,
+      "distance_traveled": 0.0,
+      "damage_dealt": 77.0,
+      "ship_total_shots_fired": 100,
+      "ship_weapons": [
+        {
+          "name": "Test Seeker (Rapid Fire)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 77
+        }
+      ],
+      "ship_in_flight": 23,
+      "ship_resolved_shots": 77,
+      "ship_resolved_hits": 77,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "launches": 100,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 100,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Initial Ammo",
+            "expected": 100000.0,
+            "actual": 100000.0,
+            "passed": true,
+            "detail": "expected=100000.0, actual=100000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Ammo Consumed",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Launches",
+            "expected": 100,
+            "actual": 100,
+            "passed": true,
+            "detail": "expected=100, actual=100"
+          }
+        ]
+      },
+      "duration_real": 0.0514829158782959,
+      "ticks": 100
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Initial Ammo",
+        "status": "PASS",
+        "expected": 100000.0,
+        "actual": 100000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100000.0, actual=100000.0"
+      },
+      {
+        "name": "Ammo Consumed",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Launches",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100, actual=100"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\RESOURCE-008_2026-04-11T19-49-50-267652_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\RESOURCE-008_2026-04-11T19-49-50-267652_final.json",
+    "seed": 59618936
+  }
+]

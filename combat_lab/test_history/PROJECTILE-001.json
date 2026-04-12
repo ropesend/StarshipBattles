@@ -1,0 +1,2352 @@
+[
+  {
+    "timestamp": "2026-04-06T20:15:42.109302",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16584134101867676,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:33:49.546382",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.1650245189666748,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:49:42.548606",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16280770301818848,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:01:19.776927",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16726350784301758,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:08.816716",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16081953048706055,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:08:45.370285",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16082525253295898,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:19:26.787697",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16817784309387207,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:02:47.972525",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.15046930313110352,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:04:59.752442",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.17377471923828125,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-001_2026-04-11T15-04-59-577164_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-001_2026-04-11T15-04-59-577164_final.json",
+    "seed": 1077443058
+  },
+  {
+    "timestamp": "2026-04-11T19:49:08.947532",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "travel_time_seconds": 0.01,
+      "weapon_type": "Projectile360",
+      "weapon_damage": 1,
+      "weapon_range": 1000,
+      "projectile_speed": 20000,
+      "reload_time": 0.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "data",
+            "name": "Target Mass",
+            "expected": 400.0,
+            "actual": 400.0,
+            "passed": true,
+            "detail": "expected=400.0, actual=400.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 200.0,
+            "actual": 200.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Shots Fired",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": "weapon should fire hundreds of shots in 500 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "100% Resolved Hit Rate",
+            "expected": true,
+            "actual": "500/500",
+            "passed": true,
+            "detail": "stationary target: every resolved shot must hit"
+          }
+        ]
+      },
+      "duration_real": 0.16323161125183105,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 9,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Mass",
+        "status": "PASS",
+        "expected": 400.0,
+        "actual": 400.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=400.0, actual=400.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 200.0,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Shots Fired",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "weapon should fire hundreds of shots in 500 ticks"
+      },
+      {
+        "name": "100% Resolved Hit Rate",
+        "status": "PASS",
+        "expected": true,
+        "actual": "500/500",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "stationary target: every resolved shot must hit"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-001_2026-04-11T19-49-08-784301_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-001_2026-04-11T19-49-08-784301_final.json",
+    "seed": 1863460978
+  }
+]

@@ -71,7 +71,6 @@ class RangeBoostInRangeScenario(StaticTargetScenario):
         pass_criteria=f"beam.range == {MOD_EXPECTED_RANGE} AND damage_dealt > 0",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=30,
         tags=["modifier", "range_mult"],
     )
@@ -158,7 +157,6 @@ class RangeIdentityScenario(StaticTargetScenario):
         pass_criteria=f"beam.range == {MOD_BASE_BEAM_RANGE} AND damage_dealt > 0",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=31,
         tags=["modifier", "range_mult"],
     )
@@ -240,7 +238,6 @@ class RangeBoostBeyondBaseScenario(StaticTargetScenario):
         pass_criteria=f"beam.range == {MOD_EXPECTED_RANGE} AND damage_dealt > 0",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=32,
         tags=["modifier", "range_mult"],
     )
@@ -324,7 +321,6 @@ class RangeBoostComparisonScenario(ComparisonScenario):
         pass_criteria="baseline_damage_dealt == 0 AND variant_damage_dealt > 0",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=33,
         tags=["modifier", "range_mult", "comparison"],
     )
@@ -402,7 +398,6 @@ class RangeBoostOutOfRangeScenario(StaticTargetScenario):
         pass_criteria="damage_dealt == 0 AND shots_fired == 0",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=34,
         tags=["modifier", "range_mult", "out-of-range"],
     )
@@ -502,7 +497,6 @@ class RangePenaltyOutOfRangeScenario(ComparisonScenario):
         pass_criteria="baseline_damage > 0 AND variant_damage == 0",
         max_ticks=500,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=35,
         tags=["modifier", "range_mult", "penalty"],
     )

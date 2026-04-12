@@ -1,0 +1,1082 @@
+[
+  {
+    "timestamp": "2026-03-30T22:34:33.422244",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999648.0,
+      "damage_dealt": 452.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.904,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "sensor_attack_value": 1.0,
+      "attacker_attack_bonus": 1.0,
+      "expected_hit_chance_with_sensor": 0.9086992831024822,
+      "expected_hit_chance_baseline": 0.7854738591348314,
+      "hit_rate_improvement": 0.1232254239676508,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.001,
+            "actual": 0.001,
+            "passed": true,
+            "detail": "expected=0.001, actual=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Improves Expected Hit Chance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "with_sensor=0.9087, baseline=0.7855"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 452.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.09285402297973633,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.001,
+        "actual": 0.001,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.001, actual=0.001"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Sensor Improves Expected Hit Chance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "with_sensor=0.9087, baseline=0.7855"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 452.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:07.293786",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999648.0,
+      "damage_dealt": 452.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.904,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "sensor_attack_value": 1.0,
+      "attacker_attack_bonus": 1.0,
+      "expected_hit_chance_with_sensor": 0.9086992831024822,
+      "expected_hit_chance_baseline": 0.7854738591348314,
+      "hit_rate_improvement": 0.1232254239676508,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.001,
+            "actual": 0.001,
+            "passed": true,
+            "detail": "expected=0.001, actual=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Improves Expected Hit Chance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "with_sensor=0.9087, baseline=0.7855"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 452.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.09374094009399414,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.001,
+        "actual": 0.001,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.001, actual=0.001"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Sensor Improves Expected Hit Chance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "with_sensor=0.9087, baseline=0.7855"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 452.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:47.715965",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999648.0,
+      "damage_dealt": 452.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.904,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "sensor_attack_value": 1.0,
+      "attacker_attack_bonus": 1.0,
+      "expected_hit_chance_with_sensor": 0.9086992831024822,
+      "expected_hit_chance_baseline": 0.7854738591348314,
+      "hit_rate_improvement": 0.1232254239676508,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.001,
+            "actual": 0.001,
+            "passed": true,
+            "detail": "expected=0.001, actual=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Improves Expected Hit Chance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "with_sensor=0.9087, baseline=0.7855"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 452.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.09397673606872559,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.001,
+        "actual": 0.001,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.001, actual=0.001"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Sensor Improves Expected Hit Chance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "with_sensor=0.9087, baseline=0.7855"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 452.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:22:08.672027",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999648.0,
+      "damage_dealt": 452.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.904,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "sensor_attack_value": 1.0,
+      "attacker_attack_bonus": 1.0,
+      "expected_hit_chance_with_sensor": 0.9086992831024822,
+      "expected_hit_chance_baseline": 0.7854738591348314,
+      "hit_rate_improvement": 0.1232254239676508,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.001,
+            "actual": 0.001,
+            "passed": true,
+            "detail": "expected=0.001, actual=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Improves Expected Hit Chance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "with_sensor=0.9087, baseline=0.7855"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 452.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.09452199935913086,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.001,
+        "actual": 0.001,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.001, actual=0.001"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Sensor Improves Expected Hit Chance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "with_sensor=0.9087, baseline=0.7855"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 452.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:45:47.176027",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999648.0,
+      "damage_dealt": 452.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.904,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "sensor_attack_value": 1.0,
+      "attacker_attack_bonus": 1.0,
+      "expected_hit_chance_with_sensor": 0.9086992831024822,
+      "expected_hit_chance_baseline": 0.7854738591348314,
+      "hit_rate_improvement": 0.1232254239676508,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Base Accuracy",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Accuracy Falloff",
+            "expected": 0.001,
+            "actual": 0.001,
+            "passed": true,
+            "detail": "expected=0.001, actual=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Improves Expected Hit Chance",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "with_sensor=0.9087, baseline=0.7855"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 452.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.09524154663085938,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 8,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Beam Base Accuracy",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Beam Accuracy Falloff",
+        "status": "PASS",
+        "expected": 0.001,
+        "actual": 0.001,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.001, actual=0.001"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Sensor Improves Expected Hit Chance",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "with_sensor=0.9087, baseline=0.7855"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 452.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

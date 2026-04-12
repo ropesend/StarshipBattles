@@ -80,7 +80,6 @@ class EmissiveBlocksLowDamageScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "blocks", "comparison"],
     )
 
@@ -153,7 +152,6 @@ class EmissiveReducesHighDamageScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == baseline_damage_dealt / 2",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "reduction", "comparison"],
     )
 
@@ -234,7 +232,6 @@ class EmissiveSameGroupNoStackScenario(ComparisonScenario):
         pass_criteria="baseline_damage_dealt == variant_damage_dealt",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "stacking", "same-group", "comparison"],
     )
 
@@ -309,7 +306,6 @@ class EmissiveDiffGroupStackScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "stacking", "diff-group", "comparison"],
     )
 
@@ -383,7 +379,6 @@ class EmissiveNegativeValueScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt > baseline_damage_dealt",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "negative", "comparison"],
     )
 
@@ -470,7 +465,6 @@ class EmissiveThreeSameGroupScenario(ComparisonScenario):
         pass_criteria="baseline_damage_dealt == variant_damage_dealt",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "stacking", "same-group", "three-component", "comparison"],
     )
 
@@ -543,7 +537,6 @@ class EmissiveExactDamageBlockScenario(ComparisonScenario):
         pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0",
         max_ticks=EMISSIVE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["emissive-armor", "boundary", "exact-match", "comparison"],
     )
 

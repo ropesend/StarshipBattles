@@ -84,7 +84,6 @@ class PipelineShieldEmissiveScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage, both > 0",
         max_ticks=PIPELINE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["pipeline", "shield", "emissive", "comparison"],
     )
 
@@ -163,7 +162,6 @@ class PipelineShieldSRAScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage",
         max_ticks=PIPELINE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["pipeline", "shield", "sra", "comparison"],
     )
 
@@ -251,7 +249,6 @@ class PipelineEmissiveSRAScenario(ComparisonScenario):
         pass_criteria="baseline_damage > 0 AND variant_damage < baseline_damage",
         max_ticks=PIPELINE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["pipeline", "emissive", "sra", "no-shields", "comparison"],
     )
 
@@ -321,7 +318,6 @@ class PipelineFullVsNoneScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage AND baseline_damage > 0",
         max_ticks=PIPELINE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["pipeline", "full-chain", "comparison"],
     )
 
@@ -407,7 +403,6 @@ class PipelineFullRegenScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage",
         max_ticks=PIPELINE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["pipeline", "full-chain", "regen", "comparison"],
     )
 
@@ -484,7 +479,6 @@ class PipelineSRAOverflowScenario(ComparisonScenario):
         pass_criteria="variant_damage > 0 AND variant_damage < baseline_damage",
         max_ticks=PIPELINE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["pipeline", "sra", "overflow", "comparison"],
     )
 

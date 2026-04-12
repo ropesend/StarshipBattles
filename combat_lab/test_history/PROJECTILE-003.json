@@ -1,0 +1,2682 @@
+[
+  {
+    "timestamp": "2026-04-06T20:15:44.290380",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.06348013877868652,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:33:51.797140",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.0635066032409668,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:49:44.759747",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.06224679946899414,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:01:22.011669",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.06156587600708008,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:11.075201",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.06012225151062012,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:08:47.673544",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.061162471771240234,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:19:29.048977",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.055526018142700195,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:02:50.286938",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.05640721321105957,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:05:02.363122",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.07028818130493164,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-003_2026-04-11T15-05-02-292834_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-003_2026-04-11T15-05-02-292834_final.json",
+    "seed": 1768642915
+  },
+  {
+    "timestamp": "2026-04-11T19:49:11.409270",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-003",
+      "initial_hp": 1000000650,
+      "final_hp": 1000000601.0,
+      "damage_dealt": 49.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.9423076923076923,
+      "attacker_total_shots_fired": 52,
+      "attacker_weapons": [
+        {
+          "name": "Test Weapon (Proj, Omni)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 52,
+          "shots_hit": 49
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 52,
+      "attacker_resolved_hits": 49,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "shots_fired": 52,
+      "hits": 49,
+      "in_flight": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Weapon Range",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Projectile Speed",
+            "expected": 20000,
+            "actual": 20000.0,
+            "passed": true,
+            "detail": "expected=20000, actual=20000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Reload Time",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Target Max Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target At Full Speed",
+            "expected": 37.5,
+            "actual": 37.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "precondition",
+            "name": "Target Displaced > 10000px",
+            "expected": true,
+            "actual": "18581px",
+            "passed": true,
+            "detail": "fast target should have traveled far from start"
+          },
+          {
+            "phase": "precondition",
+            "name": "Shots During Engagement",
+            "expected": true,
+            "actual": 52,
+            "passed": true,
+            "detail": "fast target should be in range for ~54 ticks"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hits Registered",
+            "expected": true,
+            "actual": 49,
+            "passed": true,
+            "detail": "leading should land some hits on fast target"
+          },
+          {
+            "phase": "outcome",
+            "name": "Hit Rate > 50%",
+            "expected": true,
+            "actual": "94.2% (49/52)",
+            "passed": true,
+            "detail": "fast linear target should be hittable with leading"
+          }
+        ]
+      },
+      "duration_real": 0.06826019287109375,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 11,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Weapon Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Weapon Range",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Projectile Speed",
+        "status": "PASS",
+        "expected": 20000,
+        "actual": 20000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=20000, actual=20000.0"
+      },
+      {
+        "name": "Reload Time",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Target Max Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target At Full Speed",
+        "status": "PASS",
+        "expected": 37.5,
+        "actual": 37.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Target Displaced > 10000px",
+        "status": "PASS",
+        "expected": true,
+        "actual": "18581px",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should have traveled far from start"
+      },
+      {
+        "name": "Shots During Engagement",
+        "status": "PASS",
+        "expected": true,
+        "actual": 52,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "fast target should be in range for ~54 ticks"
+      },
+      {
+        "name": "Hits Registered",
+        "status": "PASS",
+        "expected": true,
+        "actual": 49,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "leading should land some hits on fast target"
+      },
+      {
+        "name": "Hit Rate > 50%",
+        "status": "PASS",
+        "expected": true,
+        "actual": "94.2% (49/52)",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "fast linear target should be hittable with leading"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-003_2026-04-11T19-49-11-339939_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-003_2026-04-11T19-49-11-339939_final.json",
+    "seed": 187743694
+  }
+]

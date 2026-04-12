@@ -1,0 +1,1412 @@
+[
+  {
+    "timestamp": "2026-04-06T20:33:20.930845",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.03752946853637695,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:49:14.571276",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.036156415939331055,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:51.421217",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.03818178176879883,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:16:40.152847",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.03622627258300781,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:08:16.480725",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.03553056716918945,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:18:58.234039",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.03373908996582031,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:02:19.229462",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000017.0,
+      "damage_dealt": 83.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.166,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=83.0"
+          }
+        ]
+      },
+      "duration_real": 0.03366661071777344,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=83.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-10T15:59:54.740573",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000019.0,
+      "damage_dealt": 81.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.162,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=81.0"
+          }
+        ]
+      },
+      "duration_real": 0.036260366439819336,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=81.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-RELOAD-001_2026-04-10T15-59-54-704313_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-RELOAD-001_2026-04-10T15-59-54-704313_final.json",
+    "seed": 326102558
+  },
+  {
+    "timestamp": "2026-04-11T15:04:28.128243",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000022.0,
+      "damage_dealt": 78.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.156,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 100
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 100,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=78.0"
+          }
+        ]
+      },
+      "duration_real": 0.035140275955200195,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=78.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-RELOAD-001_2026-04-11T15-04-28-093103_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-RELOAD-001_2026-04-11T15-04-28-093103_final.json",
+    "seed": 939577057
+  },
+  {
+    "timestamp": "2026-04-11T19:48:38.695943",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-RELOAD-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000012.0,
+      "damage_dealt": 88.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.176,
+      "attacker_total_shots_fired": 100,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 100,
+          "shots_hit": 88
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 100,
+      "attacker_resolved_hits": 88,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_reload": 0.05,
+      "actual_reload": 0.05,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Reload Time",
+            "expected": 0.05,
+            "actual": 0.05,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=88.0"
+          }
+        ]
+      },
+      "duration_real": 0.03615450859069824,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Reload Time",
+        "status": "PASS",
+        "expected": 0.05,
+        "actual": 0.05,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=88.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-RELOAD-001_2026-04-11T19-48-38-659788_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-RELOAD-001_2026-04-11T19-48-38-659788_final.json",
+    "seed": 817517775
+  }
+]

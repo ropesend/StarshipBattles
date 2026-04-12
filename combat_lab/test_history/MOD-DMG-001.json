@@ -1,0 +1,1412 @@
+[
+  {
+    "timestamp": "2026-04-06T20:33:03.242150",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.13357305526733398,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:48:57.135612",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.1285707950592041,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:33.657834",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.1274092197418213,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:16:22.246004",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.12828421592712402,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:07:58.290942",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.12784528732299805,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:18:40.135874",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.1172475814819336,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:02:01.010935",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999495.5,
+      "damage_dealt": 604.5,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.209,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=604.5"
+          }
+        ]
+      },
+      "duration_real": 0.12027835845947266,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=604.5"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-10T15:59:35.614699",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999482.0,
+      "damage_dealt": 618.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.236,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=618.0"
+          }
+        ]
+      },
+      "duration_real": 0.12244844436645508,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=618.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-DMG-001_2026-04-10T15-59-35-492251_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-DMG-001_2026-04-10T15-59-35-492251_final.json",
+    "seed": 513811773
+  },
+  {
+    "timestamp": "2026-04-11T15:04:07.825620",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999479.0,
+      "damage_dealt": 621.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.242,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=621.0"
+          }
+        ]
+      },
+      "duration_real": 0.13204097747802734,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=621.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-DMG-001_2026-04-11T15-04-07-693579_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-DMG-001_2026-04-11T15-04-07-693579_final.json",
+    "seed": 719165869
+  },
+  {
+    "timestamp": "2026-04-11T19:48:19.341470",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-DMG-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999479.0,
+      "damage_dealt": 621.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.242,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 414
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 414,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_damage": 1.5,
+      "actual_damage": 1.5,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Beam Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Substantial Damage Dealt",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=621.0"
+          }
+        ]
+      },
+      "duration_real": 0.12180066108703613,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Beam Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Substantial Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=621.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-DMG-001_2026-04-11T19-48-19-218666_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-DMG-001_2026-04-11T19-48-19-218666_final.json",
+    "seed": 1228131207
+  }
+]

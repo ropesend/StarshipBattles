@@ -80,7 +80,6 @@ class SRABasicRechargeScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage",
         max_ticks=SRA_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["sra", "shield-regen", "comparison"],
     )
 
@@ -155,7 +154,6 @@ class SRAShieldCapScenario(ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage",
         max_ticks=SRA_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["sra", "shield-cap", "comparison"],
     )
 
@@ -221,7 +219,6 @@ class SRADestroyedStopsEffectScenario(ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage",
         max_ticks=SRA_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["sra", "destruction", "comparison"],
     )
 
@@ -277,7 +274,6 @@ class SRASameGroupNoStackScenario(ComparisonScenario):
         pass_criteria="baseline_damage == variant_damage",
         max_ticks=SRA_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["sra", "stacking", "same-group", "comparison"],
     )
 
@@ -339,7 +335,6 @@ class SRADiffGroupStackScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage",
         max_ticks=SRA_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["sra", "stacking", "diff-group", "comparison"],
     )
 

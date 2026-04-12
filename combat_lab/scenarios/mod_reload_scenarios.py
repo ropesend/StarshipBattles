@@ -102,7 +102,6 @@ class ModReload001_StatGateScenario(StaticTargetScenario):
         pass_criteria=f"reload_time == {BOOSTED_RELOAD} AND damage > 0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "reload_mult", "stat_gate"],
     )
 
@@ -179,7 +178,6 @@ class ModReload002_ShotCountScenario(ComparisonScenario):
         pass_criteria=f"Both shot counts within ±{SHOT_TOLERANCE}, ratio ≈ 2.0x",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "reload_mult", "shot_count", "behavioral"],
     )
 
@@ -256,7 +254,6 @@ class ModReload003_DamageRatioScenario(ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage AND ratio ≈ 2.0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "reload_mult", "damage_ratio"],
     )
 
@@ -342,7 +339,6 @@ class ModReload004_PenaltyReducesFireRateScenario(ComparisonScenario):
         pass_criteria=f"Penalized shot count ≈ {EXPECTED_SHOTS_PENALIZED}, less than baseline",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "reload_mult", "penalty", "behavioral"],
     )
 
@@ -425,7 +421,6 @@ class ModReload005_PenaltyStatGateScenario(StaticTargetScenario):
         pass_criteria=f"reload_time == {PENALIZED_RELOAD} AND damage > 0",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "reload_mult", "penalty", "stat_gate"],
     )
 

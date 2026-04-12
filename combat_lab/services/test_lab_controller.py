@@ -6,13 +6,11 @@ and orchestrates service calls, keeping UI rendering separate from business logi
 """
 
 from typing import Optional, List, Dict, Any
-from pathlib import Path
 from combat_lab.services import (
     ScenarioDataService,
     TestExecutionService,
-    MetadataManagementService,
     UIStateService,
-    TestResultsService
+    TestResultsService,
 )
 from combat_lab.registry import TestRegistry
 from combat_lab.test_history import TestHistory
@@ -43,7 +41,6 @@ class TestLabUIController:
         self.test_execution = TestExecutionService()
         self.ui_state = UIStateService()
         self.test_results = TestResultsService(test_history, registry)
-        self.metadata_mgmt = MetadataManagementService(self.scenario_data)
 
         # Output log for UI display
         self.output_log: List[str] = []
@@ -53,9 +50,6 @@ class TestLabUIController:
 
         # Load historical results so status dots show on startup
         self._load_history_into_registry(test_history)
-
-        # Run static validation on startup
-        self._run_static_validation()
 
     def _load_history_into_registry(self, test_history: TestHistory):
         """Load latest run results from history into registry for status display.
@@ -71,15 +65,6 @@ class TestLabUIController:
                 loaded += 1
         if loaded:
             logger.debug(f"Loaded {loaded} test histories from prior runs")
-
-    def _run_static_validation(self):
-        """Run static validation on all scenarios at startup."""
-        validation_results = self.metadata_mgmt.validate_all_scenarios(self.all_scenarios)
-
-        # Update registry with validation results
-        for test_id, results in validation_results.items():
-            if test_id in self.all_scenarios:
-                self.all_scenarios[test_id]['last_run_results'] = results
 
     def handle_category_click(self, category: str):
         """
@@ -172,62 +157,6 @@ class TestLabUIController:
             )
 
         return result
-
-    def handle_update_expected_values(self):
-        """Handle update expected values button click."""
-        test_id = self.ui_state.get_selected_test_id()
-        if not test_id:
-            return
-
-        scenario_info = self.registry.get_by_id(test_id)
-        if not scenario_info:
-            return
-
-        last_run_results = scenario_info.get('last_run_results')
-        if not last_run_results:
-            logger.info("No test results available. Run the test first.")
-            return
-
-        # Collect failed validation rules
-        changes = self.metadata_mgmt.collect_validation_failures(last_run_results)
-
-        if not changes:
-            logger.info("No failed validation rules to update.")
-            return
-
-        return changes  # Return changes for UI to show confirmation dialog
-
-    def apply_metadata_updates(self, changes: List[Dict[str, Any]]):
-        """
-        Apply metadata updates after user confirmation.
-
-        Args:
-            changes: List of changes to apply
-
-        Returns:
-            Tuple of (success: bool, error_message: Optional[str])
-        """
-        test_id = self.ui_state.get_selected_test_id()
-        if not test_id:
-            return (False, "No test selected")
-
-        scenario_info = self.registry.get_by_id(test_id)
-        if not scenario_info:
-            return (False, "Test not found")
-
-        # Get scenario file path
-        scenario_file = Path(scenario_info['file'])
-
-        # Apply updates
-        success, error = self.metadata_mgmt.apply_metadata_updates(scenario_file, changes)
-
-        if success:
-            # Refresh registry to reload modified scenario
-            self.registry.refresh()
-            self.all_scenarios = self.registry.get_all_scenarios()
-            logger.info("Registry refreshed. Metadata updated successfully!")
-
-        return (success, error)
 
     def get_filtered_scenarios(self, category: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """

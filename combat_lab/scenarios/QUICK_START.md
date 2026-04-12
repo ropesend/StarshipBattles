@@ -78,7 +78,6 @@ class MyBeamPointBlankTest(StaticTargetScenario):
         pass_criteria="TOST p < 0.05",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["beam", "accuracy", "point-blank"],
     )
 

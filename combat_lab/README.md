@@ -429,7 +429,6 @@ class MyAbilityBasicEffectScenario(ComparisonScenario):
         pass_criteria="variant_X > baseline_X",
         max_ticks=1000,
         seed=42,
-        battle_end_mode="time_based",
         tags=["myability", "comparison"],
     )
 

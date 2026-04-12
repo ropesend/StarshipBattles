@@ -91,7 +91,6 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage, hit rates match sigmoid predictions",
         max_ticks=TOHIT_ATK_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "sensor", "attack-modifier", "comparison"],
     )
 
@@ -187,7 +186,6 @@ class SameGroupDoesNotStackScenario(ComparisonScenario):
         pass_criteria="variant_damage ≈ baseline_damage",
         max_ticks=TOHIT_ATK_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "sensor", "stacking", "same-group", "comparison"],
     )
 
@@ -256,7 +254,6 @@ class DifferentGroupsStackScenario(ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage",
         max_ticks=TOHIT_ATK_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "sensor", "stacking", "different-groups", "comparison"],
     )
 
@@ -336,7 +333,6 @@ class NegativeModifierReducesAccuracyScenario(ComparisonScenario):
         pass_criteria="variant_damage < baseline_damage",
         max_ticks=TOHIT_ATK_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "penalty", "negative", "attack-modifier", "comparison"],
     )
 
@@ -431,7 +427,6 @@ class MixedModifiersNetPositiveScenario(ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage, hit rate matches sigmoid prediction",
         max_ticks=TOHIT_ATK_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "sensor", "penalty", "mixed-modifier", "comparison"],
     )
 

@@ -1,0 +1,977 @@
+[
+  {
+    "timestamp": "2026-03-30T22:34:33.686185",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 452.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999648.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=452.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Sensor Increases Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+          }
+        ]
+      },
+      "duration_real": 0.09378576278686523,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=452.0"
+      },
+      {
+        "name": "Sensor Increases Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:07.630226",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 452.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999648.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=452.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Sensor Increases Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+          }
+        ]
+      },
+      "duration_real": 0.09420633316040039,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=452.0"
+      },
+      {
+        "name": "Sensor Increases Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:48.137783",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 452.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999648.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=452.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Sensor Increases Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+          }
+        ]
+      },
+      "duration_real": 0.09452700614929199,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=452.0"
+      },
+      {
+        "name": "Sensor Increases Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:22:09.173284",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 452.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999648.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=452.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Sensor Increases Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+          }
+        ]
+      },
+      "duration_real": 0.09442734718322754,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=452.0"
+      },
+      {
+        "name": "Sensor Increases Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:45:47.738599",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "SENSOR-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 452.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999648.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "data",
+            "name": "Sensor Attack Value",
+            "expected": 1.0,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1.0, actual=1.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=452.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Sensor Increases Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+          }
+        ]
+      },
+      "duration_real": 0.0933382511138916,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Sensor Attack Value",
+        "status": "PASS",
+        "expected": 1.0,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1.0, actual=1.0"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=452.0"
+      },
+      {
+        "name": "Sensor Increases Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=452.0, delta=+65.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

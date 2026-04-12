@@ -102,7 +102,6 @@ class ModEndur001_StatGateScenario(StaticTargetScenario):
         pass_criteria=f"endurance == {BOOSTED_ENDURANCE} AND damage == {SEEKER_DAMAGE}",
         max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "endurance_mult", "stat_gate"],
     )
 
@@ -177,7 +176,6 @@ class ModEndur002_BoostExtendsRangeScenario(ComparisonScenario):
         pass_criteria=f"baseline_damage == 0 AND variant_damage == {SEEKER_DAMAGE}",
         max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "endurance_mult", "range_gate", "binary"],
     )
 
@@ -249,7 +247,6 @@ class ModEndur003_NearLimitReachScenario(ComparisonScenario):
         pass_criteria=f"baseline_damage == {SEEKER_DAMAGE} AND variant_damage == {SEEKER_DAMAGE}",
         max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "endurance_mult", "near_limit"],
     )
 
@@ -311,7 +308,6 @@ class ModEndur004_PenaltyShortensRangeScenario(ComparisonScenario):
         pass_criteria=f"baseline_damage == {SEEKER_DAMAGE} AND variant_damage == 0",
         max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "endurance_mult", "penalty", "binary"],
     )
 
@@ -374,7 +370,6 @@ class ModEndur005_PenaltyStatGateScenario(StaticTargetScenario):
         pass_criteria=f"endurance == {PENALIZED_ENDURANCE} AND damage == {SEEKER_DAMAGE}",
         max_ticks=ENDURANCE_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "endurance_mult", "penalty", "stat_gate"],
     )
 

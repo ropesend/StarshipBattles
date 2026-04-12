@@ -93,7 +93,6 @@ class ECMReducesHitRateComparisonScenario(ComparisonScenario):
         pass_criteria="ECM target takes less damage than undefended target",
         max_ticks=TOHIT_DEF_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "ecm", "defense-modifier", "comparison"],
     )
 
@@ -189,7 +188,6 @@ class ECMSameGroupDoesNotStackScenario(ComparisonScenario):
         pass_criteria="damage taken is identical in both battles",
         max_ticks=TOHIT_DEF_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "ecm", "stacking", "same-group", "comparison"],
     )
 
@@ -258,7 +256,6 @@ class ECMDifferentGroupsStackScenario(ComparisonScenario):
         pass_criteria="dual-ECM target takes less damage than single-ECM target",
         max_ticks=TOHIT_DEF_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "ecm", "stacking", "different-groups", "comparison"],
     )
 
@@ -339,7 +336,6 @@ class NegativeDefenseModifierScenario(ComparisonScenario):
         pass_criteria="penalized target takes more damage than unmodified target",
         max_ticks=TOHIT_DEF_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["tohit", "ecm", "penalty", "negative", "defense-modifier", "comparison"],
     )
 

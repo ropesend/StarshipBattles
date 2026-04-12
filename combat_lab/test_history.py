@@ -1,18 +1,16 @@
 """
-Test History - Persistent Storage for Test Run Results
+Test History - Sharded, Lazy-Loaded Persistent Storage for Test Run Results
 
-This module provides persistent storage for test run history, allowing users
-to track test results across multiple sessions and compare performance over time.
+One JSON file per test_id under ``combat_lab/test_history/``. Shards load on
+demand and are written atomically via ``save_json`` (temp + rename). A one-shot
+migration splits any legacy monolithic ``test_history.json`` into shards.
 
 Key Features:
     - JSON-based persistence (survives app restarts)
+    - Per-test-id shards (bounded file size, fault isolation)
     - Automatic history management (keeps last N runs per test)
-    - Flexible metric storage (supports different test types)
-    - Validation result tracking with p-values
-
-Architecture:
-    TestRunRecord - Single test run with timestamp, metrics, validation results
-    TestHistory - Manages collection of runs per test with JSON persistence
+    - Lazy load on first access per test_id
+    - Atomic per-shard writes
 
 Usage:
     ```python
@@ -21,10 +19,8 @@ Usage:
     # After test runs
     history.add_run("BEAM360-001", scenario.results)
 
-    # Retrieve runs
+    # Retrieve runs (loads on first call)
     runs = history.get_runs("BEAM360-001")
-    for run in runs:
-        print(f"{run.timestamp}: {'PASS' if run.passed else 'FAIL'}")
 
     # Clear history
     history.clear_test("BEAM360-001")
@@ -32,16 +28,22 @@ Usage:
     ```
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Set
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 import os
+import shutil
+from pathlib import Path
+
 from combat_lab.logging_config import get_logger, setup_combat_lab_logging
 from game.core.json_utils import load_json, save_json
 
 # Setup logging
 setup_combat_lab_logging()
 logger = get_logger(__name__)
+
+
+DEFAULT_MAX_RUNS = 10
 
 
 @dataclass
@@ -83,28 +85,14 @@ class TestRunRecord:
 
     @classmethod
     def from_scenario_results(cls, results: Dict[str, Any]) -> 'TestRunRecord':
-        """
-        Create record from scenario.results dictionary.
-
-        Args:
-            results: Dictionary from TestScenario.results after test execution
-
-        Returns:
-            TestRunRecord with extracted metrics and validation results
-        """
-        # Extract metrics (exclude validation-specific keys and state files)
+        """Create record from scenario.results dictionary."""
         excluded_keys = {
             'validation_results', 'validation_summary',
             'has_validation_failures', 'has_validation_warnings',
             'initial_state_file', 'final_state_file', 'seed'
         }
-        metrics = {
-            k: v for k, v in results.items()
-            if k not in excluded_keys
-        }
+        metrics = {k: v for k, v in results.items() if k not in excluded_keys}
 
-        # Determine pass/fail status
-        # A test passes if it has no validation failures
         passed = not results.get('has_validation_failures', False)
 
         return cls(
@@ -116,45 +104,28 @@ class TestRunRecord:
             validation_results=results.get('validation_results', []),
             initial_state_file=results.get('initial_state_file'),
             final_state_file=results.get('final_state_file'),
-            seed=results.get('seed')
+            seed=results.get('seed'),
         )
 
     def get_formatted_timestamp(self) -> str:
-        """
-        Get human-readable timestamp.
-
-        Returns:
-            Formatted string like "10:30 AM" or "Jan 14 10:30"
-        """
+        """Get human-readable timestamp."""
         try:
             dt = datetime.fromisoformat(self.timestamp)
-            # Today: show time only
             if dt.date() == datetime.now().date():
                 return dt.strftime("%I:%M %p")
-            # Other days: show date and time
             return dt.strftime("%b %d %I:%M %p")
         except (ValueError, TypeError):
             return self.timestamp
 
     def get_p_value(self) -> Optional[float]:
-        """
-        Extract p-value from validation results (for statistical tests).
-
-        Returns:
-            P-value if found, None otherwise
-        """
+        """Extract p-value from validation results (for statistical tests)."""
         for vr in self.validation_results:
             if 'p_value' in vr and vr['p_value'] is not None:
                 return vr['p_value']
         return None
 
     def has_battle_states(self) -> bool:
-        """
-        Check if this run has saved battle state files.
-
-        Returns:
-            True if both initial and final state files exist
-        """
+        """Check if this run has saved battle state files."""
         if not self.initial_state_file or not self.final_state_file:
             return False
         return os.path.exists(self.initial_state_file) and os.path.exists(self.final_state_file)
@@ -164,169 +135,198 @@ class TestHistory:
     __test__ = False  # Not a pytest test class
 
     """
-    Manages persistent test run history with JSON storage.
+    Sharded, lazy-loading persistent test history.
+
+    Each test_id has its own JSON file under ``history_dir``. Shards are
+    loaded on demand when queried and cached in memory. ``add_run`` reads
+    (if not cached), mutates, trims, and atomically rewrites just the
+    affected shard.
 
     Attributes:
-        history_file: Path to JSON file storing test history
-        history: Dict mapping test_id to list of TestRunRecord
+        history_dir: Directory containing per-test shard files
+        history: In-memory cache: test_id -> list of records
+        max_runs: Maximum number of runs kept per test_id
     """
 
-    def __init__(self, history_file: str = None):
+    def __init__(self, history_dir: Optional[str] = None, max_runs: int = DEFAULT_MAX_RUNS):
         """
-        Initialize test history manager.
+        Initialize sharded test history.
 
         Args:
-            history_file: Path to JSON file (default: combat_lab/test_history.json)
+            history_dir: Directory for shard files (default:
+                combat_lab/test_history/).
+            max_runs: Max runs kept per test_id (default: 10).
         """
-        if history_file is None:
-            # Default to combat_lab/test_history.json
+        if history_dir is None:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            history_file = os.path.join(base_dir, 'combat_lab', 'test_history.json')
+            history_dir = os.path.join(base_dir, 'combat_lab', 'test_history')
 
-        self.history_file = history_file
+        self.history_dir: Path = Path(history_dir)
+        self.max_runs: int = max_runs
+
+        # In-memory cache (populated lazily per test_id)
         self.history: Dict[str, List[TestRunRecord]] = {}
-        self._load()
+        self._loaded: Set[str] = set()
 
-    def _load(self):
-        """Load history from JSON file.
+        # Ensure shard directory exists
+        self.history_dir.mkdir(parents=True, exist_ok=True)
 
-        If the file is corrupt (truncated, invalid JSON), backs it up
-        with a ``.corrupt`` extension and starts with empty history.
-        """
-        if not os.path.exists(self.history_file):
-            logger.info("No existing history file found, starting fresh")
-            return
+        # One-shot migration from the legacy monolithic file (if present)
+        legacy_file = self.history_dir.parent / 'test_history.json'
+        if legacy_file.exists():
+            self._migrate_from_monolith(legacy_file)
 
-        data = load_json(self.history_file, default=None)
+    # ------------------------------------------------------------------
+    # Paths and shard I/O
+    # ------------------------------------------------------------------
 
-        if data is None:
-            # File exists but failed to parse — back it up and start fresh
-            corrupt_path = self.history_file + '.corrupt'
+    def _shard_path(self, test_id: str) -> Path:
+        """Path to the shard file for a given test_id."""
+        return self.history_dir / f"{test_id}.json"
+
+    def _load_test(self, test_id: str) -> List[TestRunRecord]:
+        """Load a shard on demand; cache the result."""
+        if test_id in self._loaded:
+            return self.history.get(test_id, [])
+
+        path = self._shard_path(test_id)
+        data = load_json(path, default=None)
+
+        if data is None and path.exists():
+            # Parse failure — back up the corrupt shard and start fresh
+            corrupt_path = path.with_suffix(path.suffix + '.corrupt')
             try:
-                import shutil
-                shutil.copy2(self.history_file, corrupt_path)
+                shutil.copy2(path, corrupt_path)
                 logger.warning(
-                    f"Corrupt history file backed up to {corrupt_path}, starting fresh"
+                    f"Corrupt history shard backed up to {corrupt_path}, starting fresh for {test_id}"
                 )
             except OSError:
-                logger.warning("Corrupt history file could not be backed up, starting fresh")
+                logger.warning(
+                    f"Corrupt history shard for {test_id} could not be backed up, starting fresh"
+                )
+            data = []
+
+        runs = [TestRunRecord.from_dict(r) for r in (data or [])]
+        self.history[test_id] = runs
+        self._loaded.add(test_id)
+        return runs
+
+    def _save_test(self, test_id: str) -> None:
+        """Atomically write the shard for a given test_id."""
+        data = [run.to_dict() for run in self.history.get(test_id, [])]
+        path = self._shard_path(test_id)
+        if not save_json(path, data):
+            logger.error(f"Failed to save history shard for {test_id} to {path}")
+
+    def _migrate_from_monolith(self, legacy_file: Path) -> None:
+        """One-shot migration: split legacy test_history.json into shards.
+
+        Reads the monolithic file, writes per-test shards, and renames the
+        original to ``test_history.json.migrated`` so it is not processed
+        again on next startup.
+        """
+        logger.info(f"Migrating legacy history file {legacy_file} to shards...")
+        data = load_json(legacy_file, default=None)
+        if data is None:
+            logger.warning(
+                f"Legacy history file {legacy_file} could not be parsed; leaving in place."
+            )
             return
 
-        # Convert dicts back to TestRunRecord objects
+        migrated = 0
         for test_id, runs in data.items():
-            self.history[test_id] = [
-                TestRunRecord.from_dict(run) for run in runs
-            ]
-        logger.info(f"Loaded {len(self.history)} test histories from {self.history_file}")
+            if not isinstance(runs, list):
+                continue
+            shard_path = self._shard_path(test_id)
+            # Don't overwrite an existing shard with legacy data
+            if shard_path.exists():
+                continue
+            if not save_json(shard_path, runs):
+                logger.error(f"Failed to migrate shard for {test_id}")
+                continue
+            migrated += 1
 
-    def _save(self):
-        """Save history to JSON file."""
-        # Convert to serializable format
-        data = {
-            test_id: [run.to_dict() for run in runs]
-            for test_id, runs in self.history.items()
-        }
+        # Rename legacy file so migration only runs once
+        migrated_path = legacy_file.with_suffix(legacy_file.suffix + '.migrated')
+        try:
+            legacy_file.replace(migrated_path)
+            logger.info(
+                f"Migrated {migrated} test histories to shards; "
+                f"legacy file moved to {migrated_path}"
+            )
+        except OSError as e:
+            logger.warning(f"Legacy history file could not be renamed: {e}")
 
-        if save_json(self.history_file, data):
-            logger.debug(f"Saved {sum(len(runs) for runs in self.history.values())} total runs")
-        else:
-            logger.error(f"Failed to save test history to {self.history_file}")
+    # ------------------------------------------------------------------
+    # Public API (same shape as the pre-shard TestHistory)
+    # ------------------------------------------------------------------
 
-    def add_run(self, test_id: str, results: Dict[str, Any], max_runs: int = 10):
+    def add_run(self, test_id: str, results: Dict[str, Any], max_runs: Optional[int] = None) -> None:
         """
-        Add test run to history, keeping only last N runs.
+        Add a test run, keeping only the last N runs for this test_id.
 
         Args:
             test_id: Test identifier (e.g., "BEAM360-001")
             results: Test results dictionary from scenario.results
-            max_runs: Maximum number of runs to keep per test (default: 10)
+            max_runs: Override the configured max_runs (default: self.max_runs)
         """
+        cap = max_runs if max_runs is not None else self.max_runs
         record = TestRunRecord.from_scenario_results(results)
 
-        if test_id not in self.history:
-            self.history[test_id] = []
+        runs = self._load_test(test_id)
+        runs.append(record)
+        if len(runs) > cap:
+            runs = runs[-cap:]
+        self.history[test_id] = runs
 
-        # Append new run
-        self.history[test_id].append(record)
-
-        # Keep only last N runs
-        if len(self.history[test_id]) > max_runs:
-            self.history[test_id] = self.history[test_id][-max_runs:]
-
-        logger.info(f"Added run for {test_id} ({'PASS' if record.passed else 'FAIL'}), now {len(self.history[test_id])} runs")
-
-        self._save()
+        logger.info(
+            f"Added run for {test_id} ({'PASS' if record.passed else 'FAIL'}), "
+            f"now {len(runs)} runs"
+        )
+        self._save_test(test_id)
 
     def get_runs(self, test_id: str) -> List[TestRunRecord]:
-        """
-        Get all runs for a test (newest last).
-
-        Args:
-            test_id: Test identifier
-
-        Returns:
-            List of TestRunRecord, ordered oldest to newest
-        """
-        return self.history.get(test_id, [])
+        """Get all runs for a test (oldest to newest)."""
+        return list(self._load_test(test_id))
 
     def get_run_count(self, test_id: str) -> int:
-        """
-        Get number of runs for a test.
-
-        Args:
-            test_id: Test identifier
-
-        Returns:
-            Number of runs recorded
-        """
-        return len(self.history.get(test_id, []))
-
-    def clear_test(self, test_id: str):
-        """
-        Clear history for specific test.
-
-        Args:
-            test_id: Test identifier
-        """
-        if test_id in self.history:
-            run_count = len(self.history[test_id])
-            del self.history[test_id]
-            logger.info(f"Cleared {run_count} runs for {test_id}")
-            self._save()
-
-    def clear_all(self):
-        """Clear all test history."""
-        total_runs = sum(len(runs) for runs in self.history.values())
-        self.history = {}
-        logger.info(f"Cleared all history ({total_runs} total runs)")
-        self._save()
+        """Get number of runs for a test."""
+        return len(self._load_test(test_id))
 
     def get_latest_run(self, test_id: str) -> Optional[TestRunRecord]:
-        """
-        Get most recent run for a test.
-
-        Args:
-            test_id: Test identifier
-
-        Returns:
-            Latest TestRunRecord or None if no runs
-        """
-        runs = self.get_runs(test_id)
+        """Get the most recent run for a test."""
+        runs = self._load_test(test_id)
         return runs[-1] if runs else None
 
     def get_pass_rate(self, test_id: str) -> Optional[float]:
-        """
-        Calculate pass rate for a test.
-
-        Args:
-            test_id: Test identifier
-
-        Returns:
-            Pass rate (0.0 to 1.0) or None if no runs
-        """
-        runs = self.get_runs(test_id)
+        """Calculate pass rate for a test (0.0 - 1.0), or None if no runs."""
+        runs = self._load_test(test_id)
         if not runs:
             return None
-
         passes = sum(1 for run in runs if run.passed)
         return passes / len(runs)
+
+    def clear_test(self, test_id: str) -> None:
+        """Clear history for a specific test (delete shard + cache entry)."""
+        path = self._shard_path(test_id)
+        if path.exists():
+            try:
+                path.unlink()
+            except OSError as e:
+                logger.warning(f"Failed to delete shard {path}: {e}")
+        self.history.pop(test_id, None)
+        self._loaded.discard(test_id)
+        logger.info(f"Cleared history for {test_id}")
+
+    def clear_all(self) -> None:
+        """Clear history for all tests (delete every shard)."""
+        count = 0
+        for shard in list(self.history_dir.glob('*.json')):
+            try:
+                shard.unlink()
+                count += 1
+            except OSError as e:
+                logger.warning(f"Failed to delete shard {shard}: {e}")
+        self.history.clear()
+        self._loaded.clear()
+        logger.info(f"Cleared all history ({count} shard files removed)")

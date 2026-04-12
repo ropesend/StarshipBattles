@@ -315,7 +315,6 @@ metadata = TestMetadata(
 
     max_ticks=500,           # Test duration
     seed=42,                 # Random seed for reproducibility
-    battle_end_mode="time_based",  # Run full duration
 )
 ```
 
@@ -358,103 +357,50 @@ metadata = TestMetadata(
 
 ## Battle End Conditions
 
-Tests need to control when the simulation ends. The Combat Lab supports multiple end condition modes.
+By default, scenarios use a ``TickLimitCondition(max_ticks=self.metadata.max_ticks)``
+built by ``TestScenario._create_end_condition()``. That method is what runs at the
+end of ``setup()`` when a scenario passes ``end_condition=self._create_end_condition()``
+to ``battle_engine.start()``.
 
-### BattleEndMode Options
-
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `TIME_BASED` | End after `max_ticks` | Most tests - run for fixed duration |
-| `HP_BASED` | End when one team eliminated | Combat outcome tests |
-| `CAPABILITY_BASED` | End when team can't fight | Mission-kill scenarios |
-| `ESCAPE_BASED` | End when ships exceed distance | Retreat/escape tests |
-| `MANUAL` | Never end (except ceiling) | Interactive exploration |
-
-### Configuring End Conditions in TestMetadata
-
-```python
-metadata = TestMetadata(
-    test_id="PROP-001",
-    # ... other fields ...
-
-    # End condition settings
-    battle_end_mode="time_based",   # Most common for tests
-    max_ticks=100,                  # Run for exactly 100 ticks
-
-    # Safety ceiling (prevents infinite loops)
-    absolute_max_ticks=1_000_000,   # Default: 1 million
-
-    # For ESCAPE_BASED mode:
-    # battle_end_mode="escape",
-    # escape_radius=5000.0,         # Distance from origin
-    # escape_team=1,                # Which team (None=any)
-    # escape_all_ships=False,       # Any ship or all ships?
-
-    # For HP_BASED mode:
-    # battle_end_mode="hp_based",
-    # battle_end_check_derelict=True,  # Count derelict as defeated
-)
-```
+Scenarios that need a different condition (escape, HP-based, composite) should
+build an explicit ``IEndCondition`` object in their ``setup()`` method — see
+``game/simulation/systems/battle_end_conditions.py`` for ``EscapeCondition``,
+``TeamEliminatedCondition``, ``AnyCondition``, etc. — and pass it directly to
+``battle_engine.start()`` instead of calling ``_create_end_condition()``.
 
 ### Common Patterns
 
 #### Single-Ship Tests (Physics, Propulsion)
 
-Use `TIME_BASED` to avoid immediate "victory" when testing one ship:
+``TickLimitCondition`` is the default — the simulation runs for
+``metadata.max_ticks`` and does not check team-elimination. This is what
+propulsion tests and single-ship physics tests use:
 
 ```python
 metadata = TestMetadata(
-    battle_end_mode="time_based",  # Don't end on victory
-    max_ticks=100,                 # Run exactly 100 ticks
+    max_ticks=100,  # Run exactly 100 ticks
 )
 ```
 
 #### Combat Tests (Two Teams)
 
-Use `HP_BASED` for realistic combat or `TIME_BASED` for statistics:
-
-```python
-# For combat outcome tests
-metadata = TestMetadata(
-    battle_end_mode="hp_based",
-    max_ticks=10000,  # Safety timeout
-)
-
-# For hit rate statistics (need full duration)
-metadata = TestMetadata(
-    battle_end_mode="time_based",
-    max_ticks=500,
-)
-```
+For combat-outcome tests, build a ``TeamEliminatedCondition`` in ``setup()``
+and pass it to ``battle_engine.start(..., end_condition=...)``. For
+statistical tests (hit rate, sample counts), keep the default
+``TickLimitCondition`` so the simulation runs for the full ``max_ticks``.
 
 #### Escape/Retreat Tests
 
-Use `ESCAPE_BASED` for testing ship movement away from battle:
-
-```python
-metadata = TestMetadata(
-    battle_end_mode="escape",
-    escape_radius=5000.0,
-    escape_team=0,        # End when team 0 escapes
-    escape_all_ships=True # All ships must escape
-)
-```
+For retreat/escape tests, build an ``EscapeCondition`` with the desired
+radius/team/all-ships flags in ``setup()`` and pass it directly to
+``battle_engine.start``. ``EscapeCondition`` lives in
+``game/simulation/systems/battle_end_conditions.py``.
 
 ### Safety Ceiling
 
-ALL modes respect `absolute_max_ticks` as a hard ceiling to prevent infinite loops:
-
-- Default: 1,000,000 ticks
-- Can be customized per-test
-- Even `MANUAL` mode will eventually end at this ceiling
-
-```python
-# Test will end at 100k ticks even if HP_BASED hasn't triggered
-metadata = TestMetadata(
-    battle_end_mode="hp_based",
-    absolute_max_ticks=100_000,
-)
-```
+``BattleEngine`` enforces a hard ``absolute_max_ticks`` ceiling independent of
+the scenario's end condition — see ``SimulationConstants.ABSOLUTE_MAX_TICKS``.
+This prevents pathological scenarios from running forever.
 
 ---
 
@@ -1127,30 +1073,22 @@ surface_distance = center_distance - target_radius
 
 #### Single-ship test ends immediately with "victory"
 
-**Cause**: Using `hp_based` mode with only one team triggers immediate victory.
+**Cause**: The scenario passed a ``TeamEliminatedCondition`` to
+``battle_engine.start()`` but only has one team.
 
-**Solution**: Use `time_based` mode for single-ship tests:
-```python
-metadata = TestMetadata(
-    battle_end_mode="time_based",
-    max_ticks=100,
-)
-```
+**Solution**: Use the default ``TickLimitCondition`` from
+``self._create_end_condition()`` (or omit ``end_condition`` entirely) so the
+simulation runs for the full ``max_ticks``.
 
 #### Test runs forever (or very long)
 
-**Cause**: Using `manual` mode without understanding the ceiling.
+**Cause**: The scenario passed ``NeverCondition`` or a composite that cannot
+be satisfied.
 
-**Solution**: Either:
-1. Set explicit `max_ticks` with `time_based` mode
-2. Or rely on `absolute_max_ticks` ceiling (default 1M ticks)
-3. For faster tests, set a lower `absolute_max_ticks`:
-```python
-metadata = TestMetadata(
-    battle_end_mode="manual",
-    absolute_max_ticks=10_000,
-)
-```
+**Solution**: The engine enforces ``absolute_max_ticks`` as a hard ceiling —
+see ``SimulationConstants.ABSOLUTE_MAX_TICKS``. Either set a lower
+``max_ticks`` in metadata, or build a proper terminating condition in
+``setup()``.
 
 #### Test history lost between sessions
 

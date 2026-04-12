@@ -1,0 +1,2672 @@
+[
+  {
+    "timestamp": "2026-04-06T20:33:27.476922",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.14555072784423828,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:49:20.976841",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.14156508445739746,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:57.973876",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.1417860984802246,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:16:46.812861",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.13979721069335938,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:08:23.204680",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.14053893089294434,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:19:04.950658",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.12758588790893555,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:02:25.978966",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 387.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999713.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 678.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999422.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=387.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=678.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=387.0, variant=678.0"
+          }
+        ]
+      },
+      "duration_real": 0.1287546157836914,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=387.0, variant_dmg=678.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=387.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=678.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=387.0, variant=678.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-10T16:00:01.864949",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 396.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999704.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 676.5,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999423.5,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=396.0, variant_dmg=676.5"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=396.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=676.5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=396.0, variant=676.5"
+          }
+        ]
+      },
+      "duration_real": 0.13250112533569336,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=396.0, variant_dmg=676.5"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=396.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=676.5"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=396.0, variant=676.5"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-STACK-002_2026-04-10T16-00-01-732448_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-STACK-002_2026-04-10T16-00-01-732448_final.json",
+    "seed": 1617748453
+  },
+  {
+    "timestamp": "2026-04-11T15:04:35.645021",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 500,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 375.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999725.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 690.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999410.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 500,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=375.0, variant_dmg=690.0"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=375.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=690.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=375.0, variant=690.0"
+          }
+        ]
+      },
+      "duration_real": 0.13471174240112305,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=375.0, variant_dmg=690.0"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=375.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=690.0"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=375.0, variant=690.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-STACK-002_2026-04-11T15-04-35-509309_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-STACK-002_2026-04-11T15-04-35-509309_final.json",
+    "seed": 10795887
+  },
+  {
+    "timestamp": "2026-04-11T19:48:45.923227",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-STACK-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 391
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 500,
+      "baseline_attacker_resolved_hits": 391,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 391.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999709.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 667.5,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999432.5,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 500,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 445
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 500,
+      "variant_attacker_resolved_hits": 445,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=391.0, variant_dmg=667.5"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Damage",
+            "expected": 1.5,
+            "actual": 1.5,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Accuracy",
+            "expected": 3.0,
+            "actual": 3.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=391.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=667.5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Combined Modifiers Increase Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=391.0, variant=667.5"
+          }
+        ]
+      },
+      "duration_real": 0.13040876388549805,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=391.0, variant_dmg=667.5"
+      },
+      {
+        "name": "Variant Damage",
+        "status": "PASS",
+        "expected": 1.5,
+        "actual": 1.5,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Variant Accuracy",
+        "status": "PASS",
+        "expected": 3.0,
+        "actual": 3.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Baseline Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=391.0"
+      },
+      {
+        "name": "Variant Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=667.5"
+      },
+      {
+        "name": "Combined Modifiers Increase Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=391.0, variant=667.5"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-STACK-002_2026-04-11T19-48-45-792818_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-STACK-002_2026-04-11T19-48-45-792818_final.json",
+    "seed": 400162584
+  }
+]

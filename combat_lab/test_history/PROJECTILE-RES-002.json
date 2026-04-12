@@ -1,0 +1,2672 @@
+[
+  {
+    "timestamp": "2026-04-06T20:15:54.729647",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.09190249443054199,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:02.190429",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.09305238723754883,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:49:54.773277",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.08977723121643066,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:01:32.165462",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.08821606636047363,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:17:21.775767",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.08837747573852539,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:08:58.080775",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.08836650848388672,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:19:39.459001",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.0818636417388916,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:00.842735",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.08325362205505371,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:05:14.211741",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.09320521354675293,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-RES-002_2026-04-11T15-05-14-118536_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-RES-002_2026-04-11T15-05-14-118536_final.json",
+    "seed": 2021644245
+  },
+  {
+    "timestamp": "2026-04-11T19:49:22.713552",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "PROJECTILE-RES-002",
+      "baseline_attacker_total_shots_fired": 500,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 499
+        }
+      ],
+      "baseline_attacker_in_flight": 1,
+      "baseline_attacker_resolved_shots": 499,
+      "baseline_attacker_resolved_hits": 499,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 499.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999601.0,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 250.0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 999999850.0,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 250,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Projectile (Rapid Fire)",
+          "type": "ProjectileWeaponAbility",
+          "shots_fired": 250,
+          "shots_hit": 250
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 250,
+      "variant_attacker_resolved_hits": 250,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Battles Produced Different Results",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Full-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=499.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Attacker Dealt Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Dealt Less Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "full=499.0, half=250.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Shots Fired",
+            "expected": 250,
+            "actual": 250,
+            "passed": true,
+            "detail": "expected=250, actual=250"
+          },
+          {
+            "phase": "outcome",
+            "name": "Half-Ammo Fired Fewer Shots",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "variant=250, baseline=500"
+          }
+        ]
+      },
+      "duration_real": 0.09045910835266113,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Battles Produced Different Results",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "baseline_dmg=499.0, variant_dmg=250.0"
+      },
+      {
+        "name": "Full-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=499.0"
+      },
+      {
+        "name": "Half-Ammo Attacker Dealt Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "damage=250.0"
+      },
+      {
+        "name": "Half-Ammo Dealt Less Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "full=499.0, half=250.0"
+      },
+      {
+        "name": "Half-Ammo Shots Fired",
+        "status": "PASS",
+        "expected": 250,
+        "actual": 250,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=250, actual=250"
+      },
+      {
+        "name": "Half-Ammo Fired Fewer Shots",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "variant=250, baseline=500"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-RES-002_2026-04-11T19-49-22-623093_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\PROJECTILE-RES-002_2026-04-11T19-49-22-623093_final.json",
+    "seed": 1180394768
+  }
+]

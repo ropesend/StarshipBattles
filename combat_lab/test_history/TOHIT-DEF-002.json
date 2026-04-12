@@ -1,0 +1,1952 @@
+[
+  {
+    "timestamp": "2026-04-06T20:17:21.792674",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.1520836353302002,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:35:31.057245",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.15438461303710938,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:51:21.599695",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.14777541160583496,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:59.868050",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.1524181365966797,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:18:50.805618",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.14554715156555176,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:10:27.982698",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.14698147773742676,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:21:07.498942",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.13312911987304688,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:04:30.071119",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 171.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000029.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 171.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000129.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=171.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 171.0,
+            "actual": 171.0,
+            "passed": true,
+            "detail": "expected=171.0, actual=171.0"
+          }
+        ]
+      },
+      "duration_real": 0.13559985160827637,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=171.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 171.0,
+        "actual": 171.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=171.0, actual=171.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:06:52.885187",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 179.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000021.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 179.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000121.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=179.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 179.0,
+            "actual": 179.0,
+            "passed": true,
+            "detail": "expected=179.0, actual=179.0"
+          }
+        ]
+      },
+      "duration_real": 0.14282655715942383,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=179.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 179.0,
+        "actual": 179.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=179.0, actual=179.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-DEF-002_2026-04-11T15-06-52-742360_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-DEF-002_2026-04-11T15-06-52-742360_final.json",
+    "seed": 558759864
+  },
+  {
+    "timestamp": "2026-04-11T19:50:55.945777",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-DEF-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 163
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 163,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 163.0,
+      "baseline_initial_hp": 1000000200,
+      "baseline_final_hp": 1000000037.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 163.0,
+      "variant_initial_hp": 1000000300,
+      "variant_final_hp": 1000000137.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (Low Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 163
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 163,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000200"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000300"
+          },
+          {
+            "phase": "precondition",
+            "name": "ECM Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=163.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Same Group No Extra Defense",
+            "expected": 163.0,
+            "actual": 163.0,
+            "passed": true,
+            "detail": "expected=163.0, actual=163.0"
+          }
+        ]
+      },
+      "duration_real": 0.132432222366333,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000200"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000300"
+      },
+      {
+        "name": "ECM Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=163.0"
+      },
+      {
+        "name": "Same Group No Extra Defense",
+        "status": "PASS",
+        "expected": 163.0,
+        "actual": 163.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=163.0, actual=163.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-DEF-002_2026-04-11T19-50-55-813345_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-DEF-002_2026-04-11T19-50-55-813345_final.json",
+    "seed": 185654535
+  }
+]

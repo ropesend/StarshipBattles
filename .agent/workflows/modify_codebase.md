@@ -21,7 +21,7 @@ At the start of any session and after major tasks, report context status:
 Before starting any refactoring phase, run ALL unit tests and record the baseline:
 ```powershell
 // turbo
-python -m pytest unit_tests/ -n 16 --tb=no -q
+python -m pytest tests/ -n 12 --tb=no -q
 ```
 **Record the count** (e.g., "462 passed"). This is your phase start baseline.
 
@@ -54,7 +54,7 @@ If it fails, debugging is required. Repeat steps 3-4.
 // turbo
 Once the new feature works, run the ENTIRE test suite to ensure no regressions.
 ```powershell
-python -m pytest unit_tests/ -n 16 --tb=no -q
+python -m pytest tests/ -n 12 --tb=no -q
 ```
 **CRITICAL:** If any *other* tests fail that weren't failing at phase start, you MUST fix the regression before finishing.
 

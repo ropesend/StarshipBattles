@@ -1,0 +1,1952 @@
+[
+  {
+    "timestamp": "2026-04-06T20:16:49.540794",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.5073492527008057,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:34:58.348549",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.5129692554473877,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:50:49.472717",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.4997131824493408,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:27.482367",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.493572473526001,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:18:17.932146",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.4968886375427246,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:09:54.821257",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.4952883720397949,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:20:35.330438",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.4421398639678955,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:03:57.563189",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.44345784187316895,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:06:16.750635",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.45494675636291504,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-METALS-002_2026-04-11T15-06-16-295688_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-METALS-002_2026-04-11T15-06-16-295688_final.json",
+    "seed": 679757606
+  },
+  {
+    "timestamp": "2026-04-11T19:50:21.931124",
+    "ticks_run": 1000,
+    "passed": true,
+    "metrics": {
+      "test_id": "SHIELD-PROJ-METALS-002",
+      "baseline_attacker_total_shots_fired": 1000,
+      "baseline_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 1000,
+      "baseline_attacker_resolved_hits": 1000,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 1000.0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 999999100.0,
+      "baseline_ticks": 1000,
+      "variant_damage_dealt": 1000.0,
+      "variant_initial_hp": 1000000150,
+      "variant_final_hp": 999999150.0,
+      "variant_ticks": 1000,
+      "ticks_run": 1000,
+      "variant_attacker_total_shots_fired": 1000,
+      "variant_attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 1000,
+          "shots_hit": 1000
+        }
+      ],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 1000,
+      "variant_attacker_resolved_hits": 1000,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true,
+            "detail": "expected=1000, actual=1000"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000150"
+          },
+          {
+            "phase": "precondition",
+            "name": "Unshielded Target Took Damage",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "damage=1000.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Unpowered Metals Shield — Negligible Protection",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+          }
+        ]
+      },
+      "duration_real": 0.45000386238098145,
+      "ticks": 1000
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=1000, actual=1000"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000150"
+      },
+      {
+        "name": "Unshielded Target Took Damage",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "damage=1000.0"
+      },
+      {
+        "name": "Unpowered Metals Shield — Negligible Protection",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "baseline=1000.0, variant=1000.0, diff=0.0 (max allowed: 1)"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-METALS-002_2026-04-11T19-50-21-480617_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\SHIELD-PROJ-METALS-002_2026-04-11T19-50-21-480617_final.json",
+    "seed": 931986743
+  }
+]

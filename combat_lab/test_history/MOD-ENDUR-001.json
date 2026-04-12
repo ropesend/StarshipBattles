@@ -1,0 +1,1412 @@
+[
+  {
+    "timestamp": "2026-04-06T20:33:09.258636",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.013553857803344727,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:49:03.019501",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.012505769729614258,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:39.672769",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.012510061264038086,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:16:28.312310",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.012510299682617188,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:08:04.476533",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.012603521347045898,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:18:46.218797",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.012537240982055664,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:02:07.157306",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.012634515762329102,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-10T15:59:42.083231",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.01410675048828125,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ENDUR-001_2026-04-10T15-59-42-069124_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ENDUR-001_2026-04-10T15-59-42-069124_final.json",
+    "seed": 307365706
+  },
+  {
+    "timestamp": "2026-04-11T15:04:14.600520",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.014014482498168945,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ENDUR-001_2026-04-11T15-04-14-586505_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ENDUR-001_2026-04-11T15-04-14-586505_final.json",
+    "seed": 1648140310
+  },
+  {
+    "timestamp": "2026-04-11T19:48:25.831385",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ENDUR-001",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000000.0,
+      "damage_dealt": 100.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.2,
+      "attacker_total_shots_fired": 1,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (Endurance Test, speed=1000, endurance=3.0s)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 1,
+          "shots_hit": 1
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 1,
+      "attacker_resolved_hits": 1,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "expected_endurance": 6.0,
+      "actual_endurance": 6.0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Seeker Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Boosted Endurance",
+            "expected": 6.0,
+            "actual": 6.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Missile Hit (100 damage)",
+            "expected": 100.0,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100.0, actual=100.0"
+          }
+        ]
+      },
+      "duration_real": 0.014582157135009766,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 4,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Boosted Endurance",
+        "status": "PASS",
+        "expected": 6.0,
+        "actual": 6.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Missile Hit (100 damage)",
+        "status": "PASS",
+        "expected": 100.0,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=100.0, actual=100.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ENDUR-001_2026-04-11T19-48-25-816803_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ENDUR-001_2026-04-11T19-48-25-816803_final.json",
+    "seed": 1830141610
+  }
+]

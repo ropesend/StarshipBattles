@@ -195,7 +195,7 @@ class MyTest(TestScenario):
 | `pass_criteria` | Formal pass/fail criteria string |
 | `max_ticks` | Simulation duration |
 | `seed` | Fixed RNG seed for reproducibility |
-| `battle_end_mode` | `"time_based"`, `"hp_based"`, `"capability"`, `"manual"`, `"escape"` |
+| `ui_priority` | Display priority in Combat Lab (0=normal, higher=more important) |
 | `tags` | Searchable tags |
 
 ### Validation System

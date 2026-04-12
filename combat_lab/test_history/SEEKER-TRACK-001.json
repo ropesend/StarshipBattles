@@ -1,0 +1,1752 @@
+[
+  {
+    "timestamp": "2026-03-31T05:00:43.603361",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.021594762802124023,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\SEEKER-TRACK-001_2026-03-31T05-00-43-581767_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\SEEKER-TRACK-001_2026-03-31T05-00-43-581767_final.json",
+    "seed": 122656869
+  },
+  {
+    "timestamp": "2026-03-31T05:22:07.249325",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.020051956176757812,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:45:45.444154",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.01957249641418457,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T06:41:46.721778",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.019056320190429688,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T10:40:58.068667",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.019522905349731445,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T10:42:19.021218",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.019202709197998047,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T12:35:30.576177",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.01862621307373047,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T12:49:47.573346",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.017023086547851562,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T15:09:53.523965",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.018579721450805664,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T16:40:14.427982",
+    "ticks_run": 600,
+    "passed": true,
+    "metrics": {
+      "test_id": "SEEKER-TRACK-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999900.0,
+      "damage_dealt": 200.0,
+      "ticks_run": 600,
+      "target_alive": true,
+      "hit_rate": 0.3333333333333333,
+      "attacker_total_shots_fired": 2,
+      "attacker_weapons": [
+        {
+          "name": "Test Seeker (No Resource)",
+          "type": "SeekerWeaponAbility",
+          "shots_fired": 2,
+          "shots_hit": 2
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 2,
+      "attacker_resolved_hits": 2,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 600,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Damage",
+            "expected": 100,
+            "actual": 100.0,
+            "passed": true,
+            "detail": "expected=100, actual=100.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Speed",
+            "expected": 1000,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "expected=1000, actual=1000.0"
+          },
+          {
+            "phase": "data",
+            "name": "Seeker Endurance",
+            "expected": 5.0,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5.0, actual=5.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Center Distance",
+            "expected": 1000.0,
+            "actual": 1000.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": true,
+            "actual": 200.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.01802515983581543,
+      "ticks": 600
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 600,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Seeker Damage",
+        "status": "PASS",
+        "expected": 100,
+        "actual": 100.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=100, actual=100.0"
+      },
+      {
+        "name": "Seeker Speed",
+        "status": "PASS",
+        "expected": 1000,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1000, actual=1000.0"
+      },
+      {
+        "name": "Seeker Endurance",
+        "status": "PASS",
+        "expected": 5.0,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5.0, actual=5.0"
+      },
+      {
+        "name": "Center Distance",
+        "status": "PASS",
+        "expected": 1000.0,
+        "actual": 1000.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": true,
+        "actual": 200.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

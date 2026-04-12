@@ -1,0 +1,2532 @@
+[
+  {
+    "timestamp": "2026-04-06T20:14:27.118511",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.011006593704223633,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:32:32.964247",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.011506080627441406,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:48:27.447347",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.011089324951171875,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:03.392671",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.011652469635009766,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:15:50.501849",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.011415958404541016,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:07:27.407786",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.012014627456665039,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:18:09.795692",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.010873794555664062,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:01:30.381526",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.01100921630859375,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:03:34.064990",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.011626720428466797,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\CNC-004_2026-04-11T15-03-34-053363_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\CNC-004_2026-04-11T15-03-34-053363_final.json",
+    "seed": 1738823845
+  },
+  {
+    "timestamp": "2026-04-11T19:47:46.259524",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "CNC-004",
+      "baseline_attacker_total_shots_fired": 0,
+      "baseline_attacker_weapons": [],
+      "baseline_attacker_in_flight": 0,
+      "baseline_attacker_resolved_shots": 0,
+      "baseline_attacker_resolved_hits": 0,
+      "baseline_target_total_shots_fired": 0,
+      "baseline_target_weapons": [],
+      "baseline_target_in_flight": 0,
+      "baseline_target_resolved_shots": 0,
+      "baseline_target_resolved_hits": 0,
+      "baseline_damage_dealt": 0,
+      "baseline_initial_hp": 1000000100,
+      "baseline_final_hp": 1000000100,
+      "baseline_ticks": 500,
+      "variant_damage_dealt": 0,
+      "variant_initial_hp": 1000000100,
+      "variant_final_hp": 1000000100,
+      "variant_ticks": 500,
+      "ticks_run": 500,
+      "variant_attacker_total_shots_fired": 0,
+      "variant_attacker_weapons": [],
+      "variant_attacker_in_flight": 0,
+      "variant_attacker_resolved_shots": 0,
+      "variant_attacker_resolved_hits": 0,
+      "variant_target_total_shots_fired": 0,
+      "variant_target_weapons": [],
+      "variant_target_in_flight": 0,
+      "variant_target_resolved_shots": 0,
+      "variant_target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Baseline Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ticks",
+            "expected": 500,
+            "actual": 500,
+            "passed": true,
+            "detail": "expected=500, actual=500"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Target Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "initial_hp=1000000100"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Has Thrust",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Has No Thrust",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Ship Moved",
+            "expected": true,
+            "actual": "speed=31.25",
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Baseline Traveled Distance",
+            "expected": true,
+            "actual": "distance=15578.1",
+            "passed": true,
+            "detail": "ship with C&C should move significantly in 500 ticks"
+          },
+          {
+            "phase": "data",
+            "name": "Variant Ship Stationary (Speed)",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Variant Ship At Origin",
+            "expected": true,
+            "actual": "distance=0.0000",
+            "passed": true,
+            "detail": "ship without C&C should not move at all"
+          }
+        ]
+      },
+      "duration_real": 0.01203155517578125,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 10,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Baseline Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Baseline Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Variant Ticks",
+        "status": "PASS",
+        "expected": 500,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=500, actual=500"
+      },
+      {
+        "name": "Variant Target Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "initial_hp=1000000100"
+      },
+      {
+        "name": "Baseline Has Thrust",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Variant Has No Thrust",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Baseline Ship Moved",
+        "status": "PASS",
+        "expected": true,
+        "actual": "speed=31.25",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Baseline Traveled Distance",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=15578.1",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship with C&C should move significantly in 500 ticks"
+      },
+      {
+        "name": "Variant Ship Stationary (Speed)",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=0.0, actual=0.0"
+      },
+      {
+        "name": "Variant Ship At Origin",
+        "status": "PASS",
+        "expected": true,
+        "actual": "distance=0.0000",
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "ship without C&C should not move at all"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\CNC-004_2026-04-11T19-47-46-247493_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\CNC-004_2026-04-11T19-47-46-247493_final.json",
+    "seed": 2058151704
+  }
+]

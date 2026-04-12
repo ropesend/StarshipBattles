@@ -4,12 +4,15 @@ Test Scenarios Module
 This module provides the infrastructure for creating test scenarios that work
 identically in both pytest (headless) and Combat Lab (visual) environments.
 
-Key Components:
-    - TestScenario: Base class for all test scenarios
-    - TestMetadata: Rich metadata for test documentation and UI
+Concrete scenario classes live in sibling modules (``beam_scenarios``,
+``projectile_scenarios``, ``shield_projection_scenarios``, etc.) and are
+discovered dynamically by ``combat_lab.registry.TestRegistry``. They do not
+need to be re-exported here — author new scenario classes by subclassing
+``TestScenario`` (or a template) and defining a ``metadata`` attribute.
 
 Usage:
     from combat_lab.scenarios import TestScenario, TestMetadata
+    from combat_lab.scenarios.validation import check_true
 
     class MyTest(TestScenario):
         metadata = TestMetadata(
@@ -18,19 +21,17 @@ Usage:
             subcategory="MySubcategory",
             name="My test",
             summary="What this test validates",
-            conditions=["Test condition 1", "Test condition 2"],
+            conditions=["Test condition 1"],
             edge_cases=["Edge case 1"],
             expected_outcome="What should happen",
-            pass_criteria="How we verify success"
+            pass_criteria="How we verify success",
         )
 
         def setup(self, battle_engine):
-            # Setup test
-            pass
+            ...
 
-        def verify(self, battle_engine):
-            # Verify results
-            return True
+        def validate(self, engine):
+            return [check_true("Something happened", True, phase="outcome")]
 """
 
 from combat_lab.scenarios.base import TestScenario, TestMetadata
@@ -42,105 +43,12 @@ from combat_lab.scenarios.validation import (
     check_tost,
     check_true,
 )
-from combat_lab.scenarios.resource_scenarios import (
-    EngineFuelConsumptionScenario,
-    EngineFuelDepletionScenario,
-    EngineFuelRegenerationScenario,
-    BeamEnergyConsumptionScenario,
-    BeamEnergyDepletionScenario,
-    BeamEnergyRegenerationScenario,
-    ProjectileAmmoConsumptionScenario,
-    ProjectileAmmoDepletionScenario,
-    SeekerAmmoConsumptionScenario,
-    EnergyContentionBeamRegenScenario,
-)
-from combat_lab.scenarios.shield_projection_scenarios import (
-    ShieldAbsorbsDamageComparisonScenario,
-    ShieldDepletionOverflowScenario,
-    MultipleShieldsStackScenario,
-    SingleHitOverflowScenario,
-    ShieldWithSufficientEnergyScenario,
-    ShieldWithEnergyZeroDamageScenario,
-    ShieldFailsOnEnergyDepletionScenario,
-    ShieldWithoutEnergyScenario,
-    ShieldWithMetalsProtects,
-    ShieldWithoutMetalsNoProtection,
-)
-from combat_lab.scenarios.cnc_scenarios import (
-    CNCBeamDisabledScenario,
-    CNCProjectileDisabledScenario,
-    CNCShieldDisabledScenario,
-    CNCEngineDisabledScenario,
-    CNCBridgeDestroyedScenario,
-    CNCBridgeRedundancyScenario,
-)
-from combat_lab.scenarios.armor_layer_scenarios import (
-    ArmorAbsorbsAllScenario,
-    ArmorDepletesOverflowScenario,
-    ArmorStackingScenario,
-)
-from combat_lab.scenarios.emissive_armor_scenarios import (
-    EmissiveBlocksLowDamageScenario,
-    EmissiveReducesHighDamageScenario,
-    EmissiveSameGroupNoStackScenario,
-    EmissiveDiffGroupStackScenario,
-    EmissiveNegativeValueScenario,
-    EmissiveThreeSameGroupScenario,
-    EmissiveExactDamageBlockScenario,
-)
-from combat_lab.scenarios.shield_regen_scenarios import (
-    RegenReducesNetDamageScenario,
-    RegenExceedsDamageScenario,
-    RegenStackingScenario,
-    RegenWithFullEnergyScenario,
-    RegenWithNoEnergyScenario,
-    RegenStopsMidBattleScenario,
-    RegenEqualsDamageRateScenario,
-)
-from combat_lab.scenarios.tohit_defense_scenarios import (
-    ECMReducesHitRateComparisonScenario,
-    ECMSameGroupDoesNotStackScenario,
-    ECMDifferentGroupsStackScenario,
-    NegativeDefenseModifierScenario,
-)
-from combat_lab.scenarios.tohit_attack_scenarios import (
-    SensorIncreasesAccuracyScenario,
-    SameGroupDoesNotStackScenario,
-    DifferentGroupsStackScenario,
-    NegativeModifierReducesAccuracyScenario,
-    MixedModifiersNetPositiveScenario,
-)
-from combat_lab.scenarios.mod_range_scenarios import (
-    RangeBoostInRangeScenario,
-    RangeIdentityScenario,
-    RangeBoostBeyondBaseScenario,
-    RangeBoostComparisonScenario,
-    RangeBoostOutOfRangeScenario,
-)
-from combat_lab.scenarios.damage_pipeline_scenarios import (
-    PipelineShieldEmissiveScenario,
-    PipelineShieldSRAScenario,
-    PipelineEmissiveSRAScenario,
-    PipelineFullVsNoneScenario,
-    PipelineFullRegenScenario,
-    PipelineSRAOverflowScenario,
-)
-from combat_lab.scenarios.mod_thrust_scenarios import (
-    ModThrustStaticScenario,
-    ModThrustBaselineScenario,
-    ModThrustDynamicVelocityScenario,
-    ModThrustAccelerationScenario,
-)
-from combat_lab.scenarios.propulsion_scenarios import (
-    PropEngineAccelerationScenario,
-    PropDualEngineScenario,
-    PropThrustMassRatioScenario,
-    PropThrusterTurnRateScenario,
-    PropThrusterRotationScenario,
-    PropDualThrusterScenario,
-    PropNoEngineStationaryScenario,
-    PropThrusterOnlyScenario,
-    PropMassAffectsTurnRateScenario,
+from combat_lab.scenarios.templates import (
+    StaticTargetScenario,
+    DuelScenario,
+    PropulsionScenario,
+    ResourceScenario,
+    ComparisonScenario,
 )
 
 __all__ = [
@@ -152,94 +60,9 @@ __all__ = [
     'check_approx',
     'check_tost',
     'check_true',
-    # Resource scenarios
-    'EngineFuelConsumptionScenario',
-    'EngineFuelDepletionScenario',
-    'EngineFuelRegenerationScenario',
-    'BeamEnergyConsumptionScenario',
-    'BeamEnergyDepletionScenario',
-    'BeamEnergyRegenerationScenario',
-    'ProjectileAmmoConsumptionScenario',
-    'ProjectileAmmoDepletionScenario',
-    'SeekerAmmoConsumptionScenario',
-    'EnergyContentionBeamRegenScenario',
-    # Modifier scenarios
-    # Modifier - Thrust Multiplier scenarios
-    'ModThrustStaticScenario',
-    'ModThrustBaselineScenario',
-    'ModThrustDynamicVelocityScenario',
-    'ModThrustAccelerationScenario',
-    # Modifier - Range Multiplier scenarios
-    'RangeBoostInRangeScenario',
-    'RangeIdentityScenario',
-    'RangeBoostBeyondBaseScenario',
-    'RangeBoostComparisonScenario',
-    'RangeBoostOutOfRangeScenario',
-    # Modifier - Damage Multiplier scenarios
-    # Propulsion scenarios
-    'PropEngineAccelerationScenario',
-    'PropDualEngineScenario',
-    'PropThrustMassRatioScenario',
-    'PropThrusterTurnRateScenario',
-    'PropThrusterRotationScenario',
-    'PropDualThrusterScenario',
-    'PropNoEngineStationaryScenario',
-    'PropThrusterOnlyScenario',
-    'PropMassAffectsTurnRateScenario',
-    # ShieldProjection scenarios
-    'ShieldAbsorbsDamageComparisonScenario',
-    'ShieldDepletionOverflowScenario',
-    'MultipleShieldsStackScenario',
-    'SingleHitOverflowScenario',
-    'ShieldWithSufficientEnergyScenario',
-    'ShieldWithEnergyZeroDamageScenario',
-    'ShieldFailsOnEnergyDepletionScenario',
-    'ShieldWithoutEnergyScenario',
-    'ShieldWithMetalsProtects',
-    'ShieldWithoutMetalsNoProtection',
-    # CommandAndControl scenarios
-    'CNCBeamDisabledScenario',
-    'CNCProjectileDisabledScenario',
-    'CNCShieldDisabledScenario',
-    'CNCEngineDisabledScenario',
-    'CNCBridgeDestroyedScenario',
-    'CNCBridgeRedundancyScenario',
-    # EmissiveArmor scenarios
-    'EmissiveBlocksLowDamageScenario',
-    'EmissiveReducesHighDamageScenario',
-    'EmissiveSameGroupNoStackScenario',
-    'EmissiveDiffGroupStackScenario',
-    'EmissiveNegativeValueScenario',
-    'EmissiveThreeSameGroupScenario',
-    'EmissiveExactDamageBlockScenario',
-    # ArmorLayer scenarios
-    'ArmorAbsorbsAllScenario',
-    'ArmorDepletesOverflowScenario',
-    'ArmorStackingScenario',
-    # ShieldRegeneration scenarios
-    'RegenReducesNetDamageScenario',
-    'RegenExceedsDamageScenario',
-    'RegenStackingScenario',
-    'RegenWithFullEnergyScenario',
-    'RegenWithNoEnergyScenario',
-    'RegenStopsMidBattleScenario',
-    'RegenEqualsDamageRateScenario',
-    # ToHitDefenseModifier scenarios
-    'ECMReducesHitRateComparisonScenario',
-    'ECMSameGroupDoesNotStackScenario',
-    'ECMDifferentGroupsStackScenario',
-    'NegativeDefenseModifierScenario',
-    # ToHitAttackModifier scenarios
-    'SensorIncreasesAccuracyScenario',
-    'SameGroupDoesNotStackScenario',
-    'DifferentGroupsStackScenario',
-    'NegativeModifierReducesAccuracyScenario',
-    'MixedModifiersNetPositiveScenario',
-    # DamagePipeline scenarios
-    'PipelineShieldEmissiveScenario',
-    'PipelineShieldSRAScenario',
-    'PipelineEmissiveSRAScenario',
-    'PipelineFullVsNoneScenario',
-    'PipelineFullRegenScenario',
-    'PipelineSRAOverflowScenario',
+    'StaticTargetScenario',
+    'DuelScenario',
+    'PropulsionScenario',
+    'ResourceScenario',
+    'ComparisonScenario',
 ]

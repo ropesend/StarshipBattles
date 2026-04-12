@@ -1,0 +1,1046 @@
+[
+  {
+    "timestamp": "2026-03-30T22:32:42.191150",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "ARMOR-001",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000200,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Emissive Armor Value",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage < Armor",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "beam.damage=1.0, armor=5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.025631189346313477,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Emissive Armor Value",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Beam Damage < Armor",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "beam.damage=1.0, armor=5"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:34:18.310204",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "ARMOR-001",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000200,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Emissive Armor Value",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage < Armor",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "beam.damage=1.0, armor=5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.025104045867919922,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Emissive Armor Value",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Beam Damage < Armor",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "beam.damage=1.0, armor=5"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:34:47.510639",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "ARMOR-001",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000200,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Emissive Armor Value",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage < Armor",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "beam.damage=1.0, armor=5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.025311946868896484,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Emissive Armor Value",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Beam Damage < Armor",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "beam.damage=1.0, armor=5"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-30T22:35:23.238543",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "ARMOR-001",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000200,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Emissive Armor Value",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage < Armor",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "beam.damage=1.0, armor=5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.026192903518676758,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Emissive Armor Value",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Beam Damage < Armor",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "beam.damage=1.0, armor=5"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:21:38.988152",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "ARMOR-001",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000200,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Emissive Armor Value",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage < Armor",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "beam.damage=1.0, armor=5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.025338172912597656,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Emissive Armor Value",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Beam Damage < Armor",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "beam.damage=1.0, armor=5"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-03-31T05:45:11.108606",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "ARMOR-001",
+      "initial_hp": 1000000200,
+      "final_hp": 1000000200,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Emissive Armor Value",
+            "expected": 5,
+            "actual": 5.0,
+            "passed": true,
+            "detail": "expected=5, actual=5.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage",
+            "expected": 1,
+            "actual": 1.0,
+            "passed": true,
+            "detail": "expected=1, actual=1.0"
+          },
+          {
+            "phase": "data",
+            "name": "Beam Damage < Armor",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": "beam.damage=1.0, armor=5"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          }
+        ]
+      },
+      "duration_real": 0.02511000633239746,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Emissive Armor Value",
+        "status": "PASS",
+        "expected": 5,
+        "actual": 5.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=5, actual=5.0"
+      },
+      {
+        "name": "Beam Damage",
+        "status": "PASS",
+        "expected": 1,
+        "actual": 1.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=1, actual=1.0"
+      },
+      {
+        "name": "Beam Damage < Armor",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "beam.damage=1.0, armor=5"
+      },
+      {
+        "name": "Damage Dealt",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

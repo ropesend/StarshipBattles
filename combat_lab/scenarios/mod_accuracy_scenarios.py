@@ -127,7 +127,6 @@ class ModAcc001_StatGateScenario(StaticTargetScenario):
         pass_criteria=f"base_accuracy == {BOOSTED_ACCURACY} AND hit_rate passes TOST at {P_BOOSTED_PB:.4f}",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "accuracy_add", "stat_gate"],
     )
 
@@ -213,7 +212,6 @@ class ModAcc002_MidRangeComparisonScenario(ComparisonScenario):
         pass_criteria="Both hit rates pass TOST within ±10% margin",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "accuracy_add", "comparison", "statistical"],
     )
 
@@ -313,7 +311,6 @@ class ModAcc003_RangeDependentEffectScenario(ComparisonScenario):
         pass_criteria="damage_ratio > point_blank_ratio",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "accuracy_add", "range_dependent", "sigmoid"],
     )
 
@@ -410,7 +407,6 @@ class ModAcc004_NegativePenaltyScenario(ComparisonScenario):
         pass_criteria="Both hit rates pass TOST; penalty_damage < baseline_damage",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "accuracy_add", "negative", "penalty"],
     )
 
@@ -513,7 +509,6 @@ class ModAcc005_LongRangeEffectivenessScenario(ComparisonScenario):
         pass_criteria="Both hit rates pass TOST within margin",
         max_ticks=MODIFIER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "accuracy_add", "long_range", "statistical"],
     )
 

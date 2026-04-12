@@ -94,7 +94,6 @@ class ArmorAbsorbsAllScenario(ComparisonScenario):
         pass_criteria="variant hull damage == 0, variant armor damage == baseline hull damage",
         max_ticks=ARMOR_LAYER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["armor", "layer", "absorption", "comparison"],
     )
 
@@ -178,7 +177,6 @@ class ArmorDepletesOverflowScenario(ComparisonScenario):
         pass_criteria="armor_damage == 100, hull_damage == 400",
         max_ticks=ARMOR_LAYER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["armor", "layer", "overflow", "depletion", "comparison"],
     )
 
@@ -277,7 +275,6 @@ class ArmorStackingScenario(ComparisonScenario):
         pass_criteria="variant hull_damage == 300, baseline hull_damage == 400, difference == 100",
         max_ticks=ARMOR_LAYER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["armor", "layer", "stacking", "comparison"],
     )
 

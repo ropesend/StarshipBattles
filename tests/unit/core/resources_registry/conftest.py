@@ -15,10 +15,10 @@ def clean_registry():
     """
     registry = get_default_registry_manager()
     # Unfreeze if frozen
-    registry._frozen = False
+    registry.unfreeze()
     registry.resources.clear()
     yield
-    registry._frozen = False
+    registry.unfreeze()
     registry.resources.clear()
 
 

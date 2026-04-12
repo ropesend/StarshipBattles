@@ -9,8 +9,8 @@ Key Design Principle:
     The only difference is headless=True (pytest) vs headless=False (Combat Lab).
 
 Architecture:
-    - TestScenario extends CombatScenario from combat_lab.scenario
-    - Adds TestMetadata for rich test documentation
+    - TestScenario is the single base class for all scenarios
+    - Carries TestMetadata for rich test documentation
     - Provides helper methods for loading test data
     - Ensures tests are reproducible with fixed seeds
 
@@ -42,9 +42,10 @@ Usage Example:
 
             battle_engine.start([attacker], [target], seed=self.metadata.seed)
 
-        def verify(self, battle_engine):
-            # Check if test passed
-            return battle_engine.teams[1][0].hp < initial_hp
+        def validate(self, engine):
+            target = engine.teams[1][0]
+            return [check_true("Target damaged", target.hp < self.initial_hp,
+                               phase="outcome")]
     ```
 """
 
@@ -53,11 +54,9 @@ import json
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 
-from combat_lab.scenario import CombatScenario
 from game.simulation.entities.ship import Ship
 from combat_lab.scenarios.validation import Check, ValidationReport
 from combat_lab.logging_config import get_logger
-from game.core.constants import SimulationConstants
 
 # Get logger for this module
 logger = get_logger(__name__)
@@ -85,13 +84,6 @@ class TestMetadata:
         pass_criteria: How we verify success (e.g., "Hit rate > 90%")
         max_ticks: Maximum simulation ticks before timeout (default: 1000)
         seed: Random seed for reproducibility (default: 42)
-        battle_end_mode: Battle end condition mode - "time_based", "hp_based", "capability",
-                        "manual", "escape" (default: "time_based" for tests to run full duration)
-        battle_end_check_derelict: Count derelict ships as defeated (for hp_based mode, default: False)
-        absolute_max_ticks: Hard ceiling to prevent infinite loops (safety net)
-        escape_radius: Distance from origin for "escape" mode
-        escape_team: Which team must escape (None = any, 0 or 1 = specific)
-        escape_all_ships: Require all ships to escape (default: False)
         ui_priority: Display priority in Combat Lab (0=normal, higher=more important)
         tags: Optional tags for filtering (e.g., ["accuracy", "close_range"])
     """
@@ -106,12 +98,6 @@ class TestMetadata:
     pass_criteria: str
     max_ticks: int = 1000
     seed: int = 42
-    battle_end_mode: str = "time_based"  # Default: run for full duration
-    battle_end_check_derelict: bool = False
-    absolute_max_ticks: int = field(default_factory=lambda: SimulationConstants.ABSOLUTE_MAX_TICKS)
-    escape_radius: Optional[float] = None
-    escape_team: Optional[int] = None
-    escape_all_ships: bool = False
     ui_priority: int = 0
     tags: List[str] = field(default_factory=list)
 
@@ -129,22 +115,16 @@ class TestMetadata:
             'pass_criteria': self.pass_criteria,
             'max_ticks': self.max_ticks,
             'seed': self.seed,
-            'battle_end_mode': self.battle_end_mode,
-            'battle_end_check_derelict': self.battle_end_check_derelict,
-            'absolute_max_ticks': self.absolute_max_ticks,
-            'escape_radius': self.escape_radius,
-            'escape_team': self.escape_team,
-            'escape_all_ships': self.escape_all_ships,
             'ui_priority': self.ui_priority,
             'tags': self.tags,
         }
 
 
-class TestScenario(CombatScenario):
+class TestScenario:
     """
     Base class for test scenarios that work in both pytest and Combat Lab.
 
-    This class extends CombatScenario with:
+    Provides:
     - Rich metadata for documentation and UI display
     - Helper methods for loading test ships
     - Automatic configuration from metadata
@@ -195,10 +175,11 @@ class TestScenario(CombatScenario):
                 battle_engine.start([attacker], [target], seed=self.metadata.seed)
                 self.initial_hp = target.hp
 
-            def verify(self, battle_engine):
-                target = battle_engine.teams[1][0]
+            def validate(self, engine):
+                target = engine.teams[1][0]
                 damage_dealt = self.initial_hp - target.hp
-                return damage_dealt > 0
+                return [check_true("Damage dealt", damage_dealt > 0,
+                                   phase="outcome")]
         ```
     """
 
@@ -210,12 +191,14 @@ class TestScenario(CombatScenario):
 
     def __init__(self):
         """Initialize test scenario from metadata."""
-        super().__init__()
-
         if self.metadata is None:
             raise ValueError(
                 f"{self.__class__.__name__} must define a 'metadata' class attribute"
             )
+
+        # Result state
+        self.passed: bool = False
+        self.results: Dict[str, Any] = {}
 
         # Configure scenario from metadata
         self.name = f"[{self.metadata.test_id}] {self.metadata.name}"
@@ -234,6 +217,14 @@ class TestScenario(CombatScenario):
         self.components_path = os.path.join(data_dir, 'components.json')
         self.modifiers_path = os.path.join(data_dir, 'modifiers.json')
         self.vehicle_classes_path = os.path.join(data_dir, 'vehicleclasses.json')
+
+    def get_data_paths(self) -> Dict[str, str]:
+        """Return the data paths this scenario loads before running."""
+        return {
+            'components': self.components_path,
+            'modifiers': self.modifiers_path,
+            'vehicle_classes': self.vehicle_classes_path,
+        }
 
     def _get_test_data_dir(self) -> str:
         """
@@ -443,14 +434,12 @@ class TestScenario(CombatScenario):
         """
         Create BattleEndCondition from test metadata.
 
-        This helper converts the metadata's battle_end_mode string into
-        a BattleEndCondition object for the BattleEngine.
+        This helper builds a default time-based BattleEndCondition for the
+        BattleEngine. Scenarios that need a different condition can attach an
+        ``end_condition`` dict directly to their metadata.
 
         Returns:
             BattleEndCondition configured from metadata
-
-        Raises:
-            ValueError: If battle_end_mode is invalid
 
         Example:
             # In setup():
@@ -464,7 +453,7 @@ class TestScenario(CombatScenario):
             end_condition_from_dict,
         )
 
-        # If metadata has an explicit end_condition dict, use it
+        # If a scenario subclass attaches an explicit end_condition dict, use it
         if hasattr(self.metadata, 'end_condition') and self.metadata.end_condition is not None:
             return end_condition_from_dict(self.metadata.end_condition)
 
@@ -525,6 +514,23 @@ class TestScenario(CombatScenario):
         """
         pass
 
+    def custom_setup(self, battle_engine) -> None:
+        """Optional per-scenario setup hook called by template setup().
+
+        Override in subclasses of StaticTargetScenario / DuelScenario /
+        PropulsionScenario / ResourceScenario to tweak ship state after the
+        template has positioned the ships but before the battle starts.
+        """
+        pass
+
+    def _collect_extra_results(self, engine) -> None:
+        """Optional hook for templates to attach scenario-specific metrics.
+
+        Override in subclasses when the template's default result collection
+        does not capture everything ``validate()`` needs.
+        """
+        pass
+
     def _run_validation(self, engine) -> 'ValidationReport':
         """
         Run the three-phase validation pipeline.
@@ -565,16 +571,6 @@ class TestScenario(CombatScenario):
         self.results['has_validation_failures'] = not report.passed
 
         return report
-
-    def verify(self, battle_engine) -> bool:
-        """
-        Legacy pass/fail method. Kept as fallback during migration.
-
-        New scenarios should implement validate() instead.
-        """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate(engine) or verify(battle_engine)"
-        )
 
     def update(self, battle_engine):
         """

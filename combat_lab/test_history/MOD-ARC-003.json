@@ -1,0 +1,1742 @@
+[
+  {
+    "timestamp": "2026-04-06T20:32:55.740390",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.014229297637939453,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:48:49.754722",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.013007879257202148,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:00:26.137691",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.012569665908813477,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:16:14.612093",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.01304769515991211,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:07:50.581127",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.013010978698730469,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:18:32.426148",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.013025522232055664,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:01:53.209708",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.014091014862060547,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-10T15:59:27.430187",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.024681806564331055,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ARC-003_2026-04-10T15-59-27-405505_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ARC-003_2026-04-10T15-59-27-405505_final.json",
+    "seed": 981008801
+  },
+  {
+    "timestamp": "2026-04-11T15:03:59.104165",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.024605512619018555,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ARC-003_2026-04-11T15-03-59-079560_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ARC-003_2026-04-11T15-03-59-079560_final.json",
+    "seed": 631657955
+  },
+  {
+    "timestamp": "2026-04-11T19:48:11.087055",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-ARC-003",
+      "initial_hp": 1000000100,
+      "final_hp": 1000000100,
+      "damage_dealt": 0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "attacker_total_shots_fired": 0,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 0,
+          "shots_hit": 0
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 0,
+      "attacker_resolved_hits": 0,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Firing Arc",
+            "expected": 90,
+            "actual": 90.0,
+            "passed": true,
+            "detail": "expected=90, actual=90.0"
+          },
+          {
+            "phase": "precondition",
+            "name": "Attacker Heading (away from target)",
+            "expected": 180.0,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Shots Fired",
+            "expected": 0,
+            "actual": 0,
+            "passed": true,
+            "detail": "expected=0, actual=0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Zero Damage Dealt",
+            "expected": 0.0,
+            "actual": 0.0,
+            "passed": true,
+            "detail": "expected=0.0, actual=0.0"
+          }
+        ]
+      },
+      "duration_real": 0.02355647087097168,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Firing Arc",
+        "status": "PASS",
+        "expected": 90,
+        "actual": 90.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=90, actual=90.0"
+      },
+      {
+        "name": "Attacker Heading (away from target)",
+        "status": "PASS",
+        "expected": 180.0,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=1.0"
+      },
+      {
+        "name": "Zero Shots Fired",
+        "status": "PASS",
+        "expected": 0,
+        "actual": 0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0, actual=0"
+      },
+      {
+        "name": "Zero Damage Dealt",
+        "status": "PASS",
+        "expected": 0.0,
+        "actual": 0.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": "expected=0.0, actual=0.0"
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ARC-003_2026-04-11T19-48-11-063499_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\MOD-ARC-003_2026-04-11T19-48-11-063499_final.json",
+    "seed": 1658988381
+  }
+]

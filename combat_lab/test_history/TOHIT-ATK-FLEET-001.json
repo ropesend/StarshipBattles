@@ -1,0 +1,1212 @@
+[
+  {
+    "timestamp": "2026-04-06T20:17:16.124820",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.16009187698364258,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-06T20:35:25.301712",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.16018295288085938,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T06:51:15.911566",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15650510787963867,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T07:02:54.120380",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15431833267211914,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T08:18:44.946515",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.1558668613433838,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-07T09:10:22.052580",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.15648865699768066,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T15:21:01.681160",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.14214754104614258,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-08T18:04:24.166253",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.1428823471069336,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-11T15:06:46.256849",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.14635086059570312,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-ATK-FLEET-001_2026-04-11T15-06-46-110498_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-ATK-FLEET-001_2026-04-11T15-06-46-110498_final.json",
+    "seed": 1608297856
+  },
+  {
+    "timestamp": "2026-04-11T19:50:49.680355",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "TOHIT-ATK-FLEET-001",
+      "initial_hp": 1000000100,
+      "final_hp": 999999600.0,
+      "damage_dealt": 500.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 1.0,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (1 Damage, Guaranteed Hit)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Fleet Attack Bonus Set",
+            "expected": true,
+            "actual": 2.0,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Fleet Attack Bonus Value",
+            "expected": 2.0,
+            "actual": 2.0,
+            "passed": true,
+            "detail": "expected=2.0, actual=2.0"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt (combat validation)",
+            "expected": true,
+            "actual": 500.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.14591050148010254,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 3,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Fleet Attack Bonus Set",
+        "status": "PASS",
+        "expected": true,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Fleet Attack Bonus Value",
+        "status": "PASS",
+        "expected": 2.0,
+        "actual": 2.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=2.0, actual=2.0"
+      },
+      {
+        "name": "Damage Dealt (combat validation)",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-ATK-FLEET-001_2026-04-11T19-50-49-534445_initial.json",
+    "final_state_file": "C:\\Dev\\Starship Battles\\combat_lab\\battle_states\\TOHIT-ATK-FLEET-001_2026-04-11T19-50-49-534445_final.json",
+    "seed": 539244516
+  }
+]

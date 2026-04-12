@@ -127,7 +127,6 @@ class ModStack001_CompoundStatGateScenario(StaticTargetScenario):
         pass_criteria=f"damage == {DUAL_EXPECTED_DAMAGE} AND damage > 10",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "stacking", "compound"],
     )
 
@@ -200,7 +199,6 @@ class ModStack002_IndependentStatsScenario(ComparisonScenario):
         pass_criteria="variant deals more damage AND both stat values correct",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "stacking", "independent"],
     )
 
@@ -281,7 +279,6 @@ class ModStack003_CompoundRatioScenario(ComparisonScenario):
         pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {DUAL_EXPECTED_DAMAGE / SINGLE_EXPECTED_DAMAGE}",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "stacking", "compound", "ratio"],
     )
 
@@ -358,7 +355,6 @@ class ModStack004_CombinedEffectScenario(ComparisonScenario):
         pass_criteria=f"ratio within ±{RATIO_TOLERANCE + 0.05} of {EXPECTED_COMBINED_RATIO:.2f}",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "stacking", "combined", "multifactorial"],
     )
 
@@ -431,7 +427,6 @@ class ModStack005_CompoundNotAdditiveScenario(ComparisonScenario):
         pass_criteria=f"ratio closer to {DUAL_EXPECTED_DAMAGE}x than {ADDITIVE_WOULD_BE}x",
         max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "stacking", "compound_vs_additive"],
     )
 

@@ -89,7 +89,6 @@ class SeekerSpeedComparisonScenario(ComparisonScenario):
         pass_criteria="variant_damage > 0, baseline_damage == 0",
         max_ticks=SEEKER_SPEED_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["seeker", "speed", "comparison"],
     )
 
@@ -158,7 +157,6 @@ class SeekerEnduranceComparisonScenario(ComparisonScenario):
         pass_criteria="variant_damage > 0, baseline_damage == 0",
         max_ticks=SEEKER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["seeker", "endurance", "comparison"],
     )
 
@@ -232,7 +230,6 @@ class SeekerTurnRateComparisonScenario(ComparisonScenario):
         pass_criteria="variant_damage > 0, baseline_damage == 0",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["seeker", "turn-rate", "comparison"],
     )
 
@@ -307,7 +304,6 @@ class SeekerTurnRate180Scenario(ComparisonScenario):
         pass_criteria="variant_damage > 0, baseline_damage == 0",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["seeker", "turn-rate", "180-reverse", "comparison"],
     )
 
@@ -376,7 +372,6 @@ class SeekerDamageComparisonScenario(ComparisonScenario):
         pass_criteria="variant_damage / baseline_damage == 4.0",
         max_ticks=SEEKER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["seeker", "damage", "comparison"],
     )
 
@@ -446,7 +441,6 @@ class SeekerHPvsPDCScenario(_PDCMixin, ComparisonScenario):
         pass_criteria="variant_damage > baseline_damage",
         max_ticks=SEEKER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["seeker", "hp", "pdc", "comparison"],
     )
 
@@ -510,8 +504,7 @@ class SeekerNoAmmoScenario(ComparisonScenario):
         edge_cases=["Weapon exists but cannot afford activation"],
         expected_outcome="Baseline deals damage, variant deals zero.",
         pass_criteria="variant_damage == 0",
-        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
-        tags=["seeker", "resource", "ammo", "comparison"],
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, tags=["seeker", "resource", "ammo", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
@@ -546,8 +539,7 @@ class SeekerLimitedAmmoScenario(ComparisonScenario):
         edge_cases=["Weapon fires until ammo depleted"],
         expected_outcome="Variant deals less damage.",
         pass_criteria="variant_damage < baseline_damage",
-        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
-        tags=["seeker", "resource", "ammo", "depletion", "comparison"],
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, tags=["seeker", "resource", "ammo", "depletion", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
@@ -594,8 +586,7 @@ class SeekerAmmoControlScenario(ComparisonScenario):
         edge_cases=["Control validates comparison infrastructure"],
         expected_outcome="Both deal identical damage.",
         pass_criteria="baseline_damage == variant_damage",
-        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
-        tags=["seeker", "resource", "control", "comparison"],
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, tags=["seeker", "resource", "control", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
@@ -636,8 +627,7 @@ class SeekerPDCReducesDamageScenario(_PDCMixin, ComparisonScenario):
         edge_cases=["PDC beam fires at incoming seekers"],
         expected_outcome="PDC target takes less damage.",
         pass_criteria="variant_damage < baseline_damage",
-        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
-        tags=["seeker", "pdc", "point-defense", "comparison"],
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, tags=["seeker", "pdc", "point-defense", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Attacker_Seeker_LowHP.json"
@@ -683,8 +673,7 @@ class SeekerDefenseVsPDCScenario(_PDCMixin, ComparisonScenario):
         edge_cases=["to_hit_defense feeds into sigmoid as defense_score on the projectile"],
         expected_outcome="High defense seekers deal more damage.",
         pass_criteria="variant_damage > baseline_damage",
-        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
-        tags=["seeker", "pdc", "to-hit-defense", "comparison"],
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, tags=["seeker", "pdc", "to-hit-defense", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Attacker_Seeker_LowDefense.json"

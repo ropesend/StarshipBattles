@@ -1,0 +1,1612 @@
+[
+  {
+    "timestamp": "2026-04-01T22:07:14.797940",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7476828098297119,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T06:08:00.163323",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.8277177810668945,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T06:14:47.256027",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7854688167572021,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T06:27:29.414934",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7573633193969727,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-02T20:59:21.084498",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7535810470581055,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T03:57:02.813932",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7388002872467041,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T04:23:14.918466",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7430434226989746,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T04:26:37.888287",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7569046020507812,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T04:50:05.990850",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7371704578399658,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  },
+  {
+    "timestamp": "2026-04-03T07:34:36.949678",
+    "ticks_run": 500,
+    "passed": true,
+    "metrics": {
+      "test_id": "MOD-006",
+      "initial_hp": 3050,
+      "final_hp": 2591.0,
+      "damage_dealt": 459.0,
+      "ticks_run": 500,
+      "target_alive": true,
+      "hit_rate": 0.918,
+      "attacker_total_shots_fired": 500,
+      "attacker_weapons": [
+        {
+          "name": "Test Beam (Medium Accuracy, 1 Damage)",
+          "type": "BeamWeaponAbility",
+          "shots_fired": 500,
+          "shots_hit": 500
+        }
+      ],
+      "attacker_in_flight": 0,
+      "attacker_resolved_shots": 500,
+      "attacker_resolved_hits": 500,
+      "target_total_shots_fired": 0,
+      "target_weapons": [],
+      "target_in_flight": 0,
+      "target_resolved_shots": 0,
+      "target_resolved_hits": 0,
+      "base_arc": 360,
+      "expected_arc": 180,
+      "actual_firing_arc": 180.0,
+      "modifier_applied_correctly": true,
+      "validation": {
+        "passed": true,
+        "failed_phase": null,
+        "summary": {
+          "data": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "precondition": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          "outcome": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        "checks": [
+          {
+            "phase": "precondition",
+            "name": "Simulation Ran",
+            "expected": true,
+            "actual": 500,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "precondition",
+            "name": "Beam Weapon Loaded",
+            "expected": true,
+            "actual": true,
+            "passed": true,
+            "detail": ""
+          },
+          {
+            "phase": "data",
+            "name": "Base Firing Arc (from JSON)",
+            "expected": 360,
+            "actual": 360,
+            "passed": true,
+            "detail": "expected=360, actual=360"
+          },
+          {
+            "phase": "data",
+            "name": "Modified Firing Arc",
+            "expected": 180,
+            "actual": 180.0,
+            "passed": true,
+            "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+          },
+          {
+            "phase": "outcome",
+            "name": "Damage Dealt Within Arc",
+            "expected": true,
+            "actual": 459.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      "duration_real": 0.7600514888763428,
+      "ticks": 500
+    },
+    "validation_summary": {
+      "pass": 5,
+      "fail": 0,
+      "warn": 0,
+      "info": 0
+    },
+    "validation_results": [
+      {
+        "name": "Simulation Ran",
+        "status": "PASS",
+        "expected": true,
+        "actual": 500,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Beam Weapon Loaded",
+        "status": "PASS",
+        "expected": true,
+        "actual": true,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "precondition",
+        "detail": ""
+      },
+      {
+        "name": "Base Firing Arc (from JSON)",
+        "status": "PASS",
+        "expected": 360,
+        "actual": 360,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "expected=360, actual=360"
+      },
+      {
+        "name": "Modified Firing Arc",
+        "status": "PASS",
+        "expected": 180,
+        "actual": 180.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "data",
+        "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.001"
+      },
+      {
+        "name": "Damage Dealt Within Arc",
+        "status": "PASS",
+        "expected": true,
+        "actual": 459.0,
+        "p_value": null,
+        "tolerance": null,
+        "phase": "outcome",
+        "detail": ""
+      }
+    ],
+    "initial_state_file": null,
+    "final_state_file": null,
+    "seed": null
+  }
+]

@@ -334,7 +334,6 @@ class BeamAccuracyScenario(StaticTargetScenario):
             pass_criteria=pass_criteria,
             max_ticks=max_ticks,
             seed=STANDARD_SEED,
-            battle_end_mode="time_based",
             ui_priority=ui_priority,
             tags=["accuracy", acc_tag, dist_tag, "beam-weapons"] + extra_tags,
         )
@@ -684,7 +683,6 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
         pass_criteria="damage_dealt == 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["range-limit", "out-of-range", "beam-weapons"],
     )
@@ -771,7 +769,6 @@ class BeamStopsWithoutEnergyScenario(ComparisonScenario):
         pass_criteria="variant damage == 0, variant shots_fired == 0",
         max_ticks=BEAM_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["beam", "energy", "resource", "no-power", "comparison"],
     )
 
@@ -840,7 +837,6 @@ class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
         pass_criteria="variant damage < baseline, variant damage > 0, variant shots ≈ 250",
         max_ticks=BEAM_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["beam", "energy", "resource", "depletion", "comparison"],
     )
 
@@ -926,7 +922,6 @@ class BeamControlWithEnergyScenario(ComparisonScenario):
         pass_criteria="variant damage == baseline damage",
         max_ticks=BEAM_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["beam", "energy", "resource", "control", "comparison"],
     )
 
@@ -992,7 +987,6 @@ class BeamWithMetalsFires(ComparisonScenario):
         pass_criteria="baseline damage > 0, variant damage == 0, variant shots == 0",
         max_ticks=BEAM_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["beam", "metals", "generic-resource", "comparison"],
     )
 
@@ -1054,7 +1048,6 @@ class BeamWithMetalsControl(ComparisonScenario):
         pass_criteria="variant damage == baseline damage",
         max_ticks=BEAM_RES_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         tags=["beam", "metals", "generic-resource", "control", "comparison"],
     )
 

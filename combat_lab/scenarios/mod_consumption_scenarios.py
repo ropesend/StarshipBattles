@@ -89,7 +89,6 @@ class ConsumptionModifierSmokeScenario(StaticTargetScenario):
         pass_criteria=f"damage_dealt > {BASE_EXPECTED_SHOTS} (proves modifier is active)",
         max_ticks=MAX_TICKS,
         seed=SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "consumption_mult"],
     )
 
@@ -169,7 +168,6 @@ class ConsumptionModifierDamageComparisonScenario(ComparisonScenario):
         pass_criteria="variant_damage ≈ 2x baseline_damage",
         max_ticks=MAX_TICKS,
         seed=SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "consumption_mult", "comparison"],
     )
 
@@ -252,7 +250,6 @@ class ConsumptionModifierShotsComparisonScenario(ComparisonScenario):
         pass_criteria=f"variant_shots ≈ 2x baseline_shots",
         max_ticks=MAX_TICKS,
         seed=SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "consumption_mult", "comparison"],
     )
 
@@ -353,7 +350,6 @@ class ConsumptionIncreaseScenario(ComparisonScenario):
         pass_criteria=f"variant_damage < baseline_damage AND variant_damage ≈ {INCREASED_EXPECTED_SHOTS} AND baseline_damage ≈ {BASE_EXPECTED_SHOTS}",
         max_ticks=MAX_TICKS,
         seed=SEED,
-        battle_end_mode="time_based",
         tags=["modifier", "consumption_mult", "penalty"],
     )
 

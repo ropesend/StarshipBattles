@@ -292,7 +292,6 @@ class PropEngineAccelerationScenario(PropulsionScenario):
         pass_criteria="final_velocity > initial_velocity AND final_velocity > 0",
         max_ticks=100,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["propulsion", "engine", "acceleration", "foundational"],
     )
@@ -344,7 +343,6 @@ class PropDualEngineScenario(PropulsionScenario):
         pass_criteria=f"max_speed = {PROP001C_MAX_SPEED} AND distance = {PROP001C_EXPECTED_DISTANCE:.2f}",
         max_ticks=PROP001C_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=9,
         tags=["propulsion", "engine", "stacking", "ability"],
     )
@@ -394,7 +392,6 @@ class PropThrustMassRatioScenario(TestScenario):
         pass_criteria="speed ratio matches inverse mass ratio exactly (1e-9 tolerance)",
         max_ticks=200,
         seed=42,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["propulsion", "engine", "mass", "scaling", "foundational"],
     )
@@ -512,7 +509,6 @@ class PropThrusterTurnRateScenario(PropulsionScenario):
         pass_criteria=f"turn_speed = {PROP003_TURN_SPEED} AND final_angle = {PROP003_EXPECTED_FINAL_ANGLE}°",
         max_ticks=PROP003_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["propulsion", "thruster", "turn_rate", "foundational"],
     )
@@ -565,7 +561,6 @@ class PropThrusterRotationScenario(PropulsionScenario):
         pass_criteria=f"turn_speed = {PROP004_TURN_SPEED} AND final_angle = {PROP004_EXPECTED_FINAL_ANGLE}°",
         max_ticks=PROP004_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["propulsion", "thruster", "rotation", "physics"],
     )
@@ -620,7 +615,6 @@ class PropDualThrusterScenario(PropulsionScenario):
         pass_criteria=f"turn_speed = {PROP004B_TURN_SPEED} AND final_angle = {PROP004B_EXPECTED_FINAL_ANGLE}°",
         max_ticks=PROP004B_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=7,
         tags=["propulsion", "thruster", "stacking", "ability"],
     )
@@ -671,7 +665,6 @@ class PropNoEngineStationaryScenario(PropulsionScenario):
         pass_criteria="final_velocity == 0 AND distance_traveled == 0",
         max_ticks=100,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=10,
         tags=["propulsion", "engine", "negative_test", "foundational"],
     )
@@ -731,7 +724,6 @@ class PropThrusterOnlyScenario(PropulsionScenario):
         pass_criteria=f"turn_speed = {PROP003B_TURN_SPEED} AND final_angle = {PROP003B_EXPECTED_FINAL_ANGLE}° AND velocity = 0",
         max_ticks=PROP003B_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=8,
         tags=["propulsion", "thruster", "rotation", "isolated_test"],
     )
@@ -796,7 +788,6 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         pass_criteria=f"Low final_angle = {PROP005_LOW_EXPECTED_FINAL_ANGLE}° AND High final_angle = {PROP005_HIGH_EXPECTED_FINAL_ANGLE:.4f}°",
         max_ticks=PROP005_MAX_TICKS,
         seed=42,
-        battle_end_mode="time_based",
         ui_priority=7,
         tags=["propulsion", "thruster", "mass", "turn_rate", "scaling", "foundational"],
     )
