@@ -23,8 +23,65 @@
 
 ## Current State
 **Last Updated:** 2026-04-12
-**Active Phase:** Phase 5.5 Complete — Phase 6 Task 6.1 next (final legacy-deletion phase)
-**Last Action:** Phase 1 complete. All 11 tasks checked off. `validate_phase.py PROJ-269 1` PASSED.
+**Active Phase:** Phases 1-5.5 Complete — Phase 6 PAUSED after audit
+**Last Action:** Phase 5.5 wrapped (ModifierStack engine application + HitRecord modifier trace). Phase 6 audit (Task 6.12) ran: 35 files in active code touch legacy types. Phase 6 deferred to a fresh session — see "Phase 6 Handoff" below for the concrete plan.
+
+### Phase 6 Handoff
+
+**Why paused:** Context budget at session end was ~75% with insufficient headroom for the irreversible deletions across 35 files. Phase 6 needs a fresh session.
+
+**Audit results (Task 6.12):**
+35 files reference `BattleMode` / `BattleModeHandler` / `create_*_battle` / `FleetBattleAdapter`. Of those:
+- **Production code:** 14 files (engine, controller, adapters, screens, registries)
+- **Tests:** 19 files (controller tests, adapter tests, factory tests, etc.)
+- **Self:** `battle_mode_handler.py`, `battle_config.py`, `battle_factories.py` (the targets)
+
+**Discovered blocker (must be fixed before Task 6.7):**
+The Combat Lab spec compiler (`build_test_battle_spec`) only supports `StaticTargetScenario`. Other 4 templates (DuelScenario, PropulsionScenario, ResourceScenario, ComparisonScenario) raise `NotImplementedError` and the runner falls back to the legacy path. **Removing the legacy fallback (Task 6.7) requires extending the compiler to all 5 templates first** — `~80+` scenarios depend on those.
+
+**Recommended Phase 6 execution order:**
+
+1. **First, extend the compiler** (NEW pre-Phase-6 task or inserted as Task 6.7a):
+   - Add Duel/Propulsion/Resource/Comparison support to `build_test_battle_spec`
+   - Each template type: examine its `setup()` → produce equivalent `BattleSpec` (CUSTOM formation positions are usually fine)
+   - Run combat_lab fast suite under `SB_USE_BATTLE_RUNNER=1` until 162/162 green
+2. **Self-contained simplifications (low risk):**
+   - Task 6.10: drop `_is_started=True` hack from `test_execution_service.py` — confirm the new path doesn't need it
+   - Task 6.7: remove `USE_BATTLE_RUNNER` flag + legacy branch + `_run_scenario_legacy` helper from `combat_lab/runner.py`
+   - Task 6.8: rewrite `ComparisonScenario._run_baseline_battle` to use `run_battle`
+3. **Strategy adapter rewrite (medium risk):**
+   - Task 6.5/6.11: rewrite `SimulationBattleResolver.resolve_battle` to use `build_strategy_battle_spec` + `run_battle`. Drop `_apply_shield_interference` and `_apply_strategic_modifiers` (Phase 5.5 ModifierStack pipeline replaces them).
+   - Run `tests/integration/strategy/combat/test_damage_persistence.py` to verify still green.
+4. **Battle Setup screen (medium risk):**
+   - Task 6.4: remove `FleetBattleSetupScreen._apply_complex_modifiers`. Wire the screen's `_start_battle` to call `build_manual_battle_spec` + `run_battle` directly.
+   - Manual smoke required (UI test).
+5. **FleetBattleAdapter cleanup:**
+   - Task 6.6: delete `update_from_battle_results` (replaced by `PostBattleHook`). Audit callers — should be zero after Task 6.5.
+6. **test_executor.py rewrite (highest risk in this phase):**
+   - Task 6.9: 4 paths (visual single, visual batch, headless single, headless batch) all to `run_battle`. Combat Lab UI must still render scenes.
+   - Manual UI smoke required.
+7. **Engine refactor (the big one):**
+   - Tasks 6.1/6.2/6.3: This is the hardest. `BattleController.configure(BattleConfig(mode=BattleMode.MANUAL))` is currently used by `run_battle` itself. Two options:
+     - (a) Make `run_battle` bypass `BattleController` entirely — call `BattleService` or `BattleEngine` directly.
+     - (b) Make `BattleController.configure` work without `mode` / handler.
+   - Recommend option (a): `run_battle` orchestrates the engine directly without the legacy controller wrapper. This eliminates the dependency chain entirely.
+   - After this: delete `BattleModeHandler`, `BattleMode`, `BattleConfig` (or shrink to `BattleRunOptions`), and the 4 `create_*_battle` factories.
+8. **Audit + docs (Tasks 6.12, 6.13, 6.14):**
+   - Re-run Task 6.12 grep — must show zero hits in active code.
+   - Rewrite `docs/systems/combat_simulation.md` to describe the unified flow.
+   - Update `docs/02_PATTERNS.md` (remove "Battle Mode Strategy" pattern entry, add spec-compiler pattern).
+9. **Final regression (Task 6.15):** full pytest + combat_lab fast + manual launcher smoke.
+
+**What's safe to commit before resuming Phase 6:**
+- Plan/decisions/checklist updates (already on this branch).
+- Phase 5.5 implementation + tests (already on this branch).
+- The Phase 6 audit (above) — informational only.
+
+**Baselines going into Phase 6 (unchanged from Phase 5.5):** pytest **14709 passed**, combat_lab fast **162 passed**.
+
+---
+
+**Last Action (per protocol 02):** Phase 5.5 complete. All 4 tasks checked, validate_phase passed, plan + decisions + docs updated.
 
 **Phase 1 deliverables shipped:**
 - DTOs in simulation layer: `BattleSpec`, `BattleOutcome` + nested types + enums
