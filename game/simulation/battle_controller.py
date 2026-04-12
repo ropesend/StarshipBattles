@@ -26,11 +26,7 @@ from game.simulation.managers.retreat_manager import (
     RetreatMethod,
 )
 from game.simulation.managers.battle_state_manager import BattleStateManager
-from game.simulation.combat.battle_mode_handler import (
-    BattleModeHandler,
-    get_handler_for_mode,
-)
-from game.simulation.battle_config import BattleConfig, BattleMode
+from game.simulation.battle_config import BattleConfig
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,9 +82,6 @@ class BattleController:
         self._retreat_manager: Optional[RetreatManager] = None
         self._state_manager: BattleStateManager = BattleStateManager()
 
-        # Mode handler (Strategy pattern for mode-specific behavior)
-        self._mode_handler: Optional[BattleModeHandler] = None
-
         # Callbacks
         self._on_ship_escaped: Optional[Callable[['Ship'], None]] = None
 
@@ -108,10 +101,6 @@ class BattleController:
         self._ship_id_map.clear()
         self._initial_state = None
         self._is_started = False
-
-        # Initialize mode handler (Strategy pattern)
-        self._mode_handler = get_handler_for_mode(config.mode)
-        self._mode_handler.configure(self, config)
 
         # Initialize retreat manager with map bounds from config
         self._retreat_manager = RetreatManager(map_bounds=config.map_bounds)
@@ -215,8 +204,9 @@ class BattleController:
                 self._config
             )
 
-            logger.info(f"Battle started: mode={self._config.mode.value}, "
-                    f"ships={len(self._service.get_all_ships())}")
+            logger.info(
+                f"Battle started: ships={len(self._service.get_all_ships())}"
+            )
 
         return result
 
@@ -399,43 +389,19 @@ class BattleController:
         self._retreat_manager.update(get_ship_by_id)
 
     def _retreat_allowed(self) -> bool:
-        """
-        Check if retreat is allowed in current battle.
+        """Whether retreat is allowed (PROJ-269: now config-driven only).
 
-        Uses OR logic between mode handler and config:
-        - Mode handler provides the default per battle mode (e.g. Strategy
-          allows retreat, Manual/Test/Hypothetical deny it).
-        - BattleConfig.allow_retreat=True can OVERRIDE to enable retreat in
-          modes that normally deny it.
-        - Config cannot DISABLE retreat when mode handler allows it.
-
-        Truth table:
-            handler  | config  | result
-            ---------+---------+-------
-            False    | False   | False
-            False    | True    | True   (config override)
-            True     | False   | True   (handler default)
-            True     | True    | True
+        Pre-PROJ-269 the answer was OR'd with a per-mode default
+        (`StrategyBattleModeHandler.can_retreat() == True`). Post-PROJ-269
+        the strategy compiler doesn't go through `BattleController` at
+        all (`run_battle` bypasses it), so the only callers that need
+        retreat are ones that explicitly set `config.allow_retreat=True`.
         """
-        if self._mode_handler:
-            return self._mode_handler.can_retreat() or (self._config and self._config.allow_retreat)
-        return self._config.allow_retreat if self._config else False
+        return bool(self._config and self._config.allow_retreat)
 
     def _reinforcements_allowed(self) -> bool:
-        """
-        Check if reinforcements are allowed in current battle.
-
-        Uses OR logic between mode handler and config (same pattern as
-        _retreat_allowed):
-        - Mode handler provides the default per battle mode (e.g. Strategy
-          allows reinforcements, Manual/Test/Hypothetical deny them).
-        - BattleConfig.allow_reinforcements=True can OVERRIDE to enable
-          reinforcements in modes that normally deny them.
-        - Config cannot DISABLE reinforcements when mode handler allows them.
-        """
-        if self._mode_handler:
-            return self._mode_handler.can_reinforce() or (self._config and self._config.allow_reinforcements)
-        return self._config.allow_reinforcements if self._config else False
+        """Whether reinforcements are allowed (PROJ-269: config-driven only)."""
+        return bool(self._config and self._config.allow_reinforcements)
 
     # === State Management ===
 
@@ -587,10 +553,9 @@ class BattleController:
         """Get underlying BattleService."""
         return self._service
 
-    @property
-    def mode_handler(self) -> Optional[BattleModeHandler]:
-        """Get the current mode handler."""
-        return self._mode_handler
+    # PROJ-269 Phase 6: `mode_handler` property removed alongside the
+    # `BattleModeHandler` hierarchy. Callers that need per-battle
+    # behavior consult the config flags directly.
 
     # === Results ===
 
@@ -642,23 +607,10 @@ class BattleController:
             captured_ships=[],  # Future: derelicts captured by winner
         )
 
-    def apply_results_to_fleets(self, results: BattleResults) -> None:
-        """
-        For strategy mode: Write battle results back to source fleets.
-
-        Updates ship states, removes destroyed ships, handles escapes.
-        Delegates to mode handler for actual implementation.
-        """
-        if not self._config or self._config.mode != BattleMode.STRATEGY:
-            raise StateException(
-                "apply_results_to_fleets only valid in STRATEGY mode",
-                code=ErrorCode.INVALID_STATE.value,
-                context={"mode": self._config.mode.value if self._config else None}
-            )
-
-        # Delegate to mode handler (always set after configure())
-        self._mode_handler.apply_results(self, results)
-        logger.info("Battle results applied to fleets via mode handler")
+    # PROJ-269 Phase 6: `apply_results_to_fleets` removed. Strategy
+    # battles now go through `run_battle(spec)` whose
+    # `spec.post_battle_hook` (`apply_outcome_to_fleets`) writes outcome
+    # state back into ShipInstance / Fleet / Empire as a side effect.
 
     # === Callbacks ===
 
@@ -676,7 +628,6 @@ class BattleController:
         self._is_configured = False
         self._is_started = False
         self._ship_id_map.clear()
-        self._mode_handler = None
         if self._retreat_manager:
             self._retreat_manager.reset()
 

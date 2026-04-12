@@ -4,9 +4,7 @@ from unittest.mock import Mock, patch
 
 from game.simulation.battle_controller import (
     BattleController,
-    BattleConfig,
-    BattleMode,
-)
+    BattleConfig,)
 
 
 class TestBattleControllerStateSaveLoad:
@@ -63,7 +61,7 @@ class TestBattleControllerStateSaveLoad:
         restored_ship = Mock()
         restored_ship.id = "runtime-ship-id"
         mock_state_manager = Mock()
-        mock_state_manager.restore_config_from_state.return_value = BattleConfig(mode=BattleMode.MANUAL)
+        mock_state_manager.restore_config_from_state.return_value = BattleConfig()
         mock_state_manager.extract_ships_from_state.return_value = (
             [restored_ship],
             {restored_ship.id: "state-ship-id"},
@@ -81,10 +79,16 @@ class TestBattleControllerStateSaveLoad:
         )
         mock_service.add_ship.assert_called_with(restored_ship, 0)
 
-    def test_load_state_handles_error(self, controller, mock_service):
-        """load_state handles errors gracefully."""
+    def test_load_state_handles_error(self, controller):
+        """load_state handles errors gracefully.
+
+        PROJ-269 Phase 6: BattleMode validation is gone, so this test
+        now verifies that a state-manager that raises during restore
+        propagates an error result rather than crashing.
+        """
         mock_state = Mock()
-        mock_state.mode = "invalid_mode"  # Will cause BattleMode() to fail
+        controller._state_manager = Mock()
+        controller._state_manager.restore_config_from_state.side_effect = ValueError("bad state")
 
         result = controller.load_state(mock_state)
 

@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock
 
-from game.simulation.battle_config import BattleConfig, BattleMode
+from game.simulation.battle_config import BattleConfig
 from game.simulation.services.battle_service import BattleServiceResult
 
 
@@ -61,7 +61,6 @@ def mock_ship():
 def basic_config():
     """Create a basic BattleConfig."""
     return BattleConfig(
-        mode=BattleMode.MANUAL,
         seed=12345,
         absolute_max_ticks=10000,
     )

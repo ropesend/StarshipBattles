@@ -9,11 +9,11 @@ Manages:
 """
 from typing import Dict, Optional, List, Tuple, Any, TYPE_CHECKING
 
-from game.core.exceptions import StateException, ValidationException
+from game.core.exceptions import StateException
 from game.core.error_codes import ErrorCode
 from game.simulation.battle_state import BattleState
 from game.simulation.systems.battle_end_conditions import end_condition_from_dict
-from game.simulation.battle_config import BattleConfig, BattleMode
+from game.simulation.battle_config import BattleConfig
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -55,9 +55,12 @@ class BattleStateManager:
                 context={"parameter": "engine"}
             )
 
+        # PROJ-269 Phase 6: `mode` is now a plain label kept for save-file
+        # backward compatibility. The string defaults to "manual" since
+        # there is no longer a BattleMode enum to read from config.
         return BattleState.capture_from_engine(
             engine,
-            mode=config.mode.value,
+            mode="manual",
             seed=config.seed,
             allow_retreat=config.allow_retreat,
             allow_reinforcements=config.allow_reinforcements,
@@ -79,20 +82,11 @@ class BattleStateManager:
         Raises:
             ValidationException: If state has invalid mode
         """
-        try:
-            mode = BattleMode(state.mode)
-        except ValueError as e:
-            raise ValidationException(
-                f"Invalid battle mode in state: {state.mode}",
-                code=ErrorCode.VALIDATION_FAILED.value,
-                context={"mode_value": state.mode}
-            ) from e
-
-        # Restore end condition from serialized dict
+        # PROJ-269 Phase 6: BattleMode enum gone — `state.mode` is now a
+        # plain label preserved for save-file backward compatibility but
+        # not used to dispatch behavior.
         end_condition = end_condition_from_dict(state.end_condition_data)
-
         return BattleConfig(
-            mode=mode,
             seed=state.seed,
             end_condition=end_condition,
             allow_retreat=state.allow_retreat,

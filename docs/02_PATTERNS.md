@@ -19,7 +19,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 10. [Event Bus](#10-event-bus)
 11. [Surface Caching (SpriteManager)](#11-surface-caching-spritemanager)
 12. [Configuration Classes](#12-configuration-classes)
-13. [Battle Mode Strategy](#13-battle-mode-strategy)
+13. [Spec Compiler + run_battle](#13-spec-compiler--run_battle-replaces-battle-mode-strategy)
 14. [Two-Phase Ability Aggregation](#14-two-phase-ability-aggregation)
 15. [Factory](#15-factory)
 16. [ScrollState (Scroll Utility)](#16-scrollstate-scroll-utility)
@@ -953,75 +953,70 @@ Key characteristics:
 
 ---
 
-## 13. Battle Mode Strategy
-
-> **DEPRECATED — slated for Phase-6 deletion (PROJ-269).**
-> Replaced by the **Spec Compiler + `run_battle` pattern**: each context
-> (Combat Lab, Battle Setup, Strategy) has a context-specific compiler
-> that translates its domain inputs into a `BattleSpec`, then calls
-> `run_battle(spec) -> BattleOutcome`. The engine is context-blind.
-> Variance moves from a switch (mode=TEST/STRATEGY/...) to named fields
-> on `BattleSpec` (`boundary`, `end_condition`, `modifier_stack`,
-> `telemetry_level`, `post_battle_hook`).
->
-> Files: `game/simulation/battle_runner.py`, `game/simulation/battle_spec.py`,
-> `game/simulation/battle_outcome.py`, the three compilers under
-> `combat_lab/spec_compiler.py`, `game/ui/screens/battle_setup/spec_compiler.py`,
-> `game/strategy/combat/spec_compiler.py`. See `docs/systems/combat_simulation.md`
-> §0 for the full description.
+## 13. Spec Compiler + `run_battle` (replaces "Battle Mode Strategy")
 
 ### Where
 
-`game/simulation/combat/battle_mode_handler.py` -- `BattleModeHandler` ABC and four concrete handlers.
+- `game/simulation/battle_runner.py` — `run_battle(spec) -> BattleOutcome`
+- `game/simulation/battle_spec.py` — frozen `BattleSpec` DTO
+- `game/simulation/battle_outcome.py` — frozen `BattleOutcome` DTO
+- Three context-specific compilers:
+  - `combat_lab/spec_compiler.py::build_test_battle_spec`
+  - `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec`
+  - `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec`
 
 ### How It Works
 
-The Strategy pattern eliminates mode-specific conditionals in `BattleController`.
-Each battle mode (Manual, Test, Strategy, Hypothetical) has a dedicated handler.
+Every battle goes through ONE entry point: `run_battle(spec)`. The
+engine is context-blind. Variance lives on `BattleSpec` fields
+(`boundary`, `end_condition`, `modifier_stack`, `telemetry_level`,
+`post_battle_hook`) rather than in a mode switch.
 
-```python
-# game/simulation/combat/battle_mode_handler.py (actual code)
-class BattleModeHandler(ABC):
-    @abstractmethod
-    def configure(self, controller, config) -> None: ...
-    @abstractmethod
-    def can_retreat(self) -> bool: ...
-    @abstractmethod
-    def can_reinforce(self) -> bool: ...
-    @abstractmethod
-    def should_clone_ships(self) -> bool: ...
-    @abstractmethod
-    def is_headless_default(self) -> bool: ...
-    @abstractmethod
-    def apply_results(self, controller, results) -> None: ...
+```
+caller domain inputs (TestScenario / BattleSetupState / Fleets)
+        │
+        ▼
+context-specific spec compiler (build_*_battle_spec)
+        │
+        ▼
+BattleSpec (frozen DTO)
+        │
+        ▼
+run_battle(spec, ai_factory, ship_builder, ...)  ──► BattleOutcome
+                                                          │
+                                                          ▼
+                                       spec.post_battle_hook(outcome)
 ```
 
-Concrete handlers:
-
-| Handler | Retreat | Reinforce | Clone | Headless | Effects |
-|---------|---------|-----------|-------|----------|---------|
-| `ManualBattleModeHandler` | No | No | No | No | None |
-| `TestBattleModeHandler` | No | No | No | Yes | None |
-| `StrategyBattleModeHandler` | Yes | Yes | No | Yes | Fleet updates |
-| `HypotheticalBattleModeHandler` | No | No | Yes | Yes | None |
-
-Factory function selects the handler:
-
-```python
-def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:
-    handlers = {
-        BattleMode.MANUAL: ManualBattleModeHandler,
-        BattleMode.TEST: TestBattleModeHandler,
-        BattleMode.STRATEGY: StrategyBattleModeHandler,
-        BattleMode.HYPOTHETICAL: HypotheticalBattleModeHandler,
-    }
-    return handlers[mode]()
-```
+This pattern replaces the deleted **Battle Mode Strategy** (PROJ-269
+Phase 6 removed `BattleModeHandler` + 4 concrete handlers + the
+`get_handler_for_mode(BattleMode)` factory).
 
 ### When to Use
 
-- Adding a new battle mode: create a handler, add it to the factory dict.
-- Never add mode-specific if/else branches in `BattleController`.
+- Adding a new battle context: create a `build_*_battle_spec()`
+  compiler that translates your domain inputs into a `BattleSpec`. The
+  compiler lives in YOUR layer (Combat Lab / Battle Setup / Strategy /
+  …). Call `run_battle(spec, ...)`.
+- Adding a new variance dimension that crosses contexts: add a field to
+  `BattleSpec` and consume it from the engine. Do NOT introduce a mode
+  switch.
+- Adding a context-specific post-battle side effect: attach a
+  `post_battle_hook` closure on the spec.
+
+### Why it replaced the Strategy pattern
+
+| Old "mode" trait | New `BattleSpec` field / mechanism |
+|------------------|-----------------------------------|
+| `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
+| `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
+| `should_clone_ships` | Caller's `ship_builder` returns a clone |
+| `is_headless_default` | `run_battle(spec, headless=...)` kwarg |
+| `apply_results(...)` | `BattleSpec.post_battle_hook` |
+
+See `docs/systems/combat_simulation.md` §0–§1 and
+`Projects/active_projects/PROJ-269/decisions.md` for the full
+rationale.
 
 ---
 
@@ -1312,7 +1307,7 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 | Event Bus | `game/ui/screens/builder/event_bus.py` | `EventBus`, `BuilderEvents` |
 | Surface Cache | `game/ui/renderer/sprites.py` | `SpriteManager` |
 | Config Classes | `game/core/config.py` | `DisplayConfig`, `AIConfig`, `PhysicsConfig` |
-| Battle Mode | `game/simulation/combat/battle_mode_handler.py` | `BattleModeHandler` |
+| Spec Compiler + run_battle | `game/simulation/battle_runner.py` + 3 compilers | `run_battle`, `BattleSpec` |
 | Ability Aggregation | `game/simulation/entities/ability_aggregator.py` | `calculate_ability_totals()` |
 | Factory | `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py` | `AIControllerFactory`, `ShipFactory`, `PanelFactory` |
 | ScrollState | `game/ui/widgets/scroll_state.py` | `ScrollState` |

@@ -86,16 +86,14 @@ class TestSceneCallback:
             callback_received.append((action, kwargs))
 
         from game.ui.screens.battle_screen import BattleScreen
-        from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
-        from game.simulation.battle_controller import BattleController
-        from unittest.mock import Mock, patch
+        from game.simulation.battle_config import BattleConfig, ReturnDestination
+        from unittest.mock import Mock
 
         scene = BattleScreen(800, 600, callback)
 
         # Set up a minimal controller with config
         mock_controller = Mock()
         mock_config = BattleConfig(
-            mode=BattleMode.MANUAL,
             return_destination=ReturnDestination.BATTLE_SETUP,
             show_results=False,
         )

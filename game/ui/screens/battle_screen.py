@@ -23,7 +23,7 @@ from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_ui import BattleUI
 from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
-from game.ui.services.battle_factories import create_started_battle_controller
+from game.simulation.battle_controller import BattleController
 # PROJ-126: Import AI factory from AI layer (UI can depend on AI)
 from game.ai.ai_factory import AIControllerFactory
 from game.ui.effects.hit_effects import (
@@ -240,13 +240,11 @@ class BattleScreen:
             test_mode: Running from Combat Lab
             test_scenario: The TestScenario instance (if running from Combat Lab)
         """
-        from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+        from game.simulation.battle_config import BattleConfig, ReturnDestination
 
-        mode = BattleMode.TEST if test_mode else BattleMode.MANUAL
         dest = ReturnDestination.TEST_LAB if test_mode else ReturnDestination.BATTLE_SETUP
 
         config = BattleConfig(
-            mode=mode,
             seed=seed,
             headless=headless,
             start_paused=start_paused,
@@ -254,12 +252,13 @@ class BattleScreen:
             test_scenario=test_scenario,
         )
 
-        controller = create_started_battle_controller(
-            config,
-            team0_ships,
-            team1_ships,
-            ai_factory=self._ai_factory,
-        )
+        # PROJ-269 Phase 6: replaces the deleted
+        # `create_started_battle_controller` factory with an inline setup.
+        controller = BattleController(ai_factory=self._ai_factory)
+        controller.configure(config)
+        controller.add_ships(team0_ships, 0)
+        controller.add_ships(team1_ships, 1)
+        controller.start()
         self.start_battle(controller)
 
     def handle_event(self, event):

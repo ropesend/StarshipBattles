@@ -19,12 +19,160 @@
 | 4. Formation system | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Telemetry levels | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 5.5. ModifierStack engine application | Complete | [phase_5_5_checklist.md](phase_5_5_checklist.md) |
-| 6. Delete legacy paths | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Delete legacy paths | In Progress (implementation done; manual smoke pending) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-12 (Phase 6 in progress — 6 tasks complete)
-**Active Phase:** Phase 6 — 6 of 15 tasks complete (6.7a, 6.7, 6.8, 6.5/6.11, 6.6, 6.4)
-**Last Action (latest session):** Completed Tasks 6.5/6.11 + 6.6 + 6.4 on top of the earlier 6.7a/6.7/6.8 batch. All ship-mutation side channels are now gone.
+**Last Updated:** 2026-04-12 (**Phase 6 IMPLEMENTATION COMPLETE** — manual launcher smoke + project audit remaining)
+**Active Phase:** Phase 6 — 15 of 15 tasks complete. All automated regression gates green. Only manual launcher smoke (requires interactive desktop session) and the project-level audit (`Projects/protocols/04_audit_project.md`) remain before the project itself can be marked closed.
+
+**Final batch (Tasks 6.9 + 6.10 + 6.15):**
+- Added `materialize_spec_ships(spec, ship_builder)` helper in `battle_runner.py` (extracted from `start_engine_from_spec` for reuse between `run_battle` and visual-mode UI callers).
+- **Visual-mode UI migration** (Task 6.9 visual): `test_lab/screen.py::_switch_to_battle` and `test_execution_service.py::run_visual` now compile via `scenario.to_spec()` → `before_run_battle()` → `materialize_spec_ships()` → `controller.add_ships` + `controller.start()` → `wire_ships()` + `custom_setup()`. The `_is_started=True` hack (Task 6.10) is gone — controller lifecycle is proper.
+- **Headless-mode UI migration** (Task 6.9 headless): `test_executor.py::run_headless` and `run_next_batch` consolidated through a new `_run_scenario_via_run_battle` helper that drives everything through `run_battle(spec)` with `BattleStateCapture` bridged via manual `__enter__`/`__exit__` (no `with` block since the engine is only available inside the pre_tick_loop callback). `dataclasses.replace(spec, seed=...)` honors UI seed overrides.
+- Updated test fixtures (`create_mock_test_scenario` + local mocks in `test_visual_run.py` + `test_batch_skip.py`) to stub the new spec-compiler surface (`to_spec`, `before_run_battle`, `wire_ships`, `custom_setup`, `_load_ship`).
+- Rewrote tests that previously asserted on `scenario.setup()` to assert on the new spec-compiler call sequence.
+
+**Final regression (Task 6.15):**
+- Combat Lab fast: **162/162 green** ✅
+- Combat Lab full (with -HT): **170/170 green** ✅
+- `pytest tests/`: **14576 passed**, 4 failed (3 pre-existing baseline + 1 known-flaky `test_telemetry_overhead_smoke`), 3 errors (pre-existing import errors). Pass-count delta from baseline (14710 → 14576 = -134) is **deliberate** — covers ~110 deleted tests for the now-deleted code paths (BattleMode, BattleModeHandler, factories, update_from_battle_results, etc.). ✅
+- No new DeprecationWarnings introduced. ✅
+- Manual launcher smoke: **deferred** — requires an interactive desktop session.
+
+**Phase 6 deliverables (all done):**
+- ✅ `BattleMode` enum deleted.
+- ✅ `BattleModeHandler` ABC + 4 concrete handlers + `get_handler_for_mode` factory deleted (file stubbed).
+- ✅ All 5 `create_*_battle` factories deleted (`create_started_battle_controller`, `create_manual_battle`, `create_test_battle`, `create_strategy_battle`, `create_hypothetical_battle`); file stubbed.
+- ✅ `BattleConfig` reshaped — variant fields removed (`mode`, `team_modifiers`, `global_modifiers`, `environmental_effects`, `per_tick_callback`, `source_fleets`); operational fields retained.
+- ✅ `BattleController.configure` no longer dispatches on `BattleMode`; `mode_handler` property + `apply_results_to_fleets` deleted.
+- ✅ `run_battle` constructs `BattleEngine` directly — no `BattleController` wrapper, no `BattleConfig`, no `BattleMode`.
+- ✅ `SimulationBattleResolver.resolve_battle` rewritten to use `build_strategy_battle_spec` + `run_battle`; ship-mutation side channels (`_apply_shield_interference`, `_apply_strategic_modifiers`) deleted.
+- ✅ `FleetBattleAdapter.update_from_battle_results` deleted; `ConflictResolutionEngine` no longer calls it (PostBattleHook is authoritative).
+- ✅ `FleetBattleSetupScreen._apply_complex_modifiers` deleted; `_sync_complex_toggles_to_state` projects UI toggles into `BattleSetupSide.system_complexes`/`sector_complexes` for the spec compiler.
+- ✅ Combat Lab `USE_BATTLE_RUNNER` flag + legacy branch deleted; `_run_scenario_legacy` deleted.
+- ✅ Combat Lab spec compiler extended to all 5 templates (StaticTarget/Duel/Propulsion/Resource/Comparison).
+- ✅ `ComparisonScenario._run_baseline_battle` rewritten to use `run_battle` internally — no more throwaway `BattleEngine(...)`.
+- ✅ All UI callers (app.py, BattleScreen, test_executor, test_lab/screen, test_execution_service) migrated off the deleted factories and the `_is_started=True` hack.
+- ✅ Docs updated: `combat_simulation.md` §0–§2 rewritten; `02_PATTERNS.md` §13 replaced (Battle Mode Strategy → Spec Compiler + run_battle); `01_ARCHITECTURE.md` deprecation labels removed.
+
+**Audit (Task 6.12):** Zero live legacy references in active code. Stub modules (battle_factories.py, battle_mode_handler.py, deleted-test files) retain `"""... DELETED in PROJ-269 Phase 6 ..."""` docstrings only — no executable code.
+
+**Scope consequences (per Phase 5.5 placeholder-skip decision):** Strategy environmental effects (storm shield interference), per-team strategic modifiers (shield_mult, damage_mult, flat_shield_bonus), and Battle Setup complex toggles (system/sector shield/damage boosters/suppressors) are now RECORDED in the ModifierStack for forensic trace but NOT applied to battle math. Real effect mapping is content work outside PROJ-269.
+
+**Next Action:**
+1. **Manual launcher smoke** (interactive desktop session): `python launcher.py` → Combat Lab visual + headless + batch on representative scenarios; Battle Setup 2v2 with toggled complex; strategy game fleet conflict with damage persistence verification.
+2. **Project audit**: Run `Projects/protocols/04_audit_project.md`. Once audit + manual smoke pass, move PROJ-269 to `Projects/archived_projects/`.
+
+**Blockers:** None.
+
+**Outstanding (interactive-only, not blockers):** Manual launcher smoke + project audit (`Projects/protocols/04_audit_project.md`) — both require an interactive desktop session and human judgement.
+
+**Phase 6 file inventory (cumulative across the session):**
+- Production code (15 files): `combat_lab/runner.py`, `combat_lab/spec_compiler.py`, `combat_lab/scenarios/{base,templates,propulsion_scenarios,tohit_attack_fleet_scenarios}.py`, `combat_lab/services/test_execution_service.py`, `game/strategy/combat/spec_compiler.py`, `game/strategy/adapters/simulation_adapter.py`, `game/strategy/engine/conflict_resolution_engine.py`, `game/strategy/data/fleet_battle_adapter.py`, `game/ui/screens/battle_setup_screen.py`, `game/ui/screens/battle_screen.py`, `game/ui/screens/test_lab/screen.py`, `game/ui/screens/test_lab/test_executor.py`, `game/ui/services/battle_factories.py`, `game/ui/services/__init__.py`, `game/app.py`, `game/simulation/battle_config.py`, `game/simulation/battle_controller.py`, `game/simulation/battle_runner.py`, `game/simulation/combat/__init__.py`, `game/simulation/combat/battle_mode_handler.py`, `game/simulation/managers/battle_state_manager.py`.
+- Tests (14 files modified, 7 stubbed): see `phase_6_checklist.md` for per-task notes.
+- Docs (3 files): `docs/systems/combat_simulation.md`, `docs/02_PATTERNS.md`, `docs/01_ARCHITECTURE.md`.
+- Project: `Projects/active_projects/PROJ-269/{plan,phase_6_checklist}.md`, `tests/fixtures/test_scenarios.py` mock factory.
+
+---
+
+### Earlier action snapshot
+
+**Earlier action (this session):** Completed Tasks 6.1/6.2/6.3 (engine refactor: deleted `BattleMode`/`BattleModeHandler`/factories), 6.12 (audit), 6.13 (combat_simulation.md rewrite), and 6.14 (02_PATTERNS.md rewrite).
+
+**6.1 / 6.2 / 6.3 — Engine refactor:**
+- `run_battle` now constructs `BattleEngine` directly (no more `BattleController` wrapper). Calls `engine.start_teams(teams_by_id, seed=..., end_condition=..., absolute_max_ticks=...)`.
+- `BattleController.configure` no longer dispatches on a mode_handler — the `_mode_handler` field, `mode_handler` property, and `apply_results_to_fleets` method are deleted.
+- `BattleConfig` reshaped: `mode`, `team_modifiers`, `global_modifiers`, `environmental_effects`, `per_tick_callback`, `source_fleets` removed; remaining fields are pure operational options.
+- `BattleMode` enum deleted entirely.
+- `BattleModeHandler` ABC + 4 concrete handlers + `get_handler_for_mode` deleted (file reduced to deprecation stub).
+- `create_started_battle_controller`, `create_manual_battle`, `create_test_battle`, `create_strategy_battle`, `create_hypothetical_battle` all deleted; `battle_factories.py` reduced to a stub.
+- All UI callers migrated: `app.py::start_battle`, `BattleScreen.start`, `test_execution_service.run_visual`, `test_lab/screen.py::_switch_to_battle` now construct `BattleController` inline with a plain `BattleConfig`.
+- `BattleStateManager` no longer derives `state.mode` from the enum (uses literal "manual" string for save backward compat).
+- Test-side cleanup: 7 test files stubbed (the ones dedicated to `BattleMode`/`BattleModeHandler`/`apply_results`/`create_*_battle`); ~110 tests deliberately removed; ~10 tests rewritten to assert against the new surface.
+
+**6.12 — Audit:**
+- All live hits in production code are gone. Remaining grep matches are all docstring deprecation notes (`"""... DELETED in PROJ-269 Phase 6 ..."""`) on the empty stub modules.
+- `BattleEngine(` direct construction: only `battle_runner.py` and `BattleService.create_battle` instantiate it. No combat_lab / strategy / UI direct construction remains.
+
+**6.13 — `docs/systems/combat_simulation.md`:**
+- §0 "Smoke-test flag" removed (USE_BATTLE_RUNNER is gone).
+- §1 "Battle Orchestration" rewritten — caller → spec compiler → `run_battle` → outcome → post_battle_hook diagram + entry-point snippet + spec compiler table.
+- §2 "Battle Modes" replaced with a removal note + old-trait → new-mechanism mapping.
+
+**6.14 — `docs/02_PATTERNS.md`:**
+- §13 "Battle Mode Strategy" replaced with §13 "Spec Compiler + run_battle".
+- ToC + bottom pattern-summary table updated.
+
+**Regressions (verified this batch):**
+- Combat Lab fast: **162/162 green**.
+- Full `pytest tests/`: **14576 passed** + 4 failed + 3 errors. The 3 failed + 3 errors are pre-existing baseline. The +1 failed is `test_telemetry_overhead_smoke` which is known-flaky-under-load (passes in isolation; documented in Phase 5.5 decisions). Net result: **baseline maintained**.
+- `validate_phase PROJ-269 6`: 12 / 15 tasks PASS. Tasks 6.9, 6.10, 6.15 remaining.
+
+**Pass-count delta vs baseline (14710 → 14576 = -134):** Deliberate. Roughly:
+- ~30 tests deleted in `test_battle_factories.py` (factories gone)
+- ~20 tests deleted in `test_battle_mode_handlers.py`
+- ~25 tests deleted in `test_battle_controller/test_config.py` (BattleMode tests)
+- ~20 tests deleted in `test_battle_controller/test_edge_cases.py` (mode_handler tests)
+- ~12 tests deleted in `test_battle_controller/test_retreat_priority.py`
+- ~10 tests deleted in `test_battle_config.py`
+- 4 tests deleted in `test_fleet_battle_adapter.py` (update_from_battle_results)
+- 3 tests deleted in `test_fleet_battle_adapter_identity.py`
+- 1 test rewritten in `test_battle_resolver_integration.py`
+- ~10 test rewrites + new tests for the new surface (compiler tests, adapter tests)
+
+**Next Action (for next agent):** Tasks 6.9 + 6.10 — migrate the Combat Lab UI visual-mode path through `run_battle`. This is the LAST big migration. Two callers need to switch from `BattleController + scenario.setup(engine)` to `run_battle(spec)` with a non-blocking driver:
+- `combat_lab/services/test_execution_service.py::run_visual`
+- `game/ui/screens/test_lab/screen.py::_switch_to_battle`
+- `game/ui/screens/test_lab/test_executor.py` (4 paths)
+
+The `_is_started=True` hack on lines 72-73 of `test_execution_service.py` and lines 419-420 of `test_lab/screen.py` will fall out automatically once the path uses `run_battle` (which manages lifecycle internally). Then Task 6.15 final regression gate.
+
+**Blockers:** None.
+
+**Files modified in latest batch (cumulative across this session):**
+- `combat_lab/runner.py`, `combat_lab/spec_compiler.py`, `combat_lab/scenarios/{base,templates,propulsion_scenarios,tohit_attack_fleet_scenarios}.py`
+- `combat_lab/services/test_execution_service.py`
+- `game/strategy/combat/spec_compiler.py` (extended kwargs)
+- `game/strategy/adapters/simulation_adapter.py` (rewritten)
+- `game/strategy/engine/conflict_resolution_engine.py`
+- `game/strategy/data/fleet_battle_adapter.py` (deleted update_from_battle_results)
+- `game/ui/screens/battle_setup_screen.py`
+- `game/ui/screens/battle_screen.py` (inlined BattleController construction)
+- `game/ui/screens/test_lab/screen.py` (inlined BattleController construction)
+- `game/ui/services/battle_factories.py` (stubbed)
+- `game/ui/services/__init__.py` (re-exports cleaned)
+- `game/app.py` (inlined BattleController construction)
+- `game/simulation/battle_config.py` (reshaped, BattleMode removed)
+- `game/simulation/battle_controller.py` (mode_handler dispatch removed)
+- `game/simulation/battle_runner.py` (now uses BattleEngine directly)
+- `game/simulation/combat/__init__.py` (BattleModeHandler exports removed)
+- `game/simulation/combat/battle_mode_handler.py` (stubbed)
+- `game/simulation/managers/battle_state_manager.py` (BattleMode dependency removed)
+- `tests/unit/combat_lab/test_spec_compiler.py` (13 new tests earlier)
+- `tests/unit/strategy/adapters/test_simulation_adapter.py` (rewritten)
+- `tests/unit/strategy/adapters/test_simulation_adapter_storms.py` (rewritten)
+- `tests/unit/strategy/conflict_resolution/test_battle_resolver_integration.py`, `conftest.py`
+- `tests/unit/strategy/test_fleet_battle_adapter.py` (deleted 4 tests)
+- `tests/unit/strategy/fleet/test_fleet_battle_adapter_identity.py` (stubbed)
+- `tests/unit/simulation/test_battle_config.py` (stubbed)
+- `tests/unit/simulation/combat/test_battle_mode_handlers.py` (stubbed)
+- `tests/unit/simulation/managers/test_battle_state_manager.py` (2 tests rewritten)
+- `tests/unit/simulation/battle_controller/{conftest,test_initialization,test_execution,test_mechanics,test_state}.py` (BattleMode refs stripped)
+- `tests/unit/simulation/battle_controller/{test_config,test_edge_cases,test_retreat_priority}.py` (stubbed)
+- `tests/unit/ui/services/test_battle_factories.py` (stubbed)
+- `tests/unit/ui/test_battle_screen_simulation.py`, `test_scene_protocol.py` (BattleMode refs removed)
+- `tests/unit/test_lab/test_visual_run.py` (BattleMode refs removed)
+- `tests/unit/combat_lab/services/test_test_execution_service.py` (BattleMode assertion removed)
+- `tests/integration/fleet_combat/conftest.py` (unused BattleMode import removed)
+- `docs/systems/combat_simulation.md` (§0–§2 rewritten)
+- `docs/02_PATTERNS.md` (§13 rewritten)
+- `Projects/active_projects/PROJ-269/phase_6_checklist.md` (12 tasks marked complete)
+
+---
+
+### Earlier action snapshot (3 tasks per batch above)
+
+**Earlier action (this session):** Completed Tasks 6.5/6.11 + 6.6 + 6.4 on top of the earlier 6.7a/6.7/6.8 batch. All ship-mutation side channels are now gone.
 
 **6.5 / 6.11 — `SimulationBattleResolver` rewritten to use `build_strategy_battle_spec` + `run_battle`:**
 - Deleted `_apply_shield_interference` and `_apply_strategic_modifiers` helpers.

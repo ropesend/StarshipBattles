@@ -188,14 +188,6 @@ class TestLabExecutor:
 
         runner = TestRunner()
 
-        # Ensure battle engine exists (may have been reset after visual test)
-        self.ensure_engine()
-        engine = self.get_engine()
-
-        if engine is None:
-            self.output_log.append("ERROR: Could not create battle engine!")
-            return False
-
         try:
             # Instantiate scenario
             logger.debug(f" Instantiating scenario class for headless run")
@@ -212,100 +204,130 @@ class TestLabExecutor:
                 self.output_log.append(f"Test {test_id} SKIPPED - {skip_reason}")
                 return True
 
-            # Load test data
-            logger.debug(f" Loading test data for scenario")
             runner.load_data_for_scenario(scenario)
-            logger.debug(f" Test data loaded successfully")
 
-            # Get seed based on current seed mode setting BEFORE starting engine
             seed = self.controller.ui_state.get_effective_seed(metadata.seed)
             logger.debug(f" Using seed: {seed} (mode: {self.controller.ui_state.get_seed_mode()})")
-
-            # Pass seed to scenario for use in engine.start()
             scenario._override_seed = seed
-            logger.debug(f" Set scenario._override_seed={seed}")
 
-            # Setup scenario (this will call engine.start with the seed)
-            logger.debug(f" Calling scenario.setup()")
-            scenario.setup(engine)
-            logger.debug(f" Scenario setup complete")
-
-            # Show "Running Test..." overlay
+            # Show "Running Test..." overlay.
             self.render_progress("Running Test...", metadata.name, f"Max ticks: {scenario.max_ticks}")
             self.draw_and_flip()
 
-            # Run simulation headless
-            result = self._execute_headless(test_id, scenario, engine, seed, runner)
-
-            return result
+            return self._run_scenario_via_run_battle(
+                test_id=test_id,
+                scenario=scenario,
+                seed=seed,
+                runner=runner,
+                progress_label=None,
+            )
 
         except (OSError, ValueError, KeyError, TypeError) as e:
             self.output_log.append(f"ERROR: {e}")
             return False
 
-    def _execute_headless(self, test_id, scenario, engine, seed, runner):
+    def _run_scenario_via_run_battle(
+        self, *, test_id, scenario, seed, runner, progress_label,
+    ):
+        """Run a scenario headless through `run_battle(spec)`.
+
+        PROJ-269 Phase 6 Task 6.9: replaces the legacy
+        `scenario.setup(engine)` + direct tick loop pattern with the
+        unified entry. Shared by `run_headless` and `run_next_batch`.
+
+        `BattleStateCapture` is driven manually (no `with` block) — the
+        engine isn't available until `run_battle`'s
+        `pre_tick_loop_callback` fires.
         """
-        Execute a headless test simulation.
+        from dataclasses import replace
+        from game.ai.ai_factory import AIControllerFactory
+        from game.simulation.battle_runner import run_battle
 
-        Shared logic between run_headless and run_next_batch.
+        # 1. Compile spec + apply UI seed override.
+        spec = scenario.to_spec(registries=None)
+        if seed is not None and seed != spec.seed:
+            spec = replace(spec, seed=seed)
 
-        Args:
-            test_id: Test ID being run
-            scenario: Instantiated scenario object
-            engine: BattleEngine instance
-            seed: Random seed used
-            runner: TestRunner instance for logging
+        # 2. Pre-run hook (ComparisonScenario baseline runs here).
+        scenario.before_run_battle(spec)
 
-        Returns:
-            True if test completed successfully
-        """
+        # 3. Role-keyed ship registry + pre-start snapshot, populated in
+        #    ship_builder before engine.start() touches anything.
+        from combat_lab.runner import _role_from_instance_id, _snapshot_ship_state
+
+        ships_by_role = {}
+        initial_state_by_role = {}
+
+        def ship_builder(ship_spec):
+            ship = scenario._load_ship(ship_spec.design_id)
+            role = _role_from_instance_id(ship_spec.instance_id)
+            if role is not None:
+                ships_by_role[role] = ship
+                initial_state_by_role[role] = _snapshot_ship_state(ship)
+            return ship
+
+        # 4. State capture bridged across run_battle via manual __enter__/__exit__.
+        state_capture = BattleStateCapture(engine=None, test_id=test_id, seed=seed)
+        engine_ref = {"engine": None}
+
+        def pre_tick_loop(engine):
+            engine_ref["engine"] = engine
+            scenario._effective_seed = spec.seed
+            scenario.wire_ships(
+                ships_by_role, engine=engine, initial_state=initial_state_by_role,
+            )
+            scenario.custom_setup(engine)
+            # Now the engine has ships + state → safe to capture initial.
+            state_capture.engine = engine
+            state_capture.__enter__()
+
+        def per_tick(engine):
+            scenario.update(engine)
+
         start_time = time.time()
-        tick_count = 0
-        max_ticks = scenario.max_ticks
+        try:
+            run_battle(
+                spec,
+                ai_factory=AIControllerFactory(),
+                ship_builder=ship_builder,
+                pre_tick_loop_callback=pre_tick_loop,
+                per_tick_callback=per_tick,
+            )
+        finally:
+            # Always capture final state (even on exceptions) so
+            # partial-run states are written to disk for forensics.
+            if state_capture.engine is not None:
+                state_capture.__exit__(None, None, None)
 
-        logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
-
-        with BattleStateCapture(engine, test_id, seed) as state_capture:
-            # Run simulation as fast as possible
-            while tick_count < max_ticks:
-                # Call scenario update for dynamic logic
-                scenario.update(engine)
-
-                # Update engine one tick
-                engine.update()
-                tick_count += 1
-
-                # Check if battle ended naturally
-                if engine.is_battle_over():
-                    logger.debug(f" Battle ended naturally at tick {tick_count}")
-                    break
-
-        # Simulation complete - verify results
         elapsed_time = time.time() - start_time
-        logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
+        engine = engine_ref["engine"]
+        tick_count = engine.tick_counter if engine else 0
+        logger.debug(
+            f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s "
+            f"({tick_count / elapsed_time:.0f} ticks/sec)"
+            if elapsed_time > 0
+            else f" Simulation complete: {tick_count} ticks"
+        )
 
-        # Validate results
+        # Validate results against the live engine.
         report = scenario._run_validation(engine)
         scenario.passed = report.passed
-        logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
-        # Store results including battle state file paths
-        scenario.results['ticks_run'] = tick_count
-        scenario.results['duration_real'] = elapsed_time
-        scenario.results['ticks'] = tick_count  # Alias for consistency with runner
-        scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
+        scenario.results["ticks_run"] = tick_count
+        scenario.results["duration_real"] = elapsed_time
+        scenario.results["ticks"] = tick_count
+        scenario.results.update(state_capture.get_results_dict())
         self.registry.update_last_run_results(test_id, scenario.results)
-
-        # Add to persistent test history
         self.test_history.add_run(test_id, scenario.results)
-
-        # Log test execution (for UI vs headless comparison)
         runner.log_test_execution(scenario, headless=True)
 
-        # Update output log
         status = "PASSED" if scenario.passed else "FAILED"
-        self.output_log.append(f"Test {test_id} {status} ({tick_count} ticks, {elapsed_time:.2f}s)")
-
+        if progress_label is not None:
+            self.output_log.append(f"{progress_label} {test_id}: {status}")
+        else:
+            self.output_log.append(
+                f"Test {test_id} {status} ({tick_count} ticks, {elapsed_time:.2f}s)"
+            )
         return True
 
     def run_all(self, filtered_scenarios):
@@ -365,68 +387,22 @@ class TestLabExecutor:
                 pygame.time.set_timer(pygame.USEREVENT + 1, 50, loops=1)
                 return
 
-            # Load test data
             runner.load_data_for_scenario(scenario)
 
-            # Get seed based on current seed mode setting BEFORE starting engine
             seed = self.controller.ui_state.get_effective_seed(metadata.seed)
-
-            # Ensure battle engine exists (may have been reset)
-            self.ensure_engine()
-            engine = self.get_engine()
-
-            if engine is None:
-                self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: ERROR - No engine")
-                self.batch_current_index += 1
-                pygame.time.set_timer(pygame.USEREVENT + 1, 50, loops=1)
-                return
-
-            # Pass seed to scenario for use in engine.start()
             scenario._override_seed = seed
 
-            # Setup scenario (this will call engine.start with the seed)
-            scenario.setup(engine)
-
-            # Show progress overlay
             progress_title = f"Running test {self.batch_current_index + 1}/{self.batch_total}"
             self.render_progress(progress_title, metadata.name, f"ID: {test_id}")
             self.draw_and_flip()
 
-            # Run headless simulation with battle state capture
-            start_time = time.time()
-            tick_count = 0
-            max_ticks = scenario.max_ticks
-
-            with BattleStateCapture(engine, test_id, seed) as state_capture:
-                while tick_count < max_ticks:
-                    scenario.update(engine)
-                    engine.update()
-                    tick_count += 1
-
-                    if engine.is_battle_over():
-                        break
-
-            # Validate results
-            elapsed_time = time.time() - start_time
-            report = scenario._run_validation(engine)
-            scenario.passed = report.passed
-
-            # Store results including battle state file paths
-            scenario.results['ticks_run'] = tick_count
-            scenario.results['duration_real'] = elapsed_time
-            scenario.results['ticks'] = tick_count
-            scenario.results.update(state_capture.get_results_dict())
-            self.registry.update_last_run_results(test_id, scenario.results)
-
-            # Add to persistent test history
-            self.test_history.add_run(test_id, scenario.results)
-
-            # Log test execution
-            runner.log_test_execution(scenario, headless=True)
-
-            # Update output log
-            status = "PASSED" if scenario.passed else "FAILED"
-            self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: {status}")
+            self._run_scenario_via_run_battle(
+                test_id=test_id,
+                scenario=scenario,
+                seed=seed,
+                runner=runner,
+                progress_label=f"[{self.batch_current_index + 1}/{self.batch_total}]",
+            )
 
         except (OSError, ValueError, KeyError, TypeError) as e:
             self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: ERROR - {e}")

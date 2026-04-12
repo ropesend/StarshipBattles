@@ -394,31 +394,73 @@ class TestLabScreen:
             )
 
     def _switch_to_battle(self, scenario):
-        """Configure battle via controller and request scene transition.
+        """Configure a visual-mode battle via the spec compiler + controller.
 
-        Uses the unified controller flow: creates BattleConfig, configures
-        a BattleController, runs scenario.setup(), then hands the controller
-        to BattleScreen.start_battle().
+        PROJ-269 Phase 6 Task 6.9/6.10: the legacy `scenario.setup(engine)`
+        path (which force-started the engine and required a
+        `_is_started=True` hack) is gone. The flow is now:
+
+          1. `scenario.to_spec()` → BattleSpec.
+          2. `scenario.before_run_battle(spec)` (ComparisonScenario baseline).
+          3. Materialize ships via `materialize_spec_ships` + scenario's
+             `_load_ship` as the ship_builder.
+          4. Thread `spec.boundary` + `spec.modifier_stack` onto the engine.
+          5. `controller.add_ships` + `controller.start()` — proper
+             lifecycle, no hack.
+          6. `scenario.wire_ships` + `scenario.custom_setup` post-start.
+          7. Hand the started controller to `BattleScreen`.
         """
-        from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
-        from game.simulation.battle_controller import BattleController
+        from combat_lab.runner import _snapshot_ship_state
         from game.ai.ai_factory import AIControllerFactory
+        from game.simulation.battle_config import BattleConfig, ReturnDestination
+        from game.simulation.battle_controller import BattleController
+        from game.simulation.battle_runner import materialize_spec_ships
 
+        # 1. Compile + pre-run hook.
+        spec = scenario.to_spec(registries=None)
+        scenario.before_run_battle(spec)
+
+        # 2. Controller + config (seed, end_condition, max_ticks from spec).
         config = BattleConfig(
-            mode=BattleMode.TEST,
             start_paused=True,
             return_destination=ReturnDestination.TEST_LAB,
             show_results=True,
             test_scenario=scenario,
+            seed=spec.seed,
+            end_condition=spec.end_condition,
+            absolute_max_ticks=spec.absolute_max_ticks,
         )
         controller = BattleController(ai_factory=AIControllerFactory())
         controller.configure(config)
+        engine = controller.service.get_engine()
 
-        # Scenario sets up ships, positions, AI strategies, and starts engine
-        scenario.setup(controller.service.get_engine())
-        controller._is_started = True  # Engine already started by scenario.setup()
-        controller.service._is_started = True  # Service must also know engine is started
+        # 3. Thread spec-only fields onto the engine before start.
+        if spec.boundary is not None:
+            engine.boundary = spec.boundary
+        engine.modifier_stack = spec.modifier_stack
 
+        # 4. Materialize ships + take pre-start snapshots.
+        teams_by_id, ships_by_role = materialize_spec_ships(
+            spec, ship_builder=lambda ship_spec: scenario._load_ship(ship_spec.design_id),
+        )
+        initial_state = {
+            role: _snapshot_ship_state(ship)
+            for role, ship in ships_by_role.items()
+        }
+        for team_id, ships in teams_by_id.items():
+            controller.add_ships(ships, team_id=team_id)
+
+        # 5. Proper controller.start() — no _is_started=True hack.
+        controller.start()
+
+        # 6. Wire ships + run scenario-specific custom setup post-start.
+        scenario._effective_seed = spec.seed
+        scenario.wire_ships(
+            ships_by_role, engine=engine, initial_state=initial_state,
+        )
+        scenario.custom_setup(engine)
+
+        # 7. Hand to BattleScreen for per-frame ticking.
         self.game.battle_scene.start_battle(controller)
 
         if self.scene_callback:

@@ -8,7 +8,7 @@ PROJ-126: Updated to inject AIControllerFactory.
 import pytest
 
 from game.simulation.battle_controller import BattleController
-from game.simulation.battle_config import BattleConfig, BattleMode
+from game.simulation.battle_config import BattleConfig
 from game.simulation.services.battle_service import BattleService
 from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship

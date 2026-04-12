@@ -1,8 +1,16 @@
-"""
-BattleConfig and BattleMode - Configuration structures for battle modes.
+"""BattleConfig - operational configuration for a `BattleController` instance.
 
-Extracted from battle_controller.py (PROJ-90) to eliminate circular imports.
-Other modules can now import these without importing the full BattleController.
+PROJ-269 Phase 6 reshape: `BattleMode` enum + the per-mode variant fields
+(`team_modifiers`, `global_modifiers`, `environmental_effects`,
+`source_fleets`, `per_tick_callback`) were deleted. All variant behavior
+moved to `BattleSpec` / `run_battle`. What remains here is a thin
+operational-options bag for the visual-mode `BattleController` flow that
+`BattleScreen` still drives per-frame (until Task 6.9 migrates that path
+through `run_battle` as well).
+
+`ReturnDestination` is also retained because the post-battle UI flow
+(`BattleScreen._on_battle_ended()` → `app._return_to(destination)`) still
+keys off it.
 """
 from dataclasses import dataclass, field
 from enum import Enum
@@ -12,18 +20,6 @@ from game.core.constants import SimulationConstants
 
 if TYPE_CHECKING:
     from game.simulation.systems.battle_end_conditions import IEndCondition
-
-
-class BattleMode(Enum):
-    """Types of battle execution modes.
-
-    Used as a label for logging and UI display, NOT as a behavior switch.
-    All battle behavior is configured through BattleConfig fields.
-    """
-    MANUAL = "manual"           # Battle Setup screen
-    TEST = "test"               # Combat Lab
-    STRATEGY = "strategy"       # Strategy layer fleet combat
-    HYPOTHETICAL = "hypothetical"  # Planning simulations (isolated)
 
 
 class ReturnDestination(Enum):
@@ -40,14 +36,14 @@ def _default_end_condition() -> 'IEndCondition':
 
 @dataclass
 class BattleConfig:
-    """Configuration for a battle instance.
+    """Operational configuration for a `BattleController` instance.
 
-    The battle simulator is a pure engine — it receives ships, runs the
-    simulation, and reports results. BattleConfig contains ONLY data
-    that the simulator needs. Caller-specific concerns (test validation,
-    fleet updates) are handled by the caller after the battle.
+    Carries only fields that affect HOW a battle runs (visual vs
+    headless, paused vs ticking, what scene to return to). Everything
+    that affects WHAT the battle is — ships, modifiers, end conditions,
+    boundary, formations — lives on `BattleSpec` and flows through
+    `run_battle(spec)`.
     """
-    mode: BattleMode = BattleMode.MANUAL
     seed: Optional[int] = None
     end_condition: Any = field(default_factory=_default_end_condition)
     absolute_max_ticks: int = SimulationConstants.ABSOLUTE_MAX_TICKS
@@ -61,24 +57,15 @@ class BattleConfig:
     start_paused: bool = False
     enable_logging: bool = True
 
-    # Battle features — available to ALL modes.
-    # These are OR'd with the mode handler defaults: setting True here enables
-    # the feature even in modes that deny it by default.  Setting False does NOT
-    # disable the feature when the mode handler allows it.
+    # Battle features (visual-mode toggles).
     allow_retreat: bool = False
     allow_reinforcements: bool = False
-    environmental_effects: Optional[Any] = None
-
-    # Battle conditions — per-team and global modifiers applied at battle start.
-    # Each modifier: {"ability": "ToHitAttackModifier", "value": 2.0, "source": "Sensor Array"}
-    team_modifiers: Any = field(default_factory=dict)    # {team_id: [modifier_dicts]}
-    global_modifiers: Any = field(default_factory=list)  # [modifier_dicts] applied to all teams
 
     # Caller metadata — stored on config for callers to read back after battle.
-    # The simulator does NOT use these fields.
+    # The simulator does NOT use this field.
     test_scenario: Optional[Any] = None   # Combat Lab: scenario with validate()
 
-    # Map bounds for retreat calculations
+    # Map bounds for retreat calculations.
     map_bounds: Tuple[float, float, float, float] = (
         0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE
     )

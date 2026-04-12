@@ -5,26 +5,24 @@ simulator. All three contexts (Combat Lab, Battle Setup, Strategy) build
 a `BattleSpec` via their own compiler and hand it here. The engine is
 context-blind.
 
-Phase 1 scope:
-  - Boundary, modifier_stack, telemetry_level are accepted on the spec
-    but not yet enforced. Phase 3 wires boundary; Phase 5 wires telemetry
-    subscribers; Phase 5 + engine hooks wire the ModifierStack.
-  - Per-component HP from `ComponentStateSpec` is NOT yet routed into
-    Ship construction. Phase 2 wires `Ship.from_spec` / bridge through
-    `ShipInstance.components`.
-  - Ship materialization is delegated to an injected `ship_builder`
-    callable — Phase-1 transitional contract. Each compiler in Tasks
-    1.7-1.9 supplies the builder most appropriate for its inputs.
+PROJ-269 Phase 6 Tasks 6.1-6.3: `run_battle` now constructs and drives
+`BattleEngine` directly. The legacy `BattleController` + `BattleConfig` +
+`BattleMode` chain is bypassed entirely — those types are slated for
+deletion in the same phase. Operational concerns (`headless`,
+`per_tick_callback`, `pre_tick_loop_callback`) remain function arguments.
 
-What IS enforced in Phase 1:
-  - spec → engine: teams added in order, `team_id` matches spec
+What `run_battle` enforces:
+  - spec → engine: teams added in spec order, team_id preserved
   - end_condition / absolute_max_ticks forwarded to the engine
   - seed forwarded (deterministic RNG)
+  - boundary + modifier_stack threaded onto the engine
   - per_tick_callback called each tick with the engine
+  - pre_tick_loop_callback fired once after engine.start, before tick 1
   - post_battle_hook called once with the final outcome
+  - telemetry aggregators (Phase 5) attached per `spec.telemetry_level`
   - outcome is a `BattleOutcome` with:
       - teams in input order
-      - every ShipSpec.instance_id has exactly one ShipOutcome
+      - every `ShipSpec.instance_id` has exactly one `ShipOutcome`
       - `end_reason` derived from the end-condition type that fired
       - `seed` echoed
 """
@@ -34,8 +32,6 @@ import logging
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 from game.core.math import Vector2
-from game.simulation.battle_config import BattleConfig, BattleMode
-from game.simulation.battle_controller import BattleController
 from game.simulation.battle_outcome import (
     BattleOutcome,
     EndReason,
@@ -64,11 +60,11 @@ from game.simulation.systems.battle_end_conditions import (
     TeamIncapacitatedCondition,
     TickLimitCondition,
 )
+from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
-    from game.simulation.systems.battle_engine import BattleEngine
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +88,81 @@ _END_REASON_BY_CLASS = {
 }
 
 
+def materialize_spec_ships(
+    spec: BattleSpec,
+    *,
+    ship_builder: Callable[[ShipSpec], "Ship"],
+) -> "tuple[Dict[int, List[Ship]], Dict[str, Ship]]":
+    """Materialize every `ShipSpec` in `spec.teams` into a `Ship`.
+
+    Shared by `run_battle` (which calls `engine.start_teams` with the
+    result) and visual-mode callers (which go through
+    `BattleController.add_ships` + `controller.start` instead). The
+    function applies the spec pose, velocity, instance_id, and
+    per-component HP — everything that's purely spec-driven, before
+    any engine participation.
+
+    Returns:
+        `(teams_by_id, ships_by_role)`:
+        - `teams_by_id`: `{team_id: [Ship, ...]}` — bucketed the way
+          `BattleEngine.start_teams` expects.
+        - `ships_by_role`: role-suffix (text after the last ':' in
+          `ShipSpec.instance_id`) → materialized Ship. Callers that
+          don't use role tagging can ignore the second value.
+    """
+    teams_by_id: Dict[int, List["Ship"]] = {}
+    ships_by_role: Dict[str, "Ship"] = {}
+    for team_spec in spec.teams:
+        team_ships: List["Ship"] = []
+        for task_force in team_spec.fleet_hierarchy:
+            for squadron in task_force.squadrons:
+                for ship_spec in squadron.ships:
+                    ship = ship_builder(ship_spec)
+                    ship.x = ship_spec.position.x
+                    ship.y = ship_spec.position.y
+                    ship.angle = ship_spec.angle
+                    ship.velocity = Vector2(ship_spec.velocity)
+                    ship.instance_id = ship_spec.instance_id
+                    _apply_spec_components_to_ship(ship_spec, ship)
+                    team_ships.append(ship)
+                    if ship_spec.instance_id and ":" in ship_spec.instance_id:
+                        role = ship_spec.instance_id.rsplit(":", 1)[1]
+                        ships_by_role[role] = ship
+        teams_by_id[team_spec.team_id] = team_ships
+    return teams_by_id, ships_by_role
+
+
+def start_engine_from_spec(
+    spec: BattleSpec,
+    *,
+    ai_factory: "IAIControllerFactory",
+    ship_builder: Callable[[ShipSpec], "Ship"],
+) -> "tuple[BattleEngine, Dict[str, Ship]]":
+    """Construct and start a `BattleEngine` from a `BattleSpec`.
+
+    Thin wrapper around `materialize_spec_ships` + `BattleEngine` setup
+    + `engine.start_teams()`. Returns `(engine, ships_by_role)`.
+    """
+    engine = BattleEngine(
+        logger=BattleLogger(enabled=False),
+        ai_factory=ai_factory,
+    )
+    if spec.boundary is not None:
+        engine.boundary = spec.boundary
+    engine.modifier_stack = spec.modifier_stack
+
+    teams_by_id, ships_by_role = materialize_spec_ships(
+        spec, ship_builder=ship_builder,
+    )
+    engine.start_teams(
+        teams_by_id,
+        seed=spec.seed,
+        end_condition=spec.end_condition,
+        absolute_max_ticks=spec.absolute_max_ticks,
+    )
+    return engine, ships_by_role
+
+
 def run_battle(
     spec: BattleSpec,
     *,
@@ -107,21 +178,21 @@ def run_battle(
         spec: The BattleSpec describing initial conditions.
         ai_factory: Injected AI controller factory (UI/strategy owns this).
         ship_builder: Callable that materializes a `Ship` from a `ShipSpec`.
-            Phase-1 transitional contract — Phase 2 moves ship construction
-            into the engine once `Ship.from_spec` understands
-            `ComponentStateSpec` per-component HP.
-        headless: Whether to run without rendering. Phase 1 runs the engine
-            synchronously regardless; the flag is a no-op at this layer
-            but is accepted so downstream callers can request visual mode
-            once the Battle Screen migrates in Phase 6.
+            Each compiler supplies the builder appropriate for its inputs
+            (Combat Lab loads JSON; strategy invokes `ShipInstance.to_ship`;
+            Battle Setup pre-builds via the design library).
+        headless: Whether to run without rendering. Reserved for future
+            visual-mode integration; today the engine ticks synchronously
+            until `is_battle_over()` regardless. Visual callers drive
+            their own per-frame loop and won't go through `run_battle`
+            until Task 6.9's UI migration.
         per_tick_callback: Optional callable invoked each tick with the
-            engine. Used by the Battle Screen for rendering and by Combat
-            Lab scenarios for per-tick observation / position tracking.
+            engine. Used by Combat Lab scenarios for per-tick observation
+            and position tracking.
         pre_tick_loop_callback: Optional one-shot hook fired AFTER
-            engine.start() completes and BEFORE the first tick. Used by
-            Combat Lab's `_run_scenario_via_battle_runner` to call
-            `scenario.custom_setup(engine)` — the Phase 1 smoke-test path.
-            Phase 5+ may subsume this into telemetry subscription.
+            `engine.start_teams()` completes and BEFORE the first tick.
+            Used by Combat Lab to invoke `scenario.custom_setup(engine)`
+            without introducing a dedicated setup-phase.
 
     Returns:
         A populated `BattleOutcome`. Invariants:
@@ -129,70 +200,11 @@ def run_battle(
             - every `ShipSpec.instance_id` maps to exactly one `ShipOutcome`
             - `outcome.seed == spec.seed`
     """
-    # Touch headless so linters don't flag it; Phase 1 has no render path here.
-    _ = headless
+    _ = headless  # Reserved for Task 6.9's visual-mode integration.
 
-    controller = BattleController(ai_factory=ai_factory)
-
-    config = BattleConfig(
-        mode=BattleMode.MANUAL,     # Label only; Phase 6 drops BattleMode.
-        seed=spec.seed,
-        end_condition=spec.end_condition,
-        absolute_max_ticks=spec.absolute_max_ticks,
-        headless=True,
-        enable_logging=False,
+    engine, _ships_by_role = start_engine_from_spec(
+        spec, ai_factory=ai_factory, ship_builder=ship_builder,
     )
-    configure_result = controller.configure(config)
-    if not configure_result.success:
-        raise RuntimeError(
-            f"BattleController.configure failed: {configure_result.errors}"
-        )
-
-    # PROJ-269 Phase 3: thread the spec's boundary into the engine.
-    # `configure` creates the engine via `BattleService.create_battle`,
-    # so by this point the engine exists and we can attach the boundary
-    # before ships / start.
-    engine_for_setup = controller.service.get_engine()
-    if spec.boundary is not None and engine_for_setup is not None:
-        engine_for_setup.boundary = spec.boundary
-    # PROJ-269 Phase 5.5: thread the spec's modifier_stack so the
-    # FleetAuraManager.initialize() call in engine.start() picks it up.
-    if engine_for_setup is not None:
-        engine_for_setup.modifier_stack = spec.modifier_stack
-
-    # Materialize + register each ship, preserving spec pose and instance_id.
-    for team_spec in spec.teams:
-        team_ships: List["Ship"] = []
-        for task_force in team_spec.fleet_hierarchy:
-            for squadron in task_force.squadrons:
-                for ship_spec in squadron.ships:
-                    ship = ship_builder(ship_spec)
-                    # Spec pose overrides whatever the builder set.
-                    ship.x = ship_spec.position.x
-                    ship.y = ship_spec.position.y
-                    ship.angle = ship_spec.angle
-                    ship.velocity = Vector2(ship_spec.velocity)
-                    ship.instance_id = ship_spec.instance_id
-                    # PROJ-269 Phase 2: apply per-component HP from spec.
-                    _apply_spec_components_to_ship(ship_spec, ship)
-                    team_ships.append(ship)
-        add_result = controller.add_ships(team_ships, team_id=team_spec.team_id)
-        if not add_result.success:
-            raise RuntimeError(
-                f"BattleController.add_ships failed for team "
-                f"{team_spec.team_id}: {add_result.errors}"
-            )
-
-    start_result = controller.start()
-    if not start_result.success:
-        raise RuntimeError(
-            f"BattleController.start failed: {start_result.errors}"
-        )
-
-    # Tick loop with optional per-tick observer.
-    engine = controller.service.get_engine()
-    if engine is None:
-        raise RuntimeError("Engine missing after controller.start()")
 
     # PROJ-269 Phase 5: attach telemetry subscribers based on spec level.
     weapon_aggregator, stats_aggregator, hit_log_recorder = _attach_telemetry(
@@ -530,4 +542,9 @@ def _derive_end_reason(engine: "BattleEngine", spec: BattleSpec) -> EndReason:
     return _END_REASON_BY_CLASS.get(type(spec.end_condition), EndReason.TICK_LIMIT)
 
 
-__all__ = ["run_battle", "extract_outcome"]
+__all__ = [
+    "run_battle",
+    "extract_outcome",
+    "start_engine_from_spec",
+    "materialize_spec_ships",
+]

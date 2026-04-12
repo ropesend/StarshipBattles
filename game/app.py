@@ -541,13 +541,33 @@ class Game:
         logger.debug("Race setup cancelled")
 
     def start_battle(self, team0_ships, team1_ships, headless=False, end_condition=None):
-        """Start a battle with the given ships using unified controller flow."""
-        from game.ui.services.battle_factories import create_manual_battle
+        """Start a battle with the given ships using unified controller flow.
+
+        PROJ-269 Phase 6: replaces the deleted `create_manual_battle`
+        factory with an inlined `BattleController` setup. The Battle
+        Setup spec compiler integration (full `build_manual_battle_spec`
+        + `run_battle` routing) lands with Task 6.9's UI visual-mode
+        migration — for now the controller still drives the UI's
+        per-frame tick loop via `BattleScreen`.
+        """
+        from game.simulation.battle_config import BattleConfig
+        from game.simulation.battle_controller import BattleController
+        from game.ai.ai_factory import AIControllerFactory
+
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
-        controller = create_manual_battle(
-            team0_ships, team1_ships, headless=headless, end_condition=end_condition
-        )
+
+        config_kwargs = {"headless": headless}
+        if end_condition is not None:
+            config_kwargs["end_condition"] = end_condition
+        config = BattleConfig(**config_kwargs)
+
+        controller = BattleController(ai_factory=AIControllerFactory())
+        controller.configure(config)
+        controller.add_ships(team0_ships, 0)
+        controller.add_ships(team1_ships, 1)
+        controller.start()
+
         self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)
 

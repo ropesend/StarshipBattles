@@ -111,20 +111,22 @@ class TestBattleScreenSimulationLifecycle:
         assert self.scene._ui_service is not None
         assert isinstance(self.scene._ui_service, BattleUIService)
 
-    def test_start_delegates_controller_bootstrap_to_factory_helper(self):
-        """start() should use the shared controller bootstrap helper."""
+    def test_start_constructs_controller_inline(self):
+        """start() should construct a BattleController inline (post-PROJ-269)
+        and hand it to start_battle. The legacy
+        `create_started_battle_controller` factory was deleted in Phase 6."""
         mock_controller = MagicMock()
         mock_controller.config = MagicMock(headless=False, start_paused=False)
         mock_controller.service = self.scene._battle_service
 
         with patch(
-            'game.ui.screens.battle_screen.create_started_battle_controller',
+            'game.ui.screens.battle_screen.BattleController',
             return_value=mock_controller,
-        ) as mock_create_controller:
+        ) as mock_controller_cls:
             with patch.object(self.scene, 'start_battle') as mock_start_battle:
                 self.scene.start([self.ship1], [self.ship2], headless=False)
 
-        mock_create_controller.assert_called_once()
+        mock_controller_cls.assert_called_once()
         mock_start_battle.assert_called_once_with(mock_controller)
 
     def test_pause_unpause_toggle(self):

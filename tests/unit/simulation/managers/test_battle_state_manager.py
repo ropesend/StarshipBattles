@@ -65,8 +65,12 @@ class TestBattleStateManagerCapture:
             assert result is mock_state
 
     def test_capture_state_passes_config_values(self, state_manager, mock_engine, mock_config):
-        """capture_state passes config values to BattleState."""
-        mock_config.mode.value = "strategy"
+        """capture_state passes config values to BattleState.
+
+        PROJ-269 Phase 6: `mode` is now a hardcoded string label (the
+        BattleMode enum was deleted). Capture continues to forward seed
+        and the retreat / reinforcement flags untouched.
+        """
         mock_config.seed = 99999
         mock_config.allow_retreat = True
         mock_config.allow_reinforcements = True
@@ -78,7 +82,7 @@ class TestBattleStateManagerCapture:
 
             MockState.capture_from_engine.assert_called_once_with(
                 mock_engine,
-                mode="strategy",
+                mode="manual",
                 seed=99999,
                 allow_retreat=True,
                 allow_reinforcements=True,
@@ -132,13 +136,20 @@ class TestBattleStateManagerRestore:
 
         assert config.seed is None
 
-    def test_restore_state_raises_on_invalid_mode(self, state_manager):
-        """restore_state raises on invalid mode."""
+    def test_restore_state_accepts_any_mode_string(self, state_manager):
+        """PROJ-269 Phase 6: `mode` is a backward-compat label, not an
+        enum value — any string is accepted (no validation, no enum
+        coercion). The pre-Phase-6 ValidationException-on-bad-mode
+        contract is gone alongside `BattleMode`."""
         mock_state = Mock()
-        mock_state.mode = "invalid_mode"
+        mock_state.mode = "anything_goes_now"
+        mock_state.seed = 1
+        mock_state.end_condition_data = {"type": "team_eliminated"}
+        mock_state.allow_retreat = False
+        mock_state.allow_reinforcements = False
 
-        with pytest.raises(ValidationException):
-            state_manager.restore_config_from_state(mock_state)
+        config = state_manager.restore_config_from_state(mock_state)
+        assert config is not None
 
 
 # === Extract Ships From State Tests ===

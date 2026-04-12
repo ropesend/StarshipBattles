@@ -19,9 +19,9 @@ def mock_fleet():
     mock_ship = MagicMock()
     mock_ship.name = "Test Ship"
     fleet.ships = [mock_ship]
-    # PROJ-210: battle adapter is now accessed via fleet.battle property
-    fleet.battle = MagicMock()
-    fleet.battle.update_from_battle_results = MagicMock()
+    # PROJ-269 Phase 6: `update_from_battle_results` deleted; the adapter
+    # mock is just a placeholder now (no methods exposed).
+    fleet.battle = MagicMock(spec=[])
     return fleet
 
 

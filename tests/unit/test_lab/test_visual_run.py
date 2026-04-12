@@ -48,6 +48,21 @@ class TestVisualRunFlow:
         mock_scenario = Mock()
         mock_scenario.metadata = mock_metadata
         mock_scenario.name = "Test Scenario"
+        # PROJ-269 Phase 6: UI path now consumes a BattleSpec from
+        # `scenario.to_spec()`. Supply an empty-teams spec so the path
+        # short-circuits cleanly without an engine.
+        empty_spec = Mock()
+        empty_spec.seed = 0
+        empty_spec.teams = ()
+        empty_spec.boundary = None
+        empty_spec.modifier_stack = Mock()
+        empty_spec.end_condition = Mock()
+        empty_spec.absolute_max_ticks = 10000
+        mock_scenario.to_spec = Mock(return_value=empty_spec)
+        mock_scenario.before_run_battle = Mock()
+        mock_scenario.wire_ships = Mock()
+        mock_scenario.custom_setup = Mock()
+        mock_scenario._load_ship = Mock()
         mock_scenario_cls.return_value = mock_scenario
 
         # Setup registry to return scenario info
@@ -114,9 +129,13 @@ class TestVisualRunFlow:
         # start_battle should have been called exactly once
         mock_game.battle_scene.start_battle.assert_called_once()
 
-    def test_visual_run_controller_has_test_mode(self, mock_game, mock_registry, mock_controller):
-        """Visual run should pass a controller configured for TEST mode."""
-        from game.simulation.battle_config import BattleMode
+    def test_visual_run_controller_set_for_test_lab(self, mock_game, mock_registry, mock_controller):
+        """Visual run should pass a controller routed to return to TEST_LAB.
+
+        PROJ-269 Phase 6: BattleMode is gone — test-vs-manual distinction
+        now lives in `test_scenario` presence + `return_destination`.
+        """
+        from game.simulation.battle_config import ReturnDestination
 
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
@@ -124,9 +143,9 @@ class TestVisualRunFlow:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        # Extract the controller passed to start_battle
         controller = mock_game.battle_scene.start_battle.call_args[0][0]
-        assert controller.config.mode == BattleMode.TEST
+        assert controller.config.return_destination == ReturnDestination.TEST_LAB
+        assert controller.config.test_scenario is not None
 
     def test_visual_run_controller_starts_paused(self, mock_game, mock_registry, mock_controller):
         """Visual run should pass a controller configured to start paused."""
@@ -151,8 +170,10 @@ class TestVisualRunFlow:
         # Verify scene_callback was called to request battle transition
         screen.scene_callback.assert_called_once_with("start_test_battle", scenario=mock_scenario)
 
-    def test_visual_run_calls_scenario_setup(self, mock_game, mock_registry, mock_controller):
-        """Visual run should call scenario.setup() with the engine."""
+    def test_visual_run_wires_scenario_via_spec_compiler(self, mock_game, mock_registry, mock_controller):
+        """PROJ-269 Phase 6: visual run goes through `scenario.to_spec()`
+        + `wire_ships()` + `custom_setup()`, NOT the legacy
+        `scenario.setup(engine)` path."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
@@ -160,8 +181,9 @@ class TestVisualRunFlow:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        # Verify scenario.setup() was called once (in _switch_to_battle, not duplicated)
-        assert mock_scenario.setup.call_count == 1
+        assert mock_scenario.to_spec.call_count == 1
+        assert mock_scenario.wire_ships.call_count == 1
+        assert mock_scenario.custom_setup.call_count == 1
 
     def test_visual_run_controller_has_scenario_reference(self, mock_game, mock_registry, mock_controller):
         """Visual run should store scenario reference in controller config."""
@@ -190,6 +212,30 @@ class TestVisualRunFlow:
 
         # Camera fitting is now handled inside start_battle, so just verify start_battle was called
         mock_game.battle_scene.start_battle.assert_called_once()
+
+
+def _mock_scenario_for_switch_to_battle():
+    """Build a scenario Mock that satisfies the PROJ-269 Phase 6 UI path.
+
+    `_switch_to_battle` now calls `scenario.to_spec()` → iterates
+    `spec.teams` via `materialize_spec_ships`. An empty-teams spec lets
+    the tests exercise the config/controller wiring without needing a
+    real engine.
+    """
+    scenario = Mock()
+    empty_spec = Mock()
+    empty_spec.seed = 0
+    empty_spec.teams = ()
+    empty_spec.boundary = None
+    empty_spec.modifier_stack = Mock()
+    empty_spec.end_condition = Mock()
+    empty_spec.absolute_max_ticks = 10000
+    scenario.to_spec = Mock(return_value=empty_spec)
+    scenario.before_run_battle = Mock()
+    scenario.wire_ships = Mock()
+    scenario.custom_setup = Mock()
+    scenario._load_ship = Mock()
+    return scenario
 
 
 class TestSceneTransitionCallbacks:
@@ -234,7 +280,7 @@ class TestSceneTransitionCallbacks:
         callback = Mock()
         screen = self._create_screen_with_real_switch(mock_game, callback)
 
-        scenario = Mock()
+        scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
         callback.assert_called_once_with("start_test_battle", scenario=scenario)
@@ -244,23 +290,27 @@ class TestSceneTransitionCallbacks:
         callback = Mock()
         screen = self._create_screen_with_real_switch(mock_game, callback)
 
-        scenario = Mock()
+        scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
         mock_game.battle_scene.start_battle.assert_called_once()
 
     def test_switch_to_battle_controller_has_test_config(self, mock_game):
-        """_switch_to_battle should pass controller with TEST mode config."""
-        from game.simulation.battle_config import BattleMode, ReturnDestination
+        """_switch_to_battle should pass controller routed for the test lab.
+
+        PROJ-269 Phase 6: BattleMode is gone; the equivalent of "TEST mode"
+        is now `start_paused=True` + `return_destination=TEST_LAB` +
+        `test_scenario` set.
+        """
+        from game.simulation.battle_config import ReturnDestination
 
         callback = Mock()
         screen = self._create_screen_with_real_switch(mock_game, callback)
 
-        scenario = Mock()
+        scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
         controller = mock_game.battle_scene.start_battle.call_args[0][0]
-        assert controller.config.mode == BattleMode.TEST
         assert controller.config.start_paused is True
         assert controller.config.return_destination == ReturnDestination.TEST_LAB
         assert controller.config.test_scenario == scenario
@@ -271,7 +321,7 @@ class TestSceneTransitionCallbacks:
         mock_game.state = "INITIAL"  # sentinel value
         screen = self._create_screen_with_real_switch(mock_game, callback)
 
-        scenario = Mock()
+        scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
         # game.state should not have been set by _switch_to_battle
@@ -320,10 +370,9 @@ class TestEndBattleInTestMode:
             screen._battle_service = Mock()
             screen._battle_service.get_engine.return_value = mock_engine
             # Set up controller with config
-            from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+            from game.simulation.battle_config import BattleConfig, ReturnDestination
             mock_controller = Mock()
             mock_controller.config = BattleConfig(
-                mode=BattleMode.TEST,
                 return_destination=ReturnDestination.TEST_LAB,
                 show_results=True,
             )

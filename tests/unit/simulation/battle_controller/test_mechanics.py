@@ -4,9 +4,7 @@ from unittest.mock import Mock, patch
 
 from game.simulation.battle_controller import (
     BattleController,
-    BattleConfig,
-    BattleMode,
-)
+    BattleConfig,)
 from game.simulation.managers.retreat_manager import RetreatMethod, RetreatState
 from game.simulation.services.battle_service import BattleServiceResult
 
@@ -139,7 +137,7 @@ class TestBattleControllerRetreat:
 
     def test_request_retreat_fails_for_dead_ship(self, controller, mock_service, mock_ship):
         """request_retreat fails for dead ship."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -153,7 +151,7 @@ class TestBattleControllerRetreat:
 
     def test_request_retreat_fails_for_unknown_ship(self, controller, mock_service, mock_ship):
         """request_retreat fails for ship not in battle."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -164,7 +162,7 @@ class TestBattleControllerRetreat:
 
     def test_request_retreat_fails_if_already_retreating(self, controller, mock_service, mock_ship):
         """request_retreat fails if ship already retreating."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -179,7 +177,7 @@ class TestBattleControllerRetreat:
 
     def test_request_retreat_edge_creates_retreat_state(self, controller, mock_service, mock_ship):
         """request_retreat with edge method creates proper state."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -194,7 +192,7 @@ class TestBattleControllerRetreat:
 
     def test_request_retreat_warp_creates_retreat_state(self, controller, mock_service, mock_ship):
         """request_retreat with warp method creates proper state."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -212,7 +210,7 @@ class TestBattleControllerRetreat:
 
     def test_request_retreat_unknown_method_fails(self, controller, mock_service, mock_ship):
         """request_retreat with unknown method fails."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -225,7 +223,7 @@ class TestBattleControllerRetreat:
 
     def test_cancel_retreat_removes_retreat_state(self, controller, mock_service, mock_ship):
         """cancel_retreat removes the retreat state."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -240,7 +238,7 @@ class TestBattleControllerRetreat:
 
     def test_cancel_retreat_fails_when_not_retreating(self, controller, mock_service, mock_ship):
         """cancel_retreat fails when ship not retreating."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -266,7 +264,7 @@ class TestBattleControllerReinforcements:
 
     def test_add_reinforcements_fails_when_not_started(self, controller, mock_service, mock_ship):
         """add_reinforcements fails when battle not started."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_reinforcements=True)
+        config = BattleConfig(allow_reinforcements=True)
         controller.configure(config)
 
         result = controller.add_reinforcements([mock_ship], team_id=0, entry_point=(0, 0))
@@ -276,7 +274,7 @@ class TestBattleControllerReinforcements:
 
     def test_add_reinforcements_positions_ships(self, controller, mock_service, mock_ship):
         """add_reinforcements positions ships at entry point."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_reinforcements=True)
+        config = BattleConfig(allow_reinforcements=True)
         controller.configure(config)
         controller.start()
 
@@ -291,7 +289,7 @@ class TestBattleControllerReinforcements:
 
     def test_add_reinforcements_calls_engine(self, controller, mock_service, mock_ship):
         """add_reinforcements calls engine.add_ship_mid_battle."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_reinforcements=True)
+        config = BattleConfig(allow_reinforcements=True)
         controller.configure(config)
         controller.start()
 
@@ -304,7 +302,7 @@ class TestBattleControllerReinforcements:
 
     def test_add_reinforcements_tracks_ship_id(self, controller, mock_service, mock_ship):
         """add_reinforcements assigns and tracks ship ID."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_reinforcements=True)
+        config = BattleConfig(allow_reinforcements=True)
         controller.configure(config)
         controller.start()
 

@@ -53,24 +53,53 @@ class TestExecutionService:
             self.runner.load_data_for_scenario(scenario)
             logger.debug(f" Test data loaded successfully")
 
-            # Use unified controller flow
-            from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
-            from game.simulation.battle_controller import BattleController
+            # PROJ-269 Phase 6 Tasks 6.9/6.10: spec-compiled visual-mode
+            # path. `controller.start()` is called normally — no more
+            # `_is_started=True` hack.
+            from combat_lab.runner import _snapshot_ship_state
             from game.ai.ai_factory import AIControllerFactory
+            from game.simulation.battle_config import BattleConfig, ReturnDestination
+            from game.simulation.battle_controller import BattleController
+            from game.simulation.battle_runner import materialize_spec_ships
+
+            spec = scenario.to_spec(registries=None)
+            scenario.before_run_battle(spec)
 
             config = BattleConfig(
-                mode=BattleMode.TEST,
                 start_paused=True,
                 return_destination=ReturnDestination.TEST_LAB,
                 show_results=True,
                 test_scenario=scenario,
+                seed=spec.seed,
+                end_condition=spec.end_condition,
+                absolute_max_ticks=spec.absolute_max_ticks,
             )
             controller = BattleController(ai_factory=AIControllerFactory())
             controller.configure(config)
+            engine = controller.service.get_engine()
 
-            scenario.setup(controller.service.get_engine())
-            controller._is_started = True
-            controller.service._is_started = True
+            if spec.boundary is not None:
+                engine.boundary = spec.boundary
+            engine.modifier_stack = spec.modifier_stack
+
+            teams_by_id, ships_by_role = materialize_spec_ships(
+                spec,
+                ship_builder=lambda ship_spec: scenario._load_ship(ship_spec.design_id),
+            )
+            initial_state = {
+                role: _snapshot_ship_state(ship)
+                for role, ship in ships_by_role.items()
+            }
+            for team_id, ships in teams_by_id.items():
+                controller.add_ships(ships, team_id=team_id)
+
+            controller.start()
+
+            scenario._effective_seed = spec.seed
+            scenario.wire_ships(
+                ships_by_role, engine=engine, initial_state=initial_state,
+            )
+            scenario.custom_setup(engine)
 
             battle_scene.start_battle(controller)
             logger.debug(f" Battle started via controller (scenario={scenario.metadata.test_id})")

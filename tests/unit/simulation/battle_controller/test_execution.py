@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from game.simulation.battle_controller import BattleController
-from game.simulation.battle_config import BattleConfig, BattleMode
+from game.simulation.battle_config import BattleConfig
 from game.simulation.services.battle_service import BattleServiceResult
 
 
@@ -113,7 +113,7 @@ class TestBattleControllerUpdate:
 
     def test_update_processes_retreats_when_enabled(self, controller, mock_service):
         """update processes retreats when allow_retreat is True."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -173,7 +173,7 @@ class TestBattleControllerRunHeadless:
 
     def test_run_headless_stops_when_battle_over(self, controller, mock_service):
         """run_headless stops when is_battle_over returns True."""
-        config = BattleConfig(mode=BattleMode.MANUAL)
+        config = BattleConfig()
         controller.configure(config)
         controller.start()
 
@@ -191,7 +191,7 @@ class TestBattleControllerRunHeadless:
 
     def test_run_headless_calls_progress_callback(self, controller, mock_service):
         """run_headless calls progress callback every 100 ticks."""
-        config = BattleConfig(mode=BattleMode.MANUAL, absolute_max_ticks=250)
+        config = BattleConfig(absolute_max_ticks=250)
         controller.configure(config)
         controller.start()
 
@@ -215,7 +215,7 @@ class TestBattleControllerRunHeadless:
 
     def test_run_headless_processes_retreats_when_enabled(self, controller, mock_service):
         """run_headless processes retreats each tick when enabled."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
 
@@ -285,7 +285,7 @@ class TestBattleControllerRunTicks:
 
     def test_run_ticks_processes_retreats_when_enabled(self, controller, mock_service):
         """run_ticks processes retreats each tick when enabled."""
-        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
+        config = BattleConfig(allow_retreat=True)
         controller.configure(config)
         controller.start()
         mock_service.is_battle_over.return_value = False

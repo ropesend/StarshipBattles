@@ -235,68 +235,89 @@ granularity) coexists with `components` during the PROJ-269 transition
 so 40+ existing call sites continue to work. Consolidation is a
 follow-up.
 
-**Smoke-test flag (Phase 1 only):**
-
-`SB_USE_BATTLE_RUNNER=1` env var routes the Combat Lab CLI runner
-([`combat_lab/runner.py`](../../combat_lab/runner.py)) through `run_battle`.
-Off by default — subsequent phases migrate more call sites until Phase 6
-deletes the legacy branch and the flag itself.
-
 ---
 
-## 1. Battle Orchestration
+## 1. Battle Orchestration (post-PROJ-269 unified flow)
 
-### Unified Entry/Exit Flow
+### `run_battle(spec) -> BattleOutcome` is the only sanctioned entry
 
-The battle simulator is a **pure engine**: it receives ships in any state, runs the
-simulation, and reports ALL results. It does NOT know about test scenarios, fleet
-updates, or pass/fail validation — callers analyze the output.
+The battle simulator is a **pure engine**: callers compile their own
+domain inputs into a `BattleSpec` via a per-context compiler and hand it
+to `run_battle`. The engine knows nothing about test scenarios, fleet
+hierarchies, or UI screens — it just runs the sim and emits a
+`BattleOutcome`.
 
 **Architecture layers:**
 ```
-Caller (Battle Setup / Combat Lab / Strategy Layer)
-  → BattleController (orchestrator)
-    → BattleService (abstraction)
-      → BattleEngine (core tick loop)
+Caller (Battle Setup / Combat Lab / Strategy)
+  → context-specific spec compiler
+    → BattleSpec (frozen DTO)
+      → run_battle(spec, ai_factory, ship_builder, ...)
+        → BattleEngine (constructed inline; no controller wrapper)
+          → BattleOutcome
+            → spec.post_battle_hook(outcome)  # optional side effects
 ```
 
-**Unified entry** — all modes use ONE path:
+**Unified entry**:
+
 ```python
-controller = BattleController(ai_factory=AIControllerFactory())
-controller.configure(BattleConfig(
-    end_condition=...,                           # Composable IEndCondition
-    return_destination=ReturnDestination.TEST_LAB, # Where to go after battle
-    show_results=True,                           # Show results screen?
-    start_paused=True,                           # Start paused?
-))
-controller.add_ships(team0_ships, team_id=0)
-controller.add_ships(team1_ships, team_id=1)
-controller.start()
-battle_screen.start_battle(controller)  # ONE entry point
+from game.simulation.battle_runner import run_battle
+
+spec = build_strategy_battle_spec(fleets, sector=..., empires=..., registries=...)
+outcome = run_battle(
+    spec,
+    ai_factory=AIControllerFactory(),
+    ship_builder=lambda ship_spec: ship_instance.to_ship(...),
+    per_tick_callback=None,           # optional
+    pre_tick_loop_callback=None,      # optional
+)
 ```
 
-**Convenience factory** — `create_started_battle_controller()` (`game/ui/services/battle_factories.py`)
-centralizes the configure→add_ships→start sequence. `BattleScreen.start()`, `create_manual_battle()`,
-and `create_hypothetical_battle()` all delegate to it.
+`run_battle` instantiates `BattleEngine` directly, threads
+`spec.boundary` and `spec.modifier_stack` onto it, calls
+`engine.start_teams(...)`, drives the tick loop, attaches telemetry
+aggregators per `spec.telemetry_level`, extracts a `BattleOutcome` via
+`extract_outcome(engine, spec)`, and finally invokes
+`spec.post_battle_hook(outcome)` if one is attached.
 
-**Unified exit** — all modes use ONE path:
-- Battle ends → `BattleScreen._on_battle_ended()` 
-- If `show_results=True`: extracts results → `BattleResultsScreen` → user clicks Return
-- If `show_results=False`: returns directly to destination
-- `app.py._return_to(destination)` routes to the correct scene
+### Spec compilers
 
-**`ReturnDestination`** enum (`game/simulation/battle_config.py`):
+| Context | Compiler | File |
+|---------|----------|------|
+| Combat Lab | `build_test_battle_spec(scenario, registries)` | [`combat_lab/spec_compiler.py`](../../combat_lab/spec_compiler.py) |
+| Battle Setup | `build_manual_battle_spec(ui_state, registries, ...)` | [`game/ui/screens/battle_setup/spec_compiler.py`](../../game/ui/screens/battle_setup/spec_compiler.py) |
+| Strategy combat | `build_strategy_battle_spec(fleets, ...)` | [`game/strategy/combat/spec_compiler.py`](../../game/strategy/combat/spec_compiler.py) |
+
+Each compiler:
+1. Walks its own domain inputs (TestScenario / BattleSetupState / Fleets).
+2. Emits a `BattleSpec` with the right boundary, formations, modifier stack, telemetry level, and end condition.
+3. Optionally attaches a `PostBattleHook` (strategy attaches `apply_outcome_to_fleets`; Combat Lab and Battle Setup pass None).
+
+### Visual mode (post-PROJ-269 transitional)
+
+`run_battle` is a blocking-headless call — it runs the tick loop to
+completion. Visual battles (Battle Setup → Battle Screen, Combat Lab UI
+visual run) still use a `BattleController` wrapper for per-frame
+ticking. That wrapper is a thin lifecycle holder (configure → add_ships
+→ start → tick-from-game-loop) and no longer dispatches on mode. The
+remaining `BattleController` will be deleted when Task 6.9's UI
+visual-mode migration lands a non-blocking `run_battle` driver.
+
+**`BattleConfig`** (post-PROJ-269 reshape) is a thin operational-options
+bag for the visual-mode controller — `seed`, `end_condition`,
+`absolute_max_ticks`, `headless`, `start_paused`, `enable_logging`,
+`allow_retreat`, `allow_reinforcements`, `return_destination`,
+`show_results`, `test_scenario`, `map_bounds`. The `BattleMode` enum
++ `BattleModeHandler` strategy hierarchy + `BattleConfig.mode` field +
+`team_modifiers` / `global_modifiers` / `environmental_effects` /
+`source_fleets` / `per_tick_callback` fields are all GONE — variance
+moved onto `BattleSpec`.
+
+**`ReturnDestination`** (in `battle_config.py`) is retained for the
+post-battle UI flow:
 - `BATTLE_SETUP` — return to battle setup screen
 - `TEST_LAB` — return to Combat Lab
 - `STRATEGY` — return to strategy map
-
-### BattleConfig (`game/simulation/battle_config.py`)
-
-Data-only configuration. The `BattleMode` enum is a label for logging, not a behavior switch.
-All behavior differences are expressed through config fields.
-
-Key fields: `mode`, `seed`, `end_condition`, `return_destination`, `show_results`,
-`headless`, `start_paused`, `allow_retreat`, `allow_reinforcements`, `per_tick_callback`.
 
 ### BattleService (Low-Level Abstraction)
 
@@ -404,34 +425,22 @@ with per-ship HP bars, weapon accuracy tables, and team summaries.
 
 ---
 
-## 2. Battle Modes
+## 2. Battle Modes — REMOVED in PROJ-269 Phase 6
 
-**File:** `game/simulation/combat/battle_mode_handler.py`
+The `BattleModeHandler` Strategy pattern (4 concrete handlers
+dispatched via `get_handler_for_mode(BattleMode)`) was deleted in
+PROJ-269 Phase 6. Variance now lives on `BattleSpec` fields:
 
-Strategy pattern with `BattleModeHandler` ABC and 4 concrete implementations.
-Factory function: `get_handler_for_mode(BattleMode) -> BattleModeHandler`.
+| Old mode trait | New `BattleSpec` field / mechanism |
+|----------------|-----------------------------------|
+| `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
+| `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
+| `should_clone_ships` | Caller supplies pre-cloned ships in their `ship_builder` |
+| `is_headless_default` | `run_battle(spec, headless=...)` kwarg |
+| `apply_results` | `BattleSpec.post_battle_hook` (e.g. `apply_outcome_to_fleets`) |
 
-### BattleModeHandler ABC
-
-Abstract methods:
-- `configure(controller, config)` -- mode-specific setup
-- `can_retreat()` -- whether ships can flee
-- `can_reinforce()` -- whether mid-battle additions allowed
-- `should_clone_ships()` -- whether ships need deep-cloning for isolation
-- `is_headless_default()` -- visual vs headless default
-- `apply_results(controller, results)` -- post-battle fleet effects
-
-### Concrete Modes
-
-| Mode | Headless | Retreat | Reinforce | Clone | Fleet Effects |
-|------|----------|---------|-----------|-------|---------------|
-| `ManualBattleModeHandler` | No | No | No | No | None |
-| `TestBattleModeHandler` | Yes | No | No | No | None |
-| `StrategyBattleModeHandler` | Yes | Yes | Yes | No | Via ConflictResolutionEngine |
-| `HypotheticalBattleModeHandler` | Yes | No | No | Yes | None (isolated) |
-
-Strategy mode stores `source_fleets` from config. Fleet updates are handled by
-the strategy layer's `ConflictResolutionEngine`, not by apply_results().
+See [`Projects/active_projects/PROJ-269/decisions.md`](../../Projects/active_projects/PROJ-269/decisions.md)
+for the full rationale.
 
 ---
 

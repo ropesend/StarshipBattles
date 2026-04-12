@@ -30,9 +30,12 @@ class TestRunVisual:
         sample_scenario_info,
         mock_test_scenario
     ):
-        """Test successful visual test execution."""
-        from game.simulation.battle_config import BattleMode
+        """Test successful visual test execution.
 
+        PROJ-269 Phase 6: dropped the `controller.config.mode == TEST`
+        assertion since BattleMode is gone — `start_paused` and
+        `test_scenario` carry the same intent.
+        """
         service = TestExecutionService()
 
         # Mock scenario class to return test scenario instance
@@ -44,12 +47,15 @@ class TestRunVisual:
         success = service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
         assert success is True
-        # Scenario setup is called with the controller's engine, not the mock screen engine
-        mock_test_scenario.setup.assert_called_once()
+        # PROJ-269 Phase 6: the spec-compiled visual path calls
+        # `scenario.to_spec()` + `wire_ships()` + `custom_setup()`, NOT
+        # `scenario.setup()`. Assert the new contract.
+        mock_test_scenario.to_spec.assert_called_once()
+        mock_test_scenario.wire_ships.assert_called_once()
+        mock_test_scenario.custom_setup.assert_called_once()
         # start_battle should be called with a BattleController
         mock_battle_screen.start_battle.assert_called_once()
         controller = mock_battle_screen.start_battle.call_args[0][0]
-        assert controller.config.mode == BattleMode.TEST
         assert controller.config.start_paused is True
         assert controller.config.test_scenario is mock_test_scenario
 

@@ -193,6 +193,18 @@ class TestBatchSkipTest:
         # Make verify return True
         mock_scenario.verify.return_value = True
 
+        # PROJ-269 Phase 6: configure empty-teams spec so the run_battle
+        # path short-circuits cleanly.
+        empty_spec = Mock()
+        empty_spec.seed = 42
+        empty_spec.teams = ()
+        empty_spec.boundary = None
+        empty_spec.modifier_stack = Mock()
+        empty_spec.end_condition = Mock()
+        empty_spec.absolute_max_ticks = 100
+        mock_scenario.to_spec.return_value = empty_spec
+        mock_scenario._run_validation.return_value = Mock(passed=True)
+
         mock_cls = Mock(return_value=mock_scenario)
 
         metadata = Mock()
@@ -210,10 +222,16 @@ class TestBatchSkipTest:
         mock_engine.is_battle_over.return_value = False
 
         output_log = []
+        # PROJ-269 Phase 6: supply a controller mock with a concrete
+        # seed so the run_battle path can do `replace(spec, seed=...)`
+        # without stumbling over Mock-valued seeds.
+        ctrl = Mock()
+        ctrl.ui_state.get_effective_seed.return_value = 42
+        ctrl.ui_state.get_seed_mode.return_value = "metadata"
         executor = TestLabExecutor(
             registry=mock_registry,
             test_history=Mock(),
-            controller=Mock(),
+            controller=ctrl,
             render_progress=lambda t, s, d: None,
             draw_and_flip=lambda: None,
             get_engine=lambda: mock_engine,
@@ -236,9 +254,10 @@ class TestBatchSkipTest:
                 with patch('game.ui.screens.test_lab.test_executor.pygame'):
                     executor.run_next_batch()
 
-        # For non-skipped scenarios, setup and update should be called
-        mock_scenario.setup.assert_called_once()
-        assert mock_engine.update.call_count > 0
+        # PROJ-269 Phase 6: for non-skipped scenarios, the run_battle
+        # path calls `to_spec()` → `before_run_battle()` → run_battle.
+        mock_scenario.to_spec.assert_called_once()
+        mock_scenario.before_run_battle.assert_called_once()
 
     def test_headless_skips_skip_test_scenario(self):
         """run_headless should also skip scenarios with skip_test=True."""
@@ -292,9 +311,12 @@ class TestBatchSkipTest:
 
     def test_scenario_without_skip_test_attribute_runs_normally(self):
         """Scenarios that don't define skip_test at all should run normally."""
+        # PROJ-269 Phase 6: spec includes the new spec-compiler surface.
         mock_scenario = Mock(spec=[
             'results', 'max_ticks', 'passed', 'metadata', 'name',
             'setup', 'update', 'verify', '_run_validation', '_override_seed',
+            '_effective_seed', '_load_ship',
+            'to_spec', 'before_run_battle', 'wire_ships', 'custom_setup',
         ])
         mock_scenario.results = {}
         mock_scenario.max_ticks = 10
@@ -306,6 +328,16 @@ class TestBatchSkipTest:
         mock_scenario.metadata.seed = 42
         mock_scenario.metadata.name = "No Skip Attr"
         mock_scenario.name = "No Skip Attr"
+
+        # PROJ-269 Phase 6: empty-teams spec → short-circuit via run_battle.
+        empty_spec = Mock()
+        empty_spec.seed = 42
+        empty_spec.teams = ()
+        empty_spec.boundary = None
+        empty_spec.modifier_stack = Mock()
+        empty_spec.end_condition = Mock()
+        empty_spec.absolute_max_ticks = 100
+        mock_scenario.to_spec.return_value = empty_spec
 
         mock_cls = Mock(return_value=mock_scenario)
 
@@ -349,5 +381,5 @@ class TestBatchSkipTest:
                 with patch('game.ui.screens.test_lab.test_executor.pygame'):
                     executor.run_next_batch()
 
-        # Should still run normally
-        mock_scenario.setup.assert_called_once()
+        # PROJ-269 Phase 6: should still run normally via the spec path.
+        mock_scenario.to_spec.assert_called_once()
