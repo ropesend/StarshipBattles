@@ -49,6 +49,9 @@ dead_code_candidates.txt
 # Corrupt backup files
 *.corrupt
 
+# Per-test-id history shards (session state, not source)
+combat_lab/test_history/
+
 # Legacy test_history.json after per-test-id shard migration
 combat_lab/test_history.json.migrated
 
