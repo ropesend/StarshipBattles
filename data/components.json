@@ -69,7 +69,7 @@
                     }
                 ],
                 "ProjectileWeaponAbility": {
-                    "damage": "=40 - (0.01 * range_to_target)",
+                    "damage": 40,
                     "range": 2400,
                     "reload": 2.0,
                     "projectile_speed": 20000,

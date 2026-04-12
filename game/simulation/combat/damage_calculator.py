@@ -168,6 +168,17 @@ class DamageCalculator:
                 context=context,
             ))
 
+        # HP death check — ship at 0 HP is destroyed and removed from combat
+        ship_hp = getattr(ship, 'hp', None)
+        if isinstance(ship_hp, (int, float)) and ship_hp <= 0 and ship.is_alive:
+            ship.is_alive = False
+            if event_bus:
+                event_bus.emit(CombatEvent(
+                    event_type=CombatEventType.SHIP_DESTROYED,
+                    target_ship=ship,
+                    context=context,
+                ))
+
     def _damage_layer(
         self,
         ship: 'Ship',

@@ -7,6 +7,12 @@
             "targeting_policy": "standard",
             "movement_policy": "kite_max"
         },
+        "optimal_range": {
+            "name": "Optimal Range",
+            "description": "Stay at mid-range, center of weapons envelope.",
+            "targeting_policy": "standard",
+            "movement_policy": "kite_optimal"
+        },
         "sniper": {
             "name": "Sniper",
             "description": "Long range focus on weak targets.",

@@ -16,7 +16,7 @@ import os
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UIButton, UILabel, UIDropDownMenu
+from pygame_gui.elements import UIPanel, UIButton, UILabel, UIDropDownMenu, UITextEntryLine
 
 from game.core.paths import Paths
 from game.core.json_utils import load_json, save_json
@@ -99,10 +99,21 @@ class FleetBattleSetupScreen:
         self.state = BattleSetupState()
         self.active_side = 0
         self.active_fleet_index = 0
+        self.selected_tf_index = None  # Selected task force index (None = unassigned)
+        self.selected_sq_index = None  # Selected squadron index within selected TF
+        self.selected_ship_index = None  # Selected ship index for strategy editing
         self.available_designs = []
 
         self._ui_manager = None
         self._panels_built = False
+
+        # End condition settings
+        self.tick_limit = 100000
+        self.end_all_destroyed = True
+        self.end_all_derelict = False
+        self.end_mass_ratio = False
+        self.mass_ratio_threshold = 0.10
+
         # Track complex toggle state per side: {(side, scope, design_id): bool}
         self._complex_toggles = {}
 
@@ -282,6 +293,44 @@ class FleetBattleSetupScreen:
             self._sector_complex_btns.append(btn)
             y += 26
 
+        # End conditions section
+        y += 5
+        UILabel(pygame.Rect(10, y, width - 20, 22), "End Conditions:",
+                manager=self._ui_manager, container=panel)
+        y += 25
+
+        # Tick limit
+        UILabel(pygame.Rect(10, y, 60, 22), "Ticks:",
+                manager=self._ui_manager, container=panel)
+        self._tick_limit_entry = UITextEntryLine(
+            pygame.Rect(70, y, width - 80, 24),
+            manager=self._ui_manager, container=panel
+        )
+        self._tick_limit_entry.set_text(str(self.tick_limit))
+        y += 28
+
+        # End mode toggles
+        self._end_destroyed_btn = UIButton(
+            pygame.Rect(10, y, width - 20, 24),
+            f"{'[X]' if self.end_all_destroyed else '[  ]'} All Destroyed",
+            manager=self._ui_manager, container=panel
+        )
+        y += 26
+
+        self._end_derelict_btn = UIButton(
+            pygame.Rect(10, y, width - 20, 24),
+            f"{'[X]' if self.end_all_derelict else '[  ]'} All Derelict/Destroyed",
+            manager=self._ui_manager, container=panel
+        )
+        y += 26
+
+        self._end_mass_btn = UIButton(
+            pygame.Rect(10, y, width - 20, 24),
+            f"{'[X]' if self.end_mass_ratio else '[  ]'} Mass Ratio < {self.mass_ratio_threshold:.0%}",
+            manager=self._ui_manager, container=panel
+        )
+        y += 26
+
     def _build_center_panel(self, x, width, height):
         panel = UIPanel(
             relative_rect=pygame.Rect(x, 0, width, height),
@@ -316,16 +365,33 @@ class FleetBattleSetupScreen:
         )
         y += 32
 
+        # Target indicator — where new ships will go
+        target_desc = "Unassigned (fleet level)"
+        if self.selected_tf_index is not None and self.selected_tf_index < len(fleet.task_forces):
+            tf = fleet.task_forces[self.selected_tf_index]
+            if self.selected_sq_index is not None and self.selected_sq_index < len(tf.squadrons):
+                sq = tf.squadrons[self.selected_sq_index]
+                target_desc = f"SQ: {sq.name} in TF: {tf.name}"
+            else:
+                target_desc = f"TF: {tf.name} (lone ship)"
+
+        UILabel(pygame.Rect(10, y, width - 20, 22),
+                f"Add ships to: {target_desc}",
+                manager=self._ui_manager, container=panel)
+        y += 25
+
         # Task forces section
-        UILabel(pygame.Rect(10, y, width - 20, 22), "Task Forces:",
+        UILabel(pygame.Rect(10, y, width - 20, 22), "Task Forces (click to select target):",
                 manager=self._ui_manager, container=panel)
         y += 25
 
         self._tf_buttons = []
         self._tf_dup_buttons = []
         for ti, tf in enumerate(fleet.task_forces):
-            # Task force header
-            tf_label = f"TF: {tf.name} ({len(tf.all_ships)} ships)"
+            # Task force header — highlight if selected
+            is_tf_selected = (self.selected_tf_index == ti and self.selected_sq_index is None)
+            marker = ">> " if is_tf_selected else "   "
+            tf_label = f"{marker}TF: {tf.name} ({len(tf.all_ships)} ships)"
             btn = UIButton(
                 pygame.Rect(10, y, width - 90, 26), tf_label,
                 manager=self._ui_manager, container=panel
@@ -350,7 +416,9 @@ class FleetBattleSetupScreen:
 
             # Show squadrons within TF
             for si, sq in enumerate(tf.squadrons):
-                sq_label = f"  SQ: {sq.name} ({len(sq.all_ships)} ships)"
+                is_sq_selected = (self.selected_tf_index == ti and self.selected_sq_index == si)
+                sq_marker = ">>" if is_sq_selected else "  "
+                sq_label = f"{sq_marker} SQ: {sq.name} ({len(sq.all_ships)} ships)"
                 sq_btn = UIButton(
                     pygame.Rect(20, y, width - 110, 24), sq_label,
                     manager=self._ui_manager, container=panel
@@ -393,6 +461,9 @@ class FleetBattleSetupScreen:
         )
         y += 32
 
+        # === Selected item policy controls ===
+        y = self._build_policy_controls(panel, y, width, fleet)
+
         # Unassigned ships (in fleet but not in any task force)
         unassigned = fleet.get_unassigned_ships()
         UILabel(pygame.Rect(10, y, width - 20, 22),
@@ -403,9 +474,11 @@ class FleetBattleSetupScreen:
         self._ship_buttons = []
         for i, ship in enumerate(fleet.ships):
             hull = ship.design_data.get('ship_class', '?')
+            is_selected = (self.selected_ship_index == i)
+            marker = "> " if is_selected else "  "
             btn = UIButton(
                 pygame.Rect(10, y, width - 80, 26),
-                f"{ship.name} ({hull})",
+                f"{marker}{ship.name} ({hull})",
                 manager=self._ui_manager, container=panel
             )
             btn._ship_index = i
@@ -418,6 +491,97 @@ class FleetBattleSetupScreen:
 
             self._ship_buttons.append((btn, remove_btn))
             y += 28
+
+            # Show strategy dropdown for selected ship
+            if is_selected:
+                UILabel(pygame.Rect(20, y, 60, 22), "AI:",
+                        manager=self._ui_manager, container=panel)
+                from game.core.strategy_metadata import get_default_strategy_metadata_service
+                from game.core.string_utils import display_name
+                strategies = get_default_strategy_metadata_service().strategies
+                ai_options = [strat.get('name', display_name(sid)) for sid, strat in strategies.items()]
+                if not ai_options:
+                    ai_options = ['Standard Ranged']
+
+                current_strategy = ship.design_data.get('ai_strategy', 'standard_ranged')
+                current_display = None
+                for sid, strat in strategies.items():
+                    if sid == current_strategy:
+                        current_display = strat.get('name', display_name(sid))
+                        break
+                if current_display is None or current_display not in ai_options:
+                    current_display = ai_options[0]
+
+                self._ship_strategy_dropdown = UIDropDownMenu(
+                    ai_options, current_display,
+                    pygame.Rect(80, y, width - 90, 24),
+                    manager=self._ui_manager, container=panel
+                )
+                self._ship_strategy_dropdown._strategy_ship_index = i
+                y += 28
+
+    def _build_policy_controls(self, panel, y, width, fleet):
+        """Build policy dropdowns for the selected TF, SQ, or ship."""
+        self._targeting_dropdown = None
+        self._movement_dropdown = None
+        self._ship_strategy_dropdown = None
+
+        selected_node = None
+        label = ""
+
+        if self.selected_tf_index is not None and self.selected_tf_index < len(fleet.task_forces):
+            tf = fleet.task_forces[self.selected_tf_index]
+            if self.selected_sq_index is not None and self.selected_sq_index < len(tf.squadrons):
+                selected_node = tf.squadrons[self.selected_sq_index]
+                label = f"Squadron: {selected_node.name}"
+            else:
+                selected_node = tf
+                label = f"Task Force: {tf.name}"
+
+        if selected_node is not None:
+            UILabel(pygame.Rect(10, y, width - 20, 22), f"Policies for {label}:",
+                    manager=self._ui_manager, container=panel)
+            y += 25
+
+            # Targeting policy
+            UILabel(pygame.Rect(10, y, 70, 22), "Target:",
+                    manager=self._ui_manager, container=panel)
+            tgt_names = ["(inherit)"] + [name for _, name in _TARGETING_OPTIONS]
+            current_tgt = "(inherit)"
+            if selected_node.policy.targeting:
+                current_tgt = next(
+                    (n for tid, n in _TARGETING_OPTIONS if tid == selected_node.policy.targeting),
+                    "(inherit)"
+                )
+            self._targeting_dropdown = UIDropDownMenu(
+                tgt_names, current_tgt,
+                pygame.Rect(80, y, width - 90, 24),
+                manager=self._ui_manager, container=panel
+            )
+            y += 28
+
+            # Movement policy
+            UILabel(pygame.Rect(10, y, 70, 22), "Move:",
+                    manager=self._ui_manager, container=panel)
+            mov_names = ["(inherit)"] + [name for _, name in _MOVEMENT_OPTIONS]
+            current_mov = "(inherit)"
+            if selected_node.policy.movement:
+                current_mov = next(
+                    (n for mid, n in _MOVEMENT_OPTIONS if mid == selected_node.policy.movement),
+                    "(inherit)"
+                )
+            self._movement_dropdown = UIDropDownMenu(
+                mov_names, current_mov,
+                pygame.Rect(80, y, width - 90, 24),
+                manager=self._ui_manager, container=panel
+            )
+            y += 28
+
+        # Per-ship AI strategy for selected ship
+        # (shown for unassigned ships when clicked in the ship list)
+
+        y += 5
+        return y
 
     def _build_right_panel(self, x, width, height):
         panel = UIPanel(
@@ -477,6 +641,14 @@ class FleetBattleSetupScreen:
         # Fleet selection
         if hasattr(element, '_fleet_index'):
             self.active_fleet_index = element._fleet_index
+            self.selected_tf_index = None
+            self.selected_sq_index = None
+            self._rebuild_ui()
+            return
+
+        # Ship selection (click to show strategy dropdown)
+        if hasattr(element, '_ship_index') and not hasattr(element, '_remove_ship_index'):
+            self.selected_ship_index = element._ship_index
             self._rebuild_ui()
             return
 
@@ -496,6 +668,22 @@ class FleetBattleSetupScreen:
             self._complex_toggles[key] = not self._complex_toggles.get(key, False)
             self._rebuild_ui()
             return
+
+        # Task force selection (click TF to set as target for new ships)
+        if hasattr(element, '_tf_index'):
+            self.selected_tf_index = element._tf_index
+            self.selected_sq_index = None  # Select TF level (lone ships)
+            self._rebuild_ui()
+            return
+
+        # Squadron selection (click SQ to set as target for new ships)
+        if hasattr(element, '_sq_tf_index') and hasattr(element, '_sq_index'):
+            # Only handle if it's NOT a dup or del button
+            if not hasattr(element, '_dup_sq_tf_index') and not hasattr(element, '_del_sq_tf_index'):
+                self.selected_tf_index = element._sq_tf_index
+                self.selected_sq_index = element._sq_index
+                self._rebuild_ui()
+                return
 
         # Task force duplication
         if hasattr(element, '_dup_tf_index'):
@@ -543,6 +731,15 @@ class FleetBattleSetupScreen:
             self._add_task_force()
         elif hasattr(self, '_add_sq_btn') and element == self._add_sq_btn:
             self._add_squadron()
+        elif hasattr(self, '_end_destroyed_btn') and element == self._end_destroyed_btn:
+            self.end_all_destroyed = not self.end_all_destroyed
+            self._rebuild_ui()
+        elif hasattr(self, '_end_derelict_btn') and element == self._end_derelict_btn:
+            self.end_all_derelict = not self.end_all_derelict
+            self._rebuild_ui()
+        elif hasattr(self, '_end_mass_btn') and element == self._end_mass_btn:
+            self.end_mass_ratio = not self.end_mass_ratio
+            self._rebuild_ui()
 
     def _handle_dropdown(self, event):
         if event.ui_element == self._side_dropdown:
@@ -551,6 +748,56 @@ class FleetBattleSetupScreen:
             self._rebuild_ui()
         elif hasattr(self, '_fleet_role_dropdown') and event.ui_element == self._fleet_role_dropdown:
             self._set_fleet_battle_role(event.text)
+        elif self._targeting_dropdown and event.ui_element == self._targeting_dropdown:
+            self._set_selected_policy("targeting", event.text)
+        elif self._movement_dropdown and event.ui_element == self._movement_dropdown:
+            self._set_selected_policy("movement", event.text)
+        elif (self._ship_strategy_dropdown and
+              event.ui_element == self._ship_strategy_dropdown):
+            self._set_ship_strategy(event.text)
+
+    def _set_ship_strategy(self, display_name: str):
+        """Set AI strategy on the selected ship."""
+        fleet = self._get_active_fleet()
+        if not fleet or self.selected_ship_index is None:
+            return
+        if self.selected_ship_index >= len(fleet.ships):
+            return
+
+        ship = fleet.ships[self.selected_ship_index]
+
+        from game.core.strategy_metadata import get_default_strategy_metadata_service
+        service = get_default_strategy_metadata_service()
+        for strategy_id, strat in service.strategies.items():
+            if strat.get('name', '') == display_name:
+                ship.design_data['ai_strategy'] = strategy_id
+                break
+
+    def _set_selected_policy(self, axis: str, display_name: str):
+        """Set a policy axis on the selected TF or SQ."""
+        fleet = self._get_active_fleet()
+        if not fleet:
+            return
+
+        selected_node = None
+        if self.selected_tf_index is not None and self.selected_tf_index < len(fleet.task_forces):
+            tf = fleet.task_forces[self.selected_tf_index]
+            if self.selected_sq_index is not None and self.selected_sq_index < len(tf.squadrons):
+                selected_node = tf.squadrons[self.selected_sq_index]
+            else:
+                selected_node = tf
+
+        if not selected_node:
+            return
+
+        # Map display name to policy ID
+        value = None  # "(inherit)" maps to None
+        if axis == "targeting":
+            value = next((tid for tid, n in _TARGETING_OPTIONS if n == display_name), None)
+        elif axis == "movement":
+            value = next((mid for mid, n in _MOVEMENT_OPTIONS if n == display_name), None)
+
+        setattr(selected_node.policy, axis, value)
 
     # === Task Force / Squadron Management ===
 
@@ -724,7 +971,19 @@ class FleetBattleSetupScreen:
         design_data = self.available_designs[design_index]
         registries = _get_registries()
 
-        self.state.add_ship_from_design(fleet, design_data, registries=registries)
+        # Create the ship instance and add to fleet master list
+        ship = self.state.add_ship_from_design(fleet, design_data, registries=registries)
+
+        # Also assign to the selected task force/squadron
+        if self.selected_tf_index is not None and self.selected_tf_index < len(fleet.task_forces):
+            tf = fleet.task_forces[self.selected_tf_index]
+            if self.selected_sq_index is not None and self.selected_sq_index < len(tf.squadrons):
+                # Add to selected squadron
+                tf.squadrons[self.selected_sq_index].add_ship(ship)
+            else:
+                # Add as lone ship in the task force
+                tf.add_lone_ship(ship)
+
         self._rebuild_ui()
 
     def _remove_ship(self, ship_index: int):
@@ -794,9 +1053,42 @@ class FleetBattleSetupScreen:
             logger.warning("Cannot start battle: both sides need ships")
             return
 
+        # Build end condition from UI settings
+        end_condition = self._build_end_condition()
+
         if self.scene_callback:
             action = "start_headless" if headless else "start_battle"
-            self.scene_callback(action, team0=team0_ships, team1=team1_ships)
+            self.scene_callback(
+                action, team0=team0_ships, team1=team1_ships,
+                end_condition=end_condition,
+            )
+
+    def _build_end_condition(self):
+        """Build composite end condition from UI settings."""
+        from game.simulation.systems.battle_end_conditions import (
+            TickLimitCondition, TeamEliminatedCondition,
+            MassRatioCondition, AnyCondition,
+        )
+
+        # Read tick limit from text entry
+        try:
+            tick_text = self._tick_limit_entry.get_text() if hasattr(self, '_tick_limit_entry') else str(self.tick_limit)
+            self.tick_limit = max(100, int(tick_text))
+        except (ValueError, AttributeError):
+            pass  # Keep current value
+
+        conditions = [TickLimitCondition(self.tick_limit)]
+
+        if self.end_all_destroyed:
+            conditions.append(TeamEliminatedCondition(check_derelict=False))
+
+        if self.end_all_derelict:
+            conditions.append(TeamEliminatedCondition(check_derelict=True))
+
+        if self.end_mass_ratio:
+            conditions.append(MassRatioCondition(threshold=self.mass_ratio_threshold))
+
+        return AnyCondition(conditions)
 
     def _apply_complex_modifiers(self, ships, side_id: int):
         """Apply toggled complex effects to ships."""

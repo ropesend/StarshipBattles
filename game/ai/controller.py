@@ -110,6 +110,14 @@ class AIController:
         val = policy.get('engage_distance', 'max_range')
         if val == 'max_range':
             return 1.0
+        elif val == 'optimal_range':
+            return 0.5
+        elif val == 'medium_range':
+            return 0.6
+        elif val == 'short_range':
+            return 0.3
+        elif val == 'point_blank':
+            return 0.1
         elif val == 'ram':
             return 0.0
         elif isinstance(val, (int, float)):

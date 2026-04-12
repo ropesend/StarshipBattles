@@ -58,8 +58,8 @@
     {
       "class_name": "ProjectileWeaponAbility",
       "tags": [],
-      "damage": 0.0,
-      "base_damage": 0.0,
+      "damage": 40.0,
+      "base_damage": 40.0,
       "range": 4800.0,
       "base_range": 2400.0,
       "reload_time": 2.0,

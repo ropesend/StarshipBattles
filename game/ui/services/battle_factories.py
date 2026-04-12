@@ -103,6 +103,7 @@ def create_manual_battle(
     team1_ships: List['Ship'],
     seed: Optional[int] = None,
     headless: bool = False,
+    end_condition: Optional[Any] = None,
 ) -> BattleController:
     """
     Create a controller for a manual battle (Battle Setup screen).
@@ -112,15 +113,20 @@ def create_manual_battle(
         team1_ships: Ships for team 1
         seed: Random seed for determinism
         headless: Run without rendering
+        end_condition: Optional custom end condition (IEndCondition)
 
     Returns:
         Configured and started BattleController
     """
-    config = BattleConfig(
+    config_kwargs = dict(
         mode=BattleMode.MANUAL,
         seed=seed,
         headless=headless,
     )
+    if end_condition is not None:
+        config_kwargs['end_condition'] = end_condition
+
+    config = BattleConfig(**config_kwargs)
 
     return create_started_battle_controller(config, team0_ships, team1_ships)
 

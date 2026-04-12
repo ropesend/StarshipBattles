@@ -125,6 +125,9 @@ class CollisionSystem:
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
 
                     if self.rng.random() < chance:
+                        # Record confirmed hit on the firing component
+                        beam_comp.shots_hit += 1
+
                         # Evaluate damage at hit distance using ability
                         damage = beam_ab.get_damage(hit_dist)
                         # Handle both Ship targets (have combat_engine) and

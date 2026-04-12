@@ -540,12 +540,14 @@ class Game:
         self.race_setup_window = None
         logger.debug("Race setup cancelled")
 
-    def start_battle(self, team0_ships, team1_ships, headless=False):
+    def start_battle(self, team0_ships, team1_ships, headless=False, end_condition=None):
         """Start a battle with the given ships using unified controller flow."""
         from game.ui.services.battle_factories import create_manual_battle
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
-        controller = create_manual_battle(team0_ships, team1_ships, headless=headless)
+        controller = create_manual_battle(
+            team0_ships, team1_ships, headless=headless, end_condition=end_condition
+        )
         self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)
 
@@ -763,14 +765,15 @@ class Game:
 
     def _handle_battle_setup_action(self, action: str, **kwargs):
         """Handle scene actions from BattleSetupScreen."""
+        end_condition = kwargs.get("end_condition")
         if action == "start_battle":
-            self.start_battle(kwargs["team0"], kwargs["team1"])
+            self.start_battle(kwargs["team0"], kwargs["team1"], end_condition=end_condition)
         elif action == "start_headless":
             team0, team1 = kwargs["team0"], kwargs["team1"]
             logger.info(f"Team 1: {len(team0)} ships ({sum(s.max_hp for s in team0):.0f} total HP)")
             logger.info(f"Team 2: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
             logger.info("Running simulation...")
-            self.start_battle(team0, team1, headless=True)
+            self.start_battle(team0, team1, headless=True, end_condition=end_condition)
         elif action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
 

@@ -58,8 +58,8 @@
     {
       "class_name": "BeamWeaponAbility",
       "tags": [],
-      "damage": 0.0,
-      "base_damage": 0.0,
+      "damage": 15.0,
+      "base_damage": 15.0,
       "range": 2000.0,
       "base_range": 2000.0,
       "reload_time": 0.2,

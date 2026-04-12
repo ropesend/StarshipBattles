@@ -171,13 +171,10 @@ class WeaponAbility(Ability):
         else:
             self.firing_arc = self._base_firing_arc + self.get_effective_stat('arc_add', 0.0)
 
-        # Sync facing_angle from properties (if not already overridden)
-        # IComponent.stats is guaranteed to exist by the protocol
+        # Sync facing_angle from modifier properties
         properties = self.component.stats.get('properties', {})
         if 'facing_angle' in properties:
-            # Check if component-level facing_angle was set (overrides properties)
-            if getattr(self.component, 'facing_angle', None) is None:
-                self.facing_angle = properties['facing_angle']
+            self.facing_angle = properties['facing_angle']
 
     def update(self) -> bool:
         if self.cooldown_timer > 0:
@@ -213,7 +210,9 @@ class WeaponAbility(Ability):
         """
         if self.damage_formula:
             context = {'range_to_target': range_to_target}
-            return max(0.0, FormulaEvaluator.safe_evaluate(self.damage_formula, context))
+            base = max(0.0, FormulaEvaluator.safe_evaluate(self.damage_formula, context))
+            # Apply damage modifier (size mount, etc.) to the formula result
+            return base * self.get_effective_stat('damage_mult', 1.0)
         return self.damage
 
     def get_ui_rows(self):

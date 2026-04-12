@@ -261,10 +261,19 @@ class ComponentStatsCalculator:
             abilities: Dict of ability definitions to update in-place
             context: Context for formula evaluation
         """
+        # Runtime variables that are only available during combat, not at load time.
+        # Formulas referencing these must be preserved as strings for the ability
+        # to evaluate at runtime (e.g., damage formulas with range_to_target).
+        _RUNTIME_VARIABLES = {'range_to_target', 'target_mass', 'target_speed'}
+
         def evaluate_recursive(obj, ctx):
             """Recursively evaluate formulas in nested structures."""
             if isinstance(obj, str) and obj.startswith("="):
-                return FormulaEvaluator.safe_evaluate(obj[1:], ctx)
+                # Preserve formulas that reference runtime variables
+                formula_str = obj[1:]
+                if any(var in formula_str for var in _RUNTIME_VARIABLES):
+                    return obj  # Keep as formula string for runtime evaluation
+                return FormulaEvaluator.safe_evaluate(formula_str, ctx)
             elif isinstance(obj, dict):
                 for key, sub_val in obj.items():
                     obj[key] = evaluate_recursive(sub_val, ctx)

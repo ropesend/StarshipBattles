@@ -367,11 +367,10 @@ class TestWeaponFormulaIntegration:
         weapon = WeaponAbility(component_with_modifiers, weapon_data)
         weapon.recalculate()
 
-        # Note: The modifier applies to the base damage (evaluated at range 0)
-        # but get_damage() returns the formula result
+        # The modifier applies to both static damage and formula-based get_damage()
         assert weapon.damage == pytest.approx(200.0, rel=1e-6)  # 100 * 2.0
-        # get_damage still uses formula directly
-        assert weapon.get_damage(0) == 100.0
+        # get_damage() now also applies damage_mult to the formula result
+        assert weapon.get_damage(0) == pytest.approx(200.0, rel=1e-6)  # 100 * 2.0
 
     def test_formula_with_complex_math(self, component_with_modifiers):
         """Formulas with complex math should evaluate correctly."""

@@ -37,6 +37,12 @@
             "retreat_hp_threshold": 0.0,
             "avoid_collisions": false
         },
+        "kite_optimal": {
+            "behavior": "kite",
+            "engage_distance": "optimal_range",
+            "retreat_hp_threshold": 0.15,
+            "avoid_collisions": true
+        },
         "hold_position": {
             "behavior": "kite",
             "engage_distance": "max_range",

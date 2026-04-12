@@ -219,9 +219,7 @@ class WeaponFiringSystem:
         aim_pos, aim_vec = self._targeting.calculate_firing_solution(ship, comp, target)
 
         if comp.has_ability('BeamWeaponAbility'):
-            # Beam attack - instant hit (shots_hit initialized in Component.__init__)
-            comp.shots_hit += 1
-
+            # Beam attack — shots_hit tracked in collision.py after accuracy roll
             attacks.append({
                 'type': AttackType.BEAM,
                 'source': ship,

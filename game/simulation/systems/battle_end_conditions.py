@@ -339,6 +339,50 @@ class NeverCondition:
         return "NeverCondition()"
 
 
+class MassRatioCondition:
+    """End battle when one side's fighting mass drops below a threshold ratio.
+
+    Fighting mass excludes dead and derelict ships. Battle ends when:
+    min(team0_mass, team1_mass) / max(team0_mass, team1_mass) < threshold
+
+    Args:
+        threshold: Ratio below which battle ends (default 0.10 = 10%).
+    """
+
+    def __init__(self, threshold: float = 0.10):
+        self.threshold = threshold
+
+    def is_met(self, ships: List['Ship'], tick: int) -> bool:
+        team0_mass = sum(
+            s.mass for s in ships
+            if s.team_id == 0 and s.is_alive and not s.is_derelict
+        )
+        team1_mass = sum(
+            s.mass for s in ships
+            if s.team_id == 1 and s.is_alive and not s.is_derelict
+        )
+
+        if team0_mass <= 0 or team1_mass <= 0:
+            return True
+
+        ratio = min(team0_mass, team1_mass) / max(team0_mass, team1_mass)
+        return ratio < self.threshold
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"type": "mass_ratio", "threshold": self.threshold}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'MassRatioCondition':
+        return cls(threshold=data.get("threshold", 0.10))
+
+    @property
+    def description(self) -> str:
+        return f"End when mass ratio < {self.threshold:.0%}"
+
+    def __repr__(self) -> str:
+        return f"MassRatioCondition(threshold={self.threshold})"
+
+
 # ============================================================================
 # Composite Conditions
 # ============================================================================
@@ -416,6 +460,7 @@ _CONDITION_TYPES: Dict[str, type] = {
     "escape": EscapeCondition,
     "ship_destroyed": ShipDestroyedCondition,
     "never": NeverCondition,
+    "mass_ratio": MassRatioCondition,
     "any": AnyCondition,
     "all": AllCondition,
 }

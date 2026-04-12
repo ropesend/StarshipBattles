@@ -937,8 +937,8 @@ class TestWeaponShotTracking:
 
         assert weapon.shots_fired == 1
 
-    def test_beam_shots_hit_incremented(self):
-        """Beam weapon's shots_hit is incremented (instant hit)."""
+    def test_beam_shots_hit_not_incremented_at_fire_time(self):
+        """Beam weapon's shots_hit is NOT incremented at fire time (tracked in collision.py)."""
         from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
         from game.simulation.combat.targeting_system import TargetingSystem
 
@@ -985,7 +985,8 @@ class TestWeaponShotTracking:
 
         system.fire_weapons(ship)
 
-        assert weapon.shots_hit == 1
+        # shots_hit is NOT incremented at fire time — only after accuracy check in collision.py
+        assert weapon.shots_hit == 0
 
 
 class TestHangarLaunchEdgeCases:
