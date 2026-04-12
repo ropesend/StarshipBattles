@@ -50,14 +50,24 @@ outcome = run_battle(
 )
 ```
 
-Phase 1 hook not fully wired: `modifier_stack`. It round-trips
-through the spec/outcome and each compiler builds entries for relevant
-modifiers (system/sector/empire/species/complexes), but
-`DamageCalculator` does not yet consume the stack — compilers emit
-placeholder effects. A follow-up project will wire real effect
-evaluation through the damage pipeline and the existing two-phase
-aggregator. `boundary` is fully enforced as of Phase 3;
-`telemetry_level` is fully wired as of Phase 5 (see below).
+All four Phase-1 hooks are wired into the engine:
+- `boundary` — fully enforced as of Phase 3 (per-tick + `ExitPolicy`
+  dispatch via `BoundaryEnforcementPhase`)
+- `formation` — fully resolved at compile time as of Phase 4
+- `telemetry_level` — fully wired as of Phase 5 (see below)
+- `modifier_stack` — wired as of Phase 5.5. `run_battle` threads
+  `spec.modifier_stack` onto `BattleEngine.modifier_stack`; at
+  `start_teams`, `FleetAuraManager.initialize(ships, modifier_stack=...)`
+  translates each `ModifierEntry` into an `ExternalModifier` using
+  `entry.effect.stat_key` as the ability name (`ToHitAttackModifier`,
+  `ToHitDefenseModifier`, ...). Entries whose `stat_key == "placeholder"`
+  are silently skipped — compilers emit those as record-of-presence
+  markers for toggles whose real effect mapping hasn't been authored
+  yet. When a compiler wires a real `stat_key`, the aura manager
+  applies it without further engine changes. `HitLogRecorder` also
+  consumes the stack at DETAILED telemetry to populate
+  `HitRecord.modifiers_applied` with the active modifiers (globals +
+  attacker-team entries, placeholders filtered).
 
 ### Telemetry (Phase 5)
 

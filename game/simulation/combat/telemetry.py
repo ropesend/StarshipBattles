@@ -240,16 +240,28 @@ class HitLogRecorder:
         provenance, which is a later refinement).
     """
 
-    def __init__(self, event_bus: "CombatEventBus", *, tick_provider=None):
+    def __init__(
+        self,
+        event_bus: "CombatEventBus",
+        *,
+        tick_provider=None,
+        modifier_stack=None,
+    ):
         """
         Args:
             event_bus: The engine's `CombatEventBus`.
             tick_provider: Callable returning the current tick counter.
                 If None, every HitRecord has `tick=0`. `run_battle`
                 injects `lambda: engine.tick_counter`.
+            modifier_stack: Optional `ModifierStack`. When supplied,
+                each `HitRecord.modifiers_applied` is populated with
+                the modifiers active on the attacker's team + globals.
+                Placeholder-effect entries are filtered out.
+                PROJ-269 Phase 5.5.
         """
         self._hits: Dict[str, List["HitRecord"]] = {}
         self._tick_provider = tick_provider or (lambda: 0)
+        self._modifier_stack = modifier_stack
 
         from game.simulation.combat.combat_events import CombatEventType
 
@@ -274,10 +286,17 @@ class HitLogRecorder:
         attacker_ship_id = ""
         weapon_component_id = ""
         weapon_ability_class = ""
+        attacker_team_id = None
         if ctx is not None:
             attacker = getattr(ctx, "attacker", None)
             if attacker is not None:
                 attacker_ship_id = getattr(attacker, "instance_id", "") or ""
+                t = getattr(attacker, "team_id", None)
+                if t is not None:
+                    try:
+                        attacker_team_id = int(t)
+                    except (TypeError, ValueError):
+                        attacker_team_id = None
             source_weapon = getattr(ctx, "source_weapon", None)
             if source_weapon is not None:
                 weapon_component_id = getattr(source_weapon, "id", "") or ""
@@ -299,9 +318,44 @@ class HitLogRecorder:
             weapon_component_id=weapon_component_id,
             weapon_ability_class=weapon_ability_class,
             damage=float(getattr(event, "damage_amount", 0.0) or 0.0),
-            modifiers_applied=(),
+            modifiers_applied=self._trace_modifiers_for_team(attacker_team_id),
         )
         self._hits.setdefault(instance_id, []).append(record)
+
+    def _trace_modifiers_for_team(self, attacker_team_id) -> Tuple:
+        """Return a tuple of `ModifierApplication` for the active stack
+        entries that apply to this hit:
+          - Always include `stack.global_` entries
+          - Include `stack.per_team[attacker_team_id]` entries when the
+            attacker's team is known
+          - Filter out placeholder effects (stat_key == "placeholder")
+        """
+        stack = self._modifier_stack
+        if stack is None:
+            return ()
+        from game.simulation.battle_outcome import ModifierApplication
+
+        entries: List = []
+        entries.extend(getattr(stack, "global_", ()) or ())
+        if attacker_team_id is not None:
+            per_team = getattr(stack, "per_team", {}) or {}
+            team_entries = per_team.get(attacker_team_id, ())
+            entries.extend(team_entries or ())
+
+        applications: List = []
+        for entry in entries:
+            effect = getattr(entry, "effect", None)
+            if effect is None:
+                continue
+            stat_key = getattr(effect, "stat_key", "") or ""
+            if not stat_key or stat_key == "placeholder":
+                continue
+            applications.append(ModifierApplication(
+                source=str(getattr(entry, "source", "") or ""),
+                effect_name=stat_key,
+                value=float(getattr(effect, "value", 0.0) or 0.0),
+            ))
+        return tuple(applications)
 
     def get_hits(self, instance_id: str) -> Tuple["HitRecord", ...]:
         return tuple(self._hits.get(instance_id, []))

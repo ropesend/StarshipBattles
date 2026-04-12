@@ -176,6 +176,7 @@ class BattleEngine:
         ai_factory: Optional['IAIControllerFactory'] = None,
         tick_phases: Optional['TickPhaseRegistry'] = None,
         boundary: Optional[Any] = None,
+        modifier_stack: Optional[Any] = None,
     ):
         """
         Create a BattleEngine instance.
@@ -244,6 +245,10 @@ class BattleEngine:
         # Retreated ships — removed from self.ships but tracked here so
         # extract_outcome can mark ShipOutcome.status=RETREATED.
         self.retreated_ships: List['Ship'] = []
+
+        # PROJ-269 Phase 5.5: modifier stack applied at engine start via
+        # the FleetAuraManager pipeline. None = no external modifiers.
+        self.modifier_stack = modifier_stack
 
     @property
     def projectiles(self) -> List[Any]:
@@ -334,7 +339,9 @@ class BattleEngine:
 
         for s in self.ships:
             self._initialize_ship(s)
-        self.aura_manager.initialize(self.ships)
+        # PROJ-269 Phase 5.5: thread the engine's modifier_stack (populated
+        # by run_battle from spec) into the aura manager for effect application.
+        self.aura_manager.initialize(self.ships, modifier_stack=self.modifier_stack)
         self.logger.start_session()
         self.logger.log(
             f"Battle started: {sum(len(t) for t in teams.values())} ships "

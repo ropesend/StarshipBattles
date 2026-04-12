@@ -61,8 +61,22 @@ class FleetAuraManager:
         self._providers_dirty: bool = True
         self._last_fingerprint: Optional[tuple] = None
 
-    def initialize(self, ships: List[Any], config: Any = None) -> None:
-        """Scan ships for fleet-scope abilities and load config modifiers."""
+    def initialize(
+        self,
+        ships: List[Any],
+        config: Any = None,
+        *,
+        modifier_stack: Any = None,
+    ) -> None:
+        """Scan ships for fleet-scope abilities and load external modifiers.
+
+        PROJ-269 Phase 5.5: added `modifier_stack` kwarg. When supplied,
+        each `ModifierEntry` in `stack.per_team` / `stack.global_` is
+        translated into an `ExternalModifier` (using the entry's
+        `effect.stat_key` as the `ability_name`). Placeholder entries
+        (stat_key == "placeholder") are silently ignored so Phase-5
+        compilers that emit stub effects don't accidentally boost stats.
+        """
         self._providers.clear()
         self._external.clear()
         self._team_bonuses.clear()
@@ -73,7 +87,7 @@ class FleetAuraManager:
                 continue
             self._scan_ship(ship)
 
-        # Load external modifiers from config
+        # Load external modifiers from config (legacy path)
         if config:
             for team_id, mods in getattr(config, 'team_modifiers', {}).items():
                 for mod in mods:
@@ -91,10 +105,49 @@ class FleetAuraManager:
                     team_id=None,
                 ))
 
+        # PROJ-269 Phase 5.5: translate ModifierStack (if provided) into
+        # ExternalModifier entries. `stat_key == "placeholder"` is the
+        # compiler marker for "we recorded this toggle's presence but
+        # have no real effect mapping yet" — skip those.
+        if modifier_stack is not None:
+            per_team = getattr(modifier_stack, 'per_team', {}) or {}
+            for team_id, entries in per_team.items():
+                for entry in entries or ():
+                    self._append_external_from_entry(entry, team_id=int(team_id))
+            for entry in getattr(modifier_stack, 'global_', ()) or ():
+                self._append_external_from_entry(entry, team_id=None)
+
         self._initialized = True
         self._recalculate(ships)
         self._last_fingerprint = self._get_provider_fingerprint(ships)
         self._providers_dirty = False
+
+    def _append_external_from_entry(
+        self, entry: Any, *, team_id: Optional[int]
+    ) -> None:
+        """Translate a single `ModifierEntry` into an `ExternalModifier`.
+
+        Silently skips entries whose effect has `stat_key == "placeholder"`
+        — those are compiler stubs with no real effect mapping yet.
+        """
+        effect = getattr(entry, 'effect', None)
+        if effect is None:
+            return
+        stat_key = getattr(effect, 'stat_key', '') or ''
+        if not stat_key or stat_key == 'placeholder':
+            return
+        value = float(getattr(effect, 'value', 0.0) or 0.0)
+        source_name = (
+            getattr(entry, 'source', None)
+            or getattr(effect, 'source_modifier_name', '')
+            or 'Unknown'
+        )
+        self._external.append(ExternalModifier(
+            ability_name=stat_key,
+            value=value,
+            source_name=str(source_name),
+            team_id=team_id,
+        ))
 
     def _scan_ship(self, ship: Any) -> None:
         """Find all non-SELF scoped abilities on a ship."""

@@ -152,10 +152,13 @@ def run_battle(
     # `configure` creates the engine via `BattleService.create_battle`,
     # so by this point the engine exists and we can attach the boundary
     # before ships / start.
-    if spec.boundary is not None:
-        engine_for_boundary = controller.service.get_engine()
-        if engine_for_boundary is not None:
-            engine_for_boundary.boundary = spec.boundary
+    engine_for_setup = controller.service.get_engine()
+    if spec.boundary is not None and engine_for_setup is not None:
+        engine_for_setup.boundary = spec.boundary
+    # PROJ-269 Phase 5.5: thread the spec's modifier_stack so the
+    # FleetAuraManager.initialize() call in engine.start() picks it up.
+    if engine_for_setup is not None:
+        engine_for_setup.modifier_stack = spec.modifier_stack
 
     # Materialize + register each ship, preserving spec pose and instance_id.
     for team_spec in spec.teams:
@@ -252,6 +255,7 @@ def _attach_telemetry(engine: "BattleEngine", spec: BattleSpec):
         hit_log_recorder = HitLogRecorder(
             engine.combat_events,
             tick_provider=lambda: engine.tick_counter,
+            modifier_stack=spec.modifier_stack,
         )
 
     return weapon_aggregator, stats_aggregator, hit_log_recorder
