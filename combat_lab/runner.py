@@ -17,6 +17,17 @@ from game.ai.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
 from combat_lab.logging_config import get_logger, setup_combat_lab_logging
 
+# PROJ-269 Phase 1 Task 1.10: feature flag that routes Combat Lab CLI through
+# the unified `run_battle(spec) -> BattleOutcome` entry. Off by default —
+# subsequent phases migrate more call sites until Phase 6 deletes the legacy
+# branch entirely.
+USE_BATTLE_RUNNER: bool = os.environ.get("SB_USE_BATTLE_RUNNER", "0") == "1"
+
+# Importing the Combat Lab spec compiler here ensures the monkey-patch that
+# attaches `TestScenario.to_spec` is always in effect when the runner is
+# loaded — callers don't have to know about that side-effect.
+import combat_lab.spec_compiler  # noqa: F401 (side-effect import)
+
 # Setup logging
 setup_combat_lab_logging()
 logger = get_logger(__name__)
@@ -92,6 +103,11 @@ class TestRunner:
         # 1. Load Data (manages its own unfrozen() scope for clear + hydrate)
         self.load_data_for_scenario(scenario)
 
+        if USE_BATTLE_RUNNER:
+            return self._run_scenario_via_battle_runner(
+                scenario, headless=headless, log_results=log_results
+            )
+
         # 2. Setup Engine
         from game.simulation.systems.battle_engine import BattleLogger
         battle_logger = BattleLogger(enabled=True)
@@ -147,6 +163,174 @@ class TestRunner:
         if log_results:
             self.log_test_execution(scenario, headless)
 
+        return scenario
+
+    # ------------------------------------------------------------------
+    # PROJ-269 Phase 1 Task 1.10: BattleSpec → run_battle smoke path.
+    # ------------------------------------------------------------------
+
+    def _run_scenario_via_battle_runner(
+        self, scenario, *, headless: bool, log_results: bool
+    ):
+        """Run a scenario through `run_battle(spec)` when USE_BATTLE_RUNNER=1.
+
+        Keeps scenario-side semantics (self.attacker / self.target /
+        initial_hp / _run_validation) intact by:
+          1. Calling `scenario.to_spec(registries)` to translate the
+             scenario into a BattleSpec.
+          2. Supplying a ship_builder that calls `scenario._load_ship`
+             and attaches the resulting Ship onto the scenario
+             (`scenario.attacker` / `scenario.target`).
+          3. Capturing the engine via a per-tick callback so
+             `_run_validation(engine)` can run after the battle.
+
+        Falls back to the legacy branch with a logged warning if the
+        scenario's template is not yet supported by the compiler.
+        """
+        from game.simulation.battle_runner import run_battle
+
+        logger.info(
+            f"[USE_BATTLE_RUNNER=1] routing scenario {scenario.name} "
+            f"through run_battle()"
+        )
+        ai_factory = AIControllerFactory()
+
+        # Build the spec (may raise NotImplementedError for unsupported
+        # templates — Phase 1 supports StaticTargetScenario subclasses).
+        try:
+            spec = scenario.to_spec(registries=None)
+        except NotImplementedError as exc:
+            logger.warning(
+                f"to_spec() not supported for {type(scenario).__name__}: "
+                f"{exc}. Falling back to legacy path."
+            )
+            return self._run_scenario_legacy(
+                scenario, headless=headless, log_results=log_results
+            )
+
+        # Also pre-seed the scenario's template-level state that
+        # `_run_validation` reads. StaticTargetScenario sets
+        # self.initial_hp from target HP *in setup()*; mirror that here
+        # since we don't call setup() on the battle_runner path.
+        scenario_ships_by_id = {}
+
+        def ship_builder(ship_spec):
+            """Translate ShipSpec.design_id → scenario._load_ship(file).
+
+            Also mirrors the template-level attribute wiring that
+            `StaticTargetScenario.setup()` performs (movement policies,
+            initial_hp). That way `scenario.custom_setup` + validation
+            have the same state they'd have on the legacy path.
+            """
+            ship = scenario._load_ship(ship_spec.design_id)
+            scenario_ships_by_id[ship_spec.instance_id] = ship
+            if ":attacker" in ship_spec.instance_id:
+                scenario.attacker = ship
+                if getattr(scenario, "force_fire", True):
+                    ship.movement_policy = "test_stationary"
+                else:
+                    ship.movement_policy = "test_do_nothing"
+            elif ":target" in ship_spec.instance_id:
+                scenario.target = ship
+                scenario.initial_hp = ship.hp
+                ship.movement_policy = "test_do_nothing"
+            return ship
+
+        # Capture the engine for validation.
+        engine_ref = {"engine": None}
+
+        def pre_tick_loop(engine):
+            """Runs once after engine.start() and before the first tick.
+            Mirrors `StaticTargetScenario.setup`'s tail (custom_setup hook)."""
+            engine_ref["engine"] = engine
+            scenario.custom_setup(engine)
+
+        def per_tick(engine):
+            # `pre_tick_loop` already set engine_ref, but keep it in sync
+            # in case of reinforcements / teardown swaps in later phases.
+            engine_ref["engine"] = engine
+            scenario.update(engine)
+
+        # Run the unified path.
+        start_time = time.time()
+        try:
+            outcome = run_battle(
+                spec,
+                ai_factory=ai_factory,
+                ship_builder=ship_builder,
+                per_tick_callback=per_tick,
+                pre_tick_loop_callback=pre_tick_loop,
+            )
+        except Exception as e:
+            logger.error(f"Scenario Crash (run_battle): {e}", exc_info=True)
+            scenario.passed = False
+            scenario.results['error'] = str(e)
+            if log_results:
+                self.log_test_execution(scenario, headless)
+            return scenario
+
+        duration = time.time() - start_time
+        engine = engine_ref["engine"]
+        self.engine = engine  # For any external callers reading runner.engine
+
+        # Restore StaticTargetScenario template behavior: target.movement_policy
+        # setup in setup() is skipped on the new path, but that's OK for
+        # Phase 1 smoke runs where the scenario just observes ticks via the
+        # existing AI-driven ships.
+        if engine is None:
+            scenario.passed = False
+            scenario.results['error'] = 'run_battle produced no engine reference'
+            if log_results:
+                self.log_test_execution(scenario, headless)
+            return scenario
+
+        report = scenario._run_validation(engine)
+        scenario.passed = report.passed
+        scenario.results['duration_real'] = duration
+        scenario.results['ticks'] = engine.tick_counter
+        scenario.results['battle_outcome_end_reason'] = outcome.end_reason.value
+
+        status = "PASSED" if scenario.passed else "FAILED"
+        logger.info(f"Result: {status} in {duration:.2f}s (battle_runner path)")
+
+        if log_results:
+            self.log_test_execution(scenario, headless)
+        return scenario
+
+    def _run_scenario_legacy(self, scenario, *, headless, log_results):
+        """Fallback: the legacy path, extracted so the runner branch can
+        reuse it when `USE_BATTLE_RUNNER` is on but the scenario template
+        isn't yet supported by `build_test_battle_spec`."""
+        from game.simulation.systems.battle_engine import BattleLogger
+        battle_logger = BattleLogger(enabled=True)
+        ai_factory = AIControllerFactory()
+        self.engine = BattleEngine(logger=battle_logger, ai_factory=ai_factory)
+        scenario.setup(self.engine)
+        logger.info(f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})")
+        start_time = time.time()
+        try:
+            for tick in range(scenario.max_ticks):
+                self.engine.update()
+                scenario.update(self.engine)
+                if self.engine.is_battle_over():
+                    logger.info(f"Battle ended at tick {tick}")
+                    break
+        except Exception as e:
+            logger.error(f"Scenario Crash: {e}", exc_info=True)
+            scenario.passed = False
+            scenario.results['error'] = str(e)
+            if log_results:
+                self.log_test_execution(scenario, headless)
+            return scenario
+        duration = time.time() - start_time
+        report = scenario._run_validation(self.engine)
+        scenario.passed = report.passed
+        scenario.results['duration_real'] = duration
+        scenario.results['ticks'] = self.engine.tick_counter
+        status = "PASSED" if scenario.passed else "FAILED"
+        logger.info(f"Result: {status} in {duration:.2f}s (legacy path)")
+        if log_results:
+            self.log_test_execution(scenario, headless)
         return scenario
 
     def log_test_execution(self, scenario, headless):

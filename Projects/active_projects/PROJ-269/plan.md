@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. DTO boundary + spec compilers | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. DTO boundary + spec compilers | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Component HP persistence | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Boundary + N-team engine support | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Formation system | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,11 +22,42 @@
 
 ## Current State
 **Last Updated:** 2026-04-12
-**Active Phase:** Planning complete — awaiting user approval to begin Phase 1
-**Last Action:** Project plan authored following architectural review + user-answered design questions
-**Next Action:** User reviews plan / design / decisions / phase checklists. On approval, begin Phase 1 Task 1.1.
+**Active Phase:** Phase 1 Complete — Phase 2 Task 2.1 next
+**Last Action:** Phase 1 complete. All 11 tasks checked off. `validate_phase.py PROJ-269 1` PASSED.
+
+**Phase 1 deliverables shipped:**
+- DTOs in simulation layer: `BattleSpec`, `BattleOutcome` + nested types + enums
+- `BoundaryRegion` protocol + 3 concrete types (Rect/Circle/Unbounded) + `ExitPolicy`
+- `ModifierStack` + `ModifierEntry` (source-tagged, wraps existing `ModifierEffect`)
+- `FormationShape` enum + `FormationSpec` (resolver lands Phase 4)
+- `TelemetryLevel` IntEnum (subscribers land Phase 5)
+- `run_battle(spec, *, ai_factory, ship_builder, headless=True, per_tick_callback=None, pre_tick_loop_callback=None) -> BattleOutcome` engine entry
+- 3 spec compilers:
+  - `combat_lab/spec_compiler.py::build_test_battle_spec` (StaticTargetScenario supported in Phase 1)
+  - `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec`
+  - `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec`
+- Combat Lab CLI runner wired behind `SB_USE_BATTLE_RUNNER=1` env flag (BEAMWEAPON-001 passes under both flag states)
+- `docs/systems/combat_simulation.md` §0 "Unified Entry (in progress — PROJ-269)" added
+- Full regression: **14576 passed** (+108 from baseline 14468); same 3 pre-existing unrelated failures + 3 pre-existing unrelated ImportErrors; combat_lab fast: 162 passed
+
+**Next Action:** Phase 2 Task 2.1. Read `phase_2_checklist.md` for the first task and `design.md §5.1` for `ShipInstance.components` persistence contract. Phase 2 adds:
+- `ShipInstance.components: Dict[str, ComponentState]` with HP persistence
+- `ComponentState` dataclass in `game/strategy/fleets/component_state.py`
+- Round-trip: strategy compiler reads ShipInstance.components → `ShipSpec.components` → engine → `ShipOutcome.components` → `PostBattleHook` writes back
+- Real `apply_outcome_to_fleets` PostBattleHook implementation (replaces the Phase-1 `_noop_hook`)
+- Integration test: damage persists across two consecutive strategy battles
+
 **Blockers:** None
-**Context for Next Agent:** All seven architectural decisions are locked in [decisions.md](decisions.md). The design is sketched in [design.md](design.md). Each phase has a detailed checklist. Start by reading `docs/systems/combat_simulation.md` to understand the current state of the simulator, then `design.md` for the target state.
+
+**Context for Next Agent:**
+- Phase 1 introduced a **transitional `ship_builder: Callable[[ShipSpec], Ship]` kwarg on `run_battle`** because ShipSpec (pure DTO) can't carry pre-built Ships. Phase 2 should design `Ship.from_spec(spec, registries)` that understands `ComponentStateSpec` per-component HP, then begin deprecating the `ship_builder` param in favor of internal materialization.
+- **DTO field annotations currently use `object`** for the four types introduced in sibling Phase-1 tasks (`boundary`, `modifier_stack`, `formation`, `telemetry_level`). Phase 2+ can tighten these to concrete types now that the types exist — simple annotation tightening, no DTO shape changes.
+- `post_battle_hook` is currently `_noop_hook` in `build_strategy_battle_spec`. Phase 2 replaces it with `apply_outcome_to_fleets`.
+- `ShipSpec.components = ()` everywhere today. Phase 2 populates it from `ShipInstance.components`.
+- Task 1.10 integrated the Combat Lab CLI runner — but only for `StaticTargetScenario` subclasses. Other templates (Duel / Propulsion / Resource / Comparison) raise `NotImplementedError` in the compiler and fall back to the legacy path. Phase 4 (formation system) is the natural point to extend coverage.
+- **Skipped in Phase 1:** the `scenario.to_spec` monkey-patch lives in `combat_lab/spec_compiler.py` — `combat_lab/runner.py` imports it for its side-effect (`import combat_lab.spec_compiler  # noqa: F401`). If this becomes confusing, promoting `to_spec` into `TestScenario` as a real method (delegating to the compiler) is a clean follow-up.
+- **Pre-existing pytest failures/errors** (3 build-queue + 3 AI/strategy imports) predate PROJ-269. Leave them alone.
+- **Baselines going into Phase 2:** pytest 14576 passed, combat_lab fast 162 passed.
 
 ## Overview
 

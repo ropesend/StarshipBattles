@@ -4,6 +4,67 @@ System documentation for the real-time combat simulation layer.
 
 ---
 
+## 0. Unified Entry (in progress — PROJ-269)
+
+> **Status:** Phase 1 in progress. The legacy `BattleController` + `BattleMode`
+> path documented in §1–§2 still works and is the default. The new unified
+> entry runs alongside it and is exercised by one smoke-test caller in Phase 1;
+> Phases 2–6 migrate the remaining callers and delete the legacy code.
+
+`run_battle(spec: BattleSpec) -> BattleOutcome` at
+[`game/simulation/battle_runner.py`](../../game/simulation/battle_runner.py)
+is the target single entry point. Every battle — Combat Lab, Battle Setup,
+Strategy combat — builds a `BattleSpec` via a context-specific compiler and
+hands it here.
+
+**DTOs** (introduced in Phase 1):
+
+| File | Contains |
+|------|----------|
+| `game/simulation/battle_spec.py` | `BattleSpec`, `TeamSpec`, `TaskForceSpec`, `SquadronSpec`, `ShipSpec`, `ComponentStateSpec`, `EntryVector`, `AIPolicy`, `CombatPolicies`, `PostBattleHook` |
+| `game/simulation/battle_outcome.py` | `BattleOutcome`, `TeamOutcome`, `TaskForceOutcome`, `ShipOutcome`, `ShipStatus`, `EndReason`, `HitRecord`, `WeaponSummary`, `ShipStats`, `ModifierApplication` |
+| `game/simulation/combat/boundary.py` | `BoundaryRegion` protocol, `RectBoundary`, `CircleBoundary`, `UnboundedRegion`, `ExitPolicy` |
+| `game/simulation/combat/modifier_stack.py` | `ModifierStack`, `ModifierEntry` — source-tagged modifier bundle |
+| `game/simulation/combat/formation.py` | `FormationShape`, `FormationSpec` (resolver lands in Phase 4) |
+| `game/simulation/combat/telemetry.py` | `TelemetryLevel` (MINIMAL / NORMAL / DETAILED; subscribers land in Phase 5) |
+
+**Spec compilers** (one per context):
+
+| File | Function |
+|------|----------|
+| `combat_lab/spec_compiler.py` | `build_test_battle_spec(scenario, registries)` |
+| `game/ui/screens/battle_setup/spec_compiler.py` | `build_manual_battle_spec(ui_state, registries, ...)` |
+| `game/strategy/combat/spec_compiler.py` | `build_strategy_battle_spec(fleets, sector, system, empires, settings, registries)` |
+
+**Engine entry:**
+
+```python
+from game.simulation.battle_runner import run_battle
+
+spec = build_test_battle_spec(scenario, registries)
+outcome = run_battle(
+    spec,
+    ai_factory=AIControllerFactory(),
+    ship_builder=my_ship_builder,     # Phase-1 transitional; Phase 2 folds in
+    per_tick_callback=on_tick,        # optional — rendering / observation
+)
+```
+
+Phase 1 hooks that have no enforcement yet: `boundary`, `modifier_stack`,
+`telemetry_level`. They round-trip through the spec/outcome but the engine
+does not interpret them. Phase 3 wires boundary enforcement; Phase 5 wires
+telemetry subscribers and modifier-stack application; Phase 2 wires
+per-component HP persistence.
+
+**Smoke-test flag (Phase 1 only):**
+
+`SB_USE_BATTLE_RUNNER=1` env var routes the Combat Lab CLI runner
+([`combat_lab/runner.py`](../../combat_lab/runner.py)) through `run_battle`.
+Off by default — subsequent phases migrate more call sites until Phase 6
+deletes the legacy branch and the flag itself.
+
+---
+
 ## 1. Battle Orchestration
 
 ### Unified Entry/Exit Flow

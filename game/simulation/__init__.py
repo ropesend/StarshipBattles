@@ -61,6 +61,32 @@ from game.simulation.battle_state import BattleState
 # Validation
 from game.simulation.validation.ship_validator import ShipDesignValidator
 
+# Unified Battle Spec/Outcome DTOs (PROJ-269 Phase 1)
+from game.simulation.battle_spec import (
+    AIPolicy,
+    BattleSpec,
+    CombatPolicies,
+    ComponentStateSpec,
+    EntryVector,
+    PostBattleHook,
+    ShipSpec,
+    SquadronSpec,
+    TaskForceSpec,
+    TeamSpec,
+)
+from game.simulation.battle_outcome import (
+    BattleOutcome,
+    EndReason,
+    HitRecord,
+    ModifierApplication,
+    ShipOutcome,
+    ShipStats,
+    ShipStatus,
+    TaskForceOutcome,
+    TeamOutcome,
+    WeaponSummary,
+)
+
 
 __all__ = [
     # Entities
@@ -83,4 +109,26 @@ __all__ = [
     'BattleState',
     # Validation
     'ShipDesignValidator',
+    # BattleSpec DTOs (PROJ-269)
+    'AIPolicy',
+    'BattleSpec',
+    'CombatPolicies',
+    'ComponentStateSpec',
+    'EntryVector',
+    'PostBattleHook',
+    'ShipSpec',
+    'SquadronSpec',
+    'TaskForceSpec',
+    'TeamSpec',
+    # BattleOutcome DTOs (PROJ-269)
+    'BattleOutcome',
+    'EndReason',
+    'HitRecord',
+    'ModifierApplication',
+    'ShipOutcome',
+    'ShipStats',
+    'ShipStatus',
+    'TaskForceOutcome',
+    'TeamOutcome',
+    'WeaponSummary',
 ]
