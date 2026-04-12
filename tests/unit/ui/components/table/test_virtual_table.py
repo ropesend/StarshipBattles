@@ -551,3 +551,207 @@ class TestVirtualTable:
         table.rebuild_headers()
 
         mock_header.rebuild.assert_called_once()
+
+    @patch("game.ui.components.table.virtual_table.UIButton", create=True)
+    @patch("game.ui.components.table.virtual_table.UIImage")
+    @patch("game.ui.components.table.virtual_table.UILabel")
+    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
+    @patch("game.ui.components.table.virtual_table.UIPanel")
+    @patch("game.ui.components.table.virtual_table.TableHeader")
+    def test_rebuild_row_pool_handles_actions_column(
+        self,
+        mock_header_class,
+        mock_panel_class,
+        mock_scrollbar_class,
+        mock_label_class,
+        mock_image_class,
+        mock_button_class,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """rebuild_row_pool should create action buttons if type is 'actions'."""
+        from game.ui.components.table.virtual_table import VirtualTable
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        cols = [
+            {"id": "actions", "label": "Actions", "width": 100, "visible": True, "type": "actions"},
+        ]
+        column_manager = TableColumnManager(cols)
+
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        
+        def panel_side_effect(*args, **kwargs):
+            mock = MagicMock()
+            mock.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+            return mock
+            
+        mock_panel_class.side_effect = panel_side_effect
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+            row_height=50,
+        )
+
+        # There should be buttons created for the actions column
+        assert mock_button_class.call_count > 0, "UIButton not created for actions column"
+        for row in table._row_pool:
+            if not row.get("bg"):
+                continue
+            actions_widget = next((w for w in row["widgets"] if getattr(w.get("col", {}), "get", lambda k,d=None: None)("type") == "actions"), None)
+            if not actions_widget:
+                actions_widget = next((w for w in row["widgets"] if w.get("type") == "actions"), None)
+            assert actions_widget is not None, "Actions widget definition missing from row pool"
+            assert "actions_dict" in actions_widget, "actions_dict dictionary missing from actions widget"
+            assert set(actions_widget["actions_dict"].keys()) == {"up", "down", "remove", "add"}
+
+    @patch("game.ui.components.table.virtual_table.UIImage")
+    @patch("game.ui.components.table.virtual_table.UILabel")
+    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
+    @patch("game.ui.components.table.virtual_table.UIPanel")
+    @patch("game.ui.components.table.virtual_table.TableHeader")
+    def test_update_visible_rows_handles_actions_column(
+        self,
+        mock_header_class,
+        mock_panel_class,
+        mock_scrollbar_class,
+        mock_label_class,
+        mock_image_class,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """update_visible_rows should skip set_text for 'actions' to avoid KeyError 'el'."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_scrollbar = MagicMock()
+        mock_scrollbar.start_percentage = 0.0
+        mock_scrollbar_class.return_value = mock_scrollbar
+
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        mock_panel_class.return_value = mock_list_panel
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+
+        # Inject an actions widget structure into the pool to trigger the code path
+        for row in table._row_pool:
+            row["widgets"].append({
+                "type": "actions",
+                "col": {"id": "test_act", "type": "actions"}
+            })
+
+        # This should complete without throwing KeyError: 'el'
+        table.force_update()  # Clear dirty state
+        try:
+            table.update_visible_rows()
+        except KeyError as e:
+            if str(e) == "'el'":
+                pytest.fail("update_visible_rows caused KeyError: 'el' on actions type")
+            else:
+                raise
+
+    @patch("game.ui.components.table.virtual_table.UIImage")
+    @patch("game.ui.components.table.virtual_table.UILabel")
+    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
+    @patch("game.ui.components.table.virtual_table.UIPanel")
+    @patch("game.ui.components.table.virtual_table.TableHeader")
+    def test_check_action_button_press(
+        self,
+        mock_header_class,
+        mock_panel_class,
+        mock_scrollbar_class,
+        mock_label_class,
+        mock_image_class,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """check_action_button_press should map UI element to action and row_index."""
+        from game.ui.components.table.virtual_table import VirtualTable
+        
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        mock_panel_class.return_value = mock_list_panel
+
+        table = VirtualTable(mock_panel, mock_manager, data_source, column_manager, selection_strategy)
+
+        # Build fake row structure
+        fake_btn = MagicMock()
+        table._row_pool.clear()
+        bg_mock = MagicMock()
+        bg_mock.visible = True
+        
+        table._row_pool.append({
+            "bg": bg_mock,
+            "row_index": 5,
+            "widgets": [{
+                "type": "actions",
+                "actions_dict": {"add": fake_btn}
+            }]
+        })
+
+        result = table.check_action_button_press(fake_btn)
+        assert result == ("add", 5)
+        
+        # Mismatch
+        result = table.check_action_button_press(MagicMock())
+        assert result is None
+
+    @patch("game.ui.components.table.virtual_table.UIImage")
+    @patch("game.ui.components.table.virtual_table.UILabel")
+    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
+    @patch("game.ui.components.table.virtual_table.UIPanel")
+    @patch("game.ui.components.table.virtual_table.TableHeader")
+    def test_kill_cleans_up_actions(
+        self,
+        mock_header_class,
+        mock_panel_class,
+        mock_scrollbar_class,
+        mock_label_class,
+        mock_image_class,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """kill() should destroy any UIButtons held in actions_dict."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        mock_panel_class.return_value = mock_list_panel
+
+        table = VirtualTable(mock_panel, mock_manager, data_source, column_manager, selection_strategy)
+
+        # Build fake row structure with actions
+        fake_btn = MagicMock()
+        table._row_pool.append({
+            "bg": MagicMock(),
+            "widgets": [{
+                "type": "actions",
+                "actions_dict": {"add": fake_btn, "remove": fake_btn}
+            }]
+        })
+
+        table.kill()
+        
+        # Method handles multi buttons, so it might be called multiple times via values()
+        assert fake_btn.kill.call_count >= 2

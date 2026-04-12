@@ -100,22 +100,22 @@ def test_build_queue_screen_initializes(build_queue_screen):
 def test_load_designs_by_category(build_queue_screen):
     """Test that designs are filtered by vehicle type."""
     # Test complex category
-    complexes = build_queue_screen.controller.load_designs_by_category("complex")
+    complexes, roles = build_queue_screen.controller.load_designs_by_category("complex")
     assert len(complexes) > 0
     assert all(d.vehicle_type == "Planetary Complex" for d in complexes)
 
     # Test ship category
-    ships = build_queue_screen.controller.load_designs_by_category("ship")
+    ships, roles = build_queue_screen.controller.load_designs_by_category("ship")
     assert len(ships) > 0
     assert all(d.vehicle_type == "Ship" for d in ships)
 
     # Test satellite category
-    satellites = build_queue_screen.controller.load_designs_by_category("satellite")
+    satellites, roles = build_queue_screen.controller.load_designs_by_category("satellite")
     assert len(satellites) > 0
     assert all(d.vehicle_type == "Satellite" for d in satellites)
 
     # Test fighter category
-    fighters = build_queue_screen.controller.load_designs_by_category("fighter")
+    fighters, roles = build_queue_screen.controller.load_designs_by_category("fighter")
     assert len(fighters) > 0
     assert all(d.vehicle_type == "Fighter" for d in fighters)
 
@@ -216,6 +216,11 @@ def test_filter_panel_exists(build_queue_screen):
     assert hasattr(build_queue_screen.panels, 'btn_category_ship')
     assert hasattr(build_queue_screen.panels, 'btn_category_satellite')
     assert hasattr(build_queue_screen.panels, 'btn_category_fighter')
+
+def test_roles_panel_exists(build_queue_screen):
+    """Test that the roles panel UI elements are created."""
+    assert hasattr(build_queue_screen.panels, 'roles_panel')
+    assert build_queue_screen.panels.roles_panel is not None
 
 
 def test_bottom_bar_exists(build_queue_screen):

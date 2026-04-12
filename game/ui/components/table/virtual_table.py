@@ -10,7 +10,7 @@ Renders a scrollable table with:
 from typing import Any, Dict, List, Optional, Tuple
 
 import pygame
-from pygame_gui.elements import UIImage, UILabel, UIPanel, UIVerticalScrollBar
+from pygame_gui.elements import UIButton, UIImage, UILabel, UIPanel, UIVerticalScrollBar
 
 from game.ui.colors import TABLE_SELECTED, TABLE_UNSELECTED
 from game.ui.components.table.column_manager import TableColumnManager
@@ -164,6 +164,28 @@ class VirtualTable:
                         "type": "image", "el": img, "col": col,
                         "_last_img": None,
                     })
+                elif col.get("type") == "actions":
+                    actions_dict = {}
+                    btn_size = self._row_height - 10
+                    if btn_size > 30:
+                        btn_size = 30
+                    
+                    spacing = 5
+                    btn_x = x + 5
+                    
+                    for action, text in [("add", "+"), ("remove", "-"), ("up", "^"), ("down", "v")]:
+                        btn = UIButton(
+                            relative_rect=pygame.Rect(btn_x, (self._row_height - btn_size) // 2, btn_size, btn_size),
+                            text=text,
+                            manager=self._manager,
+                            container=row_bg,
+                        )
+                        actions_dict[action] = btn
+                        btn_x += btn_size + spacing
+                        
+                    widgets.append({
+                        "type": "actions", "col": col, "actions_dict": actions_dict
+                    })
                 else:
                     # Label widget
                     lbl = UILabel(
@@ -256,6 +278,8 @@ class VirtualTable:
                                 widget["el"].set_image(
                                     pygame.Surface((rect.width, rect.height))
                                 )
+                    elif widget["type"] == "actions":
+                        pass
                     else:
                         text = str(self._data_source.get_cell_value(data_idx, col_id))
                         if text != widget.get("_last_text"):
@@ -341,6 +365,26 @@ class VirtualTable:
                 row["bg"].background_colour = target_color
                 row["bg"].rebuild()
 
+    def check_action_button_press(self, ui_element: Any) -> Optional[Tuple[str, int]]:
+        """Check if an action button was pressed.
+
+        Args:
+            ui_element: The UI element that triggered the event.
+
+        Returns:
+            Tuple of (action_name, row_index) if matched, None otherwise.
+        """
+        for row in self._row_pool:
+            if not row.get("bg", None) or not row["bg"].visible:
+                continue
+                
+            for widget in row.get("widgets", []):
+                if widget["type"] == "actions":
+                    for action, btn in widget.get("actions_dict", {}).items():
+                        if ui_element == btn:
+                            return (action, row.get("row_index", -1))
+        return None
+
     def check_header_presses(self) -> Dict[str, Any]:
         """Check for header button presses.
 
@@ -375,6 +419,9 @@ class VirtualTable:
             for widget in row.get("widgets", []):
                 if "el" in widget:
                     widget["el"].kill()
+                if "actions_dict" in widget:
+                    for btn in widget["actions_dict"].values():
+                        btn.kill()
         self._row_pool.clear()
 
         # Kill containers

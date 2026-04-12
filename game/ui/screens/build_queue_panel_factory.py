@@ -50,10 +50,12 @@ class BuildQueuePanels:
     column_manager: TableColumnManager
     data_source: BuildQueueQueueDataSource
     filter_panel: ui.UIPanel
+    roles_panel: ui.UIPanel
+    roles_scrollable: ui.UIScrollingContainer
     bottom_bar: ui.UIPanel
     btn_close: ui.UIButton
-    btn_add_to_queue: ui.UIButton
-    btn_remove_from_queue: ui.UIButton
+    btn_add_to_queue: Optional[ui.UIButton]
+    btn_remove_from_queue: Optional[ui.UIButton]
     btn_category_complex: ui.UIButton
     btn_category_ship: ui.UIButton
     btn_category_satellite: ui.UIButton
@@ -123,7 +125,7 @@ class BuildQueuePanelFactory:
         queue_panel, queue_header, virtual_table, column_manager, data_source = (
             self._create_build_queue_panel(background)
         )
-        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_drop_pod, btn_add, btn_remove = (
+        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_drop_pod, roles_scrollable = (
             self._create_filter_panel(background)
         )
         bottom_bar, btn_close = self._create_bottom_bar(background, format_empire_resources)
@@ -142,10 +144,12 @@ class BuildQueuePanelFactory:
             column_manager=column_manager,
             data_source=data_source,
             filter_panel=filter_panel,
+            roles_panel=filter_panel,  # It is shared now
+            roles_scrollable=roles_scrollable,
             bottom_bar=bottom_bar,
             btn_close=btn_close,
-            btn_add_to_queue=btn_add,
-            btn_remove_from_queue=btn_remove,
+            btn_add_to_queue=None,
+            btn_remove_from_queue=None,
             btn_category_complex=btn_complex,
             btn_category_ship=btn_ship,
             btn_category_satellite=btn_sat,
@@ -228,10 +232,14 @@ class BuildQueuePanelFactory:
 
     def _create_queue_selector_panel(self, container: ui.UIPanel) -> BuildQueueSelector:
         """Create queue selector column."""
-        panel_x = 10 + 480 + 10
-        panel_y = 10
-        panel_width = 700
-        panel_height = self.screen_height - 10 - 80
+        planet_report_height = int((self.screen_height - 20) / 3)
+        if planet_report_height < 350:
+            planet_report_height = 350
+        
+        panel_x = 10
+        panel_y = 10 + planet_report_height + 10 + 300 + 10
+        panel_width = 480
+        panel_height = self.screen_height - panel_y - 80
 
         return BuildQueueSelector(
             manager=self.manager,
@@ -259,14 +267,10 @@ class BuildQueuePanelFactory:
         Returns:
             Tuple of (panel, scrollable_container).
         """
-        categories_width = 200
-        panel_left = 10 + categories_width + 10
-        panel_width = 280
+        panel_left = 10 + 480 + 10
+        panel_width = 700
 
-        planet_report_height = int((self.screen_height - 20) / 3)
-        if planet_report_height < 350:
-            planet_report_height = 350
-        panel_top = 10 + planet_report_height + 10
+        panel_top = 10
         panel_height = self.screen_height - panel_top - 80
 
         panel = ui.UIPanel(
@@ -355,16 +359,16 @@ class BuildQueuePanelFactory:
         """Create categories/filter panel.
 
         Returns:
-            Tuple of (panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_add, btn_remove).
+            Tuple of (panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, roles_scrollable).
         """
-        panel_width = 200
+        panel_width = 480
         panel_left = 10
 
         planet_report_height = int((self.screen_height - 20) / 3)
         if planet_report_height < 350:
             planet_report_height = 350
         panel_top = 10 + planet_report_height + 10
-        panel_height = self.screen_height - panel_top - 80
+        panel_height = 300
 
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
@@ -373,69 +377,61 @@ class BuildQueuePanelFactory:
         )
 
         ui.UITextBox(
-            relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
+            relative_rect=pygame.Rect(10, 10, 220, 30),
             html_text="<b>Categories</b>",
             manager=self.manager,
             container=panel
         )
 
         btn_complex = ui.UIButton(
-            relative_rect=pygame.Rect(10, 45, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 45, 220, 40),
             text="Complexes",
             manager=self.manager,
             container=panel
         )
 
         btn_ship = ui.UIButton(
-            relative_rect=pygame.Rect(10, 95, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 95, 220, 40),
             text="Ships",
             manager=self.manager,
             container=panel
         )
 
         btn_satellite = ui.UIButton(
-            relative_rect=pygame.Rect(10, 145, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 145, 220, 40),
             text="Satellites",
             manager=self.manager,
             container=panel
         )
 
         btn_fighter = ui.UIButton(
-            relative_rect=pygame.Rect(10, 195, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 195, 220, 40),
             text="Fighters",
             manager=self.manager,
             container=panel
         )
 
         btn_drop_pod = ui.UIButton(
-            relative_rect=pygame.Rect(10, 245, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 245, 220, 40),
             text="Drop Pods",
             manager=self.manager,
             container=panel
         )
 
         ui.UITextBox(
-            relative_rect=pygame.Rect(10, 310, panel_width - 20, 30),
-            html_text="<b>Actions</b>",
+            relative_rect=pygame.Rect(240, 10, 220, 30),
+            html_text="<b>Roles</b>",
             manager=self.manager,
             container=panel
         )
 
-        btn_add = ui.UIButton(
-            relative_rect=pygame.Rect(10, 345, panel_width - 20, 40),
-            text="Add to Queue",
+        roles_scrollable = ui.UIScrollingContainer(
+            relative_rect=pygame.Rect(240, 45, 220, panel_height - 55),
             manager=self.manager,
             container=panel
         )
 
-        btn_remove = ui.UIButton(
-            relative_rect=pygame.Rect(10, 395, panel_width - 20, 40),
-            text="Remove Selected",
-            manager=self.manager,
-            container=panel
-        )
-
-        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, btn_add, btn_remove
+        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, roles_scrollable
 
     def _create_bottom_bar(self, container: ui.UIPanel, format_empire_resources):
         """Create bottom bar with close button and info.

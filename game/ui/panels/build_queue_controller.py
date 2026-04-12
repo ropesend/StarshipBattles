@@ -102,6 +102,7 @@ class BuildQueueController:
 
         # Category filter state
         self.selected_category = "complex"
+        self.selected_role = "Any"
 
         # PROJ-69: Multi-queue state
         self.active_queue_source: Optional['BuildQueueSource'] = None
@@ -159,16 +160,35 @@ class BuildQueueController:
 
         filtered = [d for d in all_designs if d.vehicle_type == target_type]
 
+        # Extra roles extraction and filtering
+        roles_set = set()
+        for d in filtered:
+            role = getattr(d, 'design_role', None)
+            if not role:
+                role = "None"
+            roles_set.add(role)
+            
+        roles_list = sorted(list(roles_set))
+        if "Any" not in roles_list:
+            roles_list.insert(0, "Any")
+            
+        if hasattr(self, 'selected_role') and self.selected_role != "Any":
+            filtered = [
+                d for d in filtered 
+                if (getattr(d, 'design_role', None) == self.selected_role) 
+                or (not getattr(d, 'design_role', None) and self.selected_role == "None")
+            ]
+
         # Mark designs as valid/invalid using full validation
         self._validate_designs(filtered)
 
-        logger.debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}'")
+        logger.debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}' and role '{getattr(self, 'selected_role', 'Any')}'")
 
         if filtered:
             for d in filtered:
                 logger.debug(f"  - {d.name} (vehicle_type={d.vehicle_type}, design_id={d.design_id})")
 
-        return filtered
+        return filtered, roles_list
 
     def _validate_designs(self, designs) -> None:
         """Run full validation on each design and set design_valid flag.
@@ -205,8 +225,20 @@ class BuildQueueController:
             category: Category to filter by ("complex", "ship", "satellite", "fighter")
         """
         self.selected_category = category
+        self.selected_role = "Any"  # Reset role when switching categories
         self.on_queue_changed()
         logger.info(f"Build queue category changed to: {category}")
+
+    def set_role(self, role: str):
+        """
+        Set the active role filter.
+
+        Args:
+            role: Role to filter by (e.g., "Capital", "Escort", "Any")
+        """
+        self.selected_role = role
+        self.on_queue_changed()
+        logger.info(f"Build queue role changed to: {role}")
 
     def _get_design_cost(self, design_id: str) -> Dict[str, int]:
         """Load design as ship and return its construction cost.

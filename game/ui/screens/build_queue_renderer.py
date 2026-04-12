@@ -68,13 +68,17 @@ class BuildQueueRenderer:
         icon_size = 36
         btn_height = 40
 
+        scrollable_width = scrollable.get_relative_rect().width
+        panel_width = scrollable_width - 10
+        btn_width = panel_width - icon_size - 8 - 40 # 40 for the + button
+
         for design in designs:
             raw_cost = getattr(design, 'construction_cost', None)
             cost = raw_cost if isinstance(raw_cost, dict) else {}
             row_height = btn_height + (18 if cost else 0)
 
             row_panel = ui.UIPanel(
-                relative_rect=pygame.Rect(0, y_offset, 260, row_height),
+                relative_rect=pygame.Rect(0, y_offset, panel_width, row_height),
                 manager=self.manager,
                 container=scrollable,
                 object_id="#design_row_panel"
@@ -94,7 +98,7 @@ class BuildQueueRenderer:
                 display_name = f"{design.name} (INVD)"
 
             btn = ui.UIButton(
-                relative_rect=pygame.Rect(icon_size + 4, 0, 260 - icon_size - 8, btn_height),
+                relative_rect=pygame.Rect(icon_size + 4, 0, btn_width, btn_height),
                 text=display_name,
                 manager=self.manager,
                 container=row_panel
@@ -105,11 +109,21 @@ class BuildQueueRenderer:
             if cost:
                 cost_str = format_resource_cost(cost)
                 ui.UILabel(
-                    relative_rect=pygame.Rect(icon_size + 4, btn_height, 260 - icon_size - 8, 20),
+                    relative_rect=pygame.Rect(icon_size + 4, btn_height, btn_width, 20),
                     text=cost_str,
                     manager=self.manager,
                     container=row_panel
                 )
+                
+            # Add + Button
+            add_btn = ui.UIButton(
+                relative_rect=pygame.Rect(icon_size + 4 + btn_width + 4, 0, 36, btn_height),
+                text="+",
+                manager=self.manager,
+                container=row_panel
+            )
+            add_btn.design_id = design.design_id
+            add_btn.is_add_to_queue_btn = True
 
             y_offset += row_height + 5
 
@@ -149,6 +163,44 @@ class BuildQueueRenderer:
 
         if on_queue_selector_refresh:
             on_queue_selector_refresh()
+
+    def refresh_roles_list(self, roles: List[str], selected_role: str) -> None:
+        """Refresh the roles filter list.
+
+        Args:
+            roles: List of roles available.
+            selected_role: Currently selected role filter.
+        """
+        if not hasattr(self.panels, 'roles_scrollable') or not self.panels.roles_scrollable:
+            return
+            
+        scrollable = self.panels.roles_scrollable
+        
+        # Clear existing items
+        elements_to_kill = list(scrollable.get_container().elements)
+        for element in elements_to_kill:
+            element.kill()
+            
+        y_offset = 0
+        btn_height = 40
+        panel_width = scrollable.get_relative_rect().width - 10
+        btn_width = panel_width - 8
+        if btn_width < 0:
+            btn_width = 100
+            
+        # Store role buttons so we don't have to keep a mapping, we'll assign the role string to the button
+        for role in roles:
+            # If selected, maybe change color or text
+            display_text = role if role != selected_role else f"[{role}]"
+            
+            btn = ui.UIButton(
+                relative_rect=pygame.Rect(4, y_offset, btn_width, btn_height),
+                text=display_text,
+                manager=self.manager,
+                container=scrollable
+            )
+            btn.role_filter = role
+            y_offset += btn_height + 5
 
     def update_queue_header(self, active_source) -> None:
         """Update build queue header text.

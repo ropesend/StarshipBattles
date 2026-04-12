@@ -1024,3 +1024,85 @@ class TestPerResourceBuildRates:
         # PROJ-208: Handler uses default turns_remaining (1.0) for all queues
         assert standard.construction_queue[0]["turns_remaining"] == 1.0
         assert advanced.construction_queue[0]["turns_remaining"] == 1.0
+
+class TestControllerRoleFiltering:
+    """Tests for role filtering logic."""
+
+    def _make_controller_with_designs(self, designs: list) -> BuildQueueController:
+        build_context = MagicMock()
+        build_context.context_type = "planet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+
+        mock_library = MagicMock()
+        mock_library.scan_designs.return_value = designs
+
+        return BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=MagicMock(),
+            design_report=MagicMock(),
+            on_queue_changed=MagicMock(),
+        )
+
+    def test_load_designs_returns_tuple_and_extracts_roles(self):
+        """load_designs_by_category should return (designs, roles_list) and extract roles."""
+        design1 = MagicMock()
+        design1.design_role = "Escort"
+        design1.vehicle_type = "Ship"
+        design2 = MagicMock()
+        design2.design_role = "Capital"
+        design2.vehicle_type = "Ship"
+        design3 = MagicMock()
+        design3.design_role = "Escort"
+        design3.vehicle_type = "Ship"
+        
+        controller = self._make_controller_with_designs([design1, design2, design3])
+        
+        # Act
+        result = controller.load_designs_by_category("ship")
+        
+        # Assert - Result is a tuple now
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        
+        filtered_designs, roles = result
+        assert len(filtered_designs) == 3
+        # Should be sorted: ["Any", "Capital", "Escort"]
+        assert roles == ["Any", "Capital", "Escort"]
+
+    def test_load_designs_filters_by_selected_role(self):
+        """If selected_role is not 'Any', it should filter the designs list."""
+        design1 = MagicMock()
+        design1.design_role = "Escort"
+        design1.vehicle_type = "Ship"
+        design2 = MagicMock()
+        design2.design_role = "Capital"
+        design2.vehicle_type = "Ship"
+        
+        controller = self._make_controller_with_designs([design1, design2])
+        
+        # Attempt to filter by "Capital"
+        controller.set_role("Capital")
+        filtered_designs, roles = controller.load_designs_by_category("ship")
+        
+        # The list should still contain all available roles
+        assert roles == ["Any", "Capital", "Escort"]
+        
+        # But the design list should ONLY contain the Capital ship
+        assert len(filtered_designs) == 1
+        assert filtered_designs[0].design_role == "Capital"
+
+    def test_load_designs_ignore_no_role(self):
+        """Designs without a role are put under 'None' role behind the scenes but filter correctly under 'Any'."""
+        design1 = MagicMock()
+        design1.design_role = None
+        design1.vehicle_type = "Ship"
+        
+        controller = self._make_controller_with_designs([design1])
+        
+        filtered_designs, roles = controller.load_designs_by_category("ship")
+        assert "None" in roles
+        assert "Any" in roles
+        assert len(roles) == 2
+        assert len(filtered_designs) == 1

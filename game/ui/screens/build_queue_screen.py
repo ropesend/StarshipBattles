@@ -309,8 +309,10 @@ class BuildQueueScreen:
 
     def _refresh_items_list(self):
         """Refresh the items list based on selected category."""
-        designs = self.controller.load_designs_by_category(self.controller.selected_category)
+        designs, roles_list = self.controller.load_designs_by_category(self.controller.selected_category)
         self.renderer.refresh_items_list(designs, self.controller.selected_category)
+        if hasattr(self.renderer, 'refresh_roles_list'):
+            self.renderer.refresh_roles_list(roles_list, getattr(self.controller, 'selected_role', 'Any'))
 
     def _refresh_queue_display(self):
         """Refresh the build queue display via VirtualTable."""
@@ -377,20 +379,60 @@ class BuildQueueScreen:
         elif event.ui_element == panels.btn_close:
             self._close()
 
-        # Add to queue button
-        elif event.ui_element == panels.btn_add_to_queue:
-            if self.drag_handler.selected_design:
-                self.controller.add_to_queue(self.drag_handler.selected_design)
+        # Check action column in virtual table
+        action_match = panels.virtual_table.check_action_button_press(event.ui_element)
+        if action_match:
+            action, row_idx = action_match
+            self._handle_virtual_table_action(action, row_idx)
+            return
 
-        # Remove selected from queue button
-        elif event.ui_element == panels.btn_remove_from_queue:
-            self._handle_remove()
+        # Check role filter buttons
+        if hasattr(event.ui_element, 'role_filter'):
+            self.controller.set_role(event.ui_element.role_filter)
+            self._refresh_items_list()
+            return
+
+        # Check Add to Queue in available designs
+        if hasattr(event.ui_element, 'is_add_to_queue_btn') and event.ui_element.is_add_to_queue_btn:
+            self.controller.add_to_queue(event.ui_element.design_id)
+            return
 
         # Queue selector button clicks
         elif self._queue_selector and self._queue_selector.handle_button_click(
             event.ui_element, bool(pygame.key.get_mods() & pygame.KMOD_CTRL)
         ):
             pass  # Handled by selector
+
+    def _handle_virtual_table_action(self, action: str, row_idx: int) -> None:
+        """Handle virtual table action button press."""
+        if len(self.selected_queue_indices) > 1:
+            return
+
+        active_queue = self._get_active_queue()
+        if row_idx < 0 or row_idx >= len(active_queue):
+            return
+
+        item = active_queue[row_idx]
+        design_id = item.get('design_id')
+        turns = item.get('turns_remaining', 1.0)
+        category = item.get('type', 'ship')
+
+        if not design_id:
+            return
+
+        if action == "remove":
+            self._dispatch_remove_from_queue_command(row_idx)
+            self._refresh_queue_display()
+        elif action == "add":
+            self.controller.add_to_queue(design_id, 1.0, category)
+        elif action == "up":
+            if row_idx > 0:
+                self._dispatch_remove_from_queue_command(row_idx)
+                self.controller.add_to_queue(design_id, turns, category, row_idx - 1)
+        elif action == "down":
+            if row_idx < len(active_queue) - 1:
+                self._dispatch_remove_from_queue_command(row_idx)
+                self.controller.add_to_queue(design_id, turns, category, row_idx + 1)
 
     def _handle_remove(self):
         """Handle remove from queue action.
@@ -509,6 +551,8 @@ class BuildQueueScreen:
             (panels.btn_category_fighter, InputAction.BUILD_QUEUE_CAT_FIGHTERS, "Fighters"),
         ]
         for btn, action, label in hints:
+            if btn is None:
+                continue
             hint = _hint(action)
             if hint:
                 btn.set_tooltip(f"{label} ({hint})")
