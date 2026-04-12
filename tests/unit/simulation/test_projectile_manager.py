@@ -1537,3 +1537,92 @@ class TestBatchUpdateWithHitsAndDeaths:
         active = manager.get_active_projectiles()
         assert len(active) == 1
         assert proj2 in active
+
+
+# ============================================================================
+# Regression: Projectile in grid query results
+# ============================================================================
+
+class TestProjectileInGridResults:
+    """Regression tests for grid returning mixed entity types.
+
+    The spatial grid stores both Ships and Projectiles. query_radius()
+    returns all nearby objects. _check_ship_collisions must ignore
+    non-Ship objects (e.g. enemy Projectiles) without crashing.
+    """
+
+    def test_enemy_projectile_in_nearby_ships_does_not_crash(self, manager, mock_grid):
+        """Projectile in grid results is skipped, no AttributeError on .name."""
+        # Our projectile
+        proj = MagicMock()
+        proj.position = Vector2(0, 0)
+        proj.velocity = Vector2(10, 0)
+        proj.is_alive = True
+        proj.team_id = 0
+        proj.type = AttackType.PROJECTILE
+        proj.damage = 20
+        proj.distance_traveled = 0
+        proj.source_weapon = None
+        proj.target = None
+        proj.status = 'active'
+        proj.radius = 3
+
+        # Enemy projectile that ends up in grid results (no .name attribute)
+        from game.simulation.entities.projectile import Projectile
+        enemy_proj = MagicMock(spec=Projectile)
+        enemy_proj.position = Vector2(5, 0)
+        enemy_proj.velocity = Vector2(-10, 0)
+        enemy_proj.is_alive = True
+        enemy_proj.team_id = 1
+        enemy_proj.radius = 3
+
+        # Grid returns the enemy projectile alongside no real ships
+        mock_grid.query_radius.return_value = [enemy_proj]
+
+        manager.add_projectile(proj)
+        manager.update(mock_grid)  # Must not raise AttributeError
+
+        # Projectile should still be alive (no ship to hit)
+        assert proj in manager.get_active_projectiles()
+
+    def test_ship_still_hit_when_projectile_also_in_results(self, manager, mock_grid):
+        """Ship is correctly hit even when a Projectile is also in grid results."""
+        proj = MagicMock()
+        proj.position = Vector2(0, 0)
+        proj.velocity = Vector2(10, 0)
+        proj.is_alive = True
+        proj.team_id = 0
+        proj.type = AttackType.PROJECTILE
+        proj.damage = 20
+        proj.distance_traveled = 0
+        proj.source_weapon = None
+        proj.target = None
+        proj.status = 'active'
+        proj.radius = 3
+
+        # Enemy projectile in grid (no .name)
+        from game.simulation.entities.projectile import Projectile
+        enemy_proj = MagicMock(spec=Projectile)
+        enemy_proj.position = Vector2(5, 0)
+        enemy_proj.velocity = Vector2(-10, 0)
+        enemy_proj.is_alive = True
+        enemy_proj.team_id = 1
+        enemy_proj.radius = 3
+
+        # Ship in collision range
+        ship = MagicMock()
+        ship.position = Vector2(8, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.radius = 10
+        ship.is_alive = True
+        ship.team_id = 1
+        ship.name = "TargetShip"
+
+        # Grid returns both the enemy projectile and the ship
+        mock_grid.query_radius.return_value = [enemy_proj, ship]
+
+        manager.add_projectile(proj)
+        manager.update(mock_grid)
+
+        # Ship should have been hit
+        ship.combat_engine.take_damage.assert_called_once()

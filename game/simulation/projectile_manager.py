@@ -6,9 +6,10 @@ from game.core.config import BattleTuning
 
 logger = logging.getLogger(__name__)
 
+from game.simulation.entities.projectile import Projectile
+
 if TYPE_CHECKING:
     from game.engine.spatial import SpatialGrid
-    from game.simulation.entities.projectile import Projectile
 
 class ProjectileManager:
     """
@@ -50,7 +51,8 @@ class ProjectileManager:
             p_vel = Vector2(p.velocity.x, p.velocity.y)
 
             query_radius = p_vel.length() + BattleTuning.PROJECTILE_QUERY_BUFFER
-            nearby_ships = grid.query_radius(p_pos, query_radius)
+            nearby_entities = grid.query_radius(p_pos, query_radius)
+            nearby_ships = [e for e in nearby_entities if not isinstance(e, Projectile)]
 
             hit_occurred = False
 

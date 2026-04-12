@@ -520,11 +520,51 @@ class FleetBattleSetupScreen:
                 self._ship_strategy_dropdown._strategy_ship_index = i
                 y += 28
 
+                # Targeting policy for this ship
+                UILabel(pygame.Rect(20, y, 60, 22), "Target:",
+                        manager=self._ui_manager, container=panel)
+                tgt_names = ["(default)"] + [name for _, name in _TARGETING_OPTIONS]
+                current_tgt = ship.design_data.get('_targeting_policy')
+                current_tgt_display = "(default)"
+                if current_tgt:
+                    current_tgt_display = next(
+                        (n for tid, n in _TARGETING_OPTIONS if tid == current_tgt),
+                        "(default)"
+                    )
+                self._ship_targeting_dropdown = UIDropDownMenu(
+                    tgt_names, current_tgt_display,
+                    pygame.Rect(80, y, width - 90, 24),
+                    manager=self._ui_manager, container=panel
+                )
+                self._ship_targeting_dropdown._targeting_ship_index = i
+                y += 28
+
+                # Movement policy for this ship
+                UILabel(pygame.Rect(20, y, 60, 22), "Move:",
+                        manager=self._ui_manager, container=panel)
+                mov_names = ["(default)"] + [name for _, name in _MOVEMENT_OPTIONS]
+                current_mov = ship.design_data.get('_movement_policy')
+                current_mov_display = "(default)"
+                if current_mov:
+                    current_mov_display = next(
+                        (n for mid, n in _MOVEMENT_OPTIONS if mid == current_mov),
+                        "(default)"
+                    )
+                self._ship_movement_dropdown = UIDropDownMenu(
+                    mov_names, current_mov_display,
+                    pygame.Rect(80, y, width - 90, 24),
+                    manager=self._ui_manager, container=panel
+                )
+                self._ship_movement_dropdown._movement_ship_index = i
+                y += 28
+
     def _build_policy_controls(self, panel, y, width, fleet):
         """Build policy dropdowns for the selected TF, SQ, or ship."""
         self._targeting_dropdown = None
         self._movement_dropdown = None
         self._ship_strategy_dropdown = None
+        self._ship_targeting_dropdown = None
+        self._ship_movement_dropdown = None
 
         selected_node = None
         label = ""
@@ -755,6 +795,12 @@ class FleetBattleSetupScreen:
         elif (self._ship_strategy_dropdown and
               event.ui_element == self._ship_strategy_dropdown):
             self._set_ship_strategy(event.text)
+        elif (self._ship_targeting_dropdown and
+              event.ui_element == self._ship_targeting_dropdown):
+            self._set_ship_policy("_targeting_policy", event.text, _TARGETING_OPTIONS)
+        elif (self._ship_movement_dropdown and
+              event.ui_element == self._ship_movement_dropdown):
+            self._set_ship_policy("_movement_policy", event.text, _MOVEMENT_OPTIONS)
 
     def _set_ship_strategy(self, display_name: str):
         """Set AI strategy on the selected ship."""
@@ -772,6 +818,28 @@ class FleetBattleSetupScreen:
             if strat.get('name', '') == display_name:
                 ship.design_data['ai_strategy'] = strategy_id
                 break
+
+    def _set_ship_policy(self, key: str, display_name: str, options_list):
+        """Set a targeting or movement policy on the selected ship's design_data."""
+        fleet = self._get_active_fleet()
+        if not fleet or self.selected_ship_index is None:
+            return
+        if self.selected_ship_index >= len(fleet.ships):
+            return
+
+        ship = fleet.ships[self.selected_ship_index]
+
+        # Map display name to policy ID; "(default)" clears the override
+        value = None
+        for pid, pname in options_list:
+            if pname == display_name:
+                value = pid
+                break
+
+        if value is not None:
+            ship.design_data[key] = value
+        elif key in ship.design_data:
+            del ship.design_data[key]
 
     def _set_selected_policy(self, axis: str, display_name: str):
         """Set a policy axis on the selected TF or SQ."""
