@@ -30,7 +30,7 @@ class TestScanShipDesigns:
 
         mock_glob.return_value = ['/ships/frigate.json', '/ships/cruiser.json']
         mock_load_json.side_effect = [
-            {'name': 'Frigate', 'layers': [], 'ship_class': 'Frigate', 'ai_strategy': 'aggressive'},
+            {'name': 'Frigate', 'layers': [], 'ship_class': 'Frigate', 'movement_policy': 'brawl_close'},
             {'name': 'Cruiser', 'layers': [], 'ship_class': 'Cruiser'}
         ]
 
@@ -39,9 +39,9 @@ class TestScanShipDesigns:
         assert len(designs) == 2
         assert designs[0]['name'] == 'Frigate'
         assert designs[0]['ship_class'] == 'Frigate'
-        assert designs[0]['ai_strategy'] == 'aggressive'
+        assert designs[0]['movement_policy'] == 'brawl_close'
         assert designs[1]['name'] == 'Cruiser'
-        assert designs[1]['ai_strategy'] == 'standard_ranged'  # default
+        assert designs[1]['movement_policy'] == 'kite_max'  # default
 
     @patch('game.ui.screens.setup_data_io.glob.glob')
     @patch('game.ui.screens.setup_data_io.load_json')

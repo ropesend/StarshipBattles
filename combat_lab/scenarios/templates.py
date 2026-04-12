@@ -152,12 +152,12 @@ class StaticTargetScenario(TestScenario):
                           seed=seed_to_use,
                           end_condition=end_condition)
 
-        # Assign AI strategies (AI handles firing)
+        # Assign AI movement policies (AI handles firing)
         if self.force_fire:
-            self.attacker.ai_strategy = 'test_stationary_fire'
+            self.attacker.movement_policy = 'test_stationary'
         else:
-            self.attacker.ai_strategy = 'test_do_nothing'
-        self.target.ai_strategy = 'test_do_nothing'
+            self.attacker.movement_policy = 'test_do_nothing'
+        self.target.movement_policy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -360,13 +360,13 @@ class DuelScenario(TestScenario):
                           seed=self.metadata.seed,
                           end_condition=end_condition)
 
-        # Assign AI strategies (AI handles firing)
+        # Assign AI movement policies (AI handles firing)
         if self.force_fire:
-            self.ship1.ai_strategy = 'test_stationary_fire'
-            self.ship2.ai_strategy = 'test_stationary_fire'
+            self.ship1.movement_policy = 'test_stationary'
+            self.ship2.movement_policy = 'test_stationary'
         else:
-            self.ship1.ai_strategy = 'test_do_nothing'
-            self.ship2.ai_strategy = 'test_do_nothing'
+            self.ship1.movement_policy = 'test_do_nothing'
+            self.ship2.movement_policy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -534,15 +534,15 @@ class PropulsionScenario(TestScenario):
         self.expected_max_speed = (self.ship.total_thrust * K_SPEED) / self.ship.mass
         self.expected_acceleration_rate = (self.ship.total_thrust * K_THRUST) / (self.ship.mass ** 2)
 
-        # Assign AI strategy based on thrust/turn configuration
+        # Assign AI movement policy based on thrust/turn configuration
         if self.thrust_forward and not self.turn_left and not self.turn_right:
-            self.ship.ai_strategy = 'test_straight_line'
+            self.ship.movement_policy = 'test_straight_line'
         elif self.turn_right:
-            self.ship.ai_strategy = 'test_rotate_right'
+            self.ship.movement_policy = 'test_rotate_right'
         elif self.turn_left:
-            self.ship.ai_strategy = 'test_rotate_left'
+            self.ship.movement_policy = 'test_rotate_left'
         else:
-            self.ship.ai_strategy = 'test_do_nothing'
+            self.ship.movement_policy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -787,18 +787,18 @@ class ResourceScenario(TestScenario):
                            seed=seed_to_use,
                            end_condition=end_condition)
 
-        # Assign AI strategies
+        # Assign AI movement policies
         if self.thrust_forward and self.force_fire:
-            self.ship.ai_strategy = 'test_straight_line'  # thrust + AI fires at target
+            self.ship.movement_policy = 'test_straight_line'  # thrust + AI fires at target
         elif self.thrust_forward:
-            self.ship.ai_strategy = 'test_straight_line'
+            self.ship.movement_policy = 'test_straight_line'
         elif self.force_fire:
-            self.ship.ai_strategy = 'test_stationary_fire'
+            self.ship.movement_policy = 'test_stationary'
         else:
-            self.ship.ai_strategy = 'test_do_nothing'
+            self.ship.movement_policy = 'test_do_nothing'
 
         if self.target is not None:
-            self.target.ai_strategy = 'test_do_nothing'
+            self.target.movement_policy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -1017,12 +1017,12 @@ class ComparisonScenario(TestScenario):
 
         self.initial_hp = self.target.hp
 
-        # Assign AI strategies
+        # Assign AI movement policies
         if self.force_fire:
-            self.attacker.ai_strategy = 'test_stationary_fire'
+            self.attacker.movement_policy = 'test_stationary'
         else:
-            self.attacker.ai_strategy = 'test_do_nothing'
-        self.target.ai_strategy = 'test_do_nothing'
+            self.attacker.movement_policy = 'test_do_nothing'
+        self.target.movement_policy = 'test_do_nothing'
 
         end_condition = self._create_end_condition()
         engine.start(

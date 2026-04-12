@@ -281,11 +281,11 @@ class CNCEngineDisabledScenario(ComparisonScenario):
 
     def configure_baseline(self, engine):
         """Override AI to thrust forward (template sets test_do_nothing)."""
-        self.attacker.ai_strategy = 'test_straight_line'
+        self.attacker.movement_policy = 'test_straight_line'
 
     def configure_variant(self, engine):
         """Override AI to thrust forward (template sets test_do_nothing)."""
-        self.attacker.ai_strategy = 'test_straight_line'
+        self.attacker.movement_policy = 'test_straight_line'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -409,11 +409,11 @@ class CNCBridgeDestroyedScenario(ComparisonScenario):
 
     def configure_baseline(self, engine):
         """Set target to also fire (mutual combat)."""
-        self.target.ai_strategy = 'test_stationary_fire'
+        self.target.movement_policy = 'test_stationary'
 
     def configure_variant(self, engine):
         """Set target to also fire (mutual combat)."""
-        self.target.ai_strategy = 'test_stationary_fire'
+        self.target.movement_policy = 'test_stationary'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -531,11 +531,11 @@ class CNCBridgeRedundancyScenario(ComparisonScenario):
 
     def configure_baseline(self, engine):
         """Set target to also fire (mutual combat)."""
-        self.target.ai_strategy = 'test_stationary_fire'
+        self.target.movement_policy = 'test_stationary'
 
     def configure_variant(self, engine):
         """Set target to also fire (mutual combat)."""
-        self.target.ai_strategy = 'test_stationary_fire'
+        self.target.movement_policy = 'test_stationary'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

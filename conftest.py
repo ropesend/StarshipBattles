@@ -20,7 +20,7 @@ def reset_game_state(monkeypatch, request):
     Order of cleanup (post-test):
         Core (RegistryManager, Logger, Profiler) ->
         Simulation (ComponentCacheManager) ->
-        AI (StrategyManager) ->
+        AI (PolicyManager) ->
         UI (ShipThemeManager, ScreenshotManager, SpriteManager)
 
     Use @pytest.mark.use_custom_data to skip production data hydration
@@ -69,10 +69,11 @@ def reset_game_state(monkeypatch, request):
         # B. Ship Vehicle Classes: Patch loader to be a no-op (Data already in Registry)
         monkeypatch.setattr("game.simulation.entities.ship_loader.load_vehicle_classes", lambda *args, **kwargs: None)
 
-        # C. Combat Strategies: Hydrate from cache
-        from game.ai.strategy_manager import get_default_strategy_manager
-        strategy_mgr = get_default_strategy_manager()
-        strategy_mgr.strategies = cache.get_strategies()
+        # C. Policies: Hydrate from cache
+        from game.ai.policy_manager import get_default_policy_manager
+        policy_mgr = get_default_policy_manager()
+        policy_mgr.targeting_policies = cache.get_targeting_policies()
+        policy_mgr.movement_policies = cache.get_movement_policies()
 
         yield
     finally:
@@ -96,9 +97,9 @@ def reset_game_state(monkeypatch, request):
         # 2. Reset module-level caches to prevent pollution to next test
         reset_component_caches()
 
-        # 3. Reset AI Strategy Manager
-        from game.ai.strategy_manager import get_default_strategy_manager
-        get_default_strategy_manager().clear()
+        # 3. Reset AI Policy Manager
+        from game.ai.policy_manager import get_default_policy_manager
+        get_default_policy_manager().clear()
 
         # 4. Reset UI module-level defaults
         from game.ui.assets import ShipThemeManager, set_default_ship_theme_manager

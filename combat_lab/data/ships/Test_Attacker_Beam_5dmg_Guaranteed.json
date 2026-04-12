@@ -5,14 +5,21 @@
     "_description": "Combat Lab test ship: Attacker with 5-damage guaranteed-hit beam"
   },
   "name": "Test Attacker Beam 5dmg Guaranteed",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_5dmg_guaranteed"}
+      {
+        "id": "test_beam_5dmg_guaranteed"
+      }
     ],
     "ARMOR": []
   },

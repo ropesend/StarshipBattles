@@ -84,7 +84,7 @@ class ShipDTO:
         current_target_name: Name of primary target (or None)
         secondary_target_names: Names of secondary targets
         max_targets: Maximum simultaneous targets
-        ai_strategy: Name of AI strategy
+        movement_policy: Movement policy ID
         source_file: Source file path (debug)
         resources: List of resource DTOs
         components: List of component DTOs
@@ -112,7 +112,7 @@ class ShipDTO:
     current_target_name: Optional[str]
     secondary_target_names: List[str]
     max_targets: int
-    ai_strategy: str
+    movement_policy: str
     source_file: Optional[str]
     resources: List[ResourceDTO]
     components: List[ComponentDTO]

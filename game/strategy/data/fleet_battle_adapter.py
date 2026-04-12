@@ -6,14 +6,20 @@ for battle conversion.
 PROJ-90 Phase 4: Uses IPostBattleShip protocol for strategy-simulation boundary.
 """
 
-from typing import List, Optional, Tuple, TYPE_CHECKING
+import logging
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
+    from game.strategy.data.fleet_hierarchy import CombatPolicy
+    from game.strategy.data.group_policy_registry import GroupPolicyRegistry
+    from game.strategy.data.ship_instance import ShipInstance
     from game.simulation.entities.ship import Ship
     from game.core.registry import GameRegistries
+
+logger = logging.getLogger(__name__)
 
 # Default battle formation positions (in simulation coordinates)
 FORMATION_BASE_X_TEAM_0 = 20000  # Left side of battlefield
@@ -71,15 +77,96 @@ class FleetBattleAdapter:
                 len(self._fleet.ships), team_id
             )
 
+        # Resolve fleet hierarchy policies per ship
+        policy_overrides = self._resolve_ship_policies()
+
         for i, instance in enumerate(self._fleet.ships):
             if not instance.is_combat_capable():
                 continue
 
             pos = formation_positions[i] if i < len(formation_positions) else (0, 0)
             ship = instance.to_ship(pos, team_id, registries=registries)
+
+            # Apply hierarchy policy overrides
+            override = policy_overrides.get(instance.instance_id)
+            if override:
+                mov, tgt = override
+                if mov:
+                    ship.movement_policy = mov
+                if tgt:
+                    ship.targeting_policy = tgt
+
             ships.append(ship)
 
         return ships
+
+    def _resolve_ship_policies(self) -> Dict[str, Optional[Tuple[Optional[str], Optional[str]]]]:
+        """Resolve effective movement/targeting policy for each ship from hierarchy.
+
+        Walks Fleet → TaskForce → Squadron → per-ship override, mapping group
+        policy keys to per-ship policy IDs via group_policies.json.
+
+        Returns:
+            Dict mapping instance_id to (movement_policy_id, targeting_policy_id).
+            Values are None when no hierarchy override applies (ship keeps its design default).
+        """
+        from game.strategy.data.group_policy_registry import GroupPolicyRegistry
+
+        registry = GroupPolicyRegistry()
+        registry.load()
+
+        result: Dict[str, Optional[Tuple[Optional[str], Optional[str]]]] = {}
+        fleet_policy = self._fleet.fleet_policy
+
+        for tf in self._fleet.task_forces:
+            tf_effective = tf.resolve_effective_policy(fleet_policy)
+
+            for sq in tf.squadrons:
+                sq_effective = sq.resolve_effective_policy(tf_effective)
+                for ship in sq.all_ships:
+                    self._apply_policy_override(result, ship, sq_effective, registry)
+
+            for ship in tf.lone_ships:
+                self._apply_policy_override(result, ship, tf_effective, registry)
+
+        # Unassigned ships get fleet-level policy
+        assigned_ids = set(result.keys())
+        for ship in self._fleet.ships:
+            if ship.instance_id not in assigned_ids:
+                self._apply_policy_override(result, ship, fleet_policy, registry)
+
+        return result
+
+    @staticmethod
+    def _apply_policy_override(
+        result: Dict,
+        ship: 'ShipInstance',
+        group_policy: 'CombatPolicy',
+        registry: 'GroupPolicyRegistry',
+    ) -> None:
+        """Map a resolved group CombatPolicy to per-ship policy IDs."""
+        mov_override = None
+        tgt_override = None
+
+        # Per-ship override from battle setup (stored in design_data)
+        ship_mov_group = ship.design_data.get('_movement_policy')
+
+        # Use per-ship override if set, otherwise use group hierarchy
+        mov_group_key = ship_mov_group or group_policy.movement
+
+        # Map group movement key → per_ship_policy via registry
+        if mov_group_key:
+            group_def = registry.get_movement(mov_group_key)
+            if group_def and 'per_ship_policy' in group_def:
+                mov_override = group_def['per_ship_policy']
+
+        # Per-ship targeting override from battle setup is a direct policy ID
+        ship_tgt = ship.design_data.get('_targeting_policy')
+        if ship_tgt:
+            tgt_override = ship_tgt
+
+        if mov_override or tgt_override:
+            result[ship.instance_id] = (mov_override, tgt_override)
 
     def _default_formation_positions(
         self,

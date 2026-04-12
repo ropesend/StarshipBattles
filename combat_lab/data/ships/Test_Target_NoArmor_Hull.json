@@ -5,14 +5,21 @@
     "_description": "Combat Lab test ship: No armor, 1B HP hull structure in CORE only"
   },
   "name": "Test Target NoArmor Hull",
-  "color": [0, 0, 255],
+  "color": [
+    0,
+    0,
+    255
+  ],
   "team_id": 2,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_hull_extreme_hp"}
+      {
+        "id": "test_hull_extreme_hp"
+      }
     ],
     "ARMOR": []
   },

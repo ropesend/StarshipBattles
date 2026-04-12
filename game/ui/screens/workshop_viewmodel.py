@@ -560,7 +560,8 @@ class WorkshopViewModel:
         logger.info("Clearing ship design")
         self._ship.clear_non_hull_components()
 
-        self._ship.ai_strategy = "standard_ranged"
+        self._ship.movement_policy = "kite_max"
+        self._ship.targeting_policy = "standard"
         self._ship.name = "Custom Ship"
 
         self.clear_selection()
@@ -604,23 +605,40 @@ class WorkshopViewModel:
         self._ship.theme_id = theme_id
         self._emit_ship_updated()
 
-    def set_ship_ai_strategy(self, strategy_id: str) -> None:
-        """
-        Set the ship's AI strategy via the ViewModel.
+    def set_ship_movement_policy(self, policy_id: str) -> None:
+        """Set the ship's movement policy via the ViewModel.
 
         Encapsulates direct ship mutation and emits SHIP_UPDATED event.
-        Does not emit if strategy is unchanged.
+        Does not emit if policy is unchanged.
 
         Args:
-            strategy_id: AI strategy identifier (e.g., "standard_ranged", "aggressive_close")
+            policy_id: Movement policy identifier (e.g., "kite_max", "brawl_close")
         """
-        if not self._require_ship("set AI strategy"):
+        if not self._require_ship("set movement policy"):
             return
 
-        if self._ship.ai_strategy == strategy_id:
+        if self._ship.movement_policy == policy_id:
             return  # No change, skip event emission
 
-        self._ship.ai_strategy = strategy_id
+        self._ship.movement_policy = policy_id
+        self._emit_ship_updated()
+
+    def set_ship_targeting_policy(self, policy_id: str) -> None:
+        """Set the ship's targeting policy via the ViewModel.
+
+        Encapsulates direct ship mutation and emits SHIP_UPDATED event.
+        Does not emit if policy is unchanged.
+
+        Args:
+            policy_id: Targeting policy identifier (e.g., "standard", "sniper")
+        """
+        if not self._require_ship("set targeting policy"):
+            return
+
+        if self._ship.targeting_policy == policy_id:
+            return  # No change, skip event emission
+
+        self._ship.targeting_policy = policy_id
         self._emit_ship_updated()
 
     def set_ship_design_role(self, role_id: str) -> None:

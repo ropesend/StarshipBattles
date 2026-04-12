@@ -5,20 +5,30 @@
     "_description": "Beam with consumption increase (param=2 -> consumption_mult=2 -> 10->20 energy/shot)"
   },
   "name": "Test Attacker Beam ConsumptionIncrease",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_beam_rapid_1dmg_energy_consumption",
         "modifiers": [
-          { "id": "test_consumption_increase", "value": 2 }
+          {
+            "id": "test_consumption_increase",
+            "value": 2
+          }
         ]
       },
-      { "id": "test_storage_energy_250" }
+      {
+        "id": "test_storage_energy_250"
+      }
     ],
     "ARMOR": []
   },
@@ -34,5 +44,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 250, "ammo": 0.0 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 250,
+    "ammo": 0.0
+  }
 }

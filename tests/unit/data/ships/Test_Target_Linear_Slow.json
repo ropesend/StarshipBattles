@@ -8,7 +8,8 @@
     "team_id": 2,
     "ship_class": "TestM_2L",
     "theme_id": "Federation",
-    "ai_strategy": "test_straight_line",
+    "movement_policy": "test_straight_line",
+    "targeting_policy": "standard",
     "layers": {
         "CORE": [
             {

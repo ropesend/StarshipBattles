@@ -165,20 +165,20 @@ class TestTargetSelection:
 class TestAIControllerWithProductionData:
     """Integration tests using production JSON data files (TCG-FND-024).
 
-    These tests load real combat_strategies.json to verify the AI controller
-    works correctly with actual strategy definitions.
+    These tests load real policy JSON files to verify the AI controller
+    works correctly with actual policy definitions.
     """
 
     @pytest.fixture
-    def production_strategy_manager(self):
-        """Load production combat strategies from real JSON files."""
-        from game.ai.strategy_manager import get_default_strategy_manager
+    def production_policy_manager(self):
+        """Load production policies from real JSON files."""
+        from game.ai.policy_manager import get_default_policy_manager
         from tests.fixtures.paths import get_data_dir
 
         data_dir = get_data_dir()
 
         # Clear and reload with production data
-        manager = get_default_strategy_manager()
+        manager = get_default_policy_manager()
         manager.clear()
         manager.load_data(str(data_dir))
 
@@ -187,26 +187,28 @@ class TestAIControllerWithProductionData:
         # Cleanup
         manager.clear()
 
-    def test_resolve_strategy_from_production_data(self, production_strategy_manager):
-        """StrategyManager resolves strategies from production JSON (TCG-FND-024)."""
-        # Verify we have loaded strategies
-        assert len(production_strategy_manager.strategies) > 0
+    def test_lookup_policy_from_production_data(self, production_policy_manager):
+        """PolicyManager looks up policies from production JSON (TCG-FND-024)."""
+        # Verify we have loaded policies
+        assert len(production_policy_manager.targeting_policies) > 0
+        assert len(production_policy_manager.movement_policies) > 0
 
-        # Resolve a known production strategy
-        resolved = production_strategy_manager.resolve_strategy('standard_ranged')
+        # Look up a known production policy
+        targeting = production_policy_manager.get_targeting_policy('standard')
+        movement = production_policy_manager.get_movement_policy('kite_max')
 
-        # Should have all required keys
-        assert 'definition' in resolved
-        assert 'targeting' in resolved
-        assert 'movement' in resolved
+        # Should have expected keys
+        assert 'rules' in targeting
+        assert 'behavior' in movement
 
-    def test_ai_controller_with_production_strategy(
-        self, spatial_grid, create_test_ship, production_strategy_manager
+    def test_ai_controller_with_production_policy(
+        self, spatial_grid, create_test_ship, production_policy_manager
     ):
-        """AIController works with production strategy data (TCG-FND-024)."""
-        # Create ship with production strategy
+        """AIController works with production policy data (TCG-FND-024)."""
+        # Create ship with production policies
         ship1 = create_test_ship("Ally", 0, 0, team_id=0)
-        ship1.ai_strategy = 'standard_ranged'  # Real production strategy
+        ship1.movement_policy = 'kite_max'
+        ship1.targeting_policy = 'standard'
 
         enemy = create_test_ship("Enemy", 500, 0, team_id=1)
 
@@ -215,18 +217,18 @@ class TestAIControllerWithProductionData:
 
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
-        # Should update without error using production strategy
+        # Should update without error using production policies
         ai_controller.update()
 
         # Should acquire target
         assert ship1.current_target == enemy
 
     def test_ai_controller_behavior_selection_from_production_data(
-        self, spatial_grid, create_test_ship, production_strategy_manager
+        self, spatial_grid, create_test_ship, production_policy_manager
     ):
-        """AIController selects correct behavior from production strategy (TCG-FND-024)."""
+        """AIController selects correct behavior from production policy (TCG-FND-024)."""
         ship1 = create_test_ship("Ally", 0, 0, team_id=0)
-        ship1.ai_strategy = 'standard_ranged'
+        ship1.movement_policy = 'kite_max'
 
         enemy = create_test_ship("Enemy", 500, 0, team_id=1)
 
@@ -236,29 +238,30 @@ class TestAIControllerWithProductionData:
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
-        # standard_ranged uses kite_max movement policy which should select 'kite' behavior
+        # kite_max movement policy should select 'kite' behavior
         assert ai_controller.current_behavior is not None
 
-    def test_all_production_strategies_resolvable(self, production_strategy_manager):
-        """All production strategies can be resolved without error (TCG-FND-024)."""
-        for strategy_id in production_strategy_manager.strategies.keys():
-            resolved = production_strategy_manager.resolve_strategy(strategy_id)
+    def test_all_production_policies_loadable(self, production_policy_manager):
+        """All production policies can be looked up without error (TCG-FND-024)."""
+        for policy_id in production_policy_manager.targeting_policies.keys():
+            result = production_policy_manager.get_targeting_policy(policy_id)
+            assert result is not None
 
-            # Each should have minimum required structure
-            assert resolved is not None
-            assert 'targeting' in resolved
-            assert 'movement' in resolved
+        for policy_id in production_policy_manager.movement_policies.keys():
+            result = production_policy_manager.get_movement_policy(policy_id)
+            assert result is not None
+            assert 'behavior' in result
 
-    def test_ai_controller_with_multiple_strategies(
-        self, spatial_grid, create_test_ship, production_strategy_manager
+    def test_ai_controller_with_multiple_policies(
+        self, spatial_grid, create_test_ship, production_policy_manager
     ):
-        """Multiple ships with different strategies work together (TCG-FND-024)."""
-        # Create ships with different production strategies
+        """Multiple ships with different policies work together (TCG-FND-024)."""
+        # Create ships with different production policies
         ship_standard = create_test_ship("Standard", 0, 0, team_id=0)
-        ship_standard.ai_strategy = 'standard_ranged'
+        ship_standard.movement_policy = 'kite_max'
 
         ship_brawler = create_test_ship("Brawler", 100, 0, team_id=0)
-        ship_brawler.ai_strategy = 'brawler'
+        ship_brawler.movement_policy = 'brawl_close'
 
         enemy = create_test_ship("Enemy", 500, 0, team_id=1)
 

@@ -118,7 +118,7 @@ class TestShipStateValidation:
             'theme_id': 'federation',
             'team_id': 0,
             'color': [255, 0, 0],
-            'ai_strategy': 'aggressive',
+            'movement_policy': 'brawl_close',
             'position': [100.0, 200.0],
             'velocity': [1.0, 0.0],
             'angle': 45.0,

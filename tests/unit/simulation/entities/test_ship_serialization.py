@@ -61,7 +61,8 @@ def equipped_ship(registries):
         theme_id="Terran",
         registries=registries
     )
-    ship.ai_strategy = "aggressive"
+    ship.movement_policy = "brawl_close"
+    ship.targeting_policy = "brawler"
 
     # Add components to different layers
     bridge = create_component('bridge', registries=registries)
@@ -106,7 +107,8 @@ def full_ship_dict():
         "theme_id": "Federation",
         "team_id": 3,
         "color": [128, 64, 255],
-        "ai_strategy": "defensive",
+        "movement_policy": "kite_medium",
+        "targeting_policy": "standard",
         "layers": {
             "CORE": [{"id": "bridge", "modifiers": []}],
             "INNER": [{"id": "fuel_tank", "modifiers": []}],  # fuel_tank instead of engine
@@ -150,10 +152,10 @@ class TestToDictSerialization:
         assert "vehicle_type" in data
         assert data["vehicle_type"] == basic_ship.vehicle_type
 
-    def test_to_dict_serializes_ai_strategy(self, equipped_ship):
-        """to_dict should serialize ai_strategy."""
+    def test_to_dict_serializes_movement_policy(self, equipped_ship):
+        """to_dict should serialize movement_policy."""
         data = ShipSerializer.to_dict(equipped_ship)
-        assert data["ai_strategy"] == "aggressive"
+        assert data["movement_policy"] == "brawl_close"
 
     def test_to_dict_serializes_layers(self, equipped_ship):
         """to_dict should serialize components in each layer."""
@@ -253,7 +255,7 @@ class TestFromDictDeserialization:
         assert ship.ship_class == "Escort"  # default
         assert ship.theme_id == "Federation"  # default
         assert ship.team_id == 0  # default
-        assert ship.ai_strategy == "standard_ranged"  # default
+        assert ship.movement_policy == "kite_max"  # default
 
     def test_from_dict_restores_basic_properties(self, full_ship_dict, registries):
         """from_dict should restore all basic ship properties."""
@@ -264,7 +266,7 @@ class TestFromDictDeserialization:
         assert ship.theme_id == "Federation"
         assert ship.team_id == 3
         assert tuple(ship.color) == (128, 64, 255)
-        assert ship.ai_strategy == "defensive"
+        assert ship.movement_policy == "kite_medium"
 
     def test_from_dict_converts_color_list_to_tuple(self, registries):
         """from_dict should convert color list to tuple."""
@@ -358,12 +360,12 @@ class TestRoundTrip:
 
         assert tuple(restored.color) == tuple(basic_ship.color)
 
-    def test_roundtrip_preserves_ai_strategy(self, equipped_ship, registries):
-        """Round-trip should preserve ai_strategy."""
+    def test_roundtrip_preserves_movement_policy(self, equipped_ship, registries):
+        """Round-trip should preserve movement_policy."""
         data = ShipSerializer.to_dict(equipped_ship)
         restored = ShipSerializer.from_dict(data, registries=registries)
 
-        assert restored.ai_strategy == equipped_ship.ai_strategy
+        assert restored.movement_policy == equipped_ship.movement_policy
 
     def test_roundtrip_preserves_component_count(self, equipped_ship, registries):
         """Round-trip should preserve component counts in each layer."""

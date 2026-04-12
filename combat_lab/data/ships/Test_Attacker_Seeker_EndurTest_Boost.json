@@ -5,20 +5,30 @@
     "_description": "Seeker with test_seeker_endurance_test + test_endurance_boost(2), endurance 3.0→6.0s, max travel=6000px"
   },
   "name": "Test Attacker Seeker EndurTest Boost",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_seeker_endurance_test",
         "modifiers": [
-          { "id": "test_endurance_boost", "value": 2 }
+          {
+            "id": "test_endurance_boost",
+            "value": 2
+          }
         ]
       },
-      { "id": "test_storage_ammo_100k" }
+      {
+        "id": "test_storage_ammo_100k"
+      }
     ],
     "ARMOR": []
   },
@@ -34,5 +44,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 0.0, "ammo": 100000 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 100000
+  }
 }

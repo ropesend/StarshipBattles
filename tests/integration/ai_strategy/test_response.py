@@ -1,5 +1,5 @@
 """
-Tests for AI response to changing battle conditions and strategy resolution.
+Tests for AI response to changing battle conditions and policy resolution.
 """
 
 import pytest
@@ -36,8 +36,8 @@ class TestAIResponse:
         ai_controller.update()
         assert ship1.current_target == enemy2
 
-    def test_transitions_strategy_on_damage(self, spatial_grid, create_test_ship):
-        """AI may switch strategy when damaged."""
+    def test_transitions_behavior_on_damage(self, spatial_grid, create_test_ship):
+        """AI may switch behavior when damaged."""
         ship1 = create_test_ship("Ally", 0, 0, team_id=0)
         enemy = create_test_ship("Enemy", 1000, 0, team_id=1)
 
@@ -60,26 +60,27 @@ class TestAIResponse:
         assert 'flee' in damaged_behavior.lower()
 
 
-class TestStrategyResolution:
-    """Tests for strategy configuration resolution."""
+class TestPolicyResolution:
+    """Tests for policy configuration resolution."""
 
-    def test_resolves_strategy_from_manager(self, spatial_grid, create_test_ship):
-        """AI resolves strategy from StrategyManager."""
+    def test_resolves_policies_from_manager(self, spatial_grid, create_test_ship):
+        """AI resolves policies from PolicyManager."""
         ship1 = create_test_ship("Ally", 0, 0, team_id=0)
 
         spatial_grid.insert(ship1)
 
-        ship1.ai_strategy = 'max_weapons_range'
+        ship1.movement_policy = 'kite_max'
+        ship1.targeting_policy = 'standard'
 
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
-        resolved = ai_controller.get_resolved_strategy()
+        resolved = ai_controller.get_resolved_policies()
 
         assert resolved is not None
         assert 'targeting' in resolved
         assert 'movement' in resolved
 
     # NOTE: test_default_strategy_if_not_set was deleted in PROJ-192 Phase 3.
-    # Ship ALWAYS has ai_strategy (set in __init__), so testing fallback behavior
+    # Ship ALWAYS has movement_policy (set in __init__), so testing fallback behavior
     # for missing attribute was testing an impossible scenario.
 
     def test_engage_distance_multiplier(self, spatial_grid, create_test_ship):

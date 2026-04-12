@@ -90,7 +90,7 @@ class TestBattlePanels:
         ship.resources.set_max_value('fuel', 100)
         ship.resources.set_max_value('energy', 100)
         ship.resources.set_max_value('ammo', 100)
-        ship.ai_strategy = "aggressive"
+        ship.movement_policy = "brawl_close"
         return ship
 
     def test_stats_panel_expansion(self):
@@ -280,7 +280,7 @@ class TestBattlePanelsDTOIntegration:
         dto.current_target_name = None
         dto.secondary_target_names = []
         dto.max_targets = 1
-        dto.ai_strategy = "aggressive"
+        dto.movement_policy = "brawl_close"
         dto.source_file = None
         dto.resources = []
         dto.components = []

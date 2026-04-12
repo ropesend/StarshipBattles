@@ -160,7 +160,7 @@ class CollisionSystem:
         """
         for s in ships:
             if not s.is_alive: continue
-            if getattr(s, 'ai_strategy', '') != 'kamikaze': continue
+            if getattr(s, 'movement_policy', '') != 'ramming_speed': continue
             
             target = s.current_target
             if not target or not target.is_alive: continue

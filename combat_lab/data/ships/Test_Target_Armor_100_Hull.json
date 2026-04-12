@@ -5,17 +5,26 @@
     "_description": "Combat Lab test ship: 100 HP armor in ARMOR layer + 1B HP hull in CORE"
   },
   "name": "Test Target Armor 100 Hull",
-  "color": [0, 0, 255],
+  "color": [
+    0,
+    0,
+    255
+  ],
   "team_id": 2,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_hull_extreme_hp"}
+      {
+        "id": "test_hull_extreme_hp"
+      }
     ],
     "ARMOR": [
-      {"id": "test_armor_100"}
+      {
+        "id": "test_armor_100"
+      }
     ]
   },
   "_test_notes": "100 HP armor depletes after 100 hits, remaining damage overflows to CORE hull. For ARMOR-LAYER-002/003.",

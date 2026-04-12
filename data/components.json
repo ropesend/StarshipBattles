@@ -127,7 +127,7 @@
             ],
             "sprite_index": 67,
             "abilities": {
-                "ManeuveringThruster": 30,
+                "ManeuveringThruster": 90,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Engines",
@@ -710,7 +710,7 @@
             ],
             "sprite_index": 19,
             "abilities": {
-                "ShieldRegeneration": 5.0,
+                "ShieldRegeneration": 2.0,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",

@@ -63,9 +63,13 @@
       "type": "string",
       "description": "Visual theme identifier"
     },
-    "ai_strategy": {
+    "movement_policy": {
       "type": "string",
-      "description": "AI strategy identifier"
+      "description": "Movement policy identifier"
+    },
+    "targeting_policy": {
+      "type": "string",
+      "description": "Targeting policy identifier"
     },
     "layers": {
       "type": "object",

@@ -33,7 +33,7 @@ def mock_ship():
     ship.current_target = None
     ship.secondary_targets = []
     ship.max_targets = 1
-    ship.ai_strategy = "aggressive"
+    ship.movement_policy = "brawl_close"
     ship.source_file = "ships/test.json"
     ship.layers = {}
 

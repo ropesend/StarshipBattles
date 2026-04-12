@@ -19,8 +19,8 @@ Behaviors (game.ai.behaviors):
     StationaryFireBehavior - Fire without moving (test/debug)
     DoNothingBehavior - No action (test/debug)
 
-Strategy (game.ai.strategy_manager):
-    StrategyManager - Resolves AI strategy names to full definitions
+Policy (game.ai.policy_manager):
+    PolicyManager - Loads and provides lookup for targeting and movement policies
 
 Targeting (game.ai.target_evaluator):
     TargetEvaluator - Scores and prioritizes potential targets
@@ -78,8 +78,8 @@ from game.ai.behaviors import (
     DoNothingBehavior,
 )
 
-# Strategy
-from game.ai.strategy_manager import StrategyManager
+# Policy
+from game.ai.policy_manager import PolicyManager
 
 # Targeting
 from game.ai.target_evaluator import TargetEvaluator

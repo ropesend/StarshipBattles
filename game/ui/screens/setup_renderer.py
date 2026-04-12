@@ -3,11 +3,8 @@ Battle setup screen rendering functions.
 
 Pure rendering functions for drawing the setup screen UI elements.
 
-Cross-layer imports (acceptable for UI):
-- StrategyMetadataService: Core layer - populates AI strategy dropdown options
 """
 import pygame
-from game.core.strategy_metadata import get_default_strategy_metadata_service
 from game.ui.fonts import get_default_font
 from game.ui.colors import (
     TEXT_LIGHT, TEXT_ITEM, WHITE,
@@ -110,7 +107,7 @@ def draw_team(screen, display_list, col_x, title_text, color, label_font, item_f
         y = 150 + i * 35
         name = item['name']
         strategy = item['strategy']
-        strat_name = get_default_strategy_metadata_service().strategies.get(strategy, {}).get('name', strategy)[:12]
+        strat_name = strategy[:12]
 
         is_formation = (item['type'] == 'formation')
 
@@ -209,7 +206,7 @@ def draw_ai_dropdown(screen, ai_strategies, team_idx, display_idx, col2_x, col3_
 
     # Options
     for idx, strat_id in enumerate(ai_strategies):
-        strat_name = get_default_strategy_metadata_service().strategies.get(strat_id, {}).get('name', strat_id)
+        strat_name = strat_id
         opt_y = ship_y + idx * 22
         text_color = TEXT_LIGHT
         opt_text = item_font.render(strat_name, True, text_color)

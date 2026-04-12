@@ -203,10 +203,11 @@ class TestTargetingRules:
         mock_grid.query_radius.return_value = [ship, t1, t2]
         mock_grid.query_radius_exact.return_value = [ship, t1, t2]
 
-        # Strategy mock logic is complex (get_resolved_strategy).
-        # We can mock get_resolved_strategy on the controller instance.
-        controller.get_resolved_strategy = MagicMock(return_value={
-            'targeting': {'rules': [{'type': 'nearest', 'weight': 1}]}
+        # Policy mock logic is complex (get_resolved_policies).
+        # We can mock get_resolved_policies on the controller instance.
+        controller.get_resolved_policies = MagicMock(return_value={
+            'targeting': {'rules': [{'type': 'nearest', 'weight': 1}]},
+            'movement': {'behavior': 'kite'},
         })
 
         # Helper evaluator mock to avoid layout issues?

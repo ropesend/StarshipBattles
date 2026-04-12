@@ -2,7 +2,6 @@
 
 PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 - ShipFactory: Creates and configures Ship instances via UI services layer
-- StrategyMetadataService: Core layer - populates AI strategy dropdown options
 
 PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization
 to get registries from get_default_registry_provider() when first needed.
@@ -20,7 +19,6 @@ from game.ui.colors import BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT
 
 logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
-from game.core.strategy_metadata import get_default_strategy_metadata_service
 from game.core.paths import Paths
 from game.ui.screens.setup_data_io import (
     scan_ship_designs,
@@ -31,6 +29,17 @@ from game.ui.screens.setup_renderer import (
     draw_team, draw_action_buttons, draw_ai_dropdown
 )
 
+
+_MOVEMENT_OPTIONS = [
+    ("kite_max", "Hold Range"),
+    ("kite_optimal", "Optimal Range"),
+    ("brawl_close", "Advance"),
+    ("kite_medium", "Pursue"),
+    ("strafe_run", "Hit & Run"),
+    ("hold_position", "Hold Position"),
+    ("ramming_speed", "Ram"),
+    ("flee_panic", "Evasive"),
+]
 
 # PROJ-211: Lazy factory initialization (registries not available at import time)
 _ship_factory = None
@@ -80,7 +89,7 @@ class BattleSetupScreen:
         self.team2 = []
         self.scroll = ScrollState()
         self.ai_dropdown_open = None
-        self.ai_strategies = list(get_default_strategy_metadata_service().strategies.keys())
+        self.ai_strategies = [mid for mid, _ in _MOVEMENT_OPTIONS]
 
     def start(self, preserve_teams=False):
         """Initialize or reset the setup screen."""
@@ -208,7 +217,7 @@ class BattleSetupScreen:
             y = 150 + i * 40
             if y <= my < y + 35:
                 target = self.team1 if button == 1 else self.team2
-                target.append({'design': design, 'strategy': design.get('ai_strategy', 'standard_ranged')})
+                target.append({'design': design, 'strategy': design.get('movement_policy', 'kite_max')})
                 return True
 
         return False

@@ -20,21 +20,11 @@ class TestBattleSetupScreen:
         self.mock_tk = MagicMock()
         self.mock_filedialog = MagicMock()
 
-        # Mock the strategy metadata service
-        self.mock_strategy_service = MagicMock()
-        self.mock_strategy_service.strategies = {
-            'aggressive': MagicMock(),
-            'defensive': MagicMock(),
-            'standard_ranged': MagicMock(),
-        }
-
         with patch('tkinter.Tk', return_value=self.mock_tk):
             with patch('tkinter.filedialog', self.mock_filedialog):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
+                from game.ui.screens.setup_screen import BattleSetupScreen
+                self.BattleSetupScreen = BattleSetupScreen
+                yield
 
     def test_init_sets_up_empty_team_lists(self):
         """Test initialization sets up empty team lists."""
@@ -57,12 +47,12 @@ class TestBattleSetupScreen:
 
         assert screen.scene_callback == callback
 
-    def test_init_loads_ai_strategies(self):
-        """Test initialization loads AI strategies."""
+    def test_init_loads_movement_policies(self):
+        """Test initialization loads movement policy options."""
         screen = self.BattleSetupScreen(800, 600)
 
-        assert 'aggressive' in screen.ai_strategies
-        assert 'defensive' in screen.ai_strategies
+        assert len(screen.ai_strategies) > 0
+        assert 'kite_max' in screen.ai_strategies
 
     def test_start_initializes_available_designs(self):
         """Test start() initializes available_ship_designs."""
@@ -133,17 +123,15 @@ class TestBattleSetupScreenTeamManagement:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
+                from game.ui.screens.setup_screen import BattleSetupScreen
+                self.BattleSetupScreen = BattleSetupScreen
+                yield
 
     def test_handle_ships_click_adds_to_team1_on_left_click(self):
         """Test clicking ship design adds to team1 on left click."""
         screen = self.BattleSetupScreen(800, 600)
         screen.available_ship_designs = [
-            {'name': 'Fighter', 'path': '/fighter.json', 'ai_strategy': 'standard_ranged'}
+            {'name': 'Fighter', 'path': '/fighter.json', 'movement_policy': 'kite_max'}
         ]
 
         # Left click on first ship design
@@ -157,7 +145,7 @@ class TestBattleSetupScreenTeamManagement:
         """Test clicking ship design adds to team2 on right click."""
         screen = self.BattleSetupScreen(800, 600)
         screen.available_ship_designs = [
-            {'name': 'Fighter', 'path': '/fighter.json', 'ai_strategy': 'standard_ranged'}
+            {'name': 'Fighter', 'path': '/fighter.json', 'movement_policy': 'kite_max'}
         ]
 
         # Right click on first ship design
@@ -204,11 +192,9 @@ class TestBattleSetupScreenSceneCallbacks:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
+                from game.ui.screens.setup_screen import BattleSetupScreen
+                self.BattleSetupScreen = BattleSetupScreen
+                yield
 
     def test_trigger_start_battle_invokes_callback(self):
         """Test _trigger_start_battle invokes scene_callback with 'start_battle'."""
@@ -265,11 +251,9 @@ class TestBattleSetupScreenFileIO:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
+                from game.ui.screens.setup_screen import BattleSetupScreen
+                self.BattleSetupScreen = BattleSetupScreen
+                yield
 
     def test_save_setup_calls_save_battle_setup(self):
         """Test save_setup calls save_battle_setup when path provided."""
@@ -345,11 +329,9 @@ class TestBattleSetupScreenDropdown:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
+                from game.ui.screens.setup_screen import BattleSetupScreen
+                self.BattleSetupScreen = BattleSetupScreen
+                yield
 
     def test_handle_dropdown_click_changes_strategy(self):
         """Test clicking dropdown option changes ship strategy."""
@@ -394,11 +376,9 @@ class TestBattleSetupScreenISceneProtocol:
 
         with patch('tkinter.Tk', return_value=MagicMock()):
             with patch('tkinter.filedialog', MagicMock()):
-                with patch('game.ui.screens.setup_screen.get_default_strategy_metadata_service') as mock_sms:
-                    mock_sms.return_value = self.mock_strategy_service
-                    from game.ui.screens.setup_screen import BattleSetupScreen
-                    self.BattleSetupScreen = BattleSetupScreen
-                    yield
+                from game.ui.screens.setup_screen import BattleSetupScreen
+                self.BattleSetupScreen = BattleSetupScreen
+                yield
 
     def test_handle_event_method_exists(self):
         """Test handle_event method exists (IScene protocol)."""

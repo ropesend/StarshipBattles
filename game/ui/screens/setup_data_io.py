@@ -65,7 +65,7 @@ def scan_ship_designs():
                     'path': filepath,
                     'name': data.get('name', filename),
                     'ship_class': data.get('ship_class', 'Unknown'),
-                    'ai_strategy': data.get('ai_strategy', 'standard_ranged')
+                    'movement_policy': data.get('movement_policy', 'kite_max')
                 })
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             logger.warning(f"Failed to load ship design from '{filepath}': {e}")
@@ -110,7 +110,7 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
             position=position,
             angle=facing_angle,
             team_id=team_id,
-            ai_strategy=entry['strategy'],
+            movement_policy=entry['strategy'],
             source_file=os.path.basename(entry['design']['path'])
         )
         ship.recalculate_stats()

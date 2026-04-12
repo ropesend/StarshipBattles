@@ -5,17 +5,25 @@
     "_description": "Beam with damage_mult at maximum (10.0)"
   },
   "name": "Test Attacker Beam DmgBoost Max",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_beam_med_acc_1dmg",
         "modifiers": [
-          { "id": "test_damage_boost", "value": 10.0 }
+          {
+            "id": "test_damage_boost",
+            "value": 10.0
+          }
         ]
       }
     ],
@@ -33,5 +41,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 0.0, "ammo": 0.0 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

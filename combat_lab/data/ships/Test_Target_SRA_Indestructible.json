@@ -1,7 +1,37 @@
 {
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Target with indestructible SRA (1B HP) in ARMOR layer"},
-  "name": "Test Target SRA Indestructible", "color": [0, 0, 255], "team_id": 2, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
-  "layers": {"CORE": [{"id": "test_hull_extreme_hp"}, {"id": "test_shield_200"}], "ARMOR": [{"id": "test_sra_15_indestructible"}]},
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_description": "Target with indestructible SRA (1B HP) in ARMOR layer"
+  },
+  "name": "Test Target SRA Indestructible",
+  "color": [
+    0,
+    0,
+    255
+  ],
+  "team_id": 2,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
+  "layers": {
+    "CORE": [
+      {
+        "id": "test_hull_extreme_hp"
+      },
+      {
+        "id": "test_shield_200"
+      }
+    ],
+    "ARMOR": [
+      {
+        "id": "test_sra_15_indestructible"
+      }
+    ]
+  },
   "_test_notes": "SRA (1B HP) never destroyed. Baseline for SRA-003.",
-  "expected_stats": {"mass": 400.0}
+  "expected_stats": {
+    "mass": 400.0
+  }
 }

@@ -28,12 +28,11 @@ Targeting System:
     5. Select highest-scoring target as primary
     6. If ship has multiplex tracking, select additional secondary targets
 
-Strategy Resolution:
-    Ships have an ai_strategy attribute (e.g., 'standard_ranged', 'aggressive').
-    StrategyManager resolves this to a full strategy definition with:
+Policy Resolution:
+    Ships have movement_policy and targeting_policy attributes (e.g., 'kite_max', 'standard').
+    PolicyManager resolves these to full policy definitions with:
     - targeting: rules for scoring targets
     - movement: behavior, engage_distance, retreat_hp_threshold
-    - attack_run_behavior: approach/retreat distances and timing
 
 Example:
     controller = AIController(ship_adapter, grid, enemy_team=1)
@@ -65,7 +64,7 @@ from game.core.protocols import is_combatant
 from game.ai.protocols import is_projectile, IGridEntity
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
-from game.ai.strategy_manager import get_default_strategy_manager
+from game.ai.policy_manager import get_default_policy_manager
 from game.ai.combat_utils import (
     get_capability_cache_key,
     get_entity_id,
@@ -100,10 +99,13 @@ class AIController:
         }
         self.current_behavior = None
 
-    def get_resolved_strategy(self) -> Dict[str, Any]:
-        """Get the fully resolved strategy for this ship's AI strategy ID."""
-        strategy_id = self.ship.get_ai_strategy()
-        return get_default_strategy_manager().resolve_strategy(strategy_id)
+    def get_resolved_policies(self) -> Dict[str, Any]:
+        """Get the resolved targeting and movement policies for this ship."""
+        pm = get_default_policy_manager()
+        return {
+            'targeting': pm.get_targeting_policy(self.ship.get_targeting_policy()),
+            'movement': pm.get_movement_policy(self.ship.get_movement_policy()),
+        }
 
     def get_engage_distance_multiplier(self, policy) -> float:
         """Helper to get engage distance multiplier from policy."""
@@ -247,7 +249,7 @@ class AIController:
 
     def find_target(self) -> Optional[Any]:
         """Find target based on strategy's targeting priority."""
-        resolved = self.get_resolved_strategy()
+        resolved = self.get_resolved_policies()
         targeting_policy = resolved['targeting']
         rules = targeting_policy.get('rules', [])
 
@@ -270,7 +272,7 @@ class AIController:
         count_needed = max_targets - 1
         current = self.ship.get_current_target()
 
-        resolved = self.get_resolved_strategy()
+        resolved = self.get_resolved_policies()
         targeting_policy = resolved['targeting']
         rules = targeting_policy.get('rules', [])
 
@@ -298,7 +300,7 @@ class AIController:
         self.ship.set_turn_throttle(1.0)
         self.ship.set_throttle(1.0)
 
-        resolved = self.get_resolved_strategy()
+        resolved = self.get_resolved_policies()
         movement_policy = resolved['movement']
 
         target = self._acquire_targets()
@@ -317,7 +319,7 @@ class AIController:
             return
 
         behavior_key = self._select_behavior(movement_policy)
-        self._execute_behavior(behavior_key, target, resolved, movement_policy)
+        self._execute_behavior(behavior_key, target, movement_policy)
 
     # -- Stage 1: Target acquisition --------------------------------------
 
@@ -358,7 +360,6 @@ class AIController:
         self,
         behavior_key: str,
         target: Optional[Any],
-        resolved: Dict[str, Any],
         movement_policy: Dict[str, Any],
     ) -> None:
         """Instantiate and tick the selected behavior."""
@@ -370,7 +371,6 @@ class AIController:
 
         if self.current_behavior:
             behavior_context = dict(movement_policy)
-            behavior_context.update(resolved.get('definition', {}))
             if target or behavior_key in _NO_TARGET_BEHAVIORS:
                 self.current_behavior.update(target, behavior_context)
 

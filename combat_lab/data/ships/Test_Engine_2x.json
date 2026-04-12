@@ -14,7 +14,8 @@
   "team_id": 0,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
@@ -40,7 +41,10 @@
     "armor_hp_pool": 0
   },
   "propulsion_details": {
-    "engine_components": ["test_engine_no_fuel", "test_engine_no_fuel"],
+    "engine_components": [
+      "test_engine_no_fuel",
+      "test_engine_no_fuel"
+    ],
     "engine_thrust_each": 500,
     "total_thrust": 1000,
     "total_mass": 400,

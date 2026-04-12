@@ -46,7 +46,7 @@ class TestFacingAngleModifier:
         design = {
             'name': 'Test', 'ship_class': 'Escort', 'vehicle_type': 'Ship',
             'theme_id': 'Federation', 'team_id': 0, 'color': [255, 255, 255],
-            'ai_strategy': 'standard_ranged',
+            'movement_policy': 'kite_max',
             'layers': {
                 'CORE': [{'id': 'bridge'}],
                 'OUTER': [

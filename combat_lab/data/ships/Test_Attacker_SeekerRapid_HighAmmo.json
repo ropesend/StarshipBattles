@@ -6,15 +6,24 @@
     "_description": "Combat Lab test ship: Rapid-fire seeker with high ammo for RESOURCE-008"
   },
   "name": "Test Attacker SeekerRapid HighAmmo",
-  "color": [255, 0, 200],
+  "color": [
+    255,
+    0,
+    200
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_seeker_rapid"},
-      {"id": "test_storage_ammo_100k"}
+      {
+        "id": "test_seeker_rapid"
+      },
+      {
+        "id": "test_storage_ammo_100k"
+      }
     ],
     "ARMOR": []
   },

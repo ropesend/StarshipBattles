@@ -6,15 +6,24 @@
     "_description": "Combat Lab test ship: Rapid-fire projectile with low ammo for RESOURCE-007 depletion"
   },
   "name": "Test Attacker ProjRapid LowAmmo",
-  "color": [255, 150, 0],
+  "color": [
+    255,
+    150,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_proj_rapid"},
-      {"id": "test_storage_ammo_small"}
+      {
+        "id": "test_proj_rapid"
+      },
+      {
+        "id": "test_storage_ammo_small"
+      }
     ],
     "ARMOR": []
   },

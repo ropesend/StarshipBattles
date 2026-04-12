@@ -206,7 +206,7 @@ class BattleUIService:
             current_target_name=current_target_name,
             secondary_target_names=secondary_target_names,
             max_targets=ship.max_targets,
-            ai_strategy=ship.ai_strategy,
+            movement_policy=ship.movement_policy,
             source_file=ship.source_file,
             resources=resources,
             components=components

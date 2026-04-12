@@ -48,7 +48,7 @@ class TestDesignValidator:
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
-            'ai_strategy': 'standard_ranged',
+            'movement_policy': 'kite_max',
             'layers': {
                 'CORE': [
                     {'id': 'bridge'},
@@ -107,7 +107,7 @@ class TestLayerMassValidation:
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
-            'ai_strategy': 'standard_ranged',
+            'movement_policy': 'kite_max',
             'layers': {
                 'CORE': [
                     {'id': 'central_complex_command'},
@@ -134,7 +134,7 @@ class TestLayerMassValidation:
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
-            'ai_strategy': 'standard_ranged',
+            'movement_policy': 'kite_max',
             'layers': {
                 'CORE': [
                     {'id': 'central_complex_command'},
@@ -160,7 +160,7 @@ class TestLayerMassValidation:
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
-            'ai_strategy': 'standard_ranged',
+            'movement_policy': 'kite_max',
             'layers': {
                 'CORE': [
                     {'id': 'bridge'},
@@ -190,7 +190,7 @@ class TestLayerMassValidation:
             'theme_id': 'Federation',
             'team_id': 0,
             'color': [255, 255, 255],
-            'ai_strategy': 'standard_ranged',
+            'movement_policy': 'kite_max',
             'layers': {
                 'CORE': [{'id': 'bridge'}],
                 'OUTER': [{'id': 'standard_engine'}],

@@ -47,15 +47,15 @@ PDC_TARGET = "Test_Target_PDC.json"
 
 
 class _PDCMixin:
-    """Mixin to force PDC target to fire (AI strategy handles it)."""
+    """Mixin to force PDC target to fire (AI movement policy handles it)."""
 
     def configure_baseline(self, engine):
         """Set target to also fire (PDC defense)."""
-        self.target.ai_strategy = 'test_stationary_fire'
+        self.target.movement_policy = 'test_stationary'
 
     def configure_variant(self, engine):
         """Set target to also fire (PDC defense)."""
-        self.target.ai_strategy = 'test_stationary_fire'
+        self.target.movement_policy = 'test_stationary'
 
 
 # =============================================================================

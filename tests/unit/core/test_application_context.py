@@ -7,12 +7,12 @@ from game.context import ApplicationContext
 
 
 class TestApplicationContextInit:
-    """ApplicationContext constructor accepts all 10 service instances."""
+    """ApplicationContext constructor accepts all 9 service instances."""
 
     def test_constructor_accepts_all_services(self):
         services = {name: MagicMock() for name in [
-            'registry_manager', 'profiler', 'strategy_metadata',
-            'component_cache', 'strategy_manager', 'asset_manager',
+            'registry_manager', 'profiler',
+            'component_cache', 'policy_manager', 'asset_manager',
             'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
             'game_settings',
         ]}
@@ -21,8 +21,8 @@ class TestApplicationContextInit:
 
     def test_all_attributes_accessible(self):
         services = {name: MagicMock(name=name) for name in [
-            'registry_manager', 'profiler', 'strategy_metadata',
-            'component_cache', 'strategy_manager', 'asset_manager',
+            'registry_manager', 'profiler',
+            'component_cache', 'policy_manager', 'asset_manager',
             'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
             'game_settings',
         ]}
@@ -35,9 +35,8 @@ class TestApplicationContextInit:
         ctx = ApplicationContext(
             registry_manager="fake_registry",
             profiler="fake_profiler",
-            strategy_metadata="fake_metadata",
             component_cache="fake_cache",
-            strategy_manager="fake_strategy",
+            policy_manager="fake_policy",
             asset_manager="fake_assets",
             sprite_manager="fake_sprites",
             ship_theme_manager="fake_themes",
@@ -58,8 +57,8 @@ class TestCreateProduction:
     def test_all_attributes_populated(self):
         ctx = ApplicationContext.create_production()
         for name in [
-            'registry_manager', 'profiler', 'strategy_metadata',
-            'component_cache', 'strategy_manager', 'asset_manager',
+            'registry_manager', 'profiler',
+            'component_cache', 'policy_manager', 'asset_manager',
             'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
             'game_settings',
         ]:
@@ -86,8 +85,8 @@ class TestCreateTest:
     def test_all_attributes_populated(self):
         ctx = ApplicationContext.create_test()
         for name in [
-            'registry_manager', 'profiler', 'strategy_metadata',
-            'component_cache', 'strategy_manager', 'asset_manager',
+            'registry_manager', 'profiler',
+            'component_cache', 'policy_manager', 'asset_manager',
             'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
             'game_settings',
         ]:

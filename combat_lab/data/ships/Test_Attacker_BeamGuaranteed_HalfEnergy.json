@@ -5,18 +5,29 @@
     "_description": "Guaranteed-hit beam (1 energy/shot) + 250 energy battery (depletes at tick ~250)"
   },
   "name": "Test Attacker Beam Guaranteed + Half Energy",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_1dmg_guaranteed_energy"},
-      {"id": "test_storage_energy_250"}
+      {
+        "id": "test_beam_1dmg_guaranteed_energy"
+      },
+      {
+        "id": "test_storage_energy_250"
+      }
     ],
     "ARMOR": []
   },
   "_test_notes": "Guaranteed-hit beam + 250 energy. Fires ~250 shots then stops. For BEAMWEAPON-RES-002.",
-  "expected_stats": {"mass": 400.0}
+  "expected_stats": {
+    "mass": 400.0
+  }
 }

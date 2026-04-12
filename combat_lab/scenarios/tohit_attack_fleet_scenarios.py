@@ -103,8 +103,8 @@ class ExternalBattleConditionApplied(TestScenario):
 
         attacker.position = pygame.math.Vector2(0, 0)
         target.position = pygame.math.Vector2(POINT_BLANK_DISTANCE, 0)
-        attacker.ai_strategy = 'test_stationary_fire'
-        target.ai_strategy = 'test_do_nothing'
+        attacker.movement_policy = 'test_stationary'
+        target.movement_policy = 'test_do_nothing'
 
         end_condition = self._create_end_condition()
         battle_engine.start([attacker], [target],
@@ -185,9 +185,9 @@ class FleetSensorSameGroupMax(TestScenario):
         provider_a.position = pygame.math.Vector2(0, 0)
         provider_b.position = pygame.math.Vector2(0, 100)
         target.position = pygame.math.Vector2(500, 0)
-        provider_a.ai_strategy = 'test_do_nothing'
-        provider_b.ai_strategy = 'test_do_nothing'
-        target.ai_strategy = 'test_do_nothing'
+        provider_a.movement_policy = 'test_do_nothing'
+        provider_b.movement_policy = 'test_do_nothing'
+        target.movement_policy = 'test_do_nothing'
 
         end_condition = self._create_end_condition()
         battle_engine.start([provider_a, provider_b], [target],
@@ -233,9 +233,9 @@ class FleetSensorDiffGroupSum(TestScenario):
         provider_a.position = pygame.math.Vector2(0, 0)
         provider_b.position = pygame.math.Vector2(0, 100)
         target.position = pygame.math.Vector2(500, 0)
-        provider_a.ai_strategy = 'test_do_nothing'
-        provider_b.ai_strategy = 'test_do_nothing'
-        target.ai_strategy = 'test_do_nothing'
+        provider_a.movement_policy = 'test_do_nothing'
+        provider_b.movement_policy = 'test_do_nothing'
+        target.movement_policy = 'test_do_nothing'
 
         end_condition = self._create_end_condition()
         battle_engine.start([provider_a, provider_b], [target],

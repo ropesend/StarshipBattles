@@ -6,7 +6,7 @@ import inspect
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai.controller import AIController
-from game.ai.strategy_manager import get_default_strategy_manager
+from game.ai.policy_manager import get_default_policy_manager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
@@ -26,12 +26,11 @@ def ai_setup(fresh_registries):
     from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"), registry_provider=provider)
     # Load test data for AI strategies to ensure reproducible tests
-    manager = get_default_strategy_manager()
+    manager = get_default_policy_manager()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
         movement_file="test_movement_policies.json",
-        strategy_file="test_combat_strategies.json"
     )
     manager._loaded = True
 
@@ -71,7 +70,7 @@ def ai_setup(fresh_registries):
     }
 
     # Cleanup
-    get_default_strategy_manager().clear()
+    get_default_policy_manager().clear()
 
 
 class TestAIController:
@@ -101,7 +100,7 @@ class TestAIController:
 
     def test_strategy_dispatch_max_range(self, ai_setup):
         """AI should use max_range strategy by default."""
-        ai_setup['ship1'].ai_strategy = 'max_weapons_range'
+        ai_setup['ship1'].movement_policy = 'kite_max'
         ai_setup['ship1'].comp_trigger_pulled = False  # Initialize attribute
         ai_setup['ai'].update()
         # Should have trigger pulled for firing
@@ -109,7 +108,7 @@ class TestAIController:
 
     def test_strategy_dispatch_flee(self, ai_setup):
         """AI flee strategy should fire while retreating (per config)."""
-        ai_setup['ship1'].ai_strategy = 'flee'
+        ai_setup['ship1'].movement_policy = 'flee_panic'
         ai_setup['ship1'].comp_trigger_pulled = False  # Initialize to check it gets set True
         ai_setup['ai'].update()
         # Flee strategy has fire_while_retreating=true (per user config)
@@ -117,7 +116,7 @@ class TestAIController:
 
     def test_strategy_dispatch_kamikaze(self, ai_setup):
         """AI kamikaze should fire and charge."""
-        ai_setup['ship1'].ai_strategy = 'kamikaze'
+        ai_setup['ship1'].movement_policy = 'ramming_speed'
         ai_setup['ai'].update()
         # Kamikaze always fires
         assert ai_setup['ship1'].comp_trigger_pulled is True
@@ -160,12 +159,11 @@ def strategy_setup(fresh_registries):
     from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"), registry_provider=provider)
     # Load test data for AI strategies to ensure reproducible tests
-    manager = get_default_strategy_manager()
+    manager = get_default_policy_manager()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
         movement_file="test_movement_policies.json",
-        strategy_file="test_combat_strategies.json"
     )
     manager._loaded = True
     grid = SpatialGrid(cell_size=2000)
@@ -201,7 +199,7 @@ def strategy_setup(fresh_registries):
     }
 
     # Cleanup
-    get_default_strategy_manager().clear()
+    get_default_policy_manager().clear()
 
 
 class TestAIStrategyStates:
@@ -209,7 +207,7 @@ class TestAIStrategyStates:
 
     def test_attack_run_state_initialization(self, strategy_setup):
         """Attack run should initialize state on first update."""
-        strategy_setup['ship'].ai_strategy = 'attack_run'
+        strategy_setup['ship'].movement_policy = 'move_attack_run'
         strategy_setup['ship'].comp_trigger_pulled = False
         # Move ship far away so it starts in approach mode
         strategy_setup['ship'].position = pygame.math.Vector2(0, 0)
@@ -229,7 +227,7 @@ class TestAIStrategyStates:
 
     def test_attack_run_transitions_to_retreat(self, strategy_setup):
         """Attack run should transition to retreat when close."""
-        strategy_setup['ship'].ai_strategy = 'attack_run'
+        strategy_setup['ship'].movement_policy = 'move_attack_run'
         strategy_setup['ship'].position = pygame.math.Vector2(0, 0)
         strategy_setup['target'].position = pygame.math.Vector2(150, 0)  # Very close
 
@@ -268,7 +266,7 @@ class TestTargetingHelpers:
     def test_find_enemies_in_radius_includes_missiles_when_needed(self, ai_setup):
         """_find_enemies_in_radius should include missiles when targeting policy requires."""
         # Set up strategy with missile targeting rules
-        ai_setup['ship1'].ai_strategy = 'pdc_defense'
+        ai_setup['ship1'].movement_policy = 'kite_max'
 
         # Create a mock missile
         class MockMissile:

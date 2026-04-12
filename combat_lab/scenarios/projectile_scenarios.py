@@ -208,7 +208,7 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
         """Position target out of range, heading upward through engagement zone."""
         self.target.position = pygame.math.Vector2(100, -1200)
         self.target.angle = 90
-        self.target.ai_strategy = 'test_straight_line'
+        self.target.movement_policy = 'test_straight_line'
 
     def _collect_extra_results(self, engine):
         """Store hit tracking with resolved stats (excluding in-flight)."""
@@ -317,7 +317,7 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
         """Position target out of range, heading upward through engagement zone."""
         self.target.position = pygame.math.Vector2(100, -1200)
         self.target.angle = 90
-        self.target.ai_strategy = 'test_straight_line'
+        self.target.movement_policy = 'test_straight_line'
 
     def _collect_extra_results(self, engine):
         """Store hit tracking with resolved stats (excluding in-flight)."""
@@ -418,7 +418,7 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         self._tracking_weapon_range = 1000
-        self.target.ai_strategy = 'test_erratic_leashed'
+        self.target.movement_policy = 'test_erratic_leashed'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -513,7 +513,7 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         self._tracking_weapon_range = 1000
-        self.target.ai_strategy = 'test_erratic_leashed'
+        self.target.movement_policy = 'test_erratic_leashed'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

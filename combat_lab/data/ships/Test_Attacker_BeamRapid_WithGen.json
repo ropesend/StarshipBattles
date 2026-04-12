@@ -6,16 +6,27 @@
     "_description": "Combat Lab test ship: Rapid-fire beam with generator for RESOURCE-005a regeneration"
   },
   "name": "Test Attacker BeamRapid WithGen",
-  "color": [0, 255, 128],
+  "color": [
+    0,
+    255,
+    128
+  ],
   "team_id": 1,
   "ship_class": "TestS_3L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_rapid_1dmg"},
-      {"id": "test_storage_energy_small"},
-      {"id": "test_gen_fusion"}
+      {
+        "id": "test_beam_rapid_1dmg"
+      },
+      {
+        "id": "test_storage_energy_small"
+      },
+      {
+        "id": "test_gen_fusion"
+      }
     ],
     "ARMOR": []
   },

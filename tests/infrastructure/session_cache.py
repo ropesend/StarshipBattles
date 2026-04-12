@@ -19,7 +19,8 @@ class SessionRegistryCache:
         self.components_data: Dict[str, Any] = {}
         self.modifiers_data: Dict[str, Any] = {}
         self.vehicle_classes_data: Dict[str, Any] = {}
-        self.strategies_data: Dict[str, Any] = {}
+        self.targeting_policies_data: Dict[str, Any] = {}
+        self.movement_policies_data: Dict[str, Any] = {}
         self._is_loaded = False
 
     @classmethod
@@ -63,23 +64,24 @@ class SessionRegistryCache:
                 load_components(comp_path, registry_provider=provider)
                 load_vehicle_classes(registry_provider=provider)
 
-                # 4. Load combat strategies
-                from game.ai.strategy_manager import get_default_strategy_manager
-                strategy_mgr = get_default_strategy_manager()
-                strategy_mgr.clear()
-                strategy_mgr.load_data(str(Paths.DATA_DIR))
-                strategy_mgr._loaded = True
+                # 4. Load policies
+                from game.ai.policy_manager import get_default_policy_manager
+                policy_mgr = get_default_policy_manager()
+                policy_mgr.clear()
+                policy_mgr.load_data(str(Paths.DATA_DIR))
+                policy_mgr._loaded = True
 
                 # 5. Capture State (Deep Copy for initial load, shallow copies on retrieval)
                 self.modifiers_data = copy.deepcopy(mgr.modifiers)
                 self.components_data = copy.deepcopy(mgr.components)
                 self.vehicle_classes_data = copy.deepcopy(mgr.vehicle_classes)
-                self.strategies_data = copy.deepcopy(get_default_strategy_manager().strategies)
+                self.targeting_policies_data = copy.deepcopy(policy_mgr.targeting_policies)
+                self.movement_policies_data = copy.deepcopy(policy_mgr.movement_policies)
 
                 self._is_loaded = True
 
                 if os.environ.get("PYTEST_XDIST_WORKER") is None:
-                    print(f"[SessionRegistryCache] Loaded {len(self.components_data)} components, {len(self.vehicle_classes_data)} classes, {len(self.strategies_data)} strategies.")
+                    print(f"[SessionRegistryCache] Loaded {len(self.components_data)} components, {len(self.vehicle_classes_data)} classes, {len(self.targeting_policies_data)} targeting + {len(self.movement_policies_data)} movement policies.")
 
             except Exception as e:
                 # Always print critical errors
@@ -121,14 +123,15 @@ class SessionRegistryCache:
         with self._lock:
             return copy.deepcopy(self.vehicle_classes_data)
 
-    def get_strategies(self) -> Dict[str, Any]:
-        """Returns deep copy of combat strategies data.
-
-        Deep copy is required to prevent test mutations from polluting
-        the session cache.
-        """
+    def get_targeting_policies(self) -> Dict[str, Any]:
+        """Returns deep copy of targeting policies data."""
         with self._lock:
-            return copy.deepcopy(self.strategies_data)
+            return copy.deepcopy(self.targeting_policies_data)
+
+    def get_movement_policies(self) -> Dict[str, Any]:
+        """Returns deep copy of movement policies data."""
+        with self._lock:
+            return copy.deepcopy(self.movement_policies_data)
 
     @classmethod
     def reset(cls):

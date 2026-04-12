@@ -4,19 +4,36 @@
     "vehicle_type": "Ship",
     "theme_id": "Federation",
     "team_id": 0,
-    "color": [255, 0, 0],
-    "ai_strategy": "standard_ranged",
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
     "design_role": "general_purpose",
     "_comment": "DELIBERATELY INVALID: Has components requiring crew but no crew quarters",
     "layers": {
         "CORE": [
-            {"id": "bridge"},
-            {"id": "life_support"}
+            {
+                "id": "bridge"
+            },
+            {
+                "id": "life_support"
+            }
         ],
         "OUTER": [
-            {"id": "standard_engine"},
-            {"id": "standard_engine"}
+            {
+                "id": "standard_engine"
+            },
+            {
+                "id": "standard_engine"
+            }
         ]
     },
-    "resources": {"fuel": 0, "energy": 0, "ammo": 0}
+    "resources": {
+        "fuel": 0,
+        "energy": 0,
+        "ammo": 0
+    }
 }

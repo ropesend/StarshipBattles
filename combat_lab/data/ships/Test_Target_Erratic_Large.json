@@ -14,7 +14,8 @@
   "team_id": 2,
   "ship_class": "TestL_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_erratic_maneuver",
+  "movement_policy": "test_erratic",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
@@ -46,7 +47,7 @@
     "max_ammo": 0.0,
     "max_speed": 3.125,
     "acceleration_rate": 0.078125,
-    "turn_speed": 197.64235376052374,
+    "turn_speed": 197.64235376052375,
     "total_thrust": 500.0,
     "mass": 4000.0,
     "armor_hp_pool": 1000000000

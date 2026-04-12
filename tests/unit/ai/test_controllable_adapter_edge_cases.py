@@ -71,7 +71,7 @@ class TestAdapterInitialization:
 class TestOptionalAttributeDefaults:
     """Tests for attributes with special default handling."""
 
-    # NOTE: Tests for missing ai_strategy, vehicle_type, and max_targets were deleted
+    # NOTE: Tests for missing movement_policy, vehicle_type, and max_targets were deleted
     # in PROJ-192 Phase 3. Ship ALWAYS has these attributes (set in __init__), so
     # testing fallback behavior for missing attributes was testing an impossible scenario.
 
@@ -281,7 +281,8 @@ class TestInterfaceCompleteness:
         adapter.get_max_targets()
         adapter.get_secondary_targets()
         adapter.get_layers()
-        adapter.get_ai_strategy()
+        adapter.get_movement_policy()
+        adapter.get_targeting_policy()
         adapter.get_vehicle_type()
         adapter.get_all_components()
 

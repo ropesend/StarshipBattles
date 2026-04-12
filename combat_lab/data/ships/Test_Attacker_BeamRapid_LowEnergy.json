@@ -6,15 +6,24 @@
     "_description": "Combat Lab test ship: Rapid-fire beam with low energy for RESOURCE-005 depletion"
   },
   "name": "Test Attacker BeamRapid LowEnergy",
-  "color": [255, 128, 0],
+  "color": [
+    255,
+    128,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_rapid_1dmg"},
-      {"id": "test_storage_energy_small"}
+      {
+        "id": "test_beam_rapid_1dmg"
+      },
+      {
+        "id": "test_storage_energy_small"
+      }
     ],
     "ARMOR": []
   },

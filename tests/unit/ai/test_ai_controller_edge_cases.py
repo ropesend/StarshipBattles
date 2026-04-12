@@ -1,10 +1,10 @@
 """
-Unit tests for AIController edge cases with StrategyManager integration.
+Unit tests for AIController edge cases with PolicyManager integration.
 
 TCG-FND-001: Tests for edge cases when:
-- Strategy references invalid/missing policies
+- Policy references invalid/missing policies
 - Ship lacks expected capabilities
-- StrategyManager returns incomplete strategy definitions
+- PolicyManager returns incomplete policy definitions
 
 These tests ensure AIController handles edge cases gracefully without
 crashing or silently failing during combat.
@@ -13,7 +13,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.ai.controller import AIController
-from game.ai.strategy_manager import StrategyManager, get_default_strategy_manager
+from game.ai.policy_manager import PolicyManager, get_default_policy_manager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.core.math import Vector2
 
@@ -26,7 +26,8 @@ def mock_ship():
     ship.get_position = MagicMock(return_value=Vector2(0, 0))
     ship.position = Vector2(0, 0)
     ship.get_rotation = MagicMock(return_value=0.0)
-    ship.get_ai_strategy = MagicMock(return_value='standard_ranged')
+    ship.get_movement_policy = MagicMock(return_value='kite_max')
+    ship.get_targeting_policy = MagicMock(return_value='standard')
     ship.is_alive = MagicMock(return_value=True)
     ship.get_team_id = MagicMock(return_value=0)
     ship.get_velocity = MagicMock(return_value=Vector2(0, 0))
@@ -77,28 +78,25 @@ def mock_grid():
     return grid
 
 
-class TestAIControllerStrategyResolution:
-    """Tests for strategy resolution edge cases."""
+class TestAIControllerPolicyResolution:
+    """Tests for policy resolution edge cases."""
 
-    def test_controller_with_missing_strategy_id(self, mock_ship, mock_grid):
-        """Controller handles unknown strategy ID gracefully."""
-        mock_ship.get_ai_strategy = MagicMock(return_value='nonexistent_strategy')
+    def test_controller_with_missing_policy_id(self, mock_ship, mock_grid):
+        """Controller handles unknown policy ID gracefully."""
+        mock_ship.get_movement_policy = MagicMock(return_value='nonexistent_policy')
+        mock_ship.get_targeting_policy = MagicMock(return_value='nonexistent_policy')
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # resolve_strategy should return default when ID not found
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        # get_resolved_policies should return defaults when ID not found
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            # Simulate returning a fallback/default strategy
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': []},
-                'movement': {'behavior': 'kite'},
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': []})
+            mock_instance.get_movement_policy = MagicMock(return_value={'behavior': 'kite'})
             mock_manager.return_value = mock_instance
 
             # Should not raise exception
-            resolved = controller.get_resolved_strategy()
+            resolved = controller.get_resolved_policies()
             assert 'targeting' in resolved
             assert 'movement' in resolved
 
@@ -106,13 +104,10 @@ class TestAIControllerStrategyResolution:
         """Controller handles empty targeting rules gracefully."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': []},  # Empty rules
-                'movement': {'behavior': 'kite'},
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': []})
+            mock_instance.get_movement_policy = MagicMock(return_value={'behavior': 'kite'})
             mock_manager.return_value = mock_instance
 
             # find_target should return None with no enemies
@@ -123,17 +118,14 @@ class TestAIControllerStrategyResolution:
         """Controller handles missing behavior key with fallback to 'kite'."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': []},
-                'movement': {},  # Missing 'behavior' key
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': []})
+            mock_instance.get_movement_policy = MagicMock(return_value={})  # Missing 'behavior' key
             mock_manager.return_value = mock_instance
 
-            # Get resolved strategy - should not crash
-            resolved = controller.get_resolved_strategy()
+            # Get resolved policies - should not crash
+            resolved = controller.get_resolved_policies()
 
             # Should have movement section with fallback behavior
             assert 'movement' in resolved
@@ -165,13 +157,10 @@ class TestAIControllerShipCapabilities:
         mock_grid.query_radius = MagicMock(return_value=[enemy])
         mock_grid.query_radius_exact = MagicMock(return_value=[enemy])
 
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': [{'type': 'nearest', 'weight': 1}]},
-                'movement': {'behavior': 'kite'},
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': [{'type': 'nearest', 'weight': 1}]})
+            mock_instance.get_movement_policy = MagicMock(return_value={'behavior': 'kite'})
             mock_manager.return_value = mock_instance
 
             # Should still find target even without weapons
@@ -184,13 +173,10 @@ class TestAIControllerShipCapabilities:
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': []},
-                'movement': {'behavior': 'kite', 'engage_distance': 'max_range'},
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': []})
+            mock_instance.get_movement_policy = MagicMock(return_value={'behavior': 'kite', 'engage_distance': 'max_range'})
             mock_manager.return_value = mock_instance
 
             # Test engage distance calculation
@@ -222,13 +208,10 @@ class TestAIControllerUpdateEdgeCases:
 
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': []},
-                'movement': {'behavior': 'kite'},
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': []})
+            mock_instance.get_movement_policy = MagicMock(return_value={'behavior': 'kite'})
             mock_manager.return_value = mock_instance
 
             controller.update()
@@ -255,13 +238,10 @@ class TestAIControllerUpdateEdgeCases:
         mock_grid.query_radius = MagicMock(return_value=[enemy])
         mock_grid.query_radius_exact = MagicMock(return_value=[enemy])
 
-        with patch('game.ai.strategy_manager.get_default_strategy_manager') as mock_manager:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_manager:
             mock_instance = MagicMock()
-            mock_instance.resolve_strategy = MagicMock(return_value={
-                'targeting': {'rules': [{'type': 'nearest', 'weight': 1}]},
-                'movement': {'behavior': 'kite'},
-                'definition': {}
-            })
+            mock_instance.get_targeting_policy = MagicMock(return_value={'rules': [{'type': 'nearest', 'weight': 1}]})
+            mock_instance.get_movement_policy = MagicMock(return_value={'behavior': 'kite'})
             mock_manager.return_value = mock_instance
 
             controller.update()

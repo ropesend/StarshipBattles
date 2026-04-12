@@ -88,7 +88,7 @@ class ShipTemplateValidator:
             # Check required ship fields
             required_fields = [
                 'name', 'color', 'team_id', 'ship_class', 'theme_id',
-                'ai_strategy', 'layers', 'expected_stats', 'resources'
+                'movement_policy', 'layers', 'expected_stats', 'resources'
             ]
             for field in required_fields:
                 if field not in data:

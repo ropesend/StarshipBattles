@@ -6,16 +6,27 @@
     "_description": "Combat Lab test ship: Engine with fuel generator for RESOURCE-003 regeneration test"
   },
   "name": "Test Engine FuelRegen",
-  "color": [100, 255, 100],
+  "color": [
+    100,
+    255,
+    100
+  ],
   "team_id": 0,
   "ship_class": "TestS_3L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_engine_fuel_1"},
-      {"id": "test_storage_fuel_small"},
-      {"id": "test_gen_fuel"}
+      {
+        "id": "test_engine_fuel_1"
+      },
+      {
+        "id": "test_storage_fuel_small"
+      },
+      {
+        "id": "test_gen_fuel"
+      }
     ],
     "ARMOR": []
   },

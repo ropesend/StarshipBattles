@@ -5,16 +5,27 @@
     "_description": "Combat Lab test ship: Low accuracy beam + sensors from groups A and B (different groups, should stack)"
   },
   "name": "Test Attacker Beam360 Low + Sensor A+B",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_low_acc_1dmg"},
-      {"id": "test_sensor_1_group_a"},
-      {"id": "test_sensor_1_group_b"}
+      {
+        "id": "test_beam_low_acc_1dmg"
+      },
+      {
+        "id": "test_sensor_1_group_a"
+      },
+      {
+        "id": "test_sensor_1_group_b"
+      }
     ],
     "ARMOR": []
   },

@@ -83,7 +83,7 @@ class TestShipFactory:
             position=pygame.math.Vector2(1000, 2000),
             angle=45.0,
             team_id=1,
-            ai_strategy="aggressive_short",
+            movement_policy="brawl_close",
             source_file="test_ship.json"
         )
 
@@ -91,7 +91,7 @@ class TestShipFactory:
         assert ship.position.y == 2000
         assert ship.angle == 45.0
         assert ship.team_id == 1
-        assert ship.ai_strategy == "aggressive_short"
+        assert ship.movement_policy == "brawl_close"
         assert ship.source_file == "test_ship.json"
 
     def test_create_and_configure_combined(self, fresh_registries):
@@ -114,7 +114,7 @@ class TestShipFactory:
             position=pygame.math.Vector2(500, 500),
             angle=90.0,
             team_id=0,
-            ai_strategy="standard_ranged",
+            movement_policy="kite_max",
             source_file="test.json"
         )
         ship.recalculate_stats()

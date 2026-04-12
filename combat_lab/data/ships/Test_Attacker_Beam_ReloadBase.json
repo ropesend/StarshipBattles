@@ -5,14 +5,21 @@
     "_description": "Beam with reload=10, no modifier (baseline for reload tests)"
   },
   "name": "Test Attacker Beam ReloadBase",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      { "id": "test_beam_med_acc_1dmg_reload10" }
+      {
+        "id": "test_beam_med_acc_1dmg_reload10"
+      }
     ],
     "ARMOR": []
   },
@@ -28,5 +35,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 0.0, "ammo": 0.0 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

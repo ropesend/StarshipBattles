@@ -10,7 +10,8 @@
         100,
         255
     ],
-    "ai_strategy": "standard_ranged",
+    "movement_policy": "kite_medium",
+    "targeting_policy": "brawler",
     "design_role": "fleet_escort",
     "layers": {
         "CORE": [
@@ -483,7 +484,7 @@
         "max_ammo": 5000.0,
         "max_speed": 2.38764284838436,
         "acceleration_rate": 0.15202235657175947,
-        "turn_speed": 12.04948285136086,
+        "turn_speed": 36.148448554082584,
         "total_thrust": 150.0,
         "strategic_movement": 100.0,
         "mass": 1570.5866572705806,

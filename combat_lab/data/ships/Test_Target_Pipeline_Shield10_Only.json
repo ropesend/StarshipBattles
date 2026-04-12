@@ -1,11 +1,33 @@
 {
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Pipeline test: shield(10) only, no other defenses"},
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_description": "Pipeline test: shield(10) only, no other defenses"
+  },
   "name": "Test Target Pipeline Shield10 Only",
-  "color": [0, 0, 255], "team_id": 2, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
+  "color": [
+    0,
+    0,
+    255
+  ],
+  "team_id": 2,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
-    "CORE": [{"id": "test_hull_extreme_hp"}, {"id": "test_shield_10"}],
+    "CORE": [
+      {
+        "id": "test_hull_extreme_hp"
+      },
+      {
+        "id": "test_shield_10"
+      }
+    ],
     "ARMOR": []
   },
   "_test_notes": "Shield (10 HP) only. Baseline for PIPELINE-002 and PIPELINE-007 (SRA comparison).",
-  "expected_stats": {"mass": 400.0}
+  "expected_stats": {
+    "mass": 400.0
+  }
 }

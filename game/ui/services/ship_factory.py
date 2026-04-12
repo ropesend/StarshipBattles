@@ -35,7 +35,7 @@ class ShipFactory:
         # PROJ-211: Strict DI - registry_provider is required
         factory = ShipFactory(registry_provider=registries)
         ship = factory.create_from_design(design_data)
-        factory.configure_ship(ship, position, angle, team_id, ai_strategy, source_file)
+        factory.configure_ship(ship, position, angle, team_id, movement_policy, source_file)
     """
 
     def __init__(self, *, registry_provider: 'GameRegistries'):
@@ -109,12 +109,12 @@ class ShipFactory:
         position: Union[Vector2, 'pygame.math.Vector2'],
         angle: float,
         team_id: int,
-        ai_strategy: str,
+        movement_policy: str,
         source_file: str
     ) -> None:
         """Configure ship properties after creation.
 
-        Sets the position, angle, team membership, AI strategy, and
+        Sets the position, angle, team membership, movement policy, and
         source file reference for a ship instance.
 
         Args:
@@ -122,14 +122,14 @@ class ShipFactory:
             position: World position as Vector2 (core or pygame compatible).
             angle: Facing angle in degrees.
             team_id: Team identifier (0 or 1).
-            ai_strategy: AI behavior strategy name.
+            movement_policy: Movement policy identifier.
             source_file: Path to the source design file.
         """
         # Convert to core Vector2 for consistency with Ship.position type
         ship.position = Vector2(position)
         ship.angle = angle
         ship.team_id = team_id
-        ship.ai_strategy = ai_strategy
+        ship.movement_policy = movement_policy
         ship.source_file = source_file
 
     def setup_formation(

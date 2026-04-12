@@ -165,7 +165,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.retreat_status: Optional[str] = None
 
         # === AI & Targeting ===
-        self.ai_strategy: str = "standard_ranged"
+        self.movement_policy: str = "kite_max"
+        self.targeting_policy: str = "standard"
         self.design_role: str = "general_purpose"
         self.source_file: Optional[str] = None
         self.current_target: Optional[Any] = None

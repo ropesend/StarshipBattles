@@ -5,15 +5,24 @@
     "_description": "Beam with energy consumption, no modifier (baseline for consumption tests)"
   },
   "name": "Test Attacker Beam ConsumptionBase",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      { "id": "test_beam_rapid_1dmg_energy_consumption" },
-      { "id": "test_storage_energy_250" }
+      {
+        "id": "test_beam_rapid_1dmg_energy_consumption"
+      },
+      {
+        "id": "test_storage_energy_250"
+      }
     ],
     "ARMOR": []
   },
@@ -29,5 +38,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 250, "ammo": 0.0 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 250,
+    "ammo": 0.0
+  }
 }

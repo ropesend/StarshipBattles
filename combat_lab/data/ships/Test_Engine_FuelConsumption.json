@@ -6,15 +6,24 @@
     "_description": "Combat Lab test ship: Engine with fuel consumption for RESOURCE-001"
   },
   "name": "Test Engine FuelConsumption",
-  "color": [0, 200, 255],
+  "color": [
+    0,
+    200,
+    255
+  ],
   "team_id": 0,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_engine_fuel_1"},
-      {"id": "test_storage_fuel"}
+      {
+        "id": "test_engine_fuel_1"
+      },
+      {
+        "id": "test_storage_fuel"
+      }
     ],
     "ARMOR": []
   },

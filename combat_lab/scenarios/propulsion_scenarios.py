@@ -433,10 +433,10 @@ class PropThrustMassRatioScenario(TestScenario):
                           seed=self.metadata.seed,
                           end_condition=end_condition)
 
-        # Assign AI strategies for thrust
-        self.low_mass.ai_strategy = 'test_straight_line'
-        self.med_mass.ai_strategy = 'test_straight_line'
-        self.high_mass.ai_strategy = 'test_straight_line'
+        # Assign AI movement policies for thrust
+        self.low_mass.movement_policy = 'test_straight_line'
+        self.med_mass.movement_policy = 'test_straight_line'
+        self.high_mass.movement_policy = 'test_straight_line'
 
         # Store initial state
         self.initial_positions = {
@@ -822,9 +822,9 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         # Create end condition
         end_condition = self._create_end_condition()
 
-        # Assign AI strategies for rotation (clockwise)
-        self.low_mass_ship.ai_strategy = 'test_rotate_right'
-        self.high_mass_ship.ai_strategy = 'test_rotate_right'
+        # Assign AI movement policies for rotation (clockwise)
+        self.low_mass_ship.movement_policy = 'test_rotate_right'
+        self.high_mass_ship.movement_policy = 'test_rotate_right'
 
         # Start battle with both ships on same team
         battle_engine.start(

@@ -50,7 +50,8 @@ def mock_controllable():
     controllable.radius = 40.0
     controllable.turn_speed = 180.0
     controllable.current_target = None
-    controllable.ai_strategy = 'standard_ranged'
+    controllable.movement_policy = 'kite_max'
+    controllable.targeting_policy = 'standard'
     controllable.max_targets = 1
     controllable.secondary_targets = []
     controllable.vehicle_type = 'Ship'
@@ -79,7 +80,8 @@ def mock_ship():
     ship.current_target = None
     ship.secondary_targets = []
     ship.vehicle_type = 'Ship'
-    ship.ai_strategy = 'standard_ranged'
+    ship.movement_policy = 'kite_max'
+    ship.targeting_policy = 'standard'
     ship.max_targets = 1
     ship.is_thrusting = False
     ship.is_derelict = False

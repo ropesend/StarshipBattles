@@ -5,17 +5,25 @@
     "_description": "Beam with reload=0.1 and reload_penalty modifier (param=2 -> reload_mult=2.0 -> reload=0.2s, slower)"
   },
   "name": "Test Attacker Beam ReloadPenalty",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_beam_med_acc_1dmg_reload10",
         "modifiers": [
-          { "id": "test_reload_penalty", "value": 2 }
+          {
+            "id": "test_reload_penalty",
+            "value": 2
+          }
         ]
       }
     ],
@@ -33,5 +41,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 0.0, "ammo": 0.0 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

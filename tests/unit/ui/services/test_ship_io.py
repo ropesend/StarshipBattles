@@ -449,14 +449,14 @@ class TestShipIORoundTrip:
 
         assert loaded_component_count == original_component_count
 
-    def test_round_trip_preserves_ai_strategy(self, fresh_registries, tmp_path):
-        """AI strategy should be preserved after save/load cycle."""
+    def test_round_trip_preserves_movement_policy(self, fresh_registries, tmp_path):
+        """Movement policy should be preserved after save/load cycle."""
         ship = create_test_ship(
             name="AIShip",
             add_bridge=True,
             registries=fresh_registries
         )
-        ship.ai_strategy = "aggressive_close"
+        ship.movement_policy = "brawl_close"
 
         ship_data = ship.to_dict()
 
@@ -470,7 +470,7 @@ class TestShipIORoundTrip:
         from game.simulation.entities.ship import Ship
         loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
 
-        assert loaded_ship.ai_strategy == "aggressive_close"
+        assert loaded_ship.movement_policy == "brawl_close"
 
     def test_round_trip_recalculates_stats(self, mock_ship, fresh_registries, tmp_path):
         """Stats should be recalculated after load."""
@@ -581,7 +581,7 @@ class TestShipIOEdgeCases:
             "theme_id": "Federation",
             "color": [100, 150, 200],  # List, not tuple
             "team_id": 0,
-            "ai_strategy": "standard_ranged",
+            "movement_policy": "kite_max",
             "layers": {},
             "_format_version": "2.0"
         }
@@ -622,7 +622,7 @@ class TestShipIOEdgeCases:
         # Should use defaults
         assert loaded_ship.team_id == 0
         assert loaded_ship.theme_id == "Federation"
-        assert loaded_ship.ai_strategy == "standard_ranged"
+        assert loaded_ship.movement_policy == "kite_max"
 
     def test_load_ship_ignores_unknown_layer_types(self, fresh_registries, tmp_path):
         """Load should ignore unknown layer types without error."""
@@ -740,7 +740,7 @@ class TestShipIOStatMismatchWarnings:
             "color": [255, 255, 255],
             "theme_id": "Federation",
             "team_id": 0,
-            "ai_strategy": "standard_ranged",
+            "movement_policy": "kite_max",
             "layers": {},
             "expected_stats": {
                 "max_hp": 999999,  # Definitely wrong
@@ -1102,20 +1102,20 @@ class TestShipIOConcurrency:
 class TestShipIODefaultValues:
     """Tests for default value handling in ship serialization."""
 
-    def test_default_ai_strategy_preserved(self, fresh_registries, tmp_path):
-        """Default AI strategy should be serialized and loaded."""
+    def test_default_movement_policy_preserved(self, fresh_registries, tmp_path):
+        """Default movement policy should be serialized and loaded."""
         ship = create_test_ship(
             name="DefaultsShip",
             add_bridge=True,
             registries=fresh_registries
         )
 
-        # Get default AI strategy
-        default_strategy = ship.ai_strategy
+        # Get default movement policy
+        default_policy = ship.movement_policy
 
         ship_data = ship.to_dict()
-        assert 'ai_strategy' in ship_data
-        assert ship_data['ai_strategy'] == default_strategy
+        assert 'movement_policy' in ship_data
+        assert ship_data['movement_policy'] == default_policy
 
         save_file = tmp_path / "defaults_ship.json"
         with open(save_file, 'w') as f:
@@ -1127,7 +1127,7 @@ class TestShipIODefaultValues:
         from game.simulation.entities.ship import Ship
         loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
 
-        assert loaded_ship.ai_strategy == default_strategy
+        assert loaded_ship.movement_policy == default_policy
 
     def test_default_theme_id_preserved(self, fresh_registries, tmp_path):
         """Default theme ID should be serialized and loaded."""

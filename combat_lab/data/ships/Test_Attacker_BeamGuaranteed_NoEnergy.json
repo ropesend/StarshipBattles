@@ -5,17 +5,26 @@
     "_description": "Guaranteed-hit beam (1 energy/shot) with NO battery — cannot fire"
   },
   "name": "Test Attacker Beam Guaranteed + No Energy",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_1dmg_guaranteed_energy"}
+      {
+        "id": "test_beam_1dmg_guaranteed_energy"
+      }
     ],
     "ARMOR": []
   },
   "_test_notes": "Guaranteed-hit beam requires energy but has none. Cannot fire. For BEAMWEAPON-RES-001.",
-  "expected_stats": {"mass": 400.0}
+  "expected_stats": {
+    "mass": 400.0
+  }
 }

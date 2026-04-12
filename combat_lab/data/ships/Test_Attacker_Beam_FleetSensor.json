@@ -5,15 +5,24 @@
     "_description": "Attacker with guaranteed beam + fleet-scope +2 ToHit sensor"
   },
   "name": "Test Attacker Beam FleetSensor",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_1dmg_guaranteed"},
-      {"id": "test_fleet_sensor_2"}
+      {
+        "id": "test_beam_1dmg_guaranteed"
+      },
+      {
+        "id": "test_fleet_sensor_2"
+      }
     ],
     "ARMOR": []
   },

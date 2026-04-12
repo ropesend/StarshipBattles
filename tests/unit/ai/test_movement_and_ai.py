@@ -6,7 +6,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.screens.battle_screen import BattleScreen
 from game.ai.controller import AIController
-from game.ai.strategy_manager import get_default_strategy_manager
+from game.ai.policy_manager import get_default_policy_manager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.constants import LayerType
@@ -35,12 +35,11 @@ def movement_ai_setup(fresh_registries):
         mod_path_str = str(mod_path)
         load_modifiers(str(mod_path), registry_provider=provider)
 
-    manager = get_default_strategy_manager()
+    manager = get_default_policy_manager()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
         movement_file="test_movement_policies.json",
-        strategy_file="test_combat_strategies.json"
     )
     manager._loaded = True
     ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser", registries=fresh_registries)
@@ -52,7 +51,7 @@ def movement_ai_setup(fresh_registries):
     }
 
     pygame.quit()
-    get_default_strategy_manager().clear()
+    get_default_policy_manager().clear()
 
 
 class TestMovementAndAI:
@@ -63,7 +62,7 @@ class TestMovementAndAI:
         """
         attacker = movement_ai_setup['ship']
         registries = movement_ai_setup['registries']
-        attacker.ai_strategy = "max_weapons_range"
+        attacker.movement_policy = "kite_max"
         attacker.position = pygame.math.Vector2(0, 0)
 
         target = Ship("Target", 50000, 0, (255, 0, 0), 1, registries=registries)

@@ -19,7 +19,8 @@ def mock_ship():
     ship.get_max_speed.return_value = 100.0
     ship.get_radius.return_value = 10.0
     ship.get_vehicle_type.return_value = 'Frigate'
-    ship.get_ai_strategy.return_value = 'standard_ranged'
+    ship.get_movement_policy.return_value = 'kite_max'
+    ship.get_targeting_policy.return_value = 'standard'
     ship.get_team_id.return_value = 0
     ship.is_alive.return_value = True
     ship.get_current_target.return_value = None
@@ -44,25 +45,22 @@ def mock_grid():
 
 
 @pytest.fixture
-def mock_strategy_manager():
-    """Create mock StrategyManager with default strategy."""
-    with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
+def mock_policy_manager():
+    """Create mock PolicyManager with default policies."""
+    with patch('game.ai.controller.get_default_policy_manager') as mock_pm:
         instance = Mock()
-        instance.resolve_strategy.return_value = {
-            'definition': {},
-            'targeting': {'rules': []},
-            'movement': {
-                'behavior': 'kite',
-                'engage_distance': 'max_range',
-                'retreat_hp_threshold': 0.1,
-            }
+        instance.get_targeting_policy.return_value = {'rules': []}
+        instance.get_movement_policy.return_value = {
+            'behavior': 'kite',
+            'engage_distance': 'max_range',
+            'retreat_hp_threshold': 0.1,
         }
-        mock_sm.return_value = instance
-        yield mock_sm
+        mock_pm.return_value = instance
+        yield mock_pm
 
 
 @pytest.fixture
-def controller(mock_ship, mock_grid, mock_strategy_manager):
+def controller(mock_ship, mock_grid, mock_policy_manager):
     """Create an AIController instance."""
     from game.ai.controller import AIController
     return AIController(mock_ship, mock_grid, enemy_team_id=1)
@@ -100,7 +98,7 @@ class TestGetEngageDistanceMultiplier:
 class TestBehaviorSelection:
     """Tests for behavior selection logic."""
 
-    def test_behavior_selection_flee(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_behavior_selection_flee(self, mock_ship, mock_grid, mock_policy_manager):
         """HP below threshold -> 'flee' behavior."""
         from game.ai.controller import AIController
 
@@ -117,7 +115,7 @@ class TestBehaviorSelection:
 
         assert controller.current_behavior is controller.behaviors['flee']
 
-    def test_behavior_selection_policy(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_behavior_selection_policy(self, mock_ship, mock_grid, mock_policy_manager):
         """Normal HP -> policy behavior (kite/ram/etc)."""
         from game.ai.controller import AIController
 
@@ -138,7 +136,7 @@ class TestBehaviorSelection:
 class TestSatelliteException:
     """Tests for satellite-specific behavior."""
 
-    def test_satellite_exception_no_movement(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_satellite_exception_no_movement(self, mock_ship, mock_grid, mock_policy_manager):
         """Vehicle type 'Satellite' skips movement."""
         from game.ai.controller import AIController
 
@@ -159,7 +157,7 @@ class TestSatelliteException:
 class TestDeadShipHandling:
     """Tests for dead ship handling."""
 
-    def test_dead_ship_no_action(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_dead_ship_no_action(self, mock_ship, mock_grid, mock_policy_manager):
         """update() returns early for dead ship."""
         from game.ai.controller import AIController
 
@@ -177,7 +175,7 @@ class TestDeadShipHandling:
 class TestFindTarget:
     """Tests for target finding logic."""
 
-    def test_find_target_returns_highest_scored(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_find_target_returns_highest_scored(self, mock_ship, mock_grid, mock_policy_manager):
         """Multiple enemies, returns best scored."""
         from game.ai.controller import AIController
 
@@ -211,7 +209,7 @@ class TestFindTarget:
 
         assert result is enemy1
 
-    def test_find_target_no_enemies_returns_none(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_find_target_no_enemies_returns_none(self, mock_ship, mock_grid, mock_policy_manager):
         """Empty grid returns None."""
         from game.ai.controller import AIController
 
@@ -223,7 +221,7 @@ class TestFindTarget:
 
         assert result is None
 
-    def test_find_target_filters_allies(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_find_target_filters_allies(self, mock_ship, mock_grid, mock_policy_manager):
         """Only returns enemies, not allies."""
         from game.ai.controller import AIController
 
@@ -251,7 +249,7 @@ class TestFindTarget:
 
         assert result is enemy
 
-    def test_find_target_filters_dead(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_find_target_filters_dead(self, mock_ship, mock_grid, mock_policy_manager):
         """Only returns alive enemies."""
         from game.ai.controller import AIController
 
@@ -287,20 +285,18 @@ class TestBehaviorContextMerging:
         """Behavior context includes movement policy fields."""
         from game.ai.controller import AIController
 
-        # Set up strategy with specific movement policy
-        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
+        # Set up policies with specific movement policy
+        with patch('game.ai.controller.get_default_policy_manager') as mock_pm:
             instance = Mock()
-            instance.resolve_strategy.return_value = {
-                'definition': {'fire_while_retreating': True},
-                'targeting': {'rules': []},
-                'movement': {
-                    'behavior': 'attack_run',
-                    'engage_distance': 0.8,
-                    'retreat_hp_threshold': 0.2,
-                    'approach_distance': 0.5,
-                }
+            instance.get_targeting_policy.return_value = {'rules': []}
+            instance.get_movement_policy.return_value = {
+                'behavior': 'attack_run',
+                'engage_distance': 0.8,
+                'retreat_hp_threshold': 0.2,
+                'approach_distance': 0.5,
+                'fire_while_retreating': True,
             }
-            mock_sm.return_value = instance
+            mock_pm.return_value = instance
 
             # Set up target so behavior actually runs
             target = Mock()
@@ -323,27 +319,24 @@ class TestBehaviorContextMerging:
                 with patch('game.ai.controller.get_hp_percent', return_value=0.5):
                     controller.update()
 
-            # Context should contain merged movement policy + definition
+            # Context should contain movement policy fields
             assert captured_context is not None
             assert captured_context.get('approach_distance') == 0.5
             assert captured_context.get('fire_while_retreating') is True
 
-    def test_behavior_context_definition_overrides_movement(self, mock_ship, mock_grid):
-        """Definition fields override movement policy fields if both present."""
+    def test_behavior_context_uses_movement_policy_values(self, mock_ship, mock_grid):
+        """Behavior context uses movement policy values directly."""
         from game.ai.controller import AIController
 
-        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_pm:
             instance = Mock()
-            instance.resolve_strategy.return_value = {
-                'definition': {'engage_distance': 0.9},  # Override
-                'targeting': {'rules': []},
-                'movement': {
-                    'behavior': 'kite',
-                    'engage_distance': 0.5,  # Will be overridden
-                    'retreat_hp_threshold': 0.1,
-                }
+            instance.get_targeting_policy.return_value = {'rules': []}
+            instance.get_movement_policy.return_value = {
+                'behavior': 'kite',
+                'engage_distance': 0.9,
+                'retreat_hp_threshold': 0.1,
             }
-            mock_sm.return_value = instance
+            mock_pm.return_value = instance
 
             target = Mock()
             target.is_alive = True
@@ -364,7 +357,7 @@ class TestBehaviorContextMerging:
                 with patch('game.ai.controller.get_hp_percent', return_value=0.5):
                     controller.update()
 
-            # Definition should override movement policy
+            # Movement policy value should be passed through
             assert captured_context.get('engage_distance') == 0.9
 
 
@@ -408,14 +401,11 @@ class TestSecondaryTargetAcquisition:
         mock_grid.query_radius_exact.return_value = [primary, secondary1, secondary2]
         mock_ship.get_current_target.return_value = primary
 
-        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_pm:
             instance = Mock()
-            instance.resolve_strategy.return_value = {
-                'definition': {},
-                'targeting': {'rules': []},
-                'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
-            }
-            mock_sm.return_value = instance
+            instance.get_targeting_policy.return_value = {'rules': []}
+            instance.get_movement_policy.return_value = {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
+            mock_pm.return_value = instance
 
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -440,14 +430,11 @@ class TestSecondaryTargetAcquisition:
         target.position = Vector2(200, 100)
         mock_ship.get_current_target.return_value = target
 
-        with patch('game.ai.controller.get_default_strategy_manager') as mock_sm:
+        with patch('game.ai.controller.get_default_policy_manager') as mock_pm:
             instance = Mock()
-            instance.resolve_strategy.return_value = {
-                'definition': {},
-                'targeting': {'rules': []},
-                'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
-            }
-            mock_sm.return_value = instance
+            instance.get_targeting_policy.return_value = {'rules': []}
+            instance.get_movement_policy.return_value = {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
+            mock_pm.return_value = instance
 
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
@@ -461,7 +448,7 @@ class TestSecondaryTargetAcquisition:
 class TestCheckAvoidance:
     """TCG-FND-007: Tests for check_avoidance() collision detection logic."""
 
-    def test_avoidance_returns_none_when_no_threats(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_returns_none_when_no_threats(self, mock_ship, mock_grid, mock_policy_manager):
         """No nearby objects returns None."""
         from game.ai.controller import AIController
 
@@ -473,7 +460,7 @@ class TestCheckAvoidance:
 
         assert result is None
 
-    def test_avoidance_skips_self_via_adapter(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_skips_self_via_adapter(self, mock_ship, mock_grid, mock_policy_manager):
         """Self is excluded via adapter unwrapping."""
         from game.ai.controller import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
@@ -497,7 +484,7 @@ class TestCheckAvoidance:
         # Should return None because raw_ship is self
         assert result is None
 
-    def test_avoidance_skips_dead_objects(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_skips_dead_objects(self, mock_ship, mock_grid, mock_policy_manager):
         """Dead objects are skipped."""
         from game.ai.controller import AIController
 
@@ -513,7 +500,7 @@ class TestCheckAvoidance:
 
         assert result is None
 
-    def test_avoidance_skips_non_combatants(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_skips_non_combatants(self, mock_ship, mock_grid, mock_policy_manager):
         """Non-combatant objects are skipped."""
         from game.ai.controller import AIController
 
@@ -530,7 +517,7 @@ class TestCheckAvoidance:
 
         assert result is None
 
-    def test_avoidance_returns_target_for_close_object(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_returns_target_for_close_object(self, mock_ship, mock_grid, mock_policy_manager):
         """Close object within threshold returns avoidance target."""
         from game.ai.controller import AIController
         from game.core.config import BattleTuning
@@ -555,7 +542,7 @@ class TestCheckAvoidance:
         assert result is not None
         assert isinstance(result, Vector2)
 
-    def test_avoidance_calculates_correct_direction(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_calculates_correct_direction(self, mock_ship, mock_grid, mock_policy_manager):
         """Avoidance direction is away from the threat."""
         from game.ai.controller import AIController
 
@@ -579,7 +566,7 @@ class TestCheckAvoidance:
         assert result is not None
         assert result.x < mock_ship.get_position().x
 
-    def test_avoidance_handles_zero_distance(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_handles_zero_distance(self, mock_ship, mock_grid, mock_policy_manager):
         """Zero distance (coincident objects) uses default direction."""
         from game.ai.controller import AIController
 
@@ -603,7 +590,7 @@ class TestCheckAvoidance:
         assert result is not None
         assert isinstance(result, Vector2)
 
-    def test_avoidance_selects_closest_threat(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_avoidance_selects_closest_threat(self, mock_ship, mock_grid, mock_policy_manager):
         """Multiple threats: avoidance targets closest one."""
         from game.ai.controller import AIController
 
@@ -636,7 +623,7 @@ class TestCheckAvoidance:
 class TestNavigateTo:
     """TCG-FND-008: Tests for navigate_to() angle wrapping and thresholds."""
 
-    def test_navigate_rotates_right_for_clockwise_target(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_rotates_right_for_clockwise_target(self, mock_ship, mock_grid, mock_policy_manager):
         """Ship rotates right (positive) when target is clockwise."""
         from game.ai.controller import AIController
 
@@ -654,7 +641,7 @@ class TestNavigateTo:
         # direction = -1
         mock_ship.rotate.assert_called_with(-1)
 
-    def test_navigate_rotates_left_for_counterclockwise_target(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_rotates_left_for_counterclockwise_target(self, mock_ship, mock_grid, mock_policy_manager):
         """Ship rotates left (negative) when target is counterclockwise."""
         from game.ai.controller import AIController
 
@@ -672,7 +659,7 @@ class TestNavigateTo:
         # direction = 1
         mock_ship.rotate.assert_called_with(1)
 
-    def test_navigate_no_rotation_within_5_degrees(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_no_rotation_within_5_degrees(self, mock_ship, mock_grid, mock_policy_manager):
         """No rotation when within 5 degree threshold."""
         from game.ai.controller import AIController
 
@@ -691,7 +678,7 @@ class TestNavigateTo:
         # Should NOT rotate
         mock_ship.rotate.assert_not_called()
 
-    def test_navigate_thrusts_within_30_degrees(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_thrusts_within_30_degrees(self, mock_ship, mock_grid, mock_policy_manager):
         """Ship thrusts forward when within 30 degree threshold."""
         from game.ai.controller import AIController
 
@@ -708,7 +695,7 @@ class TestNavigateTo:
         # angle_diff(20, 0) = -20, abs(-20) < 30 and distance > 0
         mock_ship.thrust_forward.assert_called()
 
-    def test_navigate_no_thrust_outside_30_degrees(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_no_thrust_outside_30_degrees(self, mock_ship, mock_grid, mock_policy_manager):
         """Ship does not thrust when outside 30 degree threshold."""
         from game.ai.controller import AIController
 
@@ -725,7 +712,7 @@ class TestNavigateTo:
         # angle_diff(50, 0) = -50, abs(-50) > 30
         mock_ship.thrust_forward.assert_not_called()
 
-    def test_navigate_angle_wrapping_at_360_boundary(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_angle_wrapping_at_360_boundary(self, mock_ship, mock_grid, mock_policy_manager):
         """Angle wrapping works correctly at 360/0 boundary."""
         from game.ai.controller import AIController
 
@@ -745,7 +732,7 @@ class TestNavigateTo:
         # angle_diff(350, 10) = 20 (positive = counterclockwise)
         mock_ship.rotate.assert_called_with(1)
 
-    def test_navigate_angle_wrapping_at_180_boundary(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_angle_wrapping_at_180_boundary(self, mock_ship, mock_grid, mock_policy_manager):
         """Angle wrapping works correctly at 180 boundary."""
         from game.ai.controller import AIController
 
@@ -763,7 +750,7 @@ class TestNavigateTo:
         # angle_diff(170, 190) = 20 (positive)
         mock_ship.rotate.assert_called_with(1)
 
-    def test_navigate_stops_at_stop_distance(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_stops_at_stop_distance(self, mock_ship, mock_grid, mock_policy_manager):
         """No thrust when within stop distance."""
         from game.ai.controller import AIController
 
@@ -781,7 +768,7 @@ class TestNavigateTo:
         # Distance 5 < stop_dist 10, should not thrust
         mock_ship.thrust_forward.assert_not_called()
 
-    def test_navigate_target_directly_behind(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_target_directly_behind(self, mock_ship, mock_grid, mock_policy_manager):
         """Navigate to target directly behind ship (180 degrees)."""
         from game.ai.controller import AIController
 
@@ -802,7 +789,7 @@ class TestNavigateTo:
         # Should NOT thrust (abs(180) > 30)
         mock_ship.thrust_forward.assert_not_called()
 
-    def test_navigate_target_at_same_position(self, mock_ship, mock_grid, mock_strategy_manager):
+    def test_navigate_target_at_same_position(self, mock_ship, mock_grid, mock_policy_manager):
         """Navigate to target at same position (zero distance)."""
         from game.ai.controller import AIController
 

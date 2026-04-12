@@ -196,7 +196,7 @@ class TestShipDesignRoleSerialization:
             "theme_id": "Federation",
             "team_id": 0,
             "color": [255, 255, 255],
-            "ai_strategy": "standard_ranged",
+            "movement_policy": "kite_max",
             "design_role": "missile_platform",
             "layers": {},
             "resources": {"fuel": 0, "energy": 0, "ammo": 0},
@@ -216,7 +216,7 @@ class TestShipDesignRoleSerialization:
             "theme_id": "Federation",
             "team_id": 0,
             "color": [255, 255, 255],
-            "ai_strategy": "standard_ranged",
+            "movement_policy": "kite_max",
             "layers": {},
             "resources": {"fuel": 0, "energy": 0, "ammo": 0},
         }

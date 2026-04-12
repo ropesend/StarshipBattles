@@ -199,7 +199,7 @@ class TestBattleUIServiceRealShipIntegration:
         # These optional attributes should have sensible defaults
         # even if not explicitly set on the ship
         assert dto.is_derelict in (True, False)  # Should be boolean
-        assert isinstance(dto.ai_strategy, str)  # Should be string
+        assert isinstance(dto.movement_policy, str)  # Should be string
         assert isinstance(dto.max_targets, int)  # Should be int
 
 
@@ -354,7 +354,7 @@ class TestBattleUIServiceConversionEdgeCases:
         ship.crew_onboard = 10
         ship.crew_required = 10
         ship.max_targets = 3
-        ship.ai_strategy = "aggressive"
+        ship.movement_policy = "brawl_close"
         ship.source_file = "test.json"
         ship.layers = {}
         ship.current_target = None
@@ -404,7 +404,7 @@ class TestBattleUIServiceConversionEdgeCases:
         ship.crew_onboard = 0
         ship.crew_required = 10
         ship.max_targets = 1
-        ship.ai_strategy = "none"
+        ship.movement_policy = "none"
         ship.source_file = "test.json"
         ship.layers = {}
         ship.current_target = None
@@ -468,7 +468,7 @@ class TestBattleUIServiceConversionEdgeCases:
         ship.crew_onboard = 10
         ship.crew_required = 10
         ship.max_targets = 1
-        ship.ai_strategy = "aggressive"
+        ship.movement_policy = "brawl_close"
         ship.source_file = "test.json"
         layer_type = Mock()
         layer_type.value = "outer"
@@ -533,7 +533,7 @@ class TestBattleUIServiceConversionEdgeCases:
         ship.crew_onboard = 10
         ship.crew_required = 10
         ship.max_targets = 1
-        ship.ai_strategy = "aggressive"
+        ship.movement_policy = "brawl_close"
         ship.source_file = "test.json"
         layer_type = Mock()
         layer_type.value = "outer"

@@ -85,7 +85,7 @@ class TestShipStatsPanelExtended:
         ship.max_speed = 100
         ship.resources.set_max_value.return_value = None
         ship.resources.get_value.return_value = 50
-        ship.ai_strategy = "aggressive"
+        ship.movement_policy = "brawl_close"
         return ship
 
     def test_get_ships_with_ui_service_available(self):

@@ -420,8 +420,10 @@ class WorkshopEventRouter:
                 gui.right_panel.update_portrait_image()
                 logger.info(f"Changed theme to {event.text}")
             return True
-        elif event.ui_element == gui.right_panel.ai_dropdown:
-            return self._handle_ai_dropdown(event)
+        elif event.ui_element == gui.right_panel.movement_dropdown:
+            return self._handle_movement_dropdown(event)
+        elif event.ui_element == gui.right_panel.targeting_dropdown:
+            return self._handle_targeting_dropdown(event)
         elif event.ui_element == gui.right_panel.role_dropdown:
             return self._handle_role_dropdown(event)
 
@@ -479,24 +481,28 @@ class WorkshopEventRouter:
         
         return True
     
-    def _handle_ai_dropdown(self, event) -> bool:
-        """Handle AI strategy dropdown change."""
+    def _handle_movement_dropdown(self, event) -> bool:
+        """Handle movement policy dropdown change."""
         gui = self.gui
-        from game.core.strategy_metadata import get_default_strategy_metadata_service
+        from game.ui.screens.builder.right_panel import _MOVEMENT_OPTIONS
         selected_name = event.text
-        service = get_default_strategy_metadata_service()
-        matched = False
-        for strategy_id, strat in service.strategies.items():
-            if strat.get('name', '') == selected_name:
-                gui.viewmodel.set_ship_ai_strategy(strategy_id)
-                matched = True
-                break
-        if not matched:
-            import logging
-            logging.getLogger(__name__).warning(
-                f"No strategy found for display name '{selected_name}', "
-                f"available: {[s.get('name') for s in service.strategies.values()]}"
-            )
+        for policy_id, name in _MOVEMENT_OPTIONS:
+            if name == selected_name:
+                gui.viewmodel.set_ship_movement_policy(policy_id)
+                return True
+        logger.warning("No movement policy found for display name '%s'", selected_name)
+        return True
+
+    def _handle_targeting_dropdown(self, event) -> bool:
+        """Handle targeting policy dropdown change."""
+        gui = self.gui
+        from game.ui.screens.builder.right_panel import _TARGETING_OPTIONS
+        selected_name = event.text
+        for policy_id, name in _TARGETING_OPTIONS:
+            if name == selected_name:
+                gui.viewmodel.set_ship_targeting_policy(policy_id)
+                return True
+        logger.warning("No targeting policy found for display name '%s'", selected_name)
         return True
 
     def _handle_role_dropdown(self, event) -> bool:

@@ -5,17 +5,30 @@
     "_description": "Combat Lab test ship: Stationary target with 200 HP shield + 5/sec regen (costs 5 energy/sec) + small battery (25 energy)"
   },
   "name": "Test Target Shield Regen SmallBattery",
-  "color": [0, 0, 255],
+  "color": [
+    0,
+    0,
+    255
+  ],
   "team_id": 2,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_armor_extreme_hp"},
-      {"id": "test_shield_200"},
-      {"id": "test_shield_regen"},
-      {"id": "test_storage_energy_small"}
+      {
+        "id": "test_armor_extreme_hp"
+      },
+      {
+        "id": "test_shield_200"
+      },
+      {
+        "id": "test_shield_regen"
+      },
+      {
+        "id": "test_storage_energy_small"
+      }
     ],
     "ARMOR": []
   },

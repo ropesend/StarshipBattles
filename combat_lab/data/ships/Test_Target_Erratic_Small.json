@@ -14,7 +14,8 @@
   "team_id": 2,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_erratic_maneuver",
+  "movement_policy": "test_erratic",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {

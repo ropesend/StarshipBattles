@@ -12,12 +12,29 @@ from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMen
 from pygame_gui.core import UIElement
 
 from game.core.paths import Paths
-from game.core.strategy_metadata import get_default_strategy_metadata_service
-from game.core.string_utils import display_name
 from game.ui.panels.design_stats_panel import DesignStatsPanel
 from game.ui.widgets.dropdown_helper import recreate_dropdown
 
 logger = logging.getLogger(__name__)
+
+_MOVEMENT_OPTIONS = [
+    ("kite_max", "Hold Range"),
+    ("kite_optimal", "Optimal Range"),
+    ("brawl_close", "Advance"),
+    ("kite_medium", "Pursue"),
+    ("strafe_run", "Hit & Run"),
+    ("hold_position", "Hold Position"),
+    ("ramming_speed", "Ram"),
+    ("flee_panic", "Evasive"),
+]
+
+_TARGETING_OPTIONS = [
+    ("standard", "Standard"),
+    ("sniper", "Sniper"),
+    ("brawler", "Brawler"),
+    ("anti_fighter", "Anti-Fighter"),
+    ("self_defense", "Self Defense"),
+]
 
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None, hide_theme_selector=False):
@@ -109,28 +126,26 @@ class BuilderRightPanel:
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         y += 40
         
-        # AI
-        UILabel(pygame.Rect(10, y, 60, 25), "AI:", manager=self.manager, container=self.panel)
-        
-        strategies = get_default_strategy_metadata_service().strategies
-        ai_options = [strat.get('name', display_name(sid)) for sid, strat in strategies.items()]
-        
-        # Ensure we have at least one option
-        if not ai_options:
-            ai_options = ['Standard Ranged']
-        
-        # Find display name for ship's current strategy
-        ai_display = None
-        for sid, strat in strategies.items():
-            if sid == self.builder.ship.ai_strategy:
-                ai_display = strat.get('name', display_name(sid))
-                break
-        
-        # Fallback to first option if ship's strategy is not in new data-driven system
-        if ai_display is None or ai_display not in ai_options:
-            ai_display = ai_options[0]
-                
-        self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        # Movement Policy
+        UILabel(pygame.Rect(10, y, 60, 25), "Move:", manager=self.manager, container=self.panel)
+        move_options = [name for _, name in _MOVEMENT_OPTIONS]
+        curr_move = self.builder.ship.movement_policy
+        curr_move_display = next(
+            (name for mid, name in _MOVEMENT_OPTIONS if mid == curr_move),
+            move_options[0]
+        )
+        self.movement_dropdown = UIDropDownMenu(move_options, curr_move_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        y += 40
+
+        # Targeting Policy
+        UILabel(pygame.Rect(10, y, 60, 25), "Target:", manager=self.manager, container=self.panel)
+        tgt_options = [name for _, name in _TARGETING_OPTIONS]
+        curr_tgt = self.builder.ship.targeting_policy
+        curr_tgt_display = next(
+            (name for tid, name in _TARGETING_OPTIONS if tid == curr_tgt),
+            tgt_options[0]
+        )
+        self.targeting_dropdown = UIDropDownMenu(tgt_options, curr_tgt_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         y += 40
 
         # Role
@@ -205,27 +220,26 @@ class BuilderRightPanel:
             self.class_dropdown, class_options, curr_class, self.manager, container=self.panel
         )
         
-        # 5. Recreate AI
-        strategies = get_default_strategy_metadata_service().strategies
-        ai_options = [strat.get('name', display_name(sid)) for sid, strat in strategies.items()]
-        
-        # Ensure we have at least one option
-        if not ai_options:
-            ai_options = ['Standard Ranged']
-        
-        # Find display name for ship's current strategy
-        ai_display = None
-        for sid, strat in strategies.items():
-            if sid == s.ai_strategy:
-                ai_display = strat.get('name', display_name(sid))
-                break
-        
-        # Fallback to first option if ship's strategy is not in new data-driven system
-        if ai_display is None or ai_display not in ai_options:
-            ai_display = ai_options[0]
-                
-        self.ai_dropdown = recreate_dropdown(
-            self.ai_dropdown, ai_options, ai_display, self.manager, container=self.panel
+        # 5. Recreate Movement Policy
+        move_options = [name for _, name in _MOVEMENT_OPTIONS]
+        curr_move = s.movement_policy
+        curr_move_display = next(
+            (name for mid, name in _MOVEMENT_OPTIONS if mid == curr_move),
+            move_options[0]
+        )
+        self.movement_dropdown = recreate_dropdown(
+            self.movement_dropdown, move_options, curr_move_display, self.manager, container=self.panel
+        )
+
+        # 5b. Recreate Targeting Policy
+        tgt_options = [name for _, name in _TARGETING_OPTIONS]
+        curr_tgt = s.targeting_policy
+        curr_tgt_display = next(
+            (name for tid, name in _TARGETING_OPTIONS if tid == curr_tgt),
+            tgt_options[0]
+        )
+        self.targeting_dropdown = recreate_dropdown(
+            self.targeting_dropdown, tgt_options, curr_tgt_display, self.manager, container=self.panel
         )
 
         # 6. Recreate Role

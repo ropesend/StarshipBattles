@@ -492,34 +492,8 @@ class FleetBattleSetupScreen:
             self._ship_buttons.append((btn, remove_btn))
             y += 28
 
-            # Show strategy dropdown for selected ship
+            # Show policy dropdowns for selected ship
             if is_selected:
-                UILabel(pygame.Rect(20, y, 60, 22), "AI:",
-                        manager=self._ui_manager, container=panel)
-                from game.core.strategy_metadata import get_default_strategy_metadata_service
-                from game.core.string_utils import display_name
-                strategies = get_default_strategy_metadata_service().strategies
-                ai_options = [strat.get('name', display_name(sid)) for sid, strat in strategies.items()]
-                if not ai_options:
-                    ai_options = ['Standard Ranged']
-
-                current_strategy = ship.design_data.get('ai_strategy', 'standard_ranged')
-                current_display = None
-                for sid, strat in strategies.items():
-                    if sid == current_strategy:
-                        current_display = strat.get('name', display_name(sid))
-                        break
-                if current_display is None or current_display not in ai_options:
-                    current_display = ai_options[0]
-
-                self._ship_strategy_dropdown = UIDropDownMenu(
-                    ai_options, current_display,
-                    pygame.Rect(80, y, width - 90, 24),
-                    manager=self._ui_manager, container=panel
-                )
-                self._ship_strategy_dropdown._strategy_ship_index = i
-                y += 28
-
                 # Targeting policy for this ship
                 UILabel(pygame.Rect(20, y, 60, 22), "Target:",
                         manager=self._ui_manager, container=panel)
@@ -562,7 +536,6 @@ class FleetBattleSetupScreen:
         """Build policy dropdowns for the selected TF, SQ, or ship."""
         self._targeting_dropdown = None
         self._movement_dropdown = None
-        self._ship_strategy_dropdown = None
         self._ship_targeting_dropdown = None
         self._ship_movement_dropdown = None
 
@@ -792,32 +765,12 @@ class FleetBattleSetupScreen:
             self._set_selected_policy("targeting", event.text)
         elif self._movement_dropdown and event.ui_element == self._movement_dropdown:
             self._set_selected_policy("movement", event.text)
-        elif (self._ship_strategy_dropdown and
-              event.ui_element == self._ship_strategy_dropdown):
-            self._set_ship_strategy(event.text)
         elif (self._ship_targeting_dropdown and
               event.ui_element == self._ship_targeting_dropdown):
             self._set_ship_policy("_targeting_policy", event.text, _TARGETING_OPTIONS)
         elif (self._ship_movement_dropdown and
               event.ui_element == self._ship_movement_dropdown):
             self._set_ship_policy("_movement_policy", event.text, _MOVEMENT_OPTIONS)
-
-    def _set_ship_strategy(self, display_name: str):
-        """Set AI strategy on the selected ship."""
-        fleet = self._get_active_fleet()
-        if not fleet or self.selected_ship_index is None:
-            return
-        if self.selected_ship_index >= len(fleet.ships):
-            return
-
-        ship = fleet.ships[self.selected_ship_index]
-
-        from game.core.strategy_metadata import get_default_strategy_metadata_service
-        service = get_default_strategy_metadata_service()
-        for strategy_id, strat in service.strategies.items():
-            if strat.get('name', '') == display_name:
-                ship.design_data['ai_strategy'] = strategy_id
-                break
 
     def _set_ship_policy(self, key: str, display_name: str, options_list):
         """Set a targeting or movement policy on the selected ship's design_data."""

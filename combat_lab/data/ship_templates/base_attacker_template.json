@@ -6,7 +6,7 @@
       "weapon_component (beam/projectile/seeker)",
       "weapon_stats (accuracy, damage, range, etc.)",
       "mass (affects maneuverability)",
-      "ai_strategy (usually 'test_do_nothing')"
+      "movement_policy (usually 'test_do_nothing')"
     ],
     "common_variants": [
       {
@@ -76,7 +76,7 @@
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
   "layers": {
     "CORE": [
       {

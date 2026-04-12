@@ -6,17 +6,25 @@
     "_description": "Combat Lab test ship: Test_Attacker_Beam_DamageBoost - Medium accuracy beam with 1.5x damage modifier"
   },
   "name": "Test Attacker Beam DamageBoost",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_beam_med_acc_1dmg",
         "modifiers": [
-          { "id": "test_damage_boost", "value": 1.5 }
+          {
+            "id": "test_damage_boost",
+            "value": 1.5
+          }
         ]
       }
     ],

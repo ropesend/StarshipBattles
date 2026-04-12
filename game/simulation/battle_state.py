@@ -115,7 +115,7 @@ class ShipState:
     theme_id: str
     team_id: int
     color: Tuple[int, int, int]
-    ai_strategy: str
+    movement_policy: str
 
     # Position and physics
     position: Tuple[float, float]
@@ -135,6 +135,9 @@ class ShipState:
     resource_levels: Dict[str, float] = field(default_factory=dict)
     resource_max: Dict[str, float] = field(default_factory=dict)
 
+    # Per-ship policies
+    targeting_policy: str = "standard"
+
     # Status flags
     is_alive: bool = True
     is_derelict: bool = False
@@ -151,7 +154,8 @@ class ShipState:
             'theme_id': self.theme_id,
             'team_id': self.team_id,
             'color': list(self.color),
-            'ai_strategy': self.ai_strategy,
+            'movement_policy': self.movement_policy,
+            'targeting_policy': self.targeting_policy,
             'position': list(self.position),
             'velocity': list(self.velocity),
             'angle': self.angle,
@@ -187,7 +191,7 @@ class ShipState:
         require_keys(
             data,
             ['ship_id', 'name', 'ship_class', 'theme_id', 'team_id', 'color',
-             'ai_strategy', 'position', 'velocity', 'angle', 'current_hp',
+             'movement_policy', 'position', 'velocity', 'angle', 'current_hp',
              'max_hp', 'current_shields', 'max_shields'],
             'ShipState'
         )
@@ -253,7 +257,8 @@ class ShipState:
             theme_id=data['theme_id'],
             team_id=data['team_id'],
             color=tuple(color),
-            ai_strategy=data['ai_strategy'],
+            movement_policy=data['movement_policy'],
+            targeting_policy=data.get('targeting_policy', 'standard'),
             position=tuple(position),
             velocity=tuple(velocity),
             angle=data['angle'],
@@ -307,7 +312,8 @@ class ShipState:
             theme_id=ship.theme_id,
             team_id=ship.team_id,
             color=ship.color if isinstance(ship.color, tuple) else tuple(ship.color),
-            ai_strategy=ship.ai_strategy,
+            movement_policy=ship.movement_policy,
+            targeting_policy=ship.targeting_policy,
             position=(ship.x, ship.y),
             velocity=(ship.velocity.x, ship.velocity.y),
             angle=ship.angle,
@@ -366,7 +372,8 @@ class ShipState:
             theme_id=self.theme_id,
             registries=registries
         )
-        ship.ai_strategy = self.ai_strategy
+        ship.movement_policy = self.movement_policy
+        ship.targeting_policy = self.targeting_policy
         ship.angle = self.angle
         ship.velocity = Vector2(self.velocity[0], self.velocity[1])
 

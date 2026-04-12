@@ -1,4 +1,4 @@
-﻿{
+{
     "test_id": "PROJECTILE-006",
     "description": "Projectile 360 - Orbiting Target",
     "duration_ticks": 1000,
@@ -10,7 +10,8 @@
                 0,
                 0
             ],
-            "ai_strategy": "do_nothing"
+            "movement_policy": "test_do_nothing",
+            "targeting_policy": "standard"
         },
         {
             "name": "Target",
@@ -19,7 +20,8 @@
                 500,
                 0
             ],
-            "ai_strategy": "orbit"
+            "movement_policy": "test_erratic",
+            "targeting_policy": "standard"
         }
     ],
     "assertions": [
@@ -27,7 +29,7 @@
             "type": "hit_rate",
             "attacker": "Test Attacker Proj360",
             "target": "Test Target Orbiting",
-            "min": 0.80,
+            "min": 0.8,
             "max": 1.0
         }
     ]

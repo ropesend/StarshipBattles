@@ -33,11 +33,11 @@ class TestFleetComposition:
         team_entries = [
             {
                 'design': {'path': 'path/to/ship1.json'},
-                'strategy': 'aggressive'
+                'strategy': 'brawl_close'
             },
             {
                 'design': {'path': 'path/to/ship2.json'},
-                'strategy': 'defensive'
+                'strategy': 'kite_medium'
             }
         ]
 
@@ -55,9 +55,9 @@ class TestFleetComposition:
         assert mock_ship_1.position == pygame.math.Vector2(100, 200)
         assert mock_ship_1.angle == 90
         assert mock_ship_1.team_id == 0
-        assert mock_ship_1.ai_strategy == 'aggressive'
+        assert mock_ship_1.movement_policy == 'brawl_close'
 
-        assert mock_ship_2.ai_strategy == 'defensive'
+        assert mock_ship_2.movement_policy == 'kite_medium'
 
     @patch('game.simulation.entities.ship.Ship.from_dict')
     @patch('game.ui.screens.setup_data_io.load_json_required')

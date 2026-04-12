@@ -59,30 +59,30 @@ class TestRegistryIsolation:
             )
 
 
-class TestStrategyManagerIsolation:
-    """Verify StrategyManager state doesn't leak between tests."""
+class TestPolicyManagerIsolation:
+    """Verify PolicyManager state doesn't leak between tests."""
 
-    def test_strategy_isolation_part1_modify_strategies(self):
-        """Add a custom strategy that should be cleared after test."""
-        from game.ai.strategy_manager import get_default_strategy_manager
+    def test_policy_isolation_part1_modify_policies(self):
+        """Add a custom policy that should be cleared after test."""
+        from game.ai.policy_manager import get_default_policy_manager
 
-        mgr = get_default_strategy_manager()
-        # Add a test strategy
-        mgr.strategies['__isolation_test_strategy__'] = {'name': 'Test Strategy'}
+        mgr = get_default_policy_manager()
+        # Add a test policy
+        mgr.movement_policies['__isolation_test_policy__'] = {'name': 'Test Policy'}
 
         # Verify it was added
-        assert '__isolation_test_strategy__' in mgr.strategies
+        assert '__isolation_test_policy__' in mgr.movement_policies
 
-    def test_strategy_isolation_part2_verify_clean(self):
-        """Verify custom strategy was cleared by reset_game_state."""
-        from game.ai.strategy_manager import get_default_strategy_manager
+    def test_policy_isolation_part2_verify_clean(self):
+        """Verify custom policy was cleared by reset_game_state."""
+        from game.ai.policy_manager import get_default_policy_manager
 
-        mgr = get_default_strategy_manager()
+        mgr = get_default_policy_manager()
 
-        # The test strategy should NOT be present if isolation worked
-        # (reset_game_state clears strategies)
-        assert '__isolation_test_strategy__' not in mgr.strategies, (
-            "StrategyManager isolation failed: strategy from previous test leaked!"
+        # The test policy should NOT be present if isolation worked
+        # (reset_game_state clears policies)
+        assert '__isolation_test_policy__' not in mgr.movement_policies, (
+            "PolicyManager isolation failed: policy from previous test leaked!"
         )
 
 

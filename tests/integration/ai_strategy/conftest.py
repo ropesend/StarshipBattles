@@ -6,7 +6,7 @@ import pytest
 import pygame
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import load_components, create_component
-from game.ai.strategy_manager import get_default_strategy_manager
+from game.ai.policy_manager import get_default_policy_manager
 from game.engine.spatial import SpatialGrid
 from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
@@ -25,18 +25,17 @@ def setup_game_data():
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"), registry_provider=provider)
 
     # Load test data for AI strategies
-    manager = get_default_strategy_manager()
+    manager = get_default_policy_manager()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
         movement_file="test_movement_policies.json",
-        strategy_file="test_combat_strategies.json"
     )
     manager._loaded = True
 
     yield
 
-    get_default_strategy_manager().clear()
+    get_default_policy_manager().clear()
 
 
 @pytest.fixture

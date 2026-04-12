@@ -5,7 +5,7 @@
     "variant_properties": [
       "mass (affects radius, defense score)",
       "hp (via armor component)",
-      "ai_strategy (usually 'test_do_nothing')"
+      "movement_policy (usually 'test_do_nothing')"
     ],
     "common_variants": [
       {
@@ -20,7 +20,7 @@
         "filename": "Test_Target_SmallErratic.json",
         "mass": 50.0,
         "expected_hp": "varies",
-        "ai_strategy": "test_erratic_movement"
+        "movement_policy": "test_erratic_movement"
       },
       {
         "name": "Large Target",
@@ -42,7 +42,7 @@
   "team_id": 2,
   "ship_class": "TestM_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
   "layers": {
     "CORE": [
       {

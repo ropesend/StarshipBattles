@@ -58,7 +58,8 @@ class TestBuilderImprovements:
         mock_ship.ship_class = "Escort"
         mock_ship.theme_id = "Federation"
         mock_ship.vehicle_type = "Ship"
-        mock_ship.ai_strategy = "aggressive"
+        mock_ship.movement_policy = "brawl_close"
+        mock_ship.targeting_policy = "standard"
         mock_ship.design_role = "general_purpose"
         mock_ship.layers = {}
         mock_ship.mass_limits_ok = True

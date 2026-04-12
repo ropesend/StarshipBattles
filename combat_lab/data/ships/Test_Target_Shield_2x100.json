@@ -5,16 +5,27 @@
     "_description": "Combat Lab test ship: Stationary target with 2x 100 HP shields (200 total) + extreme armor"
   },
   "name": "Test Target Shield 2x100",
-  "color": [0, 0, 255],
+  "color": [
+    0,
+    0,
+    255
+  ],
   "team_id": 2,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_armor_extreme_hp"},
-      {"id": "test_shield_100"},
-      {"id": "test_shield_100"}
+      {
+        "id": "test_armor_extreme_hp"
+      },
+      {
+        "id": "test_shield_100"
+      },
+      {
+        "id": "test_shield_100"
+      }
     ],
     "ARMOR": []
   },

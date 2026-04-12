@@ -5,15 +5,24 @@
     "_description": "Target with 100 HP metals-consuming shield but NO metals storage"
   },
   "name": "Test Target Shield 100 + No Metals",
-  "color": [0, 0, 255],
+  "color": [
+    0,
+    0,
+    255
+  ],
   "team_id": 2,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_armor_extreme_hp"},
-      {"id": "test_shield_100_metals"}
+      {
+        "id": "test_armor_extreme_hp"
+      },
+      {
+        "id": "test_shield_100_metals"
+      }
     ],
     "ARMOR": []
   },

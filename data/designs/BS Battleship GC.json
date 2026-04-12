@@ -1,6 +1,6 @@
 {
     "_format_version": "2.0",
-    "name": "BS2 Battleship",
+    "name": "BS Battleship GC",
     "ship_class": "Battleship",
     "vehicle_type": "Ship",
     "theme_id": "Federation",
@@ -10,7 +10,8 @@
         100,
         255
     ],
-    "ai_strategy": "brawler",
+    "movement_policy": "kite_medium",
+    "targeting_policy": "standard",
     "design_role": "line_combatant",
     "layers": {
         "CORE": [
@@ -2591,7 +2592,7 @@
         "max_ammo": 80000.0,
         "max_speed": 4.125104089258211,
         "acceleration_rate": 0.0032228188915179585,
-        "turn_speed": 7.5994249013030215,
+        "turn_speed": 22.798274703909065,
         "total_thrust": 21119.999999999985,
         "strategic_movement": 14079.999999999989,
         "mass": 127996.77016027644,

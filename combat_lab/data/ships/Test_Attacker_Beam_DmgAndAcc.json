@@ -5,18 +5,29 @@
     "_description": "Beam with damage_mult(1.5) + accuracy_add(+1.0) - tests independent modifier stacking"
   },
   "name": "Test Attacker Beam DmgAndAcc",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_stationary_fire",
+  "movement_policy": "test_stationary",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_beam_med_acc_1dmg",
         "modifiers": [
-          { "id": "test_damage_boost", "value": 1.5 },
-          { "id": "test_accuracy_boost", "value": 2 }
+          {
+            "id": "test_damage_boost",
+            "value": 1.5
+          },
+          {
+            "id": "test_accuracy_boost",
+            "value": 2
+          }
         ]
       }
     ],
@@ -34,5 +45,9 @@
     "mass": 400.0,
     "armor_hp_pool": 0
   },
-  "resources": { "fuel": 0.0, "energy": 0.0, "ammo": 0.0 }
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

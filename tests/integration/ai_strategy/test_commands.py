@@ -21,7 +21,7 @@ class TestCommandGeneration:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ship1.ai_strategy = 'max_weapons_range'
+        ship1.movement_policy = 'kite_max'
 
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ai_controller.update()

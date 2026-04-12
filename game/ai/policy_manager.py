@@ -1,5 +1,8 @@
 """
-Strategy Manager - Manager for combat strategies, targeting policies, and movement policies.
+Policy Manager - Loads and provides lookup for targeting and movement policies.
+
+Replaces StrategyManager. Loads targeting_policies.json and movement_policies.json
+directly — no intermediate combat_strategies.json indirection.
 
 Exception Handling
 ==================
@@ -14,34 +17,35 @@ from typing import Any, Dict, Optional
 from game.core.json_utils import load_json
 
 logger = logging.getLogger(__name__)
-from game.core.strategy_metadata import get_default_strategy_metadata_service
 
-# Module-level reference (PROJ-258)
-_default_strategy_manager: Optional['StrategyManager'] = None
+# Module-level reference (PROJ-258 pattern)
+_default_policy_manager: Optional['PolicyManager'] = None
 
 
-def get_default_strategy_manager() -> 'StrategyManager':
-    """Get the module-level StrategyManager reference.
+def get_default_policy_manager() -> 'PolicyManager':
+    """Get the module-level PolicyManager reference.
 
     Auto-creates on first access if not yet set.
 
     Returns:
-        The module-level StrategyManager instance.
+        The module-level PolicyManager instance.
     """
-    global _default_strategy_manager
-    if _default_strategy_manager is None:
-        _default_strategy_manager = StrategyManager()
-    return _default_strategy_manager
+    global _default_policy_manager
+    if _default_policy_manager is None:
+        _default_policy_manager = PolicyManager()
+    return _default_policy_manager
 
 
-class StrategyManager:
-    """Manager for combat strategies, targeting policies, and movement policies.
+class PolicyManager:
+    """Manager for targeting and movement policies.
 
-    PROJ-258: Migrated from SingletonMeta to DI via module-level accessor.
+    Loads per-ship behavior definitions from data files:
+    - targeting_policies.json: Target scoring rules (standard, sniper, brawler, etc.)
+    - movement_policies.json: Movement behaviors (kite_max, brawl_close, etc.)
 
     Access patterns:
-        - Production: get_default_strategy_manager()
-        - Tests: StrategyManager() for direct construction
+        - Production: get_default_policy_manager()
+        - Tests: PolicyManager() for direct construction
 
     Thread Safety:
         - Data loading (load_data/ensure_loaded) is thread-safe via locking
@@ -50,15 +54,13 @@ class StrategyManager:
     _data_lock = threading.Lock()
 
     def __init__(self):
-        """Initialize the StrategyManager."""
-        self.targeting_policies = {}
-        self.movement_policies = {}
-        self.strategies = {}
+        """Initialize the PolicyManager."""
+        self.targeting_policies: Dict[str, Any] = {}
+        self.movement_policies: Dict[str, Any] = {}
         self._loaded = False
         self.defaults = {
             'targeting': {'name': 'Default', 'rules': [{'type': 'nearest', 'weight': 100}]},
             'movement': {'behavior': 'kite', 'engage_distance': 'max_range', 'retreat_hp_threshold': 0.1, 'avoid_collisions': True},
-            'strategy': {'name': 'Default', 'targeting_policy': 'standard', 'movement_policy': 'kite_max'}
         }
 
     def clear(self):
@@ -69,10 +71,7 @@ class StrategyManager:
         """
         self.targeting_policies = {}
         self.movement_policies = {}
-        self.strategies = {}
         self._loaded = False
-        # Also clear the metadata service for UI layer
-        get_default_strategy_metadata_service().clear()
 
     def ensure_loaded(self, base_path: str = "data"):
         """
@@ -81,7 +80,7 @@ class StrategyManager:
         Loads data from disk only on first call. Subsequent calls are no-ops.
 
         Args:
-            base_path: Base directory containing strategy JSON files
+            base_path: Base directory containing policy JSON files
         """
         if self._loaded:
             return
@@ -96,7 +95,6 @@ class StrategyManager:
         base_path: str = "data",
         targeting_file: str = "targeting_policies.json",
         movement_file: str = "movement_policies.json",
-        strategy_file: str = "combat_strategies.json"
     ) -> None:
         # Load Targeting Policies
         targeting_data = load_json(os.path.join(base_path, targeting_file), default={})
@@ -106,19 +104,7 @@ class StrategyManager:
         movement_data = load_json(os.path.join(base_path, movement_file), default={})
         self.movement_policies = movement_data.get('policies', {})
 
-        # Load Strategies
-        strategy_data = load_json(os.path.join(base_path, strategy_file), default={})
-        self.strategies = strategy_data.get('strategies', {})
-
-        # Populate metadata service for UI layer
-        get_default_strategy_metadata_service().set_strategies(self.strategies)
-
-        logger.info(f"StrategyManager loaded: {len(self.strategies)} strategies, {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
-
-    def get_strategy(self, strategy_id: str) -> Dict[str, Any]:
-        """Get a strategy definition by ID. Triggers lazy loading if needed."""
-        self.ensure_loaded()
-        return self.strategies.get(strategy_id, self.defaults['strategy'])
+        logger.info(f"PolicyManager loaded: {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
 
     def get_targeting_policy(self, policy_id: str) -> Dict[str, Any]:
         """Get a targeting policy by ID. Triggers lazy loading if needed."""
@@ -129,16 +115,3 @@ class StrategyManager:
         """Get a movement policy by ID. Triggers lazy loading if needed."""
         self.ensure_loaded()
         return self.movement_policies.get(policy_id, self.defaults['movement'])
-
-    def resolve_strategy(self, strategy_id: str) -> Dict[str, Any]:
-        """Returns fully resolved strategy object with policy data embedded (helper)."""
-        strat_def = self.get_strategy(strategy_id)
-
-        t_pol = self.get_targeting_policy(strat_def.get('targeting_policy'))
-        m_pol = self.get_movement_policy(strat_def.get('movement_policy'))
-
-        return {
-            'definition': strat_def,
-            'targeting': t_pol,
-            'movement': m_pol
-        }

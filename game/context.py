@@ -32,9 +32,8 @@ class ApplicationContext:
         self,
         registry_manager: Any,
         profiler: Any,
-        strategy_metadata: Any,
         component_cache: Any,
-        strategy_manager: Any,
+        policy_manager: Any,
         asset_manager: Any,
         sprite_manager: Any,
         ship_theme_manager: Any,
@@ -43,9 +42,8 @@ class ApplicationContext:
     ):
         self.registry_manager = registry_manager
         self.profiler = profiler
-        self.strategy_metadata = strategy_metadata
         self.component_cache = component_cache
-        self.strategy_manager = strategy_manager
+        self.policy_manager = policy_manager
         self.asset_manager = asset_manager
         self.sprite_manager = sprite_manager
         self.ship_theme_manager = ship_theme_manager
@@ -62,9 +60,8 @@ class ApplicationContext:
         # Late imports to avoid circular dependencies and upward layer imports
         from game.core.registry import RegistryManager
         from game.core.profiling import Profiler
-        from game.core.strategy_metadata import StrategyMetadataService
         from game.simulation.components.component_loader import ComponentCacheManager
-        from game.ai.strategy_manager import StrategyManager
+        from game.ai.policy_manager import PolicyManager
         from game.assets.asset_manager import AssetManager
         from game.ui.renderer.sprites import SpriteManager
         from game.ui.assets.ship_theme_manager import ShipThemeManager
@@ -74,9 +71,8 @@ class ApplicationContext:
         # Create all service instances
         registry_mgr = RegistryManager()
         profiler = Profiler()
-        strategy_metadata = StrategyMetadataService()
         component_cache = ComponentCacheManager()
-        strategy_manager = StrategyManager()
+        policy_manager = PolicyManager()
         asset_manager = AssetManager()
         sprite_manager = SpriteManager()
         ship_theme_manager = ShipThemeManager()
@@ -87,9 +83,7 @@ class ApplicationContext:
         # returns the same instances as ctx.xxx (prevents instance divergence)
         from game.core.registry import set_default_registry_manager
         from game.core.profiling import set_default_profiler
-        from game.core.strategy_metadata import get_default_strategy_metadata_service as _sms_mod
         from game.simulation.components.component_loader import get_default_cache_manager as _ccm_mod
-        from game.ai.strategy_manager import get_default_strategy_manager as _sm_mod
         from game.assets.asset_manager import set_default_asset_manager
         from game.ui.renderer.sprites import set_default_sprite_manager
         from game.ui.assets.ship_theme_manager import set_default_ship_theme_manager
@@ -107,19 +101,16 @@ class ApplicationContext:
         set_default_game_settings(game_settings)
 
         # Set module-level refs for services with only _default_xxx (no setter)
-        import game.core.strategy_metadata as _sms_module
-        _sms_module._default_service = strategy_metadata
         import game.simulation.components.component_loader as _ccm_module
         _ccm_module._default_cache_manager = component_cache
-        import game.ai.strategy_manager as _sm_module
-        _sm_module._default_strategy_manager = strategy_manager
+        import game.ai.policy_manager as _pm_module
+        _pm_module._default_policy_manager = policy_manager
 
         return cls(
             registry_manager=registry_mgr,
             profiler=profiler,
-            strategy_metadata=strategy_metadata,
             component_cache=component_cache,
-            strategy_manager=strategy_manager,
+            policy_manager=policy_manager,
             asset_manager=asset_manager,
             sprite_manager=sprite_manager,
             ship_theme_manager=ship_theme_manager,
@@ -138,9 +129,8 @@ class ApplicationContext:
         # Late imports
         from game.core.registry import RegistryManager
         from game.core.profiling import Profiler
-        from game.core.strategy_metadata import StrategyMetadataService
         from game.simulation.components.component_loader import ComponentCacheManager
-        from game.ai.strategy_manager import StrategyManager
+        from game.ai.policy_manager import PolicyManager
         from game.assets.asset_manager import AssetManager
         from game.ui.renderer.sprites import SpriteManager
         from game.ui.assets.ship_theme_manager import ShipThemeManager
@@ -150,9 +140,8 @@ class ApplicationContext:
         defaults = {
             'registry_manager': RegistryManager(),
             'profiler': Profiler.__new__(Profiler),
-            'strategy_metadata': StrategyMetadataService.__new__(StrategyMetadataService),
             'component_cache': ComponentCacheManager.__new__(ComponentCacheManager),
-            'strategy_manager': StrategyManager.__new__(StrategyManager),
+            'policy_manager': PolicyManager.__new__(PolicyManager),
             'asset_manager': AssetManager.__new__(AssetManager),
             'sprite_manager': SpriteManager.__new__(SpriteManager),
             'ship_theme_manager': ShipThemeManager.__new__(ShipThemeManager),

@@ -10,7 +10,8 @@
                 0,
                 0
             ],
-            "ai_strategy": "do_nothing"
+            "movement_policy": "test_do_nothing",
+            "targeting_policy": "standard"
         },
         {
             "name": "Target",
@@ -19,7 +20,8 @@
                 -500,
                 500
             ],
-            "ai_strategy": "straight_line"
+            "movement_policy": "test_straight_line",
+            "targeting_policy": "standard"
         }
     ],
     "assertions": [

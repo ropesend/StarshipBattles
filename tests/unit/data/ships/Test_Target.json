@@ -8,7 +8,8 @@
         0,
         255
     ],
-    "ai_strategy": "standard_ranged",
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
     "layers": {
         "CORE": [
             {

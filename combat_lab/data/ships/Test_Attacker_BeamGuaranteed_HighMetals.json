@@ -5,18 +5,29 @@
     "_description": "Guaranteed-hit beam (1 metals/shot) + 100k metals storage"
   },
   "name": "Test Attacker Beam Guaranteed + High Metals",
-  "color": [255, 0, 0],
+  "color": [
+    255,
+    0,
+    0
+  ],
   "team_id": 1,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
-      {"id": "test_beam_1dmg_guaranteed_metals"},
-      {"id": "test_storage_metals_100k"}
+      {
+        "id": "test_beam_1dmg_guaranteed_metals"
+      },
+      {
+        "id": "test_storage_metals_100k"
+      }
     ],
     "ARMOR": []
   },
   "_test_notes": "Beam consumes metals instead of energy. Proves resource system is generic.",
-  "expected_stats": {"mass": 400.0}
+  "expected_stats": {
+    "mass": 400.0
+  }
 }

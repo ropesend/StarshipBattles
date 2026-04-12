@@ -99,12 +99,12 @@ class WorkshopDataLoader:
     
     def clear_registries(self) -> None:
         """Clear all game data registries before loading new data."""
-        from game.core.strategy_metadata import get_default_strategy_metadata_service
+        from game.ai.policy_manager import get_default_policy_manager
 
         clear_registry()
 
-        # Clear StrategyMetadataService data
-        get_default_strategy_metadata_service().clear()
+        # Clear PolicyManager data
+        get_default_policy_manager().clear()
     
     def load_all(self) -> LoadResult:
         """
@@ -146,7 +146,7 @@ class WorkshopDataLoader:
                 logger.warning("No components.json found")
             
             # 4. Load Combat Strategies
-            self._load_strategies(result)
+            self._load_policies(result)
             
             # 5. Load Vehicle Classes & Layers
             self._load_vehicle_classes(result)
@@ -169,34 +169,29 @@ class WorkshopDataLoader:
         
         return result
     
-    def _load_strategies(self, result: LoadResult) -> None:
-        """Load combat strategies with test mode detection.
+    def _load_policies(self, result: LoadResult) -> None:
+        """Load targeting and movement policies.
 
-        PROJ-148: Uses StrategyManager.load_data() as the single source of truth.
-        StrategyManager automatically populates StrategyMetadataService.
+        Uses PolicyManager.load_data() to load from data files.
         """
-        from game.ai.strategy_manager import get_default_strategy_manager
+        from game.ai.policy_manager import get_default_policy_manager
 
-        # Check if test files exist (with test_ prefix)
-        test_strat = os.path.join(self.directory, "test_combat_strategies.json")
+        manager = get_default_policy_manager()
+        manager.clear()
 
-        manager = get_default_strategy_manager()
-        manager.clear()  # Clears both StrategyManager and StrategyMetadataService
-
-        if os.path.exists(test_strat):
-            # Test data mode - use test_ prefixed files
+        # Check for test data files
+        test_targeting = os.path.join(self.directory, "test_targeting_policies.json")
+        if os.path.exists(test_targeting):
             manager.load_data(
                 base_path=self.directory,
-                strategy_file="test_combat_strategies.json"
+                targeting_file="test_targeting_policies.json",
+                movement_file="test_movement_policies.json",
             )
-            logger.info(f"Loaded strategies from test data in {self.directory}")
+            logger.info(f"Loaded policies from test data in {self.directory}")
         else:
-            # Production mode - try standard names
-            strat_path, _ = self.find_file(["combatstrategies.json", "combat_strategies.json"])
-            if strat_path:
-                base_dir = os.path.dirname(strat_path)
-                manager.load_data(base_path=base_dir)
-                logger.info(f"Loaded strategies from {strat_path}")
+            # Production mode
+            manager.load_data(base_path=self.directory)
+            logger.info(f"Loaded policies from {self.directory}")
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""

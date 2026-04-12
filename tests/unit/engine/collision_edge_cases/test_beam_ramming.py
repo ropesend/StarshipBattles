@@ -454,7 +454,7 @@ class TestRammingEdgeCases:
     def test_ramming_non_kamikaze_ignored(self, collision_system):
         """Ships without kamikaze strategy should not ram."""
         ship = MagicMock()
-        ship.ai_strategy = 'aggressive'  # Not kamikaze
+        ship.movement_policy = 'brawl_close'  # Not kamikaze
         ship.is_alive = True
         ship.current_target = MagicMock()
 
@@ -465,7 +465,7 @@ class TestRammingEdgeCases:
     def test_ramming_no_target_ignored(self, collision_system):
         """Kamikaze ship without target should not process."""
         ship = MagicMock()
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.current_target = None
 
@@ -479,7 +479,7 @@ class TestRammingEdgeCases:
         target.is_alive = False
 
         ship = MagicMock()
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.current_target = target
 
@@ -498,7 +498,7 @@ class TestRammingEdgeCases:
 
         ship = MagicMock()
         ship.name = "Rammer"
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.hp = 100  # Equal HP
         ship.position = Vector2(0, 0)
@@ -523,7 +523,7 @@ class TestRammingEdgeCases:
 
         ship = MagicMock()
         ship.name = "Rammer"
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.hp = 50
         ship.position = Vector2(0, 0)
@@ -551,9 +551,9 @@ class TestRammingEdgeCases:
         target.radius = 10
         # No .hp attribute
 
-        ship = MagicMock(spec=['name', 'ai_strategy', 'is_alive', 'position', 'radius', 'current_target', 'combat_engine'])
+        ship = MagicMock(spec=['name', 'movement_policy', 'is_alive', 'position', 'radius', 'current_target', 'combat_engine'])
         ship.name = "Rammer"
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.position = Vector2(0, 0)
         ship.radius = 10
@@ -579,9 +579,9 @@ class TestRammingEdgeCases:
         target.radius = 10
         target.hp = 200  # Target has HP
 
-        ship = MagicMock(spec=['name', 'ai_strategy', 'is_alive', 'position', 'radius', 'current_target', 'combat_engine'])
+        ship = MagicMock(spec=['name', 'movement_policy', 'is_alive', 'position', 'radius', 'current_target', 'combat_engine'])
         ship.name = "Rammer"
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.position = Vector2(0, 0)
         ship.radius = 10
@@ -607,7 +607,7 @@ class TestRammingEdgeCases:
 
         ship = MagicMock()
         ship.name = "Rammer"
-        ship.ai_strategy = 'kamikaze'
+        ship.movement_policy = 'ramming_speed'
         ship.is_alive = True
         ship.position = Vector2(0, 0)
         ship.radius = 10
@@ -632,7 +632,7 @@ class TestRammingEdgeCases:
         rammer.name = "Rammer"
         rammer.position = Vector2(0, 0)
         rammer.radius = 10
-        rammer.ai_strategy = 'kamikaze'
+        rammer.movement_policy = 'ramming_speed'
         rammer.is_alive = True
         rammer.hp = 50
 
@@ -745,7 +745,7 @@ class TestCollisionIntegrationWithRealShip:
             team_id=0,
             registries=fresh_registries
         )
-        rammer.ai_strategy = 'kamikaze'
+        rammer.movement_policy = 'ramming_speed'
 
         # Create target ship
         target = Ship(

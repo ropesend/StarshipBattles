@@ -6,17 +6,25 @@
     "_description": "Combat Lab test ship: Test_Engine_ThrustBoost - Engine with 2x thrust modifier"
   },
   "name": "Test Engine ThrustBoost",
-  "color": [0, 255, 0],
+  "color": [
+    0,
+    255,
+    0
+  ],
   "team_id": 0,
   "ship_class": "TestS_2L",
   "theme_id": "Federation",
-  "ai_strategy": "do_nothing",
+  "movement_policy": "test_do_nothing",
+  "targeting_policy": "standard",
   "layers": {
     "CORE": [
       {
         "id": "test_engine_no_fuel",
         "modifiers": [
-          { "id": "test_thrust_boost", "value": 2 }
+          {
+            "id": "test_thrust_boost",
+            "value": 2
+          }
         ]
       }
     ],

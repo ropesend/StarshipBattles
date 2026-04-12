@@ -424,7 +424,7 @@ class TestScenario(CombatScenario):
             "team_id": 1,
             "ship_class": "TestS_2L",
             "theme_id": "Federation",
-            "ai_strategy": "test_do_nothing",
+            "movement_policy": "test_do_nothing",
             "layers": {
                 "CORE": [{"id": cid} for cid in component_ids],
                 "ARMOR": []

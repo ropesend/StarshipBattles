@@ -197,8 +197,13 @@ class IControllable(ABC):
         pass
 
     @abstractmethod
-    def get_ai_strategy(self) -> str:
-        """Get the AI strategy identifier for this ship."""
+    def get_movement_policy(self) -> str:
+        """Get the movement policy identifier for this ship."""
+        pass
+
+    @abstractmethod
+    def get_targeting_policy(self) -> str:
+        """Get the targeting policy identifier for this ship."""
         pass
 
     @abstractmethod
@@ -370,9 +375,13 @@ class ShipControllableAdapter(IControllable):
         """Get the component layers dictionary."""
         return self._ship.layers
 
-    def get_ai_strategy(self) -> str:
-        """Get the AI strategy identifier for this ship."""
-        return self._ship.ai_strategy
+    def get_movement_policy(self) -> str:
+        """Get the movement policy identifier for this ship."""
+        return self._ship.movement_policy
+
+    def get_targeting_policy(self) -> str:
+        """Get the targeting policy identifier for this ship."""
+        return self._ship.targeting_policy
 
     def get_vehicle_type(self) -> str:
         """Get the vehicle type (Ship, Satellite, etc.)."""

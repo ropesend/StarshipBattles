@@ -4,30 +4,73 @@
     "vehicle_type": "Ship",
     "theme_id": "Federation",
     "team_id": 0,
-    "color": [255, 0, 0],
-    "ai_strategy": "standard_ranged",
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
     "design_role": "general_purpose",
     "_comment": "DELIBERATELY INVALID: CORE has 510kg, limit is 500kg (50% of 1000)",
     "layers": {
         "CORE": [
-            {"id": "bridge"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "crew_quarters"},
-            {"id": "life_support"},
-            {"id": "life_support"}
+            {
+                "id": "bridge"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "crew_quarters"
+            },
+            {
+                "id": "life_support"
+            },
+            {
+                "id": "life_support"
+            }
         ]
     },
-    "resources": {"fuel": 0, "energy": 0, "ammo": 0}
+    "resources": {
+        "fuel": 0,
+        "energy": 0,
+        "ammo": 0
+    }
 }

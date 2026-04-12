@@ -21,24 +21,23 @@ class TestBuilderUISync:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
-        from game.ai.strategy_manager import get_default_strategy_manager
+        from game.ai.policy_manager import get_default_policy_manager
         from tests.infrastructure.session_cache import SessionRegistryCache
 
         # Store registries for use in test methods
         self.registries = fresh_registries
 
-        # Load strategy data from session cache (strategies not in GameRegistries yet)
+        # Load policy data from session cache
         cache = SessionRegistryCache.instance()
         cache.load_all_data()
-        strategies = cache.get_strategies()
 
-        # Populate both StrategyManager (for AI) and StrategyMetadataService (for UI)
-        strat_mgr = get_default_strategy_manager()
-        strat_mgr.strategies = strategies
-        strat_mgr._loaded = True
+        # Populate PolicyManager
+        policy_mgr = get_default_policy_manager()
+        policy_mgr.targeting_policies = cache.get_targeting_policies()
+        policy_mgr.movement_policies = cache.get_movement_policies()
+        policy_mgr._loaded = True
 
-        from game.core.strategy_metadata import get_default_strategy_metadata_service
-        get_default_strategy_metadata_service().set_strategies(strategies)
+        # PolicyManager already loaded above — no additional cleanup needed
 
         # Re-initialize pygame - required because other tests may have called pygame.quit()
         # which destroys the session-scoped pygame state from root conftest.
@@ -114,7 +113,7 @@ class TestBuilderUISync:
 
         # Set AI to something non-default
         # Default is usually optimal_firing_range
-        self.mock_builder.ship.ai_strategy = "kamikaze"
+        self.mock_builder.ship.movement_policy = "ramming_speed"
 
         # 2. Call Refresh (mocking portrait update to avoid side effects)
         with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
@@ -134,11 +133,9 @@ class TestBuilderUISync:
         val = self._get_option_value(self.panel.class_dropdown.selected_option)
         assert val == target_class
 
-        # AI Strategy Name lookup
-        from game.core.strategy_metadata import get_default_strategy_metadata_service
-        strat_name = get_default_strategy_metadata_service().strategies["kamikaze"]["name"]
-        val = self._get_option_value(self.panel.ai_dropdown.selected_option)
-        assert val == strat_name
+        # Movement policy dropdown
+        val = self._get_option_value(self.panel.movement_dropdown.selected_option)
+        assert val == "Ram"  # "ramming_speed" maps to "Ram" display name
 
     def test_type_change_filtering(self):
         """Verify that changing vehicle type filters the class list."""

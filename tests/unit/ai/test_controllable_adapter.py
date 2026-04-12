@@ -153,8 +153,11 @@ class TestMockImplementation:
             def get_all_components(self):
                 return []
 
-            def get_ai_strategy(self):
-                return None
+            def get_movement_policy(self):
+                return "kite_max"
+
+            def get_targeting_policy(self):
+                return "standard"
 
             def get_vehicle_type(self):
                 return "ship"
@@ -202,7 +205,8 @@ class TestMockImplementation:
             def set_secondary_targets(self, t): pass
             def get_components_by_ability(self, a): return []
             def get_all_components(self): return []
-            def get_ai_strategy(self): return None
+            def get_movement_policy(self): return "kite_max"
+            def get_targeting_policy(self): return "standard"
             def get_vehicle_type(self): return "ship"
 
         mock = FullMockControllable()

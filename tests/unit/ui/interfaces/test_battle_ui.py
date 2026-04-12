@@ -116,7 +116,7 @@ class TestShipDTO:
             current_target_name=None,
             secondary_target_names=[],
             max_targets=1,
-            ai_strategy="default",
+            movement_policy="default",
             source_file=None,
             resources=[],
             components=[]
@@ -164,7 +164,7 @@ class TestShipDTO:
             current_target_name=None,
             secondary_target_names=[],
             max_targets=1,
-            ai_strategy="default",
+            movement_policy="default",
             source_file=None,
             resources=[],
             components=[comp]
@@ -198,7 +198,7 @@ class TestShipDTO:
             current_target_name=None,
             secondary_target_names=[],
             max_targets=1,
-            ai_strategy="default",
+            movement_policy="default",
             source_file=None,
             resources=[],
             components=[]
