@@ -100,24 +100,44 @@
 
 ---
 
+### Task 6.7a: Extend `combat_lab/spec_compiler.py` to all 5 templates [Medium]
+**Files:**
+- `combat_lab/spec_compiler.py`
+- `combat_lab/scenarios/templates.py`
+- `combat_lab/scenarios/base.py`
+- `combat_lab/runner.py`
+- `tests/unit/combat_lab/test_spec_compiler.py`
+
+**Tests:**
+- `pytest tests/unit/combat_lab/test_spec_compiler.py`
+- `SB_USE_BATTLE_RUNNER=1 python -m combat_lab.run_tests --fast --no-history`
+
+- [x] Write failing tests covering DuelScenario / PropulsionScenario / ResourceScenario / ComparisonScenario spec translation (13 new tests, all red until compiler landed)
+- [x] Extend `build_test_battle_spec` to dispatch on `StaticTargetScenario` / `DuelScenario` / `PropulsionScenario` / `ResourceScenario` / `ComparisonScenario`
+- [x] Introduce `TestScenario.wire_ships(ships_by_role, *, engine, initial_state)` hook and override per template — replaces the side-effect tail of `setup()` (cache ship refs, store initial HP/resources, assign movement policies)
+- [x] Introduce `TestScenario.before_run_battle(spec)` hook; `ComparisonScenario` uses it to run its private baseline battle BEFORE variant ships are materialized, preserving legacy ship-creation ordering (needed for deterministic same-seed same-group MAX tests)
+- [x] Update `combat_lab/runner.py::_run_scenario_via_battle_runner` — role-keyed ship registry, pre-engine-start state snapshot (for resource scenarios whose `initial_value` must be captured before `engine.start`'s component-update tick), `configure_variant`/`configure_baseline` forwarded via `engine=` kwarg
+- [x] Verify: 27 compiler unit tests pass; Combat Lab fast suite 162/162 green under `SB_USE_BATTLE_RUNNER=1`; legacy path (flag off) still 162/162 green
+
+**Notes:** Role conventions encoded in `ShipSpec.instance_id` suffix (`:attacker`, `:target`, `:ship1`, `:ship2`, `:ship`, `:variant_attacker`, `:variant_target`, `:baseline_attacker`, `:baseline_target`). `ComparisonScenario._run_baseline_battle` still uses a throwaway `BattleEngine(...)` — Task 6.8 rewrites it to use `run_battle`.
+
+---
+
 ### Task 6.7: Rewrite `combat_lab/runner.py` to go only through `run_battle` [Medium]
-**File:** `combat_lab/runner.py`
+**File:** `combat_lab/runner.py` + `combat_lab/scenarios/propulsion_scenarios.py` + `combat_lab/scenarios/tohit_attack_fleet_scenarios.py` + `combat_lab/spec_compiler.py`
 
-**Tests:** `python -m combat_lab.run_tests --fast` — 162+ passing
+**Tests:** `python -m combat_lab.run_tests --fast` — 162 passing; full suite 170/170
 
-- [ ] Remove `USE_BATTLE_RUNNER` feature flag and the legacy branch (Phase 1 scaffolding)
-- [ ] `TestRunner.run_scenario(scenario_cls, ...)`:
-  - `scenario = scenario_cls()`
-  - `spec = scenario.to_spec(registries)`  (calls `build_test_battle_spec(self, registries)`)
-  - `outcome = run_battle(spec, ai_factory=AIControllerFactory())`
-  - Map outcome to `scenario.results` and run `scenario._run_validation(engine)` — engine is still accessible if needed via the `BattleOutcome` or a peer inspector
-- [ ] Decision needed: does scenario validation need live `engine` access, or only `BattleOutcome`?
-  - If BattleOutcome is sufficient → rewrite validation to consume outcome
-  - If engine is needed → `run_battle` returns `(outcome, final_engine_snapshot)` or similar
-- [ ] Remove direct `BattleEngine(...)` construction
-- [ ] Verify: Combat Lab fast suite green
+- [x] Remove `USE_BATTLE_RUNNER` feature flag and the legacy branch (Phase 1 scaffolding)
+- [x] `TestRunner.run_scenario(scenario_cls, ...)` rewritten to always go through `run_battle(spec, ...)`. Engine reference captured via per-tick callback for `_run_validation(engine)`.
+- [x] Remove direct `BattleEngine(...)` construction from the runner
+- [x] Remove `_run_scenario_legacy` helper and `_run_scenario_via_battle_runner` (merged into `run_scenario`)
+- [x] Decision: validation continues to receive live `engine` (via the pre_tick_loop capture) — 162/162 scenarios' validate methods unchanged
+- [x] Give the 5 non-template scenarios their own `to_spec()` + `wire_ships()` overrides (PROP-002, PROP-005, TOHIT-ATK-FLEET-002/003/004). Each builds a `BattleSpec` directly from the public DTOs
+- [x] Expose compiler primitives (`make_ship_spec`, `make_one_ship_team`, `make_battle_spec`, `make_single_ship_custom_formation`) as public API for custom `to_spec()` overrides
+- [x] Verify: Combat Lab fast suite 162/162; full suite 170/170 (including all -HT scenarios); pytest suite baseline maintained
 
-**Notes:**
+**Notes:** `TestScenario.to_spec(registries)` is now the contract — every scenario must compile to a BattleSpec. The base `setup()` method is retained in templates for anything still driving `setup()` directly (unit tests, legacy callers), but the production path is `to_spec` → `run_battle` → `wire_ships(engine)` → `custom_setup(engine)`.
 
 ---
 
@@ -126,11 +146,13 @@
 
 **Tests:** `python -m combat_lab.run_tests --fast` — comparison scenarios still pass
 
-- [ ] Today `_run_baseline_battle` constructs a throwaway `BattleEngine(...)`. Replace with: build a baseline `BattleSpec` via the scenario's baseline ships + call `run_battle(baseline_spec, ...)`.
-- [ ] Read the outcome and stash baseline metrics on `self.baseline_*` attributes (same shape as today — preserve validate()'s expectations)
-- [ ] Verify: all ComparisonScenario tests still pass
+- [x] Replace throwaway `BattleEngine(...)` construction with `run_battle(baseline_spec, ...)`
+- [x] Add `_build_baseline_battle_spec()` method — compiles baseline ships into a BattleSpec mirroring the variant `_compile_comparison` shape
+- [x] Capture engine reference via `pre_tick_loop_callback`; wire baseline ships onto `self.attacker`/`self.target`/`self.initial_hp` so `configure_baseline(engine)` operates on the right refs
+- [x] Populate `self._baseline_*` metrics from the post-run state (same shape as legacy path)
+- [x] Verify: fast suite 162/162 green; full suite 170/170 green; no remaining `BattleEngine(` construction in combat_lab (only in docstrings)
 
-**Notes:**
+**Notes:** After this task, no direct `BattleEngine(...)` construction exists anywhere in `combat_lab/`. The outer `wire_ships` flow (`before_run_battle` → `_run_baseline_battle` → variant wiring) preserves the legacy ship-creation ordering so deterministic same-seed MAX-group tests stay green.
 
 ---
 

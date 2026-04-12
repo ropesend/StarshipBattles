@@ -33,6 +33,35 @@ from typing import Optional
 from combat_lab.scenarios.base import TestScenario
 
 
+# ---------------------------------------------------------------------------
+# PROJ-269 Task 6.7a: helpers for run_battle-path `wire_ships` lookups.
+# ---------------------------------------------------------------------------
+
+
+def _pre_start_hp(initial_state, role, *, fallback):
+    """Read a role's pre-engine-start HP from the snapshot dict.
+
+    Falls back to the provided value when no snapshot is available
+    (e.g., legacy `setup()` path still uses ships live-read).
+    """
+    if initial_state is None:
+        return fallback
+    entry = initial_state.get(role)
+    if entry is None:
+        return fallback
+    return entry.get("hp", fallback)
+
+
+def _pre_start_resource(initial_state, role, resource_name, *, fallback):
+    """Read a role's pre-engine-start resource value from the snapshot."""
+    if initial_state is None:
+        return fallback
+    entry = initial_state.get(role)
+    if entry is None:
+        return fallback
+    return entry.get("resources", {}).get(resource_name, fallback)
+
+
 # ============================================================================
 # STATIC TARGET SCENARIO TEMPLATE
 # ============================================================================
@@ -171,6 +200,28 @@ class StaticTargetScenario(TestScenario):
 
         # Scenario-specific setup hook
         self.custom_setup(battle_engine)
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
+
+        Used by `combat_lab/runner.py::_run_scenario_via_battle_runner` —
+        replaces the side-effect wiring previously done inside `setup()`.
+        Mirrors `setup()`'s tail: cache attacker/target refs, store
+        `initial_hp`, and apply movement policies.
+        """
+        _ = engine
+        self.attacker = ships_by_role["attacker"]
+        self.target = ships_by_role["target"]
+        # Prefer pre-start snapshot so `initial_hp` matches the
+        # materialized ship's HP before `engine.start()` touched it.
+        self.initial_hp = _pre_start_hp(
+            initial_state, "target", fallback=self.target.hp
+        )
+        if self.force_fire:
+            self.attacker.movement_policy = "test_stationary"
+        else:
+            self.attacker.movement_policy = "test_do_nothing"
+        self.target.movement_policy = "test_do_nothing"
 
     def update(self, battle_engine):
         """Per-tick update. AI handles firing and movement via strategies."""
@@ -356,6 +407,24 @@ class DuelScenario(TestScenario):
         # Scenario-specific setup hook
         self.custom_setup(battle_engine)
 
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
+        _ = engine
+        self.ship1 = ships_by_role["ship1"]
+        self.ship2 = ships_by_role["ship2"]
+        self.ship1_initial_hp = _pre_start_hp(
+            initial_state, "ship1", fallback=self.ship1.hp
+        )
+        self.ship2_initial_hp = _pre_start_hp(
+            initial_state, "ship2", fallback=self.ship2.hp
+        )
+        if self.force_fire:
+            self.ship1.movement_policy = "test_stationary"
+            self.ship2.movement_policy = "test_stationary"
+        else:
+            self.ship1.movement_policy = "test_do_nothing"
+            self.ship2.movement_policy = "test_do_nothing"
+
     def update(self, battle_engine):
         """
         Per-tick update. AI handles firing via strategies.
@@ -528,6 +597,33 @@ class PropulsionScenario(TestScenario):
 
         # Scenario-specific setup hook
         self.custom_setup(battle_engine)
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ship onto the scenario (PROJ-269 Task 6.7a).
+
+        Mirrors the tail of `setup()`: cache start pose, compute physics
+        expectations, apply movement policy based on thrust/turn flags.
+        """
+        _ = engine, initial_state
+        self.ship = ships_by_role["ship"]
+        self.start_position = self.ship.position.copy()
+        self.start_velocity = self.ship.velocity.copy()
+        self.start_angle = self.ship.angle
+
+        from combat_lab.scenarios.propulsion_scenarios import K_SPEED, K_THRUST
+        self.expected_max_speed = (self.ship.total_thrust * K_SPEED) / self.ship.mass
+        self.expected_acceleration_rate = (
+            (self.ship.total_thrust * K_THRUST) / (self.ship.mass ** 2)
+        )
+
+        if self.thrust_forward and not self.turn_left and not self.turn_right:
+            self.ship.movement_policy = "test_straight_line"
+        elif self.turn_right:
+            self.ship.movement_policy = "test_rotate_right"
+        elif self.turn_left:
+            self.ship.movement_policy = "test_rotate_left"
+        else:
+            self.ship.movement_policy = "test_do_nothing"
 
     def update(self, battle_engine):
         """
@@ -772,6 +868,37 @@ class ResourceScenario(TestScenario):
         # Scenario-specific setup hook
         self.custom_setup(battle_engine)
 
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
+        _ = engine
+        self.ship = ships_by_role["ship"]
+        # Always prefer the pre-engine-start snapshot for initial_value —
+        # `engine.start()` runs an initial component-update cycle that
+        # drains always-on resources (fuel/energy) by ~1 tick's worth.
+        self.initial_value = _pre_start_resource(
+            initial_state, "ship", self.resource_type,
+            fallback=self.ship.resources.get_value(self.resource_type),
+        )
+        self.start_position = pygame.math.Vector2(self.ship.position)
+
+        self.target = ships_by_role.get("target")
+        if self.target is not None:
+            self.initial_hp = _pre_start_hp(
+                initial_state, "target", fallback=self.target.hp
+            )
+
+        if self.thrust_forward and self.force_fire:
+            self.ship.movement_policy = "test_straight_line"
+        elif self.thrust_forward:
+            self.ship.movement_policy = "test_straight_line"
+        elif self.force_fire:
+            self.ship.movement_policy = "test_stationary"
+        else:
+            self.ship.movement_policy = "test_do_nothing"
+
+        if self.target is not None:
+            self.target.movement_policy = "test_do_nothing"
+
     def update(self, battle_engine):
         """
         Per-tick update. AI handles thrust/firing via strategies.
@@ -991,53 +1118,160 @@ class ComparisonScenario(TestScenario):
         )
 
     def _run_baseline_battle(self):
-        """
-        Run the baseline battle on a private engine, store results.
+        """Run the private baseline battle via `run_battle(spec)`.
 
-        Creates a throwaway BattleEngine, runs the full simulation loop,
-        then collects baseline measurements.
+        PROJ-269 Task 6.8: replaces the legacy throwaway-`BattleEngine(...)`
+        path. Compiles a dedicated baseline `BattleSpec` with
+        `baseline_*_ship` files, runs it through the unified entry, then
+        captures the same metrics onto `self._baseline_*` attributes the
+        legacy code exposed.
         """
-        from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
         from game.ai.ai_factory import AIControllerFactory
+        from game.simulation.battle_runner import run_battle
 
-        baseline_engine = BattleEngine(
-            logger=BattleLogger(enabled=False),
+        baseline_spec = self._build_baseline_battle_spec()
+
+        # Role-keyed ship registry populated by ship_builder.
+        baseline_ships: dict = {}
+
+        def ship_builder(ship_spec):
+            ship = self._load_ship(ship_spec.design_id)
+            if ship_spec.instance_id.endswith(":baseline_attacker"):
+                baseline_ships["attacker"] = ship
+            elif ship_spec.instance_id.endswith(":baseline_target"):
+                baseline_ships["target"] = ship
+            return ship
+
+        engine_ref = {"engine": None}
+
+        def pre_tick_loop(engine):
+            """Wire the baseline ships and invoke the configure_baseline hook."""
+            engine_ref["engine"] = engine
+            attacker = baseline_ships["attacker"]
+            target = baseline_ships["target"]
+            # Temporarily bind the baseline ships onto `self.attacker` /
+            # `self.target` so `configure_baseline` (which subclasses
+            # implement using `self.target.movement_policy = ...` etc.)
+            # references the right ships. The outer wire_ships will rebind
+            # these to variant ships after _run_baseline_battle returns.
+            self.attacker = attacker
+            self.target = target
+            self.initial_hp = target.hp
+            if self.force_fire:
+                attacker.movement_policy = "test_stationary"
+            else:
+                attacker.movement_policy = "test_do_nothing"
+            target.movement_policy = "test_do_nothing"
+            self.configure_baseline(engine)
+
+        run_battle(
+            baseline_spec,
             ai_factory=AIControllerFactory(),
+            ship_builder=ship_builder,
+            pre_tick_loop_callback=pre_tick_loop,
         )
 
-        self._setup_battle(
-            baseline_engine,
-            self.baseline_attacker_ship,
-            self.baseline_target_ship,
-        )
-        # Stash references before _setup_battle overwrites self.attacker/target
-        baseline_attacker = self.attacker
-        baseline_target = self.target
-        baseline_initial_hp = self.initial_hp
+        baseline_engine = engine_ref["engine"]
+        baseline_attacker = baseline_ships["attacker"]
+        baseline_target = baseline_ships["target"]
+
+        # Stash references + collect metrics (same shape as the legacy path).
         self._baseline_attacker = baseline_attacker
         self._baseline_target = baseline_target
-
-        self.configure_baseline(baseline_engine)
-
-        # Run simulation loop (AI handles firing via strategies assigned in _setup_battle)
-        for tick in range(self.max_ticks):
-            baseline_engine.update()
-            if baseline_engine.is_battle_over():
-                break
-
-        # Collect baseline results
-        self._baseline_initial_hp = baseline_initial_hp
+        self._baseline_initial_hp = self.initial_hp
         self._baseline_final_hp = baseline_target.hp
-        self._baseline_damage_dealt = baseline_initial_hp - baseline_target.hp
-        self._baseline_ticks = baseline_engine.tick_counter
+        self._baseline_damage_dealt = self.initial_hp - baseline_target.hp
+        self._baseline_ticks = (
+            baseline_engine.tick_counter if baseline_engine else 0
+        )
         self._baseline_target_alive = baseline_target.is_alive
 
-        # Collect baseline weapon stats
+        # Collect baseline weapon stats.
         self._collect_weapon_stats(
-            baseline_attacker, 'baseline_attacker', engine=baseline_engine
+            baseline_attacker, "baseline_attacker", engine=baseline_engine
         )
         self._collect_weapon_stats(
-            baseline_target, 'baseline_target', engine=baseline_engine
+            baseline_target, "baseline_target", engine=baseline_engine
+        )
+
+    def _build_baseline_battle_spec(self):
+        """Build the BattleSpec for the private baseline battle.
+
+        Structurally identical to `_compile_comparison` in the compiler,
+        but uses `baseline_*_ship` files regardless of `_visual_baseline`.
+        """
+        from game.core.math import Vector2
+        from game.simulation.battle_spec import (
+            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+            ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
+        )
+        from game.simulation.combat.boundary import UnboundedRegion
+        from game.simulation.combat.formation import FormationShape, FormationSpec
+        from game.simulation.combat.modifier_stack import ModifierStack
+        from game.simulation.combat.telemetry import TelemetryLevel
+
+        attacker = ShipSpec(
+            instance_id=f"{self.metadata.test_id}:baseline_attacker",
+            design_id=self.baseline_attacker_ship,
+            theme_id="Federation",
+            name=f"{self.metadata.test_id}-baseline_attacker",
+            position=Vector2(0.0, 0.0),
+            angle=float(self.attacker_angle),
+            velocity=Vector2(0.0, 0.0),
+            components=(),
+        )
+        target = ShipSpec(
+            instance_id=f"{self.metadata.test_id}:baseline_target",
+            design_id=self.baseline_target_ship,
+            theme_id="Federation",
+            name=f"{self.metadata.test_id}-baseline_target",
+            position=Vector2(float(self.distance), 0.0),
+            angle=float(self.target_angle),
+            velocity=Vector2(0.0, 0.0),
+            components=(),
+        )
+        single_custom = FormationSpec(
+            shape=FormationShape.CUSTOM,
+            spacing=100.0,
+            custom_positions=(Vector2(0.0, 0.0),),
+        )
+
+        def _team(team_id, name, ship, origin, facing):
+            return TeamSpec(
+                team_id=team_id, name=name,
+                entry_vector=EntryVector(origin=origin, facing=facing),
+                fleet_hierarchy=(
+                    TaskForceSpec(
+                        task_force_id=f"tf-{name.lower()}",
+                        formation=single_custom,
+                        policies=CombatPolicies(),
+                        squadrons=(
+                            SquadronSpec(
+                                squadron_id=f"sq-{name.lower()}",
+                                policies=CombatPolicies(),
+                                ships=(ship,),
+                            ),
+                        ),
+                    ),
+                ),
+                ai_policy=AIPolicy(),
+            )
+
+        return BattleSpec(
+            seed=self._effective_seed,
+            telemetry_level=TelemetryLevel.DETAILED,
+            boundary=UnboundedRegion(),
+            end_condition=self._create_end_condition(),
+            absolute_max_ticks=max(self.metadata.max_ticks * 10, 1000),
+            teams=(
+                _team(0, "Attacker", attacker, Vector2(0.0, 0.0), 0.0),
+                _team(
+                    1, "Target", target,
+                    Vector2(float(self.distance), 0.0), 180.0,
+                ),
+            ),
+            modifier_stack=ModifierStack.empty(),
+            post_battle_hook=None,
         )
 
     def configure_baseline(self, engine):
@@ -1058,6 +1292,56 @@ class ComparisonScenario(TestScenario):
         before the runner's simulation loop begins.
         """
         pass
+
+    def before_run_battle(self, spec) -> None:
+        """Run the private baseline battle before the main run_battle.
+
+        Baseline must run BEFORE variant ships are materialized, to
+        match the legacy `setup()`'s ship-creation ordering — ship IDs
+        are generated during `_load_ship`, and changing the order of
+        generation perturbs deterministic same-seed outcomes for
+        same-group-MAX comparison scenarios.
+        """
+        if self._visual_baseline:
+            return
+        self._effective_seed = spec.seed
+        self._run_baseline_battle()
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
+
+        Assumes `before_run_battle` has already run the private baseline
+        battle in normal mode — this method handles variant wiring only
+        (or baseline wiring in visual-baseline mode).
+        """
+        if self._visual_baseline:
+            role_attacker, role_target = "baseline_attacker", "baseline_target"
+        else:
+            role_attacker, role_target = "variant_attacker", "variant_target"
+
+        attacker = ships_by_role[role_attacker]
+        target = ships_by_role[role_target]
+
+        self.attacker = attacker
+        self.target = target
+        self.initial_hp = _pre_start_hp(
+            initial_state, role_target, fallback=self.target.hp
+        )
+
+        if self.force_fire:
+            self.attacker.movement_policy = "test_stationary"
+        else:
+            self.attacker.movement_policy = "test_do_nothing"
+        self.target.movement_policy = "test_do_nothing"
+
+        # Invoke the configure hook for whichever battle runs on the
+        # runner's engine. `configure_baseline` for the private baseline
+        # engine is already called inside `_run_baseline_battle`.
+        if engine is not None:
+            if self._visual_baseline:
+                self.configure_baseline(engine)
+            else:
+                self.configure_variant(engine)
 
     def update(self, battle_engine):
         """

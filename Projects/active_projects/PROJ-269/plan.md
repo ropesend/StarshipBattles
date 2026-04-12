@@ -22,9 +22,54 @@
 | 6. Delete legacy paths | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-12
-**Active Phase:** Phases 1-5.5 Complete — Phase 6 PAUSED after audit
-**Last Action:** Phase 5.5 wrapped (ModifierStack engine application + HitRecord modifier trace). Phase 6 audit (Task 6.12) ran: 35 files in active code touch legacy types. Phase 6 deferred to a fresh session — see "Phase 6 Handoff" below for the concrete plan.
+**Last Updated:** 2026-04-12 (Phase 6 in progress — 3 tasks complete)
+**Active Phase:** Phase 6 — 3 of 15 tasks complete (6.7a, 6.7, 6.8)
+**Last Action:** Completed Tasks 6.7a + 6.7 + 6.8 in sequence:
+
+**6.7a — Combat Lab compiler extension to all 5 templates:**
+- `combat_lab/spec_compiler.py` now dispatches on StaticTarget / Duel / Propulsion / Resource / Comparison
+- `TestScenario.wire_ships(ships_by_role, *, engine, initial_state)` hook added — replaces the side-effect tail of `setup()` (cache ship refs, assign movement policies, capture initial HP/resources)
+- `TestScenario.before_run_battle(spec)` hook added — `ComparisonScenario` uses it to run its private baseline battle BEFORE variant ships are materialized (preserves legacy ship-creation ordering for deterministic same-seed MAX-group tests)
+- 13 new compiler unit tests (27 total, all green)
+- Instance-id role conventions: `:attacker`, `:target`, `:ship1`, `:ship2`, `:ship`, `:variant_attacker`, `:variant_target`, `:baseline_attacker`, `:baseline_target`
+
+**6.7 — Removed `USE_BATTLE_RUNNER` flag and legacy branch:**
+- `combat_lab/runner.py::run_scenario` is single-path: `scenario.to_spec()` → `run_battle(spec, ...)` → `_run_validation(engine)`. No feature flag. No `BattleEngine(...)` construction.
+- `_run_scenario_legacy` and `_run_scenario_via_battle_runner` collapsed into the main path.
+- The 5 non-template scenarios (PROP-002, PROP-005, TOHIT-ATK-FLEET-002/003/004) got their own `to_spec()` + `wire_ships()` overrides so NOTHING falls back.
+- Compiler helpers exposed as public: `make_ship_spec`, `make_one_ship_team`, `make_battle_spec`, `make_single_ship_custom_formation`.
+
+**6.8 — Rewrote `ComparisonScenario._run_baseline_battle`:**
+- No more throwaway `BattleEngine(...)` — baseline now runs through `run_battle(baseline_spec, ...)`.
+- Added `_build_baseline_battle_spec()` on the template.
+- `_run_baseline_battle` captures engine via `pre_tick_loop_callback`, wires ships onto `self.attacker`/`self.target`/`self.initial_hp` so `configure_baseline(engine)` subclass overrides work, then reads back `_baseline_*` metrics.
+
+**Regressions:**
+- Combat Lab fast suite: **162/162 green** (matches baseline).
+- Combat Lab full suite: **170/170 green** (no skipped tests).
+- `pytest tests/`: **14710 passed** + 3 pre-existing failures + 3 pre-existing errors (baseline maintained).
+- No direct `BattleEngine(...)` construction left anywhere in `combat_lab/` (only in docstrings).
+
+**Next Action (for next agent):** Task 6.5/6.11 — Rewrite `game/strategy/adapters/simulation_adapter.py::SimulationBattleResolver.resolve_battle` to use `build_strategy_battle_spec` + `run_battle`. Drop `_apply_shield_interference` / `_apply_strategic_modifiers`. Also update `ConflictResolutionEngine.resolve_combat_simulated` to stop calling `f1.battle.update_from_battle_results` (PostBattleHook handles it now).
+
+**Blockers:** None. The `_is_started=True` hack task (6.10) is now paired with Task 6.9 (test_executor/test_execution_service UI rewrite) — both touch the same subsystem and require migrating `scenario.setup(engine)` direct-engine calls onto `run_battle`. Tackle them together.
+
+**Files modified in this session:**
+- `combat_lab/runner.py`
+- `combat_lab/spec_compiler.py`
+- `combat_lab/scenarios/base.py` (added `before_run_battle` + `wire_ships` base methods)
+- `combat_lab/scenarios/templates.py` (added `wire_ships` / `before_run_battle` per template; rewrote `_run_baseline_battle` + `_build_baseline_battle_spec`)
+- `combat_lab/scenarios/propulsion_scenarios.py` (added `to_spec`/`wire_ships` to PROP-002, PROP-005)
+- `combat_lab/scenarios/tohit_attack_fleet_scenarios.py` (added `to_spec`/`wire_ships`/`custom_setup` to TOHIT-ATK-FLEET-002/003/004; added `_build_two_team_spec` helper)
+- `tests/unit/combat_lab/test_spec_compiler.py` (13 new tests for Duel/Propulsion/Resource/Comparison compiler support)
+- `Projects/active_projects/PROJ-269/phase_6_checklist.md` (added Task 6.7a entry, marked 6.7 and 6.8 complete)
+- `Projects/active_projects/PROJ-269/plan.md` (this update)
+
+**Previous handoff:** see "Phase 6 Handoff" below. Tasks 6.5/6.11 / 6.4 / 6.6 / 6.9+6.10 / 6.1+6.2+6.3 / 6.12 / 6.13 / 6.14 / 6.15 still need to be done.
+
+---
+
+### Earlier snapshot (pre-Phase-6 resumption)
 
 ### Phase 6 Handoff
 

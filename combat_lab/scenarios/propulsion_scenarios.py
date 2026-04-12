@@ -396,50 +396,118 @@ class PropThrustMassRatioScenario(TestScenario):
         tags=["propulsion", "engine", "mass", "scaling", "foundational"],
     )
 
-    def setup(self, battle_engine):
-        """Configure the test scenario."""
-        # Load three ships with different mass values
-        self.low_mass = self._load_ship('Test_Engine_1x_LowMass.json')
-        self.med_mass = self._load_ship('Test_Engine_1x_MedMass.json')
-        self.high_mass = self._load_ship('Test_Engine_1x_HighMass.json')
+    _SHIP_FILES = [
+        ("low", "Test_Engine_1x_LowMass.json", (0, 0)),
+        ("med", "Test_Engine_1x_MedMass.json", (0, 200)),
+        ("high", "Test_Engine_1x_HighMass.json", (0, 400)),
+    ]
 
-        # Position ships in a line
-        self.low_mass.position = pygame.math.Vector2(0, 0)
-        self.low_mass.velocity = pygame.math.Vector2(0, 0)
-        self.low_mass.angle = 0
+    def to_spec(self, registries=None):
+        """PROJ-269: compile to a single-team 3-ship BattleSpec."""
+        from game.core.math import Vector2
+        from game.simulation.battle_spec import (
+            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+            ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
+        )
+        from game.simulation.combat.boundary import UnboundedRegion
+        from game.simulation.combat.formation import FormationShape, FormationSpec
+        from game.simulation.combat.modifier_stack import ModifierStack
+        from game.simulation.combat.telemetry import TelemetryLevel
 
-        self.med_mass.position = pygame.math.Vector2(0, 200)
-        self.med_mass.velocity = pygame.math.Vector2(0, 0)
-        self.med_mass.angle = 0
+        _ = registries
+        ships = tuple(
+            ShipSpec(
+                instance_id=f"{self.metadata.test_id}:{role}",
+                design_id=filename,
+                theme_id="Federation",
+                name=f"{self.metadata.test_id}-{role}",
+                position=Vector2(float(x), float(y)),
+                angle=0.0,
+                velocity=Vector2(0.0, 0.0),
+                components=(),
+            )
+            for role, filename, (x, y) in self._SHIP_FILES
+        )
+        formation = FormationSpec(
+            shape=FormationShape.CUSTOM,
+            spacing=200.0,
+            custom_positions=tuple(
+                Vector2(float(x), float(y)) for _, _, (x, y) in self._SHIP_FILES
+            ),
+        )
+        team = TeamSpec(
+            team_id=0,
+            name="Propulsion",
+            entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
+            fleet_hierarchy=(
+                TaskForceSpec(
+                    task_force_id="tf-prop",
+                    formation=formation,
+                    policies=CombatPolicies(),
+                    squadrons=(
+                        SquadronSpec(
+                            squadron_id="sq-prop",
+                            policies=CombatPolicies(),
+                            ships=ships,
+                        ),
+                    ),
+                ),
+            ),
+            ai_policy=AIPolicy(),
+        )
+        return BattleSpec(
+            seed=self.metadata.seed,
+            telemetry_level=TelemetryLevel.DETAILED,
+            boundary=UnboundedRegion(),
+            end_condition=self._create_end_condition(),
+            absolute_max_ticks=max(self.metadata.max_ticks * 10, 1000),
+            teams=(team,),
+            modifier_stack=ModifierStack.empty(),
+            post_battle_hook=None,
+        )
 
-        self.high_mass.position = pygame.math.Vector2(0, 400)
-        self.high_mass.velocity = pygame.math.Vector2(0, 0)
-        self.high_mass.angle = 0
-
-        # Verify all have same thrust
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """PROJ-269: cache per-ship refs + assign test_straight_line policy."""
+        _ = engine, initial_state
+        self.low_mass = ships_by_role["low"]
+        self.med_mass = ships_by_role["med"]
+        self.high_mass = ships_by_role["high"]
+        for ship in (self.low_mass, self.med_mass, self.high_mass):
+            ship.movement_policy = "test_straight_line"
+        # Sanity-check all ships share identical thrust (legacy assertion).
         assert abs(self.low_mass.total_thrust - self.med_mass.total_thrust) < 0.1, \
             "All test ships should have identical thrust"
         assert abs(self.med_mass.total_thrust - self.high_mass.total_thrust) < 0.1, \
             "All test ships should have identical thrust"
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.low_mass, self.med_mass, self.high_mass], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Assign AI movement policies for thrust
-        self.low_mass.movement_policy = 'test_straight_line'
-        self.med_mass.movement_policy = 'test_straight_line'
-        self.high_mass.movement_policy = 'test_straight_line'
-
-        # Store initial state
         self.initial_positions = {
-            'low': self.low_mass.position.copy(),
-            'med': self.med_mass.position.copy(),
-            'high': self.high_mass.position.copy()
+            "low": self.low_mass.position.copy(),
+            "med": self.med_mass.position.copy(),
+            "high": self.high_mass.position.copy(),
+        }
+
+    def setup(self, battle_engine):
+        """Legacy-compatible setup() — unused by the run_battle path but
+        retained so any tests that drive setup() directly still work."""
+        self.low_mass = self._load_ship("Test_Engine_1x_LowMass.json")
+        self.med_mass = self._load_ship("Test_Engine_1x_MedMass.json")
+        self.high_mass = self._load_ship("Test_Engine_1x_HighMass.json")
+        self.low_mass.position = pygame.math.Vector2(0, 0)
+        self.med_mass.position = pygame.math.Vector2(0, 200)
+        self.high_mass.position = pygame.math.Vector2(0, 400)
+        for ship in (self.low_mass, self.med_mass, self.high_mass):
+            ship.velocity = pygame.math.Vector2(0, 0)
+            ship.angle = 0
+        end_condition = self._create_end_condition()
+        battle_engine.start(
+            [self.low_mass, self.med_mass, self.high_mass], [],
+            seed=self.metadata.seed, end_condition=end_condition,
+        )
+        for ship in (self.low_mass, self.med_mass, self.high_mass):
+            ship.movement_policy = "test_straight_line"
+        self.initial_positions = {
+            "low": self.low_mass.position.copy(),
+            "med": self.med_mass.position.copy(),
+            "high": self.high_mass.position.copy(),
         }
 
     def collect_results(self, engine):
@@ -792,36 +860,103 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         tags=["propulsion", "thruster", "mass", "turn_rate", "scaling", "foundational"],
     )
 
-    def setup(self, battle_engine):
-        """Load and position both ships."""
-        self.low_mass_ship = self._load_ship(PROP005_LOW_SHIP_FILE)
-        self.high_mass_ship = self._load_ship(PROP005_HIGH_SHIP_FILE)
+    def to_spec(self, registries=None):
+        """PROJ-269: compile to a single-team 2-ship BattleSpec."""
+        from game.core.math import Vector2
+        from game.simulation.battle_spec import (
+            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+            ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
+        )
+        from game.simulation.combat.boundary import UnboundedRegion
+        from game.simulation.combat.formation import FormationShape, FormationSpec
+        from game.simulation.combat.modifier_stack import ModifierStack
+        from game.simulation.combat.telemetry import TelemetryLevel
 
-        # Position ships
-        self.low_mass_ship.position = pygame.math.Vector2(0, 0)
-        self.low_mass_ship.velocity = pygame.math.Vector2(0, 0)
-        self.low_mass_ship.angle = 0
+        _ = registries
+        low = ShipSpec(
+            instance_id=f"{self.metadata.test_id}:low",
+            design_id=PROP005_LOW_SHIP_FILE,
+            theme_id="Federation",
+            name=f"{self.metadata.test_id}-low",
+            position=Vector2(0.0, 0.0),
+            angle=0.0,
+            velocity=Vector2(0.0, 0.0),
+            components=(),
+        )
+        high = ShipSpec(
+            instance_id=f"{self.metadata.test_id}:high",
+            design_id=PROP005_HIGH_SHIP_FILE,
+            theme_id="Federation",
+            name=f"{self.metadata.test_id}-high",
+            position=Vector2(0.0, 200.0),
+            angle=0.0,
+            velocity=Vector2(0.0, 0.0),
+            components=(),
+        )
+        formation = FormationSpec(
+            shape=FormationShape.CUSTOM,
+            spacing=200.0,
+            custom_positions=(Vector2(0.0, 0.0), Vector2(0.0, 200.0)),
+        )
+        team = TeamSpec(
+            team_id=0, name="TurnRate",
+            entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
+            fleet_hierarchy=(
+                TaskForceSpec(
+                    task_force_id="tf-turn",
+                    formation=formation,
+                    policies=CombatPolicies(),
+                    squadrons=(
+                        SquadronSpec(
+                            squadron_id="sq-turn",
+                            policies=CombatPolicies(),
+                            ships=(low, high),
+                        ),
+                    ),
+                ),
+            ),
+            ai_policy=AIPolicy(),
+        )
+        return BattleSpec(
+            seed=self.metadata.seed,
+            telemetry_level=TelemetryLevel.DETAILED,
+            boundary=UnboundedRegion(),
+            end_condition=self._create_end_condition(),
+            absolute_max_ticks=max(self.metadata.max_ticks * 10, 1000),
+            teams=(team,),
+            modifier_stack=ModifierStack.empty(),
+            post_battle_hook=None,
+        )
 
-        self.high_mass_ship.position = pygame.math.Vector2(0, 200)
-        self.high_mass_ship.velocity = pygame.math.Vector2(0, 0)
-        self.high_mass_ship.angle = 0
-
-        # Store initial angles
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """PROJ-269: cache per-ship refs + assign test_rotate_right policy."""
+        _ = engine, initial_state
+        self.low_mass_ship = ships_by_role["low"]
+        self.high_mass_ship = ships_by_role["high"]
         self.low_mass_start_angle = self.low_mass_ship.angle
         self.high_mass_start_angle = self.high_mass_ship.angle
+        self.low_mass_ship.movement_policy = "test_rotate_right"
+        self.high_mass_ship.movement_policy = "test_rotate_right"
 
-        # Create end condition
+    def setup(self, battle_engine):
+        """Legacy-compatible setup() — retained for anything still driving
+        `setup()` directly. The run_battle path uses `to_spec`/`wire_ships`."""
+        self.low_mass_ship = self._load_ship(PROP005_LOW_SHIP_FILE)
+        self.high_mass_ship = self._load_ship(PROP005_HIGH_SHIP_FILE)
+        self.low_mass_ship.position = pygame.math.Vector2(0, 0)
+        self.high_mass_ship.position = pygame.math.Vector2(0, 200)
+        for ship in (self.low_mass_ship, self.high_mass_ship):
+            ship.velocity = pygame.math.Vector2(0, 0)
+            ship.angle = 0
+        self.low_mass_start_angle = 0
+        self.high_mass_start_angle = 0
         end_condition = self._create_end_condition()
-
-        # Assign AI movement policies for rotation (clockwise)
-        self.low_mass_ship.movement_policy = 'test_rotate_right'
-        self.high_mass_ship.movement_policy = 'test_rotate_right'
-
-        # Start battle with both ships on same team
+        self.low_mass_ship.movement_policy = "test_rotate_right"
+        self.high_mass_ship.movement_policy = "test_rotate_right"
         battle_engine.start(
             [self.low_mass_ship, self.high_mass_ship], [],
             seed=self.metadata.seed,
-            end_condition=end_condition
+            end_condition=end_condition,
         )
 
     def collect_results(self, engine):

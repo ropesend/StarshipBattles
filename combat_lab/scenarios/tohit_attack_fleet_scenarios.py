@@ -18,6 +18,79 @@ from combat_lab.test_constants import (
 )
 
 
+def _build_two_team_spec(scenario, *, team0_ships, team1_ships):
+    """PROJ-269 Task 6.7: helper for custom two-team specs.
+
+    Each entry in `team0_ships` / `team1_ships` is `(role, design_id,
+    (x, y))`. Constructs a BattleSpec with CUSTOM formations so the
+    FormationResolver reproduces the scenario's per-ship positions.
+    """
+    from game.core.math import Vector2
+    from game.simulation.battle_spec import (
+        AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+        ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
+    )
+    from game.simulation.combat.boundary import UnboundedRegion
+    from game.simulation.combat.formation import FormationShape, FormationSpec
+    from game.simulation.combat.modifier_stack import ModifierStack
+    from game.simulation.combat.telemetry import TelemetryLevel
+
+    def _ship(role, design_id, x, y):
+        return ShipSpec(
+            instance_id=f"{scenario.metadata.test_id}:{role}",
+            design_id=design_id,
+            theme_id="Federation",
+            name=f"{scenario.metadata.test_id}-{role}",
+            position=Vector2(float(x), float(y)),
+            angle=0.0,
+            velocity=Vector2(0.0, 0.0),
+            components=(),
+        )
+
+    def _team(team_id, name, entries):
+        ships = tuple(_ship(role, design, x, y) for role, design, (x, y) in entries)
+        positions = tuple(Vector2(float(x), float(y)) for _, _, (x, y) in entries)
+        formation = FormationSpec(
+            shape=FormationShape.CUSTOM,
+            spacing=100.0,
+            custom_positions=positions,
+        )
+        return TeamSpec(
+            team_id=team_id, name=name,
+            entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
+            fleet_hierarchy=(
+                TaskForceSpec(
+                    task_force_id=f"tf-{team_id}",
+                    formation=formation,
+                    policies=CombatPolicies(),
+                    squadrons=(
+                        SquadronSpec(
+                            squadron_id=f"sq-{team_id}",
+                            policies=CombatPolicies(),
+                            ships=ships,
+                        ),
+                    ),
+                ),
+            ),
+            ai_policy=AIPolicy(),
+        )
+
+    teams = [_team(0, "Team0", team0_ships)]
+    if team1_ships:
+        teams.append(_team(1, "Team1", team1_ships))
+
+    return BattleSpec(
+        seed=scenario.metadata.seed,
+        telemetry_level=TelemetryLevel.DETAILED,
+        boundary=UnboundedRegion(),
+        end_condition=scenario._create_end_condition(),
+        absolute_max_ticks=max(scenario.metadata.max_ticks * 10, 1000),
+        teams=tuple(teams),
+        modifier_stack=ModifierStack.empty(),
+        post_battle_hook=None,
+    )
+
+
 # =============================================================================
 # TOHIT-ATK-FLEET-001: Fleet sensor provides bonus to all friendly ships
 # =============================================================================
@@ -95,23 +168,38 @@ class ExternalBattleConditionApplied(TestScenario):
         seed=STANDARD_SEED,
     )
 
-    def setup(self, battle_engine):
+    def to_spec(self, registries=None):
+        """PROJ-269: compile to a 2-team 1v1 BattleSpec."""
+        _ = registries
+        return _build_two_team_spec(
+            self,
+            team0_ships=[
+                ("attacker", "Test_Attacker_Beam360_Low.json", (0, 0)),
+            ],
+            team1_ships=[
+                ("target", "Test_Target_Stationary.json", (POINT_BLANK_DISTANCE, 0)),
+            ],
+        )
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """PROJ-269: cache refs + assign movement policies.
+
+        The ExternalModifier injection moves to `custom_setup(engine)`
+        since it needs engine.aura_manager to exist (post engine.start).
+        """
+        _ = engine, initial_state
+        self.attacker = ships_by_role["attacker"]
+        self.target = ships_by_role["target"]
+        self._initial_target_hp = self.target.hp
+        self.attacker.movement_policy = "test_stationary"
+        self.target.movement_policy = "test_do_nothing"
+
+    def custom_setup(self, battle_engine):
+        """Inject the external ToHitAttackModifier into aura_manager.
+
+        Called by the runner's pre_tick_loop after engine.start + wire_ships.
+        """
         from game.simulation.combat.fleet_aura_manager import ExternalModifier
-
-        attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        target.position = pygame.math.Vector2(POINT_BLANK_DISTANCE, 0)
-        attacker.movement_policy = 'test_stationary'
-        target.movement_policy = 'test_do_nothing'
-
-        end_condition = self._create_end_condition()
-        battle_engine.start([attacker], [target],
-                           seed=self.metadata.seed,
-                           end_condition=end_condition)
-
-        # Inject external battle condition after engine start
         battle_engine.aura_manager._external.append(
             ExternalModifier(
                 ability_name='ToHitAttackModifier',
@@ -121,10 +209,6 @@ class ExternalBattleConditionApplied(TestScenario):
             )
         )
         battle_engine.aura_manager._recalculate(battle_engine.ships)
-
-        self.attacker = attacker
-        self.target = target
-        self._initial_target_hp = target.hp
 
     def collect_results(self, engine):
         self.results['ticks_run'] = engine.tick_counter
@@ -177,24 +261,27 @@ class FleetSensorSameGroupMax(TestScenario):
         seed=STANDARD_SEED,
     )
 
-    def setup(self, battle_engine):
-        provider_a = self._load_ship('Test_FleetSensor_Provider.json')       # +2, FleetSensor group
-        provider_b = self._load_ship('Test_FleetSensor_Provider_3_GroupA.json')  # +3, FleetSensor group
-        target = self._load_ship('Test_Target_Stationary.json')
+    def to_spec(self, registries=None):
+        _ = registries
+        return _build_two_team_spec(
+            self,
+            team0_ships=[
+                ("provider_a", "Test_FleetSensor_Provider.json", (0, 0)),
+                ("provider_b", "Test_FleetSensor_Provider_3_GroupA.json", (0, 100)),
+            ],
+            team1_ships=[
+                ("target", "Test_Target_Stationary.json", (500, 0)),
+            ],
+        )
 
-        provider_a.position = pygame.math.Vector2(0, 0)
-        provider_b.position = pygame.math.Vector2(0, 100)
-        target.position = pygame.math.Vector2(500, 0)
-        provider_a.movement_policy = 'test_do_nothing'
-        provider_b.movement_policy = 'test_do_nothing'
-        target.movement_policy = 'test_do_nothing'
-
-        end_condition = self._create_end_condition()
-        battle_engine.start([provider_a, provider_b], [target],
-                           seed=self.metadata.seed, end_condition=end_condition)
-
-        self.provider_a = provider_a
-        self.provider_b = provider_b
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        _ = engine, initial_state
+        self.provider_a = ships_by_role["provider_a"]
+        self.provider_b = ships_by_role["provider_b"]
+        self.target = ships_by_role["target"]
+        self.provider_a.movement_policy = "test_do_nothing"
+        self.provider_b.movement_policy = "test_do_nothing"
+        self.target.movement_policy = "test_do_nothing"
 
     def validate(self, engine) -> list:
         checks = []
@@ -225,23 +312,27 @@ class FleetSensorDiffGroupSum(TestScenario):
         seed=STANDARD_SEED,
     )
 
-    def setup(self, battle_engine):
-        provider_a = self._load_ship('Test_FleetSensor_Provider.json')        # +2, FleetSensor group
-        provider_b = self._load_ship('Test_FleetSensor_Provider_GroupB.json')  # +1, FleetSensorB group
-        target = self._load_ship('Test_Target_Stationary.json')
+    def to_spec(self, registries=None):
+        _ = registries
+        return _build_two_team_spec(
+            self,
+            team0_ships=[
+                ("provider_a", "Test_FleetSensor_Provider.json", (0, 0)),
+                ("provider_b", "Test_FleetSensor_Provider_GroupB.json", (0, 100)),
+            ],
+            team1_ships=[
+                ("target", "Test_Target_Stationary.json", (500, 0)),
+            ],
+        )
 
-        provider_a.position = pygame.math.Vector2(0, 0)
-        provider_b.position = pygame.math.Vector2(0, 100)
-        target.position = pygame.math.Vector2(500, 0)
-        provider_a.movement_policy = 'test_do_nothing'
-        provider_b.movement_policy = 'test_do_nothing'
-        target.movement_policy = 'test_do_nothing'
-
-        end_condition = self._create_end_condition()
-        battle_engine.start([provider_a, provider_b], [target],
-                           seed=self.metadata.seed, end_condition=end_condition)
-
-        self.provider_a = provider_a
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        _ = engine, initial_state
+        self.provider_a = ships_by_role["provider_a"]
+        self.provider_b = ships_by_role["provider_b"]
+        self.target = ships_by_role["target"]
+        self.provider_a.movement_policy = "test_do_nothing"
+        self.provider_b.movement_policy = "test_do_nothing"
+        self.target.movement_policy = "test_do_nothing"
 
     def validate(self, engine) -> list:
         checks = []

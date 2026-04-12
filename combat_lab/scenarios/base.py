@@ -528,6 +528,42 @@ class TestScenario:
         """
         pass
 
+    def before_run_battle(self, spec) -> None:
+        """Pre-run hook called BEFORE `run_battle(spec)` fires.
+
+        Used by templates that need to perform work ahead of the main
+        battle (e.g. `ComparisonScenario` runs its private baseline
+        battle here so ship-creation ordering matches the legacy path).
+        Base implementation is a no-op.
+        """
+        _ = spec
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
+
+        Called by `combat_lab/runner.py::_run_scenario_via_battle_runner`
+        after ships are built and the engine has started, to replace the
+        template-level side-effect wiring that used to happen inside
+        `setup()`.
+
+        Templates (StaticTarget / Duel / Propulsion / Resource /
+        Comparison) override this to cache ship refs, compute initial
+        state (hp, resources), and assign movement policies. The base
+        implementation is a no-op for non-template scenarios.
+
+        Args:
+            ships_by_role: Mapping of role name (e.g. "attacker",
+                "target", "ship1", "ship") to materialized Ship.
+            engine: The BattleEngine post-start. Passed so templates
+                that have post-wiring engine hooks (like
+                ComparisonScenario.configure_variant) can use it.
+            initial_state: Optional per-role dict of pre-engine-start
+                snapshots (`{role: {'hp': ..., 'resources': {...}}}`).
+                Resource-sensitive templates use this to capture values
+                before `engine.start()` has drained any.
+        """
+        _ = ships_by_role, engine, initial_state
+
     def _collect_extra_results(self, engine) -> None:
         """Optional hook for templates to attach scenario-specific metrics.
 
