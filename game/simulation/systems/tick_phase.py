@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     'ITickPhase', 'TickPhaseRegistry',
-    'RebuildGridPhase', 'AIAndShipUpdatePhase', 'AttackProcessingPhase',
-    'RammingPhase', 'ProjectileUpdatePhase', 'create_default_phases',
+    'RebuildGridPhase', 'AIAndShipUpdatePhase', 'BoundaryEnforcementPhase',
+    'AttackProcessingPhase', 'RammingPhase', 'ProjectileUpdatePhase',
+    'create_default_phases',
 ]
 
 
@@ -113,6 +114,26 @@ class AIAndShipUpdatePhase:
         engine._update_ai_and_ships()
 
 
+class BoundaryEnforcementPhase:
+    """Per-tick boundary enforcement — runs after movement, before attacks.
+
+    Introduced by PROJ-269 Phase 3 Task 3.1. A ship that crossed the
+    boundary this tick has its `ExitPolicy` applied BEFORE it gets to
+    emit attacks — so a retreated ship doesn't fire one last weapon.
+    """
+
+    @property
+    def name(self) -> str:
+        return "boundary_enforcement"
+
+    @property
+    def priority(self) -> int:
+        return 250  # Between AI/ship update (200) and attacks (300).
+
+    def execute(self, engine: Any) -> None:
+        engine.enforce_boundary()
+
+
 class AttackProcessingPhase:
     """Collect and process new attacks (beams, projectiles, launches)."""
 
@@ -160,11 +181,12 @@ class ProjectileUpdatePhase:
 
 
 def create_default_phases() -> TickPhaseRegistry:
-    """Create a TickPhaseRegistry with the 5 default battle engine phases.
+    """Create a TickPhaseRegistry with the 6 default battle engine phases.
 
     Returns a registry with phases in standard execution order:
         100: RebuildGridPhase
         200: AIAndShipUpdatePhase
+        250: BoundaryEnforcementPhase   (PROJ-269 Phase 3)
         300: AttackProcessingPhase
         400: RammingPhase
         500: ProjectileUpdatePhase
@@ -172,6 +194,7 @@ def create_default_phases() -> TickPhaseRegistry:
     registry = TickPhaseRegistry()
     registry.register(RebuildGridPhase())
     registry.register(AIAndShipUpdatePhase())
+    registry.register(BoundaryEnforcementPhase())
     registry.register(AttackProcessingPhase())
     registry.register(RammingPhase())
     registry.register(ProjectileUpdatePhase())

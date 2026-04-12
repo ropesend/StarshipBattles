@@ -53,6 +53,11 @@ class ShipInstanceSerializer:
             data['design_role'] = ship.design_role
         if ship.role_override is not None:
             data['role_override'] = ship.role_override
+        # PROJ-269 Phase 2: per-component persistent state.
+        if ship.components:
+            data['components'] = {
+                key: cs.to_dict() for key, cs in ship.components.items()
+            }
         return data
 
     @staticmethod
@@ -114,6 +119,20 @@ class ShipInstanceSerializer:
         # Restore design role fields (absent in old saves → None)
         instance.design_role = data.get('design_role')
         instance.role_override = data.get('role_override')
+
+        # PROJ-269 Phase 2: restore per-component persistent state.
+        # Missing key defaults to empty — legacy saves without
+        # `components` gracefully degrade (CLAUDE.md "saves are disposable").
+        from game.strategy.data.component_state import ComponentState as _ComponentState
+        raw_components = data.get('components', {})
+        if raw_components:
+            instance.components = {
+                key: _ComponentState.from_dict(cs_data)
+                for key, cs_data in raw_components.items()
+            }
+        else:
+            instance.components = {}
+
         return instance
 
     @staticmethod
@@ -150,4 +169,5 @@ class ShipInstanceSerializer:
             experience=ship.experience,
             kills=ship.kills,
             battles_survived=ship.battles_survived,
+            components=copy.deepcopy(ship.components),
         )

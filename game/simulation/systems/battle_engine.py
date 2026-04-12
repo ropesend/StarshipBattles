@@ -175,6 +175,7 @@ class BattleEngine:
         logger: Optional[BattleLogger] = None,
         ai_factory: Optional['IAIControllerFactory'] = None,
         tick_phases: Optional['TickPhaseRegistry'] = None,
+        boundary: Optional[Any] = None,
     ):
         """
         Create a BattleEngine instance.
@@ -184,6 +185,10 @@ class BattleEngine:
             ai_factory: AI controller factory for creating controllers.
             tick_phases: Optional TickPhaseRegistry for custom tick phases.
                         If None, uses create_default_phases() (PROJ-259).
+            boundary: Optional `BoundaryRegion` — per-tick `contains()`
+                        enforcement with `ExitPolicy` applied when a ship
+                        crosses. Default `UnboundedRegion()` (no-op).
+                        Introduced by PROJ-269 Phase 3 Task 3.1.
         """
         # PROJ-259: Tick phase registry (pluggable tick phases)
         if tick_phases is None:
@@ -230,34 +235,121 @@ class BattleEngine:
         if self._ai_factory is not None:
             self._ai_factory.set_grid(self.grid)
 
+        # PROJ-269 Phase 3: boundary region (per-tick enforcement).
+        # Defaults to UnboundedRegion when not passed — matches pre-Phase-3 behavior.
+        if boundary is None:
+            from game.simulation.combat.boundary import UnboundedRegion
+            boundary = UnboundedRegion()
+        self.boundary = boundary
+        # Retreated ships — removed from self.ships but tracked here so
+        # extract_outcome can mark ShipOutcome.status=RETREATED.
+        self.retreated_ships: List['Ship'] = []
+
     @property
     def projectiles(self) -> List[Any]:
         return self.projectile_manager.projectiles
 
-    def start(
+    # ------------------------------------------------------------------
+    # PROJ-269 Phase 3: N-team accessors
+    # ------------------------------------------------------------------
+
+    @property
+    def teams(self) -> Dict[int, List['Ship']]:
+        """Ships grouped by `team_id`.
+
+        Derived from `self.ships` — always in sync with mid-battle
+        additions/removals. Keys are the distinct team_ids currently
+        present; empty groups don't appear.
+        """
+        teams: Dict[int, List['Ship']] = {}
+        for ship in self.ships:
+            teams.setdefault(ship.team_id, []).append(ship)
+        return teams
+
+    def get_ships_by_team(self, team_id: int) -> List['Ship']:
+        """Return all ships on the given team (alive or dead)."""
+        return [s for s in self.ships if s.team_id == team_id]
+
+    def get_enemies_of(self, ship: 'Ship') -> List['Ship']:
+        """Return every ship whose team_id differs from `ship.team_id`.
+
+        N-team rule: no alliances. Every non-self team is equally
+        hostile. Future projects may introduce a non-aggression layer
+        on top of this predicate.
+        """
+        return [s for s in self.ships if s.team_id != ship.team_id]
+
+    def start_teams(
         self,
-        team0_ships: List['Ship'],
-        team1_ships: List['Ship'],
+        teams: Dict[int, List['Ship']],
+        *,
         seed: Optional[int] = None,
         end_condition: Optional[IEndCondition] = None,
         absolute_max_ticks: Optional[int] = None,
-        ai_controllers: Optional[List['IAIController']] = None
+        ai_controllers: Optional[List['IAIController']] = None,
     ) -> None:
-        """
-        Initialize battle state with configurable end condition.
+        """N-team version of `start()`. Accepts any number of teams.
 
-        Args:
-            team0_ships: List of ships for team 0
-            team1_ships: List of ships for team 1
-            seed: Random seed for deterministic battles
-            end_condition: Battle end condition (default: TeamEliminatedCondition)
-            absolute_max_ticks: Safety ceiling (default: SimulationConstants.ABSOLUTE_MAX_TICKS)
-            ai_controllers: Pre-created AI controllers (optional).
-                If provided, uses these instead of creating controllers via factory.
+        Each key in `teams` is the `team_id` to assign; values are the
+        ship lists. AI controllers default to the factory with
+        `enemy_team_id=None` (the factory picks a default); Task 3.4
+        refines the AI to read `engine.get_enemies_of` dynamically.
+
+        The existing 2-team `start(team0, team1, ...)` signature is kept
+        as a thin wrapper (see below) for backwards compatibility.
         """
-        # PROJ-252: Per-battle RNG — never seed the global random module
+        self._initialize_start_state(seed, end_condition, absolute_max_ticks)
+
+        # Assign team_ids + append ships.
+        ships_per_team: Dict[int, List['Ship']] = {}
+        for team_id, team_ships in teams.items():
+            if not isinstance(team_ships, list):
+                team_ships = [team_ships]
+            for s in team_ships:
+                s.team_id = team_id
+                self.ships.append(s)
+            ships_per_team[team_id] = list(team_ships)
+
+        if ai_controllers is not None:
+            self.ai_controllers = list(ai_controllers)
+        elif self._ai_factory is not None:
+            # Phase 3 Task 3.3: AI factory's `enemy_team_id` is a 2-team
+            # artifact. For N teams, we pass any non-self team id as a
+            # hint — Task 3.4 refines the AI to scan all enemies.
+            self.ai_controllers = []
+            all_team_ids = list(ships_per_team.keys())
+            for team_id, team_ships in ships_per_team.items():
+                enemy_candidates = [tid for tid in all_team_ids if tid != team_id]
+                enemy_hint = enemy_candidates[0] if enemy_candidates else team_id
+                controllers = self._ai_factory.create_for_ships(
+                    team_ships, enemy_team_id=enemy_hint
+                )
+                self.ai_controllers.extend(controllers)
+        else:
+            raise ValidationException(
+                "BattleEngine requires AI configuration",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"missing": "ai_controllers and ai_factory", "operation": "start_teams"}
+            )
+
+        for s in self.ships:
+            self._initialize_ship(s)
+        self.aura_manager.initialize(self.ships)
+        self.logger.start_session()
+        self.logger.log(
+            f"Battle started: {sum(len(t) for t in teams.values())} ships "
+            f"across {len(teams)} teams"
+        )
+        self._log_initial_status()
+
+    def _initialize_start_state(
+        self,
+        seed: Optional[int],
+        end_condition: Optional[IEndCondition],
+        absolute_max_ticks: Optional[int],
+    ) -> None:
+        """Shared setup for `start()` and `start_teams()`."""
         self.rng = random.Random(seed)
-        # Propagate RNG to subsystems
         self.collision_system.rng = self.rng
         from game.simulation.entities.ship_combat_engine import ShipCombatEngine
         ShipCombatEngine._damage_calculator = DamageCalculator(rng=self.rng)
@@ -268,51 +360,38 @@ class BattleEngine:
         self.recent_beams = []
         self.tick_counter = 0
         self.winner = None
+        self.retreated_ships = []
 
-        # Set end condition
         self.end_condition = end_condition if end_condition is not None else TeamEliminatedCondition()
         if absolute_max_ticks is not None:
             self._absolute_max_ticks = absolute_max_ticks
 
-        # Handle single ship args (though type hint implies lists)
-        if not isinstance(team0_ships, list): team0_ships = [team0_ships]
-        if not isinstance(team1_ships, list): team1_ships = [team1_ships]
+    def start(
+        self,
+        team0_ships: List['Ship'],
+        team1_ships: List['Ship'],
+        seed: Optional[int] = None,
+        end_condition: Optional[IEndCondition] = None,
+        absolute_max_ticks: Optional[int] = None,
+        ai_controllers: Optional[List['IAIController']] = None
+    ) -> None:
+        """2-team backward-compat wrapper around `start_teams` (PROJ-269 Phase 3).
 
-        # Add ships to teams (common to all paths)
-        for s in team0_ships:
-            s.team_id = 0
-            self.ships.append(s)
-        for s in team1_ships:
-            s.team_id = 1
-            self.ships.append(s)
-
-        if ai_controllers is not None:
-            # Use pre-created controllers if provided
-            self.ai_controllers = list(ai_controllers)
-        elif self._ai_factory is not None:
-            # PROJ-43: Use injected factory to create AI controllers
-            team0_controllers = self._ai_factory.create_for_ships(team0_ships, enemy_team_id=1)
-            team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=0)
-            self.ai_controllers = team0_controllers + team1_controllers
-        else:
-            raise ValidationException(
-                "BattleEngine requires AI configuration",
-                code=ErrorCode.MISSING_DEPENDENCY.value,
-                context={"missing": "ai_controllers and ai_factory", "operation": "start"}
-            )
-
-        # Per-ship initialization: event bus, components, stats, derelict check
-        for s in self.ships:
-            self._initialize_ship(s)
-
-        # Initialize fleet aura manager (scoped ability bonuses)
-        self.aura_manager.initialize(self.ships)
-
-        # Logging
-        self.logger.start_session()
-        self.logger.log(f"Battle started: {len(team0_ships)} vs {len(team1_ships)} ships")
-
-        self._log_initial_status()
+        Delegates to `start_teams({0: team0_ships, 1: team1_ships}, ...)`
+        so existing callers keep working unchanged while new callers
+        can use `start_teams` directly for N-team battles.
+        """
+        if not isinstance(team0_ships, list):
+            team0_ships = [team0_ships]
+        if not isinstance(team1_ships, list):
+            team1_ships = [team1_ships]
+        self.start_teams(
+            {0: team0_ships, 1: team1_ships},
+            seed=seed,
+            end_condition=end_condition,
+            absolute_max_ticks=absolute_max_ticks,
+            ai_controllers=ai_controllers,
+        )
 
     def _log_initial_status(self) -> None:
         for s in self.ships:
@@ -536,6 +615,106 @@ class BattleEngine:
         self.add_ship_mid_battle(new_ship, new_ship.team_id)
         self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
 
+    # ------------------------------------------------------------------
+    # PROJ-269 Phase 3: boundary enforcement
+    # ------------------------------------------------------------------
+
+    def enforce_boundary(self) -> None:
+        """Per-tick boundary check — called from the BoundaryEnforcementPhase.
+
+        For each alive ship, if `self.boundary.contains(ship.position)`
+        returns False, dispatch to `_apply_exit_policy(ship, policy)`.
+        NONE policy is the default safety net for engines constructed
+        without an explicit boundary (UnboundedRegion always returns True).
+        """
+        boundary = self.boundary
+        if boundary is None:
+            return
+        policy = getattr(boundary, "exit_policy", None)
+        # Snapshot the alive ships — _apply_exit_policy may remove from
+        # self.ships mid-iteration.
+        for ship in list(self.ships):
+            if not getattr(ship, "is_alive", True):
+                continue
+            if not boundary.contains(ship.position):
+                self._apply_exit_policy(ship, policy)
+
+    def _apply_exit_policy(self, ship: 'Ship', policy) -> None:
+        """Apply the configured `ExitPolicy` to a ship that crossed the boundary.
+
+        Phase 3 Task 3.1 stub: only handles NONE (no-op). DESTROY /
+        RETREAT / BOUNCE are implemented in Task 3.2.
+        """
+        from game.simulation.combat.boundary import ExitPolicy
+
+        if policy is None or policy == ExitPolicy.NONE:
+            return
+        if policy == ExitPolicy.DESTROY:
+            # Destroy the ship by applying lethal damage. Uses the normal
+            # damage pipeline so SHIP_DESTROYED events fire correctly.
+            remaining_hp = max(ship.hp, 1)
+            ship.combat_engine.take_damage(remaining_hp)
+            self.logger.log(
+                f"Boundary DESTROY: {ship.name} crossed boundary at "
+                f"({ship.x:.0f}, {ship.y:.0f})"
+            )
+            return
+        if policy == ExitPolicy.RETREAT:
+            # Remove ship from active battle, track for outcome reporting.
+            if ship in self.ships:
+                self.retreated_ships.append(ship)
+                self.remove_ship(ship)
+                self.logger.log(
+                    f"Boundary RETREAT: {ship.name} exited battle at "
+                    f"({ship.x:.0f}, {ship.y:.0f})"
+                )
+            return
+        if policy == ExitPolicy.BOUNCE:
+            # Clamp to closest in-bounds point and reflect velocity.
+            new_pos = self.boundary.closest_inside_point(ship.position)
+            self._bounce_ship(ship, new_pos)
+            return
+        logger.warning(f"Unknown ExitPolicy: {policy!r}; treating as NONE.")
+
+    def _bounce_ship(self, ship: 'Ship', new_pos: Vector2) -> None:
+        """Clamp `ship.position` to `new_pos` and reflect velocity along
+        the outward normal. For Rect boundaries we flip whichever velocity
+        component was carrying the ship out; for Circle boundaries we
+        reflect along the radial vector.
+        """
+        from game.simulation.combat.boundary import CircleBoundary, RectBoundary
+
+        old_x, old_y = ship.x, ship.y
+        ship.x = float(new_pos.x)
+        ship.y = float(new_pos.y)
+        vel = getattr(ship, "velocity", None)
+        if vel is None:
+            return
+
+        boundary = self.boundary
+        if isinstance(boundary, RectBoundary):
+            # Ship crossed either the X or Y extent; flip the component(s)
+            # that exceed the boundary.
+            half_w = boundary.width / 2.0
+            half_h = boundary.height / 2.0
+            if abs(old_x) > half_w:
+                vel.x = -vel.x
+            if abs(old_y) > half_h:
+                vel.y = -vel.y
+        elif isinstance(boundary, CircleBoundary):
+            # Reflect velocity about the radial normal.
+            r = (new_pos.x ** 2 + new_pos.y ** 2) ** 0.5
+            if r > 0:
+                nx = new_pos.x / r
+                ny = new_pos.y / r
+                dot = vel.x * nx + vel.y * ny
+                vel.x -= 2 * dot * nx
+                vel.y -= 2 * dot * ny
+        else:
+            # Fallback: flip both components.
+            vel.x = -vel.x
+            vel.y = -vel.y
+
     def is_battle_over(self) -> bool:
         """
         Check if battle should end based on configured end condition.
@@ -552,24 +731,19 @@ class BattleEngine:
         return self.end_condition.is_met(self.ships, self.tick_counter)
 
     def get_winner(self) -> int:
-        """
-        Determine battle winner based on surviving ships.
+        """Determine battle winner based on surviving ships (N-team).
 
-        Note: This method always returns an int, never None. The return type
-        is explicitly `int` (not `Optional[int]`). Layers above (BattleService,
-        BattleController) may return None to indicate "no active battle".
+        PROJ-269 Phase 3: generalized from fixed-2-team to N teams.
 
         Returns:
-            0: Team 0 wins (team 1 has no alive ships)
-            1: Team 1 wins (team 0 has no alive ships)
-            -1: Draw (both teams have alive ships, or both eliminated)
+            team_id: The sole team_id whose ships are still alive.
+            -1: Draw (0 teams alive, 2+ teams alive, or no ships present).
         """
-        team0_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
-        team1_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
-        if team0_alive > 0 and team1_alive == 0:
-            return 0
-        elif team1_alive > 0 and team0_alive == 0:
-            return 1
+        alive_team_ids = {
+            s.team_id for s in self.ships if s.is_alive
+        }
+        if len(alive_team_ids) == 1:
+            return next(iter(alive_team_ids))
         return -1
     
     def shutdown(self) -> None:

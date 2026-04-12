@@ -238,3 +238,119 @@ def test_compiler_empire_modifier_flows_into_per_team(
     team1_entries = spec.modifier_stack.per_team.get(1, ())
     assert any("empire0_buff" in e.source for e in team0_entries)
     assert any("empire1_buff" in e.source for e in team1_entries)
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 Task 2.3 — ShipSpec.components populated from ShipInstance.components
+# ---------------------------------------------------------------------------
+
+
+def test_compiler_populates_ship_spec_components_from_instance(
+    session_registries, ship_factory
+):
+    """Phase 2: the strategy compiler reads `ShipInstance.components` and
+    emits a tuple of `ComponentStateSpec` entries on each `ShipSpec`.
+    Previously Phase 1 always emitted an empty tuple."""
+    from game.core.hex_math import HexCoord
+    from game.simulation.battle_spec import ComponentStateSpec
+    from game.strategy.data.component_state import (
+        ComponentState,
+        component_state_key,
+    )
+    from game.strategy.data.fleet import Fleet
+
+    # Design with two identical laser_cannon components so we can verify
+    # both are carried through by instance_index.
+    design = {
+        "name": "LaserCruiser",
+        "ship_class": "Escort",
+        "vehicle_type": "Ship",
+        "design_role": "fleet_escort",
+        "theme_id": "Federation",
+        "layers": {
+            "CORE": [{"id": "bridge"}],
+            "OUTER": [{"id": "laser_cannon"}, {"id": "laser_cannon"}],
+            "ARMOR": [],
+        },
+        "_metadata": {},
+    }
+
+    fleet = Fleet(fleet_id=42, owner_id=0, location=HexCoord(0, 0))
+    ship_instance = ship_factory(design, owner_id=0)
+    fleet.add_ship(ship_instance)
+
+    # Damage laser_cannon#0 to 30% HP via ShipInstance.components.
+    key0 = component_state_key("laser_cannon", 0)
+    cs0 = ship_instance.components[key0]
+    damaged_hp = cs0.current_hp * 0.3
+    ship_instance.components[key0] = ComponentState(
+        component_id=cs0.component_id,
+        instance_index=cs0.instance_index,
+        current_hp=damaged_hp,
+        is_active=cs0.is_active,
+    )
+
+    spec = build_strategy_battle_spec(
+        [fleet],
+        sector=None,
+        system=None,
+        empires={},
+        settings=None,
+        registries=session_registries,
+    )
+
+    ship_spec = spec.teams[0].fleet_hierarchy[0].squadrons[0].ships[0]
+    # Phase 2 must populate components (Phase 1 always produced empty tuple).
+    assert ship_spec.components, "ShipSpec.components must not be empty"
+
+    # All entries must be ComponentStateSpec (not ComponentState).
+    for entry in ship_spec.components:
+        assert isinstance(entry, ComponentStateSpec)
+
+    # Find the damaged entry and verify its current_hp roundtrips.
+    laser_entries = [
+        c for c in ship_spec.components
+        if c.component_id == "laser_cannon"
+    ]
+    assert len(laser_entries) == 2
+    damaged_entry = min(laser_entries, key=lambda c: c.current_hp)
+    assert damaged_entry.current_hp == pytest.approx(damaged_hp, abs=0.5)
+
+
+def test_compiler_empty_instance_components_yields_empty_ship_spec_components(
+    session_registries, ship_factory
+):
+    """If `ShipInstance.components` is empty (edge case — should normally
+    be populated by ShipInstance.create), the compiled spec falls back to
+    an empty tuple rather than crashing."""
+    from game.core.hex_math import HexCoord
+    from game.strategy.data.fleet import Fleet
+
+    design = {
+        "name": "EmptyComps",
+        "ship_class": "Escort",
+        "vehicle_type": "Ship",
+        "design_role": "fleet_escort",
+        "theme_id": "Federation",
+        "layers": {"CORE": [{"id": "bridge"}], "ARMOR": []},
+        "_metadata": {},
+    }
+
+    fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+    ship_instance = ship_factory(design, owner_id=0)
+    # Force components empty to simulate a legacy-save-loaded instance
+    # that hasn't been populated yet.
+    ship_instance.components = {}
+    fleet.add_ship(ship_instance)
+
+    spec = build_strategy_battle_spec(
+        [fleet],
+        sector=None,
+        system=None,
+        empires={},
+        settings=None,
+        registries=session_registries,
+    )
+
+    ship_spec = spec.teams[0].fleet_hierarchy[0].squadrons[0].ships[0]
+    assert ship_spec.components == ()

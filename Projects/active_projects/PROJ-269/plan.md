@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. DTO boundary + spec compilers | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Component HP persistence | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Boundary + N-team engine support | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Component HP persistence | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Boundary + N-team engine support | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Formation system | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Telemetry levels | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Delete legacy paths | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-12
-**Active Phase:** Phase 1 Complete — Phase 2 Task 2.1 next
+**Active Phase:** Phase 3 Complete — Phase 4 Task 4.1 next
 **Last Action:** Phase 1 complete. All 11 tasks checked off. `validate_phase.py PROJ-269 1` PASSED.
 
 **Phase 1 deliverables shipped:**
@@ -40,24 +40,53 @@
 - `docs/systems/combat_simulation.md` §0 "Unified Entry (in progress — PROJ-269)" added
 - Full regression: **14576 passed** (+108 from baseline 14468); same 3 pre-existing unrelated failures + 3 pre-existing unrelated ImportErrors; combat_lab fast: 162 passed
 
-**Next Action:** Phase 2 Task 2.1. Read `phase_2_checklist.md` for the first task and `design.md §5.1` for `ShipInstance.components` persistence contract. Phase 2 adds:
-- `ShipInstance.components: Dict[str, ComponentState]` with HP persistence
-- `ComponentState` dataclass in `game/strategy/fleets/component_state.py`
-- Round-trip: strategy compiler reads ShipInstance.components → `ShipSpec.components` → engine → `ShipOutcome.components` → `PostBattleHook` writes back
-- Real `apply_outcome_to_fleets` PostBattleHook implementation (replaces the Phase-1 `_noop_hook`)
-- Integration test: damage persists across two consecutive strategy battles
+**Next Action:** Phase 4 Task 4.1. Read `phase_4_checklist.md` for the first task. Phase 4 adds:
+- `FormationResolver` — converts `(formation, entry_vector, boundary, ship_list, design_roles) → Dict[ship_instance_id, (position, angle)]`
+- `TaskForce.formation: Optional[FormationSpec]` field
+- Design-role-based formation defaults (Strike→WEDGE, Carrier→CARRIER_PROTECTED, Defender→LINE_ABREAST, Scout/Skirmisher→LINE_ASTERN, Mixed→LINE_ABREAST)
+- Compilers invoke FormationResolver at spec-build time to produce ShipSpec poses
+- Per-shape tests (rotation invariance, spacing, custom positions)
 
 **Blockers:** None
 
-**Context for Next Agent:**
-- Phase 1 introduced a **transitional `ship_builder: Callable[[ShipSpec], Ship]` kwarg on `run_battle`** because ShipSpec (pure DTO) can't carry pre-built Ships. Phase 2 should design `Ship.from_spec(spec, registries)` that understands `ComponentStateSpec` per-component HP, then begin deprecating the `ship_builder` param in favor of internal materialization.
-- **DTO field annotations currently use `object`** for the four types introduced in sibling Phase-1 tasks (`boundary`, `modifier_stack`, `formation`, `telemetry_level`). Phase 2+ can tighten these to concrete types now that the types exist — simple annotation tightening, no DTO shape changes.
-- `post_battle_hook` is currently `_noop_hook` in `build_strategy_battle_spec`. Phase 2 replaces it with `apply_outcome_to_fleets`.
-- `ShipSpec.components = ()` everywhere today. Phase 2 populates it from `ShipInstance.components`.
-- Task 1.10 integrated the Combat Lab CLI runner — but only for `StaticTargetScenario` subclasses. Other templates (Duel / Propulsion / Resource / Comparison) raise `NotImplementedError` in the compiler and fall back to the legacy path. Phase 4 (formation system) is the natural point to extend coverage.
-- **Skipped in Phase 1:** the `scenario.to_spec` monkey-patch lives in `combat_lab/spec_compiler.py` — `combat_lab/runner.py` imports it for its side-effect (`import combat_lab.spec_compiler  # noqa: F401`). If this becomes confusing, promoting `to_spec` into `TestScenario` as a real method (delegating to the compiler) is a clean follow-up.
-- **Pre-existing pytest failures/errors** (3 build-queue + 3 AI/strategy imports) predate PROJ-269. Leave them alone.
-- **Baselines going into Phase 2:** pytest 14576 passed, combat_lab fast 162 passed.
+**Phase 3 deliverables shipped:**
+- `BattleEngine.boundary` per-tick enforcement via new `BoundaryEnforcementPhase` (priority 250). All four ExitPolicy values implemented (DESTROY kills, RETREAT removes + tracks, BOUNCE clamps + reflects, NONE no-op). `run_battle` threads `spec.boundary` to the engine.
+- `BattleEngine.start_teams(teams: Dict[int, List[Ship]])` N-team entry. `start(team0, team1)` is now a thin backward-compat wrapper. `engine.teams` is a property, `get_ships_by_team`, `get_enemies_of(ship)` helpers added.
+- `engine.get_winner()` returns sole alive team_id (or -1).
+- `TeamEliminatedCondition` + `TeamIncapacitatedCondition` generalized to "≤1 team remaining" semantics — N-team correct, 2-team backward-compatible.
+- `AIController._find_enemies_in_radius` filter: `obj.team_id != self.ship.get_team_id()`. Every non-self team is equally hostile.
+- `extract_outcome` now emits `ShipStatus.RETREATED` for ships that exited with the RETREAT policy; tracked via `engine.retreated_ships`.
+- Integration tests: `test_three_team_battle.py` (N-team structural), `test_boundary_retreat.py` (RETREAT end-to-end), plus 26 unit tests across boundary / ExitPolicy / N-team / end conditions.
+- `docs/systems/combat_simulation.md` §0 updated with "Boundary Region (Phase 3)" + "N-Team Support (Phase 3)" subsections.
+
+**Baselines going into Phase 4:** pytest **14635 passed** (up from post-Phase-2 14603; +32 new Phase-3 tests). combat_lab fast **162 passed** (maintained throughout).
+
+**Phase 2 deliverables shipped:**
+- `ComponentState` dataclass in `game/strategy/data/component_state.py` (note: `data/` not `fleets/` — manifest path diverged; decisions.md logged)
+- `ShipInstance.components: Dict[str, ComponentState]` field; populate-on-create via `_build_full_hp_components_from_design`; serialization + clone propagation; graceful degradation for legacy saves
+- `ShipInstanceBridge.to_ship` applies per-instance HP from `components`; falls back to legacy `component_damage` when `components` empty
+- `ShipInstanceBridge.update_from_ship` authoritatively rebuilds `components` from post-battle Ship layers
+- `build_strategy_battle_spec` populates `ShipSpec.components` from `ShipInstance.components`
+- `run_battle` applies `ShipSpec.components` via `_apply_spec_components_to_ship`; `extract_outcome` reads per-component HP via `_extract_component_states`
+- `apply_outcome_to_fleets` in new `game/strategy/combat/post_battle_hook.py` (surviving → update, destroyed/retreated → remove from fleet, empty fleet → remove from empire)
+- `build_strategy_battle_spec` attaches the real hook by default (Phase 1's `_noop_hook` replaced)
+- End-to-end `tests/integration/strategy/combat/test_damage_persistence.py` — 2 consecutive battles, damage persists + accumulates
+- `docs/systems/combat_simulation.md` §0 "Component HP Persistence (Phase 2)" + `docs/systems/strategy_layer.md` ShipInstance component persistence subsection
+
+**Baselines going into Phase 3:** pytest **14603 passed** (up from post-Phase-1 14576; +27 new Phase-2 tests). combat_lab fast **162 passed**.
+
+**Context for Next Agent (Phase 4):**
+- **`FormationSpec` + `FormationShape` enum already exist** in `game/simulation/combat/formation.py` from Phase 1 Task 1.4. Phase 4 adds the resolver that turns a formation into actual per-ship poses.
+- **`TaskForceSpec.formation` field exists** but is always `None` in today's compilers — the Phase 1 scaffold. Phase 4 populates it + consumes it.
+- **Design-role defaults** (per `decisions.md`): Strike→WEDGE, Carrier→CARRIER_PROTECTED, Defender→LINE_ABREAST, Scout/Skirmisher→LINE_ASTERN, Mixed→LINE_ABREAST. Dominant design_role logic required.
+- **Entry vectors** are already on `TeamSpec.entry_vector` (Phase 1); Phase 4 is where the resolver consumes `entry_vector.origin + facing` to rotate formation-local positions into world-space.
+- **Strategy compiler's hex-edge entry** lands in Phase 4 too (today it uses hex center as origin, arbitrary facing).
+- **Pre-existing pytest failures/errors** (3 build-queue + 3 AI/strategy imports) still unchanged — not PROJ-269's responsibility.
+- **Transitional concerns still open:**
+  - `ship_builder` kwarg on `run_battle` — Phase 6 subsumes.
+  - DTO annotations still use `object` for `FormationSpec` on `TaskForceSpec.formation` — can tighten as part of Phase 4.
+  - Legacy `ShipInstance.component_damage` coexists with `components`.
+  - Empty TaskForce / Squadron pruning still NOT done. Phase 4 is the natural spot if it becomes relevant.
 
 ## Overview
 

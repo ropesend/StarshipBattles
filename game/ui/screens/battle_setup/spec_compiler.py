@@ -41,6 +41,11 @@ from game.simulation.battle_spec import (
     TeamSpec,
 )
 from game.simulation.combat.boundary import UnboundedRegion
+from game.simulation.combat.formation import (
+    FormationResolver,
+    FormationSpec,
+    resolve_default_for_task_force,
+)
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
 from game.simulation.components.modifier_effects import ModifierEffect
@@ -128,33 +133,59 @@ def build_manual_battle_spec(
 # ---------------------------------------------------------------------------
 
 
+# PROJ-269 Phase 4: Battle Setup entry-vector defaults.
+# Team 0 enters from the west facing east (+x); team 1 from the east
+# facing west (180°). Gives visual separation so ships don't overlap.
+_SIDE_ENTRY_VECTORS = {
+    0: EntryVector(origin=Vector2(-500.0, 0.0), facing=0.0),
+    1: EntryVector(origin=Vector2(500.0, 0.0), facing=180.0),
+}
+
+
 def _build_team_spec(
     side: "BattleSetupSide", *, team_id: int, name: str
 ) -> TeamSpec:
+    entry_vector = _SIDE_ENTRY_VECTORS.get(
+        team_id, EntryVector(origin=Vector2(0.0, 0.0), facing=0.0)
+    )
     task_forces: List[TaskForceSpec] = []
     for fleet in side.fleets:
-        task_forces.append(_task_force_for_fleet(fleet, team_id=team_id))
+        task_forces.append(
+            _task_force_for_fleet(fleet, team_id=team_id, entry_vector=entry_vector)
+        )
 
     return TeamSpec(
         team_id=team_id,
         name=name,
-        entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
+        entry_vector=entry_vector,
         fleet_hierarchy=tuple(task_forces),
         ai_policy=AIPolicy(),
     )
 
 
-def _task_force_for_fleet(fleet: "Fleet", *, team_id: int) -> TaskForceSpec:
-    """Phase 1 wrapper: one TaskForceSpec per Fleet with a single squadron
-    holding every ship. Phase 4 consults `fleet.task_forces` for the real
-    hierarchy once formations are wired in."""
-    ships_specs: Tuple[ShipSpec, ...] = tuple(
-        _ship_spec_from_instance(ship) for ship in fleet.ships
+def _task_force_for_fleet(
+    fleet: "Fleet",
+    *,
+    team_id: int,
+    entry_vector: EntryVector,
+) -> TaskForceSpec:
+    """PROJ-269 Phase 4: one TaskForceSpec per Fleet with a single squadron
+    whose ships are placed by `FormationResolver` from the team's
+    entry_vector + a design-role default (or explicit TF.formation)."""
+    formation = _pick_formation_for_fleet(fleet)
+    poses = FormationResolver.resolve(
+        formation=formation,
+        entry_vector=entry_vector,
+        boundary=None,
+        ships=fleet.ships,
     )
-    tf_label = getattr(fleet, "_battle_setup_name", f"fleet-{fleet.id}")
+    ships_specs: Tuple[ShipSpec, ...] = tuple(
+        _ship_spec_from_instance(ship, poses.get(ship.instance_id))
+        for ship in fleet.ships
+    )
     return TaskForceSpec(
         task_force_id=f"tf-{team_id}-{fleet.id}",
-        formation=None,
+        formation=formation,
         policies=CombatPolicies(),
         squadrons=(
             SquadronSpec(
@@ -166,25 +197,40 @@ def _task_force_for_fleet(fleet: "Fleet", *, team_id: int) -> TaskForceSpec:
     )
 
 
-def _ship_spec_from_instance(ship: "ShipInstance") -> ShipSpec:
+def _pick_formation_for_fleet(fleet: "Fleet") -> FormationSpec:
+    """Explicit `TaskForce.formation` (first TF with one set) or
+    design-role default based on `fleet.ships`."""
+    for tf in getattr(fleet, "task_forces", []) or []:
+        if getattr(tf, "formation", None) is not None:
+            return tf.formation
+    return resolve_default_for_task_force(fleet.ships)
+
+
+def _ship_spec_from_instance(
+    ship: "ShipInstance",
+    pose: Optional[Tuple[Vector2, float]] = None,
+) -> ShipSpec:
     """Build a ShipSpec from a ShipInstance WITHOUT mutating the instance.
 
-    Pose fields are placeholders — `run_battle`'s `ship_builder` sets the
-    real pose from the spec, and Phase 4's FormationResolver will produce
-    the positions at compile time.
+    Pose is supplied by `FormationResolver` at compile time (Phase 4).
+    Falls back to origin+facing 0 when no pose is available (empty fleet).
     """
-    # Pull theme_id from the design data if present; default to Federation.
     theme_id = "Federation"
     if hasattr(ship, "design_data") and isinstance(ship.design_data, dict):
         theme_id = ship.design_data.get("theme_id", theme_id)
+
+    if pose is not None:
+        position, angle = pose
+    else:
+        position, angle = Vector2(0.0, 0.0), 0.0
 
     return ShipSpec(
         instance_id=ship.instance_id,
         design_id=ship.design_id,
         theme_id=theme_id,
         name=ship.name,
-        position=Vector2(0.0, 0.0),
-        angle=0.0,
+        position=position,
+        angle=float(angle),
         velocity=Vector2(0.0, 0.0),
         components=(),  # Phase 2 wires ShipInstance.components round-trip.
     )

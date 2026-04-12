@@ -113,7 +113,14 @@ class TickLimitCondition:
 
 
 class TeamEliminatedCondition:
-    """End battle when any team has 0 alive ships.
+    """End battle when ≤1 team has alive ships.
+
+    PROJ-269 Phase 3 Task 3.5: generalized from "any team has 0 alive
+    ships" (2-team semantics) to "≤1 team remaining" (N-team semantics).
+    For 2-team battles the two definitions are equivalent — when one
+    team hits 0, exactly one team (the other) is left. For 3+ team
+    battles the new definition correctly waits for the last team
+    standing instead of firing when the first team dies.
 
     Args:
         check_derelict: If True, derelict ships count as eliminated.
@@ -127,15 +134,17 @@ class TeamEliminatedCondition:
             return False
 
         team_ids = {s.team_id for s in ships}
+        alive_team_count = 0
         for team_id in team_ids:
-            alive = sum(
-                1 for s in ships
-                if s.team_id == team_id and s.is_alive
+            has_alive = any(
+                s.team_id == team_id and s.is_alive
                 and (not self.check_derelict or not s.is_derelict)
+                for s in ships
             )
-            if alive == 0:
-                return True
-        return False
+            if has_alive:
+                alive_team_count += 1
+        # Fire when only one (or zero) team has alive ships.
+        return alive_team_count <= 1
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -158,10 +167,13 @@ class TeamEliminatedCondition:
 
 
 class TeamIncapacitatedCondition:
-    """End battle when any team loses combat capability.
+    """End battle when ≤1 team retains combat capability.
 
-    A team is incapacitated when no alive ship on that team has
-    operational weapons OR movement capability.
+    PROJ-269 Phase 3 Task 3.5: generalized to N-team semantics. A team
+    is "capable" when at least one of its alive ships has operational
+    weapons, engines, or thrusters. Condition fires when at most one
+    team is still capable (the last team standing, or a full draw).
+    For 2-team battles this is equivalent to the previous semantics.
     """
 
     def is_met(self, ships: List['Ship'], tick: int) -> bool:
@@ -169,10 +181,11 @@ class TeamIncapacitatedCondition:
             return False
 
         team_ids = {s.team_id for s in ships}
-        for team_id in team_ids:
-            if not self._team_has_capability(ships, team_id):
-                return True
-        return False
+        capable_count = sum(
+            1 for team_id in team_ids
+            if self._team_has_capability(ships, team_id)
+        )
+        return capable_count <= 1
 
     @staticmethod
     def _team_has_capability(ships: List['Ship'], team_id: int) -> bool:

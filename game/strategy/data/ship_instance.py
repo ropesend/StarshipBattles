@@ -26,6 +26,7 @@ from game.strategy.data.ship_consumable_manager import ShipConsumableManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
+from game.strategy.data.component_state import ComponentState, component_state_key
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,56 @@ _DEFAULT_MAX_HP = 100
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.core.registry import GameRegistries
+
+
+def _build_full_hp_components_from_design(
+    design_data: Dict[str, Any],
+    registries: Optional['GameRegistries'],
+) -> Dict[str, ComponentState]:
+    """Build a full-HP `ComponentState` dict from a ship design.
+
+    Walks the design's layers and creates one entry per component
+    instance, keyed by `component_state_key(component_id, instance_index)`.
+    `instance_index` resets per `component_id` (so three identical
+    components produce indices 0, 1, 2).
+
+    Uses `ShipSerializer.from_dict(...)` to materialize the ship so
+    each component's `max_hp` is computed from the real formula pipeline
+    (same source of truth as Ship stat calculation). Returns an empty
+    dict if `registries` is None or the design has no layers.
+    """
+    if registries is None:
+        return {}
+    # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
+    # Same pattern as `ShipInstanceBridge.to_ship`.
+    from game.simulation.entities.ship_serialization import ShipSerializer
+
+    try:
+        ship = ShipSerializer.from_dict(design_data, registries=registries)
+    except Exception as e:
+        logger.warning(
+            f"Could not materialize ship from design for component-state "
+            f"population: {e}. Falling back to empty components."
+        )
+        return {}
+
+    components: Dict[str, ComponentState] = {}
+    per_id_index: Dict[str, int] = {}
+    for _layer_type, layer_data in ship.layers.items():
+        for comp in getattr(layer_data, "components", []):
+            comp_id = getattr(comp, "id", None)
+            if not comp_id:
+                continue
+            idx = per_id_index.get(comp_id, 0)
+            per_id_index[comp_id] = idx + 1
+            key = component_state_key(comp_id, idx)
+            components[key] = ComponentState(
+                component_id=comp_id,
+                instance_index=idx,
+                current_hp=float(getattr(comp, "current_hp", getattr(comp, "max_hp", 0))),
+                is_active=bool(getattr(comp, "is_active", True)),
+            )
+    return components
 
 
 @dataclass
@@ -59,10 +110,18 @@ class ShipInstance:
     # Current state (may differ from design defaults)
     # None values mean "use design default"
     current_hp: Optional[int] = None
-    component_damage: Dict[str, int] = field(default_factory=dict)  # component_id -> current_hp
+    component_damage: Dict[str, int] = field(default_factory=dict)  # component_id -> current_hp (legacy; single-instance granularity)
     consumable_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
     component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
     activation_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # component_key -> activation state
+
+    # PROJ-269 Phase 2: per-component-instance persistent state.
+    # Key format: `component_state_key(component_id, instance_index)` =
+    # `"{component_id}#{instance_index}"`. Authoritative source for battle
+    # round-trip (BattleSpec.components / BattleOutcome.components).
+    # `component_damage` above is kept in sync for backwards-compatible stat
+    # calculations during the PROJ-269 transition.
+    components: Dict[str, ComponentState] = field(default_factory=dict)
 
     # Cargo contents (cargo_type -> current amount)
     cargo_contents: Dict[str, int] = field(default_factory=dict)
@@ -218,6 +277,19 @@ class ShipInstance:
         initial_cargo = design_data.get('cargo', {})
         for cargo_type, amount in initial_cargo.items():
             instance.cargo_contents[cargo_type] = int(amount)
+
+        # PROJ-269 Phase 2: populate per-component-instance state with
+        # full-HP defaults from the design. Safe to skip if design has no
+        # layers (e.g. minimal test designs).
+        instance.components = _build_full_hp_components_from_design(
+            design_data, registries
+        )
+
+        # PROJ-269 Phase 4: mirror the design's role on the instance so
+        # downstream consumers (FormationResolver defaults, strategy UI
+        # filters, etc.) see it without reaching into `design_data`.
+        if instance.design_role is None:
+            instance.design_role = design_data.get("design_role")
 
         return instance
 

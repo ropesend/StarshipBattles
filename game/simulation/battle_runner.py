@@ -46,7 +46,7 @@ from game.simulation.battle_outcome import (
     TeamOutcome,
     WeaponSummary,
 )
-from game.simulation.battle_spec import BattleSpec, ShipSpec
+from game.simulation.battle_spec import BattleSpec, ComponentStateSpec, ShipSpec
 from game.simulation.systems.battle_end_conditions import (
     AllCondition,
     AnyCondition,
@@ -142,6 +142,15 @@ def run_battle(
             f"BattleController.configure failed: {configure_result.errors}"
         )
 
+    # PROJ-269 Phase 3: thread the spec's boundary into the engine.
+    # `configure` creates the engine via `BattleService.create_battle`,
+    # so by this point the engine exists and we can attach the boundary
+    # before ships / start.
+    if spec.boundary is not None:
+        engine_for_boundary = controller.service.get_engine()
+        if engine_for_boundary is not None:
+            engine_for_boundary.boundary = spec.boundary
+
     # Materialize + register each ship, preserving spec pose and instance_id.
     for team_spec in spec.teams:
         team_ships: List["Ship"] = []
@@ -155,6 +164,8 @@ def run_battle(
                     ship.angle = ship_spec.angle
                     ship.velocity = Vector2(ship_spec.velocity)
                     ship.instance_id = ship_spec.instance_id
+                    # PROJ-269 Phase 2: apply per-component HP from spec.
+                    _apply_spec_components_to_ship(ship_spec, ship)
                     team_ships.append(ship)
         add_result = controller.add_ships(team_ships, team_id=team_spec.team_id)
         if not add_result.success:
@@ -206,6 +217,14 @@ def extract_outcome(engine: "BattleEngine", spec: BattleSpec) -> BattleOutcome:
     ships_by_instance_id: Dict[str, "Ship"] = {
         ship.instance_id: ship for ship in engine.ships if ship.instance_id
     }
+    # PROJ-269 Phase 3: retreated ships were removed from `engine.ships`
+    # but tracked separately on `engine.retreated_ships`. Include them in
+    # the lookup so `_build_ship_outcome` can mark status=RETREATED.
+    retreated_ids: set = set()
+    for ship in getattr(engine, "retreated_ships", []):
+        if ship.instance_id:
+            ships_by_instance_id[ship.instance_id] = ship
+            retreated_ids.add(ship.instance_id)
 
     team_outcomes = []
     for team_spec in spec.teams:
@@ -218,7 +237,9 @@ def extract_outcome(engine: "BattleEngine", spec: BattleSpec) -> BattleOutcome:
             for squadron in task_force.squadrons:
                 for ship_spec in squadron.ships:
                     ship_outcomes.append(
-                        _build_ship_outcome(ship_spec, ships_by_instance_id)
+                        _build_ship_outcome(
+                            ship_spec, ships_by_instance_id, retreated_ids
+                        )
                     )
         team_outcomes.append(
             TeamOutcome(
@@ -243,6 +264,7 @@ def extract_outcome(engine: "BattleEngine", spec: BattleSpec) -> BattleOutcome:
 def _build_ship_outcome(
     ship_spec: ShipSpec,
     ships_by_instance_id: Dict[str, "Ship"],
+    retreated_ids: Optional[set] = None,
 ) -> ShipOutcome:
     engine_ship = ships_by_instance_id.get(ship_spec.instance_id)
 
@@ -267,7 +289,9 @@ def _build_ship_outcome(
         )
 
     # Alive-status resolution
-    if not engine_ship.is_alive:
+    if retreated_ids and ship_spec.instance_id in retreated_ids:
+        status = ShipStatus.RETREATED
+    elif not engine_ship.is_alive:
         status = ShipStatus.DESTROYED
     elif engine_ship.is_derelict:
         status = ShipStatus.DERELICT
@@ -280,7 +304,8 @@ def _build_ship_outcome(
         final_position=Vector2(engine_ship.x, engine_ship.y),
         final_angle=engine_ship.angle,
         final_velocity=Vector2(engine_ship.velocity),
-        components=ship_spec.components,  # Phase 2 rewrites with live HP
+        # PROJ-269 Phase 2: read per-component final HP from engine Ship.
+        components=_extract_component_states(engine_ship),
         weapons=tuple(_extract_weapon_summaries(engine_ship)),
         hits_taken=(),  # Phase 5 populates at DETAILED telemetry
         stats=ShipStats(
@@ -290,6 +315,72 @@ def _build_ship_outcome(
             ticks_alive=0,
         ),
     )
+
+
+def _apply_spec_components_to_ship(
+    ship_spec: ShipSpec, ship: "Ship"
+) -> None:
+    """Apply `ShipSpec.components` per-instance HP onto a constructed Ship.
+
+    Walks the Ship's layers in order, tracking per-component-id indices
+    to match the keys the compilers emit. Components on the Ship that
+    have no matching spec entry are left at their freshly-constructed
+    state (typically full HP). Components in the spec that don't map to
+    any Ship component are silently ignored (design drift).
+
+    Called by `run_battle` for each ship after `ship_builder` returns.
+    """
+    if not ship_spec.components:
+        return
+    # Build (component_id, instance_index) -> ComponentStateSpec lookup.
+    spec_by_key: Dict[tuple, ComponentStateSpec] = {
+        (c.component_id, c.instance_index): c for c in ship_spec.components
+    }
+    if not spec_by_key:
+        return
+
+    per_id_index: Dict[str, int] = {}
+    for layer_data in ship.layers.values():
+        for comp in getattr(layer_data, "components", []):
+            comp_id = getattr(comp, "id", None)
+            if not comp_id:
+                continue
+            idx = per_id_index.get(comp_id, 0)
+            per_id_index[comp_id] = idx + 1
+            spec_entry = spec_by_key.get((comp_id, idx))
+            if spec_entry is None:
+                continue
+            target_hp = spec_entry.current_hp
+            current = getattr(comp, "current_hp", None)
+            if current is None:
+                continue
+            damage = current - target_hp
+            if damage > 0:
+                comp.take_damage(int(damage))
+
+
+def _extract_component_states(engine_ship: "Ship") -> tuple:
+    """Emit a tuple of `ComponentStateSpec` reflecting each Ship component's
+    final state. Walks layers in order; instance_index resets per component_id.
+    """
+    out: List[ComponentStateSpec] = []
+    per_id_index: Dict[str, int] = {}
+    for layer_data in engine_ship.layers.values():
+        for comp in getattr(layer_data, "components", []):
+            comp_id = getattr(comp, "id", None)
+            if not comp_id:
+                continue
+            idx = per_id_index.get(comp_id, 0)
+            per_id_index[comp_id] = idx + 1
+            out.append(
+                ComponentStateSpec(
+                    component_id=comp_id,
+                    instance_index=idx,
+                    current_hp=float(getattr(comp, "current_hp", 0)),
+                    is_active=bool(getattr(comp, "is_active", True)),
+                )
+            )
+    return tuple(out)
 
 
 def _extract_weapon_summaries(engine_ship: "Ship") -> List[WeaponSummary]:

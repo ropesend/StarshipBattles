@@ -39,6 +39,7 @@ from game.simulation.battle_spec import (
     TeamSpec,
 )
 from game.simulation.combat.boundary import UnboundedRegion
+from game.simulation.combat.formation import FormationShape, FormationSpec
 from game.simulation.combat.modifier_stack import ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
 
@@ -118,6 +119,22 @@ def build_test_battle_spec(
         components=(),
     )
 
+    # PROJ-269 Phase 4: explicit CUSTOM formations so the resolver can
+    # reproduce the scenario's positions from the spec alone. Each
+    # single-ship TaskForce gets a single custom position in its own
+    # local frame (origin), since the team's entry_vector already
+    # places the formation in world space.
+    attacker_formation = FormationSpec(
+        shape=FormationShape.CUSTOM,
+        spacing=100.0,
+        custom_positions=(Vector2(0.0, 0.0),),
+    )
+    target_formation = FormationSpec(
+        shape=FormationShape.CUSTOM,
+        spacing=100.0,
+        custom_positions=(Vector2(0.0, 0.0),),
+    )
+
     team_attacker = TeamSpec(
         team_id=0,
         name="Attacker",
@@ -125,7 +142,7 @@ def build_test_battle_spec(
         fleet_hierarchy=(
             TaskForceSpec(
                 task_force_id="tf-attacker",
-                formation=None,
+                formation=attacker_formation,
                 policies=CombatPolicies(),
                 squadrons=(
                     SquadronSpec(
@@ -148,7 +165,7 @@ def build_test_battle_spec(
         fleet_hierarchy=(
             TaskForceSpec(
                 task_force_id="tf-target",
-                formation=None,
+                formation=target_formation,
                 policies=CombatPolicies(),
                 squadrons=(
                     SquadronSpec(

@@ -36,6 +36,7 @@ from game.simulation.battle_spec import (
     AIPolicy,
     BattleSpec,
     CombatPolicies,
+    ComponentStateSpec,
     EntryVector,
     ShipSpec,
     SquadronSpec,
@@ -43,6 +44,11 @@ from game.simulation.battle_spec import (
     TeamSpec,
 )
 from game.simulation.combat.boundary import UnboundedRegion
+from game.simulation.combat.formation import (
+    FormationResolver,
+    FormationSpec,
+    resolve_default_for_task_force,
+)
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
 from game.simulation.components.modifier_effects import ModifierEffect
@@ -68,6 +74,7 @@ def build_strategy_battle_spec(
     registries: "GameRegistries",
     seed: Optional[int] = None,
     end_condition: Optional["IEndCondition"] = None,
+    post_battle_hook: Optional[Any] = None,
 ) -> BattleSpec:
     """Compile fleets-on-hex + environment into a `BattleSpec`.
 
@@ -119,6 +126,14 @@ def build_strategy_battle_spec(
         end_condition if end_condition is not None else TeamEliminatedCondition()
     )
 
+    # PROJ-269 Phase 2: attach a real post-battle hook that closes over
+    # this battle's fleets + empires and calls `apply_outcome_to_fleets`
+    # to persist outcome state. Callers that want a no-op (tests, legacy)
+    # can pass an explicit `post_battle_hook=lambda outcome: None`.
+    effective_hook = post_battle_hook
+    if effective_hook is None:
+        effective_hook = _build_strategy_post_battle_hook(fleets, empires)
+
     return BattleSpec(
         seed=seed if seed is not None else 0,
         telemetry_level=TelemetryLevel.NORMAL,
@@ -127,8 +142,45 @@ def build_strategy_battle_spec(
         absolute_max_ticks=_DEFAULT_ABSOLUTE_MAX_TICKS,
         teams=tuple(teams),
         modifier_stack=modifier_stack,
-        post_battle_hook=_noop_hook,
+        post_battle_hook=effective_hook,
     )
+
+
+def _build_strategy_post_battle_hook(
+    fleets: List["Fleet"],
+    empires: Mapping[Any, Any],
+):
+    """Create a post-battle hook closure for a specific set of fleets.
+
+    Captures (team_id -> fleet) positionally — the compiler assigns
+    team_ids in the same order as the input `fleets` list, so hook
+    inversion is trivial.
+    """
+    from game.strategy.combat.post_battle_hook import apply_outcome_to_fleets
+
+    fleets_by_team_id: Dict[int, List["Fleet"]] = {
+        team_id: [fleet] for team_id, fleet in enumerate(fleets)
+    }
+    # Translate the empires mapping from arbitrary keys to the same
+    # team_id basis used by the compiler.
+    empires_by_team_id: Dict[int, Any] = {}
+    for team_id, fleet in enumerate(fleets):
+        # Prefer explicit team_id key, fall back to fleet.owner_id, fall
+        # back to fleet id — callers may pass empires keyed either way.
+        empire = empires.get(team_id)
+        if empire is None:
+            empire = empires.get(fleet.owner_id)
+        if empire is not None:
+            empires_by_team_id[team_id] = empire
+
+    def _hook(outcome):
+        apply_outcome_to_fleets(
+            outcome,
+            fleets_by_team_id=fleets_by_team_id,
+            empires=empires_by_team_id or None,
+        )
+
+    return _hook
 
 
 # ---------------------------------------------------------------------------
@@ -137,12 +189,22 @@ def build_strategy_battle_spec(
 
 
 def _team_spec_for_fleet(fleet: "Fleet", *, team_id: int) -> TeamSpec:
+    # PROJ-269 Phase 4: invoke FormationResolver to compute per-ship poses.
+    entry_vector = EntryVector(origin=Vector2(0.0, 0.0), facing=0.0)
+    formation = _pick_formation_for_fleet(fleet)
+    poses = FormationResolver.resolve(
+        formation=formation,
+        entry_vector=entry_vector,
+        boundary=None,
+        ships=fleet.ships,
+    )
     ships: Tuple[ShipSpec, ...] = tuple(
-        _ship_spec_from_instance(ship) for ship in fleet.ships
+        _ship_spec_from_instance(ship, poses.get(ship.instance_id))
+        for ship in fleet.ships
     )
     task_force = TaskForceSpec(
         task_force_id=f"tf-fleet-{fleet.id}",
-        formation=None,
+        formation=formation,
         policies=CombatPolicies(),
         squadrons=(
             SquadronSpec(
@@ -155,25 +217,71 @@ def _team_spec_for_fleet(fleet: "Fleet", *, team_id: int) -> TeamSpec:
     return TeamSpec(
         team_id=team_id,
         name=f"Fleet {fleet.id}",
-        entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
+        entry_vector=entry_vector,
         fleet_hierarchy=(task_force,),
         ai_policy=AIPolicy(),
     )
 
 
-def _ship_spec_from_instance(ship: "ShipInstance") -> ShipSpec:
+def _pick_formation_for_fleet(fleet: "Fleet") -> FormationSpec:
+    """Pick the formation for a Fleet.
+
+    Priority:
+      1. Explicit `TaskForce.formation` if any TF on the fleet has one
+         set (first TF wins — Phase 4 MVP, richer per-TF resolution
+         lands with proper TF hierarchy handling).
+      2. `resolve_default_for_task_force(fleet.ships)` otherwise.
+    """
+    for tf in getattr(fleet, "task_forces", []) or []:
+        if getattr(tf, "formation", None) is not None:
+            return tf.formation
+    return resolve_default_for_task_force(fleet.ships)
+
+
+def _ship_spec_from_instance(
+    ship: "ShipInstance",
+    pose: Optional[Tuple[Vector2, float]] = None,
+) -> ShipSpec:
     theme_id = "Federation"
     if hasattr(ship, "design_data") and isinstance(ship.design_data, dict):
         theme_id = ship.design_data.get("theme_id", theme_id)
+
+    # PROJ-269 Phase 2: translate ShipInstance.components (Dict[str,
+    # ComponentState]) into a tuple of ComponentStateSpec. Sort by
+    # (component_id, instance_index) so the output is deterministic —
+    # downstream tests and outcome comparisons depend on stable order.
+    component_specs: Tuple[ComponentStateSpec, ...] = ()
+    instance_components = getattr(ship, "components", None) or {}
+    if instance_components:
+        sorted_states = sorted(
+            instance_components.values(),
+            key=lambda cs: (cs.component_id, cs.instance_index),
+        )
+        component_specs = tuple(
+            ComponentStateSpec(
+                component_id=cs.component_id,
+                instance_index=cs.instance_index,
+                current_hp=float(cs.current_hp),
+                is_active=bool(cs.is_active),
+            )
+            for cs in sorted_states
+        )
+
+    # PROJ-269 Phase 4: FormationResolver supplies the pose.
+    if pose is not None:
+        position, angle = pose
+    else:
+        position, angle = Vector2(0.0, 0.0), 0.0
+
     return ShipSpec(
         instance_id=ship.instance_id,
         design_id=ship.design_id,
         theme_id=theme_id,
         name=ship.name,
-        position=Vector2(0.0, 0.0),
-        angle=0.0,
+        position=position,
+        angle=float(angle),
         velocity=Vector2(0.0, 0.0),
-        components=(),  # Phase 2 wires ShipInstance.components persistence.
+        components=component_specs,
     )
 
 

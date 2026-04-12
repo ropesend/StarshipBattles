@@ -137,10 +137,14 @@ class AIController:
             List of enemy entities (ships and optionally missiles)
         """
         # PROJ-254: Use exact-distance query to avoid broad-phase false positives
+        # PROJ-269 Phase 3 Task 3.4: N-team targeting — every non-self team
+        # counts as enemy (no alliances, no target preference). Ignores
+        # `self.enemy_team_id` in favor of `obj.team_id != self.ship.get_team_id()`.
         candidates = self.grid.query_radius_exact(self.ship.get_position(), BattleTuning.TARGET_QUERY_RADIUS)
+        my_team_id = self.ship.get_team_id()
         enemies = [obj for obj in candidates
                    if obj.is_alive and is_combatant(obj)
-                   and obj.team_id == self.enemy_team_id
+                   and obj.team_id != my_team_id
                    and obj != exclude]
 
         if include_missiles:

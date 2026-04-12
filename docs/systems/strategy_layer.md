@@ -271,6 +271,43 @@ Role categories:
 - `role_override: Optional[str]` — player override per instance
 - `effective_role` property — returns override if set, else design_role
 
+### TaskForce.formation (PROJ-269 Phase 4)
+
+`TaskForce.formation: Optional[FormationSpec]` stores the combat
+formation authored for the task force. `None` means "use the
+design-role default" — resolved at battle start by
+`FormationResolver.resolve(...)` consuming `resolve_default_for_task_force`.
+
+Serialized on `TaskForce.to_dict()` / `from_dict()`. Missing key in
+legacy saves deserializes to `None` (CLAUDE.md "saves are disposable"
+rule applies).
+
+See `docs/systems/combat_simulation.md` §0 "Formation System" for the
+8 shapes, rotation pipeline, and design-role-to-default mapping.
+
+### Per-Component HP Persistence (PROJ-269 Phase 2)
+
+`ShipInstance.components: Dict[str, ComponentState]` tracks per-component
+state across battles. Keyed by `"{component_id}#{instance_index}"` so
+multiple identical components on a ship (e.g. three seeker missiles)
+are disambiguated. `ComponentState` carries `component_id`,
+`instance_index`, `current_hp`, `is_active`.
+
+The round-trip: the strategy battle compiler
+([game/strategy/combat/spec_compiler.py](../../game/strategy/combat/spec_compiler.py))
+translates `ShipInstance.components` into `BattleSpec.ships[...].components`
+(tuple of `ComponentStateSpec`). After the battle, `BattleSpec.post_battle_hook`
+(defaults to `apply_outcome_to_fleets` from
+[game/strategy/combat/post_battle_hook.py](../../game/strategy/combat/post_battle_hook.py))
+writes the post-battle HP back into `ShipInstance.components`. See
+`docs/systems/combat_simulation.md` §0 for the full flow.
+
+Ships accumulate damage across battles — no automatic repair between
+strategy turns. Repair is a future project.
+
+Legacy `ShipInstance.component_damage: Dict[str, int]` (single-instance
+granularity) coexists with `components` during the PROJ-269 transition.
+
 **DesignMetadata field:** `design_role: str` — extracted during `from_design_file()`,
 used by `DesignSelectorWindow` role filter dropdown.
 

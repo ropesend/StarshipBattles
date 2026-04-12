@@ -50,11 +50,135 @@ outcome = run_battle(
 )
 ```
 
-Phase 1 hooks that have no enforcement yet: `boundary`, `modifier_stack`,
-`telemetry_level`. They round-trip through the spec/outcome but the engine
-does not interpret them. Phase 3 wires boundary enforcement; Phase 5 wires
-telemetry subscribers and modifier-stack application; Phase 2 wires
-per-component HP persistence.
+Phase 1 hooks not yet enforced by the engine: `modifier_stack`,
+`telemetry_level`. They round-trip through the spec/outcome but the
+engine does not interpret them yet. Phase 5 wires telemetry
+subscribers and modifier-stack application. `boundary` is fully
+enforced as of Phase 3 (see below).
+
+### Boundary Region (Phase 3)
+
+`BattleEngine.boundary: BoundaryRegion` is enforced every tick by
+`BoundaryEnforcementPhase` at priority 250 (after ship movement,
+before attacks). For each alive ship, the engine calls
+`boundary.contains(ship.position)`; if False, it dispatches to
+`_apply_exit_policy(ship, boundary.exit_policy)` with one of:
+
+| ExitPolicy | Effect |
+|------------|--------|
+| `DESTROY` | Ship is killed via `combat_engine.take_damage(remaining_hp)`; `ShipStatus.DESTROYED` in outcome |
+| `RETREAT` | Ship removed from `engine.ships` and appended to `engine.retreated_ships`; `ShipStatus.RETREATED` in outcome |
+| `BOUNCE` | Ship position clamped to `boundary.closest_inside_point`; velocity reflected (Rect: flip X/Y, Circle: radial reflect) |
+| `NONE` | No-op — ship may exit freely (unbounded Combat Lab scenarios) |
+
+Boundary shapes: `RectBoundary(width, height)`, `CircleBoundary(radius)`,
+`UnboundedRegion()` — all centered on `(0, 0)`.
+`BattleSpec.boundary=None` is equivalent to `UnboundedRegion()`.
+
+Retreat is a special case of boundary exit with the `RETREAT` policy
+— no separate retreat mechanic.
+
+### Formation System (Phase 4)
+
+Ship positions at battle start are computed by `FormationResolver`
+([game/simulation/combat/formation.py](../../game/simulation/combat/formation.py))
+from three inputs:
+
+1. `FormationSpec(shape, spacing, custom_positions=())` carried on
+   `TaskForceSpec.formation`
+2. The team's `EntryVector(origin, facing)` — where the formation
+   anchors in world space
+3. The fleet's ship list (order = position assignment)
+
+Supported `FormationShape` values (8 total):
+
+| Shape | Local-frame pattern (facing = +x) |
+|-------|-----------------------------------|
+| `LINE_ABREAST` | Perpendicular to facing; symmetric around y=0 |
+| `LINE_ASTERN` | Single file along +x: (0,0), (s,0), (2s,0)... |
+| `WEDGE` | Leader at (0,0); each row k behind at (-k·s, ±k·s) |
+| `ECHELON_LEFT` | Diagonal up-left: (-i·s, +i·s) |
+| `ECHELON_RIGHT` | Diagonal down-left: (-i·s, -i·s) |
+| `SCREEN` | Main line x=0 + screen column x=+s |
+| `CARRIER_PROTECTED` | ~n/3 carriers at origin; rest on ring of radius=s |
+| `CUSTOM` | `custom_positions` tuple used verbatim |
+
+World-space pipeline for each ship: local_pos → rotate by `facing` (°, CCW) → translate by `origin` → optional clamp to `boundary.closest_inside_point`. Every ship's `angle = entry_vector.facing`.
+
+Default formation when `TaskForce.formation is None` comes from
+`resolve_default_for_task_force(ships)` — dominant `design_role` bucket:
+
+| Dominant archetype | Default shape |
+|---------------------|--------------|
+| Carrier (`carrier`) | CARRIER_PROTECTED |
+| Strike (`interceptor`/`assault_ship`/`raider`/`missile_platform`) | WEDGE |
+| Defender (`line_combatant`/`fleet_escort`/`defensive_platform`/`shield_projector`) | LINE_ABREAST |
+| Scout (`scout`/`command_ship`/`sensor_platform`) | LINE_ASTERN |
+| Mixed / unknown roles | LINE_ABREAST (fallback) |
+
+Ties → LINE_ABREAST. Compilers consult `_pick_formation_for_fleet`
+(first explicit `TaskForce.formation` wins, else default).
+
+### N-Team Support (Phase 3)
+
+The engine supports any number of teams. Internal APIs:
+
+| Method | Returns |
+|--------|---------|
+| `engine.teams: Dict[int, List[Ship]]` | Ships grouped by team_id (property, always in sync) |
+| `engine.get_ships_by_team(team_id)` | All ships with that team_id |
+| `engine.get_enemies_of(ship)` | All ships whose `team_id != ship.team_id` (no alliances) |
+| `engine.start_teams(teams: Dict[int, List[Ship]], ...)` | N-team version of `start()` |
+
+`engine.start(team0, team1, ...)` remains a backward-compat 2-team
+wrapper.
+
+`TeamEliminatedCondition` fires when **≤1 team retains alive ships**
+(correct for any N). Equivalent to the old "any team has 0 alive"
+semantic for 2-team battles. `TeamIncapacitatedCondition` analogous.
+
+AI targeting: `AIController._find_enemies_in_radius` filters on
+`obj.team_id != self.ship.get_team_id()` — every non-self team is
+equally hostile. No target preference between teams.
+
+`engine.get_winner()` returns the sole surviving team_id when exactly
+one team is alive; -1 otherwise.
+
+### Component HP Persistence (Phase 2)
+
+Per-component HP persists across strategy battles via the
+`ShipSpec.components → BattleOutcome.components → ShipInstance.components`
+round-trip. A ship that enters battle with one component at 40% HP is
+reported at ≤40% HP in the outcome, and the `PostBattleHook` writes
+that back to the `ShipInstance` so the NEXT battle's compiled spec
+carries the same damage.
+
+Flow:
+1. `ShipInstance.components: Dict[str, ComponentState]`
+   ([game/strategy/data/component_state.py](../../game/strategy/data/component_state.py))
+   keyed by `"{component_id}#{instance_index}"` — disambiguates
+   identical components (e.g. three seeker missiles).
+2. `build_strategy_battle_spec(...)` translates each `ComponentState`
+   into a `ComponentStateSpec` on `ShipSpec.components`.
+3. `run_battle(spec, ...)` applies per-component HP after the ship
+   builder runs (`_apply_spec_components_to_ship`), then runs the
+   battle.
+4. `extract_outcome(engine, spec)` reads each Ship's per-component
+   final HP into `ShipOutcome.components` via `_extract_component_states`.
+5. `post_battle_hook(outcome)` (the strategy compiler attaches
+   `apply_outcome_to_fleets` by default) writes per-component HP back
+   into `ShipInstance.components` for survivors, removes destroyed /
+   retreated ships from their fleets, and prunes empty fleets from
+   their empire.
+
+Ships are never "repaired" between battles — component HP only
+decreases over a ship's lifetime unless an explicit repair mechanic
+adjusts it. Repair is a separate future project.
+
+Legacy `ShipInstance.component_damage: Dict[str, int]` (single-instance
+granularity) coexists with `components` during the PROJ-269 transition
+so 40+ existing call sites continue to work. Consolidation is a
+follow-up.
 
 **Smoke-test flag (Phase 1 only):**
 

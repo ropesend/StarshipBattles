@@ -7,6 +7,8 @@ organizational level: Fleet -> TaskForce -> Squadron -> Ships.
 
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 
+from game.core.math import Vector2
+from game.simulation.combat.formation import FormationShape, FormationSpec
 from game.strategy.data.fleet_hierarchy import (
     FleetHierarchyNode,
     CombatPolicy,
@@ -34,6 +36,7 @@ class TaskForce(FleetHierarchyNode):
         policy: Optional[CombatPolicy] = None,
         battle_role: Optional[BattleRole] = None,
         flagship_id: Optional[str] = None,
+        formation: Optional[FormationSpec] = None,
     ):
         super().__init__(
             name=name,
@@ -43,6 +46,9 @@ class TaskForce(FleetHierarchyNode):
             flagship_id=flagship_id,
         )
         self._squadrons: List[Squadron] = []
+        # PROJ-269 Phase 4: formation authored for this task force.
+        # `None` → design-role default resolved by `FormationResolver`.
+        self.formation: Optional[FormationSpec] = formation
 
     @property
     def squadrons(self) -> List[Squadron]:
@@ -78,6 +84,10 @@ class TaskForce(FleetHierarchyNode):
         if self._squadrons:
             data["squadrons"] = [sq.to_dict() for sq in self._squadrons]
 
+        # PROJ-269 Phase 4: formation (omitted when None for back-compat).
+        if self.formation is not None:
+            data["formation"] = _formation_to_dict(self.formation)
+
         return data
 
     @classmethod
@@ -89,15 +99,44 @@ class TaskForce(FleetHierarchyNode):
         if "battle_role" in data:
             battle_role = BattleRole(data["battle_role"])
 
+        formation = _formation_from_dict(data.get("formation"))
+
         tf = cls(
             name=data["name"],
             node_id=data.get("node_id"),
             policy=policy,
             battle_role=battle_role,
             flagship_id=data.get("flagship_id"),
+            formation=formation,
         )
 
         for sq_data in data.get("squadrons", []):
             tf.add_squadron(Squadron.from_dict(sq_data))
 
         return tf
+
+
+# ---------------------------------------------------------------------------
+# FormationSpec (de)serialization helpers — local to TaskForce since it is
+# the only strategy-layer holder of FormationSpec today.
+# ---------------------------------------------------------------------------
+
+
+def _formation_to_dict(formation: FormationSpec) -> Dict[str, Any]:
+    return {
+        "shape": formation.shape.value,
+        "spacing": float(formation.spacing),
+        "custom_positions": [
+            [float(p.x), float(p.y)] for p in formation.custom_positions
+        ],
+    }
+
+
+def _formation_from_dict(data: Optional[Dict[str, Any]]) -> Optional[FormationSpec]:
+    if data is None:
+        return None
+    shape = FormationShape(data["shape"])
+    spacing = float(data.get("spacing", 100.0))
+    raw_positions = data.get("custom_positions", [])
+    custom = tuple(Vector2(float(p[0]), float(p[1])) for p in raw_positions)
+    return FormationSpec(shape=shape, spacing=spacing, custom_positions=custom)
