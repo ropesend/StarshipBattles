@@ -169,13 +169,13 @@ engine = create_battle_engine_with_ships(team0_count=3, team1_count=2)
 **Fixtures:**
 | Fixture | Scope | Description |
 |---------|-------|-------------|
-| `strategy_manager_with_test_data` | function | StrategyManager loaded with test AI policies |
+| `policy_manager_with_test_data` | function | PolicyManager loaded with test AI policies |
 
 **Usage:**
 ```python
-def test_ai_targeting(strategy_manager_with_test_data):
-    manager = strategy_manager_with_test_data
-    # Manager has test targeting, movement, and strategy policies loaded
+def test_ai_targeting(policy_manager_with_test_data):
+    manager = policy_manager_with_test_data
+    # Manager has test targeting and movement policies loaded
 ```
 
 ---

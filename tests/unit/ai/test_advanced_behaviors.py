@@ -36,41 +36,32 @@ def advanced_setup():
 class TestAdvancedBehaviors:
 
     def test_kite_behavior(self, advanced_setup):
-        """Test KiteBehavior navigation logic."""
+        """Test KiteBehavior smooth orbital navigation."""
         kite = KiteBehavior(advanced_setup['mock_controller'])
 
-        # Strategy: Engage at max range
         strategy = {'engage_distance': 'max_range'}
-
-        # Setup mock return values explicitly to avoid odd collisions
         advanced_setup['mock_controller'].get_engage_distance_multiplier = MagicMock(return_value=1.0)
         advanced_setup['mock_controller'].check_avoidance = MagicMock(return_value=None)
 
-        # Scenario 1: Target too far (2000 > 1000)
-        # Should navigate TO target
-        advanced_setup['target'].position = pygame.math.Vector2(2000, 0)
-        # Scenario 1: Target too far (2000 > 1000)
-        # Should navigate TO target
+        # Scenario 1: Target far away (2000 > 1000 weapon range)
+        # Should navigate mostly toward target with some tangential component
         advanced_setup['target'].position = pygame.math.Vector2(2000, 0)
         kite.update(advanced_setup['target'], strategy)
 
-        # Check navigate_to call
-        # navigate_to(target_pos, stop_dist=opt_dist)
-        advanced_setup['mock_controller'].navigate_to.assert_called_with(
-            advanced_setup['target'].position,
-            stop_dist=1000.0  # max_range * 1.0
-        )
+        args, kwargs = advanced_setup['mock_controller'].navigate_to.call_args
+        dest = args[0]
+        assert dest.x > 0, "Should move toward target (positive X)"
+        assert kwargs.get('stop_dist', 0) == 0, "Should always thrust (stop_dist=0)"
 
-        # Scenario 2: Target too close (500 < 1000)
+        # Scenario 2: Target too close (500 < 1000 weapon range)
         advanced_setup['target'].position = pygame.math.Vector2(500, 0)
-
         kite.update(advanced_setup['target'], strategy)
 
-        # Should navigate AWAY (Kite position)
         args, _ = advanced_setup['mock_controller'].navigate_to.call_args
-        dest = args[0]  # target_pos
-        assert dest.x == pytest.approx(-500.0, abs=1.0)
-        assert dest.y == 0
+        dest = args[0]
+        rel = dest - pygame.math.Vector2(0, 0)  # ship at origin
+        # Should move outward (away from target) with tangential component
+        assert rel.x < 0 or abs(rel.y) > 0, "Should orbit outward when too close"
 
     def test_attack_run_behavior(self, advanced_setup):
         """Test AttackRun (Boom and Zoom) logic."""
@@ -140,4 +131,93 @@ class TestAdvancedBehaviors:
 
         assert rel_move.x < 0  # Moving Left (Inward)
         assert rel_move.y < 0  # Moving Up (Orbit)
+
+
+class TestKiteBehaviorSmooth:
+    """Tests for smooth orbital kite behavior.
+
+    The kite behavior should smoothly transition from closing to orbiting
+    as the ship approaches optimal range, rather than stopping and reversing.
+    """
+
+    def test_far_from_target_navigates_toward(self, advanced_setup):
+        """When far from optimal range, ship should close in toward target."""
+        kite = KiteBehavior(advanced_setup['mock_controller'])
+        strategy = {'engage_distance': 'max_range'}
+        advanced_setup['mock_controller'].get_engage_distance_multiplier = MagicMock(return_value=1.0)
+        advanced_setup['mock_controller'].check_avoidance = MagicMock(return_value=None)
+
+        # Ship at origin, target at 3000 — well beyond weapon range 1000
+        advanced_setup['mock_controller'].ship.get_position.return_value = pygame.math.Vector2(0, 0)
+        advanced_setup['target'].position = pygame.math.Vector2(3000, 0)
+
+        kite.update(advanced_setup['target'], strategy)
+
+        args, _ = advanced_setup['mock_controller'].navigate_to.call_args
+        dest = args[0]
+        # Should navigate mostly toward target (positive X)
+        rel = dest - pygame.math.Vector2(0, 0)
+        assert rel.x > 0, "Ship should move toward target when far away"
+
+    def test_at_optimal_range_orbits_tangentially(self, advanced_setup):
+        """At optimal range, ship should orbit (tangential movement, not stop/reverse)."""
+        kite = KiteBehavior(advanced_setup['mock_controller'])
+        strategy = {'engage_distance': 'max_range'}
+        advanced_setup['mock_controller'].get_engage_distance_multiplier = MagicMock(return_value=1.0)
+        advanced_setup['mock_controller'].check_avoidance = MagicMock(return_value=None)
+
+        # Ship at optimal distance from target (1000 units = weapon range * 1.0)
+        advanced_setup['mock_controller'].ship.get_position.return_value = pygame.math.Vector2(1000, 0)
+        advanced_setup['target'].position = pygame.math.Vector2(0, 0)
+
+        kite.update(advanced_setup['target'], strategy)
+
+        args, kwargs = advanced_setup['mock_controller'].navigate_to.call_args
+        dest = args[0]
+        ship_pos = pygame.math.Vector2(1000, 0)
+        rel = dest - ship_pos
+
+        # At optimal range, movement should be primarily tangential (Y component)
+        # not radially away (positive X) as the old behavior would do
+        assert abs(rel.y) > abs(rel.x) * 0.5, \
+            f"At optimal range, tangential component should dominate, got rel={rel}"
+
+    def test_too_close_moves_outward_while_orbiting(self, advanced_setup):
+        """When too close, ship should have outward + tangential component."""
+        kite = KiteBehavior(advanced_setup['mock_controller'])
+        strategy = {'engage_distance': 'max_range'}
+        advanced_setup['mock_controller'].get_engage_distance_multiplier = MagicMock(return_value=1.0)
+        advanced_setup['mock_controller'].check_avoidance = MagicMock(return_value=None)
+
+        # Ship at 500 units — well inside optimal range of 1000
+        advanced_setup['mock_controller'].ship.get_position.return_value = pygame.math.Vector2(500, 0)
+        advanced_setup['target'].position = pygame.math.Vector2(0, 0)
+
+        kite.update(advanced_setup['target'], strategy)
+
+        args, _ = advanced_setup['mock_controller'].navigate_to.call_args
+        dest = args[0]
+        ship_pos = pygame.math.Vector2(500, 0)
+        rel = dest - ship_pos
+
+        # Should move outward (positive X = away from target at origin)
+        assert rel.x > 0, "Ship should have outward component when too close"
+        # Should also have tangential component (orbiting, not just fleeing)
+        assert abs(rel.y) > 0, "Ship should have tangential component even when too close"
+
+    def test_navigate_to_called_with_zero_stop_dist(self, advanced_setup):
+        """Ship should always thrust (stop_dist=0) for continuous movement."""
+        kite = KiteBehavior(advanced_setup['mock_controller'])
+        strategy = {'engage_distance': 'max_range'}
+        advanced_setup['mock_controller'].get_engage_distance_multiplier = MagicMock(return_value=1.0)
+        advanced_setup['mock_controller'].check_avoidance = MagicMock(return_value=None)
+
+        # At optimal range
+        advanced_setup['mock_controller'].ship.get_position.return_value = pygame.math.Vector2(1000, 0)
+        advanced_setup['target'].position = pygame.math.Vector2(0, 0)
+
+        kite.update(advanced_setup['target'], strategy)
+
+        _, kwargs = advanced_setup['mock_controller'].navigate_to.call_args
+        assert kwargs.get('stop_dist', 0) == 0, "Should never stop — always thrust"
 

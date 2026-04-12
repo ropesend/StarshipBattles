@@ -21,7 +21,7 @@ game/ai/
     patrol_zone.py               # Loose zone coverage
     free_maneuver.py             # No spatial constraints
   group_target_coordinator.py  # Focus fire, reserves, flagship succession
-  strategy_manager.py          # StrategyManager (via ApplicationContext) - loads/resolves strategies
+  policy_manager.py            # PolicyManager (via ApplicationContext) - loads targeting/movement policies
   target_evaluator.py          # TargetEvaluator - scores potential targets
   combat_utils.py              # Shared helpers (distance, HP, PDC arc checks)
   ai_factory.py                # AIControllerFactory - two-phase creation
@@ -43,7 +43,7 @@ game/ai/
 
 1. **Alive check** -- dead ships do nothing.
 2. **Throttle reset** -- set engine and turn throttle to 1.0.
-3. **Strategy resolution** -- `StrategyManager.resolve_strategy(ship.ai_strategy)` returns targeting rules and movement policy.
+3. **Policy resolution** -- `PolicyManager` resolves `ship.movement_policy` and `ship.targeting_policy` to full policy definitions.
 4. **Target acquisition** -- reuse current target if alive, otherwise call `find_target()`.
 5. **Secondary targets** -- if ship has multiplex tracking (`max_targets > 1`), find additional targets.
 6. **Behavior selection** (see flowchart below).
@@ -78,7 +78,7 @@ All behaviors extend `AIBehavior(controller)` with `enter()` and `update(target,
 
 | Behavior | Key | Description |
 |----------|-----|-------------|
-| **KiteBehavior** | `kite` | Maintain optimal weapon range. Close in if too far, back off if too close. Supports collision avoidance. |
+| **KiteBehavior** | `kite` | Smooth orbital range-keeping. Blends radial (toward/away) and tangential (orbiting) vectors based on distance from optimal range. Ships close in from far away, smoothly transition to orbiting at range, and spiral outward if too close. Never stops or reverses. Supports collision avoidance. |
 | **AttackRunBehavior** | `attack_run` | Two-phase state machine: APPROACH until within range, then RETREAT for `retreat_duration` seconds. Cycles automatically. |
 | **RamBehavior** | `ram` | Navigate straight to target position, no collision avoidance. |
 | **FleeBehavior** | `flee` | Move away from target. `fire_while_retreating` controls whether weapons fire. |
@@ -173,45 +173,48 @@ Dead enemies are automatically filtered. Returns `None` if no valid enemies.
 
 ---
 
-## StrategyManager
+## PolicyManager
 
-Service (managed by ApplicationContext) that loads and resolves per-ship combat strategies from JSON data files.
+Service (managed by ApplicationContext) that loads and provides lookup for per-ship targeting and movement policies from JSON data files.
 
 ### Data Files (in `data/`)
 
 | File | Contents |
 |------|----------|
-| `targeting_policies.json` | Named targeting policies with scoring rules |
-| `movement_policies.json` | Named movement policies (behavior, engage_distance, thresholds) |
-| `combat_strategies.json` | Named strategies that reference one targeting + one movement policy |
-| `group_policies.json` | Group-level policy presets for fleet hierarchy nodes (see Strategy Layer doc) |
+| `targeting_policies.json` | Named targeting policies with scoring rules (standard, sniper, brawler, anti_fighter, self_defense) |
+| `movement_policies.json` | Named movement policies: behavior type, engage_distance, retreat threshold, etc. |
+| `group_policies.json` | Group-level combat policy presets for fleet hierarchy nodes (see Strategy Layer doc) |
 
 ### Resolution
 
-`resolve_strategy(strategy_id)` returns a fully composed dict:
+Ships reference policies directly via `ship.movement_policy` and `ship.targeting_policy`. The controller resolves these each tick:
 
 ```python
-{
-    'definition': { ... },       # Raw strategy entry
-    'targeting': { 'rules': [...] },  # Resolved targeting policy
-    'movement': { 'behavior': 'kite', 'engage_distance': 'max_range', ... }
+# AIController.get_resolved_policies()
+pm = get_default_policy_manager()
+return {
+    'targeting': pm.get_targeting_policy(ship.get_targeting_policy()),
+    'movement': pm.get_movement_policy(ship.get_movement_policy()),
 }
 ```
 
-Ships reference a strategy by ID string (e.g., `'standard_ranged'`, `'aggressive'`) via `ship.ai_strategy`. The controller resolves this each tick.
+### Fleet Hierarchy Overrides
 
-### Test Strategies
+At battle time, `FleetBattleAdapter.to_battle_ships()` resolves the fleet hierarchy (Fleet → TaskForce → Squadron → per-ship override) and maps group movement policy keys to per-ship movement policy IDs via `group_policies.json`. This override is applied to the Ship object before battle starts, so the AIController always reads the effective policy.
 
-Predefined strategies for Combat Lab scenarios:
+### Test Policies
 
-| Strategy ID | Behavior | Purpose |
-|-------------|----------|---------|
-| `test_stationary_fire` | `stationary_fire` | Stay still, fire at targets |
+Predefined movement policies for Combat Lab scenarios:
+
+| Policy ID | Behavior | Purpose |
+|-----------|----------|---------|
+| `test_stationary` | `stationary_fire` | Stay still, fire at targets |
 | `test_do_nothing` | `do_nothing` | No movement, no firing |
 | `test_straight_line` | `straight_line` | Full thrust in facing direction |
 | `test_rotate_right` | `rotate_only` (dir=1) | Clockwise rotation |
 | `test_rotate_left` | `rotate_only` (dir=-1) | Counter-clockwise rotation |
 | `test_erratic` | `erratic` | Random direction changes |
+| `test_erratic_leashed` | `erratic` | Random movement with leash constraint |
 
 No-target behaviors (execute without an enemy target): `straight_line`, `rotate_only`, `erratic`, `do_nothing`, `stationary_fire`.
 
@@ -251,7 +254,7 @@ The interface covers:
 - **Position/movement reads:** `get_position()`, `get_rotation()`, `get_max_speed()`, etc.
 - **Movement controls:** `set_throttle()`, `rotate()`, `thrust_forward()`, `adjust_position()`
 - **Combat:** `get_weapon_range()`, `set_trigger_pulled()`, target management
-- **Identity:** `get_team_id()`, `is_alive()`, `get_ai_strategy()`, `get_vehicle_type()`
+- **Identity:** `get_team_id()`, `is_alive()`, `get_movement_policy()`, `get_targeting_policy()`, `get_vehicle_type()`
 
 ---
 
@@ -296,11 +299,11 @@ TypeGuard functions (`is_grid_entity()`, `is_projectile()`, etc.) use duck-typin
 | Movement behaviors | `game/ai/behaviors.py` |
 | Spatial behaviors | `game/ai/spatial_behaviors/` (package) |
 | Group coordinator | `game/ai/group_target_coordinator.py` |
-| StrategyManager | `game/ai/strategy_manager.py` |
+| PolicyManager | `game/ai/policy_manager.py` |
 | TargetEvaluator | `game/ai/target_evaluator.py` |
 | Combat utilities | `game/ai/combat_utils.py` |
 | AIControllerFactory | `game/ai/ai_factory.py` |
 | IControllable + Adapter | `game/ai/interfaces/controllable.py` |
 | AI protocols | `game/ai/protocols.py` |
-| Per-ship strategy data | `data/combat_strategies.json`, `data/targeting_policies.json`, `data/movement_policies.json` |
+| Per-ship policy data | `data/targeting_policies.json`, `data/movement_policies.json` |
 | Group policy data | `data/group_policies.json` |

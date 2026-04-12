@@ -47,7 +47,8 @@ purpose typically go in **OUTER** (or **INNER** for protected placement).
   "theme_id": "Federation",
   "team_id": 0,
   "color": [100, 100, 255],
-  "ai_strategy": "standard_ranged",
+  "movement_policy": "kite_max",
+  "targeting_policy": "standard",
   "design_role": "resource_harvester",
   "layers": {
     "CORE": [
@@ -124,7 +125,8 @@ purpose typically go in **OUTER** (or **INNER** for protected placement).
 | `theme_id` | Yes | Visual theme (e.g., "Federation") |
 | `team_id` | Yes | Default team (0) |
 | `color` | Yes | RGB color array |
-| `ai_strategy` | Yes | AI behavior key (standard for complexes: `"standard_ranged"`) |
+| `movement_policy` | Yes | Movement behavior key (standard for complexes: `"kite_max"`) |
+| `targeting_policy` | Yes | Targeting rule set (standard for complexes: `"standard"`) |
 | `design_role` | Yes | Classification label from `data/design_roles.json`. Common complex roles: `resource_harvester`, `production_facility`, `planetary_modifier`, `stellar_protector`, `enrichment_facility`, `resupply_depot`, `construction_accelerator`, `defensive_platform` |
 | `layers` | Yes | Component layout (CORE, INNER, OUTER, ARMOR) |
 | `resources` | Yes | Initial resource levels |

@@ -60,7 +60,7 @@ Six layers with strict downward-only dependency flow:
 
 | Module                | Description |
 |-----------------------|-------------|
-| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages all 10 services. |
+| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages all 9 services. |
 
 ### `game/core/` -- Foundation layer, no game-layer dependencies
 
@@ -84,7 +84,6 @@ Six layers with strict downward-only dependency flow:
 | `json_utils.py`       | JSON serialization helpers |
 | `singleton.py`        | SingletonMeta metaclass (deprecated — no production users, kept for reference) |
 | `profiling.py`        | Profiler, profile_action for performance |
-| `strategy_metadata.py`| Strategy-layer metadata types |
 | `string_utils.py`     | String utility functions |
 | `validation_helpers.py`| Validation helper utilities |
 | `patterns/`           | `layer_iterator.py` -- generic layer iteration pattern |
@@ -137,7 +136,7 @@ Six layers with strict downward-only dependency flow:
 | `behaviors.py`       | 11 behavior classes (Kite, AttackRun, Ram, Flee, Orbit, StationaryFire, DoNothing, StraightLine, RotateOnly, Erratic + base AIBehavior) |
 | `spatial_behaviors/`  | Spatial positioning system: BattleLine, Column, Screen, Escort, PatrolZone, FreeManeuver. Replaces old ShipFormation. |
 | `group_target_coordinator.py` | GroupTargetCoordinator -- focus fire, reserve commitment, flagship succession |
-| `strategy_manager.py`| StrategyManager -- resolves AI strategy names to definitions |
+| `policy_manager.py`  | PolicyManager -- loads and provides lookup for targeting and movement policies |
 | `target_evaluator.py`| TargetEvaluator -- scores and prioritizes targets |
 | `ai_factory.py`      | AIControllerFactory -- creates controllers (moved from simulation layer) |
 | `combat_utils.py`    | Shared AI combat utility functions |
@@ -203,7 +202,7 @@ Fleet, ShipInstance, OrderType, Order, HexCoord, TurnEngine, GameSession, GameCo
 
 ### `game.ai` (12 exports)
 
-AIController, AIBehavior, KiteBehavior, AttackRunBehavior, RamBehavior, FleeBehavior, OrbitBehavior, StationaryFireBehavior, DoNothingBehavior, StrategyManager, TargetEvaluator, AIControllerFactory
+AIController, AIBehavior, KiteBehavior, AttackRunBehavior, RamBehavior, FleeBehavior, OrbitBehavior, StationaryFireBehavior, DoNothingBehavior, PolicyManager, TargetEvaluator, AIControllerFactory
 
 ### `game.ui` (7 module exports)
 

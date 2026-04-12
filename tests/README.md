@@ -44,7 +44,7 @@ tests/
 │   │   └── services/        # Combat Lab service tests
 │   └── ui/                  # UI panel/rendering tests
 ├── integration/             # Integration tests
-│   ├── ai_strategy/         # AI strategy integration
+│   ├── ai_strategy/         # AI policy integration
 │   ├── colonization/        # Colonization workflow tests
 │   ├── fleet_combat/        # Fleet combat tests
 │   ├── gameplay_loop/       # Full gameplay loop tests
@@ -84,7 +84,7 @@ conftest.py (project root)
         ├── pytest_configure() - Pre-import game.ui
         │
         ├── tests/unit/ai/conftest.py
-        │   └── [imports: unit_test_data_dir, strategy_manager_with_test_data]
+        │   └── [imports: unit_test_data_dir, policy_manager_with_test_data]
         │
         ├── tests/unit/builder/conftest.py
         │   └── builder_test_setup [autouse, function] - Placeholder (cleanup in root)

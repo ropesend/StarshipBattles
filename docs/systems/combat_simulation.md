@@ -216,7 +216,7 @@ Ship extends `PhysicsBody` (position, velocity, angle) and `ShipPhysicsMixin` (a
 - `current_target`, `secondary_targets`, `max_targets` -- targeting
 - Defense stats: `emissive_armor`, `shield_regenerating_armor`, `current_shields`, `max_shields`
 - Offense: `baseline_to_hit_offense`, `total_defense_score`
-- Metadata: `ai_strategy` (per-ship AI behavior), `design_role` (classification label from `data/design_roles.json`)
+- Metadata: `movement_policy` + `targeting_policy` (per-ship AI behavior), `design_role` (classification label from `data/design_roles.json`)
 
 **Initialization:** Requires `registries: GameRegistries` (strict DI, PROJ-50).
 Auto-equips default hull component from vehicle class definition.

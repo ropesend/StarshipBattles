@@ -143,7 +143,7 @@ Example ship structure:
   "team_id": 1,
   "ship_class": "TestM_2L",
   "theme_id": "Federation",
-  "ai_strategy": "test_do_nothing",
+  "movement_policy": "test_do_nothing",
   "layers": {
     "CORE": [
       {"id": "test_bridge_basic"},

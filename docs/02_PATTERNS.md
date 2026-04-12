@@ -50,13 +50,13 @@ that needs service references. **Not a singleton** — the caller manages lifeti
 ```python
 # game/context.py
 class ApplicationContext:
-    def __init__(self, registry_manager, profiler, strategy_metadata,
-                 component_cache, strategy_manager, asset_manager,
+    def __init__(self, registry_manager, profiler,
+                 component_cache, policy_manager, asset_manager,
                  sprite_manager, ship_theme_manager, screenshot_manager,
                  game_settings):
         self.registry_manager = registry_manager
         self.profiler = profiler
-        # ... all 10 services
+        # ... all 9 services
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -75,9 +75,8 @@ class ApplicationContext:
 |---------|------|-------|
 | RegistryManager | `game/core/registry.py` | Core |
 | Profiler | `game/core/profiling.py` | Core |
-| StrategyMetadataService | `game/core/strategy_metadata.py` | Core |
 | ComponentCacheManager | `game/simulation/components/component_loader.py` | Simulation |
-| StrategyManager | `game/ai/strategy_manager.py` | AI |
+| PolicyManager | `game/ai/policy_manager.py` | AI |
 | AssetManager | `game/assets/asset_manager.py` | Assets |
 | SpriteManager | `game/ui/renderer/sprites.py` | UI |
 | ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
@@ -106,7 +105,7 @@ ctx = ApplicationContext.create_test(profiler=mock_profiler)
 ### Legacy: SingletonMeta (Deprecated)
 
 `SingletonMeta` (`game/core/singleton.py`) is retained but **no production code uses it**.
-No `.instance()` or `.reset()` methods exist on any of the 10 services.
+No `.instance()` or `.reset()` methods exist on any of the 9 services.
 
 ---
 
@@ -1312,5 +1311,5 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 - Use **BattleScreen / StrategyScreen**, not BattleScene / StrategyScene.
 - Use **VehicleDesignService**, not ShipBuilderService.
 - **ScreenshotManager** is at `game/ui/services/screenshot_manager.py`.
-- **StrategyManager** is at `game/ai/strategy_manager.py`.
+- **PolicyManager** is at `game/ai/policy_manager.py`.
 - **EventBus** is at `game/ui/screens/builder/event_bus.py`.

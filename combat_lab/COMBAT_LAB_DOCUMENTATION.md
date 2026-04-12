@@ -601,7 +601,7 @@ All non-hull components have **mass = 0**. Ship mass comes only from hull compon
     "color": [0, 0, 255],
     "team_id": 2,
     "ship_class": "TestS_2L",
-    "ai_strategy": "test_do_nothing",
+    "movement_policy": "test_do_nothing",
     "layers": {
         "CORE": [
             {"id": "test_armor_extreme_hp"}

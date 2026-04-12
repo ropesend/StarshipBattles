@@ -100,8 +100,8 @@ __all__ = [
     'OrbitBehavior',
     'StationaryFireBehavior',
     'DoNothingBehavior',
-    # Strategy
-    'StrategyManager',
+    # Policy
+    'PolicyManager',
     # Targeting
     'TargetEvaluator',
     # Factory

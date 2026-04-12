@@ -340,9 +340,8 @@ Key rules:
 | `data/homeworld_presets.json` | Homeworld planet configuration presets |
 | `data/race_names.json` | Generated race name pools |
 | `data/components.json` | All component definitions |
-| `data/combat_strategies.json` | Per-ship AI combat strategies (targeting + movement policy pairs) |
-| `data/targeting_policies.json` | Targeting rule sets for per-ship AI |
-| `data/movement_policies.json` | Movement behavior presets for per-ship AI |
+| `data/targeting_policies.json` | Targeting rule sets for per-ship AI (standard, sniper, brawler, anti_fighter, self_defense) |
+| `data/movement_policies.json` | Movement behavior presets for per-ship AI (kite_max, brawl_close, strafe_run, etc.) |
 | `data/group_policies.json` | Group-level combat policy presets (targeting, movement, retreat — 21 presets for fleet hierarchy) |
 | `data/design_roles.json` | Design role definitions (28 roles) with vehicle type restrictions — loaded by `DesignRoleRegistry` |
 

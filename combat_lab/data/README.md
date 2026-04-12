@@ -180,7 +180,7 @@ Test_Target_Erratic_Small.json     # Small maneuverable target
     "team_id": 2,
     "ship_class": "TestM_2L",
     "theme_id": "Federation",
-    "ai_strategy": "test_do_nothing",
+    "movement_policy": "test_do_nothing",
     "layers": {
         "CORE": [
             {"id": "test_armor_extreme_hp"}
@@ -213,7 +213,8 @@ Test_Target_Erratic_Small.json     # Small maneuverable target
 | `team_id` | int | Team number (1 or 2) | `2` |
 | `ship_class` | string | Hull type ID | `"TestM_2L"` |
 | `theme_id` | string | Visual theme | `"Federation"` |
-| `ai_strategy` | string | AI behavior | `"test_do_nothing"` |
+| `movement_policy` | string | Movement behavior policy | `"test_do_nothing"` |
+| `targeting_policy` | string | Targeting behavior policy (optional, default: `"standard"`) | `"standard"` |
 | `layers` | object | Component layers | See below |
 
 #### layers Object
@@ -279,7 +280,7 @@ If actual stats don't match after loading, warning is printed.
     "color": [255, 0, 0],
     "team_id": 1,
     "ship_class": "TestS_2L",
-    "ai_strategy": "test_do_nothing",
+    "movement_policy": "test_do_nothing",
     "layers": {
         "CORE": [
             {"id": "test_beam_low_acc_1dmg"}
@@ -305,7 +306,7 @@ If actual stats don't match after loading, warning is printed.
     "name": "Test Target Stationary",
     "team_id": 2,
     "ship_class": "TestS_2L",  // hull_test_s = mass 400
-    "ai_strategy": "test_do_nothing",
+    "movement_policy": "test_do_nothing",
     "layers": {
         "CORE": [
             {"id": "test_armor_extreme_hp"}  // 1B HP, mass 0
@@ -339,7 +340,7 @@ If actual stats don't match after loading, warning is printed.
 {
     "name": "Test Target Erratic Small",
     "ship_class": "TestS_2L",  // hull_test_s = mass 400
-    "ai_strategy": "test_erratic_maneuver",
+    "movement_policy": "test_erratic_maneuver",
     "layers": {
         "CORE": [
             {"id": "test_armor_small_extreme_hp"},  // 1B HP, mass 0
@@ -354,10 +355,10 @@ If actual stats don't match after loading, warning is printed.
 }
 ```
 
-### AI Strategies
+### Movement Policies
 
-| Strategy | Behavior | Used For |
-|----------|----------|----------|
+| Policy | Behavior | Used For |
+|--------|----------|----------|
 | `test_do_nothing` | No movement, no actions | Stationary targets, attackers |
 | `test_erratic_maneuver` | Random acceleration/turning | Moving target tests |
 
@@ -398,7 +399,7 @@ Hull mass comes from the default hull component, not a base_mass field. All non-
        "team_id": 1,
        "ship_class": "TestS_2L",
        "theme_id": "Federation",
-       "ai_strategy": "test_do_nothing",
+       "movement_policy": "test_do_nothing",
        "layers": {
            "CORE": [
                {"id": "test_projectile_std"}

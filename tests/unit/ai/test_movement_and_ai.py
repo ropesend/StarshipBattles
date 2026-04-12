@@ -118,7 +118,8 @@ class TestMovementAndAI:
 
         # Attacker is already configured as Cruiser in setUp
 
-        target = Ship("Test", 500, 0, (255, 0, 0), team_id=1, ship_class="Cruiser", registries=registries)
+        # Place target well beyond weapon range so ship closes in (thrusts forward)
+        target = Ship("Test", 5000, 0, (255, 0, 0), team_id=1, ship_class="Cruiser", registries=registries)
         target.mass = 100
 
         mock_grid = MagicMock()

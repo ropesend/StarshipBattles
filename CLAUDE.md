@@ -281,7 +281,7 @@ When faced with choices, prefer:
 
 ### Key Patterns (see `docs/02_PATTERNS.md` for full list)
 - **Registry Pattern** - Centralized component/ship/planet registration
-- **ApplicationContext DI** - `game/context.py` manages all 10 services (PROJ-258)
+- **ApplicationContext DI** - `game/context.py` manages all 9 services (PROJ-258)
 - **Protocol + TypeGuard** - Duck typing with runtime checks
 - **Dependency Injection** - IRegistryProvider for production/test split, ApplicationContext for services
 - **Facade/Delegate** - StrategySessionFacade, Ship→ShipCombatEngine

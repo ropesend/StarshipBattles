@@ -111,24 +111,34 @@ class FleeBehavior(AIBehavior):
         self.controller.navigate_to(flee_pos, stop_dist=0)
 
 class KiteBehavior(AIBehavior):
-    """Maintain optimal weapon range from target.
+    """Maintain optimal weapon range via smooth orbital approach.
 
-    Decision Tree:
-        1. Check collision avoidance (if enabled in strategy)
-           - If nearby collision detected → navigate away, return
-        2. Calculate optimal distance = weapon_range * engage_distance_multiplier
-           - Minimum distance clamped to MIN_SPACING
-        3. Compare current distance to optimal:
-           - If too far → close in toward target
-           - If too close → back off to maintain kite range
+    Instead of binary close-in/back-off, blends a radial component
+    (toward/away from target) with a tangential component (orbiting)
+    based on how far the ship is from optimal range. This produces
+    smooth circling at range rather than stop-and-reverse oscillation.
+
+    Blend Logic:
+        - Far from target: mostly radial (closing in), small tangent
+        - At optimal range: pure tangent (orbiting)
+        - Too close: outward radial + tangent (spiraling out while orbiting)
+
+    The radial weight is proportional to the distance error, clamped to [-1, 1].
+    The tangential weight is always present, ensuring continuous movement.
 
     Strategy Parameters:
         avoid_collisions (bool): Enable collision avoidance check (default: True)
         engage_distance (float|str): Range multiplier or 'max_range'/'ram' (default: 'max_range')
+        throttle_limit (float): Cap on throttle (0.0-1.0, default: None = no cap)
     """
 
     MIN_SPACING: int = AIConfig.MIN_SPACING
     DEFAULT_AVOIDANCE: bool = True
+    # How fast the radial correction ramps up as distance error grows.
+    # At error = opt_dist * RADIAL_GAIN, radial weight reaches 1.0.
+    RADIAL_GAIN: float = 1.0
+    # Navigation target offset distance
+    NAV_OFFSET: float = 200.0
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         # Collision avoidance if enabled
@@ -137,26 +147,59 @@ class KiteBehavior(AIBehavior):
             if override_pos:
                 self.controller.navigate_to(override_pos, stop_dist=0)
                 return
-        
-        # Get engage distance multiplier logic
-        engage_mult = self.controller.get_engage_distance_multiplier(strategy)
 
         # Calculate optimal distance
+        engage_mult = self.controller.get_engage_distance_multiplier(strategy)
         opt_dist = self.controller.ship.get_weapon_range() * engage_mult
         if opt_dist < self.MIN_SPACING:
-            opt_dist = self.MIN_SPACING  # Minimum spacing
+            opt_dist = self.MIN_SPACING
 
         ship_pos = self.controller.ship.get_position()
-        dist = ship_pos.distance_to(target.position)
+        vec_to_target = target.position - ship_pos
+        dist = vec_to_target.length()
 
-        if dist > opt_dist:
-            # Close in
-            self.controller.navigate_to(target.position, stop_dist=opt_dist)
+        if dist == 0:
+            # On top of target — flee in arbitrary direction
+            self.controller.navigate_to(ship_pos + Vector2(self.NAV_OFFSET, 0), stop_dist=0)
+            return
+
+        # Radial direction (toward target) and tangent (perpendicular, CCW orbit)
+        radial = vec_to_target.normalize()
+        tangent = Vector2(-radial.y, radial.x)
+
+        # Radial weight: positive = move inward, negative = move outward
+        # Scales linearly with distance error, clamped to [-1, 1]
+        error = dist - opt_dist
+        if opt_dist > 0:
+            radial_weight = max(-1.0, min(1.0, error / (opt_dist * self.RADIAL_GAIN)))
         else:
-            # Kite - maintain distance
-            kite_dir = _flee_direction(ship_pos, target.position)
-            kite_pos = target.position + kite_dir * opt_dist
-            self.controller.navigate_to(kite_pos, stop_dist=0)
+            radial_weight = -1.0 if dist < self.MIN_SPACING else 1.0
+
+        # Tangential weight: scales up as ship approaches optimal range.
+        # At 2x optimal distance, tangent is minimal (0.0). At optimal distance, tangent is 1.0.
+        # This ensures ships close in efficiently from far away, then smoothly transition to orbit.
+        if opt_dist > 0 and dist > opt_dist:
+            # Approaching: tangent grows from 0 to 1 as dist goes from 2*opt to opt
+            tangent_weight = max(0.0, min(1.0, 1.0 - (dist - opt_dist) / opt_dist))
+        else:
+            # At or inside optimal range: full tangent for smooth orbiting
+            tangent_weight = 1.0
+
+        # Blend radial and tangential components
+        move_dir = tangent * tangent_weight + radial * radial_weight
+        length = move_dir.length()
+        if length > 0:
+            move_dir = move_dir * (1.0 / length)  # normalize
+
+        # Navigate to a point along the blended direction
+        nav_target = ship_pos + move_dir * self.NAV_OFFSET
+
+        # Apply throttle limit if specified (e.g., hold_position uses low throttle)
+        throttle_limit = strategy.get('throttle_limit')
+        if throttle_limit is not None:
+            self.controller.ship.set_throttle(throttle_limit)
+
+        self.controller.navigate_to(nav_target, stop_dist=0)
 
 class AttackRunBehavior(AIBehavior):
     """Hit-and-run attack pattern with approach/retreat cycles.

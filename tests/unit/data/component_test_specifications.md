@@ -164,7 +164,7 @@ TEST_LOG_DIR = "tests/simulation/output/logs/"
         {
             "file": "tests/data/ships/Test_Engine_1x_LowMass.json",
             "position": [0, 0],
-            "ai_strategy": "straight_line"
+            "movement_policy": "straight_line"
         }
     ],
     "duration_ticks": 1000,

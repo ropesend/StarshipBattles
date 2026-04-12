@@ -19,7 +19,7 @@ Reference template for stationary target ships used in weapon testing.
 **Key Properties:**
 - `mass`: Affects target radius and defense score
 - `armor_component`: Determines HP pool
-- `ai_strategy`: Usually `test_do_nothing` for stationary targets
+- `movement_policy`: Usually `test_do_nothing` for stationary targets
 
 ### base_attacker_template.json
 Reference template for attacker ships with various weapon types.
@@ -34,7 +34,7 @@ Reference template for attacker ships with various weapon types.
 **Key Properties:**
 - `weapon_component`: Defines weapon stats (accuracy, damage, range, etc.)
 - `mass`: Usually 25.0 for attackers
-- `ai_strategy`: Usually `test_do_nothing`
+- `movement_policy`: Usually `test_do_nothing`
 
 ## Usage
 

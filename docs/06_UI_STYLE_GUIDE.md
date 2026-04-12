@@ -229,7 +229,7 @@ All defined as module-level tuples in `game/ui/colors.py`. Import by name:
 |----------|-----|---------|
 | `SECTION_HEADER_WEAPONS` | (200, 200, 150) | Weapons section |
 | `SECTION_HEADER_COMPONENTS` | (200, 200, 100) | Components section |
-| `AI_STRATEGY_TEXT` | (150, 200, 150) | AI strategy name |
+| `AI_STRATEGY_TEXT` | (150, 200, 150) | Movement/targeting policy name |
 | `METADATA_FILE_TEXT` | (150, 150, 200) | Source file path |
 
 ### Button Colors

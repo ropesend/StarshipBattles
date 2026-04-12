@@ -18,8 +18,8 @@ The most critical file. Provides two autouse fixtures that run for **every test*
    - Loads data via `SessionRegistryCache` (once per session, cached thereafter)
    - Calls `mgr.hydrate()` to populate the registry from cached data
    - Patches `ComponentCacheManager` and `load_vehicle_classes` to prevent disk I/O
-   - Hydrates `StrategyManager` from cache
-   - Post-test: resets all service instances (RegistryManager, event handler, component caches, StrategyManager, ShipThemeManager, ScreenshotManager, SpriteManager) via `set_default_xxx()` calls
+   - Hydrates `PolicyManager` from cache
+   - Post-test: resets all service instances (RegistryManager, event handler, component caches, PolicyManager, ShipThemeManager, ScreenshotManager, SpriteManager) via `set_default_xxx()` calls
 
 2. **`enforce_headless`** (session-scoped, autouse) -- Sets `SDL_VIDEODRIVER=dummy`, initializes Pygame, creates a dummy display at `DisplayConfig.test_resolution()`.
 
@@ -84,7 +84,7 @@ A session-scoped cache that loads all game data from disk exactly once per test 
 
 ### How It Works
 
-1. On first call to `load_all_data()`, it triggers the real game loaders (`load_components`, `load_modifiers`, `load_vehicle_classes`, `StrategyManager.load_data`)
+1. On first call to `load_all_data()`, it triggers the real game loaders (`load_components`, `load_modifiers`, `load_vehicle_classes`, `PolicyManager.load_data`)
 2. Captures the resulting state from `RegistryManager` via deep copy
 3. Sets `_is_loaded = True`; subsequent calls return immediately
 4. Getter methods (`get_components()`, `get_modifiers()`, etc.) return **deep copies** to prevent cross-test pollution
@@ -131,7 +131,7 @@ Pytest fixtures: `battle_engine`, `battle_engine_with_ships`, `mock_battle_engin
 
 ### AI Fixtures (`tests/fixtures/ai.py`)
 
-- `strategy_manager_with_test_data` -- loads test AI strategies from `tests/unit/data/`
+- `policy_manager_with_test_data` -- loads test AI policies from `tests/unit/data/`
 
 ### Test Scenario Fixtures (`tests/fixtures/test_scenarios.py`)
 
@@ -249,7 +249,7 @@ Each xdist worker gets its own process with independent service instances. The `
 | `tests/fixtures/ships.py` | Ship factory + fixtures |
 | `tests/fixtures/components.py` | Component factory + fixtures |
 | `tests/fixtures/battle.py` | BattleEngine factory + fixtures |
-| `tests/fixtures/ai.py` | StrategyManager test fixture |
+| `tests/fixtures/ai.py` | PolicyManager test fixture |
 | `tests/fixtures/test_scenarios.py` | Combat Lab mock helpers |
 | `tests/fixtures/paths.py` | Path resolution utilities |
 | `tests/fixtures/common.py` | `initialized_ship_data` fixtures |
