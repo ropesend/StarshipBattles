@@ -432,6 +432,7 @@ class TestLabScreen:
         )
         controller = BattleController(ai_factory=AIControllerFactory())
         controller.configure(config)
+        controller.set_spec(spec)
         engine = controller.service.get_engine()
 
         # 3. Thread spec-only fields onto the engine before start.

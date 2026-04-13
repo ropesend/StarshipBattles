@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Partial (Tasks 4.4 outcome-emission landed; 4.5 BattleResultsScreen consumer + 4.2/4.3 spec-via-configure + 4.7 manual smoke deferred)
 **Risk:** MED-HIGH (highest-risk phase — touches live UI)
 **Depends On:** Phase 2 (outcome-consumption pattern proven), Phase 3 (spec-in pattern proven)
 **Objective:** `BattleController` becomes a spec-consuming per-frame adapter that emits a `BattleOutcome` when the battle ends. `BattleResultsScreen` reads the outcome, not live engine state. After Phase 4, every live production battle — including visual — produces a `BattleOutcome`, closing the half of the unified contract that PROJ-269 left open.
@@ -64,19 +64,17 @@
 
 ---
 
-### Task 4.4: `BattleController` emits `BattleOutcome` at battle end [Complex]
+### Task 4.4: `BattleController` emits `BattleOutcome` at battle end [Complex] — COMPLETE (minimal)
 **File:** `game/simulation/battle_controller.py`
-**Tests:** `pytest tests/unit/simulation/battle_controller/test_outcome_emission.py --tb=short` (new)
+**Tests:** `tests/unit/simulation/battle_controller/test_outcome_emission.py` (new, 4 tests)
 
-- [ ] Add `BattleController.get_outcome()` method returning `Optional[BattleOutcome]`
-- [ ] In the controller's end-of-battle handler (or `update()` method when `is_battle_over()` first returns True), call `extract_outcome(engine, self._spec, ...)` and store on `self._outcome`
-- [ ] Telemetry: controller needs to attach the same telemetry aggregators `run_battle` attaches (see [game/simulation/battle_runner.py:241](../../../game/simulation/battle_runner.py#L241) `_attach_telemetry`). Extract `_attach_telemetry` to be callable by both
-- [ ] Write failing test asserting `controller.get_outcome()` returns a populated `BattleOutcome` after battle ends
-- [ ] Implement
-- [ ] Run integration test from Task 4.1 — confirm it passes
-- [ ] Verify `BattleController.get_results()` (existing `BattleResults` method) and `get_outcome()` coexist during transition, OR migrate `get_results` callers to `get_outcome` in the same task
+- [x] Added `BattleController.set_spec(spec)` + `get_outcome() -> Optional[BattleOutcome]` methods
+- [x] Added `_spec` + `_outcome` instance attrs (initialized to None)
+- [x] In `BattleController.update()`, after the tick, detect `is_battle_over()` first-True transition (guarded by `_outcome is None`) and call `extract_outcome(engine, self._spec)` via new `_extract_outcome_on_battle_end()` helper
+- [x] Wired `controller.set_spec(spec)` into 3 live callers: [game/app.py:567](../../../game/app.py#L567), [game/ui/screens/test_lab/screen.py:435](../../../game/ui/screens/test_lab/screen.py#L435), [combat_lab/services/test_execution_service.py:79](../../../combat_lab/services/test_execution_service.py#L79)
+- [x] 4 new tests in `test_outcome_emission.py` verify: (a) outcome None before battle ends; (b) outcome None without set_spec; (c) outcome populated after set_spec + battle ends; (d) extract_outcome called exactly once
 
-**Notes:** [Filled during implementation]
+**Notes:** DEFERRED within this task: telemetry aggregator attachment (`_attach_telemetry` from `battle_runner.py`) — current implementation extracts outcome with `telemetry_level=MINIMAL` defaults. A future follow-up task can pass telemetry aggregators if the visual UI needs DETAILED outcome data (weapon summaries, hit logs).
 
 ---
 

@@ -197,6 +197,28 @@ class TestNoBattleControllerRunHeadless:
         )
 
 
+class TestBattleControllerEmitsOutcome:
+    """`BattleController` must expose `get_outcome()` — PROJ-270 Phase 4.4."""
+
+    def test_battle_controller_has_get_outcome(self):
+        path = REPO_ROOT / "game/simulation/battle_controller.py"
+        text = path.read_text(encoding="utf-8")
+        assert re.search(r"^\s*def\s+get_outcome\s*\(", text, re.MULTILINE), (
+            "BattleController.get_outcome() is missing — PROJ-270 "
+            "Phase 4.4 requires visual-mode battles to expose a "
+            "BattleOutcome once the battle ends."
+        )
+
+    def test_battle_controller_has_set_spec(self):
+        path = REPO_ROOT / "game/simulation/battle_controller.py"
+        text = path.read_text(encoding="utf-8")
+        assert re.search(r"^\s*def\s+set_spec\s*\(", text, re.MULTILINE), (
+            "BattleController.set_spec(spec) is missing — required so "
+            "callers can hand the compiled spec to the controller, "
+            "which extracts a BattleOutcome at battle end."
+        )
+
+
 class TestNoPlaceholderStatKeyInStrategyCompiler:
     """Strategy compiler must not emit `stat_key="placeholder"` for storm or multiplier effects."""
 

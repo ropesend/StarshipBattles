@@ -8,25 +8,19 @@ operational-options bag for the visual-mode `BattleController` flow that
 `BattleScreen` still drives per-frame (until Task 6.9 migrates that path
 through `run_battle` as well).
 
-`ReturnDestination` is also retained because the post-battle UI flow
-(`BattleScreen._on_battle_ended()` → `app._return_to(destination)`) still
-keys off it.
+PROJ-270 Phase 5.2: `ReturnDestination` moved to
+`game.core.return_destination`. This module re-exports it only for
+backwards compatibility during the transition — new callers should
+import from `game.core.return_destination` directly.
 """
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Optional, Tuple, Any, TYPE_CHECKING
 
 from game.core.constants import SimulationConstants
+from game.core.return_destination import ReturnDestination
 
 if TYPE_CHECKING:
     from game.simulation.systems.battle_end_conditions import IEndCondition
-
-
-class ReturnDestination(Enum):
-    """Where to navigate after the battle ends."""
-    BATTLE_SETUP = "battle_setup"
-    TEST_LAB = "test_lab"
-    STRATEGY = "strategy"
 
 
 def _default_end_condition() -> 'IEndCondition':

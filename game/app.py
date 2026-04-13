@@ -568,6 +568,7 @@ class Game:
 
         controller = BattleController(ai_factory=AIControllerFactory())
         controller.configure(config)
+        controller.set_spec(spec)
         engine = controller.service.get_engine()
         if spec.boundary is not None:
             engine.boundary = spec.boundary

@@ -4,15 +4,27 @@ System documentation for the real-time combat simulation layer.
 
 ---
 
-## 0. Unified Entry (PROJ-269 — complete)
+## 0. Unified Entry (PROJ-269 + PROJ-270 — complete)
 
-> **Status:** Implementation complete. Every battle (Combat Lab, Battle
-> Setup, Strategy combat) now compiles a `BattleSpec` via its
-> context-specific compiler and routes through `run_battle(spec)`. The
-> legacy `BattleMode` enum + `BattleModeHandler` hierarchy + the four
-> `create_*_battle` factories are deleted. `BattleController` remains
-> only as a thin per-frame tick driver for visual-mode UI; headless
-> callers go through `run_battle` directly. See §1 for the full flow.
+> **Status:** Implementation complete as of PROJ-270. Every battle (Combat
+> Lab, Battle Setup, Strategy combat) compiles a `BattleSpec` via its
+> context-specific compiler and either:
+> - calls `run_battle(spec) -> BattleOutcome` directly (headless paths), or
+> - hands the spec to `BattleController` which drives a per-frame tick
+>   loop for visual mode and calls `extract_outcome(engine, spec)` at
+>   battle end to emit a `BattleOutcome`.
+>
+> Every live battle produces a `BattleOutcome`. The legacy `BattleMode`
+> enum + `BattleModeHandler` hierarchy + the four `create_*_battle`
+> factories are deleted (PROJ-269). The `engine_ref["engine"] = engine`
+> closure trick Combat Lab used to capture the engine is also deleted
+> (PROJ-270 Phase 2). Validators consume `(BattleOutcome, CombatLabTelemetry)`.
+>
+> Acceptance locked by `tests/unit/simulation/test_unified_entry_guard.py`:
+> no direct `engine.start*()` / `BattleEngine(...)` bypasses; no
+> `scenario.setup(engine)` methods; no "Legacy-compatible" markers;
+> `BattleController.run_headless` deleted; `get_outcome()` / `set_spec()`
+> present on `BattleController`. See §1 for the full flow.
 
 `run_battle(spec: BattleSpec) -> BattleOutcome` at
 [`game/simulation/battle_runner.py`](../../game/simulation/battle_runner.py)

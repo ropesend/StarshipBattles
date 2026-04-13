@@ -16,14 +16,14 @@
 | 1. Headless single-entry cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Combat Lab outcome adoption | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle Setup spec migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Visual-mode BattleOutcome contract | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. DTO cleanup | Partial (5.3 done; 5.1/5.2/5.4/5.5 remain) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 4. Visual-mode BattleOutcome contract | Partial (4.4 outcome-emission done; 4.5 UI consumer deferred) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. DTO cleanup | Partial (5.2 + 5.3 done; 5.1/5.4/5.5 remain) | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Strategic-modifier battle-math restoration (bounded) | Complete (Track A) | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Test coverage backfill | Partial (7.1/7.4 done; 7.2/7.3/7.5 remain) | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Final cleanup + acceptance audit | Partial (8.1/8.3 done; 8.2/8.4-8.7 remain) | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-12 — Session end (6 of 8 phases complete or partial; Phase 4 deferred to next session)
+**Last Updated:** 2026-04-12 — Extended session (7 of 8 phases have partial or complete landings; only Phase 4.5 BattleResultsScreen UI consumer + residual DTO cleanup + manual smoke remain)
 **Active Phase:** Phase 4 — Visual-Mode BattleOutcome Contract (deferred — highest-risk remaining work)
 **Last Action:** Massive single-session progress. Phases 1, 2, 3, 6 (Track A), 8.3 complete. Phase 5.3, 7.1, 7.4, 8.1 done (partial coverage of those phases). The user-facing PROJ-270 acceptance criteria is now largely met for headless, strategy, Combat Lab, and Battle Setup paths — only visual-mode (Phase 4) and residual DTO cleanup (Phase 5.1/5.2/5.4/5.5) remain.
 **Next Action:** Phase 4 — refactor `BattleController` to accept a `BattleSpec` and emit a `BattleOutcome` at battle end. `BattleResultsScreen` reads outcome. Highest-risk remaining work; requires careful TDD + manual smoke at end of phase. Once Phase 4 lands, the pytest guard in `tests/unit/simulation/test_unified_entry_guard.py` should be extended with a `TestVisualModeEmitsOutcome` class.
@@ -33,6 +33,8 @@
   - Phase 1: Headless single-entry bypasses eliminated (`test_execution_service.run_headless`, `BattleController.run_headless`, all 7 scenario `setup()` methods); new shared helper `combat_lab/services/scenario_run_helper.py`
   - Phase 2: `_run_validation(outcome, telemetry)` is the new contract across all 30 scenario files; new `combat_lab/telemetry.py`; the `engine_ref` closure trick is eradicated
   - Phase 3: `app.py::start_battle(spec)` + `battle_setup_screen._start_battle` → `build_manual_battle_spec` live production path
+  - Phase 4.4: `BattleController.set_spec(spec)` + `get_outcome()` — visual-mode battles now emit `BattleOutcome` at battle end. New `tests/unit/simulation/battle_controller/test_outcome_emission.py` (4 tests).
+  - Phase 5.2: `ReturnDestination` enum moved from `game/simulation/battle_config.py` to `game/core/return_destination.py` (dependency-free layer)
   - Phase 5.3: `BattleState.mode` field deleted
   - Phase 6 Track A: strategy compiler emits real `shield_capacity_mult` / `damage_mult` stat_keys for storm + fleet multipliers; `FleetAuraManager._append_external_from_entry` logs placeholder skips once per source
   - Phase 7.1: `_is_started` regression guard tests
@@ -41,9 +43,10 @@
   - Phase 8.3: `tests/unit/simulation/test_unified_entry_guard.py` — 8 guard tests locking the acceptance criteria
 - **Regression state:** `pytest tests/` **14572 passed** / 3 pre-existing build-queue UI failures / 3 pre-existing AI import errors. Combat Lab **162/162 fast** + **170/170 full** green.
 - **Deferred to follow-up sessions:**
-  - **Phase 4 (visual-mode outcome contract):** MEDIUM-HIGH risk; `BattleController` spec acceptance + `BattleResultsScreen` rewrite + manual launcher smoke
+  - **Phase 4.5 (BattleResultsScreen consumer):** rewrite `game/ui/screens/battle_results_data.py::extract_battle_results` to consume `BattleOutcome` instead of live `engine.ships`. Controller already emits outcome via Phase 4.4. Touch `BattleResultsScreen` to pull the outcome from the controller.
+  - **Phase 4.2/4.3 (spec-via-configure):** tighten `BattleController.configure` to require a spec (currently `set_spec` is a separate call made by callers — works, but could be tidier)
+  - **Phase 4.7 (manual launcher smoke):** requires interactive desktop
   - **Phase 5.1:** delete `BattleConfig.test_scenario` field (need to route scenario-for-validation through a different channel)
-  - **Phase 5.2:** move `ReturnDestination` enum from `game/simulation/battle_config.py` to `game/ui/navigation/`
   - **Phase 5.4:** collapse `BattleConfig.map_bounds` into `BattleSpec.boundary` (requires `RetreatManager` to consume `BoundaryRegion`)
   - **Phase 5.5:** audit `AIPolicy` / `CombatPolicies` / `ComponentStateSpec.is_active` / `TaskForceOutcome` for deletion vs wiring
   - **Phase 6.4a (sub-task):** delete `FleetAuraManager.initialize(config=...)` legacy branch — dead in production, requires 5 test rewrites

@@ -33,6 +33,8 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.simulation.battle_outcome import BattleOutcome
+    from game.simulation.battle_spec import BattleSpec
     from game.simulation.entities.ship import Ship
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
 
@@ -84,6 +86,16 @@ class BattleController:
 
         # Callbacks
         self._on_ship_escaped: Optional[Callable[['Ship'], None]] = None
+
+        # PROJ-270 Phase 4: BattleSpec + BattleOutcome for outcome-consuming
+        # visual-mode UI. `_spec` is set via `set_spec()` by the caller that
+        # compiled the spec (e.g. `Game.start_battle`). `_outcome` is
+        # populated lazily when the battle first finishes and exposed via
+        # `get_outcome()`.
+        from game.simulation.battle_spec import BattleSpec  # noqa: PLC0415 — local to avoid cycle
+        from game.simulation.battle_outcome import BattleOutcome  # noqa: PLC0415
+        self._spec: Optional[BattleSpec] = None
+        self._outcome: Optional[BattleOutcome] = None
 
     # === Configuration ===
 
@@ -227,7 +239,45 @@ class BattleController:
             self._update_retreats()
 
         # Run one tick
-        return self._service.update()
+        result = self._service.update()
+
+        # PROJ-270 Phase 4: when the battle first transitions to "over",
+        # extract a BattleOutcome so visual-mode consumers can read a
+        # proper DTO instead of the live engine. Only extracts once per
+        # battle (guarded by `_outcome is None`).
+        if self._outcome is None and self._spec is not None and self.is_battle_over():
+            self._extract_outcome_on_battle_end()
+
+        return result
+
+    def set_spec(self, spec: "BattleSpec") -> None:
+        """Set the `BattleSpec` this battle was compiled from.
+
+        PROJ-270 Phase 4: visual-mode callers (e.g. `Game.start_battle`)
+        call this after `configure()` + `add_ships()` so the controller
+        can extract a `BattleOutcome` at battle end.
+        """
+        self._spec = spec
+
+    def get_outcome(self) -> Optional["BattleOutcome"]:
+        """Return the `BattleOutcome` for this battle, once it has ended.
+
+        Returns `None` while the battle is in progress or if the
+        controller was never handed a spec via `set_spec()`.
+        """
+        return self._outcome
+
+    def _extract_outcome_on_battle_end(self) -> None:
+        """Extract the `BattleOutcome` from the engine's final state.
+
+        Called once by `update()` the first tick after `is_battle_over()`
+        becomes True.
+        """
+        from game.simulation.battle_runner import extract_outcome  # noqa: PLC0415
+        engine = self._service.get_engine()
+        if engine is None or self._spec is None:
+            return
+        self._outcome = extract_outcome(engine, self._spec)
 
     def run_ticks(self, count: int) -> BattleServiceResult:
         """
