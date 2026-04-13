@@ -366,17 +366,21 @@ spec.post_battle_hook(outcome)  (optional)
 
 **Visual mode (Combat Lab UI, Battle Setup screen):** uses
 `BattleController` as a thin per-frame tick-loop driver around
-`BattleEngine`. Construction goes through the spec compiler +
-`materialize_spec_ships(spec, ship_builder)` + `controller.add_ships`
-+ `controller.start()`. PROJ-269 Phase 6 deleted the `BattleMode` /
+`BattleEngine`. PROJ-269 Phase 6 deleted the `BattleMode` /
 `BattleModeHandler` / `create_*_battle` factory machinery; the
-controller is now config-flag-driven only.
+controller is now spec-in only.
 
-**PROJ-270 Phase 4:** `BattleController` now also accepts the compiled
-spec via `controller.set_spec(spec)` and — once `is_battle_over()`
-first returns True — calls `extract_outcome(engine, spec)` to produce a
-`BattleOutcome` via `controller.get_outcome()`. Visual-mode battles
-therefore honour the same "every battle emits a `BattleOutcome`"
+**PROJ-270 Phase 10:** visual-mode construction goes through the
+single unified entry `controller.start_from_spec(spec, ai_factory=...,
+ship_builder=...)` which internally calls `start_engine_from_spec`
+(the same code path `run_battle` uses) — eliminating the previously-
+duplicated `engine.boundary = spec.boundary; engine.modifier_stack =
+spec.modifier_stack; materialize_spec_ships; controller.add_ships +
+controller.start` block that used to live in each visual call site.
+
+At battle end, `BattleController` calls `extract_outcome(engine, spec)`
+to produce a `BattleOutcome` via `controller.get_outcome()`. Visual-mode
+battles therefore honour the same "every battle emits a `BattleOutcome`"
 contract that headless callers already satisfied.
 
 ### Strategy Turn Flow

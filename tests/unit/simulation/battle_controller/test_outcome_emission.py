@@ -174,3 +174,153 @@ class TestBattleControllerConfigureAcceptsSpec:
         controller.update()
 
         assert controller.get_outcome() is mock_outcome
+
+
+class TestBattleControllerStartFromSpec:
+    """PROJ-270 Phase 10: `BattleController.start_from_spec` is the single
+    spec-in visual-mode entry. Routes through `start_engine_from_spec` —
+    the same code path `run_battle` uses — to eliminate the 3 duplicated
+    engine-plumbing blocks in production call sites.
+    """
+
+    def test_start_from_spec_exists(self):
+        """Method presence guard — required for the unified visual-mode path."""
+        from game.simulation.battle_controller import BattleController
+        assert callable(getattr(BattleController, "start_from_spec", None)), (
+            "BattleController.start_from_spec is required — visual-mode "
+            "callers route through it instead of hand-rolling spec→engine plumbing."
+        )
+
+    def test_start_from_spec_stores_spec_for_outcome_extraction(
+        self, monkeypatch,
+    ):
+        """After start_from_spec, controller.get_outcome() returns the
+        real outcome at battle end (spec is wired for extract_outcome)."""
+        from unittest.mock import MagicMock
+        from game.simulation import battle_runner
+        from game.simulation.battle_controller import BattleController
+        from game.simulation.battle_config import BattleConfig
+
+        fake_engine = MagicMock()
+        fake_engine.ships = []
+        fake_engine.retreated_ships = []
+        fake_engine.tick_counter = 0
+        fake_engine.is_battle_over.return_value = False
+
+        def _fake_start(spec, *, ai_factory, ship_builder):
+            return fake_engine, {}
+
+        monkeypatch.setattr(
+            battle_runner, "start_engine_from_spec", _fake_start,
+        )
+
+        mock_spec = MagicMock(name="BattleSpec")
+        mock_spec.boundary = None
+        mock_spec.seed = 42
+        mock_spec.end_condition = MagicMock()
+        mock_spec.absolute_max_ticks = 100
+
+        controller = BattleController(service=MagicMock())
+        controller._service.adopt_started_engine = MagicMock(
+            return_value=MagicMock(success=True)
+        )
+        controller._state_manager = MagicMock()
+        controller._state_manager.capture_state = MagicMock(return_value=None)
+
+        result, ships_by_role = controller.start_from_spec(
+            mock_spec, ai_factory=MagicMock(), ship_builder=lambda s: MagicMock(),
+        )
+
+        assert result.success
+        assert controller._spec is mock_spec, (
+            "start_from_spec must set_spec so get_outcome() works at battle end"
+        )
+        assert controller._is_started is True
+
+
+class TestOutcomeContentAssertions:
+    """PROJ-270 Phase 11.1: strengthen outcome assertions beyond plumbing.
+
+    Skeptic finding: prior tests used `MagicMock(name="BattleOutcome")` —
+    a regression returning `BattleOutcome(teams=(), duration_ticks=0)`
+    would pass every test. Real-content assertions ensure the outcome
+    carries meaningful team + status + duration data.
+    """
+
+    def test_outcome_has_populated_teams_after_real_run(self, fresh_registries):
+        """Real `run_battle` call with minimal spec — outcome.teams is non-empty."""
+        from game.ai.ai_factory import AIControllerFactory
+        from game.core.math import Vector2
+        from game.simulation.battle_runner import run_battle
+        from game.simulation.battle_spec import (
+            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+            ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
+        )
+        from game.simulation.combat.boundary import UnboundedRegion, ExitPolicy
+        from game.simulation.combat.modifier_stack import ModifierStack
+        from game.simulation.combat.telemetry import TelemetryLevel
+        from game.simulation.entities.ship_serialization import ShipSerializer
+        from game.simulation.systems.battle_end_conditions import TickLimitCondition
+
+        design = {
+            "name": "Cruiser", "ship_class": "Escort",
+            "vehicle_type": "Ship", "design_role": "fleet_escort",
+            "theme_id": "Federation",
+            "layers": {
+                "CORE": [{"id": "bridge"}],
+                "OUTER": [{"id": "laser_cannon"}],
+                "ARMOR": [],
+            },
+            "_metadata": {},
+        }
+
+        def _build(ship_spec):
+            ship = ShipSerializer.from_dict(design, registries=fresh_registries)
+            ship.instance_id = ship_spec.instance_id
+            return ship
+
+        def _team(tid, iid):
+            ss = ShipSpec(
+                instance_id=iid, design_id="Cruiser", theme_id="Federation",
+                name=iid, position=Vector2(0, 0), angle=0.0,
+                velocity=Vector2(0, 0), components=(),
+            )
+            return TeamSpec(
+                team_id=tid, name=f"T{tid}",
+                entry_vector=EntryVector(origin=Vector2(0, 0), facing=0.0),
+                fleet_hierarchy=(TaskForceSpec(
+                    task_force_id=f"tf-{tid}", formation=None,
+                    policies=CombatPolicies(),
+                    squadrons=(SquadronSpec(
+                        squadron_id=f"sq-{tid}", policies=CombatPolicies(),
+                        ships=(ss,),
+                    ),),
+                ),),
+                ai_policy=AIPolicy(),
+            )
+
+        spec = BattleSpec(
+            seed=1,
+            telemetry_level=TelemetryLevel.NORMAL,
+            boundary=UnboundedRegion(exit_policy=ExitPolicy.NONE),
+            end_condition=TickLimitCondition(max_ticks=2),
+            absolute_max_ticks=10,
+            teams=(_team(0, "s0"), _team(1, "s1")),
+            modifier_stack=ModifierStack.empty(),
+            post_battle_hook=None,
+        )
+        outcome = run_battle(spec, ai_factory=AIControllerFactory(), ship_builder=_build)
+
+        # Real-content assertions — catches `BattleOutcome(teams=())` regressions.
+        assert len(outcome.teams) == 2, f"expected 2 teams, got {len(outcome.teams)}"
+        assert outcome.duration_ticks > 0, (
+            f"duration_ticks should advance past 0, got {outcome.duration_ticks}"
+        )
+        assert outcome.end_reason is not None
+        assert outcome.seed == 1, "seed echoed from spec"
+        # Each team has real ship data.
+        for team in outcome.teams:
+            assert len(team.ships) == 1
+            for ship_outcome in team.ships:
+                assert ship_outcome.instance_id in ("s0", "s1")
+                assert ship_outcome.status is not None

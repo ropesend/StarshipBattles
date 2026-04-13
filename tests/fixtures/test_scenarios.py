@@ -149,11 +149,15 @@ def create_mock_test_scenario(
     # compiler + materialize_spec_ships. For mocks we supply an empty
     # spec (zero teams) so the UI path short-circuits cleanly in tests
     # that don't care about the engine-level behavior.
+    # PROJ-270 Phase 10: must be REAL ModifierStack (not Mock) because
+    # start_from_spec → start_engine_from_spec → FleetAuraManager.initialize
+    # iterates modifier_stack.per_team.items() which a Mock can't satisfy.
+    from game.simulation.combat.modifier_stack import ModifierStack
     empty_spec = Mock()
     empty_spec.seed = 0
     empty_spec.teams = ()
     empty_spec.boundary = None
-    empty_spec.modifier_stack = Mock()
+    empty_spec.modifier_stack = ModifierStack.empty()
     empty_spec.end_condition = Mock()
     empty_spec.absolute_max_ticks = max_ticks * 10
     scenario.to_spec = Mock(return_value=empty_spec)

@@ -285,3 +285,50 @@ class TestUnboundedDistanceToEdge:
         region = UnboundedRegion()
         assert region.distance_to_edge(Vector2(0.0, 0.0)) == math.inf
         assert region.distance_to_edge(Vector2(1e9, -1e9)) == math.inf
+
+
+# ---------------------------------------------------------------------------
+# PROJ-270 Phase 11.7: origin-ambiguity convention tests.
+# Skeptic flagged that the documented "pick +x direction" convention for
+# CircleBoundary at origin had no test — anyone refactoring the ambiguity
+# resolution would silently break the contract the docstring advertises.
+# ---------------------------------------------------------------------------
+
+
+class TestCircleBoundaryOriginConvention:
+    """`CircleBoundary.closest_edge_point` at origin uses +x convention."""
+
+    def test_origin_returns_plus_x_direction(self):
+        """The docstring promises "pick +x direction by convention" at pos=origin."""
+        circle = CircleBoundary(radius=100.0, exit_policy=ExitPolicy.RETREAT)
+        edge = circle.closest_edge_point(Vector2(0.0, 0.0))
+        assert edge.x == pytest.approx(100.0), (
+            "Convention: origin-ambiguous case returns (radius, 0) — +x direction"
+        )
+        assert edge.y == pytest.approx(0.0)
+
+    def test_origin_distance_equals_radius(self):
+        """distance_to_edge at origin == radius (center-to-perimeter)."""
+        circle = CircleBoundary(radius=250.0, exit_policy=ExitPolicy.RETREAT)
+        assert circle.distance_to_edge(Vector2(0.0, 0.0)) == pytest.approx(250.0)
+
+
+class TestRectBoundaryCenterDeterminism:
+    """`RectBoundary.closest_edge_point` at center deterministically picks
+    one edge when all 4 are equidistant (no ties).
+
+    Convention: current implementation's `min(...)` returns the FIRST
+    match — with order (left, right, top, bottom), that's LEFT.
+    Documenting this so future refactors don't silently change behavior.
+    """
+
+    def test_center_of_square_returns_left_edge(self):
+        """Square rect at (0,0) — all 4 edges equidistant; left wins by order."""
+        rect = RectBoundary(width=100.0, height=100.0, exit_policy=ExitPolicy.RETREAT)
+        edge = rect.closest_edge_point(Vector2(0.0, 0.0))
+        # Convention: order of min() checks is [left, right, top, bottom]
+        # so left edge wins when all distances equal.
+        assert edge.x == pytest.approx(-50.0), (
+            "Convention: equidistant center returns left-edge point (-w/2, y)"
+        )
+        assert edge.y == pytest.approx(0.0)

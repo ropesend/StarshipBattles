@@ -47,6 +47,21 @@ class BoundaryRegion(Protocol):
     Per `docs/02_PATTERNS.md` — runtime-checkable protocol. Callers that
     need a narrow type check should use duck-typing (`hasattr`) rather
     than `isinstance(obj, BoundaryRegion)` for mock compatibility.
+
+    **PROJ-270 Phase 12.4:** the protocol now covers the universal ops
+    (`contains`, `closest_inside_point`) that ALL regions support.
+    Edge-query methods (`closest_edge_point`, `distance_to_edge`) are
+    still on the protocol for back-compat — `UnboundedRegion`
+    implementations raise `NotImplementedError` / return `math.inf`
+    respectively. Callers that only need edge queries can narrow to
+    the concrete `RectBoundary` / `CircleBoundary` types at runtime
+    via `isinstance` — those implementations guarantee meaningful
+    values. A full type-model split (`Region` base + `BoundedRegion`
+    subtype) was considered but deferred because `BattleSpec.boundary`
+    is typed `Optional[BoundaryRegion]` and widely passed through —
+    splitting would cascade into spec compilers, tests, and archived
+    saves. The current sentinel approach (`isinstance(b, UnboundedRegion)`
+    guard in RetreatManager) is pragmatic and working.
     """
 
     exit_policy: ExitPolicy
@@ -69,7 +84,8 @@ class BoundaryRegion(Protocol):
         Used by `RetreatManager.find_nearest_edge` to navigate a
         retreating ship toward the arena edge. Unbounded regions have
         no edge — `UnboundedRegion.closest_edge_point` raises
-        `NotImplementedError`.
+        `NotImplementedError`. Callers wanting a strict type-level
+        guarantee should narrow to `RectBoundary` / `CircleBoundary`.
         """
         ...
 

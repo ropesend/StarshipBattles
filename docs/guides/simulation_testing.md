@@ -2,6 +2,24 @@
 
 Consolidated guide for the Starship Battles simulation test system. Covers test architecture, the TestScenario pattern, validation, troubleshooting, and writing new tests.
 
+> **API UPDATE (PROJ-270 Phase 11, 2026-04-12):** The code examples below
+> that show `def setup(self, battle_engine)` and `def update(self, battle_engine)`
+> are **LEGACY** — PROJ-269 Phase 1 + PROJ-270 Phase 1 deleted those methods.
+> The current `TestScenario` API is:
+>
+> ```python
+> class MyTest(TestScenario):
+>     metadata = TestMetadata(...)
+>     def to_spec(self, registries=None) -> BattleSpec: ...
+>     def wire_ships(self, ships_by_role, engine, initial_state): ...
+>     def custom_setup(self, engine): ...   # optional
+>     def validate(self, outcome, telemetry) -> list: ...
+> ```
+>
+> See `combat_lab/scenarios/base.py` for the current canonical shape and
+> any modern scenario file (e.g. `beam_accuracy_scenarios.py`) for a
+> worked example. `docs/systems/combat_simulation.md` §0 is authoritative.
+
 ---
 
 ## 1. Overview & Test Architecture

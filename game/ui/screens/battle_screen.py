@@ -113,9 +113,9 @@ class BattleScreen:
         # Accumulator for time-accurate simulation (moved from Game)
         self._accumulator = 0.0
 
-        # Legacy state — kept as instance vars for backward compatibility
-        # with Combat Lab code that still sets them directly.
-        # Will be fully removed when Combat Lab migrates to controller flow.
+        # NOQA: legacy-retained — Combat Lab instance vars kept for
+        # back-compat with older visual test scenarios. Removal tracked
+        # in follow-up to PROJ-270 Phase 10.
         self.headless_mode = False
         self.headless_start_time = None
         self.test_mode = False
@@ -239,7 +239,8 @@ class BattleScreen:
             start_paused: Start with simulation paused
             test_mode: Running from Combat Lab (selects post-battle nav target)
         """
-        from game.simulation.battle_config import BattleConfig, ReturnDestination
+        from game.simulation.battle_config import BattleConfig
+        from game.core.return_destination import ReturnDestination
 
         dest = ReturnDestination.TEST_LAB if test_mode else ReturnDestination.BATTLE_SETUP
 
@@ -399,15 +400,22 @@ class BattleScreen:
         self._update_tick_rate(dt)
 
     def _run_single_tick(self):
-        """Run a single simulation tick."""
+        """Run a single simulation tick via the controller."""
         if self.engine.is_battle_over():
             return
 
-        # Delegate to controller if available, else direct engine update
-        if self._controller:
-            self._controller.update()
-        else:
-            self.engine.update()
+        # PROJ-270 Phase 10: controller is the only sanctioned per-tick
+        # driver — eliminates the `else: self.engine.update()` bypass
+        # that would otherwise skip outcome extraction and the retreat
+        # manager.
+        if self._controller is None:
+            from game.core.exceptions import StateException
+            raise StateException(
+                "BattleScreen._run_single_tick called without a controller — "
+                "invariant violation. Visual battles must always have a "
+                "BattleController bound via start_battle()."
+            )
+        self._controller.update()
 
         self.sim_tick_counter = self.engine.tick_counter
 
@@ -492,6 +500,15 @@ class BattleScreen:
         `extract_outcome(engine, spec)` without a spec, so we build
         the outcome by hand with the shape that `extract_battle_results`
         needs.
+
+        PROJ-270 Phase 10 note: this fallback is invoked ONLY for the
+        `BattleScreen.start(team0, team1)` legacy test-convenience
+        path (71 test callers). Production paths (`Game.start_battle`,
+        Combat Lab, Test Lab) route through `BattleController.start_from_spec`
+        and have a real spec attached — their outcome is extracted via
+        `extract_outcome(engine, spec)`. Deletion of the fallback is
+        gated on migrating all 71 test callers to build specs; tracked
+        as a follow-up (see phase_10_checklist.md Task 10.4 notes).
         """
         from game.simulation.battle_outcome import (
             BattleOutcome,

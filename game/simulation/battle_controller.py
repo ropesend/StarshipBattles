@@ -14,7 +14,7 @@ Handles:
 - Retreat and reinforcement mechanics
 - Result collection and state extraction
 """
-from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
+from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING  # noqa: F401
 
 from game.core.exceptions import StateException, ValidationException
 from game.core.error_codes import ErrorCode
@@ -242,6 +242,98 @@ class BattleController:
 
         return result
 
+    def start_from_spec(
+        self,
+        spec: "BattleSpec",
+        *,
+        ai_factory: "IAIControllerFactory",
+        ship_builder: "Callable",
+        config: Optional[BattleConfig] = None,
+    ) -> "tuple[BattleServiceResult, Dict[str, 'Ship']]":
+        """Configure + start a battle directly from a `BattleSpec`.
+
+        PROJ-270 Phase 10 — single entry point for visual-mode battles.
+        Routes through `start_engine_from_spec` (the same code path
+        `run_battle` uses), eliminating the 3 duplicated `engine.boundary
+        = spec.boundary; engine.modifier_stack = spec.modifier_stack;
+        materialize_spec_ships; controller.add_ships; controller.start`
+        blocks that previously lived in `app.py`, `test_lab/screen.py`,
+        and `test_execution_service.py`.
+
+        Args:
+            spec: The `BattleSpec` describing the battle.
+            ai_factory: AI controller factory (UI/strategy-owned).
+            ship_builder: Callable that builds a `Ship` from a `ShipSpec`.
+            config: Optional `BattleConfig` for operational concerns
+                (`headless`, `start_paused`, `return_destination`). If
+                None, a default `BattleConfig` is constructed using
+                `spec.seed`, `spec.end_condition`, and
+                `spec.absolute_max_ticks`.
+
+        Returns:
+            `(result, ships_by_role)` — `result` is the standard
+            BattleServiceResult; `ships_by_role` is the role-tagged
+            ship lookup from `materialize_spec_ships` for callers that
+            need it (Combat Lab scenarios).
+        """
+        from game.simulation.battle_runner import start_engine_from_spec  # noqa: PLC0415
+
+        # Build / merge the operational config.
+        if config is None:
+            config = BattleConfig(
+                seed=spec.seed,
+                end_condition=spec.end_condition,
+                absolute_max_ticks=spec.absolute_max_ticks,
+            )
+
+        self._config = config
+        self._ship_id_map.clear()
+        self._initial_state = None
+        self._is_started = False
+
+        # Boundary comes from the spec (PROJ-270 Task 5.4); wire retreat
+        # manager before the engine starts so any tick-0 retreat checks
+        # have the right arena shape.
+        from game.simulation.combat.boundary import UnboundedRegion  # noqa: PLC0415
+        boundary = spec.boundary if spec.boundary is not None else UnboundedRegion()
+        self._retreat_manager = RetreatManager(boundary=boundary)
+
+        # Inject spec + ai_factory so outcome extraction works at battle end.
+        self.set_spec(spec)
+        self._ai_factory = ai_factory
+
+        # Drive the shared spec-in engine constructor (same as run_battle).
+        engine, ships_by_role = start_engine_from_spec(
+            spec, ai_factory=ai_factory, ship_builder=ship_builder,
+        )
+
+        # Adopt the running engine into the service so per-frame update() works.
+        teams_by_id: Dict[int, List['Ship']] = {}
+        for ship in engine.ships:
+            teams_by_id.setdefault(ship.team_id, []).append(ship)
+        result = self._service.adopt_started_engine(
+            engine,
+            team_ships_by_id=teams_by_id,
+            seed=spec.seed,
+        )
+
+        self._is_configured = True
+        self._is_started = True
+
+        # Initial state capture (routed through BattleStateManager).
+        self._initial_state = self._state_manager.capture_state(engine, self._config)
+        # Ship ID map.
+        for ship in engine.ships:
+            if ship.id not in self._ship_id_map:
+                self._ship_id_map[ship.id] = ship.id
+
+        logger.info(
+            f"Battle started from spec: ships={len(engine.ships)} "
+            f"across {len(teams_by_id)} teams (spec-in path)"
+        )
+
+        return result, ships_by_role
+
     # === Execution ===
 
     def update(self) -> BattleServiceResult:
@@ -461,7 +553,14 @@ class BattleController:
             self._config
         )
 
-    def load_state(self, state: BattleState) -> BattleServiceResult:
+    def load_state(self, state: BattleState) -> BattleServiceResult:  # noqa: C901
+        # PROJ-270 Phase 10 note: `load_state` has zero production callers
+        # (grep-verified). It exists only for test coverage + the internal
+        # `save_state()` symmetry. Because saves are disposable per
+        # CLAUDE.md, the boundary defaults to `UnboundedRegion` on restore
+        # (edge retreat disabled). If a future feature persists + restores
+        # battles in production, it must thread `BattleState.boundary`
+        # through — not rely on this fallback.
         """
         Restore battle from saved state (uses BattleStateManager for config restoration).
 

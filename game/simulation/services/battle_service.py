@@ -217,6 +217,29 @@ class BattleService:
 
         return BattleServiceResult(success=True, engine=self._engine)
 
+    def adopt_started_engine(
+        self,
+        engine: BattleEngine,
+        *,
+        team_ships_by_id: Dict[int, List['Ship']],
+        seed: Optional[int] = None,
+    ) -> BattleServiceResult:
+        """Adopt a `BattleEngine` that was started via `start_engine_from_spec`.
+
+        PROJ-270 Phase 10: visual-mode callers (`BattleController.start_from_spec`)
+        route through `start_engine_from_spec` for spec-in construction, then
+        hand the running engine to the service so per-frame `update()` works.
+        This replaces the legacy `create_battle() + add_ship() × N +
+        start_battle()` dance that duplicated the spec→engine plumbing in
+        three visual call sites.
+        """
+        self._engine = engine
+        self._team0_ships = list(team_ships_by_id.get(0, ()))
+        self._team1_ships = list(team_ships_by_id.get(1, ()))
+        self._is_started = True
+        self._seed = seed
+        return BattleServiceResult(success=True, engine=engine)
+
     def update(self) -> BattleServiceResult:
         """
         Run one simulation tick.

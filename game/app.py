@@ -552,7 +552,6 @@ class Game:
         """
         from game.simulation.battle_config import BattleConfig
         from game.simulation.battle_controller import BattleController
-        from game.simulation.battle_runner import materialize_spec_ships
         from game.ai.ai_factory import AIControllerFactory
         from game.core.registry import get_default_registry_provider
 
@@ -565,13 +564,6 @@ class Game:
             end_condition=spec.end_condition,
             absolute_max_ticks=spec.absolute_max_ticks,
         )
-
-        controller = BattleController(ai_factory=AIControllerFactory())
-        controller.configure(config, spec=spec)
-        engine = controller.service.get_engine()
-        if spec.boundary is not None:
-            engine.boundary = spec.boundary
-        engine.modifier_stack = spec.modifier_stack
 
         registries = get_default_registry_provider().get_registries()
 
@@ -588,13 +580,14 @@ class Game:
                 f"found in BattleSetupState fleets"
             )
 
-        teams_by_id, _ships_by_role = materialize_spec_ships(
-            spec, ship_builder=_ship_builder,
+        # PROJ-270 Phase 10: single spec-in path — no hand-rolled plumbing.
+        controller = BattleController()
+        controller.start_from_spec(
+            spec,
+            ai_factory=AIControllerFactory(),
+            ship_builder=_ship_builder,
+            config=config,
         )
-        for team_id, ships in teams_by_id.items():
-            controller.add_ships(ships, team_id=team_id)
-
-        controller.start()
 
         self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)

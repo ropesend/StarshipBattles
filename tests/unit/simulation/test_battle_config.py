@@ -67,16 +67,24 @@ class TestBattleConfigDeletedFields:
     state that belongs on `BattleSpec` instead.
     """
 
-    FORBIDDEN_FIELDS = frozenset({
-        "mode",                  # PROJ-269: variance moved to BattleSpec
-        "team_modifiers",        # PROJ-269: moved to ModifierStack
-        "global_modifiers",      # PROJ-269: moved to ModifierStack
-        "environmental_effects", # PROJ-269: moved to ModifierStack
-        "per_tick_callback",     # PROJ-269: function arg on run_battle
-        "source_fleets",         # PROJ-269: variance moved to BattleSpec
-        "test_scenario",         # PROJ-270 Phase 5.1: write-only dead field
-        "map_bounds",            # PROJ-270 Task 5.4: replaced by BattleSpec.boundary
-    })
+    # PROJ-270 Phase 12.6: each entry carries a sunset date — once passed,
+    # re-evaluate whether the regression-guard is still load-bearing or
+    # has outlived its purpose. Guards with no sunset date accumulate
+    # unboundedly as a ledger of past sins.
+    #
+    # Format: {field_name: "YYYY-MM-DD"} — date is ~6 months from the
+    # project that added it. On/after sunset, audit + prune or renew.
+    FORBIDDEN_FIELDS_WITH_SUNSET = {
+        "mode":                  "2026-10-01",  # PROJ-269
+        "team_modifiers":        "2026-10-01",  # PROJ-269
+        "global_modifiers":      "2026-10-01",  # PROJ-269
+        "environmental_effects": "2026-10-01",  # PROJ-269
+        "per_tick_callback":     "2026-10-01",  # PROJ-269
+        "source_fleets":         "2026-10-01",  # PROJ-269
+        "test_scenario":         "2027-04-01",  # PROJ-270 Phase 5.1
+        "map_bounds":            "2027-04-01",  # PROJ-270 Task 5.4
+    }
+    FORBIDDEN_FIELDS = frozenset(FORBIDDEN_FIELDS_WITH_SUNSET.keys())
 
     def test_no_forbidden_fields(self):
         """BattleConfig dataclass has no forbidden fields."""

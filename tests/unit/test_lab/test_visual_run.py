@@ -55,7 +55,8 @@ class TestVisualRunFlow:
         empty_spec.seed = 0
         empty_spec.teams = ()
         empty_spec.boundary = None
-        empty_spec.modifier_stack = Mock()
+        from game.simulation.combat.modifier_stack import ModifierStack
+        empty_spec.modifier_stack = ModifierStack.empty()
         empty_spec.end_condition = Mock()
         empty_spec.absolute_max_ticks = 10000
         mock_scenario.to_spec = Mock(return_value=empty_spec)
@@ -135,7 +136,7 @@ class TestVisualRunFlow:
         PROJ-269 Phase 6: BattleMode is gone — test-vs-manual distinction
         now lives in `test_scenario` presence + `return_destination`.
         """
-        from game.simulation.battle_config import ReturnDestination
+        from game.core.return_destination import ReturnDestination
 
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
@@ -220,12 +221,13 @@ def _mock_scenario_for_switch_to_battle():
     the tests exercise the config/controller wiring without needing a
     real engine.
     """
+    from game.simulation.combat.modifier_stack import ModifierStack
     scenario = Mock()
     empty_spec = Mock()
     empty_spec.seed = 0
     empty_spec.teams = ()
     empty_spec.boundary = None
-    empty_spec.modifier_stack = Mock()
+    empty_spec.modifier_stack = ModifierStack.empty()
     empty_spec.end_condition = Mock()
     empty_spec.absolute_max_ticks = 10000
     scenario.to_spec = Mock(return_value=empty_spec)
@@ -300,7 +302,7 @@ class TestSceneTransitionCallbacks:
         is now `start_paused=True` + `return_destination=TEST_LAB` +
         `test_scenario` set.
         """
-        from game.simulation.battle_config import ReturnDestination
+        from game.core.return_destination import ReturnDestination
 
         callback = Mock()
         screen = self._create_screen_with_real_switch(mock_game, callback)
@@ -367,7 +369,8 @@ class TestEndBattleInTestMode:
             screen._battle_service = Mock()
             screen._battle_service.get_engine.return_value = mock_engine
             # Set up controller with config
-            from game.simulation.battle_config import BattleConfig, ReturnDestination
+            from game.simulation.battle_config import BattleConfig
+            from game.core.return_destination import ReturnDestination
             mock_controller = Mock()
             mock_controller.config = BattleConfig(
                 return_destination=ReturnDestination.TEST_LAB,

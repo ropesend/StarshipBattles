@@ -280,25 +280,32 @@ class TestScenario:
     results: Dict[str, Any]         # Test results (populated during execution)
     passed: bool                    # Test outcome
 
-    def setup(self, battle_engine):
-        """Configure ships and initial state. MUST be implemented."""
+    def to_spec(self, registries=None) -> BattleSpec:
+        """Compile the scenario into a BattleSpec. MUST be implemented."""
         raise NotImplementedError
 
-    def validate(self, engine) -> List[Check]:
-        """Return all validation checks. MUST be implemented."""
+    def wire_ships(self, ships_by_role, engine, initial_state):
+        """Bind `self.attacker`/`self.target` + other scenario ships from
+        the materialized role dict. MUST be implemented."""
         raise NotImplementedError
 
-    def collect_results(self, engine):
-        """Populate measurement attributes before validate() runs. Optional."""
+    def custom_setup(self, engine):
+        """Optional post-start tweaks — called AFTER engine.start_teams()."""
         pass
 
-    def update(self, battle_engine):
-        """Optional per-tick update logic."""
-        pass
+    def validate(self, outcome, telemetry) -> List[Check]:
+        """Return all validation checks from BattleOutcome + Combat Lab
+        telemetry. MUST be implemented."""
+        raise NotImplementedError
 
     def _load_ship(self, filename: str) -> Ship:
         """Helper to load ship from combat_lab/data/ships/"""
 ```
+
+*PROJ-270 Phase 11: the legacy `setup(battle_engine)` + `validate(engine)`
+pattern has been replaced by the `to_spec` / `wire_ships` / `validate(outcome,
+telemetry)` trio. See `combat_lab/scenarios/base.py` for the authoritative
+base class.*
 
 ### TestMetadata
 
