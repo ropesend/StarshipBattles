@@ -436,11 +436,14 @@ def _route_team_for_scope(scope_str: str, owner_team: int) -> int:
 
     Enemy-scoped abilities target the opponent team; everything else
     (including allied/player/fleet/system/sector scopes) targets the
-    owner team. Battle Setup is 2-sided today — `_NUM_TEAMS == 2` —
-    so `1 - owner` is the single opponent.
+    owner team. Battle Setup is 2-sided (`_NUM_TEAMS == 2`), so
+    `(_NUM_TEAMS - 1) - owner` is the single opponent.
+
+    3+ team extension: replace with a caller that loops over all
+    non-owner teams, emitting one entry per opponent team.
     """
     if scope_str in _OPPONENT_SCOPES:
-        return 1 - owner_team
+        return (_NUM_TEAMS - 1) - owner_team
     return owner_team
 
 

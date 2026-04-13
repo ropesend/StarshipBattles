@@ -31,7 +31,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple
 
 from game.core.math import Vector2
-from game.simulation.battle_outcome import BattleOutcome
 from game.simulation.battle_spec import (
     BattleSpec,
     CombatPolicies,
@@ -314,32 +313,26 @@ def _build_modifier_stack(
     environmental_effects: Any = None,
     team_modifiers: Optional[Mapping[int, Any]] = None,
 ) -> ModifierStack:
+    # PROJ-271 Phase 9: `sector.modifiers` / `system.modifiers` /
+    # `empire.combat_modifiers` ad-hoc dict iterables are no longer
+    # consumed. Audit (2026-04-13) confirmed no production code
+    # populates these attributes. The old `_entries_from_modifier_source`
+    # helper emitted placeholder entries (silently dropped at battle
+    # time) — that was a "dead-with-landmine" pattern that reproduced
+    # the PROJ-269 bug class. Real strategic modifiers flow via
+    # environmental_effects and team_modifiers (below).
     global_entries: List[ModifierEntry] = []
-    if system is not None:
-        global_entries.extend(
-            _entries_from_modifier_source(system, source_prefix="system")
-        )
-    if sector is not None:
-        global_entries.extend(
-            _entries_from_modifier_source(sector, source_prefix="sector")
-        )
     if environmental_effects is not None:
         global_entries.extend(
             _entries_from_environmental_effects(environmental_effects)
         )
+    _ = system  # Parameter retained for API stability (Phase 9 deletion scope).
+    _ = sector
+    _ = empires
 
     per_team: Dict[int, Tuple[ModifierEntry, ...]] = {}
-    # Empire modifiers — empires is keyed by team_id (or empire id).
-    # Phase 1 matches them positionally.
     for team_id in range(team_count):
-        empire = empires.get(team_id)
         entries: List[ModifierEntry] = []
-        if empire is not None:
-            entries.extend(
-                _entries_from_modifier_source(
-                    empire, source_prefix="empire", attr_name="combat_modifiers"
-                )
-            )
         if team_modifiers is not None and team_id in team_modifiers:
             entries.extend(
                 _entries_from_fleet_combat_modifiers(
@@ -456,66 +449,6 @@ def _real_entry(
         param_value=value,
     )
     return ModifierEntry(source=source, stack_group=None, effect=effect)
-
-
-def _entries_from_modifier_source(
-    source_obj: Any,
-    *,
-    source_prefix: str,
-    attr_name: str = "modifiers",
-) -> List[ModifierEntry]:
-    """Extract ModifierEntry objects from an attribute on `source_obj`.
-
-    The attribute is expected to be an iterable of dicts with
-    `design_id` and `display_name`. Placeholder emission is out of
-    PROJ-271 scope — these ad-hoc sector/system modifier dicts have
-    no real data-model mapping yet. When a modifier source joins the
-    FleetCombatModifiers contract or gets its own stat_key mapping,
-    replace the placeholder here (follow-up project).
-    """
-    modifier_dicts = getattr(source_obj, attr_name, None)
-    if not modifier_dicts:
-        return []
-    entries: List[ModifierEntry] = []
-    for mod in modifier_dicts:
-        design_id = mod.get("design_id")
-        if not design_id:
-            continue
-        display = mod.get("display_name", design_id)
-        placeholder_effect = ModifierEffect(
-            stat_key="placeholder",
-            value=0.0,
-            operation="multiply",
-            target_ability=None,
-            source_modifier_id=design_id,
-            source_modifier_name=display,
-            formula_str="",
-            param_value=0.0,
-        )
-        entries.append(
-            ModifierEntry(
-                source=f"{source_prefix}:{design_id}",
-                stack_group=None,
-                effect=placeholder_effect,
-            )
-        )
-    return entries
-
-
-# ---------------------------------------------------------------------------
-# Post-battle hook (Phase 1 placeholder)
-# ---------------------------------------------------------------------------
-
-
-def _noop_hook(outcome: BattleOutcome) -> None:
-    """Phase 1 placeholder post-battle hook.
-
-    Phase 2 replaces this with `apply_outcome_to_fleets(outcome, ...)`
-    which writes `ShipOutcome.components` back to
-    `ShipInstance.components`, removes destroyed ships from fleets,
-    and applies empire-level effects.
-    """
-    _ = outcome
 
 
 __all__ = ["build_strategy_battle_spec"]

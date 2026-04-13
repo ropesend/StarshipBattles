@@ -120,6 +120,58 @@ def test_capture_battle_state_propagates_type_error_instead_of_swallowing():
         )
 
 
+def test_battle_state_capture_class_method_does_not_swallow_programming_errors():
+    """PROJ-271 Phase 6 (audit follow-up): `BattleStateCapture._capture_state`
+    (the class method used by the LIVE production path via context
+    manager) must also catch only OSError — not `Exception`.
+
+    Phase 5 narrowed the module-level `capture_battle_state()` but
+    missed the class method `_capture_state` that the live caller
+    (`test_executor.py:247 BattleStateCapture(...)`) actually uses.
+    Same broad-except pattern would swallow the same class of bugs."""
+    import re
+    path = REPO_ROOT / "combat_lab" / "battle_state_capture.py"
+    text = path.read_text(encoding="utf-8")
+    # Find the _capture_state class method body.
+    start = text.find("def _capture_state")
+    assert start > 0, "_capture_state signature not found"
+    end = text.find("\n    def ", start + 1)
+    if end < 0:
+        end = len(text)
+    body = text[start:end]
+    code_lines = [ln for ln in body.splitlines() if not ln.lstrip().startswith("#")]
+    code = "\n".join(code_lines)
+    pattern = re.compile(r"^\s*except\s+Exception\b", re.MULTILINE)
+    assert not pattern.search(code), (
+        "BattleStateCapture._capture_state() still catches `except Exception` "
+        "— this is the live production path via the context manager at "
+        "test_executor.py:247. The module-level `capture_battle_state` was "
+        "narrowed in Phase 5 but this class method was missed. Narrow to "
+        "`except OSError`."
+    )
+
+
+def test_battle_state_capture_class_method_propagates_type_error():
+    """PROJ-271 Phase 6 (audit follow-up): the class-method variant
+    must propagate programming errors just like the module function."""
+    import pytest
+    from combat_lab.battle_state_capture import BattleStateCapture
+
+    # Engine stub that will cause BattleState.capture_from_engine to
+    # raise AttributeError/TypeError — the class method must let it
+    # propagate, not silently return None.
+    class BrokenEngine:
+        pass
+
+    capture = BattleStateCapture(engine=BrokenEngine(), test_id="TEST-PHASE6", seed=42)
+    # _timestamp + _battle_id normally set by __enter__; set manually
+    # to reach the _capture_state body.
+    capture._timestamp = "2026-04-13T00:00:00"
+    capture._battle_id = "test-battle-id"
+    with pytest.raises((AttributeError, TypeError, ValueError)):
+        capture._capture_state("final")
+
+
 def test_capture_battle_state_still_handles_disk_errors_gracefully(tmp_path, monkeypatch):
     """PROJ-271 Phase 5.3: OSError (disk full, permission denied,
     directory-creation failure) is still caught and returns None.

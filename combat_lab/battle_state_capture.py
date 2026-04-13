@@ -265,7 +265,14 @@ class BattleStateCapture:
         return False  # Don't suppress exceptions
 
     def _capture_state(self, state_type: str) -> Optional[str]:
-        """Capture state with consistent timestamp, battle_id, and ship IDs."""
+        """Capture state with consistent timestamp, battle_id, and ship IDs.
+
+        PROJ-271 Phase 6 (audit follow-up): narrowed `except Exception`
+        to `except OSError`. Phase 5 narrowed the module-level
+        `capture_battle_state()` but missed this class method — which is
+        the LIVE production path via `test_executor.py:247` context
+        manager. Programming errors now propagate.
+        """
         try:
             ensure_states_dir()
 
@@ -286,8 +293,8 @@ class BattleStateCapture:
             logger.debug(f"Captured {state_type} state: {filepath}")
             return filepath
 
-        except Exception as e:
-            logger.warning(f"Failed to capture {state_type} state: {e}")
+        except OSError as e:
+            logger.warning(f"Failed to write {state_type} state to disk: {e}")
             return None
 
     def get_results_dict(self) -> dict:

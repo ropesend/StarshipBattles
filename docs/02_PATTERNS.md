@@ -1285,6 +1285,64 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 
 ---
 
+## 24. External-Stats Bridge (PROJ-270 Phase 9 + PROJ-271)
+
+**Where:** `game/simulation/entities/ship.py` (`Ship.external_stats`), `game/simulation/combat/fleet_aura_manager.py` (`_apply_bonuses`), `game/simulation/components/abilities/base.py` (`Ability.get_effective_stat` composition), `game/simulation/entities/ship_stats.py` (`_apply_aggregated_stats` for ship-level keys).
+
+**How It Works:**
+- `ModifierStack` entries (from spec compilers) flow through `FleetAuraManager._recalculate` which aggregates per-team bonuses into `ship.external_stats: Dict[str, float]`.
+- At ability-level consumption, `Ability.get_effective_stat(stat_key)` composes ability-local / component-local / ship-external values: `_mult` keys multiply (local × external); `_add` keys sum (local + external).
+- At ship-level consumption (for keys like `shield_bonus_add`), `Ship.recalculate_stats` reads `ship.external_stats[stat_key]` directly and applies it to aggregated stats.
+- External_stats is battle-scoped and never serialized — it's read-only composition layer preserving "ships enter unmutated".
+
+**Why:**
+- Pre-Phase 9, `FleetAuraManager._apply_bonuses` was a hardcoded 2-key sink that silently discarded every stat_key except `fleet_attack_bonus` / `fleet_defense_bonus`. Track A battle math (storm, fleet boosters) compiled real stat_keys that never reached ship stats.
+- Option A (external-stats dict) chosen over Option B (synthesize `AppliedModifier` entries) because B would write back into `component.modifiers`, violating PROJ-269's invariant.
+
+**When to Use:**
+- New stat_key that applies across all components on a ship uniformly -> per-ability lookup via `STAT_BINDINGS` + `get_effective_stat`.
+- New stat_key that adds "virtual" capacity/effect at the ship level (no specific ability owns it) -> ship-level read in `_apply_aggregated_stats`. `shield_bonus_add` is the reference example.
+
+**Don't:**
+- Mutate `component.stats` from outside `Component._calculate_modifier_stats`.
+- Populate `ship.external_stats` from anywhere except `FleetAuraManager._apply_bonuses`.
+- Serialize `external_stats` in save data — it's battle-scoped composition, rebuilt each battle.
+
+---
+
+## 25. Scope-Driven Team Routing (PROJ-271)
+
+**Where:** `game/ui/screens/battle_setup/spec_compiler.py` (`_route_team_for_scope`, `_OPPONENT_SCOPES`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
+
+**How It Works:**
+- An ability's `AbilityScope` value encodes who it targets: `fleet`/`allied_*`/`player_*`/`system`/`sector` -> owner's team; `enemy_sector`/`enemy_system` -> opponent team.
+- Battle Setup compiler's `_route_team_for_scope(scope_str, owner_team)` routes each emitted `ModifierEntry` to the correct `per_team[team_id]` bucket at compile time (currently 2-team assumption via `_NUM_TEAMS`).
+- Strategy compiler path is simpler: `CombatModifierCollector` pre-computes enemy-scope effects INTO the receiving fleet's `FleetCombatModifiers` before the compiler runs, so the compiler emits to `per_team[receiver_id]` trivially.
+
+**Why:**
+- User clarified 2026-04-13: "the suppressor and booster effect is just the difference between multiplying by less than 1 or more than 1; the scope determines what vehicles/designs are impacted." No separate suppressor architecture — scope IS the routing mechanism.
+
+**When to Use:**
+- Any new ability type with fleet/system/sector scope options needs scope-driven routing when its effects are compiled into `ModifierStack` entries.
+- Extending `_OPPONENT_SCOPES` requires adding tests proving each scope routes correctly.
+
+---
+
+## 26. Spec Compiler → run_battle (PROJ-269)
+
+**Where:** `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec`, `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec`, `combat_lab/scenarios/base.py::to_spec`, all feeding `game/simulation/battle_runner.py::run_battle(spec, ai_factory, ship_builder) -> BattleOutcome`.
+
+**How It Works:**
+- Each UI/strategy/test-lab context compiles its inputs (fleets + toggles + environmental effects) into a `BattleSpec` (frozen DTO).
+- `run_battle` consumes the spec, starts a `BattleEngine` via `start_engine_from_spec`, ticks until end, emits a `BattleOutcome`.
+- Visual mode: `BattleController.set_spec` + `update()` per-frame + `get_outcome()` at end — same spec-in/outcome-out contract with a per-frame driver.
+
+**Why:** Previously 5 production paths bypassed a unified entry. The spec compiler pattern makes the contract "every battle is spec -> engine -> outcome" enforceable via the acceptance guard at `tests/unit/simulation/test_unified_entry_guard.py`.
+
+**When to Use:** Any new battle-producing code path must emit a `BattleSpec` and consume its results via `BattleOutcome`. Don't construct `BattleEngine` directly; don't call `engine.update()` directly.
+
+---
+
 ## Quick Reference
 
 | Pattern | Primary File | Key Class/Function |

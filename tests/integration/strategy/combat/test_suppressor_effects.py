@@ -22,9 +22,7 @@ from game.simulation.battle_spec import (
     TeamSpec,
 )
 from game.simulation.combat.boundary import UnboundedRegion, ExitPolicy
-from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
-from game.simulation.components.modifier_effects import ModifierEffect
 from game.simulation.entities.ship_serialization import ShipSerializer
 from game.simulation.systems.battle_end_conditions import TickLimitCondition
 
@@ -208,6 +206,62 @@ def test_battle_setup_shield_booster_targets_owner_team(
     )
     assert side1.max_shields == 500.0, (
         f"Booster must NOT affect opponent team; got {side1.max_shields}"
+    )
+
+
+def test_two_same_group_shield_boosters_max_not_sum(
+    fresh_registries, session_registries
+):
+    """PROJ-271 Phase 7 end-to-end: two `qs_system_shield_booster_complex`
+    on side 0 → side 0 ships have max_shields reflecting MAX of the
+    two boosters (1.25x = 625), NOT SUM (1.5625x = 781).
+
+    The shield_booster_system component uses stack_group=
+    'shield_booster_system' (verified in components.json). Two instances
+    of the same complex emit two ModifierEntry with the SAME stack_group.
+    Per PROJ-271 stacking decision: same-group MAX, different-group SUM.
+    """
+    from game.ui.screens.battle_setup.spec_compiler import build_manual_battle_spec
+    from game.ui.screens.battle_setup_state import BattleSetupState
+    from game.core.registry import get_default_registry_provider, GameRegistries
+
+    provider = get_default_registry_provider()
+    registries = GameRegistries(
+        components=provider.get_components(),
+        modifiers=provider.get_modifiers(),
+        vehicle_classes=provider.get_vehicle_classes(),
+        resources=provider.get_resources(),
+        resource_catalog=provider.get_resource_catalog(),
+    )
+
+    state = BattleSetupState()
+    # Two copies of the SAME complex on side 0 → two entries, same
+    # stack_group → MAX, not SUM.
+    for _ in range(2):
+        state.side_0.system_complexes.append({
+            "design_id": "qs_system_shield_booster_complex",
+            "display_name": "System Shield Booster",
+        })
+    spec_from_ui = build_manual_battle_spec(state, registries)
+    stack = spec_from_ui.modifier_stack
+
+    spec = BattleSpec(
+        seed=42,
+        telemetry_level=TelemetryLevel.NORMAL,
+        boundary=UnboundedRegion(exit_policy=ExitPolicy.NONE),
+        end_condition=TickLimitCondition(max_ticks=2),
+        absolute_max_ticks=100,
+        teams=(_team(0, _ship_spec("side0_ship")), _team(1, _ship_spec("side1_ship"))),
+        modifier_stack=stack,
+        post_battle_hook=None,
+    )
+    outcome = _run(spec, fresh_registries)
+    side0 = _ship_outcome(outcome, "side0_ship")
+
+    # MAX: 1.25x = 625, NOT SUM: 2.5x = 1250 or 1.5625x = 781
+    assert side0.max_shields == 625.0, (
+        f"Expected MAX of two 1.25x boosters = 625; got {side0.max_shields}. "
+        f"Stack group not respected — two entries SUMmed instead of MAXed."
     )
 
 

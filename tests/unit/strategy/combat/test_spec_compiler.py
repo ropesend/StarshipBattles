@@ -17,7 +17,6 @@ from game.simulation.combat.boundary import (
     ExitPolicy,
     UnboundedRegion,
 )
-from game.simulation.combat.modifier_stack import ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
 from game.strategy.combat.spec_compiler import build_strategy_battle_spec
 from game.strategy.data.fleet import Fleet
@@ -173,71 +172,16 @@ def test_compiler_post_battle_hook_is_callable(fleets_on_hex, session_registries
 # ---------------------------------------------------------------------------
 
 
-def test_compiler_system_modifier_flows_into_global(
-    fleets_on_hex, session_registries
-):
-    class _FakeSystem:
-        modifiers = [{"design_id": "system_bonus", "display_name": "System Bonus"}]
-
-    spec = build_strategy_battle_spec(
-        fleets_on_hex,
-        sector=None,
-        system=_FakeSystem(),
-        empires={},
-        settings=_FakeSettings(),
-        registries=session_registries,
-    )
-    assert isinstance(spec.modifier_stack, ModifierStack)
-    sources = [e.source for e in spec.modifier_stack.global_]
-    assert any("system:" in s for s in sources), sources
-
-
-def test_compiler_sector_modifier_flows_into_global(
-    fleets_on_hex, session_registries
-):
-    class _FakeSector:
-        modifiers = [{"design_id": "sector_bonus", "display_name": "Sector Bonus"}]
-
-    spec = build_strategy_battle_spec(
-        fleets_on_hex,
-        sector=_FakeSector(),
-        system=None,
-        empires={},
-        settings=_FakeSettings(),
-        registries=session_registries,
-    )
-    sources = [e.source for e in spec.modifier_stack.global_]
-    assert any("sector:" in s for s in sources), sources
-
-
-def test_compiler_empire_modifier_flows_into_per_team(
-    fleets_on_hex, session_registries
-):
-    class _FakeEmpire:
-        def __init__(self, modifier_design_id):
-            self.combat_modifiers = [
-                {
-                    "design_id": modifier_design_id,
-                    "display_name": modifier_design_id,
-                }
-            ]
-
-    empires = {
-        0: _FakeEmpire("empire0_buff"),
-        1: _FakeEmpire("empire1_buff"),
-    }
-    spec = build_strategy_battle_spec(
-        fleets_on_hex,
-        sector=None,
-        system=None,
-        empires=empires,
-        settings=_FakeSettings(),
-        registries=session_registries,
-    )
-    team0_entries = spec.modifier_stack.per_team.get(0, ())
-    team1_entries = spec.modifier_stack.per_team.get(1, ())
-    assert any("empire0_buff" in e.source for e in team0_entries)
-    assert any("empire1_buff" in e.source for e in team1_entries)
+# PROJ-271 Phase 9: deleted `test_compiler_system_modifier_flows_into_global`,
+# `test_compiler_sector_modifier_flows_into_global`, and
+# `test_compiler_empire_modifier_flows_into_per_team`. These tests
+# exercised `_entries_from_modifier_source` — a helper emitting
+# `stat_key="placeholder"` for ad-hoc `sector.modifiers` /
+# `system.modifiers` / `empire.combat_modifiers` iterables. No
+# production code populated those attributes; the helper was
+# dead-with-landmine (would silently drop effects if ever wired).
+# Helper + call sites deleted in Phase 9; tests no longer exercise
+# anything meaningful.
 
 
 # ---------------------------------------------------------------------------

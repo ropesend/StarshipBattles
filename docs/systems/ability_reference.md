@@ -1543,6 +1543,7 @@ All modifier stat keys that affect abilities at runtime.
 | ARC_ADD | WeaponAbility firing arc |
 | ACCURACY_ADD | BeamWeaponAbility base accuracy |
 | PROJECTILE_STEALTH_LEVEL | SeekerWeaponAbility stealth |
+| SHIELD_BONUS_ADD | Ship-level `max_shields`; added once per ship and scaled by external `shield_capacity_mult` in `ship_stats.py::_apply_aggregated_stats`. Pipeline ordering `(base + flat) × mult`. Typical source: strategic ShieldProjection auras (PROJ-271 Phase 1). |
 
 ### Set/Override (default None)
 

@@ -280,6 +280,120 @@ def test_mixed_add_and_mult_per_team_isolation():
     assert team1.external_stats.get("shield_bonus_add", 0.0) == 0.0
 
 
+# ---------------------------------------------------------------------------
+# PROJ-271 Phase 7: stack_group respect on external entries
+# ---------------------------------------------------------------------------
+
+
+def _grouped_mult_entry(source: str, stat_key: str, value: float, stack_group: str):
+    return ModifierEntry(
+        source=source,
+        stack_group=stack_group,
+        effect=ModifierEffect(
+            stat_key=stat_key,
+            value=value,
+            operation="multiply",
+            target_ability=None,
+            source_modifier_id="mod",
+            source_modifier_name="Mod",
+            formula_str="",
+            param_value=value,
+        ),
+    )
+
+
+def test_same_stack_group_entries_compose_max_not_sum():
+    """PROJ-271 Phase 7: two external entries in the SAME stack_group
+    compose MAX, not SUM. Matches ship-provider aura semantics."""
+    ship = _ship(0)
+    stack = ModifierStack(
+        per_team={
+            0: (
+                _grouped_mult_entry("a", "shield_capacity_mult", 1.5, "shield_boost"),
+                _grouped_mult_entry("b", "shield_capacity_mult", 1.25, "shield_boost"),
+            ),
+        },
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+    # MAX(1.5, 1.25) = 1.5 — NOT 1.5 + 1.25 = 2.75
+    assert ship.external_stats.get("shield_capacity_mult") == pytest.approx(1.5)
+
+
+def test_different_stack_groups_compose_sum():
+    """Entries with different stack_groups compose additively.
+
+    Note: for `_mult` stat keys, "additive composition across groups"
+    means the VALUES are summed (matches ship-provider aura — e.g.,
+    two different types of shield boosters each 0.2 stack to 0.4).
+    The engine then interprets the composed value per stat_key semantics
+    (`_mult` uses the composed value directly)."""
+    ship = _ship(0)
+    stack = ModifierStack(
+        per_team={
+            0: (
+                _grouped_mult_entry("a", "shield_capacity_mult", 1.2, "boost_type_a"),
+                _grouped_mult_entry("b", "shield_capacity_mult", 1.3, "boost_type_b"),
+            ),
+        },
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+    # Different groups: SUM = 1.2 + 1.3 = 2.5
+    assert ship.external_stats.get("shield_capacity_mult") == pytest.approx(2.5)
+
+
+def test_apply_bonuses_invokes_ship_recalculate_stats():
+    """PROJ-271 Phase 11.5: confirm `FleetAuraManager._apply_bonuses`
+    calls `ship.recalculate_stats()` when external_stats change, so
+    the ship's `max_shields` (and other aggregate stats) reflect the
+    new modifiers. Previously only integration tests proved this
+    wiring; a direct unit test makes regression diagnosis fast."""
+    from unittest.mock import MagicMock
+    from types import SimpleNamespace
+    ship = SimpleNamespace(
+        team_id=0,
+        is_alive=True,
+        is_derelict=False,
+        fleet_attack_bonus=0.0,
+        fleet_defense_bonus=0.0,
+        external_stats={},
+        get_all_components=lambda: [],
+        recalculate_stats=MagicMock(),
+    )
+    stack = ModifierStack(
+        per_team={0: (_add_entry("planet", "shield_bonus_add", 50.0),)},
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+    ship.recalculate_stats.assert_called()
+
+
+def test_none_stack_group_entries_each_contribute_independently():
+    """Entries with stack_group=None each form a unique group, so they
+    all contribute via SUM (preserves pre-Phase-7 behavior for
+    un-grouped entries)."""
+    ship = _ship(0)
+    stack = ModifierStack(
+        per_team={
+            0: (
+                _entry("a", "ToHitAttackModifier", 0.1),
+                _entry("b", "ToHitAttackModifier", 0.2),
+                _entry("c", "ToHitAttackModifier", 0.3),
+            ),
+        },
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+    # All three have stack_group=None (from _entry helper); each is
+    # a unique group → SUM = 0.6
+    assert ship.fleet_attack_bonus == pytest.approx(0.6)
+
+
 def test_shield_bonus_add_does_not_log_placeholder_warning(caplog):
     """The new stat_key must NOT trigger the `_log_placeholder_once`
     warning — it's a real mapping now."""

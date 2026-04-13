@@ -35,11 +35,18 @@ class AuraProvider:
 
 @dataclass
 class ExternalModifier:
-    """A battle condition modifier not tied to a ship (permanent for the battle)."""
+    """A battle condition modifier not tied to a ship (permanent for the battle).
+
+    PROJ-271 Phase 7: `stack_group` drives two-phase aggregation —
+    entries sharing a stack_group compose MAX; distinct stack_groups
+    compose SUM. `None` means "unique group" (each entry contributes
+    independently via SUM). Mirrors the ship-provider aura semantics.
+    """
     ability_name: str
     value: float
     source_name: str
     team_id: Optional[int]  # None = global (all teams)
+    stack_group: Optional[str] = None
 
 
 class FleetAuraManager:
@@ -132,11 +139,15 @@ class FleetAuraManager:
             self._log_placeholder_once(source)
             return
         value = float(getattr(effect, 'value', 0.0) or 0.0)
+        # PROJ-271 Phase 7: copy stack_group from the entry so the
+        # recalculate path can apply two-phase MAX/SUM aggregation.
+        stack_group = getattr(entry, 'stack_group', None)
         self._external.append(ExternalModifier(
             ability_name=stat_key,
             value=value,
             source_name=source,
             team_id=team_id,
+            stack_group=stack_group,
         ))
 
     def _log_placeholder_once(self, source: str) -> None:
@@ -291,22 +302,30 @@ class FleetAuraManager:
                 groups[group] = []
             groups[group].append(provider.value)
 
+        # PROJ-271 Phase 7: external ModifierEntry values now route
+        # through the same team_ability_groups structure BEFORE
+        # aggregation, so they participate in the two-phase MAX/SUM
+        # alongside ship-provider auras. Same-stack_group entries MAX;
+        # different stack_groups SUM; None stack_group becomes a
+        # unique group (preserves pre-Phase-7 additive behavior for
+        # un-grouped ToHitAttack/Defense entries).
+        for idx, ext in enumerate(self._external):
+            group = ext.stack_group or f"_default_ext_{idx}"
+            target_teams = team_ids if ext.team_id is None else (
+                {ext.team_id} if ext.team_id in team_ability_groups else set()
+            )
+            for team_id in target_teams:
+                if ext.ability_name not in team_ability_groups[team_id]:
+                    team_ability_groups[team_id][ext.ability_name] = {}
+                groups = team_ability_groups[team_id][ext.ability_name]
+                if group not in groups:
+                    groups[group] = []
+                groups[group].append(ext.value)
+
         # PROJ-253: Delegate two-phase aggregation to shared function
         for team_id, ability_groups in team_ability_groups.items():
             totals = _aggregate_ability_groups(ability_groups)
             self._team_bonuses[team_id] = {k: v for k, v in totals.items() if v}
-
-        # Add external modifiers (always active, no stacking groups)
-        for ext in self._external:
-            if ext.team_id is None:
-                for team_id in team_ids:
-                    current = self._team_bonuses[team_id].get(ext.ability_name, 0.0)
-                    self._team_bonuses[team_id][ext.ability_name] = current + ext.value
-            else:
-                team_id = ext.team_id
-                if team_id in self._team_bonuses:
-                    current = self._team_bonuses[team_id].get(ext.ability_name, 0.0)
-                    self._team_bonuses[team_id][ext.ability_name] = current + ext.value
 
         self._apply_bonuses(ships)
 

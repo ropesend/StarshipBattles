@@ -758,6 +758,56 @@ class BattleScreen:
             prof_text = font.render("PROFILING ACTIVE", True, PROFILING_TEXT)
             screen.blit(prof_text, (width - 180, 10))
 
+        # PROJ-271 Phase 8 Task 8.2: active external modifier indicator.
+        # Shows users that fleet/environmental modifiers (storm,
+        # boosters, suppressors) are live — otherwise their numeric
+        # effect on ship stats is invisible.
+        mod_lines = self.get_active_modifier_labels()
+        if mod_lines:
+            y_offset = 90
+            title = font.render("Active Modifiers:", True, HUD_TEXT)
+            screen.blit(title, (panel_offset, y_offset))
+            for i, line in enumerate(mod_lines):
+                surf = font.render(line, True, HUD_TEXT)
+                screen.blit(surf, (panel_offset, y_offset + 22 + i * 18))
+
+    def get_active_modifier_labels(self) -> list:
+        """Return formatted active-modifier lines for HUD display.
+
+        PROJ-271 Phase 8 Task 8.2: surfaces `FleetAuraManager.get_active_bonuses`
+        for user-visible modifier feedback. Returns an empty list when
+        no controller/engine is available or no modifiers are active.
+        """
+        controller = getattr(self, '_controller', None)
+        if controller is None:
+            return []
+        service = getattr(controller, '_service', None) or getattr(controller, 'service', None)
+        if service is None:
+            return []
+        try:
+            engine = service.get_engine()
+        except (AttributeError, TypeError):
+            return []
+        if engine is None:
+            return []
+        aura_manager = getattr(engine, 'aura_manager', None)
+        if aura_manager is None:
+            return []
+        lines = []
+        # Collect team IDs present in the battle.
+        team_ids = sorted({s.team_id for s in getattr(engine, 'ships', [])})
+        for team_id in team_ids:
+            try:
+                bonuses = aura_manager.get_active_bonuses(team_id)
+            except (AttributeError, TypeError):
+                continue
+            for b in bonuses:
+                ability = b.get('ability', '?')
+                value = b.get('value', 0)
+                source = b.get('source', '?')
+                lines.append(f"T{team_id} {ability}={value:.2f} ({source})")
+        return lines
+
     def print_headless_summary(self):
         """Print summary of headless battle results."""
         # Skip summary for test mode - test framework handles results

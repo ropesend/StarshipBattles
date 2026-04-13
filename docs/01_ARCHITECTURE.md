@@ -159,7 +159,7 @@ Six layers with strict downward-only dependency flow:
 | `panels/`        | BattlePanels, BuilderWidgets |
 | `components/`    | Reusable UI components including `table/` subpackage |
 | `widgets/`       | PanelFactory, ScrollableJsonPanel, UIElementRegistry |
-| `services/`      | BattleFactories, InputMapper, ShipFactory, ShipIO, ComponentService, ValidationService |
+| `services/`      | InputMapper, ShipFactory, ShipIO, ComponentService, ValidationService (BattleFactories deleted in PROJ-270 Phase 8.2) |
 | `orchestration/` | (Package retained for future UI orchestration; `BattleOrchestrator` removed — `AIControllerFactory` is the canonical AI creation path) |
 | `research/`      | Research/tech tree UI visualization |
 | `interfaces/`    | UI-layer interface definitions |

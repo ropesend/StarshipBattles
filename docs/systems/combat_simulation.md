@@ -424,13 +424,19 @@ translates each `ModifierEntry` into an `ExternalModifier`. Unknown /
 placeholder stat_keys emit a once-per-source WARNING so compiler
 authors see missing mappings immediately (PROJ-270 Phase 6.4).
 
-**Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A):
-Storm hex shield interference + per-team `FleetCombatModifiers.shield_mult`
-/ `damage_mult` now emit REAL stat_keys (`shield_capacity_mult` /
-`damage_mult`) from `game/strategy/combat/spec_compiler.py` — no
-longer silently skipped. `flat_shield_bonus` + suppressor effects
-remain placeholders pending PROJ-271 (new additive stat_key +
-opponent-team routing).
+**Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A + PROJ-271 Track B):
+All strategic modifier sources emit real stat_keys now. Storm hex shield
+interference -> `shield_capacity_mult`. Per-team
+`FleetCombatModifiers.shield_mult`/`damage_mult` -> `shield_capacity_mult`
+/ `damage_mult`. `FleetCombatModifiers.flat_shield_bonus` ->
+`shield_bonus_add` (additive, ship-level). Battle Setup complex toggles
+parse design JSONs, walk components, and map abilities
+(`ShieldModifier`, `DamageModifier`, `ShieldProjection`) to stat_keys
+with scope-driven team routing (`enemy_*` -> opponent team, else ->
+owner team). Pipeline ordering `(base + flat) × mult` is locked in
+`ship_stats.py::_apply_aggregated_stats`. `FleetAuraManager` respects
+`stack_group` on external entries (two-phase MAX within group, SUM
+across groups) per PROJ-271 Phase 7.
 
 **End conditions** (composable via `IEndCondition` protocol):
 

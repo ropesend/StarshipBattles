@@ -67,6 +67,16 @@ class TestNoDirectBattleEngineConstruction:
         "game/simulation/systems/battle_engine.py",  # the class's own module docstring
     }
 
+    def test_whitelist_size_locked(self):
+        """PROJ-271 Phase 11.2: any change to the whitelist count forces
+        explicit review. Silent whitelist growth hides new bypasses."""
+        assert len(self.WHITELIST_FILES) == 3, (
+            f"WHITELIST_FILES size changed from 3 to {len(self.WHITELIST_FILES)}. "
+            "Adding a new whitelist entry is a load-bearing decision — update "
+            "this assertion deliberately after confirming the new entry is a "
+            "legitimate lifecycle path (not a new bypass)."
+        )
+
     def test_no_unwhitelisted_BattleEngine_construction(self):
         paths = list(_iter_py_files(
             "game", "combat_lab",
@@ -538,19 +548,24 @@ class TestBattleSetupCompilerBehavioralStatKeys:
         assert suppressors, "Expected suppressor routed to team 1 (opponent)"
 
     def test_no_placeholder_from_any_real_complex(self):
-        """Survey every complex in the Battle Setup toggle lists — none emits placeholder."""
-        for design_id in [
-            "qs_system_shield_booster_complex",
-            "qs_system_shield_suppressor_complex",
-            "qs_system_shield_projector_complex",
-            "qs_system_damage_booster_complex",
-            "qs_system_damage_suppressor_complex",
-            "qs_sector_shield_booster_complex",
-            "qs_sector_shield_suppressor_complex",
-            "qs_sector_shield_projector_complex",
-            "qs_sector_damage_booster_complex",
-            "qs_sector_damage_suppressor_complex",
-        ]:
+        """PROJ-271 Phase 11.1: glob every `data/designs/qs_*_complex.json`
+        (not a hardcoded list) — if any complex design carries a
+        `ShieldModifier`/`DamageModifier`/`ShieldProjection` ability,
+        its compiled entries must have no placeholders. New complexes
+        added to disk are automatically checked."""
+        import json
+        complex_files = sorted((REPO_ROOT / "data" / "designs").glob("qs_*_complex.json"))
+        assert complex_files, "No complex design files found — pattern drift?"
+
+        for path in complex_files:
+            with open(path, "r", encoding="utf-8") as f:
+                design = json.load(f)
+            # Only complex designs with at least one scoped modifier-
+            # producing ability can emit real entries. Skip economy /
+            # logistics complexes that don't affect combat.
+            if not _design_has_combat_ability(design):
+                continue
+            design_id = path.stem
             scope = "system" if "system" in design_id else "sector"
             spec = self._compile(design_id, scope, 0)
             all_entries = []
@@ -561,6 +576,51 @@ class TestBattleSetupCompilerBehavioralStatKeys:
                 f"Complex '{design_id}' emitted placeholder entries: "
                 f"{[e.effect.source_modifier_name for e in placeholders]}"
             )
+
+
+def _design_has_combat_ability(design: dict) -> bool:
+    """Check if a complex design has at least one component whose
+    abilities include ShieldModifier/DamageModifier/ShieldProjection."""
+    # Need to inspect component abilities which requires registry lookup.
+    # Simpler heuristic: the design mentions one of the relevant
+    # component IDs by scanning layers for specific component types.
+    target_components = {
+        "sector_shield_projector", "system_shield_projector",
+        "shield_booster_system", "shield_booster_sector",
+        "shield_suppressor_system", "shield_suppressor_sector",
+        "damage_booster_system", "damage_booster_sector",
+        "damage_suppressor_system", "damage_suppressor_sector",
+    }
+    layers = design.get("layers", {})
+    for layer_comps in layers.values():
+        for comp in (layer_comps or []):
+            if isinstance(comp, dict) and comp.get("id") in target_components:
+                return True
+    return False
+
+
+class TestStrategyCompilerHasNoPlaceholderEmission:
+    """PROJ-271 Phase 9: strategy compiler must not emit ANY
+    `stat_key="placeholder"` ModifierEffect. The old
+    `_entries_from_modifier_source` helper was dead-with-landmine
+    (deleted in Phase 9); any new placeholder-emission is a regression.
+    """
+
+    def test_no_placeholder_stat_key_anywhere_in_compiler(self):
+        import re
+        path = REPO_ROOT / "game/strategy/combat/spec_compiler.py"
+        text = path.read_text(encoding="utf-8")
+        # Strip comment-only lines (rationale may cite the pattern as prose).
+        code_lines = [ln for ln in text.splitlines() if not ln.lstrip().startswith("#")]
+        code = "\n".join(code_lines)
+        pattern = re.compile(r'stat_key\s*=\s*["\']placeholder["\']')
+        matches = pattern.findall(code)
+        assert not matches, (
+            "Strategy compiler emits placeholder stat_keys somewhere. "
+            "PROJ-271 Phase 9 established that no code in the compiler "
+            "should produce placeholder effects — every modifier source "
+            "must map to a real stat_key or be deleted entirely."
+        )
 
 
 class TestNoPlaceholderStatKeyInStrategyCompiler:

@@ -59,10 +59,6 @@ from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.core.config import PhysicsConfig
 from game.core.constants import CombatConstants
 from game.simulation.interfaces import (
-    IResourceStorageAbility,
-    IResourceGenerationAbility,
-    IResourceConsumptionAbility,
-    IWarpJumpAbility,
     is_resource_storage,
     is_resource_generation,
     is_resource_consumption,
@@ -465,8 +461,14 @@ class ShipStatsCalculator:
         if isinstance(external_stats, dict):
             flat_shield_bonus = external_stats.get('shield_bonus_add', 0.0)
             if flat_shield_bonus:
+                # PROJ-271 Phase 12.1: scale the flat bonus by BOTH
+                # capacity_mult AND shield_capacity_mult so the "virtual
+                # extra shield component" semantic composes identically
+                # to how a real ShieldProjection computes capacity
+                # (see ShieldProjection.recalculate).
+                capacity_mult = external_stats.get('capacity_mult', 1.0)
                 shield_cap_mult = external_stats.get('shield_capacity_mult', 1.0)
-                ship.max_shields += flat_shield_bonus * shield_cap_mult
+                ship.max_shields += flat_shield_bonus * capacity_mult * shield_cap_mult
         ship.shield_regen_rate = acc['shield_regen']
         ship.shield_regen_cost = acc['shield_cost']
         ship.warp_max_tonnage = acc['warp_max_tonnage']

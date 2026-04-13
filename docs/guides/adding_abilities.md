@@ -239,11 +239,15 @@ def recalculate(self):
 
 ## Step 5: Understand get_effective_stat()
 
-`get_effective_stat()` is inherited from `Ability`. It resolves stats with this priority:
+`get_effective_stat()` is inherited from `Ability`. It resolves stats by composing ability-local and ship-level sources:
 
-1. **Targeted ability stats:** `component.ability_stats[ClassName][stat_key]`
-2. **Global component stats:** `component.stats[stat_key]`
-3. **Default value:** Based on key naming convention:
+1. **Local lookup:** `component.ability_stats[ClassName][stat_key]` (targeted), falling back to `component.stats[stat_key]` (global).
+2. **External lookup (PROJ-270 Phase 9):** `ship.external_stats[stat_key]` populated by `FleetAuraManager._apply_bonuses` from the battle's `ModifierStack` (fleet / environmental / complex-toggle modifiers).
+3. **Composition:**
+   - Both present and key ends in `_mult` -> multiply: `local * external`.
+   - Both present and key ends in `_add` -> sum: `local + external`.
+   - Only one present -> use it directly.
+4. **Default value (neither present):**
    - `*_mult` stats -> `1.0`
    - `*_add` stats -> `0.0`
    - Other stats -> `None` (or explicit default)
@@ -262,6 +266,12 @@ arc_set = self.get_effective_stat('arc_set', None)
 **Targeted vs Global Effects:**
 - **Targeted:** `target_ability: "WeaponAbility"` only affects that ability class
 - **Global:** No `target_ability` affects all abilities on the component
+
+**External (PROJ-270/271):**
+`ship.external_stats` carries stat_keys contributed by the `ModifierStack` — e.g., `shield_capacity_mult` from a storm hex, `damage_mult` from a fleet booster, `shield_bonus_add` from a planet shield-projector aura. The composition is read-only at consumption time: abilities never mutate `component.stats`; they just read the combined value via `get_effective_stat`. This preserves PROJ-269's "ships enter battle unmutated" principle.
+
+**Ship-level vs per-ability stat_keys:**
+Most modifiers compose at the per-ability level via `STAT_BINDINGS` on the consuming ability class (see Step 3). A few — like `shield_bonus_add` — compose at SHIP level because the effect isn't anchored to a specific ability (a flat shield bonus from a planet aura behaves "as if the ship had an extra shield component"). Those ship-level stat_keys are read in `ship_stats.py::_apply_aggregated_stats` directly from `ship.external_stats` and applied once per ship. Follow the existing pattern for either choice — don't mix.
 
 ## Step 6: Implement UI Methods
 

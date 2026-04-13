@@ -105,6 +105,32 @@ class TestShieldBonusAddPipelineAtShipLevel:
             f"Expected max_shields=50 (flat bonus only, no component), got {ship.max_shields}"
         )
 
+    def test_flat_bonus_stacks_with_capacity_mult_too(self, fresh_registries):
+        """PROJ-271 Phase 12.1: the 'virtual extra shield component'
+        semantic requires the flat bonus to be scaled by BOTH external
+        `shield_capacity_mult` AND external `capacity_mult`, matching
+        how real ShieldProjection components compute `capacity`.
+
+        `capacity_mult` isn't currently populated by any fleet aura,
+        but if it ever is, the flat bonus should compose identically
+        to a real shield component.
+        """
+        ship = ShipSerializer.from_dict(_design_with_shields(), registries=fresh_registries)
+        ship.external_stats = {
+            "shield_bonus_add": 50.0,
+            "capacity_mult": 2.0,
+            "shield_capacity_mult": 0.5,
+        }
+        ship.recalculate_stats()
+        # Real component: base_capacity 500 * 2.0 * 0.5 = 500.
+        # Flat bonus: 50 * 2.0 * 0.5 = 50.
+        # Total: 500 + 50 = 550.
+        assert ship.max_shields == 550, (
+            f"Expected flat bonus to be scaled by BOTH capacity_mult AND "
+            f"shield_capacity_mult (like a real shield component). "
+            f"Got max_shields={ship.max_shields}"
+        )
+
     def test_zero_flat_bonus_is_neutral(self, fresh_registries):
         """`shield_bonus_add` of 0.0 has no effect — max_shields unchanged."""
         ship = ShipSerializer.from_dict(_design_with_shields(), registries=fresh_registries)

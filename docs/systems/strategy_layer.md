@@ -749,13 +749,17 @@ into the engine:
   5.5 initially emitted these as `stat_key="placeholder"` — recorded
   in the forensic trace but with NO effect on battle math (a real
   gameplay regression).
-- **Post-PROJ-270 Phase 6 Track A:** the strategy compiler now emits
-  REAL stat_keys: storm `shield_capacity_mult` → `StatKey.SHIELD_CAPACITY_MULT`;
-  fleet `shield_mult` → `StatKey.SHIELD_CAPACITY_MULT`; fleet `damage_mult`
-  → `StatKey.DAMAGE_MULT`. `FleetAuraManager._append_external_from_entry`
-  applies them to ship stats during battle. `flat_shield_bonus` +
-  suppressor effects remain placeholders pending PROJ-271 (new additive
-  stat_key + opponent-team routing).
+- **Post-PROJ-270 Phase 6 Track A + PROJ-271 Track B:** the strategy compiler emits
+  REAL stat_keys for all modifier sources: storm `shield_capacity_mult` →
+  `StatKey.SHIELD_CAPACITY_MULT`; fleet `shield_mult` →
+  `StatKey.SHIELD_CAPACITY_MULT`; fleet `damage_mult` → `StatKey.DAMAGE_MULT`;
+  fleet `flat_shield_bonus` → `StatKey.SHIELD_BONUS_ADD` (additive, ship-level).
+  Enemy-scope suppressors are pre-computed into the RECEIVER fleet's
+  `FleetCombatModifiers` by `CombatModifierCollector` before compile, so
+  routing at compile time is trivial. `FleetAuraManager._recalculate`
+  applies entries to `ship.external_stats` and respects `stack_group`
+  (same-group MAX, different-group SUM). PROJ-271 Phase 9 deleted the
+  dead-with-landmine `_entries_from_modifier_source` placeholder path.
 
 All `find_abilities_in_scope()` calls use `require_active=True` — only abilities in the
 ACTIVE activation phase contribute to combat modifiers. Inactive or activating abilities
