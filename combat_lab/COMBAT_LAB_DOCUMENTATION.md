@@ -665,36 +665,45 @@ class MyBeamTest(TestScenario):
         seed=STANDARD_SEED,
     )
 
-    def setup(self, battle_engine):
-        self.attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-        self.target = self._load_ship('Test_Target_Stationary.json')
+    # Most tests inherit their spec-compilation from a template (e.g.
+    # StaticTargetScenario). Class attrs `attacker_ship` / `target_ship`
+    # / `distance` drive the template's `to_spec()`.
+    attacker_ship = 'Test_Attacker_Beam360_Low.json'
+    target_ship = 'Test_Target_Stationary.json'
+    distance = 50
 
-        import pygame
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.target.position = pygame.math.Vector2(50, 0)
-
-        battle_engine.start([self.attacker], [self.target], seed=self.metadata.seed)
+    def wire_ships(self, ships_by_role, engine, initial_state):
+        """Bind ship references post-start. PROJ-270 Phase 10: runs after
+        `start_engine_from_spec` has materialized ships + started the engine.
+        """
+        self.attacker = ships_by_role['attacker']
+        self.target = ships_by_role['target']
         self.initial_hp = self.target.hp
 
-    def collect_results(self, engine):
-        """Populate measurement attributes."""
-        self.damage_dealt = self.initial_hp - self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = engine.tick_counter
-        self.results['hit_rate'] = self.damage_dealt / engine.tick_counter
+    def validate(self, outcome, telemetry=None) -> list:
+        """Return Check objects for three-phase validation.
 
-    def validate(self, engine) -> list:
-        """Return Check objects for three-phase validation."""
+        `outcome` is the frozen `BattleOutcome` DTO from `run_battle`;
+        `telemetry` is the optional `CombatLabTelemetry` bundle with
+        per-tick forensic data.
+        """
         checks = []
-        # Data phase - verify component data
-        weapon = self.attacker.weapon
+        # Data phase — verify weapon base stats (read from live component
+        # via wire_ships, since the engine is still accessible post-battle).
+        weapon = self.attacker.get_primary_weapon()
         checks.append(check_exact('Damage', expected=1, actual=weapon.damage))
-        # Outcome phase - verify statistical equivalence
+
+        # Outcome phase — compute from the BattleOutcome's ship summary.
+        target_outcome = next(
+            s for team in outcome.teams for s in team.ships
+            if s.instance_id.endswith('target')
+        )
+        damage_dealt = target_outcome.max_hp - target_outcome.hp
         checks.append(check_tost(
             'Hit Rate',
             expected_p=0.5318,
-            successes=self.damage_dealt,
-            trials=engine.tick_counter,
+            successes=int(damage_dealt),
+            trials=outcome.duration_ticks,
             margin=STANDARD_MARGIN,
         ))
         return checks

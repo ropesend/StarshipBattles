@@ -31,7 +31,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from game.core.math import Vector2
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -159,7 +158,6 @@ def _build_team_spec(
         name=name,
         entry_vector=entry_vector,
         fleet_hierarchy=tuple(task_forces),
-        ai_policy=AIPolicy(),
     )
 
 

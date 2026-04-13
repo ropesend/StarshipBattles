@@ -921,8 +921,7 @@ class ComparisonScenario(TestScenario):
         but uses `baseline_*_ship` files regardless of `_visual_baseline`.
         """
         from game.core.math import Vector2
-        from game.simulation.battle_spec import (
-            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+        from game.simulation.battle_spec import ( BattleSpec, CombatPolicies, EntryVector,
             ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
         )
         from game.simulation.combat.boundary import UnboundedRegion
@@ -974,7 +973,6 @@ class ComparisonScenario(TestScenario):
                         ),
                     ),
                 ),
-                ai_policy=AIPolicy(),
             )
 
         return BattleSpec(

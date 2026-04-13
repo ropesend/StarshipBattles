@@ -308,19 +308,37 @@ Each compiler:
 2. Emits a `BattleSpec` with the right boundary, formations, modifier stack, telemetry level, and end condition.
 3. Optionally attaches a `PostBattleHook` (strategy attaches `apply_outcome_to_fleets`; Combat Lab and Battle Setup pass None).
 
-### Visual mode (post-PROJ-269 transitional)
+### Visual mode (post-PROJ-270)
 
-`run_battle` is a blocking-headless call — it runs the tick loop to
-completion. Visual battles (Battle Setup → Battle Screen, Combat Lab UI
-visual run) use a `BattleController` wrapper for per-frame ticking.
-That wrapper is a thin lifecycle holder (configure → set_spec →
-add_ships → start → tick-from-game-loop → get_outcome).
+`run_battle(spec)` is a blocking-headless call — it runs the tick loop
+to completion. Visual battles (Battle Setup → Battle Screen, Combat Lab
+UI visual run) use a `BattleController` wrapper for per-frame ticking.
+Per **Decision 3**, `run_battle` and the visual-mode path are a single
+architectural contract with two drivers (blocking vs. per-frame) — not
+two competing entry points.
 
-**PROJ-270 Phase 4:** `BattleController.set_spec(spec)` + `get_outcome()`
-let the controller emit a `BattleOutcome` when the battle ends —
-visual-mode UI (`BattleResultsScreen` via `extract_battle_results`)
-consumes the outcome, closing the "every battle emits a `BattleOutcome`
-that the UI consumes" acceptance criterion.
+**PROJ-270 Phase 10 unified entry:** `BattleController.start_from_spec(spec, ai_factory, ship_builder, config=None)` is the single visual-mode
+entry. It routes internally through `start_engine_from_spec` (the exact
+same helper `run_battle` calls) to materialize ships, construct the
+engine, thread `spec.boundary` + `spec.modifier_stack`, and start the
+engine via `engine.start_teams`. The game loop then drives
+`controller.update()` per frame. At battle end, the controller calls
+`extract_outcome(engine, spec)` once and exposes the result via
+`controller.get_outcome()`.
+
+The three production visual call sites (`game/app.py:start_battle`,
+`game/ui/screens/test_lab/screen.py::_switch_to_battle`,
+`combat_lab/services/test_execution_service.py::run_visual`) are all
+single-line `controller.start_from_spec(spec, ...)` calls — no
+hand-rolled `engine.boundary = spec.boundary` / `add_ships` plumbing.
+
+**PROJ-270 Phase 4.5:** `BattleResultsScreen` (via `extract_battle_results`)
+consumes the `BattleOutcome` from `controller.get_outcome()`, closing
+the "every battle emits a `BattleOutcome` that the UI consumes"
+acceptance criterion. The legacy `BattleScreen.start(team0, team1)`
+test-convenience path is retained for ~44 unit tests that predate the
+spec-in contract; it synthesizes a minimal `BattleOutcome` via
+`_build_fallback_outcome` — a test-only shim with no production callers.
 
 **`BattleConfig`** (post-PROJ-270 reshape) is a thin operational-options
 bag for the visual-mode controller — `seed`, `end_condition`,
@@ -336,8 +354,9 @@ arena `boundary`, which is now a `BoundaryRegion` ADT on the spec).
 **`ReturnDestination`** lives at `game/core/return_destination.py`
 (PROJ-270 Phase 5.2 moved it out of the simulation layer — it names
 UI navigation contexts, so the simulation layer should not depend on
-its definition). `battle_config.py` re-exports the enum for backwards
-compat. Values:
+its definition). PROJ-270 Phase 10 deleted the `battle_config.py`
+re-export — all importers now use `game.core.return_destination`
+directly. Values:
 - `BATTLE_SETUP` — return to battle setup screen
 - `TEST_LAB` — return to Combat Lab
 - `STRATEGY` — return to strategy map

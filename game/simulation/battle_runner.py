@@ -38,7 +38,6 @@ from game.simulation.battle_outcome import (
     ShipOutcome,
     ShipStats,
     ShipStatus,
-    TaskForceOutcome,
     TeamOutcome,
     WeaponSummary,
 )
@@ -317,11 +316,7 @@ def extract_outcome(
     team_outcomes = []
     for team_spec in spec.teams:
         ship_outcomes = []
-        task_force_outcomes = []
         for task_force in team_spec.fleet_hierarchy:
-            task_force_outcomes.append(
-                TaskForceOutcome(task_force_id=task_force.task_force_id)
-            )
             for squadron in task_force.squadrons:
                 for ship_spec in squadron.ships:
                     ship_outcomes.append(
@@ -338,7 +333,6 @@ def extract_outcome(
             TeamOutcome(
                 team_id=team_spec.team_id,
                 name=team_spec.name,
-                fleet_hierarchy=tuple(task_force_outcomes),
                 ships=tuple(ship_outcomes),
             )
         )

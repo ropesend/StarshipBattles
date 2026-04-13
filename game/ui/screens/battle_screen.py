@@ -503,12 +503,20 @@ class BattleScreen:
 
         PROJ-270 Phase 10 note: this fallback is invoked ONLY for the
         `BattleScreen.start(team0, team1)` legacy test-convenience
-        path (71 test callers). Production paths (`Game.start_battle`,
-        Combat Lab, Test Lab) route through `BattleController.start_from_spec`
-        and have a real spec attached — their outcome is extracted via
-        `extract_outcome(engine, spec)`. Deletion of the fallback is
-        gated on migrating all 71 test callers to build specs; tracked
-        as a follow-up (see phase_10_checklist.md Task 10.4 notes).
+        path (~44 `self.scene.start([...])` test callers). Production
+        paths (`Game.start_battle`, Combat Lab, Test Lab) route through
+        `BattleController.start_from_spec` and have a real spec attached —
+        their outcome is extracted via `extract_outcome(engine, spec)`.
+        Deletion of the fallback is gated on migrating the test callers
+        to build specs; tracked as a follow-up.
+
+        PROJ-270 Phase 13.5: tightened the synthesized fields. Previously
+        reported `seed=0`, `end_reason=TEAM_ELIMINATED`, and
+        `telemetry_level=NORMAL` regardless of actual state. Now derives
+        each from available data: `seed` from `_controller._config.seed`
+        (or 0 if genuinely unknown), `end_reason` from `engine.end_condition`
+        class lookup, `telemetry_level=MINIMAL` matching the empty-aggregator
+        semantic truthfully.
         """
         from game.simulation.battle_outcome import (
             BattleOutcome,
@@ -573,18 +581,31 @@ class BattleScreen:
             TeamOutcome(
                 team_id=team_id,
                 name=f"Team {team_id}",
-                fleet_hierarchy=(),
                 ships=tuple(_ship_to_outcome(s) for s in ships),
             )
             for team_id, ships in sorted(ships_by_team.items())
         )
 
+        # PROJ-270 Phase 13.5: derive end_reason from engine's actual
+        # end_condition class rather than hardcoding TEAM_ELIMINATED.
+        from game.simulation.battle_runner import _END_REASON_BY_CLASS
+        end_cond = getattr(engine, "end_condition", None)
+        end_reason = _END_REASON_BY_CLASS.get(
+            type(end_cond) if end_cond is not None else type(None),
+            EndReason.TEAM_ELIMINATED,  # safe default if end_condition is unset
+        )
+        # Derive seed from controller's config (if present).
+        seed_val = 0
+        controller = self._controller
+        if controller is not None and controller._config is not None:
+            seed_val = controller._config.seed or 0
+
         return BattleOutcome(
-            end_reason=EndReason.TEAM_ELIMINATED,
+            end_reason=end_reason,
             duration_ticks=engine.tick_counter,
-            seed=0,
+            seed=seed_val,
             teams=team_outcomes,
-            telemetry_level=TelemetryLevel.NORMAL,
+            telemetry_level=TelemetryLevel.MINIMAL,
         )
 
     def _cycle_focus_ship(self, direction):

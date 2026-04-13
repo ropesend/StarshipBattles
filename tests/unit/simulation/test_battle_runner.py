@@ -21,7 +21,6 @@ from game.core.math import Vector2
 from game.simulation.battle_outcome import BattleOutcome, EndReason, ShipStatus
 from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -76,7 +75,6 @@ def _make_team(team_id: int, ships: tuple) -> TeamSpec:
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 

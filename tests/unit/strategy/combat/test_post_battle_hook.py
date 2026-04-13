@@ -102,7 +102,6 @@ def _make_outcome(
         TeamOutcome(
             team_id=tid,
             name=f"Team {tid}",
-            fleet_hierarchy=(),
             ships=tuple(ships),
         )
         for tid, ships in team_ship_outcomes.items()

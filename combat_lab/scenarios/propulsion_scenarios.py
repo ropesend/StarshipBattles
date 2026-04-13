@@ -405,8 +405,7 @@ class PropThrustMassRatioScenario(TestScenario):
     def to_spec(self, registries=None):
         """PROJ-269: compile to a single-team 3-ship BattleSpec."""
         from game.core.math import Vector2
-        from game.simulation.battle_spec import (
-            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+        from game.simulation.battle_spec import ( BattleSpec, CombatPolicies, EntryVector,
             ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
         )
         from game.simulation.combat.boundary import UnboundedRegion
@@ -453,7 +452,6 @@ class PropThrustMassRatioScenario(TestScenario):
                     ),
                 ),
             ),
-            ai_policy=AIPolicy(),
         )
         return BattleSpec(
             seed=self.metadata.seed,
@@ -839,8 +837,7 @@ class PropMassAffectsTurnRateScenario(TestScenario):
     def to_spec(self, registries=None):
         """PROJ-269: compile to a single-team 2-ship BattleSpec."""
         from game.core.math import Vector2
-        from game.simulation.battle_spec import (
-            AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+        from game.simulation.battle_spec import ( BattleSpec, CombatPolicies, EntryVector,
             ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
         )
         from game.simulation.combat.boundary import UnboundedRegion
@@ -891,7 +888,6 @@ class PropMassAffectsTurnRateScenario(TestScenario):
                     ),
                 ),
             ),
-            ai_policy=AIPolicy(),
         )
         return BattleSpec(
             seed=self.metadata.seed,

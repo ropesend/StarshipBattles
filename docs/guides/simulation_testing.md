@@ -2,23 +2,10 @@
 
 Consolidated guide for the Starship Battles simulation test system. Covers test architecture, the TestScenario pattern, validation, troubleshooting, and writing new tests.
 
-> **API UPDATE (PROJ-270 Phase 11, 2026-04-12):** The code examples below
-> that show `def setup(self, battle_engine)` and `def update(self, battle_engine)`
-> are **LEGACY** — PROJ-269 Phase 1 + PROJ-270 Phase 1 deleted those methods.
-> The current `TestScenario` API is:
->
-> ```python
-> class MyTest(TestScenario):
->     metadata = TestMetadata(...)
->     def to_spec(self, registries=None) -> BattleSpec: ...
->     def wire_ships(self, ships_by_role, engine, initial_state): ...
->     def custom_setup(self, engine): ...   # optional
->     def validate(self, outcome, telemetry) -> list: ...
-> ```
->
-> See `combat_lab/scenarios/base.py` for the current canonical shape and
-> any modern scenario file (e.g. `beam_accuracy_scenarios.py`) for a
-> worked example. `docs/systems/combat_simulation.md` §0 is authoritative.
+> **Last major API revision:** PROJ-270 (2026-04-12) — `TestScenario`
+> uses `to_spec / wire_ships / custom_setup / validate(outcome, telemetry)`.
+> See `docs/systems/combat_simulation.md` §0 for the authoritative
+> architecture summary.
 
 ---
 
@@ -161,9 +148,14 @@ Both environments use the exact same `BattleEngine` code. The only difference is
 
 ### TestScenario Class
 
+The current `TestScenario` API is spec-driven: scenarios compile to a
+`BattleSpec` via `to_spec()`, `run_battle(spec)` drives the engine, and
+validators consume the resulting `BattleOutcome` + Combat Lab `telemetry`
+bundle. The authoritative base class lives at [combat_lab/scenarios/base.py](../../combat_lab/scenarios/base.py); existing modern scenarios (e.g. `combat_lab/scenarios/tohit_attack_scenarios.py`) serve as worked examples.
+
 ```python
 from combat_lab.scenarios import TestScenario, TestMetadata
-from combat_lab.scenarios.validation import check_exact, check_true
+from combat_lab.scenarios.validation import check_true
 
 class MyTest(TestScenario):
     metadata = TestMetadata(
@@ -182,24 +174,57 @@ class MyTest(TestScenario):
         tags=["accuracy", "close_range"],
     )
 
-    def setup(self, battle_engine):
-        """Configure ships, positions, initial state."""
-        pass
+    # `to_spec(registries=None)` is inherited from TestScenario. The base
+    # class generates a 2-team spec from `attacker_ship` / `target_ship`
+    # class attrs + `distance`; most scenarios just set those and don't
+    # need to override `to_spec`.
+    attacker_ship = "Test_Attacker_Beam.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 50
 
-    def update(self, battle_engine):
-        """Optional: per-tick logic (target movement controllers only).
-        Firing and thrust are handled by AI strategies assigned in setup()."""
-        pass
+    def wire_ships(self, ships_by_role, engine, initial_state):
+        """Bind ship references from the materialized role dict.
 
-    def validate(self, engine) -> list:
-        """Return list of Check objects for 3-phase validation."""
-        checks = []
-        checks.append(check_true(
-            "Damage dealt", self.damage_dealt > 0,
-            detail=f"damage={self.damage_dealt}", phase="outcome"
-        ))
-        return checks
+        Called after `materialize_spec_ships` + `engine.start_teams`.
+        `ships_by_role` keys match the role suffix on each `ShipSpec.instance_id`
+        (typically "attacker" / "target" for StaticTargetScenario-derived tests).
+        """
+        self.attacker = ships_by_role["attacker"]
+        self.target = ships_by_role["target"]
+        self.initial_hp = self.target.hp
+
+    def custom_setup(self, engine):
+        """Optional per-scenario tweaks after engine.start_teams().
+
+        Use for setting initial targets, loading beams, priming per-tick
+        fire triggers — anything that can't be expressed in a ShipSpec.
+        """
+        self.attacker.current_target = self.target
+
+    def validate(self, outcome, telemetry=None) -> list:
+        """Return list of Check objects consuming the finalized BattleOutcome.
+
+        `outcome` is a frozen `BattleOutcome` DTO (see `game/simulation/battle_outcome.py`);
+        `telemetry` is an optional `CombatLabTelemetry` bundle with forensic data
+        (per-tick projectile counts, per-weapon shots_fired/hit tallies).
+        """
+        target_outcome = next(
+            s for team in outcome.teams for s in team.ships
+            if s.instance_id.endswith("target")
+        )
+        damage_dealt = target_outcome.max_hp - target_outcome.hp
+        return [
+            check_true(
+                "Damage dealt", damage_dealt > 0,
+                detail=f"damage={damage_dealt}", phase="outcome",
+            )
+        ]
 ```
+
+**Post-PROJ-270 migration:** prior versions of this doc showed a
+`def setup(self, battle_engine)` pattern — that API was deleted during
+PROJ-269 Phase 1 + PROJ-270 Phase 1. If you encounter old scenario
+files still using it, migrate them using the template above.
 
 ### TestMetadata Fields
 

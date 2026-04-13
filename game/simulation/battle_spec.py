@@ -65,21 +65,6 @@ class EntryVector:
 
 
 @dataclass(frozen=True)
-class AIPolicy:
-    """Empire-level AI behavior flags carried on a TeamSpec.
-
-    Phase 1 introduces the DTO; fields will be expanded in Phase 3+ when
-    the engine's AI plumbing gains per-team policies beyond the existing
-    per-ship targeting/movement policies.
-    """
-
-    # Reserved for future fields (aggression bias, reserve-commit threshold,
-    # flagship-preservation priority, etc.). Kept empty in Phase 1 so specs
-    # can be constructed without guessing defaults.
-    pass
-
-
-@dataclass(frozen=True)
 class CombatPolicies:
     """Three-axis combat policy bag (targeting / movement / retreat).
 
@@ -169,7 +154,6 @@ class TeamSpec:
     name: str
     entry_vector: EntryVector
     fleet_hierarchy: Tuple[TaskForceSpec, ...]
-    ai_policy: AIPolicy
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +202,6 @@ class BattleSpec:
 
 
 __all__ = [
-    "AIPolicy",
     "BattleSpec",
     "CombatPolicies",
     "ComponentStateSpec",

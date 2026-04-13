@@ -26,8 +26,7 @@ def _build_two_team_spec(scenario, *, team0_ships, team1_ships):
     FormationResolver reproduces the scenario's per-ship positions.
     """
     from game.core.math import Vector2
-    from game.simulation.battle_spec import (
-        AIPolicy, BattleSpec, CombatPolicies, EntryVector,
+    from game.simulation.battle_spec import ( BattleSpec, CombatPolicies, EntryVector,
         ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec,
     )
     from game.simulation.combat.boundary import UnboundedRegion
@@ -72,7 +71,6 @@ def _build_two_team_spec(scenario, *, team0_ships, team1_ships):
                     ),
                 ),
             ),
-            ai_policy=AIPolicy(),
         )
 
     teams = [_team(0, "Team0", team0_ships)]

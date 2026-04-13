@@ -15,24 +15,37 @@ class MyTest(StaticTargetScenario):
     target_ship = "Test_Target_Stationary.json"
     distance = 50  # center-to-center pixels
 
-    def validate(self, engine) -> list:
-        """Return Check objects. Called after collect_results() populates self.damage_dealt, etc."""
-        checks = self._template_preconditions()
+    def validate(self, outcome, telemetry=None) -> list:
+        """Return Check objects consuming the finalized BattleOutcome.
+
+        `outcome` is the frozen `BattleOutcome` DTO from `run_battle`;
+        `telemetry` is an optional `CombatLabTelemetry` bundle with
+        per-tick forensic data (projectile tracks, per-weapon shots).
+        """
+        checks = self._template_preconditions(outcome, telemetry)
         checks.append(check_exact("Target Mass", 400, self.target.mass))
-        checks.append(check_tost("Hit Rate", 0.5318, successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter, margin=0.06))
+        checks.append(check_tost("Hit Rate", 0.5318,
+                                  successes=int(self.damage_dealt),
+                                  trials=outcome.duration_ticks, margin=0.06))
         return checks
 ```
 
-The template handles `setup()`, `update()`, and `collect_results()` automatically.
-You only write validation logic.
+The template handles spec compilation, ship materialization, per-tick
+firing, and result collection automatically. You only write validation
+logic.
 
 ## Lifecycle
 
-1. **`setup()`** -- Template loads ships, positions them, starts the battle engine
-2. **`update()`** -- Template fires the weapon each tick (`force_fire=True` by default)
-3. **`collect_results()`** -- Template populates `self.damage_dealt`, `self.results['ticks_run']`, etc.
-4. **`validate()`** -- You return a list of `Check` objects (the framework calls `collect_results()` first)
+1. **`to_spec(registries)`** — Template compiles the scenario into a
+   `BattleSpec` (inherits default shape; override for custom specs)
+2. **`wire_ships(ships_by_role, engine, initial_state)`** — Template
+   binds `self.attacker` / `self.target` from the materialized role dict
+3. **`custom_setup(engine)`** — Optional hook for per-scenario tweaks
+4. **`run_battle`** drives the tick loop; template's `per_tick` hook
+   fires the weapon and captures forensic telemetry
+5. **`validate(outcome, telemetry)`** — You return a list of `Check`
+   objects. The template populates `self.damage_dealt`, `self.results`, etc.
+   before calling you.
 
 ## Check Functions
 
@@ -86,15 +99,16 @@ class MyBeamPointBlankTest(StaticTargetScenario):
     target_ship = "Test_Target_Stationary.json"
     distance = 50
 
-    def custom_setup(self, battle_engine):
-        """Hook called at end of template setup. Calculate expected hit chance."""
+    def custom_setup(self, engine):
+        """Hook called after engine.start_teams(). Calculate expected hit chance."""
         from combat_lab.scenarios.beam_scenarios import compute_beam_hit_chance
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
+    def validate(self, outcome, telemetry=None) -> list:
+        """Consume the finalized BattleOutcome + Combat Lab telemetry."""
+        checks = self._template_preconditions(outcome, telemetry)
 
-        # Data phase: verify loaded ship stats
+        # Data phase: verify loaded ship stats (accessible via wire_ships bindings)
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
@@ -107,7 +121,7 @@ class MyBeamPointBlankTest(StaticTargetScenario):
             "Hit Rate",
             self.expected_hit_chance,
             successes=int(self.damage_dealt),
-            trials=engine.tick_counter,
+            trials=outcome.duration_ticks,
             margin=STANDARD_MARGIN,
         ))
         return checks
