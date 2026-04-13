@@ -246,3 +246,5 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-242 | Unified Formula Evaluation System | 2026-04-10 | PROJ-201-250 |
 | PROJ-243 | Mid-Battle Ship Addition Fix | 2026-04-10 | PROJ-201-250 |
 | PROJ-244 | Team Naming Standardization | 2026-04-10 | PROJ-201-250 |
+| PROJ-248 | Weapon Cache Mutable Return | 2026-04-08 | PROJ-201-250 |
+| PROJ-249 | PDC Targeting Configuration | 2026-04-08 | PROJ-201-250 |

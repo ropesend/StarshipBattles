@@ -62,6 +62,7 @@ from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRu
 from game.core.constants import AttackType, CombatConstants
 from game.core.protocols import is_combatant
 from game.ai.protocols import is_projectile, IGridEntity
+from game.simulation.interfaces.entity_protocols import is_combat_ship
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
 from game.ai.policy_manager import get_default_policy_manager
@@ -158,20 +159,28 @@ class AIController:
 
         return enemies
 
-    def _build_capabilities_cache(self, ships: List[Any]) -> Dict[str, Dict[str, Any]]:
-        """Pre-compute expensive capability checks for all ships.
+    def _build_capabilities_cache(self, entities: List[Any]) -> Dict[str, Dict[str, Any]]:
+        """Pre-compute expensive capability checks for ship-like entities.
 
         PERF: Builds capability data once per ship instead of repeatedly during
         rule evaluation. This converts O(n*m) component lookups (n targets, m rules)
         to O(n) lookups.
 
         Args:
-            ships: List of ships to cache capabilities for
+            entities: Heterogeneous list of potential targets. Callers pass a
+                mix of ship-like entities (ICombatShip) AND projectile
+                instances (IProjectile) — `_find_enemies_in_radius` extends
+                the enemy list with missiles when the targeting policy has
+                `pdc_arc` rules. Only ICombatShip entities are cached here;
+                projectiles have no components to query and are skipped. Their
+                absence from the cache is the normal path — `TargetEvaluator`
+                per-rule paths (`_eval_pdc_arc_rule`, etc.) handle projectile
+                candidates directly via `is_projectile` guards.
 
         Returns:
-            Dict mapping ship.id to capability data:
+            Dict mapping entity id to capability data:
             {
-                ship_id: {
+                entity_id: {
                     'has_weapons': bool,
                     'weapon_components': List[Component],
                     'has_pdc': bool,
@@ -180,18 +189,24 @@ class AIController:
             }
         """
         cache = {}
-        for ship in ships:
-            ship_id = get_capability_cache_key(ship)
-            if ship_id is None:
+        for entity in entities:
+            # Only ICombatShip entities carry component queries. Projectiles
+            # (missiles) fail this TypeGuard — skip them. See patterns §2
+            # Protocol + TypeGuard in docs/02_PATTERNS.md.
+            if not is_combat_ship(entity):
+                continue
+
+            entity_id = get_capability_cache_key(entity)
+            if entity_id is None:
                 continue
 
             # Get weapon components once
-            weapons = ship.get_components_by_ability('WeaponAbility', operational_only=True)
+            weapons = entity.get_components_by_ability('WeaponAbility', operational_only=True)
 
             # Filter for PDC weapons
             pdc_weapons = [w for w in weapons if w.has_ability('PDCAbility')]
 
-            cache[ship_id] = {
+            cache[entity_id] = {
                 'has_weapons': len(weapons) > 0,
                 'weapon_components': weapons,
                 'has_pdc': len(pdc_weapons) > 0,

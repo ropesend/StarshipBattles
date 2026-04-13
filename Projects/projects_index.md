@@ -4,14 +4,14 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-271 | Strategic Modifier Battle-Math Track B | Planning | 2026-04-12 | 2026-04-12 |
-| PROJ-270 | Unified Battle Simulator Entry/Exit - Closure | Planning | 2026-04-12 | 2026-04-12 |
 | PROJ-269 | Unified Battle Simulator Entry/Exit | Planning | 2026-04-12 | 2026-04-12 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-271 | Strategic Modifier Battle-Math Track B | Archived | 2026-04-12 | 2026-04-13 |
+| PROJ-270 | Unified Battle Simulator Entry/Exit - Closure | Archived | 2026-04-12 | 2026-04-13 |
 | PROJ-267 | Test Infrastructure Consolidation | Archived | 2026-04-09 | 2026-04-10 |
 | PROJ-266 | Critical UI Screen Test Coverage | Archived | 2026-04-09 | 2026-04-10 |
 | PROJ-265 | Simulation Domain Test Coverage | Archived | 2026-04-09 | 2026-04-10 |
@@ -24,8 +24,6 @@ w# Projects Index
 | PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | Archived | 2026-04-08 | 2026-04-09 |
 | PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | Archived | 2026-04-08 | 2026-04-09 |
 | PROJ-250 | Dual-Source Retreat Config Ambiguity | Archived | 2026-04-06 | 2026-04-08 |
-| PROJ-249 | PDC Targeting Configuration | Archived | 2026-04-06 | 2026-04-08 |
-| PROJ-248 | Weapon Cache Mutable Return | Archived | 2026-04-06 | 2026-04-08 |
 | PROJ-256 | Centralize All File Paths via Paths Class | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-255 | Code Quality & Decomposition | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-254 | Identity, Indexing & Correctness | Archived | 2026-04-08 | 2026-04-08 |
