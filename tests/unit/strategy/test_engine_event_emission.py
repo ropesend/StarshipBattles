@@ -608,15 +608,11 @@ class TestCombatResolvedEvent:
         f1.owner_id = 0
         f1.location = HexCoord(3, 4)
         f1.ships = [MagicMock()]
-        f1.update_from_battle_results = MagicMock()
-
         f2 = MagicMock(spec=Fleet)
         f2.id = 2
         f2.owner_id = 1
         f2.location = HexCoord(3, 4)
         f2.ships = [MagicMock()]
-        f2.update_from_battle_results = MagicMock()
-
         winner = engine._resolve_combat_simulated(f1, f2)
 
         assert winner == f1
@@ -648,15 +644,11 @@ class TestCombatResolvedEvent:
         f1.owner_id = 0
         f1.location = HexCoord(0, 0)
         f1.ships = [MagicMock()]
-        f1.update_from_battle_results = MagicMock()
-
         f2 = MagicMock(spec=Fleet)
         f2.id = 20
         f2.owner_id = 1
         f2.location = HexCoord(0, 0)
         f2.ships = [MagicMock()]
-        f2.update_from_battle_results = MagicMock()
-
         winner = engine._resolve_combat_simulated(f1, f2)
 
         assert winner == f2
@@ -721,15 +713,11 @@ class TestCombatResolvedEvent:
         f1.owner_id = 5
         f1.location = HexCoord(0, 0)
         f1.ships = [MagicMock()]
-        f1.update_from_battle_results = MagicMock()
-
         f2 = MagicMock(spec=Fleet)
         f2.id = 2
         f2.owner_id = 8
         f2.location = HexCoord(0, 0)
         f2.ships = [MagicMock()]
-        f2.update_from_battle_results = MagicMock()
-
         engine._resolve_combat_simulated(f1, f2)
 
         _, kw = calls[0]

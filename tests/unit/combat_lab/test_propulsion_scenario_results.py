@@ -73,10 +73,18 @@ def mock_ship():
 
 @pytest.fixture
 def mock_battle_engine():
-    """Create a mock battle engine."""
-    engine = Mock()
-    engine.tick_counter = 50
-    return engine
+    """Create a mock outcome-shaped object.
+
+    PROJ-270 Phase 2.5: `collect_results` now takes a `BattleOutcome`
+    instead of a live engine. The fixture name is retained for test
+    backwards-compat, but it now returns an outcome-shaped mock with
+    `duration_ticks` (replaces `tick_counter`) + a few engine-compat
+    attributes for tests that still reference `.tick_counter` directly.
+    """
+    outcome = Mock()
+    outcome.duration_ticks = 50
+    outcome.tick_counter = 50  # legacy alias for tests that still check it
+    return outcome
 
 
 class TestPropulsionScenarioVelocityResults:

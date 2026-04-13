@@ -113,11 +113,11 @@ class ModEndur001_StatGateScenario(StaticTargetScenario):
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
         self.actual_endurance = seeker.endurance if seeker else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_endurance'] = BOOSTED_ENDURANCE
         self.results['actual_endurance'] = self.actual_endurance
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
@@ -185,7 +185,7 @@ class ModEndur002_BoostExtendsRangeScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = BOOST_TEST_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify endurance values on variant
@@ -257,7 +257,7 @@ class ModEndur003_NearLimitReachScenario(ComparisonScenario):
     distance = NEAR_LIMIT_DISTANCE
     expect_different_damage = False  # Both hit — same damage expected
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Outcome: both seekers reached target
@@ -317,7 +317,7 @@ class ModEndur004_PenaltyShortensRangeScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = PENALTY_TEST_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty was applied
@@ -381,11 +381,11 @@ class ModEndur005_PenaltyStatGateScenario(StaticTargetScenario):
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
         self.actual_endurance = seeker.endurance if seeker else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_endurance'] = PENALIZED_ENDURANCE
         self.results['actual_endurance'] = self.actual_endurance
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')

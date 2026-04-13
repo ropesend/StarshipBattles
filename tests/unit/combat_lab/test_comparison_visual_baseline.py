@@ -40,7 +40,7 @@ class _DummyComparisonScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         # This accesses variant_damage_dealt — crashes in visual baseline mode
         return [check_true(
             "Variant Did Damage",

@@ -81,7 +81,7 @@ class CNCBeamDisabledScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired and dealt damage
@@ -139,7 +139,7 @@ class CNCProjectileDisabledScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         checks.append(check_true(
@@ -198,7 +198,7 @@ class CNCShieldDisabledScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_NoCNC.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: variant should have 0 shields (non-operational)
@@ -283,7 +283,7 @@ class CNCEngineDisabledScenario(ComparisonScenario):
         """Override AI to thrust forward (template sets test_do_nothing)."""
         self.attacker.movement_policy = 'test_straight_line'
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline ship has thrust (C&C active)
@@ -410,7 +410,7 @@ class CNCBridgeDestroyedScenario(ComparisonScenario):
         """Set target to also fire (mutual combat)."""
         self.target.movement_policy = 'test_stationary'
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: the weak bridge was destroyed
@@ -531,7 +531,7 @@ class CNCBridgeRedundancyScenario(ComparisonScenario):
         """Set target to also fire (mutual combat)."""
         self.target.movement_policy = 'test_stationary'
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: single-bridge ship fired some shots before bridge died

@@ -86,13 +86,13 @@ class RangeBoostInRangeScenario(StaticTargetScenario):
         else:
             self.actual_beam_range = None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['base_range'] = MOD_BASE_BEAM_RANGE
         self.results['expected_beam_range'] = MOD_EXPECTED_RANGE
         self.results['actual_beam_range'] = self.actual_beam_range
         self.results['distance'] = self.distance
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: beam weapon exists
@@ -172,12 +172,12 @@ class RangeIdentityScenario(StaticTargetScenario):
         else:
             self.actual_beam_range = None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['base_range'] = MOD_BASE_BEAM_RANGE
         self.results['actual_beam_range'] = self.actual_beam_range
         self.results['distance'] = self.distance
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: beam weapon exists
@@ -253,13 +253,13 @@ class RangeBoostBeyondBaseScenario(StaticTargetScenario):
         else:
             self.actual_beam_range = None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['base_range'] = MOD_BASE_BEAM_RANGE
         self.results['expected_beam_range'] = MOD_EXPECTED_RANGE
         self.results['actual_beam_range'] = self.actual_beam_range
         self.results['distance'] = self.distance
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: beam weapon exists
@@ -331,7 +331,7 @@ class RangeBoostComparisonScenario(ComparisonScenario):
     variant_target_ship = STATIONARY_TARGET
     distance = 1200
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline beam has unmodified range
@@ -413,12 +413,12 @@ class RangeBoostOutOfRangeScenario(StaticTargetScenario):
         else:
             self.actual_beam_range = None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_beam_range'] = MOD_EXPECTED_RANGE
         self.results['actual_beam_range'] = self.actual_beam_range
         self.results['distance'] = self.distance
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: beam weapon exists
@@ -507,7 +507,7 @@ class RangePenaltyOutOfRangeScenario(ComparisonScenario):
     variant_target_ship = STATIONARY_TARGET
     distance = 600
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: variant beam range should be ~400 (800 * 0.5)

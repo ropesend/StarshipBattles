@@ -233,65 +233,29 @@ class TestLabExecutor:
 
         PROJ-269 Phase 6 Task 6.9: replaces the legacy
         `scenario.setup(engine)` + direct tick loop pattern with the
-        unified entry. Shared by `run_headless` and `run_next_batch`.
+        unified entry.
+        PROJ-270 Phase 2.5: engine_ref closure trick is gone — validator
+        consumes `(outcome, telemetry)` from the shared helper.
 
         `BattleStateCapture` is driven manually (no `with` block) — the
-        engine isn't available until `run_battle`'s
-        `pre_tick_loop_callback` fires.
+        engine isn't available until the helper's `pre_tick_loop_hook` fires.
         """
-        from dataclasses import replace
-        from game.ai.ai_factory import AIControllerFactory
-        from game.simulation.battle_runner import run_battle
+        from combat_lab.services.scenario_run_helper import run_scenario_via_run_battle
 
-        # 1. Compile spec + apply UI seed override.
-        spec = scenario.to_spec(registries=None)
-        if seed is not None and seed != spec.seed:
-            spec = replace(spec, seed=seed)
-
-        # 2. Pre-run hook (ComparisonScenario baseline runs here).
-        scenario.before_run_battle(spec)
-
-        # 3. Role-keyed ship registry + pre-start snapshot, populated in
-        #    ship_builder before engine.start() touches anything.
-        from combat_lab.runner import _role_from_instance_id, _snapshot_ship_state
-
-        ships_by_role = {}
-        initial_state_by_role = {}
-
-        def ship_builder(ship_spec):
-            ship = scenario._load_ship(ship_spec.design_id)
-            role = _role_from_instance_id(ship_spec.instance_id)
-            if role is not None:
-                ships_by_role[role] = ship
-                initial_state_by_role[role] = _snapshot_ship_state(ship)
-            return ship
-
-        # 4. State capture bridged across run_battle via manual __enter__/__exit__.
+        # State capture bridged across run_battle via manual __enter__/__exit__.
         state_capture = BattleStateCapture(engine=None, test_id=test_id, seed=seed)
-        engine_ref = {"engine": None}
 
-        def pre_tick_loop(engine):
-            engine_ref["engine"] = engine
-            scenario._effective_seed = spec.seed
-            scenario.wire_ships(
-                ships_by_role, engine=engine, initial_state=initial_state_by_role,
-            )
-            scenario.custom_setup(engine)
+        def pre_tick_loop_hook(engine):
             # Now the engine has ships + state → safe to capture initial.
             state_capture.engine = engine
             state_capture.__enter__()
 
-        def per_tick(engine):
-            scenario.update(engine)
-
         start_time = time.time()
         try:
-            run_battle(
-                spec,
-                ai_factory=AIControllerFactory(),
-                ship_builder=ship_builder,
-                pre_tick_loop_callback=pre_tick_loop,
-                per_tick_callback=per_tick,
+            outcome, telemetry = run_scenario_via_run_battle(
+                scenario,
+                seed_override=seed,
+                pre_tick_loop_hook=pre_tick_loop_hook,
             )
         finally:
             # Always capture final state (even on exceptions) so
@@ -300,8 +264,7 @@ class TestLabExecutor:
                 state_capture.__exit__(None, None, None)
 
         elapsed_time = time.time() - start_time
-        engine = engine_ref["engine"]
-        tick_count = engine.tick_counter if engine else 0
+        tick_count = outcome.duration_ticks
         logger.debug(
             f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s "
             f"({tick_count / elapsed_time:.0f} ticks/sec)"
@@ -309,8 +272,8 @@ class TestLabExecutor:
             else f" Simulation complete: {tick_count} ticks"
         )
 
-        # Validate results against the live engine.
-        report = scenario._run_validation(engine)
+        # Validate results via outcome + telemetry.
+        report = scenario._run_validation(outcome, telemetry)
         scenario.passed = report.passed
 
         scenario.results["ticks_run"] = tick_count

@@ -113,7 +113,7 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
         """Store projectile mechanics for results."""
         self.travel_time = calculate_projectile_travel_time(200, 20000)
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store projectile-specific results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['weapon_type'] = 'Projectile360'
@@ -122,7 +122,7 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
         self.results['projectile_speed'] = 20000
         self.results['reload_time'] = 0.0
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase: verify weapon and target loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -208,7 +208,7 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
         self.target.angle = 90
         self.target.movement_policy = 'test_straight_line'
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store hit tracking with resolved stats (excluding in-flight)."""
         resolved = self.results.get('attacker_resolved_shots', 0)
         hits = self.results.get('attacker_resolved_hits', 0)
@@ -218,7 +218,7 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
         self.results['in_flight'] = in_flight
         self.results['hit_rate'] = hits / resolved if resolved > 0 else 0.0
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase: verify weapon and target loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -316,7 +316,7 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
         self.target.angle = 90
         self.target.movement_policy = 'test_straight_line'
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store hit tracking with resolved stats (excluding in-flight)."""
         resolved = self.results.get('attacker_resolved_shots', 0)
         hits = self.results.get('attacker_resolved_hits', 0)
@@ -326,7 +326,7 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
         self.results['in_flight'] = in_flight
         self.results['hit_rate'] = hits / resolved if resolved > 0 else 0.0
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase: verify weapon and target loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -416,7 +416,7 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
         self._tracking_weapon_range = 1000
         self.target.movement_policy = 'test_erratic_leashed'
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase: verify weapon loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -510,7 +510,7 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
         self._tracking_weapon_range = 1000
         self.target.movement_policy = 'test_erratic_leashed'
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase: verify weapon loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -603,12 +603,12 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
     target_ship = "Test_Target_Stationary.json"
     distance = PROJECTILE_OUT_OF_RANGE_DISTANCE
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store range-specific results."""
         self.results['distance'] = PROJECTILE_OUT_OF_RANGE_DISTANCE
         self.results['weapon_max_range'] = 1000
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase: verify weapon loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -682,12 +682,12 @@ class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
         """Calculate travel time for results."""
         self.travel_time = calculate_projectile_travel_time(100, 20000)
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['damage_per_hit'] = 1
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -760,12 +760,12 @@ class ProjectileDamageMidRangeScenario(StaticTargetScenario):
         """Calculate travel time for results."""
         self.travel_time = calculate_projectile_travel_time(500, 20000)
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['damage_per_hit'] = 1
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -839,12 +839,12 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
         """Calculate travel time for results."""
         self.travel_time = calculate_projectile_travel_time(900, 20000)
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['damage_per_hit'] = 1
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data phase
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
@@ -924,7 +924,7 @@ class ProjectileStopsWithoutAmmoScenario(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired and dealt damage
@@ -992,7 +992,7 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline dealt damage
@@ -1076,7 +1076,7 @@ class ProjectileControlWithAmmoScenario(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Outcome: identical damage
@@ -1136,7 +1136,7 @@ class ProjectileWithMetalsFires(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         checks.append(check_true(
@@ -1194,7 +1194,7 @@ class ProjectileWithMetalsControl(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.append(check_exact(
             "Control — Identical Damage",

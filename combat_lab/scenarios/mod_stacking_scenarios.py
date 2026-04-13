@@ -138,11 +138,11 @@ class ModStack001_CompoundStatGateScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_damage = beam.damage if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_damage'] = DUAL_EXPECTED_DAMAGE
         self.results['actual_damage'] = self.actual_damage
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
@@ -208,7 +208,7 @@ class ModStack002_IndependentStatsScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify both modifiers applied on variant
@@ -288,7 +288,7 @@ class ModStack003_CompoundRatioScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage
@@ -364,7 +364,7 @@ class ModStack004_CombinedEffectScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage
@@ -436,7 +436,7 @@ class ModStack005_CompoundNotAdditiveScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage

@@ -138,12 +138,12 @@ class ModAcc001_StatGateScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_accuracy = beam.base_accuracy if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_accuracy'] = BOOSTED_ACCURACY
         self.results['actual_accuracy'] = self.actual_accuracy
         self.results['expected_hit_rate'] = P_BOOSTED_PB
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
@@ -221,7 +221,7 @@ class ModAcc002_MidRangeComparisonScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both battles dealt damage
@@ -320,7 +320,7 @@ class ModAcc003_RangeDependentEffectScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = LONG_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both battles dealt meaningful damage
@@ -416,7 +416,7 @@ class ModAcc004_NegativePenaltyScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty was applied
@@ -518,7 +518,7 @@ class ModAcc005_LongRangeEffectivenessScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = LONG_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt meaningful damage

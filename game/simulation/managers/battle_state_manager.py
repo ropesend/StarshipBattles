@@ -55,12 +55,9 @@ class BattleStateManager:
                 context={"parameter": "engine"}
             )
 
-        # PROJ-269 Phase 6: `mode` is now a plain label kept for save-file
-        # backward compatibility. The string defaults to "manual" since
-        # there is no longer a BattleMode enum to read from config.
+        # PROJ-270 Phase 5.3: `state.mode` field removed.
         return BattleState.capture_from_engine(
             engine,
-            mode="manual",
             seed=config.seed,
             allow_retreat=config.allow_retreat,
             allow_reinforcements=config.allow_reinforcements,
@@ -82,9 +79,7 @@ class BattleStateManager:
         Raises:
             ValidationException: If state has invalid mode
         """
-        # PROJ-269 Phase 6: BattleMode enum gone — `state.mode` is now a
-        # plain label preserved for save-file backward compatibility but
-        # not used to dispatch behavior.
+        # PROJ-270 Phase 5.3: `state.mode` field removed entirely.
         end_condition = end_condition_from_dict(state.end_condition_data)
         return BattleConfig(
             seed=state.seed,
@@ -131,10 +126,8 @@ class BattleStateManager:
         if state is None:
             return False
 
-        # BattleState is a dataclass - mode and ships are always defined
-        # Check for valid values rather than attribute existence
-        if not state.mode:
-            return False
+        # BattleState is a dataclass - ships is always defined
+        # Check for valid values
         if state.ships is None:
             return False
 

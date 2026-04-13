@@ -72,15 +72,11 @@ class TestBattleResolverIntegration:
         fleet1.has_ship_instances.return_value = True
         fleet1.get_ship_instances.return_value = [MagicMock()]
         fleet1.ships = [MagicMock()]
-        fleet1.update_from_battle_results = MagicMock()
-
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.has_ship_instances.return_value = True
         fleet2.get_ship_instances.return_value = [MagicMock()]
         fleet2.ships = [MagicMock()]
-        fleet2.update_from_battle_results = MagicMock()
-
         winner = engine._resolve_combat_simulated(fleet1, fleet2)
 
         assert winner == fleet1
@@ -142,13 +138,9 @@ class TestBattleResolverIntegration:
         fleet1 = MagicMock()
         fleet1.id = 1
         fleet1.has_ship_instances.return_value = True
-        fleet1.update_from_battle_results = MagicMock()
-
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.has_ship_instances.return_value = True
-        fleet2.update_from_battle_results = MagicMock()
-
         winner = engine._resolve_combat_simulated(fleet1, fleet2)
 
         # Fleet with more survivors wins on draw
@@ -227,15 +219,11 @@ class TestResolveAllConflicts:
         fleet1.location = HexCoord(5, 5)
         fleet1.owner_id = 0
         fleet1.ships = [MagicMock()]
-        fleet1.update_from_battle_results = MagicMock()
-
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.location = HexCoord(5, 5)
         fleet2.owner_id = 1
         fleet2.ships = [MagicMock()]
-        fleet2.update_from_battle_results = MagicMock()
-
         empire1.fleets = [fleet1]
         empire2.fleets = [fleet2]
 
@@ -268,15 +256,11 @@ class TestResolveAllConflicts:
         fleet1.location = HexCoord(5, 5)
         fleet1.owner_id = 0
         fleet1.ships = [MagicMock()]
-        fleet1.update_from_battle_results = MagicMock()
-
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.location = HexCoord(5, 5)
         fleet2.owner_id = 1
         fleet2.ships = [MagicMock()]
-        fleet2.update_from_battle_results = MagicMock()
-
         empire1.fleets = [fleet1]
         empire2.fleets = [fleet2]
 

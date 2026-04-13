@@ -92,7 +92,7 @@ class ModThrustStaticScenario(PropulsionScenario):
     ship_file = THRUST_BOOST_ENGINE_SHIP
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify modifier applied to thrust
@@ -154,7 +154,7 @@ class ModThrustBaselineScenario(PropulsionScenario):
     ship_file = BASELINE_SHIP_FILE
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify no modifier effect
@@ -217,7 +217,7 @@ class ModThrustDynamicVelocityScenario(PropulsionScenario):
     ship_file = THRUST_BOOST_ENGINE_SHIP
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: modifier is applied
@@ -285,7 +285,7 @@ class ModThrustAccelerationScenario(PropulsionScenario):
     ship_file = THRUST_BOOST_ENGINE_SHIP
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify modifier applied to thrust
@@ -363,7 +363,7 @@ class ModThrustPenaltyScenario(PropulsionScenario):
     ship_file = THRUST_PENALTY_SHIP_FILE
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty modifier applied to thrust

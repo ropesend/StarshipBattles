@@ -99,8 +99,12 @@ class TestSimulationBattleResolverEnvironmentalEffects:
             if e.source == "environment:storm_shield_interference"
         ]
         assert len(storm_entries) == 1
-        # Per Phase 5.5, effects flow as placeholders — engine silently skips.
-        assert storm_entries[0].effect.stat_key == "placeholder"
+        # PROJ-270 Phase 6.1: storm effects now emit the real
+        # `shield_capacity_mult` stat_key so `FleetAuraManager` applies
+        # the effect to ship shield capacity during battle.
+        assert storm_entries[0].effect.stat_key == "shield_capacity_mult"
+        # Value should match the storm's shield_capacity_mult (0.5 in this fixture).
+        assert storm_entries[0].effect.value == 0.5
 
     def test_resolve_battle_no_storm_modifier_when_neutral(self):
         """shield_capacity_mult == 1.0 → no storm ModifierEntry emitted."""

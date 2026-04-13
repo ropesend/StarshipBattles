@@ -121,11 +121,11 @@ class ModDmg001_StatGateScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_damage = beam.damage if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_damage'] = BOOSTED_DAMAGE
         self.results['actual_damage'] = self.actual_damage
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
@@ -190,7 +190,7 @@ class ModDmg002_BoostRatioScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage
@@ -251,7 +251,7 @@ class ModDmg003_ExtremeRatioScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt damage
@@ -316,7 +316,7 @@ class ModDmg004_PenaltyScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty applied
@@ -407,7 +407,7 @@ class ModDmg005_RangeIndependentScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage at mid-range

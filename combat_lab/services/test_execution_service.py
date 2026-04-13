@@ -125,12 +125,10 @@ class TestExecutionService:
         """
         Execute a test scenario headlessly through `run_battle(spec)`.
 
-        PROJ-270 Phase 1.1: the legacy `battle_engine.start([], [])` +
-        `scenario.setup(engine)` + raw-tick-loop path is gone. The unified
-        spec compiler drives `run_battle` via the shared
-        `combat_lab.services.scenario_run_helper`; validation still consumes
-        the live engine here (PROJ-270 Phase 2 migrates that to
-        `BattleOutcome`).
+        PROJ-270 Phase 1.1: legacy `battle_engine.start([], [])` +
+        `scenario.setup(engine)` + raw-tick-loop removed.
+        PROJ-270 Phase 2.5: validator now consumes `(outcome, telemetry)`;
+        the live-engine closure trick is gone.
 
         Args:
             scenario_info: Scenario information from registry.
@@ -170,21 +168,21 @@ class TestExecutionService:
 
             logger.debug(f" Starting run_battle (max_ticks={max_ticks})")
             start_time = time.time()
-            engine, _outcome = run_scenario_via_run_battle(
+            outcome, telemetry = run_scenario_via_run_battle(
                 scenario,
                 per_tick_hook=per_tick_hook,
             )
             elapsed_time = time.time() - start_time
 
-            tick_count = engine.tick_counter if engine is not None else 0
+            tick_count = outcome.duration_ticks
             ticks_per_sec = tick_count / elapsed_time if elapsed_time > 0 else 0
             logger.debug(
                 f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s "
                 f"({ticks_per_sec:.0f} ticks/sec)"
             )
 
-            # Validate results (Phase 1 still consumes engine; Phase 2 → outcome).
-            report = scenario._run_validation(engine)
+            # PROJ-270 Phase 2.5: validate via outcome + telemetry.
+            report = scenario._run_validation(outcome, telemetry)
             scenario.passed = report.passed
             logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 

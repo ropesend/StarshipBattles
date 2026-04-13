@@ -104,7 +104,7 @@ class ArmorAbsorbsAllScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Same total damage, different layer distribution
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify armor capacity
@@ -187,7 +187,7 @@ class ArmorDepletesOverflowScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Same total damage, different layer distribution
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify armor capacity
@@ -285,7 +285,7 @@ class ArmorStackingScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Same total damage, different layer distribution
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has double armor HP

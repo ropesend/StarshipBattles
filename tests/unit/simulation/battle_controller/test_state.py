@@ -43,7 +43,6 @@ class TestBattleControllerStateSaveLoad:
         """load_state restores battle from BattleState."""
         # Create a mock BattleState
         mock_state = Mock()
-        mock_state.mode = "manual"
         mock_state.seed = 12345
         mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False

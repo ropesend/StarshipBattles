@@ -19,7 +19,7 @@ Usage Example:
         target_ship = "Test_Target.json"
         distance = 500
 
-        def validate(self, engine):
+        def validate(self, outcome, telemetry=None):
             checks = self._template_preconditions()
             checks.append(check_true(
                 "Damage dealt", self.damage_dealt > 100,
@@ -110,7 +110,7 @@ class StaticTargetScenario(TestScenario):
             target_ship = "Test_Target_Stationary.json"
             distance = 50
 
-            def validate(self, engine):
+            def validate(self, outcome, telemetry=None):
                 checks = self._template_preconditions()
                 checks.append(check_true(
                     "Damage dealt", self.damage_dealt > 0,
@@ -170,7 +170,7 @@ class StaticTargetScenario(TestScenario):
             return
         self._track_tick(battle_engine.tick_counter)
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """
         Populate measurement attributes for StaticTargetScenario.
 
@@ -184,17 +184,17 @@ class StaticTargetScenario(TestScenario):
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
         self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = engine.tick_counter
+        self.results['ticks_run'] = outcome.duration_ticks
         self.results['target_alive'] = self.target.is_alive
 
-        if engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / engine.tick_counter
+        if outcome.duration_ticks > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / outcome.duration_ticks
 
         # Collect per-weapon firing statistics (pass engine for in-flight counting)
         if hasattr(self, 'attacker') and self.attacker:
-            self._collect_weapon_stats(self.attacker, 'attacker', engine=engine)
+            self._collect_weapon_stats(self.attacker, 'attacker', telemetry=telemetry)
         if hasattr(self, 'target') and self.target:
-            self._collect_weapon_stats(self.target, 'target', engine=engine)
+            self._collect_weapon_stats(self.target, 'target', telemetry=telemetry)
 
         self._finalize_tracking()
 
@@ -203,7 +203,7 @@ class StaticTargetScenario(TestScenario):
                 self.results[key] = getattr(self, key)
 
         # Scenario-specific extra-results hook
-        self._collect_extra_results(engine)
+        self._collect_extra_results(outcome, telemetry)
 
     def _template_preconditions(self):
         """
@@ -273,7 +273,7 @@ class DuelScenario(TestScenario):
             ship2_file = "Test_Ship2.json"
             distance = 500
 
-            def validate(self, engine):
+            def validate(self, outcome, telemetry=None):
                 checks = self._template_preconditions()
                 checks.append(check_true(
                     "Ship1 wins", self.winner == 'ship1',
@@ -321,7 +321,7 @@ class DuelScenario(TestScenario):
 
         self._track_tick(battle_engine.tick_counter)
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """
         Populate measurement attributes for DuelScenario.
 
@@ -340,13 +340,13 @@ class DuelScenario(TestScenario):
         self.results['ship2_damage_dealt'] = self.ship2_damage_dealt
         self.results['ship1_damage_taken'] = self.ship1_damage_taken
         self.results['ship2_damage_taken'] = self.ship2_damage_taken
-        self.results['ticks_run'] = engine.tick_counter
+        self.results['ticks_run'] = outcome.duration_ticks
         self.results['ship1_alive'] = self.ship1.is_alive
         self.results['ship2_alive'] = self.ship2.is_alive
 
         # Collect per-weapon firing statistics
-        self._collect_weapon_stats(self.ship1, 'ship1', engine=engine)
-        self._collect_weapon_stats(self.ship2, 'ship2', engine=engine)
+        self._collect_weapon_stats(self.ship1, 'ship1', telemetry=telemetry)
+        self._collect_weapon_stats(self.ship2, 'ship2', telemetry=telemetry)
 
         self._finalize_tracking()
 
@@ -416,7 +416,7 @@ class PropulsionScenario(TestScenario):
             ship_file = "Test_Engine_Ship.json"
             thrust_forward = True
 
-            def validate(self, engine):
+            def validate(self, outcome, telemetry=None):
                 checks = self._template_preconditions()
                 checks.append(check_true(
                     "Accelerated",
@@ -473,7 +473,7 @@ class PropulsionScenario(TestScenario):
 
         self._track_tick(battle_engine.tick_counter)
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """
         Populate measurement attributes for PropulsionScenario.
 
@@ -502,14 +502,14 @@ class PropulsionScenario(TestScenario):
         self.results['distance_traveled'] = self.distance_traveled
         self.results['velocity_change'] = self.velocity_change
         self.results['angle_change'] = self.angle_change
-        self.results['ticks_run'] = engine.tick_counter
+        self.results['ticks_run'] = outcome.duration_ticks
         self.results['expected_max_speed'] = self.expected_max_speed
         self.results['expected_acceleration_rate'] = self.expected_acceleration_rate
 
         # For turn tests: calculate expected angle change from turn_speed
         # turn_speed is in degrees per 100 ticks
         if hasattr(self, 'ship') and self.ship.turn_speed > 0:
-            ticks_run = engine.tick_counter
+            ticks_run = outcome.duration_ticks
             degrees_per_tick = self.ship.turn_speed / 100.0
             expected_angle_change = degrees_per_tick * ticks_run
             self.results['expected_angle_change'] = expected_angle_change
@@ -617,7 +617,7 @@ class ResourceScenario(TestScenario):
             resource_type = "fuel"
             thrust_forward = True
 
-            def validate(self, engine) -> list:
+            def validate(self, outcome, telemetry=None) -> list:
                 checks = self._template_preconditions()
                 checks.append(check_approx("Final Fuel", 995.0, self.final_value, tolerance=0.01))
                 return checks
@@ -677,7 +677,7 @@ class ResourceScenario(TestScenario):
 
         self._track_tick(battle_engine.tick_counter)
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """
         Populate measurement attributes for ResourceScenario.
 
@@ -690,7 +690,7 @@ class ResourceScenario(TestScenario):
         final_position = pygame.math.Vector2(self.ship.position)
         self.distance_traveled = final_position.distance_to(self.start_position)
 
-        self.results['ticks_run'] = engine.tick_counter
+        self.results['ticks_run'] = outcome.duration_ticks
         self.results['initial_value'] = self.initial_value
         self.results['final_value'] = self.final_value
         self.results['value_consumed'] = self.value_consumed
@@ -703,14 +703,14 @@ class ResourceScenario(TestScenario):
             self.results['damage_dealt'] = self.damage_dealt
 
         # Collect per-weapon firing statistics
-        self._collect_weapon_stats(self.ship, 'ship', engine=engine)
+        self._collect_weapon_stats(self.ship, 'ship', telemetry=telemetry)
         if self.target is not None:
-            self._collect_weapon_stats(self.target, 'target', engine=engine)
+            self._collect_weapon_stats(self.target, 'target', telemetry=telemetry)
 
         self._finalize_tracking()
 
         # Scenario-specific extra-results hook
-        self._collect_extra_results(engine)
+        self._collect_extra_results(outcome, telemetry)
 
     def _template_preconditions(self):
         """
@@ -779,7 +779,7 @@ class ComparisonScenario(TestScenario):
             variant_target_ship = "Test_Target_ECM.json"      # Has ECM
             distance = 400
 
-            def validate(self, engine) -> list:
+            def validate(self, outcome, telemetry=None) -> list:
                 checks = self._template_preconditions()
                 checks.append(check_true(
                     "ECM Reduces Damage",
@@ -849,11 +849,12 @@ class ComparisonScenario(TestScenario):
                 baseline_ships["target"] = ship
             return ship
 
-        engine_ref = {"engine": None}
+        # PROJ-270 Phase 2.5: capture in-flight projectile counts via
+        # per_tick callback — replaces the engine_ref closure trick.
+        baseline_in_flight: dict = {}
 
         def pre_tick_loop(engine):
             """Wire the baseline ships and invoke the configure_baseline hook."""
-            engine_ref["engine"] = engine
             attacker = baseline_ships["attacker"]
             target = baseline_ships["target"]
             # Temporarily bind the baseline ships onto `self.attacker` /
@@ -871,14 +872,22 @@ class ComparisonScenario(TestScenario):
             target.movement_policy = "test_do_nothing"
             self.configure_baseline(engine)
 
-        run_battle(
+        def per_tick(engine):
+            # Capture in-flight projectiles per role; only final tick kept.
+            for role_key, ship_ref in baseline_ships.items():
+                baseline_in_flight[role_key] = sum(
+                    1 for p in engine.projectiles
+                    if p.is_alive and p.owner is ship_ref
+                )
+
+        baseline_outcome = run_battle(
             baseline_spec,
             ai_factory=AIControllerFactory(),
             ship_builder=ship_builder,
             pre_tick_loop_callback=pre_tick_loop,
+            per_tick_callback=per_tick,
         )
 
-        baseline_engine = engine_ref["engine"]
         baseline_attacker = baseline_ships["attacker"]
         baseline_target = baseline_ships["target"]
 
@@ -888,17 +897,21 @@ class ComparisonScenario(TestScenario):
         self._baseline_initial_hp = self.initial_hp
         self._baseline_final_hp = baseline_target.hp
         self._baseline_damage_dealt = self.initial_hp - baseline_target.hp
-        self._baseline_ticks = (
-            baseline_engine.tick_counter if baseline_engine else 0
-        )
+        self._baseline_ticks = baseline_outcome.duration_ticks
         self._baseline_target_alive = baseline_target.is_alive
 
-        # Collect baseline weapon stats.
+        # Collect baseline weapon stats. Build a mini CombatLabTelemetry so
+        # in-flight counts flow through `_collect_weapon_stats`.
+        from combat_lab.telemetry import CombatLabTelemetry
+        baseline_telemetry = CombatLabTelemetry(in_flight_by_role={
+            "baseline_attacker": baseline_in_flight.get("attacker", 0),
+            "baseline_target": baseline_in_flight.get("target", 0),
+        })
         self._collect_weapon_stats(
-            baseline_attacker, "baseline_attacker", engine=baseline_engine
+            baseline_attacker, "baseline_attacker", telemetry=baseline_telemetry
         )
         self._collect_weapon_stats(
-            baseline_target, "baseline_target", engine=baseline_engine
+            baseline_target, "baseline_target", telemetry=baseline_telemetry
         )
 
     def _build_baseline_battle_spec(self):
@@ -1056,7 +1069,7 @@ class ComparisonScenario(TestScenario):
         """
         self._track_tick(battle_engine.tick_counter)
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """
         Populate measurement attributes for both battles.
 
@@ -1064,7 +1077,7 @@ class ComparisonScenario(TestScenario):
         In normal mode, both baseline and variant results are stored.
         """
         current_damage = self.initial_hp - self.target.hp
-        current_ticks = engine.tick_counter
+        current_ticks = outcome.duration_ticks
 
         if self._visual_baseline:
             # Visual Baseline mode — only baseline ran on runner's engine
@@ -1079,8 +1092,8 @@ class ComparisonScenario(TestScenario):
             self.results['baseline_ticks'] = self.baseline_ticks
             self.results['ticks_run'] = current_ticks
 
-            self._collect_weapon_stats(self.attacker, 'baseline_attacker', engine=engine)
-            self._collect_weapon_stats(self.target, 'baseline_target', engine=engine)
+            self._collect_weapon_stats(self.attacker, 'baseline_attacker', telemetry=telemetry)
+            self._collect_weapon_stats(self.target, 'baseline_target', telemetry=telemetry)
         else:
             # Normal mode — baseline ran internally, variant on runner's engine
             self.variant_damage_dealt = current_damage
@@ -1103,14 +1116,14 @@ class ComparisonScenario(TestScenario):
             self.results['variant_ticks'] = self.variant_ticks
             self.results['ticks_run'] = current_ticks
 
-            self._collect_weapon_stats(self.attacker, 'variant_attacker', engine=engine)
-            self._collect_weapon_stats(self.target, 'variant_target', engine=engine)
+            self._collect_weapon_stats(self.attacker, 'variant_attacker', telemetry=telemetry)
+            self._collect_weapon_stats(self.target, 'variant_target', telemetry=telemetry)
 
         self._finalize_tracking()
 
-        self._collect_extra_results(engine)
+        self._collect_extra_results(outcome, telemetry)
 
-    def _run_validation(self, engine):
+    def _run_validation(self, outcome, telemetry=None):
         """
         Override base _run_validation for visual baseline mode.
 
@@ -1119,7 +1132,7 @@ class ComparisonScenario(TestScenario):
         Collect results and return a baseline-only precondition report.
         """
         if self._visual_baseline:
-            self.collect_results(engine)
+            self.collect_results(outcome, telemetry)
             checks = self._template_preconditions()
             from combat_lab.scenarios.validation import ValidationReport
             report = ValidationReport(checks=checks)
@@ -1146,7 +1159,7 @@ class ComparisonScenario(TestScenario):
             }
             self.results['has_validation_failures'] = not report.passed
             return report
-        return super()._run_validation(engine)
+        return super()._run_validation(outcome, telemetry)
 
     def _template_preconditions(self):
         """

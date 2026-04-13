@@ -102,7 +102,7 @@ class ECMReducesHitRateComparisonScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_ECM.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify ECM is present on variant target
@@ -198,7 +198,7 @@ class ECMSameGroupDoesNotStackScenario(ComparisonScenario):
     distance = MID_RANGE_DISTANCE
     expect_different_damage = False  # Same-group MAX means identical damage
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: ECM target took some damage
@@ -265,7 +265,7 @@ class ECMDifferentGroupsStackScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_ECM_GroupAB.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: single-ECM target took damage
@@ -345,7 +345,7 @@ class NegativeDefenseModifierScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_ECM_Penalty.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty on variant target

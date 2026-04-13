@@ -101,24 +101,32 @@ caller → spec compiler → run_battle(spec)
 - **Two-phase ability aggregation** (intra-group MAX, inter-group SUM): Phase 6's stat_key mapping reuses the existing `ExternalModifier` pipeline in `FleetAuraManager`.
 - **Strict TDD** (CLAUDE.md Rule 1): every Phase 1–8 task starts with a failing test.
 
-### Validator-to-Outcome Field Mapping (Phase 2 design task)
+### Validator-to-Outcome Field Mapping (Phase 2 Task 2.1 — COMPLETE)
 
-Combat Lab scenarios today read these live-engine fields. Phase 2 Task 2.1 produces this full inventory; today's shape (sketch):
+Combat Lab scenarios today read these live-engine fields. The PROJ-270 Phase 2 audit produced this inventory:
 
-| Live-engine access | `BattleOutcome` equivalent | Notes |
-|--------------------|----------------------------|-------|
-| `ship.current_shields`, `ship.hp` | `ShipOutcome.components` (aggregate) | Per-component final HP → derive ship shield/hull state |
-| `ship.layers[LayerType.ARMOR].components[i].current_hp` | `ShipOutcome.components` (filter by `component_id`) | Direct |
-| `ship.is_alive`, `ship.is_derelict` | `ShipOutcome.status` | `SURVIVED`/`DERELICT`/`DESTROYED`/`RETREATED` |
-| `ship.x, ship.y, ship.angle, ship.velocity` | `ShipOutcome.final_position/final_angle/final_velocity` | Direct |
-| `component.shots_fired, component.shots_hit` | `ShipOutcome.weapons` → `WeaponSummary` | Direct (NORMAL+ telemetry) |
-| `ship.total_damage_taken`, `peak_speed`, `ticks_derelict`, `ticks_alive` | `ShipOutcome.stats` → `ShipStats` | Direct (NORMAL+ telemetry) |
-| In-flight projectile counts | **GAP** | `BattleOutcome` doesn't carry projectile state today |
-| Per-tick position track (for erratic tests) | **GAP** | Needs new `PositionTrack` on `ShipOutcome` or on `BattleOutcome` |
-| `engine.tick_counter` | `BattleOutcome.duration_ticks` | Direct |
-| `engine.retreated_ships` | `ShipOutcome.status == RETREATED` for that ship | Direct |
+| Live-engine access | Post-PROJ-270-Phase-2 equivalent | Resolution |
+|--------------------|----------------------------------|-----------|
+| `engine.tick_counter` | `outcome.duration_ticks` | **14 sites migrated** by batch script |
+| `engine.projectiles` (in `_collect_weapon_stats`) | `telemetry.in_flight_for(role)` | **1 site migrated** — `CombatLabTelemetry` stores in-flight count per role, captured in helper via per-tick callback |
+| `engine.ships` / `engine.teams` | Only in docstring examples | Not live; flagged for Phase 8.5 docs rewrite |
+| `engine.aura_manager` | Only referenced in tohit_attack_fleet docstrings | Not live |
+| `engine.retreated_ships` | Not read by Combat Lab validators | N/A |
+| `ship.*` (current_hp, is_alive, components, x/y/angle/velocity, shots_fired/hit, etc.) | Same — wired as `self.attacker` / `self.target` during `wire_ships`; no migration needed | Unchanged — wired ship refs persist through the battle; validators read directly |
+| `self.target.layers[LayerType.ARMOR].components[i].current_hp` | Unchanged — accessed via wired ship refs | Unchanged |
+| `component.shots_fired`, `component.shots_hit` | Unchanged — accessed via wired ship refs | Unchanged |
 
-**Phase 2 design decision:** the two gaps (in-flight projectiles, position tracks) are both Combat-Lab-specific forensic data. Option A: extend `BattleOutcome` with these fields at `DETAILED` telemetry level only. Option B: return them as a separate `CombatLabTelemetry` bundle from a Combat Lab-specific helper (not on the simulation-layer `BattleOutcome`). Phase 2 Task 2.1 picks one; Option B keeps simulation-layer DTOs lean.
+**Key insight:** the vast majority of the 190 method-signature occurrences were signature renames (`def validate(self, engine)` → `def validate(self, outcome, telemetry=None)`) because the body of most validators reads from `self.*` (wired ship refs), not from `engine.*`. Only 14 `engine.tick_counter` sites + 1 `engine.projectiles` site were genuine engine reads.
+
+**Phase 2 design decision (locked):** Option B — Combat-Lab-specific `CombatLabTelemetry` bundle carries forensic data (in-flight projectile counts). Simulation-layer `BattleOutcome` stays lean.
+- **`CombatLabTelemetry`** lives at [combat_lab/telemetry.py](../../../combat_lab/telemetry.py)
+- **Helper [combat_lab/services/scenario_run_helper.py](../../../combat_lab/services/scenario_run_helper.py)** captures it during per-tick callback and returns `(outcome, telemetry)` to callers
+- **`TestScenario._run_validation(outcome, telemetry)`** is the new contract
+- **`_collect_weapon_stats(ship, role, *, telemetry=None)`** reads from telemetry
+
+**Future additions to `CombatLabTelemetry` (deferred — add when a scenario genuinely needs them):**
+- Per-tick position tracks (currently implemented via `self._track_tick` + `self.tracked_positions` on templates — no migration needed today)
+- Per-hit event logs beyond what `ShipOutcome.hits_taken` provides
 
 ### Dependencies & Risks
 

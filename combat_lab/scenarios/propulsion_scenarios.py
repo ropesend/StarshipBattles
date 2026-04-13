@@ -300,7 +300,7 @@ class PropEngineAccelerationScenario(PropulsionScenario):
     ship_file = PROP001_SHIP_FILE
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.extend(self._propulsion_data_checks(PROP001_TOTAL_MASS, PROP001_ENGINE_THRUST))
         # Precondition
@@ -351,7 +351,7 @@ class PropDualEngineScenario(PropulsionScenario):
     ship_file = PROP001C_SHIP_FILE
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.extend(self._propulsion_data_checks(PROP001C_TOTAL_MASS, PROP001C_TOTAL_THRUST))
         # Precondition
@@ -486,11 +486,11 @@ class PropThrustMassRatioScenario(TestScenario):
         }
 
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """Populate measurement attributes for the three ships."""
-        self.results['ticks_run'] = engine.tick_counter
+        self.results['ticks_run'] = outcome.duration_ticks
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
         ticks = self.results.get('ticks_run', 0)
         checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
@@ -561,7 +561,7 @@ class PropThrusterTurnRateScenario(PropulsionScenario):
     ship_file = PROP003_SHIP_FILE
     turn_left = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Ship Mass", PROP003_TOTAL_MASS, self.ship.mass))
@@ -613,7 +613,7 @@ class PropThrusterRotationScenario(PropulsionScenario):
     ship_file = PROP004_SHIP_FILE
     turn_right = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Ship Mass", PROP004_TOTAL_MASS, self.ship.mass))
@@ -667,7 +667,7 @@ class PropDualThrusterScenario(PropulsionScenario):
     ship_file = PROP004B_SHIP_FILE
     turn_right = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Ship Mass", PROP004B_TOTAL_MASS, self.ship.mass))
@@ -717,7 +717,7 @@ class PropNoEngineStationaryScenario(PropulsionScenario):
     ship_file = "Test_No_Engine.json"
     thrust_forward = True  # Command thrust, but it should have no effect
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
         ticks = self.results.get('ticks_run', 0)
         checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
@@ -777,12 +777,12 @@ class PropThrusterOnlyScenario(PropulsionScenario):
     turn_left = True
     thrust_forward = True  # Also command thrust - should have no effect
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         # Don't use template preconditions — this test intentionally has
         # thrust_forward=True with no engine, so "Ship Moved" would wrongly fail.
         checks = []
-        checks.append(check_true("Simulation Ran", engine.tick_counter > 0,
-                                 actual=engine.tick_counter))
+        checks.append(check_true("Simulation Ran", outcome.duration_ticks > 0,
+                                 actual=outcome.duration_ticks))
         # Data
         checks.append(check_exact("Ship Mass", PROP003B_TOTAL_MASS, self.ship.mass))
         checks.append(check_exact("Ship Thrust", PROP003B_THRUST, self.ship.total_thrust))
@@ -915,11 +915,11 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         self.high_mass_ship.movement_policy = "test_rotate_right"
 
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """Populate measurement attributes for the two ships."""
-        self.results['ticks_run'] = engine.tick_counter
+        self.results['ticks_run'] = outcome.duration_ticks
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
         ticks = self.results.get('ticks_run', 0)
         checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))

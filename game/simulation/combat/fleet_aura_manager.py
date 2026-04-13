@@ -127,27 +127,50 @@ class FleetAuraManager:
     ) -> None:
         """Translate a single `ModifierEntry` into an `ExternalModifier`.
 
-        Silently skips entries whose effect has `stat_key == "placeholder"`
-        — those are compiler stubs with no real effect mapping yet.
+        Skips entries whose effect has `stat_key == "placeholder"` —
+        those are compiler stubs with no real effect mapping yet.
+        PROJ-270 Phase 6.4: placeholder skips are now logged (once per
+        source) so compiler authors get immediate feedback when they
+        add a new modifier source without a stat_key mapping.
         """
         effect = getattr(entry, 'effect', None)
         if effect is None:
             return
         stat_key = getattr(effect, 'stat_key', '') or ''
-        if not stat_key or stat_key == 'placeholder':
-            return
-        value = float(getattr(effect, 'value', 0.0) or 0.0)
-        source_name = (
+        source = str(
             getattr(entry, 'source', None)
             or getattr(effect, 'source_modifier_name', '')
             or 'Unknown'
         )
+        if not stat_key or stat_key == 'placeholder':
+            self._log_placeholder_once(source)
+            return
+        value = float(getattr(effect, 'value', 0.0) or 0.0)
         self._external.append(ExternalModifier(
             ability_name=stat_key,
             value=value,
-            source_name=str(source_name),
+            source_name=source,
             team_id=team_id,
         ))
+
+    def _log_placeholder_once(self, source: str) -> None:
+        """Emit one WARNING per unique placeholder source to avoid log spam.
+
+        The set of already-warned sources lives on the manager instance so
+        re-initialization (new battle) emits a fresh warning — useful for
+        per-battle visibility.
+        """
+        if not hasattr(self, '_placeholder_warned_sources'):
+            self._placeholder_warned_sources: set = set()
+        if source in self._placeholder_warned_sources:
+            return
+        self._placeholder_warned_sources.add(source)
+        logger.warning(
+            "FleetAuraManager: ModifierEntry source=%r has no stat_key "
+            "mapping (placeholder). Effect will NOT be applied to battle "
+            "math. Compiler author should map this to a real StatKey.",
+            source,
+        )
 
     def _scan_ship(self, ship: Any) -> None:
         """Find all non-SELF scoped abilities on a ship."""

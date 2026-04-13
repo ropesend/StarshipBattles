@@ -11,8 +11,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from game.core.paths import Paths
 from game.core.registry import get_default_registry_manager, get_default_registry_provider
-from game.ai.ai_factory import AIControllerFactory
-from game.simulation.battle_runner import run_battle
 from game.simulation.components.component import load_components, load_modifiers
 from combat_lab.logging_config import get_logger, setup_combat_lab_logging
 
@@ -147,63 +145,24 @@ class TestRunner:
         # 1. Load Data (manages its own unfrozen() scope for clear + hydrate)
         self.load_data_for_scenario(scenario)
 
-        # 2. Compile to a BattleSpec. Scenarios must inherit from a
-        # template or supply their own `to_spec()` override; anything else
-        # is a hard error (no silent legacy fallback post-Phase 6).
-        spec = scenario.to_spec(registries=None)
-        ai_factory = AIControllerFactory()
+        # 2. Compile + drive via the shared helper.
+        # PROJ-270 Phase 2.5: engine_ref closure trick is gone — validator
+        # consumes (outcome, telemetry). The helper handles to_spec,
+        # before_run_battle, ship materialization, wire_ships, custom_setup,
+        # and per-tick dispatch internally.
+        from combat_lab.services.scenario_run_helper import run_scenario_via_run_battle
 
-        # 3. Pre-run hook — ComparisonScenario runs its private baseline
-        # battle here (must happen BEFORE variant ships are materialized
-        # to preserve ship-creation ordering for deterministic outcomes).
-        scenario.before_run_battle(spec)
-
-        # 4. Role-keyed ship registry + pre-start snapshot. `ship_builder`
-        # populates both as ships materialize; `pre_tick_loop` passes the
-        # full dicts to `scenario.wire_ships(...)` after `engine.start()`.
-        ships_by_role: dict = {}
-        initial_state_by_role: dict = {}
-
-        def ship_builder(ship_spec):
-            ship = scenario._load_ship(ship_spec.design_id)
-            role = _role_from_instance_id(ship_spec.instance_id)
-            if role is not None:
-                ships_by_role[role] = ship
-                initial_state_by_role[role] = _snapshot_ship_state(ship)
-            return ship
-
-        engine_ref = {"engine": None}
-
-        def pre_tick_loop(engine):
-            engine_ref["engine"] = engine
-            # Custom_setup hooks and ComparisonScenario's baseline-battle
-            # path both read `_effective_seed`.
-            scenario._effective_seed = spec.seed
-            scenario.wire_ships(
-                ships_by_role,
-                engine=engine,
-                initial_state=initial_state_by_role,
-            )
-            scenario.custom_setup(engine)
-
-        def per_tick(engine):
-            engine_ref["engine"] = engine
-            scenario.update(engine)
+        def per_tick_hook(engine):
             if render_callback is not None:
                 render_callback(engine)
 
-        # 5. Run the unified path.
         logger.info(
             f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})"
         )
         start_time = time.time()
         try:
-            outcome = run_battle(
-                spec,
-                ai_factory=ai_factory,
-                ship_builder=ship_builder,
-                per_tick_callback=per_tick,
-                pre_tick_loop_callback=pre_tick_loop,
+            outcome, telemetry = run_scenario_via_run_battle(
+                scenario, per_tick_hook=per_tick_hook,
             )
         except Exception as e:
             logger.error(f"Scenario Crash: {e}", exc_info=True)
@@ -214,21 +173,13 @@ class TestRunner:
             return scenario
 
         duration = time.time() - start_time
-        engine = engine_ref["engine"]
-        self.engine = engine  # Exposed for external callers reading runner.engine
+        self.engine = None  # PROJ-270 Phase 2.5: no engine escape from run_battle.
 
-        if engine is None:
-            scenario.passed = False
-            scenario.results['error'] = 'run_battle produced no engine reference'
-            if log_results:
-                self.log_test_execution(scenario, headless)
-            return scenario
-
-        # 6. Validate.
-        report = scenario._run_validation(engine)
+        # 6. Validate via outcome + telemetry.
+        report = scenario._run_validation(outcome, telemetry)
         scenario.passed = report.passed
         scenario.results['duration_real'] = duration
-        scenario.results['ticks'] = engine.tick_counter
+        scenario.results['ticks'] = outcome.duration_ticks
         scenario.results['battle_outcome_end_reason'] = outcome.end_reason.value
 
         status = "PASSED" if scenario.passed else "FAILED"

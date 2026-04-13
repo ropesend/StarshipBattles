@@ -119,7 +119,7 @@ class FleetSensorBonusApplied(StaticTargetScenario):
     distance = POINT_BLANK_DISTANCE
     force_fire = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
 
         # Data: verify fleet bonus is set on the attacker
@@ -210,15 +210,15 @@ class ExternalBattleConditionApplied(TestScenario):
         )
         battle_engine.aura_manager._recalculate(battle_engine.ships)
 
-    def collect_results(self, engine):
-        self.results['ticks_run'] = engine.tick_counter
+    def collect_results(self, outcome, telemetry=None):
+        self.results['ticks_run'] = outcome.duration_ticks
         self.results['damage_dealt'] = 0
         # Measure damage dealt to target
         if hasattr(self, 'target') and self.target:
             initial_hp = getattr(self, '_initial_target_hp', 0)
             self.results['damage_dealt'] = initial_hp - self.target.hp if initial_hp else 0
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
 
         fleet_bonus = getattr(self.attacker, 'fleet_attack_bonus', 0.0)
@@ -283,7 +283,7 @@ class FleetSensorSameGroupMax(TestScenario):
         self.provider_b.movement_policy = "test_do_nothing"
         self.target.movement_policy = "test_do_nothing"
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
         bonus_a = getattr(self.provider_a, 'fleet_attack_bonus', 0.0)
         bonus_a = bonus_a if isinstance(bonus_a, (int, float)) else 0.0
@@ -334,7 +334,7 @@ class FleetSensorDiffGroupSum(TestScenario):
         self.provider_b.movement_policy = "test_do_nothing"
         self.target.movement_policy = "test_do_nothing"
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = []
         bonus = getattr(self.provider_a, 'fleet_attack_bonus', 0.0)
         bonus = bonus if isinstance(bonus, (int, float)) else 0.0

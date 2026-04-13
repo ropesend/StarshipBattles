@@ -155,13 +155,17 @@ def _fake_run_battle_factory(tick_count=10):
               per_tick_callback=None, pre_tick_loop_callback=None):
         engine = Mock()
         engine.tick_counter = 0
+        engine.projectiles = []
         if pre_tick_loop_callback is not None:
             pre_tick_loop_callback(engine)
         if per_tick_callback is not None:
             for i in range(tick_count):
                 engine.tick_counter = i + 1
                 per_tick_callback(engine)
-        return Mock(end_reason=Mock(value="tick_limit"))
+        outcome = Mock()
+        outcome.end_reason = Mock(value="tick_limit")
+        outcome.duration_ticks = tick_count
+        return outcome
     return _fake
 
 

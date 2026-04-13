@@ -1020,76 +1020,41 @@ class FleetBattleSetupScreen:
     # === Battle Start ===
 
     def _start_battle(self, headless: bool = False):
+        """Compile a BattleSpec from the current UI state and hand it to the app.
+
+        PROJ-270 Phase 3: the inline `fleet.battle.to_battle_ships(...)` +
+        `DeploymentZoneCalculator` materialization is replaced by the
+        spec compiler `build_manual_battle_spec` (which uses
+        `FormationResolver` for positioning). Complex toggles flow into
+        `spec.modifier_stack` via `_sync_complex_toggles_to_state`.
+        """
+        from game.ui.screens.battle_setup.spec_compiler import build_manual_battle_spec
+
         registries = _get_registries()
 
-        # PROJ-269 Phase 6 Task 6.4: sync `_complex_toggles` dict onto
-        # `BattleSetupSide.system_complexes` / `sector_complexes` so the
-        # Battle Setup spec compiler (`build_manual_battle_spec`) can
-        # translate toggled complexes into `ModifierStack` entries. Per
-        # Phase 5.5 placeholder semantics the engine currently records
-        # but does not evaluate these effects — real content mapping is
-        # post-PROJ-269 work. This replaces the deleted ship-mutation
-        # side channel (`_apply_complex_modifiers`).
+        # Sync `_complex_toggles` dict onto `BattleSetupSide.system_complexes` /
+        # `sector_complexes` so the compiler can translate toggled complexes
+        # into `ModifierStack` entries.
         self._sync_complex_toggles_to_state()
 
-        team0_ships = []
-        team1_ships = []
+        # Guard: both sides must have at least one ship.
+        def _total_ships(side) -> int:
+            return sum(len(fleet.ships) for fleet in side.fleets)
 
-        # Convert each fleet — use deployment zones for multi-fleet
-        from game.strategy.services.deployment_zone_calculator import DeploymentZoneCalculator
-
-        for fi, fleet in enumerate(self.state.side_0.fleets):
-            # Determine battle role for this fleet
-            role = BattleRole.MAIN_BODY
-            if fleet.task_forces:
-                role = fleet.task_forces[0].battle_role or BattleRole.MAIN_BODY
-            elif fi == 1:
-                role = BattleRole.FLANKER_RIGHT
-            elif fi == 2:
-                role = BattleRole.FLANKER_LEFT
-
-            positions = DeploymentZoneCalculator.compute_positions(
-                ship_count=len(fleet.get_combat_capable_ships()),
-                battle_role=role,
-                team_id=0,
-            )
-            ships = fleet.battle.to_battle_ships(
-                team_id=0, formation_positions=positions, registries=registries
-            )
-            team0_ships.extend(ships)
-
-        for fi, fleet in enumerate(self.state.side_1.fleets):
-            role = BattleRole.MAIN_BODY
-            if fleet.task_forces:
-                role = fleet.task_forces[0].battle_role or BattleRole.MAIN_BODY
-            elif fi == 1:
-                role = BattleRole.FLANKER_RIGHT
-            elif fi == 2:
-                role = BattleRole.FLANKER_LEFT
-
-            positions = DeploymentZoneCalculator.compute_positions(
-                ship_count=len(fleet.get_combat_capable_ships()),
-                battle_role=role,
-                team_id=1,
-            )
-            ships = fleet.battle.to_battle_ships(
-                team_id=1, formation_positions=positions, registries=registries
-            )
-            team1_ships.extend(ships)
-
-        if not team0_ships or not team1_ships:
+        if _total_ships(self.state.side_0) == 0 or _total_ships(self.state.side_1) == 0:
             logger.warning("Cannot start battle: both sides need ships")
             return
 
-        # Build end condition from UI settings
         end_condition = self._build_end_condition()
+        spec = build_manual_battle_spec(
+            self.state,
+            registries,
+            end_condition=end_condition,
+        )
 
         if self.scene_callback:
             action = "start_headless" if headless else "start_battle"
-            self.scene_callback(
-                action, team0=team0_ships, team1=team1_ships,
-                end_condition=end_condition,
-            )
+            self.scene_callback(action, spec=spec)
 
     def _build_end_condition(self):
         """Build composite end condition from UI settings."""

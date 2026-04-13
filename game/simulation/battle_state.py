@@ -604,7 +604,6 @@ class BattleState:
 
     # Metadata
     created_at: str = ""
-    mode: str = "manual"  # manual, test, strategy, hypothetical
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -618,7 +617,6 @@ class BattleState:
             'allow_retreat': self.allow_retreat,
             'allow_reinforcements': self.allow_reinforcements,
             'created_at': self.created_at,
-            'mode': self.mode,
         }
 
     def to_json(self, indent: int = 2) -> str:
@@ -646,7 +644,6 @@ class BattleState:
             allow_retreat=data.get('allow_retreat', False),
             allow_reinforcements=data.get('allow_reinforcements', False),
             created_at=data.get('created_at', ''),
-            mode=data.get('mode', 'manual'),
         )
 
     @classmethod
@@ -659,7 +656,6 @@ class BattleState:
     def capture_from_engine(
         cls,
         engine: 'BattleEngine',
-        mode: str = "manual",
         seed: Optional[int] = None,
         allow_retreat: bool = False,
         allow_reinforcements: bool = False,
@@ -717,7 +713,6 @@ class BattleState:
             allow_retreat=allow_retreat,
             allow_reinforcements=allow_reinforcements,
             created_at=datetime.now().isoformat(),
-            mode=mode,
         )
 
     def get_ships_by_team(self, team_id: int) -> List[ShipState]:

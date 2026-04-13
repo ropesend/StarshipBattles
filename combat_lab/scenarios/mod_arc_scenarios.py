@@ -109,11 +109,11 @@ class ModArc001_StatGateScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_arc = beam.firing_arc if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_arc'] = ARC_180
         self.results['actual_arc'] = self.actual_arc
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
@@ -175,7 +175,7 @@ class ModArc002_ForwardTargetScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Both hit same target at same rate
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify arc values
@@ -249,7 +249,7 @@ class ModArc003_TargetOutsideArcScenario(StaticTargetScenario):
     distance = POINT_BLANK_DISTANCE
     attacker_angle = FACING_AWAY  # Face LEFT, away from target
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
@@ -325,7 +325,7 @@ class ModArc004_ArcRestrictionScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     attacker_angle = FACING_AWAY  # Both face away from target
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Outcome: omnidirectional beam fires and hits
@@ -393,12 +393,12 @@ class ModArc005_SetSemanticsScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_arc = beam.firing_arc if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['actual_arc'] = self.actual_arc
         self.results['if_multiplied'] = BASE_ARC * TURRET_ARC_PARAM
         self.results['if_added'] = BASE_ARC + TURRET_ARC_PARAM
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')

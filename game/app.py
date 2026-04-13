@@ -540,32 +540,60 @@ class Game:
         self.race_setup_window = None
         logger.debug("Race setup cancelled")
 
-    def start_battle(self, team0_ships, team1_ships, headless=False, end_condition=None):
-        """Start a battle with the given ships using unified controller flow.
+    def start_battle(self, spec, *, headless=False):
+        """Start a battle from a compiled `BattleSpec`.
 
-        PROJ-269 Phase 6: replaces the deleted `create_manual_battle`
-        factory with an inlined `BattleController` setup. The Battle
-        Setup spec compiler integration (full `build_manual_battle_spec`
-        + `run_battle` routing) lands with Task 6.9's UI visual-mode
-        migration — for now the controller still drives the UI's
-        per-frame tick loop via `BattleScreen`.
+        PROJ-270 Phase 3: consumes a `BattleSpec` directly. The caller
+        (FleetBattleSetupScreen) compiles via `build_manual_battle_spec`.
+        We materialize ships via the shared `materialize_spec_ships`
+        helper, thread boundary + modifier_stack onto the engine, then
+        drive `BattleController` for per-frame ticking (Phase 4 refactors
+        the controller to accept a spec directly).
         """
         from game.simulation.battle_config import BattleConfig
         from game.simulation.battle_controller import BattleController
+        from game.simulation.battle_runner import materialize_spec_ships
         from game.ai.ai_factory import AIControllerFactory
+        from game.core.registry import get_default_registry_provider
 
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
 
-        config_kwargs = {"headless": headless}
-        if end_condition is not None:
-            config_kwargs["end_condition"] = end_condition
-        config = BattleConfig(**config_kwargs)
+        config = BattleConfig(
+            headless=headless,
+            seed=spec.seed,
+            end_condition=spec.end_condition,
+            absolute_max_ticks=spec.absolute_max_ticks,
+        )
 
         controller = BattleController(ai_factory=AIControllerFactory())
         controller.configure(config)
-        controller.add_ships(team0_ships, 0)
-        controller.add_ships(team1_ships, 1)
+        engine = controller.service.get_engine()
+        if spec.boundary is not None:
+            engine.boundary = spec.boundary
+        engine.modifier_stack = spec.modifier_stack
+
+        registries = get_default_registry_provider().get_registries()
+
+        def _ship_builder(ship_spec):
+            # Look up the original ShipInstance by instance_id so we can
+            # call `to_ship(registries)` to preserve accumulated component HP.
+            for side in (self.battle_setup.state.side_0, self.battle_setup.state.side_1):
+                for fleet in side.fleets:
+                    for ship_instance in fleet.ships:
+                        if ship_instance.instance_id == ship_spec.instance_id:
+                            return ship_instance.to_ship(registries=registries)
+            raise KeyError(
+                f"ShipInstance with instance_id={ship_spec.instance_id!r} not "
+                f"found in BattleSetupState fleets"
+            )
+
+        teams_by_id, _ships_by_role = materialize_spec_ships(
+            spec, ship_builder=_ship_builder,
+        )
+        for team_id, ships in teams_by_id.items():
+            controller.add_ships(ships, team_id=team_id)
+
         controller.start()
 
         self.battle_scene.start_battle(controller)
@@ -784,16 +812,26 @@ class Game:
             draw_exit_dialog(self.screen, self.font_large, self.font_med)
 
     def _handle_battle_setup_action(self, action: str, **kwargs):
-        """Handle scene actions from BattleSetupScreen."""
-        end_condition = kwargs.get("end_condition")
-        if action == "start_battle":
-            self.start_battle(kwargs["team0"], kwargs["team1"], end_condition=end_condition)
-        elif action == "start_headless":
-            team0, team1 = kwargs["team0"], kwargs["team1"]
-            logger.info(f"Team 1: {len(team0)} ships ({sum(s.max_hp for s in team0):.0f} total HP)")
-            logger.info(f"Team 2: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
-            logger.info("Running simulation...")
-            self.start_battle(team0, team1, headless=True, end_condition=end_condition)
+        """Handle scene actions from BattleSetupScreen.
+
+        PROJ-270 Phase 3: `start_battle` / `start_headless` now carry a
+        compiled `spec: BattleSpec` kwarg instead of raw ship lists.
+        """
+        if action in ("start_battle", "start_headless"):
+            spec = kwargs["spec"]
+            if action == "start_headless":
+                ship_count_per_team = [
+                    sum(
+                        len(squadron.ships)
+                        for task_force in team.fleet_hierarchy
+                        for squadron in task_force.squadrons
+                    )
+                    for team in spec.teams
+                ]
+                for i, count in enumerate(ship_count_per_team):
+                    logger.info(f"Team {i}: {count} ships")
+                logger.info("Running simulation...")
+            self.start_battle(spec, headless=(action == "start_headless"))
         elif action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
 

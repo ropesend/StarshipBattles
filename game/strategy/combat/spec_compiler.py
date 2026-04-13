@@ -355,23 +355,25 @@ def _build_modifier_stack(
 
 
 def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
-    """Translate an `EnvironmentalEffects` value into placeholder entries.
+    """Translate an `EnvironmentalEffects` value into `ModifierEntry` entries.
 
-    PROJ-269 Phase 5.5 semantics: each relevant multiplier / bonus is
-    recorded as a `ModifierEntry` with `stat_key="placeholder"` so the
-    engine silently skips real-effect application. The entries still
-    appear in `HitRecord.modifiers_applied` for forensic traces — real
-    content mapping (`shield_capacity_mult` → effective stat) is
-    post-PROJ-269 work.
+    PROJ-270 Phase 6.1: storm shield interference now emits a REAL
+    `stat_key="shield_capacity_mult"` (not `"placeholder"`) so the
+    `FleetAuraManager` pipeline applies the effect to ship shield
+    capacity during battle. Replaces the PROJ-269 Phase 5.5 placeholder
+    semantics for this specific effect.
     """
     entries: List[ModifierEntry] = []
     shield_mult = getattr(effects, "shield_capacity_mult", 1.0)
     if shield_mult is not None and shield_mult != 1.0:
         entries.append(
-            _placeholder_entry(
+            _real_entry(
                 source="environment:storm_shield_interference",
                 display_name=f"Storm Shield x{shield_mult:.2f}",
                 design_id="storm_shield_interference",
+                stat_key="shield_capacity_mult",
+                value=shield_mult,
+                operation="multiply",
             )
         )
     return entries
@@ -380,11 +382,16 @@ def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
 def _entries_from_fleet_combat_modifiers(
     modifiers: Any, *, team_id: int
 ) -> List[ModifierEntry]:
-    """Translate a `FleetCombatModifiers` value into placeholder entries.
+    """Translate a `FleetCombatModifiers` value into `ModifierEntry` entries.
 
-    Emits one entry per non-default field (shield_mult, damage_mult,
-    flat_shield_bonus). Each carries the team_id and a named source so
-    forensic traces can distinguish team-0 vs team-1 modifiers.
+    PROJ-270 Phase 6.2: `shield_mult` and `damage_mult` now emit REAL
+    stat_keys (`shield_capacity_mult`, `damage_mult`) so the
+    `FleetAuraManager` pipeline applies them during battle. Replaces
+    the Phase 5.5 placeholder semantics for these multipliers.
+
+    `flat_shield_bonus` remains a placeholder pending PROJ-271 scope —
+    requires new additive stat_key (`SHIELD_BONUS_ADD`) wiring. See
+    decisions.md Decision 1 (scope trim).
     """
     entries: List[ModifierEntry] = []
     shield_mult = getattr(modifiers, "shield_mult", 1.0)
@@ -392,21 +399,29 @@ def _entries_from_fleet_combat_modifiers(
     flat_shield = getattr(modifiers, "flat_shield_bonus", 0.0)
     if shield_mult != 1.0:
         entries.append(
-            _placeholder_entry(
+            _real_entry(
                 source=f"team{team_id}:shield_mult",
                 display_name=f"Shield x{shield_mult:.2f}",
                 design_id="team_shield_mult",
+                stat_key="shield_capacity_mult",
+                value=shield_mult,
+                operation="multiply",
             )
         )
     if damage_mult != 1.0:
         entries.append(
-            _placeholder_entry(
+            _real_entry(
                 source=f"team{team_id}:damage_mult",
                 display_name=f"Damage x{damage_mult:.2f}",
                 design_id="team_damage_mult",
+                stat_key="damage_mult",
+                value=damage_mult,
+                operation="multiply",
             )
         )
     if flat_shield:
+        # PROJ-271 deferred: flat_shield_bonus still placeholder until
+        # `SHIELD_BONUS_ADD` additive stat_key is wired through.
         entries.append(
             _placeholder_entry(
                 source=f"team{team_id}:flat_shield_bonus",
@@ -415,6 +430,35 @@ def _entries_from_fleet_combat_modifiers(
             )
         )
     return entries
+
+
+def _real_entry(
+    *,
+    source: str,
+    display_name: str,
+    design_id: str,
+    stat_key: str,
+    value: float,
+    operation: str = "multiply",
+) -> ModifierEntry:
+    """Build a `ModifierEntry` that the engine will actually apply.
+
+    PROJ-270 Phase 6: used for modifier sources whose real stat_key
+    mapping is known. The `FleetAuraManager` translates this into an
+    `ExternalModifier` via `ability_name=stat_key` and applies it to
+    ship stats at battle start.
+    """
+    effect = ModifierEffect(
+        stat_key=stat_key,
+        value=value,
+        operation=operation,
+        target_ability=None,
+        source_modifier_id=design_id,
+        source_modifier_name=display_name,
+        formula_str="",
+        param_value=value,
+    )
+    return ModifierEntry(source=source, stack_group=None, effect=effect)
 
 
 def _placeholder_entry(*, source: str, display_name: str, design_id: str) -> ModifierEntry:

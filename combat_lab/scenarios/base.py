@@ -466,7 +466,7 @@ class TestScenario:
         return TickLimitCondition(max_ticks=self.metadata.max_ticks)
 
 
-    def validate(self, engine) -> 'List[Check]':
+    def validate(self, outcome, telemetry=None) -> 'List[Check]':
         """
         Return all validation checks for this scenario.
 
@@ -474,25 +474,35 @@ class TestScenario:
         with a phase ("data", "precondition", "outcome") so the framework
         knows what failed and why.
 
+        PROJ-270 Phase 2.5: rewritten to consume `BattleOutcome` +
+        `CombatLabTelemetry` instead of a live `BattleEngine` reference.
+        `outcome.duration_ticks` replaces `engine.tick_counter`; forensic
+        data (in-flight projectiles) comes from `telemetry`.
+
         Args:
-            engine: BattleEngine instance after simulation.
+            outcome: `BattleOutcome` from `run_battle`.
+            telemetry: Optional `CombatLabTelemetry` bundle (None when
+                forensic data isn't needed).
 
         Returns:
             List of Check objects.
         """
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate(engine)"
+            f"{self.__class__.__name__} must implement validate(outcome, telemetry)"
         )
 
-    def collect_results(self, engine):
+    def collect_results(self, outcome, telemetry=None):
         """
         Populate measurement attributes before validate() runs.
 
         Override in templates to calculate derived values (damage_dealt,
         final_velocity, etc.) that validate() checks reference.
 
+        PROJ-270 Phase 2.5: rewritten to consume outcome + telemetry.
+
         Args:
-            engine: BattleEngine instance after simulation.
+            outcome: `BattleOutcome` from `run_battle`.
+            telemetry: Optional `CombatLabTelemetry` bundle.
         """
         pass
 
@@ -541,7 +551,7 @@ class TestScenario:
         """
         _ = ships_by_role, engine, initial_state
 
-    def _collect_extra_results(self, engine) -> None:
+    def _collect_extra_results(self, outcome, telemetry=None) -> None:
         """Optional hook for templates to attach scenario-specific metrics.
 
         Override in subclasses when the template's default result collection
@@ -549,19 +559,19 @@ class TestScenario:
         """
         pass
 
-    def _run_validation(self, engine) -> 'ValidationReport':
+    def _run_validation(self, outcome, telemetry=None) -> 'ValidationReport':
         """
         Run the three-phase validation pipeline.
 
-        1. Calls collect_results(engine) to populate measurement attributes.
-        2. Calls validate(engine) to get all Check objects.
+        1. Calls collect_results(outcome, telemetry) to populate measurement attributes.
+        2. Calls validate(outcome, telemetry) to get all Check objects.
         3. Builds a ValidationReport that determines pass/fail.
 
         Returns:
             ValidationReport with the authoritative pass/fail result.
         """
-        self.collect_results(engine)
-        checks = self.validate(engine)
+        self.collect_results(outcome, telemetry)
+        checks = self.validate(outcome, telemetry)
         report = ValidationReport(checks=checks)
         self.results['validation'] = report.to_dict()
 
@@ -703,7 +713,7 @@ class TestScenario:
 
         self.results['tracking_summary'] = summary
 
-    def _collect_weapon_stats(self, ship: Ship, role: str, engine=None) -> None:
+    def _collect_weapon_stats(self, ship: Ship, role: str, telemetry=None) -> None:
         """
         Collect per-weapon firing statistics from a ship's components.
 
@@ -711,7 +721,7 @@ class TestScenario:
         simulation engine maintains on every Component and stores them in
         ``self.results`` under role-prefixed keys.
 
-        When ``engine`` is provided, also counts in-flight projectiles owned
+        When ``telemetry`` is provided, also counts in-flight projectiles owned
         by this ship so hit rate can be calculated against resolved shots
         only (excluding projectiles that hadn't arrived when the test ended).
 
@@ -722,17 +732,17 @@ class TestScenario:
             {role}_weapons : list[dict]
                 One entry per weapon component with keys:
                 name, type, shots_fired, shots_hit.
-            {role}_in_flight : int  (only when engine provided)
+            {role}_in_flight : int  (only when telemetry provided)
                 Projectiles still alive at test end, owned by this ship.
-            {role}_resolved_shots : int  (only when engine provided)
+            {role}_resolved_shots : int  (only when telemetry provided)
                 total_shots_fired minus in_flight.
-            {role}_resolved_hits : int  (only when engine provided)
+            {role}_resolved_hits : int  (only when telemetry provided)
                 Same as total shots_hit (hits are always resolved).
 
         Args:
             ship: Ship instance whose weapons to inspect.
             role: Prefix for result keys (e.g. ``"attacker"``, ``"target"``).
-            engine: Optional BattleEngine for in-flight projectile counting.
+            telemetry: Optional CombatLabTelemetry for in-flight projectile counts.
         """
         from game.simulation.components.abilities.weapons import WeaponAbility
 
@@ -757,12 +767,10 @@ class TestScenario:
 
         self.results[f'{role}_weapons'] = weapons
 
-        # Count in-flight projectiles (still alive at test end)
-        if engine is not None:
-            in_flight = sum(
-                1 for p in engine.projectiles
-                if p.is_alive and p.owner is ship
-            )
+        # Count in-flight projectiles (still alive at test end) from telemetry.
+        # PROJ-270 Phase 2.5: telemetry bundle replaces live `engine.projectiles`.
+        if telemetry is not None:
+            in_flight = telemetry.in_flight_for(role)
             self.results[f'{role}_in_flight'] = in_flight
             self.results[f'{role}_resolved_shots'] = ship.total_shots_fired - in_flight
             self.results[f'{role}_resolved_hits'] = total_hits

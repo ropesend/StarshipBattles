@@ -95,7 +95,7 @@ class RegenReducesNetDamageScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_Regen.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify shield capacity on both targets
@@ -191,7 +191,7 @@ class RegenExceedsDamageScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_Regen_200.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took damage (proves beam is firing)
@@ -264,7 +264,7 @@ class RegenStackingScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_Regen_2x.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has double regen rate
@@ -344,7 +344,7 @@ class RegenWithFullEnergyScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Energy-starved regen = same damage as free regen
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: both targets have same regen rate
@@ -416,7 +416,7 @@ class RegenWithNoEnergyScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Energy-starved regen = same as no regen
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both took hull damage
@@ -485,7 +485,7 @@ class RegenStopsMidBattleScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_Regen_SmallBattery.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both took hull damage
@@ -566,7 +566,7 @@ class RegenEqualsDamageRateScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_Regen_100.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify regen rate on variant

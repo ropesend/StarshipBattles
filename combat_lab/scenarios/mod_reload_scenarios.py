@@ -113,11 +113,11 @@ class ModReload001_StatGateScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_reload = beam.reload_time if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_reload'] = BOOSTED_RELOAD
         self.results['actual_reload'] = self.actual_reload
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
@@ -187,7 +187,7 @@ class ModReload002_ShotCountScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         b_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -263,7 +263,7 @@ class ModReload003_DamageRatioScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt damage
@@ -348,7 +348,7 @@ class ModReload004_PenaltyReducesFireRateScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty applied
@@ -432,11 +432,11 @@ class ModReload005_PenaltyStatGateScenario(StaticTargetScenario):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         self.actual_reload = beam.reload_time if beam else None
 
-    def _collect_extra_results(self, battle_engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         self.results['expected_reload'] = PENALIZED_RELOAD
         self.results['actual_reload'] = self.actual_reload
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')

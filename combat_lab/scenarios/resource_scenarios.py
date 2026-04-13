@@ -236,7 +236,7 @@ class EngineFuelConsumptionScenario(ResourceScenario):
     resource_type = "fuel"
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Ship Mass", RES001_HULL_MASS, self.ship.mass))
@@ -293,7 +293,7 @@ class EngineFuelDepletionScenario(ResourceScenario):
     resource_type = "fuel"
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Ship Mass", RES001_HULL_MASS, self.ship.mass))
@@ -348,7 +348,7 @@ class EngineFuelRegenerationScenario(ResourceScenario):
     resource_type = "fuel"
     thrust_forward = True
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         fuel_change = self.final_value - self.initial_value
         # Data
@@ -410,12 +410,12 @@ class BeamEnergyConsumptionScenario(ResourceScenario):
     target_ship_file = "Test_Target_Stationary.json"
     target_distance = 10
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store shots_fired derived from energy consumed."""
         self.shots_fired = int(self.value_consumed)  # 1 energy per shot
         self.results['shots_fired'] = self.shots_fired
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Energy", RES004_INITIAL_ENERGY, self.initial_value))
@@ -467,12 +467,12 @@ class BeamEnergyDepletionScenario(ResourceScenario):
     target_ship_file = "Test_Target_Stationary.json"
     target_distance = 10
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store shots_fired derived from energy consumed."""
         self.shots_fired = int(self.value_consumed)
         self.results['shots_fired'] = self.shots_fired
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Energy", RES005_INITIAL_ENERGY, self.initial_value))
@@ -525,13 +525,13 @@ class BeamEnergyRegenerationScenario(ResourceScenario):
     target_ship_file = "Test_Target_Stationary.json"
     target_distance = 10
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Estimate shots by damage (1 damage per hit at point-blank)."""
         self.shots_fired = self.damage_dealt
         self.results['shots_fired'] = self.shots_fired
         self.results['energy_change'] = self.final_value - self.initial_value
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Energy", RES005A_INITIAL_ENERGY, self.initial_value))
@@ -591,12 +591,12 @@ class ProjectileAmmoConsumptionScenario(ResourceScenario):
     target_ship_file = "Test_Target_Stationary.json"
     target_distance = 50
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store shots_fired derived from ammo consumed."""
         self.shots_fired = int(self.value_consumed)
         self.results['shots_fired'] = self.shots_fired
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Ammo", RES006_INITIAL_AMMO, self.initial_value))
@@ -648,12 +648,12 @@ class ProjectileAmmoDepletionScenario(ResourceScenario):
     target_ship_file = "Test_Target_Stationary.json"
     target_distance = 50
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store shots_fired derived from ammo consumed."""
         self.shots_fired = int(self.value_consumed)
         self.results['shots_fired'] = self.shots_fired
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Ammo", RES007_INITIAL_AMMO, self.initial_value))
@@ -706,12 +706,12 @@ class SeekerAmmoConsumptionScenario(ResourceScenario):
     target_ship_file = "Test_Target_Stationary.json"
     target_distance = 500
 
-    def _collect_extra_results(self, engine):
+    def _collect_extra_results(self, outcome, telemetry=None):
         """Store launches derived from ammo consumed."""
         self.launches = int(self.value_consumed)  # 1 ammo per launch
         self.results['launches'] = self.launches
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Ammo", RES008_INITIAL_AMMO, self.initial_value))
@@ -772,7 +772,7 @@ class EnergyContentionBeamRegenScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired all ticks (plenty of energy)

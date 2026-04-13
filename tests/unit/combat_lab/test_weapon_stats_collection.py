@@ -274,15 +274,20 @@ def _create_mock_projectile(owner_ship, alive=True):
     return proj
 
 
-def _create_mock_engine(projectiles=None):
-    """Create a mock engine with a projectiles list."""
-    engine = Mock()
-    engine.projectiles = projectiles or []
-    return engine
+def _make_telemetry(in_flight_by_role):
+    """Build a CombatLabTelemetry with the given in-flight counts per role."""
+    from combat_lab.telemetry import CombatLabTelemetry
+    return CombatLabTelemetry(in_flight_by_role=dict(in_flight_by_role))
 
 
 class TestInFlightTracking:
-    """Tests for in-flight projectile counting in weapon stats."""
+    """Tests for in-flight projectile counting in weapon stats.
+
+    PROJ-270 Phase 2.5: `_collect_weapon_stats` now takes `telemetry`
+    (a `CombatLabTelemetry` bundle) instead of a live engine. The
+    tests compose telemetry directly rather than assembling a mock
+    engine with a projectiles list.
+    """
 
     def test_counts_in_flight_projectiles(self):
         """In-flight projectiles owned by the ship are counted."""
@@ -290,20 +295,15 @@ class TestInFlightTracking:
         comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=10, shots_hit=7)
         ship = _create_mock_ship([comp], total_shots_fired=10)
 
-        engine = _create_mock_engine([
-            _create_mock_projectile(ship, alive=True),
-            _create_mock_projectile(ship, alive=True),
-            _create_mock_projectile(ship, alive=False),  # dead, not in flight
-        ])
-
-        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+        telemetry = _make_telemetry({"attacker": 2})
+        scenario._collect_weapon_stats(ship, "attacker", telemetry=telemetry)
 
         assert scenario.results["attacker_in_flight"] == 2
         assert scenario.results["attacker_resolved_shots"] == 8  # 10 - 2
         assert scenario.results["attacker_resolved_hits"] == 7
 
-    def test_no_engine_skips_in_flight(self):
-        """Without engine reference, in-flight keys are not set."""
+    def test_no_telemetry_skips_in_flight(self):
+        """Without telemetry, in-flight keys are not set."""
         scenario = _create_scenario_instance()
         comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=5, shots_hit=3)
         ship = _create_mock_ship([comp])
@@ -313,31 +313,25 @@ class TestInFlightTracking:
         assert "attacker_in_flight" not in scenario.results
 
     def test_in_flight_excludes_other_ships_projectiles(self):
-        """Only projectiles owned by the specific ship are counted."""
+        """Only the role's in-flight count is recorded (ownership was resolved upstream)."""
         scenario = _create_scenario_instance()
         comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=5, shots_hit=3)
         ship = _create_mock_ship([comp], total_shots_fired=5)
-        other_ship = Mock()
 
-        engine = _create_mock_engine([
-            _create_mock_projectile(ship, alive=True),
-            _create_mock_projectile(other_ship, alive=True),  # different owner
-            _create_mock_projectile(other_ship, alive=True),
-        ])
-
-        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+        # Telemetry pre-counted ownership; this role has 1 in flight.
+        telemetry = _make_telemetry({"attacker": 1, "other": 2})
+        scenario._collect_weapon_stats(ship, "attacker", telemetry=telemetry)
 
         assert scenario.results["attacker_in_flight"] == 1
 
     def test_zero_in_flight(self):
-        """Zero in-flight when all projectiles have resolved."""
+        """Zero in-flight when telemetry reports 0 for the role."""
         scenario = _create_scenario_instance()
         comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=10, shots_hit=10)
         ship = _create_mock_ship([comp], total_shots_fired=10)
 
-        engine = _create_mock_engine([])
-
-        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+        telemetry = _make_telemetry({"attacker": 0})
+        scenario._collect_weapon_stats(ship, "attacker", telemetry=telemetry)
 
         assert scenario.results["attacker_in_flight"] == 0
         assert scenario.results["attacker_resolved_shots"] == 10
@@ -348,14 +342,8 @@ class TestInFlightTracking:
         comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=100, shots_hit=96)
         ship = _create_mock_ship([comp], total_shots_fired=100)
 
-        engine = _create_mock_engine([
-            _create_mock_projectile(ship, alive=True),
-            _create_mock_projectile(ship, alive=True),
-            _create_mock_projectile(ship, alive=True),
-            _create_mock_projectile(ship, alive=True),
-        ])
-
-        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+        telemetry = _make_telemetry({"attacker": 4})
+        scenario._collect_weapon_stats(ship, "attacker", telemetry=telemetry)
 
         # 100 shots - 4 in flight = 96 resolved, 96 hits = 100%
         assert scenario.results["attacker_resolved_shots"] == 96

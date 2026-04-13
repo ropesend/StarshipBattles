@@ -35,6 +35,44 @@ class TestBattleControllerInit:
         assert controller._on_ship_escaped is None
 
 
+class TestBattleControllerStartGuard:
+    """PROJ-270 Phase 7.1: regression guard for the `_is_started=True` hack.
+
+    Pre-PROJ-269, several call sites bypassed the normal lifecycle by
+    setting `controller._is_started = True` directly. PROJ-269 Task 6.10
+    deleted the hack sites; this test locks the flow by asserting that
+    `start()` is the only path that flips `_is_started` to True and that
+    direct external assignment without `configure()` is caught.
+    """
+
+    def test_start_requires_configure(self, controller):
+        """Calling start() without configure() first must fail cleanly."""
+        result = controller.start()
+        assert result.success is False
+        assert "not configured" in result.errors[0].lower()
+
+    def test_is_started_false_before_start(self, controller, basic_config, mock_service):
+        """Configured but not started → _is_started is False."""
+        controller.configure(basic_config)
+        assert controller._is_started is False
+
+    def test_start_flips_is_started(self, controller, basic_config, mock_service):
+        """start() is the path that flips _is_started to True on success."""
+        controller.configure(basic_config)
+        assert controller._is_started is False
+        controller.start()
+        assert controller._is_started is True
+
+    def test_double_start_fails(self, controller, basic_config, mock_service):
+        """Second start() call when already started returns an error."""
+        controller.configure(basic_config)
+        controller.start()
+        # Second call should fail because _is_started is already True
+        result = controller.start()
+        assert result.success is False
+        assert "already" in result.errors[0].lower()
+
+
 class TestBattleControllerConfigure:
     """Tests for BattleController.configure()."""
 

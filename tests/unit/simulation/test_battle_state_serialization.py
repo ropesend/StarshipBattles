@@ -631,7 +631,6 @@ class TestBattleStateSerialization:
             allow_retreat=False,
             allow_reinforcements=False,
             created_at="2024-01-01T12:00:00",
-            mode="manual",
         )
 
     @pytest.fixture
@@ -693,7 +692,6 @@ class TestBattleStateSerialization:
             allow_retreat=True,
             allow_reinforcements=False,
             created_at="2024-01-15T14:30:00",
-            mode="strategy",
         )
 
     @pytest.fixture
@@ -754,7 +752,6 @@ class TestBattleStateSerialization:
             allow_retreat=True,
             allow_reinforcements=True,
             created_at="2024-02-01T10:00:00",
-            mode="test",
         )
 
     def test_to_dict_contains_all_fields(self, empty_battle_state):
@@ -764,7 +761,7 @@ class TestBattleStateSerialization:
         expected_fields = [
             "version", "battle_id", "seed", "tick_count",
             "ships", "projectiles", "end_condition_data", "allow_retreat",
-            "allow_reinforcements", "created_at", "mode",
+            "allow_reinforcements", "created_at",
         ]
         for field in expected_fields:
             assert field in result, f"Missing field: {field}"
@@ -784,7 +781,6 @@ class TestBattleStateSerialization:
         assert restored.allow_retreat == empty_battle_state.allow_retreat
         assert restored.allow_reinforcements == empty_battle_state.allow_reinforcements
         assert restored.created_at == empty_battle_state.created_at
-        assert restored.mode == empty_battle_state.mode
 
     def test_round_trip_with_ships(self, battle_state_with_ships):
         """Battle state with ships should round-trip correctly."""
@@ -871,7 +867,6 @@ class TestBattleStateSerialization:
         assert restored.allow_retreat is False
         assert restored.allow_reinforcements is False
         assert restored.created_at == ""
-        assert restored.mode == "manual"
 
     def test_get_ships_by_team(self, battle_state_with_ships):
         """get_ships_by_team() should filter ships correctly."""
