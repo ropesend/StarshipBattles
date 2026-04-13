@@ -553,7 +553,6 @@ class Game:
         from game.simulation.battle_config import BattleConfig
         from game.simulation.battle_controller import BattleController
         from game.ai.ai_factory import AIControllerFactory
-        from game.core.registry import get_default_registry_provider
 
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
@@ -565,7 +564,11 @@ class Game:
             absolute_max_ticks=spec.absolute_max_ticks,
         )
 
-        registries = get_default_registry_provider().get_registries()
+        # Use the DI container already initialized on Game.__init__ (app.py:175)
+        # rather than calling a non-existent factory method. This matches the
+        # DI pattern documented in docs/01_ARCHITECTURE.md — GameRegistries is
+        # owned by Game and passed through the call chain.
+        registries = self.registries
 
         def _ship_builder(ship_spec):
             # Look up the original ShipInstance by instance_id so we can
