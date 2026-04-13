@@ -114,7 +114,7 @@ def _damage_mult_entry(value: float) -> ModifierEntry:
 
 
 def _run(spec: BattleSpec, registries) -> BattleOutcome:
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design_with_shields(), registries=registries)
         ship.instance_id = ship_spec.instance_id
         return ship

@@ -55,14 +55,14 @@ def _minimal_design() -> dict:
 
 
 @pytest.fixture
-def ship_builder_from_design(fresh_registries) -> Callable[[ShipSpec], Ship]:
+def ship_builder_from_design(fresh_registries) -> Callable[[ShipSpec, int], Ship]:
     """Ship builder that materializes each ShipSpec via ShipSerializer.from_dict
     using a shared minimal design. Phase 1 pattern — Phase 2 adds
     per-component HP inside run_battle, and the builder remains simple."""
 
     design = _minimal_design()
 
-    def _build(ship_spec: ShipSpec) -> Ship:
+    def _build(ship_spec: ShipSpec, team_id: int) -> Ship:
         ship = ShipSerializer.from_dict(design, registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship

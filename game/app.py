@@ -570,14 +570,24 @@ class Game:
         # owned by Game and passed through the call chain.
         registries = self.registries
 
-        def _ship_builder(ship_spec):
+        def _ship_builder(ship_spec, team_id):
             # Look up the original ShipInstance by instance_id so we can
-            # call `to_ship(registries)` to preserve accumulated component HP.
+            # call `to_ship(position, team_id, registries=)` to preserve
+            # accumulated component HP. `team_id` is threaded through by
+            # `materialize_spec_ships` from the enclosing `TeamSpec.team_id`.
+            # `position` comes from the spec (will be overwritten to the
+            # spec pose by materialize_spec_ships post-build — we still
+            # pass it here so ShipInstance.to_ship's contract is satisfied).
+            position = (ship_spec.position.x, ship_spec.position.y)
             for side in (self.battle_setup.state.side_0, self.battle_setup.state.side_1):
                 for fleet in side.fleets:
                     for ship_instance in fleet.ships:
                         if ship_instance.instance_id == ship_spec.instance_id:
-                            return ship_instance.to_ship(registries=registries)
+                            return ship_instance.to_ship(
+                                position,
+                                team_id,
+                                registries=registries,
+                            )
             raise KeyError(
                 f"ShipInstance with instance_id={ship_spec.instance_id!r} not "
                 f"found in BattleSetupState fleets"

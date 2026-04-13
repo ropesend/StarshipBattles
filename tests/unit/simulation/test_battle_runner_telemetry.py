@@ -48,8 +48,8 @@ def _design() -> dict:
 
 
 @pytest.fixture
-def ship_builder(fresh_registries) -> Callable[[ShipSpec], Ship]:
-    def _build(ship_spec):
+def ship_builder(fresh_registries) -> Callable[[ShipSpec, int], Ship]:
+    def _build(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design(), registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship

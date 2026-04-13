@@ -17,6 +17,7 @@
 | 2. Spec compiler emits real stat_key for `flat_shield_bonus` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Suppressor opponent-team routing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. End-to-end integration tests + manual smoke | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Evaluate + eliminate legacy `capture_battle_state` | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-12 — Scaffold created as successor to PROJ-270 Track A

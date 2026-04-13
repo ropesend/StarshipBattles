@@ -273,7 +273,7 @@ class TestOutcomeContentAssertions:
             "_metadata": {},
         }
 
-        def _build(ship_spec):
+        def _build(ship_spec, team_id):
             ship = ShipSerializer.from_dict(design, registries=fresh_registries)
             ship.instance_id = ship_spec.instance_id
             return ship

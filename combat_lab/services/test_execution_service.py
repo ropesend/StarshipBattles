@@ -80,7 +80,7 @@ class TestExecutionService:
             # deterministic per design_id.
             _pre_teams, pre_ships_by_role = materialize_spec_ships(
                 spec,
-                ship_builder=lambda ship_spec: scenario._load_ship(ship_spec.design_id),
+                ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
             )
             initial_state = {
                 role: _snapshot_ship_state(ship)
@@ -92,7 +92,7 @@ class TestExecutionService:
             _result, ships_by_role = controller.start_from_spec(
                 spec,
                 ai_factory=AIControllerFactory(),
-                ship_builder=lambda ship_spec: scenario._load_ship(ship_spec.design_id),
+                ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
                 config=config,
             )
             engine = controller.service.get_engine()

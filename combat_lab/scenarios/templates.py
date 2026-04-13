@@ -841,7 +841,7 @@ class ComparisonScenario(TestScenario):
         # Role-keyed ship registry populated by ship_builder.
         baseline_ships: dict = {}
 
-        def ship_builder(ship_spec):
+        def ship_builder(ship_spec, team_id):
             ship = self._load_ship(ship_spec.design_id)
             if ship_spec.instance_id.endswith(":baseline_attacker"):
                 baseline_ships["attacker"] = ship

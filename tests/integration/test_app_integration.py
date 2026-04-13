@@ -157,6 +157,37 @@ class TestStartBattleRegistriesDI:
             "docstring for background."
         )
 
+    def test_start_battle_ship_builder_calls_to_ship_with_position_and_team_id(self):
+        """The `_ship_builder` closure at `game/app.py::start_battle` MUST pass
+        `position` and `team_id` to `ShipInstance.to_ship()`.
+
+        Regression symptom: `TypeError: ShipInstance.to_ship() missing 2
+        required positional arguments: 'position' and 'team_id'` at app.py:580
+        when a user clicks "Start Battle" on the Battle Setup screen.
+
+        The fix widens `materialize_spec_ships`'s `ship_builder` callback
+        signature from `Callable[[ShipSpec], Ship]` to `Callable[[ShipSpec, int], Ship]`,
+        threading `team_spec.team_id` through to the closure so
+        `ShipInstance.to_ship(position, team_id, registries=...)` has both
+        required args.
+
+        Guard: the closure must pass BOTH `position=` (or a positional
+        Tuple) and `team_id=` (or a second positional int) to to_ship.
+        """
+        from pathlib import Path
+        app_path = Path(__file__).resolve().parents[2] / "game" / "app.py"
+        text = app_path.read_text(encoding="utf-8")
+        # Find the _ship_builder closure definition + its to_ship call. The
+        # broken call shape is `to_ship(registries=registries)` alone.
+        broken_pattern = "to_ship(registries=registries)"
+        assert broken_pattern not in text, (
+            f"game/app.py still contains the broken `to_ship(registries=registries)` "
+            f"call shape. This is missing required `position` and `team_id` "
+            f"positional args — it crashes at runtime when a user starts a "
+            f"manual battle from the Battle Setup screen. Fix by widening "
+            f"the ship_builder signature + passing team_id through."
+        )
+
     def test_default_registry_provider_has_no_get_registries_method(self):
         """Documents the API shape that caused the original crash.
 

@@ -667,7 +667,6 @@ class BattleState:
 
         Args:
             engine: The battle engine to capture from
-            mode: Battle mode string
             seed: Random seed used for this battle
             allow_retreat: Whether retreat is enabled
             allow_reinforcements: Whether reinforcements are enabled

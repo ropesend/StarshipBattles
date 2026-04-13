@@ -76,10 +76,10 @@ def capture_battle_state(
         filename = generate_state_filename(test_id, timestamp, state_type)
         filepath = os.path.join(BATTLE_STATES_DIR, filename)
 
-        # Capture state using BattleState
+        # Capture state using BattleState. PROJ-270 Phase 5.3 deleted
+        # the `mode` field + kwarg — do not pass it.
         state = BattleState.capture_from_engine(
             engine,
-            mode="test",
             seed=seed,
         )
 
@@ -265,9 +265,9 @@ class BattleStateCapture:
             filename = generate_state_filename(self.test_id, self._timestamp, state_type)
             filepath = os.path.join(BATTLE_STATES_DIR, filename)
 
+            # PROJ-270 Phase 5.3 deleted the `mode` field — do not pass it.
             state = BattleState.capture_from_engine(
                 self.engine,
-                mode="test",
                 seed=self.seed,
                 battle_id=self._battle_id,
                 ship_id_map=self._ship_id_map,

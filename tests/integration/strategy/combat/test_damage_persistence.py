@@ -56,7 +56,7 @@ def _make_ship_builder(fresh_registries):
 
     # Cache ship_instance by instance_id so builder can use the correct
     # `to_ship` with per-component HP.
-    def _build(ship_spec):
+    def _build(ship_spec, team_id):
         # Recreate via a raw design — the strategy compiler already
         # wrote per-component HP into `ShipSpec.components`, which
         # `run_battle` applies after the builder returns. So the builder
