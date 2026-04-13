@@ -136,7 +136,6 @@ class TestLabUIController:
         # Execute test
         result = self.test_execution.run_headless(
             scenario_info,
-            self.game.battle_scene.engine,
             on_progress=on_progress
         )
 

@@ -22,8 +22,10 @@
 | 6. Delete legacy paths | In Progress (implementation done; manual smoke pending) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-12 (**Phase 6 IMPLEMENTATION COMPLETE** — manual launcher smoke + project audit remaining)
+**Last Updated:** 2026-04-12 (**Phase 6 IMPLEMENTATION COMPLETE** — manual launcher smoke + project audit remaining; **closure work continued in [PROJ-270](../PROJ-270/plan.md)**)
 **Active Phase:** Phase 6 — 15 of 15 tasks complete. All automated regression gates green. Only manual launcher smoke (requires interactive desktop session) and the project-level audit (`Projects/protocols/04_audit_project.md`) remain before the project itself can be marked closed.
+
+> **⚠️ FOLLOW-UP PROJECT:** An independent 3-agent audit (2026-04-12) confirmed this project's "every battle enters via `run_battle(spec)`" claim is **overstated**. 5 production code paths still bypass `run_battle`, visual-mode produces no `BattleOutcome`, placeholder stat_keys silently killed storm/fleet-modifier battle math, and "Legacy-compatible" scenario `setup()` methods violate System Migration Policy. See [PROJ-270: Unified Battle Simulator Entry/Exit — Closure](../PROJ-270/plan.md) for the 8-phase closure work. PROJ-269 itself stays in `active_projects/` pending its manual launcher smoke; PROJ-270 proceeds in parallel.
 
 **Final batch (Tasks 6.9 + 6.10 + 6.15):**
 - Added `materialize_spec_ships(spec, ship_builder)` helper in `battle_runner.py` (extracted from `start_engine_from_spec` for reuse between `run_battle` and visual-mode UI callers).

@@ -120,16 +120,22 @@ class TestExecutionService:
     def run_headless(
         self,
         scenario_info: Dict[str, Any],
-        battle_engine,
         on_progress: Optional[Callable[[int, int], None]] = None
     ) -> Dict[str, Any]:
         """
-        Execute a test scenario headlessly (fast, no visuals).
+        Execute a test scenario headlessly through `run_battle(spec)`.
+
+        PROJ-270 Phase 1.1: the legacy `battle_engine.start([], [])` +
+        `scenario.setup(engine)` + raw-tick-loop path is gone. The unified
+        spec compiler drives `run_battle` via the shared
+        `combat_lab.services.scenario_run_helper`; validation still consumes
+        the live engine here (PROJ-270 Phase 2 migrates that to
+        `BattleOutcome`).
 
         Args:
-            scenario_info: Scenario information from registry
-            battle_engine: Battle engine instance
-            on_progress: Optional callback(current_tick, max_ticks) for progress updates
+            scenario_info: Scenario information from registry.
+            on_progress: Optional callback(current_tick, max_ticks) for
+                progress updates. Fired every 100 ticks.
 
         Returns:
             Dict containing test results with keys:
@@ -139,70 +145,53 @@ class TestExecutionService:
                 - duration_real: float
                 - error: Optional error message
         """
-        metadata = scenario_info['metadata']
+        from combat_lab.services.scenario_run_helper import run_scenario_via_run_battle
 
         try:
-            # Instantiate scenario
-            logger.debug(f" Instantiating scenario class for headless run")
+            logger.debug(" Instantiating scenario class for headless run")
             scenario_cls = scenario_info['class']
             scenario = scenario_cls()
             logger.debug(f" Scenario instantiated: {scenario.name}")
 
-            # Load test data
-            logger.debug(f" Loading test data for scenario")
+            logger.debug(" Loading test data for scenario")
             self.runner.load_data_for_scenario(scenario)
-            logger.debug(f" Test data loaded successfully")
+            logger.debug(" Test data loaded successfully")
 
-            # Clear battle engine
-            logger.debug(f" Clearing battle engine")
-            battle_engine.start([], [])
+            max_ticks = getattr(scenario, 'max_ticks', 0) or 0
+            progress_state = {'last_reported': 0}
 
-            # Setup scenario
-            logger.debug(f" Calling scenario.setup()")
-            scenario.setup(battle_engine)
-            logger.debug(f" Scenario setup complete")
+            def per_tick_hook(engine):
+                if on_progress is None:
+                    return
+                tick = engine.tick_counter
+                if tick // 100 > progress_state['last_reported'] // 100 and tick > 0:
+                    on_progress(tick, max_ticks)
+                    progress_state['last_reported'] = tick
 
-            # Run simulation headless
+            logger.debug(f" Starting run_battle (max_ticks={max_ticks})")
             start_time = time.time()
-            tick_count = 0
-            max_ticks = scenario.max_ticks
-
-            logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
-
-            # Run simulation as fast as possible
-            while tick_count < max_ticks:
-                # Call scenario update for dynamic logic
-                scenario.update(battle_engine)
-
-                # Update engine one tick
-                battle_engine.update()
-                tick_count += 1
-
-                # Optional progress callback
-                if on_progress and tick_count % 100 == 0:  # Update every 100 ticks
-                    on_progress(tick_count, max_ticks)
-
-                # Check if battle ended naturally
-                if battle_engine.is_battle_over():
-                    logger.debug(f" Battle ended naturally at tick {tick_count}")
-                    break
-
-            # Simulation complete - verify results
+            engine, _outcome = run_scenario_via_run_battle(
+                scenario,
+                per_tick_hook=per_tick_hook,
+            )
             elapsed_time = time.time() - start_time
-            ticks_per_sec = tick_count / elapsed_time if elapsed_time > 0 else 0
-            logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({ticks_per_sec:.0f} ticks/sec)")
 
-            # Validate results
-            report = scenario._run_validation(battle_engine)
+            tick_count = engine.tick_counter if engine is not None else 0
+            ticks_per_sec = tick_count / elapsed_time if elapsed_time > 0 else 0
+            logger.debug(
+                f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s "
+                f"({ticks_per_sec:.0f} ticks/sec)"
+            )
+
+            # Validate results (Phase 1 still consumes engine; Phase 2 → outcome).
+            report = scenario._run_validation(engine)
             scenario.passed = report.passed
             logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
-            # Store results
             scenario.results['ticks_run'] = tick_count
             scenario.results['duration_real'] = elapsed_time
-            scenario.results['ticks'] = tick_count  # Alias for consistency with runner
+            scenario.results['ticks'] = tick_count  # Alias for consistency with runner.
 
-            # Log test execution (for UI vs headless comparison)
             self.runner.log_test_execution(scenario, headless=True)
 
             return {
@@ -210,7 +199,7 @@ class TestExecutionService:
                 'results': scenario.results,
                 'ticks_run': tick_count,
                 'duration_real': elapsed_time,
-                'error': None
+                'error': None,
             }
 
         except Exception as e:
@@ -223,5 +212,5 @@ class TestExecutionService:
                 'results': {},
                 'ticks_run': 0,
                 'duration_real': 0,
-                'error': str(e)
+                'error': str(e),
             }

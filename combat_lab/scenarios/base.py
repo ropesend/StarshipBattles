@@ -465,29 +465,6 @@ class TestScenario:
         # Default for tests: time-based (run for full duration)
         return TickLimitCondition(max_ticks=self.metadata.max_ticks)
 
-    def setup(self, battle_engine):
-        """
-        Configure the battle engine with ships and initial state.
-
-        Subclasses MUST implement this method.
-
-        Args:
-            battle_engine: BattleEngine instance to configure
-
-        Example:
-            def setup(self, battle_engine):
-                attacker = self._load_ship('Test_Attacker.json')
-                target = self._load_ship('Test_Target.json')
-
-                import pygame
-                attacker.position = pygame.math.Vector2(0, 0)
-                target.position = pygame.math.Vector2(100, 0)
-
-                battle_engine.start([attacker], [target], seed=self.metadata.seed)
-        """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement setup(battle_engine)"
-        )
 
     def validate(self, engine) -> 'List[Check]':
         """

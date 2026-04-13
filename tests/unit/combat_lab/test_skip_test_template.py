@@ -1,12 +1,14 @@
 """
 Regression test for skip_test support in StaticTargetScenario template.
 
-Verifies that scenarios with skip_test=True don't crash during setup() or
-update() when ship files don't exist and self.attacker is never
-initialized, and that TestRunner records the skip in the results dict.
-"""
-from unittest.mock import Mock
+Verifies that TestRunner.run_scenario records a skipped scenario in results
+without invoking the spec compiler or any scenario hooks beyond the initial
+`skip_test` check.
 
+PROJ-270 Phase 1.3: the two earlier tests that invoked `scenario.setup(engine)`
+directly are gone — the `setup()` entry point is deleted. Skip-test handling
+is verified end-to-end via `test_runner_records_skip_in_results`.
+"""
 from combat_lab.runner import TestRunner
 from combat_lab.scenarios.templates import StaticTargetScenario
 from combat_lab.scenarios.base import TestMetadata
@@ -27,7 +29,7 @@ class SkippedPlaceholderScenario(StaticTargetScenario):
         category="Test",
         subcategory="Skip",
         name="Skipped Placeholder",
-        summary="Test that skip_test works in setup/update",
+        summary="Test that skip_test works via the runner's short-circuit.",
         conditions=[],
         edge_cases=[],
         expected_outcome="Skipped",
@@ -38,24 +40,7 @@ class SkippedPlaceholderScenario(StaticTargetScenario):
 
 
 class TestSkipTestTemplate:
-    """Regression: skip_test scenarios must not crash in setup() or update()."""
-
-    def test_setup_does_not_crash_when_skip_test_true(self):
-        """setup() should return early when skip_test=True, not try to load ships."""
-        scenario = SkippedPlaceholderScenario()
-        engine = Mock()
-        # This would crash with ValueError or FileNotFoundError if setup ran normally
-        scenario.setup(engine)
-        # attacker should NOT be set
-        assert not hasattr(scenario, 'attacker') or scenario.attacker is None
-
-    def test_update_does_not_crash_when_skip_test_true(self):
-        """Regression: update() must not access self.attacker when skip_test=True."""
-        scenario = SkippedPlaceholderScenario()
-        engine = Mock()
-        scenario.setup(engine)
-        # This was the original crash: update() accessing self.attacker on a skipped scenario
-        scenario.update(engine)
+    """Regression: skip_test scenarios short-circuit via the runner."""
 
     def test_runner_records_skip_in_results(self):
         """TestRunner.run_scenario marks a skipped scenario without running it."""

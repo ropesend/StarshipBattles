@@ -1,5 +1,8 @@
-"""Tests for BattleController execution methods (start, update, run_headless, run_ticks)."""
-import pytest
+"""Tests for BattleController execution methods (start, update, run_ticks).
+
+PROJ-270 Phase 1.2: `BattleController.run_headless()` is deleted.
+`TestBattleControllerNoRunHeadless` is the regression guard.
+"""
 from unittest.mock import Mock, patch
 
 from game.simulation.battle_controller import BattleController
@@ -143,105 +146,23 @@ class TestBattleControllerUpdate:
         assert result is expected_result
 
 
-class TestBattleControllerRunHeadless:
-    """Tests for BattleController.run_headless()."""
+class TestBattleControllerNoRunHeadless:
+    """PROJ-270 Phase 1.2: `BattleController.run_headless()` is deleted.
 
-    def test_run_headless_raises_when_not_started(self, controller, basic_config, mock_service):
-        """run_headless raises StateException when not started."""
-        from game.core.exceptions import StateException
-        controller.configure(basic_config)
+    The method was a legacy pre-`run_battle` entry point that drove the
+    battle through `BattleService.update()` in a manual loop — bypassing
+    `run_battle(spec)`. All live callers migrated to the unified entry
+    during Phase 1.1; the method itself is gone as of Phase 1.2.
+    """
 
-        with pytest.raises(StateException, match="not started"):
-            controller.run_headless()
-
-    def test_run_headless_runs_until_battle_over(self, controller, basic_config, mock_service):
-        """run_headless runs until is_battle_over returns True."""
-        controller.configure(basic_config)
-        controller.start()
-
-        # Battle ends after 5 updates
-        call_count = [0]
-        def side_effect():
-            call_count[0] += 1
-            return call_count[0] >= 5
-        mock_service.is_battle_over.side_effect = side_effect
-
-        controller.run_headless()
-
-        # Should have called update 4 times (stopped when is_battle_over became True)
-        assert mock_service.update.call_count == 4
-
-    def test_run_headless_stops_when_battle_over(self, controller, mock_service):
-        """run_headless stops when is_battle_over returns True."""
-        config = BattleConfig()
-        controller.configure(config)
-        controller.start()
-
-        # Battle ends after 10 ticks
-        call_count = 0
-        def side_effect():
-            nonlocal call_count
-            call_count += 1
-            return call_count >= 10
-        mock_service.is_battle_over.side_effect = side_effect
-
-        controller.run_headless()
-
-        assert mock_service.update.call_count == 9
-
-    def test_run_headless_calls_progress_callback(self, controller, mock_service):
-        """run_headless calls progress callback every 100 ticks."""
-        config = BattleConfig(absolute_max_ticks=250)
-        controller.configure(config)
-        controller.start()
-
-        # Battle ends after 250 ticks
-        call_count = 0
-        def side_effect():
-            nonlocal call_count
-            call_count += 1
-            return call_count >= 250
-        mock_service.is_battle_over.side_effect = side_effect
-
-        progress_calls = []
-        def track_progress(tick, absolute_max):
-            progress_calls.append((tick, absolute_max))
-
-        controller.run_headless(progress_callback=track_progress)
-
-        # Should be called at ticks 100, 200
-        assert (100, 250) in progress_calls
-        assert (200, 250) in progress_calls
-
-    def test_run_headless_processes_retreats_when_enabled(self, controller, mock_service):
-        """run_headless processes retreats each tick when enabled."""
-        config = BattleConfig(allow_retreat=True)
-        controller.configure(config)
-        controller.start()
-
-        # Battle ends after 5 ticks
-        call_count = 0
-        def side_effect():
-            nonlocal call_count
-            call_count += 1
-            return call_count >= 5
-        mock_service.is_battle_over.side_effect = side_effect
-
-        with patch.object(controller, '_update_retreats') as mock_retreats:
-            controller.run_headless()
-            assert mock_retreats.call_count == 4
-
-    def test_run_headless_returns_results(self, controller, basic_config, mock_service):
-        """run_headless returns BattleServiceResults."""
-        controller.configure(basic_config)
-        controller.start()
-        mock_service.is_battle_over.return_value = True
-
-        results = controller.run_headless()
-
-        # BattleServiceResults should be returned
-        assert hasattr(results, 'winner')
-        assert hasattr(results, 'tick_count')
+    def test_battle_controller_has_no_run_headless_method(self, controller):
+        """The legacy `run_headless` method is deleted."""
+        assert not hasattr(controller, 'run_headless'), (
+            "BattleController.run_headless is a PROJ-270 Phase 1.2 "
+            "deletion target. If this test fails, the method has been "
+            "reintroduced — callers must go through `run_battle(spec)` "
+            "or `run_scenario_via_run_battle` instead."
+        )
 
 
 class TestBattleControllerRunTicks:

@@ -485,30 +485,6 @@ class PropThrustMassRatioScenario(TestScenario):
             "high": self.high_mass.position.copy(),
         }
 
-    def setup(self, battle_engine):
-        """Legacy-compatible setup() — unused by the run_battle path but
-        retained so any tests that drive setup() directly still work."""
-        self.low_mass = self._load_ship("Test_Engine_1x_LowMass.json")
-        self.med_mass = self._load_ship("Test_Engine_1x_MedMass.json")
-        self.high_mass = self._load_ship("Test_Engine_1x_HighMass.json")
-        self.low_mass.position = pygame.math.Vector2(0, 0)
-        self.med_mass.position = pygame.math.Vector2(0, 200)
-        self.high_mass.position = pygame.math.Vector2(0, 400)
-        for ship in (self.low_mass, self.med_mass, self.high_mass):
-            ship.velocity = pygame.math.Vector2(0, 0)
-            ship.angle = 0
-        end_condition = self._create_end_condition()
-        battle_engine.start(
-            [self.low_mass, self.med_mass, self.high_mass], [],
-            seed=self.metadata.seed, end_condition=end_condition,
-        )
-        for ship in (self.low_mass, self.med_mass, self.high_mass):
-            ship.movement_policy = "test_straight_line"
-        self.initial_positions = {
-            "low": self.low_mass.position.copy(),
-            "med": self.med_mass.position.copy(),
-            "high": self.high_mass.position.copy(),
-        }
 
     def collect_results(self, engine):
         """Populate measurement attributes for the three ships."""
@@ -938,26 +914,6 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         self.low_mass_ship.movement_policy = "test_rotate_right"
         self.high_mass_ship.movement_policy = "test_rotate_right"
 
-    def setup(self, battle_engine):
-        """Legacy-compatible setup() — retained for anything still driving
-        `setup()` directly. The run_battle path uses `to_spec`/`wire_ships`."""
-        self.low_mass_ship = self._load_ship(PROP005_LOW_SHIP_FILE)
-        self.high_mass_ship = self._load_ship(PROP005_HIGH_SHIP_FILE)
-        self.low_mass_ship.position = pygame.math.Vector2(0, 0)
-        self.high_mass_ship.position = pygame.math.Vector2(0, 200)
-        for ship in (self.low_mass_ship, self.high_mass_ship):
-            ship.velocity = pygame.math.Vector2(0, 0)
-            ship.angle = 0
-        self.low_mass_start_angle = 0
-        self.high_mass_start_angle = 0
-        end_condition = self._create_end_condition()
-        self.low_mass_ship.movement_policy = "test_rotate_right"
-        self.high_mass_ship.movement_policy = "test_rotate_right"
-        battle_engine.start(
-            [self.low_mass_ship, self.high_mass_ship], [],
-            seed=self.metadata.seed,
-            end_condition=end_condition,
-        )
 
     def collect_results(self, engine):
         """Populate measurement attributes for the two ships."""

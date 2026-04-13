@@ -4,6 +4,7 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-270 | Unified Battle Simulator Entry/Exit - Closure | Planning | 2026-04-12 | 2026-04-12 |
 | PROJ-269 | Unified Battle Simulator Entry/Exit | Planning | 2026-04-12 | 2026-04-12 |
 
 ## Archived Projects

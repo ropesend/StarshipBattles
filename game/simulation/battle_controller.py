@@ -229,39 +229,6 @@ class BattleController:
         # Run one tick
         return self._service.update()
 
-    def run_headless(
-        self,
-        progress_callback: Optional[Callable[[int, int], None]] = None
-    ) -> BattleResults:
-        """
-        Run battle to completion without rendering.
-
-        Args:
-            progress_callback: Optional callback(tick, max_ticks) for progress updates
-
-        Returns:
-            BattleResults with battle outcome
-        """
-        if not self._is_started:
-            raise StateException(
-                "Battle not started - call start() first",
-                code=ErrorCode.STATE_FROZEN.value,
-                context={"operation": "run_headless"}
-            )
-
-        tick = 0
-
-        while not self.is_battle_over():
-            # Use self.update() so per_tick_callback and retreat logic both run
-            self.update()
-            tick += 1
-
-            # Progress callback
-            if progress_callback and tick % 100 == 0:
-                progress_callback(tick, self._config.absolute_max_ticks)
-
-        return self.get_results()
-
     def run_ticks(self, count: int) -> BattleServiceResult:
         """
         Run multiple simulation ticks.

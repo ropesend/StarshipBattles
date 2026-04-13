@@ -4,8 +4,6 @@ Unit tests for TestExecutionService.
 Tests visual and headless test execution, progress callbacks, and error handling.
 """
 
-import pytest
-import time
 from unittest.mock import Mock, patch
 from combat_lab.services.test_execution_service import TestExecutionService
 
@@ -147,280 +145,302 @@ class TestRunVisual:
         assert success is False
 
 
+def _fake_run_battle_factory(tick_count=10):
+    """Build a fake `run_battle` callable for patching.
+
+    The fake fires `pre_tick_loop_callback` once with a Mock engine, then
+    invokes `per_tick_callback` `tick_count` times. Returns a Mock outcome.
+    """
+    def _fake(spec, *, ai_factory, ship_builder, headless=True,
+              per_tick_callback=None, pre_tick_loop_callback=None):
+        engine = Mock()
+        engine.tick_counter = 0
+        if pre_tick_loop_callback is not None:
+            pre_tick_loop_callback(engine)
+        if per_tick_callback is not None:
+            for i in range(tick_count):
+                engine.tick_counter = i + 1
+                per_tick_callback(engine)
+        return Mock(end_reason=Mock(value="tick_limit"))
+    return _fake
+
+
 class TestRunHeadless:
-    """Test headless test execution."""
+    """Test headless test execution — PROJ-270 Phase 1.1 contract.
 
-    def test_run_headless_success(
+    The new contract: `run_headless(scenario_info, on_progress=None)` compiles
+    a spec via `scenario.to_spec(registries=None)` and drives the battle through
+    `run_battle(spec, ...)`. It no longer accepts a `battle_engine` parameter
+    and no longer calls `scenario.setup(engine)` or `battle_engine.start([], [])`.
+    """
+
+    def test_run_headless_compiles_spec(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test successful headless test execution."""
+        """`run_headless` calls `scenario.to_spec(registries=None)`."""
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
 
-        # Make battle end after 100 ticks
-        mock_battle_engine.is_battle_over = Mock(side_effect=[False] * 99 + [True])
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        mock_test_scenario.to_spec.assert_called_once_with(registries=None)
 
-        assert result['passed'] is True
-        assert result['error'] is None
-        assert result['ticks_run'] == 100
-        assert 'duration_real' in result
-        mock_test_scenario._run_validation.assert_called_once_with(mock_battle_engine)
-
-    def test_run_headless_runs_max_ticks(
+    def test_run_headless_calls_before_run_battle(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test that headless runs for max_ticks."""
+        """`run_headless` fires the `before_run_battle` pre-hook."""
         service = TestExecutionService()
-        mock_test_scenario.max_ticks = 50
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
 
-        assert result['ticks_run'] == 50
-        assert mock_battle_engine.update.call_count == 50
+        mock_test_scenario.before_run_battle.assert_called_once()
 
-    def test_run_headless_calls_scenario_update(
+    def test_run_headless_drives_run_battle(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test that scenario.update() is called each tick."""
+        """`run_headless` invokes `run_battle(spec, ...)` with the compiled spec."""
+        service = TestExecutionService()
+        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
+        service.runner.load_data_for_scenario = Mock()
+        service.runner.log_test_execution = Mock()
+
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ) as mock_run_battle:
+            service.run_headless(sample_scenario_info)
+
+        mock_run_battle.assert_called_once()
+        call_kwargs = mock_run_battle.call_args.kwargs
+        # run_battle receives ai_factory + ship_builder; the spec is positional
+        assert 'ai_factory' in call_kwargs
+        assert 'ship_builder' in call_kwargs
+        # Spec passed positionally is the one compiled by to_spec
+        spec_arg = mock_run_battle.call_args.args[0]
+        assert spec_arg is mock_test_scenario.to_spec.return_value
+
+    def test_run_headless_does_not_call_scenario_setup(
+        self,
+        sample_scenario_info,
+        mock_test_scenario,
+    ):
+        """`scenario.setup(engine)` is NOT called — the legacy entry is dead."""
+        service = TestExecutionService()
+        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
+        service.runner.load_data_for_scenario = Mock()
+        service.runner.log_test_execution = Mock()
+
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
+
+        mock_test_scenario.setup.assert_not_called()
+
+    def test_run_headless_wires_ships_and_custom_setup_in_pre_tick_loop(
+        self,
+        sample_scenario_info,
+        mock_test_scenario,
+    ):
+        """`pre_tick_loop_callback` invokes `wire_ships` + `custom_setup`."""
+        service = TestExecutionService()
+        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
+        service.runner.load_data_for_scenario = Mock()
+        service.runner.log_test_execution = Mock()
+
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
+
+        mock_test_scenario.wire_ships.assert_called_once()
+        mock_test_scenario.custom_setup.assert_called_once()
+
+    def test_run_headless_calls_scenario_update_per_tick(
+        self,
+        sample_scenario_info,
+        mock_test_scenario,
+    ):
+        """`per_tick_callback` invokes `scenario.update(engine)` each tick."""
         service = TestExecutionService()
         mock_test_scenario.max_ticks = 10
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=10),
+        ):
+            service.run_headless(sample_scenario_info)
 
         assert mock_test_scenario.update.call_count == 10
 
-    def test_run_headless_progress_callback(
+    def test_run_headless_runs_validation(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test progress callback is called."""
-        service = TestExecutionService()
-        mock_test_scenario.max_ticks = 250
-        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
-        service.runner.load_data_for_scenario = Mock()
-        service.runner.log_test_execution = Mock()
+        """`_run_validation` is called exactly once with the final engine.
 
-        progress_callback = Mock()
-        result = service.run_headless(
-            sample_scenario_info,
-            mock_battle_engine,
-            on_progress=progress_callback
-        )
-
-        # Should be called every 100 ticks
-        assert progress_callback.call_count == 2
-        progress_callback.assert_any_call(100, 250)
-        progress_callback.assert_any_call(200, 250)
-
-    def test_run_headless_early_termination(
-        self,
-        mock_battle_engine,
-        sample_scenario_info,
-        mock_test_scenario
-    ):
-        """Test that battle ending early terminates simulation."""
-        service = TestExecutionService()
-        mock_test_scenario.max_ticks = 1000
-        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
-        service.runner.load_data_for_scenario = Mock()
-        service.runner.log_test_execution = Mock()
-
-        # Battle ends at tick 50
-        mock_battle_engine.is_battle_over = Mock(side_effect=[False] * 49 + [True])
-
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
-
-        assert result['ticks_run'] == 50  # Should stop early
-
-    def test_run_headless_stores_results(
-        self,
-        mock_battle_engine,
-        sample_scenario_info,
-        mock_test_scenario
-    ):
-        """Test that results are stored in scenario.results."""
-        service = TestExecutionService()
-        mock_test_scenario.max_ticks = 10
-        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
-        service.runner.load_data_for_scenario = Mock()
-        service.runner.log_test_execution = Mock()
-
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
-
-        assert mock_test_scenario.results['ticks_run'] == 10
-        assert 'duration_real' in mock_test_scenario.results
-        assert mock_test_scenario.results['ticks'] == 10  # Alias
-
-    def test_run_headless_logs_execution(
-        self,
-        mock_battle_engine,
-        sample_scenario_info,
-        mock_test_scenario
-    ):
-        """Test that execution is logged."""
-        service = TestExecutionService()
-        mock_test_scenario.max_ticks = 10
-        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
-        service.runner.load_data_for_scenario = Mock()
-        service.runner.log_test_execution = Mock()
-
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
-
-        service.runner.log_test_execution.assert_called_once_with(mock_test_scenario, headless=True)
-
-    def test_run_headless_clears_engine(
-        self,
-        mock_battle_engine,
-        sample_scenario_info,
-        mock_test_scenario
-    ):
-        """Test that engine is cleared before test."""
+        PROJ-270 Phase 1 keeps validator consuming engine; Phase 2 migrates it
+        to `BattleOutcome`. This test locks Phase 1 behaviour — update when
+        Phase 2 lands.
+        """
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
 
-        mock_battle_engine.start.assert_called_once_with([], [])
+        mock_test_scenario._run_validation.assert_called_once()
 
     def test_run_headless_loads_data(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test that test data is loaded."""
+        """Scenario data is loaded before the spec is compiled."""
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
 
         service.runner.load_data_for_scenario.assert_called_once_with(mock_test_scenario)
 
-    def test_run_headless_calls_setup(
+    def test_run_headless_logs_execution(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test that scenario.setup() is called."""
+        """Execution is logged exactly once for UI/headless comparison."""
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            service.run_headless(sample_scenario_info)
 
-        mock_test_scenario.setup.assert_called_once_with(mock_battle_engine)
+        service.runner.log_test_execution.assert_called_once_with(
+            mock_test_scenario, headless=True,
+        )
 
-    def test_run_headless_failed_test(
+    def test_run_headless_returns_results_dict(
         self,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test handling of failed test."""
+        """Result dict carries passed/results/ticks_run/duration_real/error."""
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
+        mock_test_scenario.results = {'damage_dealt': 150}
 
-        # Make test fail via _run_validation
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=7),
+        ):
+            result = service.run_headless(sample_scenario_info)
+
+        assert result['passed'] is True
+        assert result['error'] is None
+        assert result['ticks_run'] == 7
+        assert 'duration_real' in result
+        assert result['results']['damage_dealt'] == 150
+
+    def test_run_headless_failed_validation(
+        self,
+        sample_scenario_info,
+        mock_test_scenario,
+    ):
+        """Failing validation yields passed=False in the result dict."""
+        service = TestExecutionService()
+        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
+        service.runner.load_data_for_scenario = Mock()
+        service.runner.log_test_execution = Mock()
         failed_report = Mock()
         failed_report.passed = False
         mock_test_scenario._run_validation = Mock(return_value=failed_report)
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=5),
+        ):
+            result = service.run_headless(sample_scenario_info)
 
         assert result['passed'] is False
         assert result['error'] is None
 
     def test_run_headless_error_handling(
         self,
-        mock_battle_engine,
-        sample_scenario_info
+        sample_scenario_info,
     ):
-        """Test error handling in headless execution."""
+        """Instantiation exception is captured in the result dict."""
         service = TestExecutionService()
-
-        # Make scenario instantiation fail
         sample_scenario_info['class'] = Mock(side_effect=Exception("Test error"))
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        result = service.run_headless(sample_scenario_info)
 
         assert result['passed'] is False
         assert result['error'] == "Test error"
         assert result['ticks_run'] == 0
         assert result['duration_real'] == 0
 
-    @patch('combat_lab.services.test_execution_service.time')
-    def test_run_headless_measures_time(
+    def test_run_headless_progress_callback(
         self,
-        mock_time,
-        mock_battle_engine,
         sample_scenario_info,
-        mock_test_scenario
+        mock_test_scenario,
     ):
-        """Test that execution time is measured."""
-        # Use deterministic mock times: start=100.0, end=100.5
-        mock_time.time.side_effect = [100.0, 100.5]
-
+        """`on_progress(tick, max_ticks)` fires every 100 ticks."""
         service = TestExecutionService()
-        mock_test_scenario.max_ticks = 100
+        mock_test_scenario.max_ticks = 250
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner.log_test_execution = Mock()
+        progress_callback = Mock()
 
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
+        with patch(
+            'combat_lab.services.scenario_run_helper.run_battle',
+            side_effect=_fake_run_battle_factory(tick_count=250),
+        ):
+            service.run_headless(sample_scenario_info, on_progress=progress_callback)
 
-        assert result['duration_real'] == pytest.approx(0.5)
-        assert result['duration_real'] > 0
-
-    def test_run_headless_returns_results_dict(
-        self,
-        mock_battle_engine,
-        sample_scenario_info,
-        mock_test_scenario
-    ):
-        """Test that result dict has all required keys."""
-        service = TestExecutionService()
-        sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
-        service.runner.load_data_for_scenario = Mock()
-        service.runner.log_test_execution = Mock()
-
-        # Add some test results
-        mock_test_scenario.results = {'damage_dealt': 150, 'hit_count': 10}
-
-        result = service.run_headless(sample_scenario_info, mock_battle_engine)
-
-        assert 'passed' in result
-        assert 'results' in result
-        assert 'ticks_run' in result
-        assert 'duration_real' in result
-        assert 'error' in result
-        assert result['results']['damage_dealt'] == 150
-        assert result['results']['hit_count'] == 10
+        # Every 100 ticks → 2 calls (at tick 100 and tick 200)
+        assert progress_callback.call_count == 2

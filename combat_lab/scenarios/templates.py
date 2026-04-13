@@ -142,65 +142,6 @@ class StaticTargetScenario(TestScenario):
     skip_test: bool = False  # If True, skip this test
     skip_reason: str = ""  # Reason for skipping
 
-    def setup(self, battle_engine):
-        """
-        Standard setup for static target scenarios.
-        Subclasses can override for custom setup, or use configuration attributes.
-        """
-        # Skip placeholder tests that aren't ready to run
-        if self.skip_test:
-            return
-
-        # Validate configuration
-        if self.attacker_ship is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'attacker_ship' attribute")
-        if self.target_ship is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'target_ship' attribute")
-        if self.distance is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'distance' attribute")
-
-        # Load ships
-        self.attacker = self._load_ship(self.attacker_ship)
-        self.target = self._load_ship(self.target_ship)
-
-        # Position attacker at origin
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = self.attacker_angle
-
-        # Position target at distance
-        self.target.position = pygame.math.Vector2(self.distance, 0)
-        self.target.angle = self.target_angle
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Determine which seed to use:
-        # - _override_seed is set by the UI when running tests (allows Random/Fixed/Custom modes)
-        # - Falls back to metadata.seed for headless/CLI test runs
-        seed_to_use = getattr(self, '_override_seed', None)
-        if seed_to_use is None:
-            seed_to_use = self.metadata.seed
-        # Expose to custom_setup so movement controllers can derive their seed
-        self._effective_seed = seed_to_use
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=seed_to_use,
-                          end_condition=end_condition)
-
-        # Assign AI movement policies (AI handles firing)
-        if self.force_fire:
-            self.attacker.movement_policy = 'test_stationary'
-        else:
-            self.attacker.movement_policy = 'test_do_nothing'
-        self.target.movement_policy = 'test_do_nothing'
-
-        # Scenario-specific setup hook
-        self.custom_setup(battle_engine)
-
     def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
         """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
 
@@ -354,59 +295,6 @@ class DuelScenario(TestScenario):
     auto_target: bool = True
     force_fire: bool = True
 
-    def setup(self, battle_engine):
-        """
-        Standard setup for duel scenarios.
-        Subclasses can override for custom setup, or use configuration attributes.
-        """
-        # Validate configuration
-        if self.ship1_file is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'ship1_file' attribute")
-        if self.ship2_file is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'ship2_file' attribute")
-        if self.distance is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'distance' attribute")
-
-        # Load ships
-        self.ship1 = self._load_ship(self.ship1_file)
-        self.ship2 = self._load_ship(self.ship2_file)
-
-        # Position ships (default: facing each other along x-axis)
-        if self.ship1_position is None:
-            self.ship1.position = pygame.math.Vector2(-self.distance / 2, 0)
-        else:
-            self.ship1.position = self.ship1_position
-        self.ship1.angle = self.ship1_angle
-
-        if self.ship2_position is None:
-            self.ship2.position = pygame.math.Vector2(self.distance / 2, 0)
-        else:
-            self.ship2.position = self.ship2_position
-        self.ship2.angle = self.ship2_angle
-
-        # Store initial state
-        self.ship1_initial_hp = self.ship1.hp
-        self.ship2_initial_hp = self.ship2.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle
-        battle_engine.start([self.ship1], [self.ship2],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Assign AI movement policies (AI handles firing)
-        if self.force_fire:
-            self.ship1.movement_policy = 'test_stationary'
-            self.ship2.movement_policy = 'test_stationary'
-        else:
-            self.ship1.movement_policy = 'test_do_nothing'
-            self.ship2.movement_policy = 'test_do_nothing'
-
-        # Scenario-specific setup hook
-        self.custom_setup(battle_engine)
-
     def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
         """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
         _ = engine
@@ -549,54 +437,6 @@ class PropulsionScenario(TestScenario):
     thrust_backward: bool = False
     turn_left: bool = False
     turn_right: bool = False
-
-    def setup(self, battle_engine):
-        """
-        Standard setup for propulsion scenarios.
-        Subclasses can override for custom setup, or use configuration attributes.
-        """
-        # Validate configuration
-        if self.ship_file is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'ship_file' attribute")
-
-        # Load ship
-        self.ship = self._load_ship(self.ship_file)
-
-        # Set initial state
-        self.ship.position = self.initial_position.copy()
-        self.ship.velocity = self.initial_velocity.copy()
-        self.ship.angle = self.initial_angle
-
-        # Store initial state for verification
-        self.start_position = self.ship.position.copy()
-        self.start_velocity = self.ship.velocity.copy()
-        self.start_angle = self.ship.angle
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with single ship (no enemies)
-        battle_engine.start([self.ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Store physics expectations
-        from combat_lab.scenarios.propulsion_scenarios import K_SPEED, K_THRUST
-        self.expected_max_speed = (self.ship.total_thrust * K_SPEED) / self.ship.mass
-        self.expected_acceleration_rate = (self.ship.total_thrust * K_THRUST) / (self.ship.mass ** 2)
-
-        # Assign AI movement policy based on thrust/turn configuration
-        if self.thrust_forward and not self.turn_left and not self.turn_right:
-            self.ship.movement_policy = 'test_straight_line'
-        elif self.turn_right:
-            self.ship.movement_policy = 'test_rotate_right'
-        elif self.turn_left:
-            self.ship.movement_policy = 'test_rotate_left'
-        else:
-            self.ship.movement_policy = 'test_do_nothing'
-
-        # Scenario-specific setup hook
-        self.custom_setup(battle_engine)
 
     def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
         """Wire materialized Ship onto the scenario (PROJ-269 Task 6.7a).
@@ -798,76 +638,6 @@ class ResourceScenario(TestScenario):
     final_value: float = 0
     value_consumed: float = 0
 
-    def setup(self, battle_engine):
-        """
-        Standard setup for resource scenarios.
-
-        Loads ship, optionally loads target, stores initial resource value,
-        starts battle with time-based end condition.
-        """
-        # Validate configuration
-        if self.ship_file is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'ship_file' attribute")
-        if self.resource_type is None:
-            raise ValueError(f"{self.__class__.__name__} must set 'resource_type' attribute")
-        if self.force_fire and self.target_ship_file is None:
-            raise ValueError(
-                f"{self.__class__.__name__} has force_fire=True but no 'target_ship_file' set"
-            )
-
-        # Load primary ship
-        self.ship = self._load_ship(self.ship_file)
-        self.ship.position = pygame.math.Vector2(0, 0)
-        self.ship.angle = 0
-
-        # Store initial resource value
-        self.initial_value = self.ship.resources.get_value(self.resource_type)
-
-        # Optionally load target ship
-        self.target = None
-        if self.target_ship_file is not None:
-            self.target = self._load_ship(self.target_ship_file)
-            self.target.position = pygame.math.Vector2(self.target_distance, 0)
-            self.target.angle = 0
-            self.initial_hp = self.target.hp
-
-        # Store start position for distance calculations
-        self.start_position = pygame.math.Vector2(self.ship.position)
-
-        # Create end condition
-        end_condition = self._create_end_condition()
-
-        # Start battle
-        team_a = [self.ship]
-        team_b = [self.target] if self.target else []
-
-        # Determine seed (support UI override)
-        seed_to_use = getattr(self, '_override_seed', None)
-        if seed_to_use is None:
-            seed_to_use = self.metadata.seed
-        # Expose to custom_setup so movement controllers can derive their seed
-        self._effective_seed = seed_to_use
-
-        battle_engine.start(team_a, team_b,
-                           seed=seed_to_use,
-                           end_condition=end_condition)
-
-        # Assign AI movement policies
-        if self.thrust_forward and self.force_fire:
-            self.ship.movement_policy = 'test_straight_line'  # thrust + AI fires at target
-        elif self.thrust_forward:
-            self.ship.movement_policy = 'test_straight_line'
-        elif self.force_fire:
-            self.ship.movement_policy = 'test_stationary'
-        else:
-            self.ship.movement_policy = 'test_do_nothing'
-
-        if self.target is not None:
-            self.target.movement_policy = 'test_do_nothing'
-
-        # Scenario-specific setup hook
-        self.custom_setup(battle_engine)
-
     def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
         """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
         _ = engine
@@ -1039,39 +809,6 @@ class ComparisonScenario(TestScenario):
     # config on the runner's engine and skips the variant entirely.
     _visual_baseline: bool = False
 
-    def setup(self, battle_engine):
-        """
-        Set up the comparison scenario.
-
-        Normal mode: runs baseline internally, configures variant on runner's engine.
-        Visual Baseline mode: configures baseline on runner's engine for observation.
-        """
-        self._validate_config()
-
-        # Resolve seed (same logic as StaticTargetScenario)
-        seed_to_use = getattr(self, '_override_seed', None)
-        if seed_to_use is None:
-            seed_to_use = self.metadata.seed
-        self._effective_seed = seed_to_use
-
-        if self._visual_baseline:
-            # Visual Baseline mode: baseline on runner's engine for observation
-            self._setup_battle(
-                battle_engine,
-                self.baseline_attacker_ship,
-                self.baseline_target_ship,
-            )
-            self.configure_baseline(battle_engine)
-        else:
-            # Normal mode: baseline internally, variant on runner's engine
-            self._run_baseline_battle()
-            self._setup_battle(
-                battle_engine,
-                self.variant_attacker_ship,
-                self.variant_target_ship,
-            )
-            self.configure_variant(battle_engine)
-
     def _validate_config(self):
         """Validate that required class attributes are set."""
         cls_name = self.__class__.__name__
@@ -1086,36 +823,6 @@ class ComparisonScenario(TestScenario):
         if self.distance is None:
             raise ValueError(f"{cls_name} must set 'distance'")
 
-    def _setup_battle(self, engine, attacker_file, target_file):
-        """
-        Load ships, position them, and start a battle on the given engine.
-
-        Sets self.attacker, self.target, and self.initial_hp for use by
-        update() and collect_results().
-        """
-        self.attacker = self._load_ship(attacker_file)
-        self.target = self._load_ship(target_file)
-
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = self.attacker_angle
-        self.target.position = pygame.math.Vector2(self.distance, 0)
-        self.target.angle = self.target_angle
-
-        self.initial_hp = self.target.hp
-
-        # Assign AI movement policies
-        if self.force_fire:
-            self.attacker.movement_policy = 'test_stationary'
-        else:
-            self.attacker.movement_policy = 'test_do_nothing'
-        self.target.movement_policy = 'test_do_nothing'
-
-        end_condition = self._create_end_condition()
-        engine.start(
-            [self.attacker], [self.target],
-            seed=self._effective_seed,
-            end_condition=end_condition,
-        )
 
     def _run_baseline_battle(self):
         """Run the private baseline battle via `run_battle(spec)`.
