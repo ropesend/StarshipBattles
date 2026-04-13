@@ -380,7 +380,7 @@ class BeamRangeTest(StaticTargetScenario):
 
     metadata = TestMetadata(test_id="BEAM-RANGE-001", name="Beam accuracy at 400px", ...)
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.append(check_true(
             "Damage dealt", self.damage_dealt > 0,
@@ -405,7 +405,7 @@ class EnergyConsumptionTest(ResourceScenario):
 
     metadata = TestMetadata(test_id="RESOURCE-001", ...)
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.append(check_approx(
             "Energy consumed", expected_consumption, self.value_consumed,
@@ -436,7 +436,7 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
 
     distance = 400
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.append(check_true(
             "Sensor Increases Damage",
@@ -463,7 +463,7 @@ class NoEngineStaysStationary(PropulsionScenario):
 
     metadata = TestMetadata(test_id="PROP-001b", name="Ship without engine stays stationary", ...)
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.append(check_exact(
             "No movement", 0.0, self.distance_traveled, phase="outcome"
@@ -486,7 +486,7 @@ class BeamStopsWithoutEnergy(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         checks.append(check_exact(
             "No-Energy — Zero Damage", 0.0, self.variant_damage_dealt,

@@ -439,7 +439,7 @@ class MyAbilityBasicEffectScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
 
-    def validate(self, engine) -> list:
+    def validate(self, outcome, telemetry=None) -> list:
         checks = self._template_preconditions()
         # Data: verify the ability is present and has expected value
         # Precondition: both battles ran and produced results
