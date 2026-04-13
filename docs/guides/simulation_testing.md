@@ -324,7 +324,7 @@ max_speed:
   ```
   Use 2x safety buffer on the calculated minimum.
 
-**7. Implement `validate(engine) -> List[Check]`** with data, precondition, and outcome checks.
+**7. Implement `validate(outcome, telemetry=None) -> List[Check]`** with data, precondition, and outcome checks. `outcome` is a frozen `BattleOutcome`; `telemetry` is the optional `CombatLabTelemetry` bundle. See §3 for the full signature.
 
 **8. Run the test** via `python -m combat_lab.run_tests <TEST_ID>`.
 

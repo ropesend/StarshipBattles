@@ -196,9 +196,9 @@ PhysicsBody, CollisionSystem, SpatialGrid
 
 Existing: Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, IEndCondition, TeamEliminatedCondition, TickLimitCondition, end_condition_from_dict, BattleService, BattleServiceResult, BattleState, ShipDesignValidator.
 
-PROJ-269 BattleSpec DTOs: AIPolicy, BattleSpec, CombatPolicies, ComponentStateSpec, EntryVector, PostBattleHook, ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec.
+PROJ-269 BattleSpec DTOs: BattleSpec, CombatPolicies, ComponentStateSpec, EntryVector, PostBattleHook, ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec.
 
-PROJ-269 BattleOutcome DTOs: BattleOutcome, EndReason, HitRecord, ModifierApplication, ShipOutcome, ShipStats, ShipStatus, TaskForceOutcome, TeamOutcome, WeaponSummary.
+PROJ-269 BattleOutcome DTOs: BattleOutcome, EndReason, HitRecord, ModifierApplication, ShipOutcome, ShipStats, ShipStatus, TeamOutcome, WeaponSummary.
 
 PROJ-269 entry: `game.simulation.battle_runner.run_battle(spec, ai_factory, ship_builder, ...) -> BattleOutcome`.
 

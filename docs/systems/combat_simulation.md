@@ -36,8 +36,8 @@ hands it here.
 
 | File | Contains |
 |------|----------|
-| `game/simulation/battle_spec.py` | `BattleSpec`, `TeamSpec`, `TaskForceSpec`, `SquadronSpec`, `ShipSpec`, `ComponentStateSpec`, `EntryVector`, `AIPolicy`, `CombatPolicies`, `PostBattleHook` |
-| `game/simulation/battle_outcome.py` | `BattleOutcome`, `TeamOutcome`, `TaskForceOutcome`, `ShipOutcome`, `ShipStatus`, `EndReason`, `HitRecord`, `WeaponSummary`, `ShipStats`, `ModifierApplication` |
+| `game/simulation/battle_spec.py` | `BattleSpec`, `TeamSpec`, `TaskForceSpec`, `SquadronSpec`, `ShipSpec`, `ComponentStateSpec`, `EntryVector`, `CombatPolicies`, `PostBattleHook` |
+| `game/simulation/battle_outcome.py` | `BattleOutcome`, `TeamOutcome`, `ShipOutcome`, `ShipStatus`, `EndReason`, `HitRecord`, `WeaponSummary`, `ShipStats`, `ModifierApplication` |
 | `game/simulation/combat/boundary.py` | `BoundaryRegion` protocol, `RectBoundary`, `CircleBoundary`, `UnboundedRegion`, `ExitPolicy` |
 | `game/simulation/combat/modifier_stack.py` | `ModifierStack`, `ModifierEntry` — source-tagged modifier bundle |
 | `game/simulation/combat/formation.py` | `FormationShape`, `FormationSpec` (resolver lands in Phase 4) |
@@ -70,19 +70,20 @@ All four Phase-1 hooks are wired into the engine:
   dispatch via `BoundaryEnforcementPhase`)
 - `formation` — fully resolved at compile time as of Phase 4
 - `telemetry_level` — fully wired as of Phase 5 (see below)
-- `modifier_stack` — wired as of Phase 5.5. `run_battle` threads
-  `spec.modifier_stack` onto `BattleEngine.modifier_stack`; at
-  `start_teams`, `FleetAuraManager.initialize(ships, modifier_stack=...)`
-  translates each `ModifierEntry` into an `ExternalModifier` using
-  `entry.effect.stat_key` as the ability name (`ToHitAttackModifier`,
-  `ToHitDefenseModifier`, ...). Entries whose `stat_key == "placeholder"`
-  are silently skipped — compilers emit those as record-of-presence
-  markers for toggles whose real effect mapping hasn't been authored
-  yet. When a compiler wires a real `stat_key`, the aura manager
-  applies it without further engine changes. `HitLogRecorder` also
+- `modifier_stack` — wired as of Phase 5.5, retargeted in PROJ-270 Phase 9 + PROJ-271.
+  `run_battle` threads `spec.modifier_stack` onto `BattleEngine.modifier_stack`;
+  at `start_teams`, `FleetAuraManager.initialize(ships, modifier_stack=...)`
+  registers the stack with the aura manager. Each tick `_apply_bonuses`
+  aggregates team-scoped entries into `ship.external_stats: Dict[str, float]`
+  keyed by `entry.effect.stat_key` (two-phase: intra-group MAX, inter-group
+  SUM, respecting `stack_group`). Abilities read this bridge via
+  `Ability.get_effective_stat` (`_mult` keys multiply local × external;
+  `_add` keys sum local + external). Ship-level keys like `shield_bonus_add`
+  are read directly in `ship_stats.py::_apply_aggregated_stats`. The
+  `_entries_from_modifier_source` placeholder path was deleted in PROJ-271
+  Phase 9 — compilers emit only real stat_keys now. `HitLogRecorder`
   consumes the stack at DETAILED telemetry to populate
-  `HitRecord.modifiers_applied` with the active modifiers (globals +
-  attacker-team entries, placeholders filtered).
+  `HitRecord.modifiers_applied`.
 
 ### Telemetry (Phase 5)
 
@@ -122,9 +123,11 @@ MINIMAL ≈ NORMAL ≈ DETAILED ≈ 28-30ms. See
 and `Projects/active_projects/PROJ-269/decisions.md` for updated
 baselines.
 
-**`HitRecord.modifiers_applied`** is an empty tuple in the MVP — real
-modifier-trace provenance requires wiring the ModifierStack through
-the damage pipeline, deferred to a follow-up.
+**`HitRecord.modifiers_applied`** is populated at DETAILED telemetry by
+`HitLogRecorder` — each record carries the globals plus attacker-team
+entries active at the time of the hit (placeholders were pre-filtered by
+the compiler; PROJ-271 Phase 9 deleted the placeholder path entirely).
+At MINIMAL/NORMAL telemetry the field is an empty tuple.
 
 ### Boundary Region (Phase 3)
 
@@ -416,13 +419,15 @@ The `update()` method is a concise coordinator that delegates to focused helpers
 Initialized at battle start, recalculated every tick. Bonuses removed immediately when provider
 ship is destroyed. Stacking follows two-phase aggregation (same group = MAX, different groups = SUM).
 
-**External modifiers** (PROJ-270 Phase 6.4a): per-team and global
-battle conditions flow into the aura manager via `spec.modifier_stack`
-only — the legacy `BattleConfig.team_modifiers` / `global_modifiers`
-kwargs were deleted. `FleetAuraManager.initialize(ships, *, modifier_stack=...)`
-translates each `ModifierEntry` into an `ExternalModifier`. Unknown /
-placeholder stat_keys emit a once-per-source WARNING so compiler
-authors see missing mappings immediately (PROJ-270 Phase 6.4).
+**External modifiers** (PROJ-270 Phase 6.4a + Phase 9, PROJ-271 Phase 7):
+per-team and global battle conditions flow into the aura manager via
+`spec.modifier_stack` only — the legacy `BattleConfig.team_modifiers` /
+`global_modifiers` kwargs were deleted. `FleetAuraManager._apply_bonuses`
+writes ALL entries into `ship.external_stats: Dict[str, float]` (not just
+the two hardcoded keys that survived 5.5). `stack_group` is respected via
+two-phase MAX/SUM aggregation (`_aggregate_ability_groups`). Unknown
+stat_keys emit a once-per-source WARNING; placeholders no longer exist
+(PROJ-271 Phase 9 deleted `_entries_from_modifier_source`).
 
 **Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A + PROJ-271 Track B):
 All strategic modifier sources emit real stat_keys now. Storm hex shield
@@ -502,7 +507,7 @@ PROJ-269 Phase 6. Variance now lives on `BattleSpec` fields:
 | `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
 | `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
 | `should_clone_ships` | Caller supplies pre-cloned ships in their `ship_builder` |
-| `is_headless_default` | `run_battle(spec, headless=...)` kwarg |
+| `is_headless_default` | Driver choice: blocking `run_battle(spec, ...)` vs per-frame `BattleController.start_from_spec(spec, ...)` |
 | `apply_results` | `BattleSpec.post_battle_hook` (e.g. `apply_outcome_to_fleets`) |
 
 See [`Projects/active_projects/PROJ-269/decisions.md`](../../Projects/active_projects/PROJ-269/decisions.md)
@@ -565,6 +570,21 @@ DamageCalculator, WeaponFiringSystem) are class-level shared instances since the
 - `_components_cache` -- dirty-flag cache of all components across layers
 - `_weapons_cache` -- per-tick cache for AI targeting hot path
 - Invalidated on add/remove/recalculate
+
+### Shield Stat Pipeline Ordering (PROJ-271)
+
+`ShipStatsCalculator._apply_aggregated_stats` computes `ship.max_shields` as:
+
+```
+max_shields = (base_shield_capacity + shield_bonus_add) × capacity_mult × shield_capacity_mult
+```
+
+- `base_shield_capacity` — sum of `ShieldProjection` base values from operational components
+- `shield_bonus_add` — read directly from `ship.external_stats['shield_bonus_add']` (flat bonus from planet shield-projector auras, compiled via `_complex_to_entries` or `_entries_from_fleet_combat_modifiers`)
+- `capacity_mult` — aggregated per-ability multiplier (component modifiers)
+- `shield_capacity_mult` — external team-aura multiplier (storm interference, fleet boosters), also read from `ship.external_stats`
+
+The flat-then-multiply ordering is load-bearing: a planet that grants +500 shield HP and a fleet with a 2× shield aura compose to `(base + 500) × 2`, matching the semantic "flat bonus behaves like an extra shield component providing the ability" (PROJ-271 decisions.md). This ordering is locked by `tests/unit/simulation/entities/test_ship_shield_bonus_add.py`. New ship-level additive stat_keys must follow the same pattern.
 
 ---
 

@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-12 — PROJ-270 in flight (closure work on top of PROJ-269). Visual-mode `BattleController` now emits `BattleOutcome`; strategy-modifier battle math (shield_capacity_mult, damage_mult) wired up; `ReturnDestination` moved to `game/core/`; `BattleState.mode` + `BattleConfig.test_scenario` deleted; `FleetAuraManager` legacy `config=` kwarg removed. See `Projects/active_projects/PROJ-270/plan.md`.
+> **Last verified:** 2026-04-13 — PROJ-270 closure complete, PROJ-271 Track B landed. Every battle compiles a `BattleSpec` and emits a `BattleOutcome`; strategy + Battle Setup modifier math emits real stat_keys (`shield_capacity_mult`, `damage_mult`, `shield_bonus_add`) that flow through `FleetAuraManager` → `ship.external_stats` → `get_effective_stat`; `FleetAuraManager` respects `stack_group` (intra-group MAX, inter-group SUM) on external entries; `ReturnDestination` lives at `game/core/return_destination.py`; `BattleConfig` trimmed to visual-mode operational options only. See `Projects/active_projects/PROJ-270/plan.md` and `Projects/active_projects/PROJ-271/plan.md`.
 
 ---
 
@@ -14,7 +14,7 @@
 | # | Document | What you learn |
 |---|----------|---------------|
 | 1 | [01_ARCHITECTURE.md](01_ARCHITECTURE.md) | Layer structure, package APIs, protocols, data flow |
-| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 23 design patterns with file locations and code examples |
+| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 26 design patterns with file locations and code examples |
 | 3 | [03_CONVENTIONS.md](03_CONVENTIONS.md) | Naming, file organization, imports, testing conventions |
 
 ### Step 2: Task-specific (read based on what you're doing)
@@ -36,7 +36,7 @@
 | System | Document | Covers |
 |--------|----------|--------|
 | Combat/Simulation | [combat_simulation.md](systems/combat_simulation.md) | Battle modes, damage pipeline, ship architecture, abilities |
-| Abilities | [ability_reference.md](systems/ability_reference.md) | All 44 component abilities: registry keys, parameters, stat bindings |
+| Abilities | [ability_reference.md](systems/ability_reference.md) | All 53 component abilities: registry keys, parameters, stat bindings |
 | Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, fleet hierarchy (task forces, squadrons), design roles, group policies, deployment zones, auto-suggestion, events |
 | AI | [ai_system.md](systems/ai_system.md) | Movement behaviors, spatial behaviors, group target coordinator, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
@@ -63,7 +63,7 @@
 docs/
 ├── README.md                    <- You are here
 ├── 01_ARCHITECTURE.md           # Layers, packages, APIs, protocols, data flow
-├── 02_PATTERNS.md               # 23 design patterns (ApplicationContext DI, Facade, CQRS, etc.)
+├── 02_PATTERNS.md               # 26 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
 ├── 03_CONVENTIONS.md            # Naming, file org, imports, test conventions
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging
@@ -81,7 +81,7 @@ docs/
 │   └── testing_infrastructure.md  DI fixtures, conftest, test helpers
 │
 └── systems/                     # Domain-specific architecture
-    ├── ability_reference.md       All 44 abilities: keys, parameters, stat bindings
+    ├── ability_reference.md       All 53 abilities: keys, parameters, stat bindings
     ├── combat_simulation.md       Battle orchestration, damage pipeline
     ├── strategy_layer.md          Facade, turn engine, commands, events
     ├── ai_system.md               AI behaviors, targeting, adapters

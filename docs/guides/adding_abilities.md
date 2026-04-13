@@ -190,6 +190,7 @@ From `game/simulation/components/abilities/stat_keys.py`:
 | `ARC_ADD` | Add to firing arc |
 | `ACCURACY_ADD` | Beam accuracy bonus |
 | `PROJECTILE_STEALTH_LEVEL` | Seeker stealth level |
+| `SHIELD_BONUS_ADD` | Flat shield HP added at ship level (composes as `(base + flat) × mult`). Consumed in `ship_stats.py::_apply_aggregated_stats`, not via `STAT_BINDINGS`. See Step 5 for ship-level vs per-ability guidance. |
 
 **Set/Override (default None):**
 

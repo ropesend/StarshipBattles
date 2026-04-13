@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase (20 patterns).
+Agent-optimized reference for every core pattern in the codebase (26 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -30,6 +30,9 @@ Each section: **Where**, **How It Works**, **When to Use**.
 21. [Screen State Machine](#21-screen-state-machine-proj-259)
 22. [TurnEngineConfig](#22-turnengineconfig-proj-259)
 23. [Tick Phase Registry](#23-tick-phase-registry-proj-259)
+24. [External-Stats Bridge](#24-external-stats-bridge-proj-270-phase-9--proj-271)
+25. [Scope-Driven Team Routing](#25-scope-driven-team-routing-proj-271)
+26. [Spec Compiler → run_battle](#26-spec-compiler--run_battle-proj-269)
 
 ---
 
@@ -1011,7 +1014,7 @@ Phase 6 removed `BattleModeHandler` + 4 concrete handlers + the
 | `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
 | `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
 | `should_clone_ships` | Caller's `ship_builder` returns a clone |
-| `is_headless_default` | `run_battle(spec, headless=...)` kwarg |
+| `is_headless_default` | Driver choice: blocking `run_battle(spec)` vs per-frame `BattleController.start_from_spec(spec, ...)` |
 | `apply_results(...)` | `BattleSpec.post_battle_hook` |
 
 See `docs/systems/combat_simulation.md` §0–§1 and
@@ -1375,6 +1378,9 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 | Screen State Machine | `game/core/state_machine.py` | `ScreenStateMachine` |
 | TurnEngineConfig | `game/strategy/engine/turn_engine_config.py` | `TurnEngineConfig` |
 | Tick Phase Registry | `game/simulation/systems/tick_phase.py` | `ITickPhase`, `TickPhaseRegistry` |
+| External-Stats Bridge | `game/simulation/entities/ship.py` + `fleet_aura_manager.py` | `ship.external_stats`, `FleetAuraManager._apply_bonuses` |
+| Scope-Driven Team Routing | `game/ui/screens/battle_setup/spec_compiler.py` | `_route_team_for_scope`, `_OPPONENT_SCOPES` |
+| Spec Compiler → run_battle | `game/simulation/battle_runner.py` + 3 compilers | `run_battle`, `BattleSpec`, `build_*_battle_spec` |
 
 ### Critical Naming Reminders
 

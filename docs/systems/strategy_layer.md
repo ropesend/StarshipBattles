@@ -730,7 +730,7 @@ Handles instant-apply/revert for activatable planet modifiers (GravityModifier, 
 
 **File:** `game/strategy/services/combat_modifier_collector.py`
 
-Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`.
+Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`. **Scope routing (PROJ-271):** enemy-scope (`enemy_sector` / `enemy_system`) effects are pre-computed INTO the RECEIVING fleet's `FleetCombatModifiers` before the strategy spec compiler runs. The compiler therefore emits each entry to `per_team[receiver_id]` trivially, with no runtime scope lookup. New enemy-scope abilities must extend the collector, not the compiler.
 
 Passed into `SimulationBattleResolver.resolve_battle(...,
 team0_modifiers=..., team1_modifiers=..., environmental_effects=...)`.
@@ -767,6 +767,20 @@ have no effect. This means planetary complex ShieldModifier/DamageModifier/Shiel
 must be manually activated before they affect combat.
 
 Wired from `ConflictResolutionEngine._resolve_combat_simulated()` which collects modifiers for both fleets and passes them to the resolver.
+
+#### Battle Setup Complex-Toggle Compilation (PROJ-271 Phase 2)
+
+The Battle Setup screen lets users toggle complex designs onto either side without those complexes being real ships in the battle. `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` translates a toggled complex design into `ModifierEntry` entries by walking the design JSON's components and mapping each non-SELF-scoped ability class to a stat_key:
+
+| Ability class in complex design | Emitted stat_key | Operation |
+|---------------------------------|------------------|-----------|
+| `ShieldProjection` | `shield_bonus_add` | add |
+| `ShieldModifier` | `shield_capacity_mult` | multiply |
+| `DamageModifier` | `damage_mult` | multiply |
+
+Each entry is routed to a team bucket by `_route_team_for_scope(scope_str, owner_team)` — `enemy_*` scopes go to the opponent team, all other scopes go to the owner's team (`_OPPONENT_SCOPES = {"enemy_sector", "enemy_system"}`). Adding a new complex ability type that should influence combat requires extending `_ABILITY_TO_STAT_KEY`; adding a new enemy-scope value requires extending `_OPPONENT_SCOPES` AND adding a scope-routing test.
+
+Unlike the strategy path (where `CombatModifierCollector` pre-computes enemy-scope routing before compile), the Battle Setup compiler does per-ability scope routing at compile time because complex toggles are synthetic inputs — there's no `CombatModifierCollector` equivalent for Battle Setup.
 
 ### Activatable Abilities & Stabilizer Pattern
 
