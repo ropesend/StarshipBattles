@@ -105,8 +105,9 @@ def capture_test_states(
     Capture both initial and final states for a test run.
 
     This is a convenience function for capturing both states. The initial state
-    should be captured right after scenario.setup(), and the final state should
-    be captured after the test completes.
+    should be captured right after ships materialize via `materialize_spec_ships`
+    (before the first tick), and the final state should be captured after the
+    test completes.
 
     Args:
         engine: BattleEngine with final state

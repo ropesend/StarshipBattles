@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Partial (5.1 + 5.2 + 5.3 + 5.5 done; 5.4 remains — map_bounds → boundary requires RetreatManager refactor)
+**Status:** Complete (5.1 + 5.2 + 5.3 + 5.4 + 5.5 all done)
 **Risk:** LOW
 **Depends On:** Phases 1–4 (DTO shape is now known to be stable on live paths)
 **Objective:** Trim `BattleConfig` to operational-only fields, relocate `ReturnDestination` out of the simulation layer, delete the `BattleState.mode` zombie field, collapse `BattleConfig.map_bounds` into `BattleSpec.boundary`, and audit unused spec fields (`AIPolicy`, `CombatPolicies`, `ComponentStateSpec.is_active`, `TaskForceOutcome`) for deletion or genuine wiring. After Phase 5 the simulation-layer DTOs carry no cross-layer leaks or dead fields.
@@ -58,21 +58,28 @@
 
 ---
 
-### Task 5.4: Collapse `BattleConfig.map_bounds` into `BattleSpec.boundary` [Medium]
+### Task 5.4: Collapse `BattleConfig.map_bounds` into `BattleSpec.boundary` [Medium] — COMPLETE
 **File:** `game/simulation/battle_config.py`, `BattleController`, `RetreatManager`
 **Tests:** `pytest tests/unit/simulation/ --testmon`
 
-- [ ] Audit usage of `config.map_bounds`:
-  - `BattleController.configure` uses it to initialize `RetreatManager` ([game/simulation/battle_controller.py:106](../../../game/simulation/battle_controller.py#L106))
-- [ ] The spec's `boundary` (a `BoundaryRegion`) carries equivalent information; `RetreatManager` should consume `spec.boundary` instead
-- [ ] Write failing test asserting `BattleConfig` has no `map_bounds` field
-- [ ] Update `RetreatManager.__init__` to accept a `BoundaryRegion` (or None for unbounded)
-- [ ] Update `BattleController.configure` to pass `spec.boundary` (from Task 4.2's `spec` parameter)
-- [ ] Delete `map_bounds` from `BattleConfig` (line 69)
-- [ ] Run test — passes
-- [ ] Run `pytest tests/unit/simulation/managers/test_retreat_manager.py` — green
+- [x] Extended `BoundaryRegion` protocol with two new methods:
+  - `closest_edge_point(pos) -> Vector2` — retreat navigation target
+  - `distance_to_edge(pos) -> float` — edge-threshold detection (inf for unbounded)
+- [x] Implemented both on `RectBoundary`, `CircleBoundary`, `UnboundedRegion`. `UnboundedRegion.closest_edge_point` raises `NotImplementedError` and `distance_to_edge` returns `math.inf` so edge-threshold checks naturally return False
+- [x] 13 new boundary tests (closest_edge_point + distance_to_edge for all three types) in `tests/unit/simulation/combat/test_boundary.py` — all green (31/31 total)
+- [x] Refactored `RetreatManager.__init__(boundary: BoundaryRegion)`. `find_nearest_edge` + `at_map_edge` now delegate to boundary API — no more raw coordinate math
+- [x] Added `request_retreat(method=EDGE)` unbounded-gate: returns `(False, "Cannot edge-retreat in unbounded arena…")` for `UnboundedRegion` (warp retreat continues to work)
+- [x] Updated `BattleController.configure(config, spec)` to derive `RetreatManager`'s boundary from `spec.boundary` (fallback `UnboundedRegion` for no-spec callers like `BattleScreen.start(team0, team1)` bypass)
+- [x] Updated `BattleController.load_state` to default to `UnboundedRegion` — saves are disposable per CLAUDE.md; edge retreat disabled on restore is acceptable
+- [x] Deleted `BattleConfig.map_bounds` field entirely (no compat shim per CLAUDE.md Rule 3)
+- [x] Re-centered all RetreatManager test fixtures — old corner-rooted `map_bounds=(0,0,100k,100k)` → origin-centered `RectBoundary(width=100k, height=100k)`. Ship positions migrated from `(50000, 50000)` center → `(0, 0)`
+- [x] Added `test_battle_config.py` regression guard in `FORBIDDEN_FIELDS` to prevent `map_bounds` resurrection
+- [x] Added 2 new retreat_manager unbounded-region tests (edge rejected, warp still works)
+- [x] Updated 1 production retreat test (`test_mechanics.py::test_request_retreat_edge_creates_retreat_state`) to construct a spec with a real `RectBoundary`
+- [x] Full regression: `pytest tests/unit/simulation/ tests/integration/simulation/test_boundary_retreat.py tests/unit/combat_lab/test_template_no_legacy_setup.py` — 3250/3250 green
+- [x] Combat Lab fast — 162/162 green
 
-**Notes:** [Filled during implementation]
+**Notes:** Design decision — extended boundary protocol rather than adding edge-math to RetreatManager or special-casing per-shape. This keeps shape geometry encapsulated in each boundary impl and makes RetreatManager shape-agnostic. The origin-centered coordinate system (RectBoundary is centered on (0,0), not at (min_x, min_y)) is the largest semantic trap — all retreat tests needed re-centering. UnboundedRegion gracefully degrades rather than raising: edge-retreat rejects with a clear message, warp-retreat continues unchanged.
 
 ---
 

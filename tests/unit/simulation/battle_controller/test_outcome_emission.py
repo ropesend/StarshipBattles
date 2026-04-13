@@ -112,3 +112,65 @@ class TestBattleControllerGetOutcome:
             "extract_outcome was called multiple times; Phase 4 contract "
             "requires it to fire exactly once per battle."
         )
+
+
+class TestBattleControllerConfigureAcceptsSpec:
+    """PROJ-270 Task 4.2/4.3: `configure(config, spec=...)` is the unified path.
+
+    Prior to the tighten, callers had to do `configure(config)` *then*
+    `set_spec(spec)` in two steps. The tightened API accepts `spec` as
+    an optional keyword to `configure()` so production call sites
+    (app.py, test_lab/screen.py, test_execution_service.py) can pass
+    both in a single call.
+
+    `spec=None` must still be permitted — the legacy `BattleScreen.start(
+    team0, team1)` bypass and ~60 existing unit tests call `configure(
+    basic_config)` with no spec.
+    """
+
+    def test_configure_accepts_spec_kwarg(self, controller_with_mock_service):
+        """`configure(config, spec=spec)` stores spec for later outcome extraction."""
+        controller, _service, _engine = controller_with_mock_service
+        mock_spec = MagicMock(name="BattleSpec")
+
+        result = controller.configure(BattleConfig(), spec=mock_spec)
+
+        assert result.success, "configure should still succeed with spec"
+        # Spec must be stored so get_outcome() can use it at battle end.
+        assert controller._spec is mock_spec, (
+            "configure(config, spec=...) must internally store the spec "
+            "on the controller (same invariant as set_spec)."
+        )
+
+    def test_configure_without_spec_still_works(self, controller_with_mock_service):
+        """`configure(config)` with no spec keeps working — legacy test path."""
+        controller, _service, _engine = controller_with_mock_service
+
+        result = controller.configure(BattleConfig())
+
+        assert result.success
+        assert controller._spec is None, (
+            "spec=None is the no-spec fallback; controller must not "
+            "accidentally synthesize one."
+        )
+
+    def test_configure_with_spec_enables_outcome_extraction(
+        self, controller_with_mock_service, monkeypatch,
+    ):
+        """End-to-end: configure(config, spec) + battle end → outcome emitted."""
+        from game.simulation import battle_runner
+        controller, service, engine = controller_with_mock_service
+        mock_outcome = MagicMock(name="BattleOutcome")
+        mock_spec = MagicMock(name="BattleSpec")
+
+        monkeypatch.setattr(
+            battle_runner, "extract_outcome",
+            lambda eng, spc: mock_outcome,
+        )
+
+        controller.configure(BattleConfig(), spec=mock_spec)
+        controller.start()
+        service.is_battle_over.return_value = True
+        controller.update()
+
+        assert controller.get_outcome() is mock_outcome

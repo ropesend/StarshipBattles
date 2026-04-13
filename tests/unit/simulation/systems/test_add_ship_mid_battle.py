@@ -78,12 +78,20 @@ class TestAddShipMidBattleInitialization:
         assert ship.combat_engine._event_bus is battle_engine.combat_events
 
     def test_recalculate_stats_called(self, battle_engine):
-        """Ship added via add_ship_mid_battle() has had recalculate_stats() called."""
+        """Ship added via add_ship_mid_battle() has recalculate_stats() called
+        at least once.
+
+        PROJ-270 Phase 9: `FleetAuraManager._apply_bonuses` now triggers
+        a second `recalculate_stats()` to propagate external stat_key
+        multipliers to component caches. `assert_called_once` →
+        `assert_called` because the invariant is "initialization recalcs
+        stats", not a specific call count.
+        """
         ship = _make_mock_ship()
 
         battle_engine.add_ship_mid_battle(ship, team_id=0)
 
-        ship.recalculate_stats.assert_called_once()
+        ship.recalculate_stats.assert_called()
 
     def test_update_derelict_status_called(self, battle_engine):
         """Ship added via add_ship_mid_battle() has had update_derelict_status() called."""

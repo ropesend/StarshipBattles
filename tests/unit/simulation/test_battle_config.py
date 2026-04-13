@@ -8,10 +8,10 @@ current trimmed surface:
   - headless / start_paused / enable_logging
   - allow_retreat / allow_reinforcements
   - return_destination / show_results
-  - map_bounds  (Phase 5.4 will later collapse this into BattleSpec.boundary)
 
 PROJ-270 deletions that this test file guards:
   - `test_scenario` field (Phase 5.1)
+  - `map_bounds` field (Phase 5.4 — replaced by BattleSpec.boundary)
   - `team_modifiers`, `global_modifiers`, `environmental_effects`,
     `per_tick_callback`, `source_fleets`, `mode` (PROJ-269 Phase 6)
 """
@@ -75,6 +75,7 @@ class TestBattleConfigDeletedFields:
         "per_tick_callback",     # PROJ-269: function arg on run_battle
         "source_fleets",         # PROJ-269: variance moved to BattleSpec
         "test_scenario",         # PROJ-270 Phase 5.1: write-only dead field
+        "map_bounds",            # PROJ-270 Task 5.4: replaced by BattleSpec.boundary
     })
 
     def test_no_forbidden_fields(self):

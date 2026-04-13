@@ -12,9 +12,14 @@ PROJ-270 Phase 5.2: `ReturnDestination` moved to
 `game.core.return_destination`. This module re-exports it only for
 backwards compatibility during the transition — new callers should
 import from `game.core.return_destination` directly.
+
+PROJ-270 Task 5.4: `map_bounds` tuple deleted. Arena boundary is
+carried on `BattleSpec.boundary` (`BoundaryRegion` ADT — origin-centered
+rect, circle, or unbounded). `BattleController.configure(config, spec)`
+consumes it directly.
 """
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from game.core.constants import SimulationConstants
 from game.core.return_destination import ReturnDestination
@@ -54,8 +59,3 @@ class BattleConfig:
     # Battle features (visual-mode toggles).
     allow_retreat: bool = False
     allow_reinforcements: bool = False
-
-    # Map bounds for retreat calculations.
-    map_bounds: Tuple[float, float, float, float] = (
-        0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE
-    )

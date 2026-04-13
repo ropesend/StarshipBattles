@@ -80,7 +80,7 @@ class BattleController:
         # Ship ID tracking (for state capture/restore)
         self._ship_id_map: Dict[str, str] = {}  # ship.id -> battle state ship_id
 
-        # Extracted managers (initialized in configure when map_bounds are known)
+        # Extracted managers (initialized in configure when boundary is known)
         self._retreat_manager: Optional[RetreatManager] = None
         self._state_manager: BattleStateManager = BattleStateManager()
 
@@ -99,12 +99,23 @@ class BattleController:
 
     # === Configuration ===
 
-    def configure(self, config: BattleConfig) -> BattleServiceResult:
+    def configure(
+        self,
+        config: BattleConfig,
+        spec: Optional["BattleSpec"] = None,
+    ) -> BattleServiceResult:
         """
         Set up a new battle with given configuration.
 
         Args:
             config: Battle configuration
+            spec: Optional BattleSpec for outcome extraction. Production
+                callers (app.py, test_lab/screen.py, test_execution_service.py)
+                pass the spec they compiled so the controller can emit a
+                `BattleOutcome` at battle end via `get_outcome()`. When
+                `spec=None` (legacy `BattleScreen.start(team0, team1)`
+                bypass and pre-spec unit tests), the controller falls
+                back to the synthesized-outcome path in consumers.
 
         Returns:
             BattleResult indicating success/failure
@@ -114,8 +125,17 @@ class BattleController:
         self._initial_state = None
         self._is_started = False
 
-        # Initialize retreat manager with map bounds from config
-        self._retreat_manager = RetreatManager(map_bounds=config.map_bounds)
+        # PROJ-270 Task 5.4: boundary comes from the spec (origin-centered
+        # `BoundaryRegion` ADT). When no spec is supplied (legacy
+        # `BattleScreen.start(team0, team1)` bypass and pre-spec unit
+        # tests), default to `UnboundedRegion` — no edge retreat, but
+        # warp retreat and the rest of the controller still work.
+        from game.simulation.combat.boundary import UnboundedRegion  # noqa: PLC0415
+        boundary = spec.boundary if (spec is not None and spec.boundary is not None) else UnboundedRegion()
+        self._retreat_manager = RetreatManager(boundary=boundary)
+
+        if spec is not None:
+            self.set_spec(spec)
 
         result = self._service.create_battle(
             seed=config.seed,
@@ -455,8 +475,12 @@ class BattleController:
             # Recreate config from state using manager
             self._config = self._state_manager.restore_config_from_state(state)
 
-            # Initialize retreat manager with config bounds
-            self._retreat_manager = RetreatManager(map_bounds=self._config.map_bounds)
+            # PROJ-270 Task 5.4: load_state has no spec in hand, and
+            # saves are disposable (CLAUDE.md) — default boundary to
+            # `UnboundedRegion`, which disables edge retreat but keeps
+            # warp retreat working on restore.
+            from game.simulation.combat.boundary import UnboundedRegion  # noqa: PLC0415
+            self._retreat_manager = RetreatManager(boundary=UnboundedRegion())
 
             # Create new battle
             self._service.create_battle(seed=state.seed, ai_factory=self._ai_factory)

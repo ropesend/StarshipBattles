@@ -250,13 +250,51 @@ class Ability:
         # IComponent protocol guarantees ability_stats and stats exist
         ability_stats = self.component.ability_stats
         class_name = self.__class__.__name__
+        local_value = None
         if class_name in ability_stats:
             if stat_key in ability_stats[class_name]:
-                return ability_stats[class_name][stat_key]
+                local_value = ability_stats[class_name][stat_key]
 
         # Fall back to global component stats
-        stats = self.component.stats
-        return stats.get(stat_key, default)
+        if local_value is None:
+            stats = self.component.stats
+            if stat_key in stats:
+                local_value = stats[stat_key]
+
+        # PROJ-270 Phase 9: compose with external stat_key bonuses from
+        # `FleetAuraManager` (fleet / environmental / storm modifiers
+        # carried on `BattleSpec.modifier_stack`). Populated on
+        # `ship.external_stats` by `FleetAuraManager._apply_bonuses`.
+        # External values stack with component-local values:
+        #   `_mult` keys → multiply (storm 0.5 * local 1.0 = 0.5)
+        #   `_add` keys → sum (external +50 + local +0 = +50)
+        # This preserves PROJ-269's "ModifierStack is single source of
+        # truth" principle — external_stats is read-only composition,
+        # never mutates component.stats.
+        ship = getattr(self.component, 'ship', None)
+        external_value = None
+        if ship is not None:
+            external_stats = getattr(ship, 'external_stats', None)
+            # Explicit dict type check — tests often use Mock ships where
+            # `external_stats` is a Mock, not a real dict. Duck-typing
+            # with `stat_key in external_stats` would raise on non-dict.
+            if isinstance(external_stats, dict) and stat_key in external_stats:
+                external_value = external_stats[stat_key]
+
+        if local_value is None and external_value is None:
+            return default
+        if external_value is None:
+            return local_value
+        if local_value is None:
+            return external_value
+        # Both present — compose.
+        if stat_key.endswith('_mult'):
+            return local_value * external_value
+        if stat_key.endswith('_add'):
+            return local_value + external_value
+        # Unknown key shape — external takes precedence (same policy as
+        # a ModifierStack override).
+        return external_value
 
     def get_primary_value(self) -> float:
         """

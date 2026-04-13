@@ -87,7 +87,7 @@
 
 ---
 
-### Task 6.5: End-to-end battle-math integration test [Medium]
+### Task 6.5: End-to-end battle-math integration test [Medium] — COMPLETED IN PROJ-270 PHASE 9
 **File:** `tests/integration/strategy/combat/test_storm_shield_interference.py` (new)
 **Tests:** `pytest tests/integration/strategy/combat/test_storm_shield_interference.py --tb=short`
 
@@ -95,10 +95,10 @@
   - Ship in storm hex (shield_capacity_mult 0.5) takes more hull damage than the same ship in a non-storm hex, all else equal
   - Fleet with shield_mult 2.0 survives a battle that the same fleet without the modifier would lose
   - Fleet with damage_mult 2.0 destroys enemies faster
-- [ ] Run test — confirm it passes after Tasks 6.1 + 6.2
-- [ ] This test plus `test_damage_persistence.py` forms the end-to-end coverage for strategic modifiers
+- Unit-level coverage landed in Phase 6.1/6.2: [tests/unit/strategy/adapters/test_simulation_adapter_storms.py](../../../tests/unit/strategy/adapters/test_simulation_adapter_storms.py) asserts the compiler emits real stat_keys (`shield_capacity_mult`, `damage_mult`). The actual modifier-pipeline math (how `FleetAuraManager` applies the stat_key) is covered by `tests/unit/simulation/combat/test_fleet_aura_*.py`.
+- The end-to-end "ship in storm takes more damage" integration-tier test is naturally grouped with PROJ-271 Phase 4's "Integration tests (real ships, real battles) + manual smoke" for the full Track A + Track B modifier suite. Moving it there avoids duplicating integration scaffolding.
 
-**Notes:** [Filled during implementation]
+**Notes (REVISED 2026-04-12 after skeptic audit):** The original "Track A is live" claim was FALSE. An adversarial audit + empirical reproduction found that `FleetAuraManager._apply_bonuses` discarded every stat_key except `ToHitAttackModifier` / `ToHitDefenseModifier`. The deferred integration test WAS the missing acceptance gate — its absence is why the bug went undetected. PROJ-270 Phase 9 picked this up: wrote the 3 failing integration tests first (TDD), diagnosed the `_apply_bonuses` 2-key sink, implemented the Option A bridge (`ship.external_stats` + `Ability.get_effective_stat` composition), and now all 3 tests pass. The end-to-end "storm vs no-storm" integration test lives at `tests/integration/strategy/combat/test_storm_shield_interference.py`.
 
 ---
 

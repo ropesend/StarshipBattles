@@ -430,8 +430,7 @@ class TestLabScreen:
             absolute_max_ticks=spec.absolute_max_ticks,
         )
         controller = BattleController(ai_factory=AIControllerFactory())
-        controller.configure(config)
-        controller.set_spec(spec)
+        controller.configure(config, spec=spec)
         engine = controller.service.get_engine()
 
         # 3. Thread spec-only fields onto the engine before start.

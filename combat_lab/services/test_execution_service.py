@@ -74,8 +74,7 @@ class TestExecutionService:
                 absolute_max_ticks=spec.absolute_max_ticks,
             )
             controller = BattleController(ai_factory=AIControllerFactory())
-            controller.configure(config)
-            controller.set_spec(spec)
+            controller.configure(config, spec=spec)
             engine = controller.service.get_engine()
 
             if spec.boundary is not None:

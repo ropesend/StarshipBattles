@@ -311,15 +311,47 @@ class FleetAuraManager:
         self._apply_bonuses(ships)
 
     def _apply_bonuses(self, ships: List[Any]) -> None:
-        """Apply cached team bonuses to ship attributes."""
+        """Apply cached team bonuses to ship attributes.
+
+        PROJ-270 Phase 9: writes ALL team-bonus stat_keys onto
+        `ship.external_stats` so the ability pipeline
+        (`Ability.get_effective_stat`) can consume them. Previously this
+        method read only the hardcoded `ToHitAttackModifier` /
+        `ToHitDefenseModifier` keys and silently discarded every other
+        stat_key in `_team_bonuses`, which meant `shield_capacity_mult`
+        / `damage_mult` / `shield_mult` compiled by the strategy spec
+        compiler never reached ship stats — the Track A battle-math
+        regression from PROJ-269 Phase 5.5 that PROJ-270 Phase 6 falsely
+        claimed to have restored.
+        """
         for ship in ships:
+            new_external_stats = {}
             if ship.is_alive:
                 team = self._team_bonuses.get(ship.team_id, {})
+                # Direct-attribute setters for fleet_attack_bonus /
+                # fleet_defense_bonus — consumed by name in collision.py:115-120.
                 ship.fleet_attack_bonus = team.get('ToHitAttackModifier', 0.0)
                 ship.fleet_defense_bonus = team.get('ToHitDefenseModifier', 0.0)
+                # Expose the FULL team-bonus dict via ship.external_stats
+                # so ability-level stat lookup picks it up.
+                new_external_stats = dict(team)
             else:
                 ship.fleet_attack_bonus = 0.0
                 ship.fleet_defense_bonus = 0.0
+
+            # PROJ-270 Phase 9: cached derived values (e.g. ShieldProjection.capacity)
+            # only re-compute on recalculate_stats(). Trigger it only when
+            # external_stats actually changed — not every tick — to avoid
+            # needless full recalculation of every ship's stat pipeline.
+            prev = getattr(ship, 'external_stats', None)
+            ship.external_stats = new_external_stats
+            if prev != new_external_stats and ship.is_alive:
+                # Guard for test-shim ships (SimpleNamespace, bare Mocks)
+                # that don't implement recalculate_stats. Real `Ship`
+                # always has it.
+                recalc = getattr(ship, 'recalculate_stats', None)
+                if callable(recalc):
+                    recalc()
 
     def get_attack_bonus(self, ship: Any) -> float:
         """Get the fleet to-hit attack bonus for a ship."""

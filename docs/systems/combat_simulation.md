@@ -326,11 +326,12 @@ that the UI consumes" acceptance criterion.
 bag for the visual-mode controller — `seed`, `end_condition`,
 `absolute_max_ticks`, `headless`, `start_paused`, `enable_logging`,
 `allow_retreat`, `allow_reinforcements`, `return_destination`,
-`show_results`, `map_bounds`. The `BattleMode` enum +
+`show_results`. The `BattleMode` enum +
 `BattleModeHandler` strategy hierarchy + `BattleConfig.mode` field +
 `team_modifiers` / `global_modifiers` / `environmental_effects` /
-`source_fleets` / `per_tick_callback` / `test_scenario` fields are all
-GONE — variance moved onto `BattleSpec`.
+`source_fleets` / `per_tick_callback` / `test_scenario` / `map_bounds`
+fields are all GONE — variance moved onto `BattleSpec` (including
+arena `boundary`, which is now a `BoundaryRegion` ADT on the spec).
 
 **`ReturnDestination`** lives at `game/core/return_destination.py`
 (PROJ-270 Phase 5.2 moved it out of the simulation layer — it names
@@ -628,7 +629,7 @@ Armor, storage tanks, crew quarters, life support, and strategy-only components 
 - Used by UI for status display, by battle engine for victory counting, by AI for behavior decisions
 - Can result from C&C loss, resource depletion, crew shortage, or component destruction
 
-`battle_engine.start()` runs an initial component update cycle so that RequiresCommandAndControl
+`BattleEngine.start()` (invoked internally by `run_battle(spec)`) runs an initial component update cycle so that RequiresCommandAndControl
 checks take effect before the first tick. This ensures ships without bridges start
 the battle with correct operational status.
 

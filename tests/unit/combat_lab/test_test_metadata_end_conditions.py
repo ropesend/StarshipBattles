@@ -3,8 +3,9 @@ Tests for TestScenario._create_end_condition().
 
 ``TestScenario._create_end_condition()`` is the single source of scenario end
 conditions — it builds a ``TickLimitCondition(max_ticks=metadata.max_ticks)``
-by default. Scenarios that need a different condition (escape, HP-based, etc.)
-construct it directly in ``setup()`` and pass it to ``battle_engine.start()``.
+by default. The returned condition is carried on ``BattleSpec.end_condition``
+(via ``scenario.to_spec()``) and consumed by ``run_battle(spec)``. Scenarios
+needing a different condition override ``_create_end_condition()``.
 """
 from combat_lab.scenarios.base import TestMetadata, TestScenario
 from game.simulation.systems.battle_end_conditions import TickLimitCondition
