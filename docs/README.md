@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-12 — PROJ-269 Phase 6 (unified `run_battle(spec)` entry; `BattleMode` / `BattleModeHandler` / `create_*_battle` factories deleted).
+> **Last verified:** 2026-04-12 — PROJ-270 in flight (closure work on top of PROJ-269). Visual-mode `BattleController` now emits `BattleOutcome`; strategy-modifier battle math (shield_capacity_mult, damage_mult) wired up; `ReturnDestination` moved to `game/core/`; `BattleState.mode` + `BattleConfig.test_scenario` deleted; `FleetAuraManager` legacy `config=` kwarg removed. See `Projects/active_projects/PROJ-270/plan.md`.
 
 ---
 

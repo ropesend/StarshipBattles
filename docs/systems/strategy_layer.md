@@ -735,21 +735,27 @@ Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped Shie
 Passed into `SimulationBattleResolver.resolve_battle(...,
 team0_modifiers=..., team1_modifiers=..., environmental_effects=...)`.
 
-PROJ-269 Phase 6 changed how these effects flow into the engine:
+PROJ-269 Phase 6 + PROJ-270 Phase 6 changed how these effects flow
+into the engine:
 
-- Pre-Phase-6: the resolver mutated ship attributes directly
+- Pre-PROJ-269: the resolver mutated ship attributes directly
   (`_apply_shield_interference` raised `ship.max_shields *= mult`,
   `_apply_strategic_modifiers` set `ship.damage_output_mult`, etc.) BEFORE
   handing ships to the engine.
-- Post-Phase-6: the resolver passes `environmental_effects` and
+- Post-PROJ-269 Phase 6: the resolver passes `environmental_effects` and
   `team_modifiers={0: team0_mods, 1: team1_mods}` into
   `build_strategy_battle_spec`, which translates each into
-  `ModifierEntry` records on the spec's `ModifierStack`. Per the Phase
-  5.5 placeholder-skip semantics, the engine RECORDS these modifiers in
-  the forensic trace (`HitRecord.modifiers_applied`) but does NOT
-  evaluate them against battle math today — real `stat_key` mapping for
-  shield_mult / damage_mult / flat_shield_bonus / shield_capacity_mult
-  is post-PROJ-269 content work.
+  `ModifierEntry` records on the spec's `ModifierStack`. PROJ-269 Phase
+  5.5 initially emitted these as `stat_key="placeholder"` — recorded
+  in the forensic trace but with NO effect on battle math (a real
+  gameplay regression).
+- **Post-PROJ-270 Phase 6 Track A:** the strategy compiler now emits
+  REAL stat_keys: storm `shield_capacity_mult` → `StatKey.SHIELD_CAPACITY_MULT`;
+  fleet `shield_mult` → `StatKey.SHIELD_CAPACITY_MULT`; fleet `damage_mult`
+  → `StatKey.DAMAGE_MULT`. `FleetAuraManager._append_external_from_entry`
+  applies them to ship stats during battle. `flat_shield_bonus` +
+  suppressor effects remain placeholders pending PROJ-271 (new additive
+  stat_key + opponent-team routing).
 
 All `find_abilities_in_scope()` calls use `require_active=True` — only abilities in the
 ACTIVE activation phase contribute to combat modifiers. Inactive or activating abilities

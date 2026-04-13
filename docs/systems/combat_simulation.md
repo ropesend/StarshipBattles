@@ -312,24 +312,31 @@ Each compiler:
 
 `run_battle` is a blocking-headless call — it runs the tick loop to
 completion. Visual battles (Battle Setup → Battle Screen, Combat Lab UI
-visual run) still use a `BattleController` wrapper for per-frame
-ticking. That wrapper is a thin lifecycle holder (configure → add_ships
-→ start → tick-from-game-loop) and no longer dispatches on mode. The
-remaining `BattleController` will be deleted when Task 6.9's UI
-visual-mode migration lands a non-blocking `run_battle` driver.
+visual run) use a `BattleController` wrapper for per-frame ticking.
+That wrapper is a thin lifecycle holder (configure → set_spec →
+add_ships → start → tick-from-game-loop → get_outcome).
 
-**`BattleConfig`** (post-PROJ-269 reshape) is a thin operational-options
+**PROJ-270 Phase 4:** `BattleController.set_spec(spec)` + `get_outcome()`
+let the controller emit a `BattleOutcome` when the battle ends —
+visual-mode UI (`BattleResultsScreen` via `extract_battle_results`)
+consumes the outcome, closing the "every battle emits a `BattleOutcome`
+that the UI consumes" acceptance criterion.
+
+**`BattleConfig`** (post-PROJ-270 reshape) is a thin operational-options
 bag for the visual-mode controller — `seed`, `end_condition`,
 `absolute_max_ticks`, `headless`, `start_paused`, `enable_logging`,
 `allow_retreat`, `allow_reinforcements`, `return_destination`,
-`show_results`, `test_scenario`, `map_bounds`. The `BattleMode` enum
-+ `BattleModeHandler` strategy hierarchy + `BattleConfig.mode` field +
+`show_results`, `map_bounds`. The `BattleMode` enum +
+`BattleModeHandler` strategy hierarchy + `BattleConfig.mode` field +
 `team_modifiers` / `global_modifiers` / `environmental_effects` /
-`source_fleets` / `per_tick_callback` fields are all GONE — variance
-moved onto `BattleSpec`.
+`source_fleets` / `per_tick_callback` / `test_scenario` fields are all
+GONE — variance moved onto `BattleSpec`.
 
-**`ReturnDestination`** (in `battle_config.py`) is retained for the
-post-battle UI flow:
+**`ReturnDestination`** lives at `game/core/return_destination.py`
+(PROJ-270 Phase 5.2 moved it out of the simulation layer — it names
+UI navigation contexts, so the simulation layer should not depend on
+its definition). `battle_config.py` re-exports the enum for backwards
+compat. Values:
 - `BATTLE_SETUP` — return to battle setup screen
 - `TEST_LAB` — return to Combat Lab
 - `STRATEGY` — return to strategy map
@@ -389,8 +396,21 @@ The `update()` method is a concise coordinator that delegates to focused helpers
 Initialized at battle start, recalculated every tick. Bonuses removed immediately when provider
 ship is destroyed. Stacking follows two-phase aggregation (same group = MAX, different groups = SUM).
 
-Per-team and global battle conditions can be injected via `BattleConfig.team_modifiers` and
-`BattleConfig.global_modifiers` for external bonuses (sensor arrays, nebula effects, etc.).
+**External modifiers** (PROJ-270 Phase 6.4a): per-team and global
+battle conditions flow into the aura manager via `spec.modifier_stack`
+only — the legacy `BattleConfig.team_modifiers` / `global_modifiers`
+kwargs were deleted. `FleetAuraManager.initialize(ships, *, modifier_stack=...)`
+translates each `ModifierEntry` into an `ExternalModifier`. Unknown /
+placeholder stat_keys emit a once-per-source WARNING so compiler
+authors see missing mappings immediately (PROJ-270 Phase 6.4).
+
+**Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A):
+Storm hex shield interference + per-team `FleetCombatModifiers.shield_mult`
+/ `damage_mult` now emit REAL stat_keys (`shield_capacity_mult` /
+`damage_mult`) from `game/strategy/combat/spec_compiler.py` — no
+longer silently skipped. `flat_shield_bonus` + suppressor effects
+remain placeholders pending PROJ-271 (new additive stat_key +
+opponent-team routing).
 
 **End conditions** (composable via `IEndCondition` protocol):
 
@@ -435,8 +455,13 @@ Event detail levels (`MINIMAL`, `NORMAL`, `DETAILED`) control granularity for pe
 **Battle Results Screen** (`game/ui/screens/battle_results_screen.py`):
 
 Full-screen IScene showing post-battle statistics. Data extracted via
-`extract_battle_results()` in `battle_results_data.py`. Two-column layout
-with per-ship HP bars, weapon accuracy tables, and team summaries.
+`extract_battle_results(outcome, return_destination)` in
+`battle_results_data.py`. **PROJ-270 Phase 4.5:** consumes a
+`BattleOutcome` (not a live `BattleEngine`). `ShipOutcome` carries
+display fields (`name`, `ship_class`, `hp`, `max_hp`,
+`current_shields`, `max_shields`) populated by `extract_outcome`
+at battle end. Two-column layout with per-ship HP bars, weapon
+accuracy tables, and team summaries.
 
 ---
 
