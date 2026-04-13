@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Partial (Tasks 4.4 outcome-emission landed; 4.5 BattleResultsScreen consumer + 4.2/4.3 spec-via-configure + 4.7 manual smoke deferred)
+**Status:** Partial (4.4 outcome-emission + 4.5 BattleResultsScreen consumer done; 4.2/4.3 spec-via-configure + 4.7 manual smoke deferred)
 **Risk:** MED-HIGH (highest-risk phase — touches live UI)
 **Depends On:** Phase 2 (outcome-consumption pattern proven), Phase 3 (spec-in pattern proven)
 **Objective:** `BattleController` becomes a spec-consuming per-frame adapter that emits a `BattleOutcome` when the battle ends. `BattleResultsScreen` reads the outcome, not live engine state. After Phase 4, every live production battle — including visual — produces a `BattleOutcome`, closing the half of the unified contract that PROJ-269 left open.
@@ -78,22 +78,18 @@
 
 ---
 
-### Task 4.5: `BattleResultsScreen` consumes `BattleOutcome` [Complex]
-**File:** `game/ui/screens/battle_results_screen.py`
-**Tests:** `pytest tests/unit/ui/screens/test_battle_results_screen.py --testmon`
+### Task 4.5: `BattleResultsScreen` consumes `BattleOutcome` [Complex] — COMPLETE
+**File:** `game/ui/screens/battle_results_data.py`, `game/ui/screens/battle_screen.py`, `game/simulation/battle_outcome.py`, `game/simulation/battle_runner.py`
 
-- [ ] Audit [game/ui/screens/battle_results_screen.py](../../../game/ui/screens/battle_results_screen.py) for every live-engine read (`engine.ships`, `battle.get_results()`, etc.)
-- [ ] Rewrite each read to consume `BattleOutcome` fields:
-  - `engine.ships` → iterate `outcome.teams[i].ships`
-  - Ship alive/dead status → `ShipOutcome.status`
-  - Damage dealt → `ShipOutcome.stats.total_damage_taken`
-  - Weapons → `ShipOutcome.weapons`
-- [ ] Write failing tests (outcome-driven) before changes
-- [ ] Update caller (`BattleScreen._on_battle_ended` or equivalent) to pass the outcome to `BattleResultsScreen`
-- [ ] Run tests — green
-- [ ] Manual smoke: complete a 2v2 battle, verify results screen renders correctly
+- [x] Extended `ShipOutcome` with display fields: `name: Optional[str]`, `ship_class: Optional[str]`, `hp: float`, `max_hp: float`, `current_shields: float`, `max_shields: float` (all default None/0 for backcompat with direct construction)
+- [x] `_build_ship_outcome` in `battle_runner.py` populates the new fields from `engine_ship` at `extract_outcome` time
+- [x] Rewrote `extract_battle_results(outcome, return_destination)` to consume `BattleOutcome` instead of `engine`. Winner derivation: derived from `team.ships_alive + ships_derelict` counts (whichever team has survivors when others are wiped)
+- [x] `BattleScreen._on_battle_ended` pulls outcome from controller via `get_outcome()` and feeds it to `extract_battle_results`. Added `_build_fallback_outcome()` helper for the legacy `BattleScreen.start(team0, team1)` test-convenience path (synthesizes minimal outcome from engine state)
+- [x] Rewrote `tests/unit/ui/test_battle_results_data.py` — 9 tests all pass, using real frozen `BattleOutcome` / `ShipOutcome` DTOs instead of mock engines
+- [x] `tests/unit/ui/test_battle_screen_simulation.py` — 130 tests all pass including the end-battle-from-ui-click routing test
+- [ ] Manual smoke: 2v2 battle → results screen render verification — deferred to Task 8.7
 
-**Notes:** [Filled during implementation]
+**Notes:** `extract_battle_results` is now fully outcome-driven; the UI layer no longer reads from `engine.ships`. Fallback path exists for test convenience but synthesizes an outcome rather than reintroducing engine dependency — the outcome DTO is the single consumer contract.
 
 ---
 

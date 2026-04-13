@@ -396,6 +396,7 @@ def _build_ship_outcome(
             weapons=weapons,
             hits_taken=hits_taken,
             stats=stats,
+            name=getattr(ship_spec, "name", None),
         )
 
     # Alive-status resolution
@@ -422,6 +423,15 @@ def _build_ship_outcome(
         weapons=weapons,
         hits_taken=hits_taken,
         stats=stats,
+        # PROJ-270 Phase 4.5: display fields read from the engine Ship so
+        # outcome consumers (BattleResultsScreen etc.) can render without
+        # a live engine reference.
+        name=getattr(engine_ship, "name", None) or getattr(ship_spec, "name", None),
+        ship_class=getattr(engine_ship, "ship_class", None),
+        hp=float(getattr(engine_ship, "hp", 0) or 0),
+        max_hp=float(getattr(engine_ship, "max_hp", 0) or 0),
+        current_shields=float(getattr(engine_ship, "current_shields", 0) or 0),
+        max_shields=float(getattr(engine_ship, "max_shields", 0) or 0),
     )
 
 

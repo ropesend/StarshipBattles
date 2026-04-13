@@ -81,7 +81,7 @@
 - [x] Modified `_append_external_from_entry` to call `_log_placeholder_once(source)` before returning on `stat_key == "placeholder"` or empty stat_key
 - [x] Verified no regression: strategy + simulation tests still green (6105 passed)
 - [x] Future compiler authors now see: `"FleetAuraManager: ModifierEntry source=... has no stat_key mapping (placeholder). Effect will NOT be applied to battle math."`
-- [ ] **Sub-task 6.4a (deferred from Phase 1.4, still deferred):** delete the legacy `if config:` branch reading `config.team_modifiers` / `config.global_modifiers`. Still dead in production but not worth the 5-test rewrite cost this session.
+- [x] **Sub-task 6.4a — COMPLETE:** Deleted the legacy `if config:` branch and the `config` parameter from `FleetAuraManager.initialize`. `_make_config` helper in [test_fleet_aura_extended.py](../../../tests/unit/simulation/combat/test_fleet_aura_extended.py) rewritten as `_make_modifier_stack` (builds real `ModifierStack` + `ModifierEntry` instead of mock config). All 5 tests migrated to `modifier_stack=stack` kwarg. `test_modifier_stack_and_legacy_config_coexist` rewrote as `test_multiple_stack_entries_compose`. 19/19 green.
 
 **Notes:** This task prevents the Phase 5.5 regression from repeating: future compiler authors who add a new modifier source without a stat_key mapping will immediately see the warning in logs.
 

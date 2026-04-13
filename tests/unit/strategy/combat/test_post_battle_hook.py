@@ -151,6 +151,50 @@ def test_surviving_ship_gets_components_updated(two_fleets):
 
 
 # ---------------------------------------------------------------------------
+# Stats cache must be invalidated after outcome applied
+# (PROJ-270 Phase 7.2 — replacement for deleted
+# `test_update_from_battle_results_triggers_speed_recalc`)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_outcome_to_fleets_invalidates_stats_cache(two_fleets):
+    """After outcome apply, the ship's `_cached_stats` is cleared so
+    downstream stat-read code (including strategic_movement / speed)
+    triggers a fresh recalculation rather than returning stale pre-battle
+    values."""
+    fleet_a, fleet_b = two_fleets
+    survivor = fleet_a.ships[0]
+
+    # Warm the cache — mimics pre-battle stat queries populating it.
+    survivor._cached_stats = {"strategic_movement": 999, "warmed": True}
+    assert survivor._cached_stats is not None
+
+    outcome = _make_outcome({
+        0: [_make_ship_outcome(
+            instance_id=survivor.instance_id,
+            status=ShipStatus.SURVIVED,
+            bridge_hp=55.0,
+        )],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    # Cache must have been invalidated so subsequent stat reads
+    # recalculate from the post-battle components.
+    assert survivor._cached_stats is None, (
+        "apply_outcome_to_fleets must invalidate ShipInstance._cached_stats "
+        "so strategic_movement / speed read post-battle component HP."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Destroyed ship → removed from fleet
 # ---------------------------------------------------------------------------
 

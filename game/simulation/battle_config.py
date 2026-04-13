@@ -55,10 +55,6 @@ class BattleConfig:
     allow_retreat: bool = False
     allow_reinforcements: bool = False
 
-    # Caller metadata — stored on config for callers to read back after battle.
-    # The simulator does NOT use this field.
-    test_scenario: Optional[Any] = None   # Combat Lab: scenario with validate()
-
     # Map bounds for retreat calculations.
     map_bounds: Tuple[float, float, float, float] = (
         0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE

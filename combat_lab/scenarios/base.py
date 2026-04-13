@@ -14,11 +14,12 @@ Architecture:
     - Provides helper methods for loading test data
     - Ensures tests are reproducible with fixed seeds
 
-Usage Example:
+Usage Example (PROJ-270 post-unified-entry contract):
     ```python
     from combat_lab.scenarios.base import TestScenario, TestMetadata
+    from combat_lab.scenarios.templates import StaticTargetScenario
 
-    class MyWeaponTest(TestScenario):
+    class MyWeaponTest(StaticTargetScenario):
         metadata = TestMetadata(
             test_id="BEAM-001",
             category="Weapons",
@@ -33,19 +34,21 @@ Usage Example:
             seed=42
         )
 
-        def setup(self, battle_engine):
-            attacker = self._load_ship('Test_Attacker_Beam.json')
-            target = self._load_ship('Test_Target.json')
+        # Template-driven: the template compiles a BattleSpec via to_spec(),
+        # run_battle drives it, then wire_ships() binds self.attacker /
+        # self.target onto the materialized ships post-start.
+        attacker_ship = "Test_Attacker_Beam.json"
+        target_ship = "Test_Target.json"
+        distance = 50
 
-            attacker.position = pygame.math.Vector2(0, 0)
-            target.position = pygame.math.Vector2(50, 0)
-
-            battle_engine.start([attacker], [target], seed=self.metadata.seed)
-
-        def validate(self, engine):
-            target = engine.teams[1][0]
-            return [check_true("Target damaged", target.hp < self.initial_hp,
-                               phase="outcome")]
+        def validate(self, outcome, telemetry=None):
+            # self.target is wired by the template; outcome.duration_ticks
+            # replaces the old engine.tick_counter read.
+            return [check_true(
+                "Target damaged",
+                self.target.hp < self.initial_hp,
+                phase="outcome",
+            )]
     ```
 """
 
@@ -169,20 +172,17 @@ class TestScenario:
                 max_ticks=500
             )
 
-            def setup(self, battle_engine):
-                attacker = self._load_ship('Test_Attacker_Beam.json')
-                target = self._load_ship('Test_Target.json')
+            # PROJ-270 contract: inherit from StaticTargetScenario (or
+            # another template) and override `attacker_ship` / `target_ship`
+            # / `distance`. The template's to_spec() + wire_ships() handle
+            # ship materialization; validate() receives outcome + telemetry.
 
-                import pygame
-                attacker.position = pygame.math.Vector2(0, 0)
-                target.position = pygame.math.Vector2(50, 0)
+            attacker_ship = 'Test_Attacker_Beam.json'
+            target_ship = 'Test_Target.json'
+            distance = 50
 
-                battle_engine.start([attacker], [target], seed=self.metadata.seed)
-                self.initial_hp = target.hp
-
-            def validate(self, engine):
-                target = engine.teams[1][0]
-                damage_dealt = self.initial_hp - target.hp
+            def validate(self, outcome, telemetry=None):
+                damage_dealt = self.initial_hp - self.target.hp
                 return [check_true("Damage dealt", damage_dealt > 0,
                                    phase="outcome")]
         ```
@@ -447,11 +447,10 @@ class TestScenario:
             BattleEndCondition configured from metadata
 
         Example:
-            # In setup():
+            # Used by template spec compilers to build the BattleSpec's
+            # end_condition field. Template-driven scenarios don't need
+            # to call this directly.
             end_condition = self._create_end_condition()
-            battle_engine.start([attacker], [target],
-                              seed=self.metadata.seed,
-                              end_condition=end_condition)
         """
         from game.simulation.systems.battle_end_conditions import (
             TickLimitCondition,

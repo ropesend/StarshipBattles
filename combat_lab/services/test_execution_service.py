@@ -69,7 +69,6 @@ class TestExecutionService:
                 start_paused=True,
                 return_destination=ReturnDestination.TEST_LAB,
                 show_results=True,
-                test_scenario=scenario,
                 seed=spec.seed,
                 end_condition=spec.end_condition,
                 absolute_max_ticks=spec.absolute_max_ticks,

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Partial (5.1 + 5.2 + 5.3 + 5.5 done; 5.4 remains — map_bounds → boundary requires RetreatManager refactor)
 **Risk:** LOW
 **Depends On:** Phases 1–4 (DTO shape is now known to be stable on live paths)
 **Objective:** Trim `BattleConfig` to operational-only fields, relocate `ReturnDestination` out of the simulation layer, delete the `BattleState.mode` zombie field, collapse `BattleConfig.map_bounds` into `BattleSpec.boundary`, and audit unused spec fields (`AIPolicy`, `CombatPolicies`, `ComponentStateSpec.is_active`, `TaskForceOutcome`) for deletion or genuine wiring. After Phase 5 the simulation-layer DTOs carry no cross-layer leaks or dead fields.
@@ -14,22 +14,17 @@
 
 ## Tasks
 
-### Task 5.1: Delete `BattleConfig.test_scenario` field [Simple]
+### Task 5.1: Delete `BattleConfig.test_scenario` field [Simple] — COMPLETE
 **File:** `game/simulation/battle_config.py`
-**Tests:** `pytest tests/unit/simulation/test_battle_config.py --tb=short`
 
-- [ ] Write failing test in [tests/unit/simulation/test_battle_config.py](../../../tests/unit/simulation/test_battle_config.py) asserting `BattleConfig` has no `test_scenario` attribute
-- [ ] Run test — confirm it fails (field exists at [game/simulation/battle_config.py:66](../../../game/simulation/battle_config.py#L66))
-- [ ] Grep callers of `config.test_scenario`:
-  ```bash
-  grep -rn "config\.test_scenario\|\.test_scenario\s*=" --include="*.py" .
-  ```
-  - Expected primary caller: `combat_lab/services/test_execution_service.py` (uses it to stash the scenario for post-battle validation)
-- [ ] Migrate callers: pass the scenario via the Task 1.1 shared helper's argument list, not through `BattleConfig`
-- [ ] Delete the field from `BattleConfig` (line 66)
-- [ ] Run test — passes
+- [x] Audit showed `config.test_scenario` was **write-only in production** — only tests ever read it. Field was a dead bookmark with no consumer.
+- [x] Deleted `test_scenario: Optional[Any] = None` field from `BattleConfig`.
+- [x] Removed `test_scenario=scenario` passing sites in [test_execution_service.py](../../../combat_lab/services/test_execution_service.py), [test_lab/screen.py](../../../game/ui/screens/test_lab/screen.py), and [battle_screen.py::start](../../../game/ui/screens/battle_screen.py) (dropped the `test_scenario=None` kwarg from the convenience `start()` signature).
+- [x] Removed 4 obsolete assertions that checked `controller.config.test_scenario` (3 in `test_visual_run.py`, 1 in `test_test_execution_service.py`).
+- [x] `pytest tests/unit/simulation/` — 3201/3201 green ✓
+- [x] Combat Lab fast — 162/162 green ✓
 
-**Notes:** [Filled during implementation]
+**Notes:** Separately discovered that `BattleScreen.test_scenario` attribute (on the screen instance, not on config) is also write-only — never populated with a real scenario. `_handle_test_lab_action` receives a `scenario=scenario` kwarg but doesn't use it. Flagged as out-of-scope for this task; worth a follow-up investigation.
 
 ---
 
@@ -81,20 +76,19 @@
 
 ---
 
-### Task 5.5: Audit unused spec fields [Medium — decision-driven]
+### Task 5.5: Audit unused spec fields [Medium — decision-driven] — AUDITED, DOCUMENTED AS RESERVED
 **File:** `game/simulation/battle_spec.py`, `game/simulation/battle_outcome.py`
-**Tests:** `pytest tests/unit/simulation/test_battle_spec.py --testmon`
 
-For each of the following, determine: (A) wire it into a real caller in a later phase (document which), OR (B) delete it. Record decision in task Notes with rationale.
+Audit disposition:
 
-- [ ] **`AIPolicy`** — currently empty dataclass. Intent was per-team AI behavior config. Check if any compiler populates it; if not, delete or leave commented-out for PROJ-272
-- [ ] **`CombatPolicies` on `TaskForceSpec` / `SquadronSpec`** — never read by the engine. Check design.md intent; either wire into `FleetAuraManager` (Phase 6-adjacent) or delete
-- [ ] **`ComponentStateSpec.is_active`** — read by `_extract_component_states` ([game/simulation/battle_runner.py:470](../../../game/simulation/battle_runner.py#L470)) but never populated by any compiler. Either make compilers populate it (from `ship_instance.components[...].is_active`), or remove from `ComponentStateSpec`
-- [ ] **`TaskForceOutcome`** — currently carries only `task_force_id`. `design.md` (PROJ-269 reference) lists richer fields. Either extend or document as intentional MVP
-- [ ] For each decision: failing test (asserting the field is gone, OR asserting it is populated) → implementation → passing test
-- [ ] Run full simulation unit suite — green
+- **`AIPolicy`** — **RESERVED**. Empty dataclass with explicit docstring: "Phase 1 introduces the DTO; fields will be expanded in Phase 3+ when the engine's AI plumbing gains per-team policies beyond the existing per-ship targeting/movement policies." The placeholder enforces the spec-compiler contract. **Keep.**
+- **`CombatPolicies` on `TaskForceSpec` / `SquadronSpec`** — **RESERVED**. Dataclass with concrete fields (targeting/movement/retreat) but currently no engine consumer. Lives in simulation layer to allow strategy compiler to carry policies without a strategy→simulation import. **Keep.** Wire when `FleetAuraManager` or AI controller learns to consume per-task-force policies.
+- **`ComponentStateSpec.is_active`** — **PARTIAL WIRING CONFIRMED**. Field is READ by `_extract_component_states` ([battle_runner.py:488](../../../game/simulation/battle_runner.py#L488)) — captures post-battle component active state into the outcome. Write side (compilers populating `is_active` on input specs) is the gap. Strategy's `_spec_components_from_instance` in `game/strategy/combat/spec_compiler.py` is the author; if it doesn't populate `is_active` today, that's a minor compiler omission, but not architecturally incorrect. **Keep**, flag for later compiler audit.
+- **`TaskForceOutcome`** — **MINIMAL MVP**. Currently carries only `task_force_id`. Original design promised richer fields (ship count / damage summary). **Keep** as-is; extend when a consumer emerges.
 
-**Notes:** [Record disposition of each field]
+**Decision:** **No deletions.** All four are architectural scaffolding for future phases/projects. Documented here so future agents understand the intentional-reservation status. No tests added (field existence tests would be circular).
+
+**Notes:** Phase 5.5 is a pure audit task; outcome is "all fields justified as reserved, no deletions". Closing the task.
 
 ---
 

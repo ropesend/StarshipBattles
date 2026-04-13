@@ -647,10 +647,3 @@ class BattleController:
         self._ship_id_map.clear()
         if self._retreat_manager:
             self._retreat_manager.reset()
-
-
-# PROJ-132: Factory functions (create_manual_battle, create_test_battle, etc.)
-# have been moved to game/ui/services/battle_factories.py to maintain proper
-# layer dependencies. The factory functions require importing from the AI layer,
-# which is not allowed in the simulation layer.
-

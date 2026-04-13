@@ -364,13 +364,20 @@ spec.post_battle_hook(outcome)  (optional)
        │  and prunes destroyed/retreated ships from fleets.
 ```
 
-**Visual mode (Combat Lab UI, Battle Setup screen):** still uses
+**Visual mode (Combat Lab UI, Battle Setup screen):** uses
 `BattleController` as a thin per-frame tick-loop driver around
 `BattleEngine`. Construction goes through the spec compiler +
 `materialize_spec_ships(spec, ship_builder)` + `controller.add_ships`
 + `controller.start()`. PROJ-269 Phase 6 deleted the `BattleMode` /
 `BattleModeHandler` / `create_*_battle` factory machinery; the
 controller is now config-flag-driven only.
+
+**PROJ-270 Phase 4:** `BattleController` now also accepts the compiled
+spec via `controller.set_spec(spec)` and — once `is_battle_over()`
+first returns True — calls `extract_outcome(engine, spec)` to produce a
+`BattleOutcome` via `controller.get_outcome()`. Visual-mode battles
+therefore honour the same "every battle emits a `BattleOutcome`"
+contract that headless callers already satisfied.
 
 ### Strategy Turn Flow
 

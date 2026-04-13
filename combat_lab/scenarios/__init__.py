@@ -10,11 +10,11 @@ discovered dynamically by ``combat_lab.registry.TestRegistry``. They do not
 need to be re-exported here — author new scenario classes by subclassing
 ``TestScenario`` (or a template) and defining a ``metadata`` attribute.
 
-Usage:
-    from combat_lab.scenarios import TestScenario, TestMetadata
+Usage (PROJ-270 post-unified-entry contract):
+    from combat_lab.scenarios import StaticTargetScenario, TestMetadata
     from combat_lab.scenarios.validation import check_true
 
-    class MyTest(TestScenario):
+    class MyTest(StaticTargetScenario):
         metadata = TestMetadata(
             test_id="TEST-001",
             category="MyCategory",
@@ -27,10 +27,11 @@ Usage:
             pass_criteria="How we verify success",
         )
 
-        def setup(self, battle_engine):
-            ...
+        attacker_ship = 'Test_Attacker.json'
+        target_ship = 'Test_Target.json'
+        distance = 100
 
-        def validate(self, engine):
+        def validate(self, outcome, telemetry=None):
             return [check_true("Something happened", True, phase="outcome")]
 """
 

@@ -224,7 +224,7 @@ class BattleScreen:
     def ai_controllers(self):
         return self.engine.ai_controllers
 
-    def start(self, team0_ships, team1_ships, seed=None, headless=False, start_paused=False, test_mode=False, test_scenario=None):
+    def start(self, team0_ships, team1_ships, seed=None, headless=False, start_paused=False, test_mode=False):
         """Start a battle between two teams.
 
         Convenience method that creates a BattleController internally and
@@ -237,8 +237,7 @@ class BattleScreen:
             seed: Random seed for deterministic battles
             headless: Run without rendering
             start_paused: Start with simulation paused
-            test_mode: Running from Combat Lab
-            test_scenario: The TestScenario instance (if running from Combat Lab)
+            test_mode: Running from Combat Lab (selects post-battle nav target)
         """
         from game.simulation.battle_config import BattleConfig, ReturnDestination
 
@@ -249,7 +248,6 @@ class BattleScreen:
             headless=headless,
             start_paused=start_paused,
             return_destination=dest,
-            test_scenario=test_scenario,
         )
 
         # PROJ-269 Phase 6: replaces the deleted
@@ -448,6 +446,11 @@ class BattleScreen:
         """Unified exit path for all battle modes.
 
         Routes to results screen or directly to destination based on config.
+        PROJ-270 Phase 4.5: pulls `BattleOutcome` from the controller
+        (populated by `BattleController._extract_outcome_on_battle_end`)
+        and feeds it to `extract_battle_results`. If the controller wasn't
+        handed a spec (e.g. legacy `BattleScreen.start(team0, team1)`
+        convenience path), falls back to the engine for an ad-hoc outcome.
         """
         from game.ui.screens.battle_results_data import extract_battle_results
 
@@ -456,7 +459,8 @@ class BattleScreen:
         show = config.show_results if config else True
 
         if show:
-            results = extract_battle_results(self.engine, return_destination=dest)
+            outcome = self._get_or_build_outcome()
+            results = extract_battle_results(outcome, return_destination=dest)
             self._battle_service.reset()
             if self.scene_callback:
                 self.scene_callback("show_results",
@@ -466,6 +470,105 @@ class BattleScreen:
             self._battle_service.reset()
             if self.scene_callback:
                 self.scene_callback("return_to_destination", destination=dest)
+
+    def _get_or_build_outcome(self):
+        """Return the controller's outcome or synthesize a minimal one.
+
+        PROJ-270 Phase 4.5 fallback: if the controller was configured
+        without a spec (legacy `BattleScreen.start(team0, team1)` path),
+        there's no outcome to pull. Build a minimal `BattleOutcome` from
+        the live engine so the results screen still renders.
+        """
+        if self._controller is not None:
+            stored = self._controller.get_outcome()
+            if stored is not None:
+                return stored
+        return self._build_fallback_outcome()
+
+    def _build_fallback_outcome(self):
+        """Build a minimal `BattleOutcome` from live engine state.
+
+        Used when the controller has no spec — we can't call
+        `extract_outcome(engine, spec)` without a spec, so we build
+        the outcome by hand with the shape that `extract_battle_results`
+        needs.
+        """
+        from game.simulation.battle_outcome import (
+            BattleOutcome,
+            EndReason,
+            ShipOutcome,
+            ShipStats,
+            ShipStatus,
+            TeamOutcome,
+            WeaponSummary,
+        )
+        from game.simulation.combat.telemetry import TelemetryLevel
+        from game.core.math import Vector2
+
+        engine = self.engine
+        ships_by_team: dict = {}
+        for ship in engine.ships:
+            ships_by_team.setdefault(ship.team_id, []).append(ship)
+
+        zero_stats = ShipStats(
+            total_damage_taken=0.0, peak_speed=0.0,
+            ticks_derelict=0, ticks_alive=0,
+        )
+
+        def _ship_to_outcome(ship) -> ShipOutcome:
+            if not ship.is_alive:
+                status = ShipStatus.DESTROYED
+            elif ship.is_derelict:
+                status = ShipStatus.DERELICT
+            else:
+                status = ShipStatus.SURVIVED
+
+            weapons = []
+            if hasattr(ship, "get_all_components"):
+                for comp in ship.get_all_components():
+                    if getattr(comp, "type", None) == "Weapon":
+                        weapons.append(WeaponSummary(
+                            component_id=comp.id,
+                            component_name=comp.name,
+                            shots_fired=getattr(comp, "shots_fired", 0),
+                            shots_hit=getattr(comp, "shots_hit", 0),
+                        ))
+
+            return ShipOutcome(
+                instance_id=getattr(ship, "instance_id", "") or ship.name,
+                status=status,
+                final_position=Vector2(ship.x, ship.y),
+                final_angle=ship.angle,
+                final_velocity=Vector2(ship.velocity),
+                components=(),
+                weapons=tuple(weapons),
+                hits_taken=(),
+                stats=zero_stats,
+                name=ship.name,
+                ship_class=getattr(ship, "ship_class", None),
+                hp=float(getattr(ship, "hp", 0) or 0),
+                max_hp=float(getattr(ship, "max_hp", 0) or 0),
+                current_shields=float(getattr(ship, "current_shields", 0) or 0),
+                max_shields=float(getattr(ship, "max_shields", 0) or 0),
+            )
+
+        team_outcomes = tuple(
+            TeamOutcome(
+                team_id=team_id,
+                name=f"Team {team_id}",
+                fleet_hierarchy=(),
+                ships=tuple(_ship_to_outcome(s) for s in ships),
+            )
+            for team_id, ships in sorted(ships_by_team.items())
+        )
+
+        return BattleOutcome(
+            end_reason=EndReason.TEAM_ELIMINATED,
+            duration_ticks=engine.tick_counter,
+            seed=0,
+            teams=team_outcomes,
+            telemetry_level=TelemetryLevel.NORMAL,
+        )
 
     def _cycle_focus_ship(self, direction):
         """Cycle camera focus through alive ships."""

@@ -113,21 +113,28 @@ def test_placeholder_effects_are_silently_ignored():
 # ---------------------------------------------------------------------------
 
 
-def test_modifier_stack_and_legacy_config_coexist():
-    """When both a BattleConfig-shaped config and a ModifierStack are
-    supplied, both contribute to the aura totals."""
+def test_multiple_stack_entries_compose():
+    """PROJ-270 Phase 6.4a: legacy `config=` branch is gone; multiple
+    `ModifierEntry` entries on the stack (per_team + global_) compose
+    additively into the aura totals.
+
+    (Pre-PROJ-270, this test exercised both a legacy BattleConfig-style
+    config AND a ModifierStack coexisting. The legacy branch was dead
+    in production after PROJ-269 Phase 6 and was deleted by PROJ-270.)
+    """
     ship = _ship(0)
-    config = SimpleNamespace(
-        team_modifiers={0: [{"ability": "ToHitAttackModifier", "value": 0.1, "source": "legacy"}]},
-        global_modifiers=[],
-    )
     stack = ModifierStack(
-        per_team={0: (_entry("empire:buff", "ToHitAttackModifier", 0.2),)},
+        per_team={
+            0: (
+                _entry("legacy:buff", "ToHitAttackModifier", 0.1),
+                _entry("empire:buff", "ToHitAttackModifier", 0.2),
+            ),
+        },
         global_=(),
     )
     mgr = FleetAuraManager()
-    mgr.initialize([ship], config=config, modifier_stack=stack)
-    # 0.1 (legacy) + 0.2 (stack) = 0.3 — both layers compose.
+    mgr.initialize([ship], modifier_stack=stack)
+    # 0.1 + 0.2 = 0.3 — entries compose additively in external aura.
     assert ship.fleet_attack_bonus == pytest.approx(0.3)
 
 

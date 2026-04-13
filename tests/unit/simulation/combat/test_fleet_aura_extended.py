@@ -53,12 +53,45 @@ def _make_ship(team_id=0, alive=True, derelict=False, abilities=None):
     return ship
 
 
-def _make_config(team_modifiers=None, global_modifiers=None):
-    """Create a mock BattleConfig with team and global modifiers."""
-    config = MagicMock()
-    config.team_modifiers = team_modifiers or {}
-    config.global_modifiers = global_modifiers or []
-    return config
+def _make_modifier_stack(team_modifiers=None, global_modifiers=None):
+    """Build a `ModifierStack` equivalent to the legacy BattleConfig shape.
+
+    PROJ-270 Phase 6.4a replacement for `_make_config`. The legacy branch
+    in `FleetAuraManager.initialize(config=...)` read dict-of-dicts from
+    a BattleConfig; post-PROJ-270 external modifiers flow through
+    `ModifierStack(per_team=..., global_=...)` only.
+    """
+    from game.simulation.combat.modifier_stack import (
+        ModifierEntry,
+        ModifierStack,
+    )
+    from game.simulation.components.modifier_effects import ModifierEffect
+
+    def _entry_from_dict(d, source_prefix):
+        effect = ModifierEffect(
+            stat_key=d.get("ability", ""),
+            value=d.get("value", 0.0),
+            operation="add",
+            target_ability=None,
+            source_modifier_id=d.get("ability", ""),
+            source_modifier_name=d.get("source", "Unknown"),
+            formula_str="",
+            param_value=d.get("value", 0.0),
+        )
+        return ModifierEntry(
+            source=d.get("source", source_prefix),
+            stack_group=None,
+            effect=effect,
+        )
+
+    per_team = {
+        team_id: tuple(_entry_from_dict(m, f"team{team_id}") for m in mods)
+        for team_id, mods in (team_modifiers or {}).items()
+    }
+    global_ = tuple(
+        _entry_from_dict(m, "global") for m in (global_modifiers or [])
+    )
+    return ModifierStack(per_team=per_team, global_=global_)
 
 
 # =============================================================================
@@ -138,10 +171,10 @@ class TestGetActiveBonuses:
         """External modifiers (from config) are included."""
         manager = FleetAuraManager()
         ship = _make_ship(team_id=0)
-        config = _make_config(
+        stack = _make_modifier_stack(
             team_modifiers={0: [{'ability': 'ToHitAttackModifier', 'value': 2.0, 'source': 'Terrain'}]},
         )
-        manager.initialize([ship], config=config)
+        manager.initialize([ship], modifier_stack=stack)
 
         bonuses = manager.get_active_bonuses(team_id=0)
 
@@ -155,10 +188,10 @@ class TestGetActiveBonuses:
         manager = FleetAuraManager()
         ship_t0 = _make_ship(team_id=0)
         ship_t1 = _make_ship(team_id=1)
-        config = _make_config(
+        stack = _make_modifier_stack(
             global_modifiers=[{'ability': 'ToHitDefenseModifier', 'value': 1.0, 'source': 'Storm'}],
         )
-        manager.initialize([ship_t0, ship_t1], config=config)
+        manager.initialize([ship_t0, ship_t1], modifier_stack=stack)
 
         bonuses_t0 = manager.get_active_bonuses(team_id=0)
         bonuses_t1 = manager.get_active_bonuses(team_id=1)
@@ -190,10 +223,10 @@ class TestExternalModifiers:
         """Team-specific modifiers are loaded and applied."""
         manager = FleetAuraManager()
         ship = _make_ship(team_id=0)
-        config = _make_config(
+        stack = _make_modifier_stack(
             team_modifiers={0: [{'ability': 'ToHitAttackModifier', 'value': 3.0, 'source': 'Terrain'}]},
         )
-        manager.initialize([ship], config=config)
+        manager.initialize([ship], modifier_stack=stack)
 
         assert ship.fleet_attack_bonus == 3.0
 
@@ -202,10 +235,10 @@ class TestExternalModifiers:
         manager = FleetAuraManager()
         ship_t0 = _make_ship(team_id=0)
         ship_t1 = _make_ship(team_id=1)
-        config = _make_config(
+        stack = _make_modifier_stack(
             global_modifiers=[{'ability': 'ToHitDefenseModifier', 'value': 2.0, 'source': 'Weather'}],
         )
-        manager.initialize([ship_t0, ship_t1], config=config)
+        manager.initialize([ship_t0, ship_t1], modifier_stack=stack)
 
         assert ship_t0.fleet_defense_bonus == 2.0
         assert ship_t1.fleet_defense_bonus == 2.0
@@ -214,7 +247,7 @@ class TestExternalModifiers:
         """No config means no external modifiers."""
         manager = FleetAuraManager()
         ship = _make_ship(team_id=0)
-        manager.initialize([ship], config=None)
+        manager.initialize([ship])
 
         assert len(manager._external) == 0
 

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from game.core.math import Vector2
 from game.simulation.battle_spec import ComponentStateSpec
@@ -126,6 +126,12 @@ class ShipOutcome:
     `instance_id` matches the originating `ShipSpec.instance_id`.
     `components` reports final per-component HP — fed back into
     `ShipInstance.components` by the strategy post-battle hook.
+
+    PROJ-270 Phase 4.5: added `name` / `ship_class` / `hp` / `max_hp` /
+    `current_shields` / `max_shields` display fields so `BattleResultsScreen`
+    and other outcome consumers can render results without a live engine
+    reference. All default to None/0 for backwards compat with direct
+    construction (e.g. tests); `extract_outcome` populates real values.
     """
 
     instance_id: str
@@ -137,6 +143,13 @@ class ShipOutcome:
     weapons: Tuple[WeaponSummary, ...]
     hits_taken: Tuple[HitRecord, ...]
     stats: ShipStats
+    # PROJ-270 Phase 4.5: display fields (None/0 means "not populated").
+    name: Optional[str] = None
+    ship_class: Optional[str] = None
+    hp: float = 0.0
+    max_hp: float = 0.0
+    current_shields: float = 0.0
+    max_shields: float = 0.0
 
 
 @dataclass(frozen=True)

@@ -145,7 +145,6 @@ class TestVisualRunFlow:
 
         controller = mock_game.battle_scene.start_battle.call_args[0][0]
         assert controller.config.return_destination == ReturnDestination.TEST_LAB
-        assert controller.config.test_scenario is not None
 
     def test_visual_run_controller_starts_paused(self, mock_game, mock_registry, mock_controller):
         """Visual run should pass a controller configured to start paused."""
@@ -196,7 +195,6 @@ class TestVisualRunFlow:
 
         # Verify scenario reference is stored in the controller config
         controller = mock_game.battle_scene.start_battle.call_args[0][0]
-        assert controller.config.test_scenario == mock_scenario
 
     def test_visual_run_camera_handled_by_start_battle(self, mock_game, mock_registry, mock_controller):
         """Visual run delegates camera fitting to start_battle (no direct camera call)."""
@@ -313,7 +311,6 @@ class TestSceneTransitionCallbacks:
         controller = mock_game.battle_scene.start_battle.call_args[0][0]
         assert controller.config.start_paused is True
         assert controller.config.return_destination == ReturnDestination.TEST_LAB
-        assert controller.config.test_scenario == scenario
 
     def test_switch_to_battle_does_not_set_game_state_directly(self, mock_game):
         """_switch_to_battle must NOT set game.state directly (app.py does that)."""
@@ -376,6 +373,10 @@ class TestEndBattleInTestMode:
                 return_destination=ReturnDestination.TEST_LAB,
                 show_results=True,
             )
+            # PROJ-270 Phase 4.5: controller has no outcome → BattleScreen
+            # falls back to building one from the live engine. Mock
+            # get_outcome explicitly returns None so the fallback fires.
+            mock_controller.get_outcome.return_value = None
             screen._controller = mock_controller
             screen.ui = Mock()
             screen.camera = Mock()

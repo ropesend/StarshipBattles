@@ -55,7 +55,6 @@ class TestRunVisual:
         mock_battle_screen.start_battle.assert_called_once()
         controller = mock_battle_screen.start_battle.call_args[0][0]
         assert controller.config.start_paused is True
-        assert controller.config.test_scenario is mock_test_scenario
 
     def test_run_visual_loads_data(
         self,

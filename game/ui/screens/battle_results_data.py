@@ -1,11 +1,16 @@
 """
 Battle Results Data Extraction
 
-Pure data extraction from BattleEngine state into frozen dataclasses
+Pure data extraction from a `BattleOutcome` DTO into frozen dataclasses
 for the results screen. No pygame dependency — fully testable.
+
+PROJ-270 Phase 4.5: rewritten to consume `BattleOutcome` (post-PROJ-269
+unified entry) instead of reading from a live `BattleEngine`. This
+closes the visual-mode half of the "every battle produces a
+BattleOutcome that the UI consumes" acceptance criterion.
 """
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, List
 
 from game.core.config import PhysicsConfig
 
@@ -62,82 +67,95 @@ class BattleResults:
 
 
 def extract_battle_results(
-    engine: Any,
-    return_destination: str = "battle_setup"
+    outcome: Any,
+    return_destination: str = "battle_setup",
 ) -> BattleResults:
-    """Extract battle results from engine state.
+    """Extract battle results from a `BattleOutcome`.
+
+    PROJ-270 Phase 4.5: function signature changed from
+    `(engine, return_destination)` → `(outcome, return_destination)`.
+    The outcome is the simulation-layer DTO produced by
+    `run_battle(spec)` / `BattleController.get_outcome()`.
 
     Args:
-        engine: BattleEngine instance with completed battle
-        return_destination: Where to navigate after results screen
+        outcome: `BattleOutcome` instance with completed battle data.
+        return_destination: Where to navigate after results screen.
 
     Returns:
-        BattleResults with all ship and team statistics
+        BattleResults with all ship and team statistics.
     """
-    ship_results = []
-    for ship in engine.ships:
-        weapons = _extract_weapons(ship)
-        total_fired = sum(w.shots_fired for w in weapons)
-        total_hit = sum(w.shots_hit for w in weapons)
+    from game.simulation.battle_outcome import ShipStatus
 
-        ship_results.append(ShipResult(
-            name=ship.name,
-            team_id=ship.team_id,
-            is_alive=ship.is_alive,
-            is_derelict=ship.is_derelict,
-            hp=ship.hp,
-            max_hp=ship.max_hp,
-            hp_percent=(ship.hp / ship.max_hp * 100) if ship.max_hp > 0 else 0.0,
-            current_shields=ship.current_shields,
-            max_shields=ship.max_shields,
-            weapons=weapons,
-            total_shots_fired=total_fired,
-            total_shots_hit=total_hit,
-            overall_accuracy=(total_hit / total_fired) if total_fired > 0 else 0.0,
-        ))
+    ship_results: List[ShipResult] = []
+    team_summaries: List[TeamSummary] = []
 
-    # Build team summaries
-    team_ids = sorted({s.team_id for s in ship_results})
-    teams = [_build_team_summary(tid, ship_results) for tid in team_ids]
+    for team in outcome.teams:
+        team_ship_results: List[ShipResult] = []
+        for ship_outcome in team.ships:
+            weapons = [
+                WeaponStats(
+                    name=w.component_name,
+                    shots_fired=w.shots_fired,
+                    shots_hit=w.shots_hit,
+                    accuracy=(w.shots_hit / w.shots_fired) if w.shots_fired > 0 else 0.0,
+                )
+                for w in ship_outcome.weapons
+            ]
+            total_fired = sum(w.shots_fired for w in weapons)
+            total_hit = sum(w.shots_hit for w in weapons)
+
+            is_alive = ship_outcome.status in (
+                ShipStatus.SURVIVED,
+                ShipStatus.DERELICT,
+            )
+            is_derelict = ship_outcome.status == ShipStatus.DERELICT
+
+            result = ShipResult(
+                name=ship_outcome.name or ship_outcome.instance_id,
+                team_id=team.team_id,
+                is_alive=is_alive,
+                is_derelict=is_derelict,
+                hp=ship_outcome.hp,
+                max_hp=ship_outcome.max_hp,
+                hp_percent=(
+                    ship_outcome.hp / ship_outcome.max_hp * 100
+                    if ship_outcome.max_hp > 0 else 0.0
+                ),
+                current_shields=ship_outcome.current_shields,
+                max_shields=ship_outcome.max_shields,
+                weapons=weapons,
+                total_shots_fired=total_fired,
+                total_shots_hit=total_hit,
+                overall_accuracy=(total_hit / total_fired) if total_fired > 0 else 0.0,
+            )
+            ship_results.append(result)
+            team_ship_results.append(result)
+
+        team_summaries.append(_build_team_summary(team.team_id, team_ship_results))
+
+    winner = _derive_winner(team_summaries)
 
     return BattleResults(
-        winner=engine.get_winner(),
-        tick_count=engine.tick_counter,
-        duration_seconds=engine.tick_counter * PhysicsConfig.TICK_RATE,
-        teams=teams,
+        winner=winner,
+        tick_count=outcome.duration_ticks,
+        duration_seconds=outcome.duration_ticks * PhysicsConfig.TICK_RATE,
+        teams=team_summaries,
         ships=ship_results,
         return_destination=return_destination,
     )
 
 
-def _extract_weapons(ship: Any) -> List[WeaponStats]:
-    """Extract weapon statistics from a ship's components."""
-    weapons = []
-    for comp in ship.get_all_components():
-        if getattr(comp, 'type', None) == "Weapon":
-            fired = getattr(comp, 'shots_fired', 0)
-            hit = getattr(comp, 'shots_hit', 0)
-            weapons.append(WeaponStats(
-                name=comp.name,
-                shots_fired=fired,
-                shots_hit=hit,
-                accuracy=(hit / fired) if fired > 0 else 0.0,
-            ))
-    return weapons
-
-
 def _build_team_summary(team_id: int, ship_results: List[ShipResult]) -> TeamSummary:
     """Build aggregate team statistics."""
-    team_ships = [s for s in ship_results if s.team_id == team_id]
-    alive = sum(1 for s in team_ships if s.is_alive and not s.is_derelict)
-    derelict = sum(1 for s in team_ships if s.is_alive and s.is_derelict)
-    destroyed = sum(1 for s in team_ships if not s.is_alive)
-    total_fired = sum(s.total_shots_fired for s in team_ships)
-    total_hit = sum(s.total_shots_hit for s in team_ships)
+    alive = sum(1 for s in ship_results if s.is_alive and not s.is_derelict)
+    derelict = sum(1 for s in ship_results if s.is_alive and s.is_derelict)
+    destroyed = sum(1 for s in ship_results if not s.is_alive)
+    total_fired = sum(s.total_shots_fired for s in ship_results)
+    total_hit = sum(s.total_shots_hit for s in ship_results)
 
     return TeamSummary(
         team_id=team_id,
-        total_ships=len(team_ships),
+        total_ships=len(ship_results),
         ships_alive=alive,
         ships_derelict=derelict,
         ships_destroyed=destroyed,
@@ -145,3 +163,19 @@ def _build_team_summary(team_id: int, ship_results: List[ShipResult]) -> TeamSum
         total_shots_hit=total_hit,
         overall_accuracy=(total_hit / total_fired) if total_fired > 0 else 0.0,
     )
+
+
+def _derive_winner(team_summaries: List[TeamSummary]) -> int:
+    """Derive winner from team summaries.
+
+    A team 'wins' if it has survivors AND all other teams are wiped.
+    Returns -1 for a draw (no survivors anywhere, or multiple teams
+    with survivors — which shouldn't happen in a concluded battle).
+    """
+    teams_with_survivors = [
+        t for t in team_summaries
+        if t.ships_alive > 0 or t.ships_derelict > 0
+    ]
+    if len(teams_with_survivors) == 1:
+        return teams_with_survivors[0].team_id
+    return -1

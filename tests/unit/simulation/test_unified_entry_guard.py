@@ -197,6 +197,42 @@ class TestNoBattleControllerRunHeadless:
         )
 
 
+class TestExtractBattleResultsConsumesOutcome:
+    """`extract_battle_results` must take `BattleOutcome` — PROJ-270 Phase 4.5.
+
+    Guards against a regression where `extract_battle_results` is
+    reverted to take `engine` (the pre-PROJ-270 signature).
+    """
+
+    def test_extract_battle_results_signature_takes_outcome(self):
+        import inspect
+        from game.ui.screens.battle_results_data import extract_battle_results
+        sig = inspect.signature(extract_battle_results)
+        params = list(sig.parameters.keys())
+        assert params[0] == "outcome", (
+            "extract_battle_results first parameter must be `outcome` "
+            "(a BattleOutcome), not `engine`. Reverting to the engine "
+            "signature re-introduces the UI→engine coupling PROJ-270 "
+            "Phase 4.5 eliminated."
+        )
+
+    def test_extract_battle_results_module_does_not_import_engine(self):
+        """The module file must not IMPORT BattleEngine (docstring mentions fine)."""
+        path = REPO_ROOT / "game/ui/screens/battle_results_data.py"
+        text = path.read_text(encoding="utf-8")
+        import_pattern = re.compile(
+            r"^\s*(?:from\s+\S*battle_engine\S*\s+import|"
+            r"import\s+\S*battle_engine\S*)",
+            re.MULTILINE,
+        )
+        hits = import_pattern.findall(text)
+        assert not hits, (
+            "battle_results_data.py imports battle_engine — PROJ-270 "
+            "Phase 4.5 eliminated this dependency. Results extraction "
+            "must go through BattleOutcome only."
+        )
+
+
 class TestBattleControllerEmitsOutcome:
     """`BattleController` must expose `get_outcome()` — PROJ-270 Phase 4.4."""
 

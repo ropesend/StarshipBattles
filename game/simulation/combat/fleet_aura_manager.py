@@ -64,18 +64,22 @@ class FleetAuraManager:
     def initialize(
         self,
         ships: List[Any],
-        config: Any = None,
         *,
         modifier_stack: Any = None,
     ) -> None:
         """Scan ships for fleet-scope abilities and load external modifiers.
 
-        PROJ-269 Phase 5.5: added `modifier_stack` kwarg. When supplied,
-        each `ModifierEntry` in `stack.per_team` / `stack.global_` is
-        translated into an `ExternalModifier` (using the entry's
-        `effect.stat_key` as the `ability_name`). Placeholder entries
-        (stat_key == "placeholder") are silently ignored so Phase-5
-        compilers that emit stub effects don't accidentally boost stats.
+        PROJ-270 Phase 6.4a: removed the legacy `config` kwarg. Pre-PROJ-269
+        the manager read `config.team_modifiers` / `config.global_modifiers`
+        from a `BattleConfig`; those fields were deleted by PROJ-269
+        Phase 6 and the branch is dead in production. External modifiers
+        now flow through `modifier_stack` only.
+
+        PROJ-269 Phase 5.5: `modifier_stack` translates each `ModifierEntry`
+        in `stack.per_team` / `stack.global_` into an `ExternalModifier`
+        (using the entry's `effect.stat_key` as the `ability_name`).
+        Placeholder entries (stat_key == "placeholder") are silently
+        ignored — a warning is logged once per source for visibility.
         """
         self._providers.clear()
         self._external.clear()
@@ -86,24 +90,6 @@ class FleetAuraManager:
             if not ship.is_alive:
                 continue
             self._scan_ship(ship)
-
-        # Load external modifiers from config (legacy path)
-        if config:
-            for team_id, mods in getattr(config, 'team_modifiers', {}).items():
-                for mod in mods:
-                    self._external.append(ExternalModifier(
-                        ability_name=mod.get('ability', ''),
-                        value=mod.get('value', 0.0),
-                        source_name=mod.get('source', 'Unknown'),
-                        team_id=int(team_id),
-                    ))
-            for mod in getattr(config, 'global_modifiers', []):
-                self._external.append(ExternalModifier(
-                    ability_name=mod.get('ability', ''),
-                    value=mod.get('value', 0.0),
-                    source_name=mod.get('source', 'Unknown'),
-                    team_id=None,
-                ))
 
         # PROJ-269 Phase 5.5: translate ModifierStack (if provided) into
         # ExternalModifier entries. `stat_key == "placeholder"` is the
