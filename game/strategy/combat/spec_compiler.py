@@ -382,14 +382,12 @@ def _entries_from_fleet_combat_modifiers(
 ) -> List[ModifierEntry]:
     """Translate a `FleetCombatModifiers` value into `ModifierEntry` entries.
 
-    PROJ-270 Phase 6.2: `shield_mult` and `damage_mult` now emit REAL
-    stat_keys (`shield_capacity_mult`, `damage_mult`) so the
-    `FleetAuraManager` pipeline applies them during battle. Replaces
-    the Phase 5.5 placeholder semantics for these multipliers.
-
-    `flat_shield_bonus` remains a placeholder pending PROJ-271 scope —
-    requires new additive stat_key (`SHIELD_BONUS_ADD`) wiring. See
-    decisions.md Decision 1 (scope trim).
+    PROJ-270 Phase 6.2: `shield_mult` and `damage_mult` emit REAL
+    stat_keys (`shield_capacity_mult`, `damage_mult`).
+    PROJ-271 Phase 2.1: `flat_shield_bonus` now ALSO emits a real
+    stat_key (`shield_bonus_add`, operation=add). Ship-level plumbing
+    in `ship_stats.py::_apply_aggregated_stats` consumes it as
+    `(base + flat) × shield_capacity_mult`.
     """
     entries: List[ModifierEntry] = []
     shield_mult = getattr(modifiers, "shield_mult", 1.0)
@@ -418,13 +416,14 @@ def _entries_from_fleet_combat_modifiers(
             )
         )
     if flat_shield:
-        # PROJ-271 deferred: flat_shield_bonus still placeholder until
-        # `SHIELD_BONUS_ADD` additive stat_key is wired through.
         entries.append(
-            _placeholder_entry(
+            _real_entry(
                 source=f"team{team_id}:flat_shield_bonus",
                 display_name=f"Shield +{flat_shield}",
                 design_id="team_flat_shield_bonus",
+                stat_key="shield_bonus_add",
+                value=flat_shield,
+                operation="add",
             )
         )
     return entries
@@ -459,25 +458,6 @@ def _real_entry(
     return ModifierEntry(source=source, stack_group=None, effect=effect)
 
 
-def _placeholder_entry(*, source: str, display_name: str, design_id: str) -> ModifierEntry:
-    """Build a PROJ-269 Phase 5.5 placeholder `ModifierEntry`.
-
-    The engine filters these out of the effect application pipeline but
-    retains them in forensic traces (`HitRecord.modifiers_applied`).
-    """
-    effect = ModifierEffect(
-        stat_key="placeholder",
-        value=0.0,
-        operation="multiply",
-        target_ability=None,
-        source_modifier_id=design_id,
-        source_modifier_name=display_name,
-        formula_str="",
-        param_value=0.0,
-    )
-    return ModifierEntry(source=source, stack_group=None, effect=effect)
-
-
 def _entries_from_modifier_source(
     source_obj: Any,
     *,
@@ -487,8 +467,11 @@ def _entries_from_modifier_source(
     """Extract ModifierEntry objects from an attribute on `source_obj`.
 
     The attribute is expected to be an iterable of dicts with
-    `design_id` and `display_name`. Phase 1 produces placeholder effects;
-    Phase 5 replaces with real effect evaluation.
+    `design_id` and `display_name`. Placeholder emission is out of
+    PROJ-271 scope — these ad-hoc sector/system modifier dicts have
+    no real data-model mapping yet. When a modifier source joins the
+    FleetCombatModifiers contract or gets its own stat_key mapping,
+    replace the placeholder here (follow-up project).
     """
     modifier_dicts = getattr(source_obj, attr_name, None)
     if not modifier_dicts:

@@ -252,3 +252,138 @@ def test_damage_mult_halves_weapon_damage(fresh_registries):
     # Placeholder for future tightening. Intentionally no negation-assertion
     # so the test doesn't spuriously pass while the bug is live. The other
     # two tests above cover the empirical regression.
+
+
+# ---------------------------------------------------------------------------
+# PROJ-271 Phase 2 Task 2.2: end-to-end compiler → pipeline for
+# `shield_bonus_add`. Proves `_entries_from_fleet_combat_modifiers`
+# emits a real stat_key that reaches ship.max_shields unchanged.
+# ---------------------------------------------------------------------------
+
+
+def _shield_bonus_add_entry(value: float) -> ModifierEntry:
+    effect = ModifierEffect(
+        stat_key="shield_bonus_add",
+        value=value,
+        operation="add",
+        target_ability=None,
+        source_modifier_id="test_flat_shield",
+        source_modifier_name="Test Flat Shield",
+        formula_str="",
+        param_value=value,
+    )
+    return ModifierEntry(source="test_flat_shield", stack_group=None, effect=effect)
+
+
+def test_flat_shield_bonus_raises_max_shields(fresh_registries):
+    """Ship under `shield_bonus_add=75` on team 0 → max_shields = 500 + 75 = 575.
+
+    Baseline: `shield_generator.ShieldProjection.base_capacity = 500`.
+    Flat bonus: 75.
+    Expected: `ship_outcome.max_shields == 575`.
+    """
+    stack = ModifierStack(
+        per_team={0: (_shield_bonus_add_entry(75.0),)},
+        global_=(),
+    )
+    spec = BattleSpec(
+        seed=42,
+        telemetry_level=TelemetryLevel.NORMAL,
+        boundary=UnboundedRegion(exit_policy=ExitPolicy.NONE),
+        end_condition=TickLimitCondition(max_ticks=2),
+        absolute_max_ticks=100,
+        teams=(_team(0, _ship_spec("buffed_ship")), _team(1, _ship_spec("opponent"))),
+        modifier_stack=stack,
+        post_battle_hook=None,
+    )
+
+    outcome = _run(spec, fresh_registries)
+
+    buffed = _ship_outcome(outcome, "buffed_ship")
+    opponent = _ship_outcome(outcome, "opponent")
+
+    assert buffed.max_shields == 575.0, (
+        f"Expected max_shields=575 (500 + 75 flat), got {buffed.max_shields}. "
+        f"PROJ-271 Phase 2 bridge broken."
+    )
+    # Opponent team must NOT receive the bonus.
+    assert opponent.max_shields == 500.0, (
+        f"Opponent team should be unaffected; got {opponent.max_shields}"
+    )
+
+
+def test_flat_shield_bonus_with_storm_mult_composes_correctly(fresh_registries):
+    """Pipeline order: (base + flat) × mult.
+
+    Baseline 500 + flat 50 = 550, then × storm 0.5 = 275.
+    Proves multiplicative and additive stat_keys compose at the ship
+    level in the documented order.
+    """
+    stack = ModifierStack(
+        per_team={
+            0: (
+                _shield_bonus_add_entry(50.0),
+                _shield_cap_mult_entry(0.5),
+            ),
+        },
+        global_=(),
+    )
+    spec = BattleSpec(
+        seed=42,
+        telemetry_level=TelemetryLevel.NORMAL,
+        boundary=UnboundedRegion(exit_policy=ExitPolicy.NONE),
+        end_condition=TickLimitCondition(max_ticks=2),
+        absolute_max_ticks=100,
+        teams=(_team(0, _ship_spec("stormed_buffed")), _team(1, _ship_spec("opponent"))),
+        modifier_stack=stack,
+        post_battle_hook=None,
+    )
+
+    outcome = _run(spec, fresh_registries)
+
+    ship = _ship_outcome(outcome, "stormed_buffed")
+    # (500 + 50) × 0.5 = 275
+    assert ship.max_shields == 275.0, (
+        f"Expected (500 + 50) × 0.5 = 275, got {ship.max_shields}. "
+        f"Pipeline ordering broken."
+    )
+
+
+def test_flat_shield_bonus_via_compiler_helper(fresh_registries):
+    """End-to-end: strategy compiler's `_entries_from_fleet_combat_modifiers`
+    builds ModifierStack entries from a `FleetCombatModifiers` and those
+    entries flow through `run_battle` to raise ship max_shields.
+
+    This exercises the whole chain: `FleetCombatModifiers` →
+    `_entries_from_fleet_combat_modifiers` → `ModifierStack` →
+    `FleetAuraManager._append_external_from_entry` →
+    `_apply_bonuses` → `ship.external_stats` →
+    `ShipStats._apply_aggregated_stats`.
+    """
+    from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+    from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+
+    modifiers = FleetCombatModifiers(
+        shield_mult=1.0, damage_mult=1.0, flat_shield_bonus=100.0,
+    )
+    entries = tuple(_entries_from_fleet_combat_modifiers(modifiers, team_id=0))
+    assert entries, "Compiler emitted nothing for flat_shield_bonus=100"
+
+    stack = ModifierStack(per_team={0: entries}, global_=())
+    spec = BattleSpec(
+        seed=42,
+        telemetry_level=TelemetryLevel.NORMAL,
+        boundary=UnboundedRegion(exit_policy=ExitPolicy.NONE),
+        end_condition=TickLimitCondition(max_ticks=2),
+        absolute_max_ticks=100,
+        teams=(_team(0, _ship_spec("fleet_buffed")), _team(1, _ship_spec("opponent"))),
+        modifier_stack=stack,
+        post_battle_hook=None,
+    )
+
+    outcome = _run(spec, fresh_registries)
+    ship = _ship_outcome(outcome, "fleet_buffed")
+    assert ship.max_shields == 600.0, (
+        f"Expected max_shields=600 (500 + 100 flat from compiler), "
+        f"got {ship.max_shields}"
+    )

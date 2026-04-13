@@ -68,6 +68,11 @@ def capture_battle_state(
     Returns:
         Path to saved file, or None if capture failed
     """
+    # PROJ-271 Phase 5.3: narrowed from `except Exception` (which
+    # swallowed a `TypeError: unexpected keyword 'mode'` for months
+    # after PROJ-270 Phase 5.3 deleted the kwarg) to `OSError` only.
+    # Programming errors (AttributeError, TypeError, ValueError) now
+    # propagate as real failures instead of hiding behind warnings.
     try:
         ensure_states_dir()
 
@@ -90,8 +95,10 @@ def capture_battle_state(
         logger.debug(f"Saved {state_type} battle state to {filepath}")
         return filepath
 
-    except Exception as e:
-        logger.warning(f"Failed to capture {state_type} battle state: {e}")
+    except OSError as e:
+        # IO failure (disk full, permission denied, directory missing).
+        # These are environmental and appropriately non-fatal.
+        logger.warning(f"Failed to write {state_type} battle state to disk: {e}")
         return None
 
 

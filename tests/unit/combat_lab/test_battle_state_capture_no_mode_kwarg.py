@@ -60,3 +60,94 @@ def test_capture_from_engine_docstring_does_not_mention_mode():
         "but the method signature has no such parameter. Delete the "
         "stale docstring line."
     )
+
+
+def test_capture_battle_state_does_not_swallow_programming_errors():
+    """PROJ-271 Phase 5.3: the try/except in `capture_battle_state()`
+    must catch only OSError (IO failures) — NOT `Exception` broadly.
+
+    A broad `except Exception` swallowed the `mode=` TypeError for
+    months after PROJ-270 Phase 5.3 deleted the kwarg. Narrowing to
+    OSError means programming errors (AttributeError, TypeError,
+    ValueError) propagate as real failures."""
+    import re
+    path = REPO_ROOT / "combat_lab" / "battle_state_capture.py"
+    text = path.read_text(encoding="utf-8")
+    # Find the capture_battle_state function body.
+    start = text.find("def capture_battle_state")
+    assert start > 0, "capture_battle_state signature not found"
+    end = text.find("\ndef ", start + 1)
+    if end < 0:
+        end = len(text)
+    body = text[start:end]
+    # Strip comment lines (the rationale for the narrowing MAY mention
+    # the phrase `except Exception`; we only want to flag actual code).
+    code_lines = [ln for ln in body.splitlines() if not ln.lstrip().startswith("#")]
+    code = "\n".join(code_lines)
+    # Match `except Exception:` or `except Exception as X:` as an
+    # actual except clause, not a comment.
+    pattern = re.compile(r"^\s*except\s+Exception\b", re.MULTILINE)
+    assert not pattern.search(code), (
+        "capture_battle_state() still catches `except Exception` — this is "
+        "the broad pattern that swallowed the `mode=` TypeError for months. "
+        "PROJ-271 Phase 5.3 narrowed it to `except OSError` so programming "
+        "errors propagate as real failures."
+    )
+
+
+def test_capture_battle_state_propagates_type_error_instead_of_swallowing():
+    """PROJ-271 Phase 5.3: if `BattleState.capture_from_engine` raises
+    a TypeError or similar (API drift, bad signature), the error must
+    propagate — NOT be silently swallowed into a returned None.
+
+    Pre-Phase 5.3, the broad `except Exception` caught everything; any
+    signature drift turned into ~40 silent warning lines per run. With
+    `except OSError` only, programming errors surface immediately so
+    they can be fixed instead of accumulating.
+    """
+    import pytest
+    from combat_lab.battle_state_capture import capture_battle_state
+
+    # An engine stub with no `tick_count` / `ships` — BattleState
+    # capture will raise AttributeError or TypeError trying to access
+    # the interface. The narrowed except clause must let that propagate.
+    class BrokenEngine:
+        pass
+
+    with pytest.raises((AttributeError, TypeError, ValueError)):
+        capture_battle_state(
+            BrokenEngine(), test_id="TEST-PHASE5", state_type="final", seed=42,
+        )
+
+
+def test_capture_battle_state_still_handles_disk_errors_gracefully(tmp_path, monkeypatch):
+    """PROJ-271 Phase 5.3: OSError (disk full, permission denied,
+    directory-creation failure) is still caught and returns None.
+
+    The Phase 5.3 narrowing only exposed programming errors —
+    environmental IO failures remain non-fatal so batch test runs
+    don't explode on a single full-disk write."""
+    import os
+    from unittest.mock import patch
+    from combat_lab import battle_state_capture
+
+    monkeypatch.setattr(battle_state_capture, "BATTLE_STATES_DIR", str(tmp_path))
+
+    # Simulate a disk write failure at the open() call.
+    with patch(
+        "builtins.open", side_effect=OSError("disk full"),
+    ):
+        from unittest.mock import MagicMock
+        from game.simulation.battle_state import BattleState
+        # Build a state object that CAN serialize — but the `open()`
+        # call is the failure point. We sidestep `capture_from_engine`
+        # here because we're proving the OSError-catching branch.
+        with patch.object(
+            BattleState, "capture_from_engine",
+            return_value=MagicMock(to_json=lambda indent=None: '{"ok":1}'),
+        ):
+            result = battle_state_capture.capture_battle_state(
+                MagicMock(), test_id="TEST-OSERR", state_type="final", seed=1,
+            )
+    # OSError was caught: returned None, did not crash.
+    assert result is None

@@ -412,6 +412,156 @@ class TestStrategyCompilerBehavioralStatKeys:
         )
         assert damage_entries[0].effect.value == 2.0
 
+    def test_strategy_compiler_routes_enemy_suppressor_to_receiver_team(self):
+        """PROJ-271 Phase 3.1: end-to-end sanity check that
+        `CombatModifierCollector` pre-computes enemy-scoped suppressors
+        into the RECEIVER fleet's `FleetCombatModifiers`, and the
+        strategy compiler emits them to `per_team[receiver_team_id]`.
+
+        The strategy compiler doesn't need scope-routing logic — the
+        collector already did it. Lock that invariant so nobody reverts
+        it later."""
+        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+
+        # Simulate: collector saw an enemy_sector suppressor on the
+        # opponent's planet and rolled it into team 0's FleetCombatModifiers
+        # as a damage_mult=0.8 penalty.
+        mods = FleetCombatModifiers(shield_mult=1.0, damage_mult=0.8, flat_shield_bonus=0.0)
+        entries = _entries_from_fleet_combat_modifiers(mods, team_id=0)
+        # Compiler emits to team 0 (the receiver of the debuff). The
+        # suppressor's semantic "imposed BY team 1" is lost at this
+        # boundary — the compiler only sees "team 0 has a 0.8x damage
+        # modifier" and emits accordingly. That's correct: the effect
+        # applies to team 0's ships.
+        damage_entries = [e for e in entries if e.effect.stat_key == "damage_mult"]
+        assert damage_entries, "Expected compiler to emit damage_mult entry for damage_mult=0.8"
+        assert damage_entries[0].effect.value == 0.8
+
+    def test_fleet_compiler_emits_shield_bonus_add(self):
+        """PROJ-271 Phase 2 Task 2.1: flat_shield_bonus now emits a real
+        `shield_bonus_add` stat_key, not a placeholder."""
+        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+
+        modifiers = FleetCombatModifiers(
+            shield_mult=1.0, damage_mult=1.0, flat_shield_bonus=50.0,
+        )
+        entries = _entries_from_fleet_combat_modifiers(modifiers, team_id=0)
+        shield_bonus = [e for e in entries if e.effect.stat_key == "shield_bonus_add"]
+        assert shield_bonus, (
+            "Expected at least one shield_bonus_add entry for flat_shield_bonus=50.0; "
+            f"got entries with stat_keys: {[e.effect.stat_key for e in entries]}"
+        )
+        assert shield_bonus[0].effect.value == 50.0
+        assert shield_bonus[0].effect.operation == "add"
+        # Never placeholder.
+        placeholders = [e for e in entries if e.effect.stat_key == "placeholder"]
+        assert not placeholders, (
+            f"Expected no placeholder entries, got: {[(e.source, e.effect.source_modifier_name) for e in placeholders]}"
+        )
+
+
+class TestNoPlaceholderStatKeyInBattleSetupCompiler:
+    """PROJ-271 Phase 2.5: Battle Setup compiler must not emit
+    `stat_key="placeholder"` for real complex toggles. The compiler
+    maps each complex's design_id → components → abilities → real
+    stat_key. Missing designs or un-mapped abilities yield NO entry
+    (not a placeholder entry)."""
+
+    def test_complex_entries_body_contains_no_placeholder_literal(self):
+        """Guard: `_complex_to_entries` helper must not emit any
+        `stat_key="placeholder"` ModifierEffect."""
+        path = REPO_ROOT / "game/ui/screens/battle_setup/spec_compiler.py"
+        text = path.read_text(encoding="utf-8")
+        match = re.search(
+            r"def _complex_to_entries.*?(?=\ndef |\Z)",
+            text,
+            flags=re.DOTALL,
+        )
+        assert match, "Could not locate _complex_to_entries helper"
+        body = match.group(0)
+        assert 'stat_key="placeholder"' not in body and "stat_key='placeholder'" not in body, (
+            "Battle Setup compiler is still emitting placeholder stat_keys — "
+            "PROJ-271 Phase 2.4 requires ability-class → stat_key mapping."
+        )
+
+
+class TestBattleSetupCompilerBehavioralStatKeys:
+    """PROJ-271 Phase 2.4: behavioral test that Battle Setup compiler
+    emits real stat_keys for each supported complex ability class."""
+
+    def _make_state_with_complex(self, design_id: str, scope: str, side_index: int):
+        """Build a minimal BattleSetupState with one complex toggled."""
+        from game.ui.screens.battle_setup_state import BattleSetupState
+        state = BattleSetupState()
+        side = state.side_0 if side_index == 0 else state.side_1
+        target = side.system_complexes if scope == "system" else side.sector_complexes
+        target.append({"design_id": design_id, "display_name": design_id})
+        return state
+
+    def _compile(self, design_id: str, scope: str, side_index: int):
+        from game.ui.screens.battle_setup.spec_compiler import build_manual_battle_spec
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+            resource_catalog=provider.get_resource_catalog(),
+        )
+        state = self._make_state_with_complex(design_id, scope, side_index)
+        return build_manual_battle_spec(state, registries)
+
+    def test_shield_projector_emits_shield_bonus_add(self):
+        spec = self._compile("qs_sector_shield_projector_complex", "sector", 0)
+        entries = spec.modifier_stack.per_team.get(0, ())
+        keys = {e.effect.stat_key for e in entries}
+        assert "shield_bonus_add" in keys, (
+            f"Expected shield_bonus_add from shield projector, got keys {keys}"
+        )
+
+    def test_shield_booster_emits_shield_capacity_mult_above_1(self):
+        spec = self._compile("qs_system_shield_booster_complex", "system", 0)
+        entries = spec.modifier_stack.per_team.get(0, ())
+        mults = [e.effect.value for e in entries if e.effect.stat_key == "shield_capacity_mult"]
+        assert mults and mults[0] > 1.0
+
+    def test_shield_suppressor_routes_to_opponent(self):
+        spec = self._compile("qs_system_shield_suppressor_complex", "system", 0)
+        team1_entries = spec.modifier_stack.per_team.get(1, ())
+        suppressors = [
+            e for e in team1_entries
+            if e.effect.stat_key == "shield_capacity_mult" and e.effect.value < 1.0
+        ]
+        assert suppressors, "Expected suppressor routed to team 1 (opponent)"
+
+    def test_no_placeholder_from_any_real_complex(self):
+        """Survey every complex in the Battle Setup toggle lists — none emits placeholder."""
+        for design_id in [
+            "qs_system_shield_booster_complex",
+            "qs_system_shield_suppressor_complex",
+            "qs_system_shield_projector_complex",
+            "qs_system_damage_booster_complex",
+            "qs_system_damage_suppressor_complex",
+            "qs_sector_shield_booster_complex",
+            "qs_sector_shield_suppressor_complex",
+            "qs_sector_shield_projector_complex",
+            "qs_sector_damage_booster_complex",
+            "qs_sector_damage_suppressor_complex",
+        ]:
+            scope = "system" if "system" in design_id else "sector"
+            spec = self._compile(design_id, scope, 0)
+            all_entries = []
+            for entries in spec.modifier_stack.per_team.values():
+                all_entries.extend(entries)
+            placeholders = [e for e in all_entries if e.effect.stat_key == "placeholder"]
+            assert not placeholders, (
+                f"Complex '{design_id}' emitted placeholder entries: "
+                f"{[e.effect.source_modifier_name for e in placeholders]}"
+            )
+
 
 class TestNoPlaceholderStatKeyInStrategyCompiler:
     """Strategy compiler must not emit `stat_key="placeholder"` for storm or multiplier effects."""
@@ -442,8 +592,8 @@ class TestNoPlaceholderStatKeyInStrategyCompiler:
         )
         assert match
         body = match.group(0)
-        # flat_shield_bonus is intentionally still placeholder (PROJ-271 deferred).
-        # shield_mult and damage_mult must NOT be placeholder.
+        # PROJ-271 Phase 2.1: flat_shield_bonus now ALSO emits a real
+        # stat_key (shield_bonus_add). All three blocks must be placeholder-free.
         shield_mult_block = re.search(
             r"if shield_mult != 1\.0:.*?(?=if damage_mult)",
             body,
@@ -461,4 +611,14 @@ class TestNoPlaceholderStatKeyInStrategyCompiler:
         assert damage_mult_block and "placeholder" not in damage_mult_block.group(0), (
             "Fleet damage_mult is still emitting placeholder — "
             "PROJ-270 Phase 6.2 requires damage_mult stat_key."
+        )
+        # PROJ-271 Phase 2.3: flat_shield_bonus must emit shield_bonus_add now.
+        flat_shield_block = re.search(
+            r"if flat_shield:.*?(?=return entries|\Z)",
+            body,
+            flags=re.DOTALL,
+        )
+        assert flat_shield_block and "placeholder" not in flat_shield_block.group(0), (
+            "Fleet flat_shield_bonus is still emitting placeholder — "
+            "PROJ-271 Phase 2.1 requires shield_bonus_add stat_key."
         )
