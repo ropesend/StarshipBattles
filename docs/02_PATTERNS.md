@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase (26 patterns).
+Agent-optimized reference for every core pattern in the codebase (25 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -32,7 +32,6 @@ Each section: **Where**, **How It Works**, **When to Use**.
 23. [Tick Phase Registry](#23-tick-phase-registry-proj-259)
 24. [External-Stats Bridge](#24-external-stats-bridge-proj-270-phase-9--proj-271)
 25. [Scope-Driven Team Routing](#25-scope-driven-team-routing-proj-271)
-26. [Spec Compiler → run_battle](#26-spec-compiler--run_battle-proj-269)
 
 ---
 
@@ -1311,6 +1310,19 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 - Populate `ship.external_stats` from anywhere except `FleetAuraManager._apply_bonuses`.
 - Serialize `external_stats` in save data — it's battle-scoped composition, rebuilt each battle.
 
+**Known Limitation — within-source stack_group composition only (PROJ-272):**
+Stack-group aggregation is WITHIN-SOURCE only. Provider auras (ship-mounted
+abilities with fleet-scope) bucket under `type(ab).__name__` (e.g.,
+`"ShieldModifier"`), while external `ModifierStack` entries bucket under
+`effect.stat_key` (e.g., `"shield_capacity_mult"`). These are semantically
+different dict keys — a provider `ShieldModifier` aura with
+`stack_group="shield_boost"` and an external `shield_capacity_mult` entry
+with the same `stack_group="shield_boost"` do NOT compose via MAX; they
+aggregate independently. Cross-source unification would require a class-name
+→ stat_key registry and is out of scope. Within each source (provider-only
+OR external-only), same-stack_group entries correctly MAX and
+different-stack_group entries correctly SUM.
+
 ---
 
 ## 25. Scope-Driven Team Routing (PROJ-271)
@@ -1328,21 +1340,6 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 **When to Use:**
 - Any new ability type with fleet/system/sector scope options needs scope-driven routing when its effects are compiled into `ModifierStack` entries.
 - Extending `_OPPONENT_SCOPES` requires adding tests proving each scope routes correctly.
-
----
-
-## 26. Spec Compiler → run_battle (PROJ-269)
-
-**Where:** `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec`, `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec`, `combat_lab/scenarios/base.py::to_spec`, all feeding `game/simulation/battle_runner.py::run_battle(spec, ai_factory, ship_builder) -> BattleOutcome`.
-
-**How It Works:**
-- Each UI/strategy/test-lab context compiles its inputs (fleets + toggles + environmental effects) into a `BattleSpec` (frozen DTO).
-- `run_battle` consumes the spec, starts a `BattleEngine` via `start_engine_from_spec`, ticks until end, emits a `BattleOutcome`.
-- Visual mode: `BattleController.set_spec` + `update()` per-frame + `get_outcome()` at end — same spec-in/outcome-out contract with a per-frame driver.
-
-**Why:** Previously 5 production paths bypassed a unified entry. The spec compiler pattern makes the contract "every battle is spec -> engine -> outcome" enforceable via the acceptance guard at `tests/unit/simulation/test_unified_entry_guard.py`.
-
-**When to Use:** Any new battle-producing code path must emit a `BattleSpec` and consume its results via `BattleOutcome`. Don't construct `BattleEngine` directly; don't call `engine.update()` directly.
 
 ---
 
@@ -1380,7 +1377,6 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 | Tick Phase Registry | `game/simulation/systems/tick_phase.py` | `ITickPhase`, `TickPhaseRegistry` |
 | External-Stats Bridge | `game/simulation/entities/ship.py` + `fleet_aura_manager.py` | `ship.external_stats`, `FleetAuraManager._apply_bonuses` |
 | Scope-Driven Team Routing | `game/ui/screens/battle_setup/spec_compiler.py` | `_route_team_for_scope`, `_OPPONENT_SCOPES` |
-| Spec Compiler → run_battle | `game/simulation/battle_runner.py` + 3 compilers | `run_battle`, `BattleSpec`, `build_*_battle_spec` |
 
 ### Critical Naming Reminders
 

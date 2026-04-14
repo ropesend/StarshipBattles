@@ -105,29 +105,27 @@ class TestShieldBonusAddPipelineAtShipLevel:
             f"Expected max_shields=50 (flat bonus only, no component), got {ship.max_shields}"
         )
 
-    def test_flat_bonus_stacks_with_capacity_mult_too(self, fresh_registries):
-        """PROJ-271 Phase 12.1: the 'virtual extra shield component'
-        semantic requires the flat bonus to be scaled by BOTH external
-        `shield_capacity_mult` AND external `capacity_mult`, matching
-        how real ShieldProjection components compute `capacity`.
+    def test_flat_bonus_ignores_capacity_mult(self, fresh_registries):
+        """PROJ-272 Phase 6: reverted PROJ-271 Phase 12.1. No fleet aura
+        populates `capacity_mult` today — reading it from external_stats
+        was a latent double-multiply time-bomb. Flat bonus is now scaled
+        ONLY by `shield_capacity_mult`.
 
-        `capacity_mult` isn't currently populated by any fleet aura,
-        but if it ever is, the flat bonus should compose identically
-        to a real shield component.
+        If a future team aura adds `capacity_mult`, revisit this decision.
         """
         ship = ShipSerializer.from_dict(_design_with_shields(), registries=fresh_registries)
         ship.external_stats = {
             "shield_bonus_add": 50.0,
-            "capacity_mult": 2.0,
+            "capacity_mult": 2.0,  # MUST NOT affect flat bonus.
             "shield_capacity_mult": 0.5,
         }
         ship.recalculate_stats()
-        # Real component: base_capacity 500 * 2.0 * 0.5 = 500.
-        # Flat bonus: 50 * 2.0 * 0.5 = 50.
-        # Total: 500 + 50 = 550.
-        assert ship.max_shields == 550, (
-            f"Expected flat bonus to be scaled by BOTH capacity_mult AND "
-            f"shield_capacity_mult (like a real shield component). "
+        # Real shield component: base_capacity 500 * 2.0 * 0.5 = 500.
+        # Flat bonus: 50 * 0.5 = 25 (capacity_mult NOT applied).
+        # Total: 500 + 25 = 525.
+        assert ship.max_shields == 525, (
+            f"Expected flat bonus scaled ONLY by shield_capacity_mult "
+            f"(PROJ-272 Phase 6 removed capacity_mult from flat-bonus scaling). "
             f"Got max_shields={ship.max_shields}"
         )
 

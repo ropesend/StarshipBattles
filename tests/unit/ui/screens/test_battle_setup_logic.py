@@ -64,7 +64,12 @@ class TestBattleSetupLogic:
         assert obj4 not in res
 
     def test_battle_scene_start_assignment(self, fresh_registries):
-        """Verify BattleScreen.start assigns teams and creates AI controllers."""
+        """Verify BattleScreen.start assigns teams and creates AI controllers.
+
+        PROJ-272 Phase 5 re-audit: `BattleScreen.start` retained as a
+        legacy test-convenience shim (~46 test callers). Full deletion
+        deferred until those tests are migrated to spec-based setup.
+        """
         scene = BattleScreen(1000, 1000)
 
         ship1 = Ship("T1-1", 0, 0, (255,0,0), team_id=0, registries=fresh_registries)

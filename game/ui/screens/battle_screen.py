@@ -225,11 +225,15 @@ class BattleScreen:
         return self.engine.ai_controllers
 
     def start(self, team0_ships, team1_ships, seed=None, headless=False, start_paused=False, test_mode=False):
-        """Start a battle between two teams.
+        """Legacy test-convenience entry. DEPRECATED — use `start_battle(controller)` for production.
 
-        Convenience method that creates a BattleController internally and
-        delegates to start_battle(). Production callers should use
-        start_battle(controller) directly for full control.
+        PROJ-272 Phase 5 AUDIT: attempted to delete this method. Round-2
+        audit claimed "zero callers" but re-audit found ~46 test callers
+        across `test_battle_screen.py`, `test_battle_screen_simulation.py`,
+        and `test_visual_run.py`. Full deletion requires migrating those
+        tests to spec-based setup — out of PROJ-272 scope. Method retained
+        as a test-only shim; production code MUST use `start_battle(controller)`
+        with a spec-configured `BattleController`.
 
         Args:
             team0_ships: List of ships for team 0
@@ -251,8 +255,6 @@ class BattleScreen:
             return_destination=dest,
         )
 
-        # PROJ-269 Phase 6: replaces the deleted
-        # `create_started_battle_controller` factory with an inline setup.
         controller = BattleController(ai_factory=self._ai_factory)
         controller.configure(config)
         controller.add_ships(team0_ships, 0)
@@ -486,6 +488,11 @@ class BattleScreen:
         without a spec (legacy `BattleScreen.start(team0, team1)` path),
         there's no outcome to pull. Build a minimal `BattleOutcome` from
         the live engine so the results screen still renders.
+
+        PROJ-272 Phase 5: re-audited; this fallback remains required for
+        the ~46 test callers of `BattleScreen.start(team0, team1)`.
+        Production paths (`Game.start_battle`, Combat Lab, Test Lab) have
+        a real spec and never hit the fallback.
         """
         if self._controller is not None:
             stored = self._controller.get_outcome()
@@ -501,22 +508,7 @@ class BattleScreen:
         the outcome by hand with the shape that `extract_battle_results`
         needs.
 
-        PROJ-270 Phase 10 note: this fallback is invoked ONLY for the
-        `BattleScreen.start(team0, team1)` legacy test-convenience
-        path (~44 `self.scene.start([...])` test callers). Production
-        paths (`Game.start_battle`, Combat Lab, Test Lab) route through
-        `BattleController.start_from_spec` and have a real spec attached —
-        their outcome is extracted via `extract_outcome(engine, spec)`.
-        Deletion of the fallback is gated on migrating the test callers
-        to build specs; tracked as a follow-up.
-
-        PROJ-270 Phase 13.5: tightened the synthesized fields. Previously
-        reported `seed=0`, `end_reason=TEAM_ELIMINATED`, and
-        `telemetry_level=NORMAL` regardless of actual state. Now derives
-        each from available data: `seed` from `_controller._config.seed`
-        (or 0 if genuinely unknown), `end_reason` from `engine.end_condition`
-        class lookup, `telemetry_level=MINIMAL` matching the empty-aggregator
-        semantic truthfully.
+        See `_get_or_build_outcome` for deprecation status.
         """
         from game.simulation.battle_outcome import (
             BattleOutcome,
@@ -540,71 +532,64 @@ class BattleScreen:
             ticks_derelict=0, ticks_alive=0,
         )
 
-        def _ship_to_outcome(ship) -> ShipOutcome:
-            if not ship.is_alive:
-                status = ShipStatus.DESTROYED
-            elif ship.is_derelict:
-                status = ShipStatus.DERELICT
-            else:
-                status = ShipStatus.SURVIVED
-
-            weapons = []
-            if hasattr(ship, "get_all_components"):
-                for comp in ship.get_all_components():
-                    if getattr(comp, "type", None) == "Weapon":
-                        weapons.append(WeaponSummary(
-                            component_id=comp.id,
-                            component_name=comp.name,
-                            shots_fired=getattr(comp, "shots_fired", 0),
-                            shots_hit=getattr(comp, "shots_hit", 0),
-                        ))
-
-            return ShipOutcome(
-                instance_id=getattr(ship, "instance_id", "") or ship.name,
-                status=status,
-                final_position=Vector2(ship.x, ship.y),
-                final_angle=ship.angle,
-                final_velocity=Vector2(ship.velocity),
-                components=(),
-                weapons=tuple(weapons),
-                hits_taken=(),
-                stats=zero_stats,
-                name=ship.name,
-                ship_class=getattr(ship, "ship_class", None),
-                hp=float(getattr(ship, "hp", 0) or 0),
-                max_hp=float(getattr(ship, "max_hp", 0) or 0),
-                current_shields=float(getattr(ship, "current_shields", 0) or 0),
-                max_shields=float(getattr(ship, "max_shields", 0) or 0),
-            )
-
-        team_outcomes = tuple(
-            TeamOutcome(
+        team_outcomes = []
+        for team_id, ships in ships_by_team.items():
+            ship_outcomes = []
+            for s in ships:
+                if not s.is_alive:
+                    status = ShipStatus.DESTROYED
+                elif s.is_derelict:
+                    status = ShipStatus.DERELICT
+                else:
+                    status = ShipStatus.SURVIVED
+                pos = getattr(s, 'position', None)
+                final_pos = pos if hasattr(pos, 'x') else Vector2(0, 0)
+                ship_outcomes.append(ShipOutcome(
+                    instance_id=getattr(s, 'instance_id', str(id(s))),
+                    status=status,
+                    final_position=final_pos,
+                    final_angle=float(getattr(s, 'angle', 0)),
+                    final_velocity=Vector2(0, 0),
+                    components=(),
+                    weapons=(),
+                    hits_taken=(),
+                    stats=zero_stats,
+                    name=getattr(s, 'name', None),
+                    ship_class=getattr(s, 'ship_class', None),
+                    hp=float(getattr(s, 'hp', 0)),
+                    max_hp=float(getattr(s, 'max_hp', 0)),
+                    current_shields=float(getattr(s, 'current_shields', 0)),
+                    max_shields=float(getattr(s, 'max_shields', 0)),
+                ))
+            team_outcomes.append(TeamOutcome(
                 team_id=team_id,
                 name=f"Team {team_id}",
-                ships=tuple(_ship_to_outcome(s) for s in ships),
-            )
-            for team_id, ships in sorted(ships_by_team.items())
-        )
+                ships=tuple(ship_outcomes),
+            ))
 
-        # PROJ-270 Phase 13.5: derive end_reason from engine's actual
-        # end_condition class rather than hardcoding TEAM_ELIMINATED.
-        from game.simulation.battle_runner import _END_REASON_BY_CLASS
-        end_cond = getattr(engine, "end_condition", None)
-        end_reason = _END_REASON_BY_CLASS.get(
-            type(end_cond) if end_cond is not None else type(None),
-            EndReason.TEAM_ELIMINATED,  # safe default if end_condition is unset
-        )
-        # Derive seed from controller's config (if present).
+        # Derive end_reason from engine's end condition class when possible.
+        end_cond = getattr(engine, 'end_condition', None)
+        end_reason = EndReason.TEAM_ELIMINATED
+        if end_cond is not None:
+            cond_name = type(end_cond).__name__
+            if "TickLimit" in cond_name:
+                end_reason = EndReason.TICK_LIMIT
+            elif "Escape" in cond_name:
+                end_reason = EndReason.ESCAPE
+            elif "Incapacitated" in cond_name:
+                end_reason = EndReason.TEAM_INCAPACITATED
+
         seed_val = 0
-        controller = self._controller
-        if controller is not None and controller._config is not None:
-            seed_val = controller._config.seed or 0
+        if self._controller is not None:
+            cfg = getattr(self._controller, '_config', None) or getattr(self._controller, 'config', None)
+            if cfg is not None:
+                seed_val = getattr(cfg, 'seed', 0) or 0
 
         return BattleOutcome(
             end_reason=end_reason,
             duration_ticks=engine.tick_counter,
             seed=seed_val,
-            teams=team_outcomes,
+            teams=tuple(team_outcomes),
             telemetry_level=TelemetryLevel.MINIMAL,
         )
 
@@ -805,7 +790,26 @@ class BattleScreen:
                 ability = b.get('ability', '?')
                 value = b.get('value', 0)
                 source = b.get('source', '?')
-                lines.append(f"T{team_id} {ability}={value:.2f} ({source})")
+                # PROJ-272 Phase 11: non-numeric guard. Defensive skip
+                # if a future aura produces a non-numeric value — don't
+                # crash the HUD.
+                if not isinstance(value, (int, float)):
+                    logger.warning(
+                        "get_active_modifier_labels: non-numeric value %r "
+                        "for ability %r, skipping.", value, ability,
+                    )
+                    continue
+                # PROJ-272 Phase 11: stat-key-aware sign format.
+                # `_mult` keys → "0.75x" (no sign, clear multiplicative)
+                # `_add` keys → "+50.00" / "-20.00" (explicit additive direction)
+                # Other keys → neutral "{value:.2f}"
+                if ability.endswith('_mult'):
+                    formatted = f"{value:.2f}x"
+                elif ability.endswith('_add'):
+                    formatted = f"{value:+.2f}"
+                else:
+                    formatted = f"{value:.2f}"
+                lines.append(f"T{team_id} {ability}={formatted} ({source})")
         return lines
 
     def print_headless_summary(self):

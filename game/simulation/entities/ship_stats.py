@@ -461,14 +461,14 @@ class ShipStatsCalculator:
         if isinstance(external_stats, dict):
             flat_shield_bonus = external_stats.get('shield_bonus_add', 0.0)
             if flat_shield_bonus:
-                # PROJ-271 Phase 12.1: scale the flat bonus by BOTH
-                # capacity_mult AND shield_capacity_mult so the "virtual
-                # extra shield component" semantic composes identically
-                # to how a real ShieldProjection computes capacity
-                # (see ShieldProjection.recalculate).
-                capacity_mult = external_stats.get('capacity_mult', 1.0)
+                # PROJ-272 Phase 6: reverted PROJ-271 Phase 12.1's
+                # `capacity_mult` read. No current aura populates
+                # `capacity_mult` — reading it from external_stats was
+                # a latent double-multiply the moment any future aura
+                # would populate it. Revisit if a real `capacity_mult`
+                # team aura is ever added. See PROJ-272 decisions.md.
                 shield_cap_mult = external_stats.get('shield_capacity_mult', 1.0)
-                ship.max_shields += flat_shield_bonus * capacity_mult * shield_cap_mult
+                ship.max_shields += flat_shield_bonus * shield_cap_mult
         ship.shield_regen_rate = acc['shield_regen']
         ship.shield_regen_cost = acc['shield_cost']
         ship.warp_max_tonnage = acc['warp_max_tonnage']

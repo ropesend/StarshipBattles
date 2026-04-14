@@ -599,6 +599,74 @@ def _design_has_combat_ability(design: dict) -> bool:
     return False
 
 
+class TestBattleScreenLegacyBypassDeprecated:
+    """PROJ-272 Phase 5 re-audit: `BattleScreen.start(team0, team1)` + its
+    `_build_fallback_outcome` companion were SLATED for deletion but
+    ~46 test callers still depend on them. Retained as documented
+    test-only shims. This guard enforces: the shim MUST carry a
+    DEPRECATED / legacy marker in its docstring so contributors don't
+    mistake it for a production API."""
+
+    def test_battle_screen_start_marked_deprecated(self):
+        path = REPO_ROOT / "game/ui/screens/battle_screen.py"
+        text = path.read_text(encoding="utf-8")
+        # Find the `def start(self, team0_ships, ...)` block.
+        import re
+        sig_match = re.search(
+            r"def\s+start\s*\(\s*self\s*,\s*team0_ships",
+            text,
+        )
+        assert sig_match, (
+            "`BattleScreen.start(team0_ships, ...)` not found. If you're "
+            "deleting it, also delete/migrate test callers in "
+            "test_battle_screen.py, test_battle_screen_simulation.py, "
+            "test_visual_run.py."
+        )
+        # Grab the next ~500 chars starting at the signature — enough to
+        # include the docstring.
+        block = text[sig_match.start():sig_match.start() + 1500]
+        assert any(marker in block for marker in ["DEPRECATED", "Legacy", "legacy"]), (
+            "`BattleScreen.start` docstring must explicitly mark the method "
+            "as DEPRECATED / legacy so production contributors don't use it. "
+            "See PROJ-272 Phase 5 decision."
+        )
+
+
+class TestScopeDefaultResolutionIsWired:
+    """PROJ-272 Phase 1: `_extract_scope` in Battle Setup compiler and
+    scope lookup in CombatModifierCollector must resolve class-level
+    `default_scope` when JSON omits `scope`. Hardcoded 'self' fallback
+    silently disagrees with runtime behavior for ShieldModifier /
+    DamageModifier (class default ALLIED_SYSTEM)."""
+
+    def test_battle_setup_extract_scope_uses_registry(self):
+        """`_extract_scope` body must reference the ability registry
+        (via `get_ability_default_scope` or direct lookup)."""
+        path = REPO_ROOT / "game/ui/screens/battle_setup/spec_compiler.py"
+        text = path.read_text(encoding="utf-8")
+        import re
+        match = re.search(
+            r"def _extract_scope.*?(?=\ndef |\Z)",
+            text,
+            flags=re.DOTALL,
+        )
+        assert match, "Could not locate _extract_scope"
+        body = match.group(0)
+        assert "get_ability_default_scope" in body or "ABILITY_REGISTRY" in body, (
+            "`_extract_scope` must resolve default scope from ability class, "
+            "not hardcode 'self'. See PROJ-272 Phase 1 decisions.md."
+        )
+
+    def test_combat_modifier_collector_uses_registry(self):
+        """Collector must resolve default scope for missing-scope entries."""
+        path = REPO_ROOT / "game/strategy/services/combat_modifier_collector.py"
+        text = path.read_text(encoding="utf-8")
+        assert "get_ability_default_scope" in text, (
+            "CombatModifierCollector must use `get_ability_default_scope` "
+            "for entries whose JSON omits 'scope'. See PROJ-272 Phase 1."
+        )
+
+
 class TestStrategyCompilerHasNoPlaceholderEmission:
     """PROJ-271 Phase 9: strategy compiler must not emit ANY
     `stat_key="placeholder"` ModifierEffect. The old

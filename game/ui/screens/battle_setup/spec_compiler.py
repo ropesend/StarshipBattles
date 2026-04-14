@@ -348,7 +348,7 @@ def _complex_to_entries(
         for ability_name, ability_data in abilities.items():
             if ability_name not in _ABILITY_TO_STAT_KEY:
                 continue
-            scope_str = _extract_scope(ability_data)
+            scope_str = _extract_scope(ability_name, ability_data)
             if scope_str == "self":
                 continue
             stat_key, operation = _ABILITY_TO_STAT_KEY[ability_name]
@@ -401,15 +401,33 @@ def _iter_components(design_data: Dict[str, Any]):
                 yield comp
 
 
-def _extract_scope(ability_data: Any) -> str:
+def _extract_scope(ability_name: str, ability_data: Any) -> str:
     """Extract the scope string from an ability's component-JSON entry.
 
     Abilities in components.json are either primitives (e.g., `10`) or
     dicts. Primitives imply SELF scope. Dicts carry an explicit `scope`
-    field; missing `scope` falls back to SELF."""
-    if isinstance(ability_data, dict):
-        return ability_data.get("scope", "self")
-    return "self"
+    field. When `scope` is MISSING from the dict, the compiler must
+    resolve the ability class's `default_scope` to match runtime behavior —
+    `Ability._parse_scope` falls back to `cls.default_scope` when JSON
+    omits scope. Hardcoding 'self' silently disagreed with the runtime
+    (e.g., `ShieldModifierAbility.default_scope = ALLIED_SYSTEM`), which
+    silently dropped complexes whose author forgot to specify scope.
+
+    PROJ-272 Phase 1: resolve class default from `ABILITY_REGISTRY`.
+    """
+    # Primitive: no scope field possible → SELF (matches runtime's
+    # `_parse_scope` behavior on non-dict data).
+    if not isinstance(ability_data, dict):
+        return "self"
+
+    # Explicit scope in dict takes precedence.
+    scope = ability_data.get("scope")
+    if scope is not None:
+        return scope
+
+    # Missing scope: resolve class-level default to match runtime behavior.
+    from game.simulation.components.abilities import get_ability_default_scope
+    return get_ability_default_scope(ability_name)
 
 
 def _extract_ability_value(ability_name: str, ability_data: Any) -> float:
@@ -441,7 +459,19 @@ def _route_team_for_scope(scope_str: str, owner_team: int) -> int:
 
     3+ team extension: replace with a caller that loops over all
     non-owner teams, emitting one entry per opponent team.
+
+    PROJ-272 Phase 10: explicit NotImplementedError for 3+ team callers
+    instead of a silent misroute. If a future caller hands this function
+    a team index beyond `_NUM_TEAMS - 1`, fail loudly.
     """
+    if owner_team < 0 or owner_team >= _NUM_TEAMS:
+        raise NotImplementedError(
+            f"Battle Setup compiler is currently 2-team only "
+            f"(_NUM_TEAMS={_NUM_TEAMS}). Got owner_team={owner_team}. "
+            f"Multi-team routing requires extending `_route_team_for_scope` "
+            f"to return a list of opponent teams and updating callers to "
+            f"emit one ModifierEntry per opponent team."
+        )
     if scope_str in _OPPONENT_SCOPES:
         return (_NUM_TEAMS - 1) - owner_team
     return owner_team

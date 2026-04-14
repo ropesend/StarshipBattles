@@ -337,8 +337,6 @@ def test_strategy_spec_post_battle_hook_applies_outcome(
     fleet_a, fleet_b = two_fleets
     spec = build_strategy_battle_spec(
         [fleet_a, fleet_b],
-        sector=None,
-        system=None,
         empires={},
         settings=None,
         registries=session_registries,

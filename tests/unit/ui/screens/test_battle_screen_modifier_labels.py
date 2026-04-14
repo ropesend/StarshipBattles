@@ -78,13 +78,61 @@ class TestGetActiveModifierLabels:
 
         labels = screen.get_active_modifier_labels()
         assert len(labels) == 2
-        # Team 0's booster
+        # PROJ-272 Phase 11: `_mult` keys format as "Nx" (e.g. "1.25x"), not
+        # "+1.25" (which would look positive when the value is a nerf < 1.0).
         assert any(
-            "T0" in line and "shield_capacity_mult" in line and "1.25" in line
+            "T0" in line and "shield_capacity_mult" in line and "1.25x" in line
             for line in labels
         ), f"Missing team 0 booster label; got: {labels}"
-        # Team 1's suppressor
         assert any(
-            "T1" in line and "damage_mult" in line and "0.80" in line
+            "T1" in line and "damage_mult" in line and "0.80x" in line
             for line in labels
         ), f"Missing team 1 suppressor label; got: {labels}"
+
+
+class TestPhase11FormatSemantics:
+    """PROJ-272 Phase 11: `_mult` / `_add` / other keys format distinctly."""
+
+    def _make_labels(self, bonuses_for_team_0):
+        screen = _make_screen()
+        aura = MagicMock()
+        aura.get_active_bonuses.side_effect = lambda tid: bonuses_for_team_0 if tid == 0 else []
+        ship = SimpleNamespace(team_id=0)
+        engine = SimpleNamespace(ships=[ship], aura_manager=aura)
+        service = MagicMock()
+        service.get_engine.return_value = engine
+        screen._controller = SimpleNamespace(_service=service)
+        return screen.get_active_modifier_labels()
+
+    def test_mult_key_uses_x_suffix_no_sign(self):
+        """Suppressor 0.75x should read as '0.75x', not '+0.75' (green/positive)."""
+        labels = self._make_labels([
+            {'ability': 'damage_mult', 'value': 0.75, 'source': 'Suppressor', 'scope': 'external', 'active': True},
+        ])
+        assert len(labels) == 1
+        assert "0.75x" in labels[0]
+        assert "+0.75" not in labels[0]
+
+    def test_add_key_uses_signed_format(self):
+        """`_add` keys show explicit sign so users know direction."""
+        labels = self._make_labels([
+            {'ability': 'shield_bonus_add', 'value': 50.0, 'source': 'Projector', 'scope': 'external', 'active': True},
+        ])
+        assert "+50.00" in labels[0]
+
+    def test_add_key_negative_signed(self):
+        labels = self._make_labels([
+            {'ability': 'accuracy_add', 'value': -0.25, 'source': 'Jammer', 'scope': 'external', 'active': True},
+        ])
+        assert "-0.25" in labels[0]
+
+    def test_non_numeric_value_skipped_not_crash(self):
+        """PROJ-272 Phase 11: non-numeric value from a future aura
+        should skip the entry with a logger warning, not crash the HUD."""
+        labels = self._make_labels([
+            {'ability': 'shield_capacity_mult', 'value': "oops", 'source': 'Buggy', 'scope': 'external', 'active': True},
+            {'ability': 'damage_mult', 'value': 1.5, 'source': 'OK', 'scope': 'external', 'active': True},
+        ])
+        # Buggy entry dropped; OK entry present.
+        assert len(labels) == 1
+        assert "1.50x" in labels[0]

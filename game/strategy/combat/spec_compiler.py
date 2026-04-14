@@ -65,8 +65,6 @@ _DEFAULT_ABSOLUTE_MAX_TICKS = 20_000
 def build_strategy_battle_spec(
     fleets: List["Fleet"],
     *,
-    sector: Any = None,
-    system: Any = None,
     empires: Optional[Mapping[Any, Any]] = None,
     settings: Any = None,
     registries: "GameRegistries",
@@ -81,13 +79,11 @@ def build_strategy_battle_spec(
     Args:
         fleets: The fleets clashing on the hex. One team per fleet in
             Phase 1 (N-team support lands in Phase 3).
-        sector: Optional sector object. The compiler reads a `modifiers`
-            attribute if present (iterable of dicts with `design_id`
-            and `display_name`).
-        system: Optional star-system object — same `modifiers` contract.
-        empires: Optional mapping of team_id -> empire. Each empire may
-            expose `combat_modifiers` (iterable of dicts) that flow into
-            `ModifierStack.per_team[team_id]`.
+        empires: Optional mapping of team_id -> empire. Used by the
+            post-battle hook to remove destroyed fleets from the owning
+            empire's fleet list. Does NOT inject any modifier-stack
+            entries (PROJ-271 Phase 9 deleted the old empire-modifier
+            path). Production callers may pass `None`.
         settings: Optional GameSettings. Only `combat_boundary_default`
             is consulted; None falls back to `UnboundedRegion`.
         registries: GameRegistries (required for signature parity and
@@ -99,19 +95,21 @@ def build_strategy_battle_spec(
             `TeamEliminatedCondition()` — matches today's strategy combat.
         environmental_effects: Optional `EnvironmentalEffects` object
             carrying per-battle environmental multipliers (e.g. storm
-            shield interference). Translated to global ModifierStack
-            entries. PROJ-269 Phase 5.5 semantics apply — placeholder
-            effects are emitted for the engine's forensic trace; real
-            effect evaluation is post-PROJ-269 content work.
+            shield interference). Translated to global ModifierStack entries.
         team_modifiers: Optional mapping `{team_id: FleetCombatModifiers}`
             carrying per-team strategic modifiers (shield/damage
             multipliers, flat shield bonus). Translated to per-team
-            ModifierStack entries with placeholder effects.
+            ModifierStack entries via `_entries_from_fleet_combat_modifiers`.
 
     Returns:
-        Populated `BattleSpec`. The caller (`SimulationBattleResolver`
-        post-Phase 6) passes this to `run_battle` along with a
-        `ship_builder` closure that calls `ShipInstance.to_ship`.
+        Populated `BattleSpec`. The caller (`SimulationBattleResolver`)
+        passes this to `run_battle` along with a `ship_builder` closure
+        that calls `ShipInstance.to_ship`.
+
+    PROJ-272 Phase 7: removed vestigial `sector`/`system`/`modifiers`-on-
+    `empires` kwargs that fed the deleted `_entries_from_modifier_source`
+    helper (PROJ-271 Phase 9). `empires` kwarg KEPT because the
+    post-battle hook still uses it to prune destroyed fleets.
     """
     _ = registries  # Phase 1: parity; Phase 2 uses this for ship construction.
 
@@ -123,9 +121,6 @@ def build_strategy_battle_spec(
         teams.append(_team_spec_for_fleet(fleet, team_id=team_id))
 
     modifier_stack = _build_modifier_stack(
-        sector=sector,
-        system=system,
-        empires=empires,
         team_count=len(teams),
         environmental_effects=environmental_effects,
         team_modifiers=team_modifiers,
@@ -306,29 +301,22 @@ def _ship_spec_from_instance(
 
 def _build_modifier_stack(
     *,
-    sector: Any,
-    system: Any,
-    empires: Mapping[Any, Any],
     team_count: int,
     environmental_effects: Any = None,
     team_modifiers: Optional[Mapping[int, Any]] = None,
 ) -> ModifierStack:
-    # PROJ-271 Phase 9: `sector.modifiers` / `system.modifiers` /
-    # `empire.combat_modifiers` ad-hoc dict iterables are no longer
-    # consumed. Audit (2026-04-13) confirmed no production code
-    # populates these attributes. The old `_entries_from_modifier_source`
-    # helper emitted placeholder entries (silently dropped at battle
-    # time) — that was a "dead-with-landmine" pattern that reproduced
-    # the PROJ-269 bug class. Real strategic modifiers flow via
-    # environmental_effects and team_modifiers (below).
+    # PROJ-271 Phase 9 + PROJ-272 Phase 7: `sector`/`system`/`empires`
+    # kwargs removed. The old `_entries_from_modifier_source` helper
+    # (deleted Phase 9) emitted placeholder entries for ad-hoc
+    # `sector.modifiers` / `system.modifiers` / `empire.combat_modifiers`
+    # attributes; no production code populated them, and callers were
+    # silently discarding the results. Real strategic modifiers flow via
+    # `environmental_effects` (global) and `team_modifiers` (per-team).
     global_entries: List[ModifierEntry] = []
     if environmental_effects is not None:
         global_entries.extend(
             _entries_from_environmental_effects(environmental_effects)
         )
-    _ = system  # Parameter retained for API stability (Phase 9 deletion scope).
-    _ = sector
-    _ = empires
 
     per_team: Dict[int, Tuple[ModifierEntry, ...]] = {}
     for team_id in range(team_count):
@@ -365,6 +353,8 @@ def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
                 stat_key="shield_capacity_mult",
                 value=shield_mult,
                 operation="multiply",
+                # PROJ-272 Phase 2: overlapping storms MAX, not SUM.
+                stack_group="storm_shield_interference",
             )
         )
     return entries
@@ -395,6 +385,10 @@ def _entries_from_fleet_combat_modifiers(
                 stat_key="shield_capacity_mult",
                 value=shield_mult,
                 operation="multiply",
+                # PROJ-272 Phase 2: per-team shield multipliers MAX within team.
+                # Collector-aggregated; one entry per team — still grouped for
+                # future source expansion (e.g., multi-empire fleet bonuses).
+                stack_group=f"team{team_id}_shield_mult",
             )
         )
     if damage_mult != 1.0:
@@ -406,6 +400,7 @@ def _entries_from_fleet_combat_modifiers(
                 stat_key="damage_mult",
                 value=damage_mult,
                 operation="multiply",
+                stack_group=f"team{team_id}_damage_mult",
             )
         )
     if flat_shield:
@@ -417,6 +412,7 @@ def _entries_from_fleet_combat_modifiers(
                 stat_key="shield_bonus_add",
                 value=flat_shield,
                 operation="add",
+                stack_group=f"team{team_id}_flat_shield",
             )
         )
     return entries
@@ -430,6 +426,7 @@ def _real_entry(
     stat_key: str,
     value: float,
     operation: str = "multiply",
+    stack_group: Optional[str] = None,
 ) -> ModifierEntry:
     """Build a `ModifierEntry` that the engine will actually apply.
 
@@ -437,6 +434,11 @@ def _real_entry(
     mapping is known. The `FleetAuraManager` translates this into an
     `ExternalModifier` via `ability_name=stat_key` and applies it to
     ship stats at battle start.
+
+    PROJ-272 Phase 2: accepts `stack_group` so entries participate in
+    two-phase MAX/SUM aggregation. Default None means "unique group"
+    (each such entry contributes independently via SUM — matches
+    pre-PROJ-272 behavior).
     """
     effect = ModifierEffect(
         stat_key=stat_key,
@@ -448,7 +450,7 @@ def _real_entry(
         formula_str="",
         param_value=value,
     )
-    return ModifierEntry(source=source, stack_group=None, effect=effect)
+    return ModifierEntry(source=source, stack_group=stack_group, effect=effect)
 
 
 __all__ = ["build_strategy_battle_spec"]

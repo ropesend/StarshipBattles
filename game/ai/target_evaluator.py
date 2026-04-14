@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from game.core.math import Vector2
 from game.core.constants import AttackType, LayerType
 from game.ai.protocols import is_projectile
+from game.simulation.interfaces.entity_protocols import is_combat_ship
 from game.ai.combat_utils import (
     get_capability_cache_key,
     get_position,
@@ -164,7 +165,14 @@ class TargetEvaluator:
 
     @staticmethod
     def _eval_has_weapons_rule(candidate, rule, ship_capabilities_cache):
-        """Evaluate has_weapons rule."""
+        """Evaluate has_weapons rule.
+
+        PROJ-272 Phase 3: projectile candidates (missiles) have no
+        components — rule treats them as "no weapons" without crashing
+        on the `get_components_by_ability` call. Previously crashed in
+        the cache-miss fallback; outer try/except silently dropped the
+        missile from scoring.
+        """
         weight = rule.get('weight', 0)
         required = rule.get('required', False)
 
@@ -172,9 +180,12 @@ class TargetEvaluator:
         candidate_id = get_capability_cache_key(candidate)
         if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
             has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
-        else:
-            # Fall back to component lookup
+        elif is_combat_ship(candidate):
+            # Fall back to component lookup — only valid for ship-like entities.
             has_wpns = any(candidate.get_components_by_ability('WeaponAbility', operational_only=False))
+        else:
+            # Projectile or non-combat-ship entity — no component query possible.
+            has_wpns = False
 
         if has_wpns:
             return (weight if weight > 0 else 1000, True)
@@ -182,9 +193,18 @@ class TargetEvaluator:
 
     @staticmethod
     def _eval_least_armor_rule(candidate, rule):
-        """Evaluate least_armor rule."""
+        """Evaluate least_armor rule.
+
+        PROJ-272 Phase 3: projectile candidates have no armor layer —
+        rule treats them as "zero armor" (score 0) without crashing on
+        the `get_components_by_layer` call.
+        """
         weight = rule.get('weight', 0)
         factor = rule.get('factor', 1)
+
+        if not is_combat_ship(candidate):
+            # Projectiles have no layers/components. Score as zero armor.
+            return (0, True)
 
         armor_comps = candidate.get_components_by_layer(LayerType.ARMOR)
         # BUG FIX: Component has .current_hp, not .hp (getattr(c, 'hp', 0) always returned 0)

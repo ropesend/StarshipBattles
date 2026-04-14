@@ -10,7 +10,7 @@ The collector handles the perspective of a single fleet:
 """
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, TYPE_CHECKING
 
 from game.strategy.services.strategic_ability_scanner import (
     find_abilities_in_scope,
@@ -74,6 +74,20 @@ def collect_combat_modifiers(
     damage_entries = []
     shield_projection_values = []
 
+    # PROJ-272 Phase 1: resolve class default when JSON omits `scope`.
+    # Previously `entry.get('scope', 'self')` silently dropped abilities
+    # whose author forgot to specify scope — runtime falls back to
+    # ALLIED_SYSTEM for ShieldModifier/DamageModifier, compiler/collector
+    # fell back to 'self'. Disagreement caused silent no-ops.
+    from game.simulation.components.abilities import get_ability_default_scope
+
+    def _entry_scope(ability_key: str, entry: Dict[str, Any]) -> str:
+        """Resolve effective scope for an ability data dict, matching runtime."""
+        scope = entry.get('scope')
+        if scope is not None:
+            return scope
+        return get_ability_default_scope(ability_key)
+
     if fleet_empire is not None:
         for scan_scope, valid_scopes in _FRIENDLY_SCOPE_MAP.items():
             for ability_key, entries_list in [
@@ -85,7 +99,7 @@ def collect_combat_modifiers(
                     require_active=True,
                 )
                 for entry in found:
-                    if entry.get('scope', 'self') in valid_scopes:
+                    if _entry_scope(ability_key, entry) in valid_scopes:
                         entries_list.append(entry)
 
             # ShieldProjection at strategic scopes (flat bonus)
@@ -94,7 +108,7 @@ def collect_combat_modifiers(
                 require_active=True,
             )
             for entry in sp_entries:
-                if entry.get('scope', 'self') in valid_scopes:
+                if _entry_scope("ShieldProjection", entry) in valid_scopes:
                     value = entry.get('value', 0)
                     if isinstance(value, dict):
                         value = value.get('value', 0)
@@ -117,7 +131,7 @@ def collect_combat_modifiers(
                 )
                 # Only include abilities with enemy_* scope
                 for entry in found:
-                    entry_scope = entry.get('scope', '')
+                    entry_scope = _entry_scope(ability_key, entry)
                     if entry_scope.startswith('enemy'):
                         entries_list.append(entry)
 

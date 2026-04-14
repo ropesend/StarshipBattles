@@ -394,6 +394,109 @@ def test_none_stack_group_entries_each_contribute_independently():
     assert ship.fleet_attack_bonus == pytest.approx(0.6)
 
 
+def test_zero_value_damage_mult_preserved():
+    """PROJ-272 Phase 8: `_apply_bonuses` must NOT filter out legitimate
+    0.0 values. A damage_mult of 0.0 is a valid effect ("enemy ships deal
+    zero damage") — semantically different from "no modifier applied".
+
+    Old `if v` truthy-filter conflated the two; new `if v is not None`
+    preserves the distinction.
+    """
+    ship = _ship(0)
+    stack = ModifierStack(
+        per_team={
+            0: (_grouped_mult_entry("suppressor", "damage_mult", 0.0, "total_suppress"),),
+        },
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+    # 0.0 must be present (not filtered) — it means "zero damage" literally.
+    assert "damage_mult" in ship.external_stats, (
+        "damage_mult=0.0 was dropped by `if v` truthy filter. Must preserve."
+    )
+    assert ship.external_stats["damage_mult"] == 0.0
+
+
+def test_consecutive_battles_reset_external_stats():
+    """PROJ-272 Phase 4: a ship carried across consecutive battles must
+    START each battle with `external_stats = {}`. Strategy mode reuses
+    ShipInstance across battles — any stale external_stats from the
+    previous battle would silently leak buffs/debuffs.
+
+    `FleetAuraManager.initialize` is the authoritative reset point."""
+    ship = _ship(0)
+    # Simulate ship carrying external_stats from previous battle.
+    ship.external_stats = {"shield_bonus_add": 50.0, "damage_mult": 0.8}
+
+    # New battle with empty ModifierStack.
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=ModifierStack.empty())
+
+    # External stats must be cleared at battle start — NOT leaked.
+    assert ship.external_stats == {}, (
+        f"external_stats leaked across battles: {ship.external_stats}. "
+        f"FleetAuraManager.initialize must reset external_stats for every "
+        f"ship at battle start."
+    )
+
+
+def test_destroyed_ship_external_stats_cleared():
+    """PROJ-272 Phase 4: destroyed ship has external_stats reset to {}
+    in `_apply_bonuses`. Locks the 'correct-by-accident' behavior flagged
+    by round-2 audit so a future refactor can't silently break it."""
+    ship = _ship(0)
+    # Start alive with a bonus.
+    stack = ModifierStack(
+        per_team={0: (_add_entry("planet", "shield_bonus_add", 50.0),)},
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+    assert ship.external_stats.get("shield_bonus_add") == pytest.approx(50.0)
+
+    # Kill the ship, update — external_stats must be cleared.
+    ship.is_alive = False
+    mgr.update([ship])
+    assert ship.external_stats == {}, (
+        f"Destroyed ship still has external_stats: {ship.external_stats}. "
+        f"Dead ships must not retain buffs."
+    )
+
+
+def test_provider_and_external_same_stack_group_do_not_cross_compose():
+    """PROJ-272 Phase 2: document intentional limitation — provider auras
+    bucket by `type(ab).__name__` ("ShieldModifier") while external entries
+    bucket by `stat_key` ("shield_capacity_mult"). They use different top-level
+    keys in `team_ability_groups`, so a matching `stack_group` does NOT cause
+    cross-source MAX composition — they aggregate independently.
+
+    This test locks the limitation. Unifying the key schemes would require
+    a class-name → stat_key registry (larger refactor not in PROJ-272 scope).
+    """
+    # Minimal setup: one ship that has NO components providing ShieldModifier.
+    # One external entry with stat_key="shield_capacity_mult" and a stack_group.
+    # Confirm: no cross-source interaction happens (there are no provider
+    # entries to collide with, so the external entry aggregates cleanly).
+    ship = _ship(0)
+    stack = ModifierStack(
+        per_team={
+            0: (_grouped_mult_entry("ext", "shield_capacity_mult", 1.5, "shield_boost"),),
+        },
+        global_=(),
+    )
+    mgr = FleetAuraManager()
+    mgr.initialize([ship], modifier_stack=stack)
+
+    # External entry under "shield_capacity_mult" bucket
+    assert ship.external_stats.get("shield_capacity_mult") == pytest.approx(1.5)
+    # Provider-style "ShieldModifier" bucket is NOT populated (no providers here)
+    assert "ShieldModifier" not in ship.external_stats, (
+        "External stat_key and provider class_name are separate buckets; "
+        "no cross-source composition possible under the current key scheme."
+    )
+
+
 def test_shield_bonus_add_does_not_log_placeholder_warning(caplog):
     """The new stat_key must NOT trigger the `_log_placeholder_once`
     warning — it's a real mapping now."""

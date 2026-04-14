@@ -81,8 +81,6 @@ class _FakeSettings:
 def test_compiler_returns_battle_spec(fleets_on_hex, session_registries):
     spec = build_strategy_battle_spec(
         fleets_on_hex,
-        sector=None,
-        system=None,
         empires={},
         settings=_FakeSettings(),
         registries=session_registries,
@@ -93,8 +91,6 @@ def test_compiler_returns_battle_spec(fleets_on_hex, session_registries):
 def test_compiler_one_team_per_fleet(fleets_on_hex, session_registries):
     spec = build_strategy_battle_spec(
         fleets_on_hex,
-        sector=None,
-        system=None,
         empires={},
         settings=_FakeSettings(),
         registries=session_registries,
@@ -118,8 +114,6 @@ def test_compiler_one_team_per_fleet(fleets_on_hex, session_registries):
 def test_compiler_defaults_to_normal_telemetry(fleets_on_hex, session_registries):
     spec = build_strategy_battle_spec(
         fleets_on_hex,
-        sector=None,
-        system=None,
         empires={},
         settings=_FakeSettings(),
         registries=session_registries,
@@ -132,8 +126,6 @@ def test_compiler_uses_boundary_from_settings(fleets_on_hex, session_registries)
     settings = _FakeSettings(combat_boundary_default=boundary)
     spec = build_strategy_battle_spec(
         fleets_on_hex,
-        sector=None,
-        system=None,
         empires={},
         settings=settings,
         registries=session_registries,
@@ -146,8 +138,6 @@ def test_compiler_none_settings_boundary_falls_back_to_unbounded(
 ):
     spec = build_strategy_battle_spec(
         fleets_on_hex,
-        sector=None,
-        system=None,
         empires={},
         settings=_FakeSettings(combat_boundary_default=None),
         registries=session_registries,
@@ -158,8 +148,6 @@ def test_compiler_none_settings_boundary_falls_back_to_unbounded(
 def test_compiler_post_battle_hook_is_callable(fleets_on_hex, session_registries):
     spec = build_strategy_battle_spec(
         fleets_on_hex,
-        sector=None,
-        system=None,
         empires={},
         settings=_FakeSettings(),
         registries=session_registries,
@@ -236,8 +224,6 @@ def test_compiler_populates_ship_spec_components_from_instance(
 
     spec = build_strategy_battle_spec(
         [fleet],
-        sector=None,
-        system=None,
         empires={},
         settings=None,
         registries=session_registries,
@@ -289,8 +275,6 @@ def test_compiler_empty_instance_components_yields_empty_ship_spec_components(
 
     spec = build_strategy_battle_spec(
         [fleet],
-        sector=None,
-        system=None,
         empires={},
         settings=None,
         registries=session_registries,
@@ -298,3 +282,55 @@ def test_compiler_empty_instance_components_yields_empty_ship_spec_components(
 
     ship_spec = spec.teams[0].fleet_hierarchy[0].squadrons[0].ships[0]
     assert ship_spec.components == ()
+
+
+# ---------------------------------------------------------------------------
+# PROJ-272 Phase 2: strategy compiler must thread `stack_group` through
+# `_real_entry` so downstream `FleetAuraManager._recalculate` can compose
+# same-group entries via MAX (instead of SUM). Previously hardcoded None.
+# ---------------------------------------------------------------------------
+
+
+class TestStackGroupThreadingInStrategyCompiler:
+    """Strategy compiler's `_real_entry` helper must accept + thread
+    `stack_group` onto every emitted ModifierEntry. Storm entries share
+    `stack_group="storm_shield_interference"`; fleet multipliers share
+    team-scoped groups."""
+
+    def test_storm_entry_has_storm_stack_group(self):
+        from game.strategy.combat.spec_compiler import _entries_from_environmental_effects
+        from game.strategy.services.area_effect_manager import EnvironmentalEffects
+        effects = EnvironmentalEffects(shield_capacity_mult=0.5)
+        entries = _entries_from_environmental_effects(effects)
+        assert entries
+        assert entries[0].stack_group == "storm_shield_interference", (
+            f"Storm entry should use a dedicated stack_group so overlapping "
+            f"storms MAX instead of SUM. Got stack_group={entries[0].stack_group!r}"
+        )
+
+    def test_fleet_shield_mult_has_team_scoped_stack_group(self):
+        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+        mods = FleetCombatModifiers(shield_mult=1.5, damage_mult=1.0, flat_shield_bonus=0.0)
+        entries = _entries_from_fleet_combat_modifiers(mods, team_id=0)
+        shield_entries = [e for e in entries if e.effect.stat_key == "shield_capacity_mult"]
+        assert shield_entries
+        assert shield_entries[0].stack_group == "team0_shield_mult"
+
+    def test_fleet_damage_mult_has_team_scoped_stack_group(self):
+        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+        mods = FleetCombatModifiers(shield_mult=1.0, damage_mult=0.75, flat_shield_bonus=0.0)
+        entries = _entries_from_fleet_combat_modifiers(mods, team_id=1)
+        damage_entries = [e for e in entries if e.effect.stat_key == "damage_mult"]
+        assert damage_entries
+        assert damage_entries[0].stack_group == "team1_damage_mult"
+
+    def test_fleet_flat_shield_bonus_has_team_scoped_stack_group(self):
+        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+        mods = FleetCombatModifiers(shield_mult=1.0, damage_mult=1.0, flat_shield_bonus=50.0)
+        entries = _entries_from_fleet_combat_modifiers(mods, team_id=0)
+        bonus_entries = [e for e in entries if e.effect.stat_key == "shield_bonus_add"]
+        assert bonus_entries
+        assert bonus_entries[0].stack_group == "team0_flat_shield"

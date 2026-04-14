@@ -419,15 +419,21 @@ The `update()` method is a concise coordinator that delegates to focused helpers
 Initialized at battle start, recalculated every tick. Bonuses removed immediately when provider
 ship is destroyed. Stacking follows two-phase aggregation (same group = MAX, different groups = SUM).
 
-**External modifiers** (PROJ-270 Phase 6.4a + Phase 9, PROJ-271 Phase 7):
+**External modifiers** (PROJ-270 Phase 6.4a + Phase 9, PROJ-271 Phase 7, PROJ-272 Phase 2):
 per-team and global battle conditions flow into the aura manager via
 `spec.modifier_stack` only — the legacy `BattleConfig.team_modifiers` /
 `global_modifiers` kwargs were deleted. `FleetAuraManager._apply_bonuses`
 writes ALL entries into `ship.external_stats: Dict[str, float]` (not just
 the two hardcoded keys that survived 5.5). `stack_group` is respected via
-two-phase MAX/SUM aggregation (`_aggregate_ability_groups`). Unknown
-stat_keys emit a once-per-source WARNING; placeholders no longer exist
-(PROJ-271 Phase 9 deleted `_entries_from_modifier_source`).
+two-phase MAX/SUM aggregation (`_aggregate_ability_groups`) — but only
+WITHIN-SOURCE: provider auras (ship-mounted `type(ab).__name__` key) and
+external entries (`effect.stat_key` key) use different top-level buckets
+and DO NOT cross-compose even with matching stack_group. Strategy compiler
+threads `stack_group` through every `_real_entry` emission (storm entries
+share `"storm_shield_interference"`; team multipliers share
+`"team{N}_shield_mult"` / `"team{N}_damage_mult"` / `"team{N}_flat_shield"`).
+Unknown stat_keys emit a once-per-source WARNING; placeholders no longer
+exist (PROJ-271 Phase 9 deleted `_entries_from_modifier_source`).
 
 **Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A + PROJ-271 Track B):
 All strategic modifier sources emit real stat_keys now. Storm hex shield
@@ -571,20 +577,28 @@ DamageCalculator, WeaponFiringSystem) are class-level shared instances since the
 - `_weapons_cache` -- per-tick cache for AI targeting hot path
 - Invalidated on add/remove/recalculate
 
-### Shield Stat Pipeline Ordering (PROJ-271)
+### Shield Stat Pipeline Ordering (PROJ-271 + PROJ-272 Phase 6)
 
 `ShipStatsCalculator._apply_aggregated_stats` computes `ship.max_shields` as:
 
 ```
-max_shields = (base_shield_capacity + shield_bonus_add) × capacity_mult × shield_capacity_mult
+max_shields = (sum_of_component_capacities) + (shield_bonus_add × shield_capacity_mult)
 ```
 
-- `base_shield_capacity` — sum of `ShieldProjection` base values from operational components
-- `shield_bonus_add` — read directly from `ship.external_stats['shield_bonus_add']` (flat bonus from planet shield-projector auras, compiled via `_complex_to_entries` or `_entries_from_fleet_combat_modifiers`)
-- `capacity_mult` — aggregated per-ability multiplier (component modifiers)
-- `shield_capacity_mult` — external team-aura multiplier (storm interference, fleet boosters), also read from `ship.external_stats`
+where each component's capacity is already scaled by per-component `capacity_mult` and the external `shield_capacity_mult` via `ShieldProjection.recalculate`. So the full semantic composition is:
 
-The flat-then-multiply ordering is load-bearing: a planet that grants +500 shield HP and a fleet with a 2× shield aura compose to `(base + 500) × 2`, matching the semantic "flat bonus behaves like an extra shield component providing the ability" (PROJ-271 decisions.md). This ordering is locked by `tests/unit/simulation/entities/test_ship_shield_bonus_add.py`. New ship-level additive stat_keys must follow the same pattern.
+```
+max_shields = sum_i(base_capacity_i × capacity_mult_i × shield_capacity_mult) + shield_bonus_add × shield_capacity_mult
+```
+
+- `base_capacity_i` — the base value of each `ShieldProjection` component on the ship
+- `capacity_mult_i` — per-component local multiplier
+- `shield_capacity_mult` — external team-aura multiplier (storm interference, fleet boosters), applied uniformly to both real components AND the flat bonus
+- `shield_bonus_add` — read directly from `ship.external_stats['shield_bonus_add']` (flat bonus from planet shield-projector auras; compiled via `_complex_to_entries` or `_entries_from_fleet_combat_modifiers`)
+
+The flat-then-multiply ordering is load-bearing: a planet that grants +500 shield HP and a fleet with a 2× shield aura compose to `(real_components_total) + 500 × 2`, matching the semantic "flat bonus behaves like an extra shield component providing the ability" (PROJ-271 decisions.md). This ordering is locked by `tests/unit/simulation/entities/test_ship_shield_bonus_add.py`.
+
+**PROJ-272 Phase 6 note:** The flat bonus is NOT scaled by `capacity_mult` from external_stats. No current team aura populates `capacity_mult` (it's a per-component stat_key, not a team-aura stat_key), so reading it for flat-bonus scaling was a latent double-multiply. Revisit if a future team-aura produces `capacity_mult`. New ship-level additive stat_keys must follow the same pattern.
 
 ---
 
@@ -850,3 +864,59 @@ TypeGuard functions: `is_weapon()`, `is_beam_weapon()`, `is_seeker_weapon()`, et
 
 All protocols are `@runtime_checkable` and designed for 1:1 mapping to
 C# interfaces / Rust traits.
+
+---
+
+## 8. UI Modifier Visibility (PROJ-271 Phase 8)
+
+Battle-scoped modifiers (external `ModifierStack` entries from fleet
+boosters, environmental effects, planet auras) are surfaced to the user
+in two places:
+
+**Results Screen — per-ship shield numbers.**
+[`game/ui/screens/battle_results_screen.py::_draw_ship_card`](../../game/ui/screens/battle_results_screen.py) renders a
+`"Shields: current/max"` row on every ship card. `ShipOutcome.current_shields`
+/ `.max_shields` are set by `extract_outcome` and reflect the full composition
+(base + flat bonuses, scaled by storm/fleet multipliers). A +50 flat bonus
+from a shield-projector aura is visible to the user as the difference between
+buffed and baseline ships.
+
+**Battle Screen — live HUD active-modifier panel.**
+[`game/ui/screens/battle_screen.py::get_active_modifier_labels`](../../game/ui/screens/battle_screen.py) pulls
+from `FleetAuraManager.get_active_bonuses(team_id)` for each team and
+formats `"T{N} {stat_key}={value:.2f} ({source})"` labels. The HUD draws
+the list only when the panel is non-empty. Added in PROJ-271 Phase 8.2
+after round-1 audit flagged that the aura manager's `get_active_bonuses`
+method had zero UI consumers.
+
+---
+
+## 9. Multi-team Battle Limits (PROJ-272 Phase 9)
+
+**2-team assumption in compilers.** Both `build_manual_battle_spec` (Battle
+Setup compiler) and `SimulationBattleResolver.resolve_battle` (strategy)
+assume exactly 2 teams. Battle Setup uses `_NUM_TEAMS = 2` + a two-team
+`_route_team_for_scope` lookup; strategy's `resolve_battle(fleet1, fleet2,
+...)` takes exactly 2 fleet args. If a hex naturally produces 3+ fleets
+(e.g., three empires meeting at one sector), `ConflictResolutionEngine`
+resolves them as SEQUENTIAL 2-fleet battles — there is no native N-team
+combat resolution today.
+
+`FleetAuraManager._recalculate` already supports N teams in its internal
+structure (iterates all team_ids found on ships), so engine-side
+expansion is feasible. Compiler-side expansion requires: (a) Battle Setup
+UI to surface N sides, (b) strategy resolver to take an N-fleet argument,
+(c) `_route_team_for_scope` to return a list of opponent team_ids instead
+of a single int for multi-enemy routing.
+
+**Mid-battle destruction of external modifier sources is NOT supported.**
+External `ModifierStack` entries (from Battle Setup complex toggles,
+strategy planet auras compiled via `CombatModifierCollector`) are static
+for the duration of the battle. They cannot be destroyed or deactivated
+mid-fight, because they aren't ship entities — they're pre-compiled stack
+entries. User-facing implication: a shield-projector planet's aura
+persists even if the planet is conceptually "in the battle sector" and
+conceptually "should" stop projecting when its component is destroyed.
+A future project that wants destructible external modifiers must turn
+them into real in-battle ship entities (with their own ability providers)
+rather than static stack entries.

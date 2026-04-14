@@ -14,7 +14,7 @@
 | # | Document | What you learn |
 |---|----------|---------------|
 | 1 | [01_ARCHITECTURE.md](01_ARCHITECTURE.md) | Layer structure, package APIs, protocols, data flow |
-| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 26 design patterns with file locations and code examples |
+| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 25 design patterns with file locations and code examples |
 | 3 | [03_CONVENTIONS.md](03_CONVENTIONS.md) | Naming, file organization, imports, testing conventions |
 
 ### Step 2: Task-specific (read based on what you're doing)
@@ -63,7 +63,7 @@
 docs/
 ├── README.md                    <- You are here
 ├── 01_ARCHITECTURE.md           # Layers, packages, APIs, protocols, data flow
-├── 02_PATTERNS.md               # 26 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
+├── 02_PATTERNS.md               # 25 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
 ├── 03_CONVENTIONS.md            # Naming, file org, imports, test conventions
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging

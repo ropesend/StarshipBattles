@@ -322,10 +322,16 @@ class FleetAuraManager:
                     groups[group] = []
                 groups[group].append(ext.value)
 
-        # PROJ-253: Delegate two-phase aggregation to shared function
+        # PROJ-253: Delegate two-phase aggregation to shared function.
+        # PROJ-272 Phase 8: narrowed `if v` truthy filter → `if v is not None`
+        # so legitimate 0.0 values (e.g., `damage_mult=0.0` = "deal zero
+        # damage" suppressor) are preserved. 0.0 and "no modifier" are
+        # semantically different game states and must not be conflated.
         for team_id, ability_groups in team_ability_groups.items():
             totals = _aggregate_ability_groups(ability_groups)
-            self._team_bonuses[team_id] = {k: v for k, v in totals.items() if v}
+            self._team_bonuses[team_id] = {
+                k: v for k, v in totals.items() if v is not None
+            }
 
         self._apply_bonuses(ships)
 

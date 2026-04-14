@@ -342,3 +342,94 @@ def test_compiler_empty_ui_state_yields_empty_teams(session_registries):
             s for tf in team.fleet_hierarchy for sq in tf.squadrons for s in sq.ships
         ]
         assert ships == []
+
+
+# ---------------------------------------------------------------------------
+# PROJ-272 Phase 1: `_extract_scope` must resolve class-level `default_scope`
+# when JSON omits `scope`. Compiler/runtime disagreement would silently drop
+# a complex whose author forgot to specify scope.
+# ---------------------------------------------------------------------------
+
+
+class TestRouteTeamForScope3PlusTeamsLoud:
+    """PROJ-272 Phase 10: 3+ team usage must raise NotImplementedError
+    explicitly instead of silently misrouting. The compiler is 2-team
+    today (`_NUM_TEAMS = 2`); expansion is a deliberate future project."""
+
+    def test_route_team_for_scope_rejects_owner_team_2(self):
+        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
+        import pytest
+        with pytest.raises(NotImplementedError, match="2-team only"):
+            _route_team_for_scope("enemy_sector", owner_team=2)
+
+    def test_route_team_for_scope_rejects_owner_team_3(self):
+        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
+        import pytest
+        with pytest.raises(NotImplementedError):
+            _route_team_for_scope("enemy_system", owner_team=5)
+
+    def test_route_team_for_scope_rejects_negative_owner_team(self):
+        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
+        import pytest
+        with pytest.raises(NotImplementedError):
+            _route_team_for_scope("self", owner_team=-1)
+
+    def test_route_team_for_scope_accepts_teams_0_and_1(self):
+        """Current 2-team assumption: owner=0 → opponent=1; owner=1 → opponent=0."""
+        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
+        assert _route_team_for_scope("enemy_sector", owner_team=0) == 1
+        assert _route_team_for_scope("enemy_system", owner_team=1) == 0
+        assert _route_team_for_scope("self", owner_team=0) == 0
+        assert _route_team_for_scope("allied_sector", owner_team=1) == 1
+
+
+class TestExtractScopeResolvesClassDefault:
+    """`_extract_scope(ability_name, ability_data)` must look up the ability
+    class's `default_scope` when the data dict omits `scope`, matching the
+    runtime `Ability._parse_scope` behavior. Previously returned `"self"`
+    unconditionally, silently dropping ShieldModifier/DamageModifier abilities
+    whose JSON forgot to specify scope (runtime default: ALLIED_SYSTEM)."""
+
+    def test_shield_modifier_with_missing_scope_resolves_to_class_default(self):
+        """ShieldModifier.default_scope = ALLIED_SYSTEM. When JSON omits scope,
+        compiler must return 'allied_system', not 'self'."""
+        from game.ui.screens.battle_setup.spec_compiler import _extract_scope
+        scope = _extract_scope("ShieldModifier", {"multiplier": 1.25})
+        assert scope == "allied_system", (
+            f"ShieldModifier with no explicit scope → class default is "
+            f"ALLIED_SYSTEM (allied_system), compiler returned {scope!r}. "
+            f"Compiler/runtime disagreement silently drops the complex."
+        )
+
+    def test_damage_modifier_with_missing_scope_resolves_to_class_default(self):
+        """DamageModifier.default_scope = ALLIED_SYSTEM."""
+        from game.ui.screens.battle_setup.spec_compiler import _extract_scope
+        scope = _extract_scope("DamageModifier", {"multiplier": 0.8})
+        assert scope == "allied_system"
+
+    def test_shield_projection_with_missing_scope_resolves_to_class_default(self):
+        """ShieldProjection.default_scope = SELF. So 'self' is still correct,
+        but via class lookup — not hardcoded."""
+        from game.ui.screens.battle_setup.spec_compiler import _extract_scope
+        scope = _extract_scope("ShieldProjection", {"value": 50})
+        assert scope == "self"
+
+    def test_explicit_scope_in_dict_wins_over_class_default(self):
+        """If JSON DOES specify scope, use it."""
+        from game.ui.screens.battle_setup.spec_compiler import _extract_scope
+        scope = _extract_scope("ShieldModifier", {"multiplier": 1.25, "scope": "enemy_sector"})
+        assert scope == "enemy_sector"
+
+    def test_primitive_ability_data_returns_self(self):
+        """Ability data as primitive (e.g., `value: 100` shorthand) implies
+        SELF scope — the primitive has no scope field."""
+        from game.ui.screens.battle_setup.spec_compiler import _extract_scope
+        scope = _extract_scope("ShieldProjection", 100)
+        assert scope == "self"
+
+    def test_unknown_ability_name_falls_back_to_self(self):
+        """For an ability name not in the registry (future-unknown), fall
+        back to 'self' rather than crashing. Logs a warning."""
+        from game.ui.screens.battle_setup.spec_compiler import _extract_scope
+        scope = _extract_scope("UnknownAbility_NotInRegistry", {"value": 1})
+        assert scope == "self"
