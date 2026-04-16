@@ -283,7 +283,8 @@ class TestGetInventoryItems:
         """FleetInfo with passengers returns passenger items."""
         # Arrange
         fleet_info = FleetInfo(
-            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            fleet_id=1, owner_id=1, name="Fleet 1", composition_summary="1 ship",
+            location=HexCoord(0, 0),
             speed=5.0, ship_count=1, passengers_current=2500
         )
 
@@ -351,7 +352,8 @@ class TestGetInventoryItems:
         """FleetInfo with zero passengers returns empty list."""
         # Arrange
         fleet_info = FleetInfo(
-            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            fleet_id=1, owner_id=1, name="Fleet 1", composition_summary="1 ship",
+            location=HexCoord(0, 0),
             speed=5.0, ship_count=1, passengers_current=0
         )
 
@@ -485,7 +487,8 @@ class TestGetInventoryItemsResources:
     def test_fleet_with_cargo_resources_returns_items(self):
         """FleetInfo with cargo resources returns resource items."""
         fleet_info = FleetInfo(
-            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            fleet_id=1, owner_id=1, name="Fleet 1", composition_summary="1 ship",
+            location=HexCoord(0, 0),
             speed=5.0, ship_count=1,
             cargo_resources=(("metals", 300), ("fuel", 100)),
             cargo_capacities=(("metals", 1000), ("fuel", 500)),
@@ -501,7 +504,8 @@ class TestGetInventoryItemsResources:
     def test_fleet_shows_all_capacity_types_even_empty(self):
         """FleetInfo with cargo capacity but zero current shows item with 0."""
         fleet_info = FleetInfo(
-            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            fleet_id=1, owner_id=1, name="Fleet 1", composition_summary="1 ship",
+            location=HexCoord(0, 0),
             speed=5.0, ship_count=1,
             cargo_resources=(("metals", 0),),
             cargo_capacities=(("metals", 1000),),

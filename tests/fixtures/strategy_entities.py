@@ -399,7 +399,7 @@ def create_test_empire(
 
     for i in range(num_fleets):
         fleet = create_test_fleet(
-            fleet_id=empire._next_fleet_id + i,
+            fleet_id=1000 + i,
             owner_id=empire_id,
             registries=registries,
         )

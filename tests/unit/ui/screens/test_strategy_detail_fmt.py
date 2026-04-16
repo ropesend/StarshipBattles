@@ -81,6 +81,7 @@ def mock_fleet():
     """Create mock fleet with ships and orders."""
     fleet = Mock()
     fleet.id = "F-001"
+    fleet.name = "Fleet F-001"
     fleet.owner_id = 1
     fleet.location = (10, 20)
     fleet.speed = 5

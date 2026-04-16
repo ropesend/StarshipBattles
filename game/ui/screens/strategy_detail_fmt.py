@@ -510,7 +510,7 @@ def format_fleet_info(fleet: IFleet) -> str:
         HTML string with fleet details
     """
     # Header
-    text = f"<b>Fleet:</b> {fleet.id}<br>"
+    text = f"<b>Fleet:</b> {fleet.name}<br>"
     text += f"<b>Owner:</b> {fleet.owner_id}<br>"
     text += f"<b>Location:</b> {fleet.location}<br>"
 
@@ -554,7 +554,7 @@ def get_label_for_object(obj) -> str:
     elif is_warp_point(obj):
         return f"Warp Point -> {obj.destination_id}"
     elif is_fleet(obj):
-        return f"Fleet {obj.id} ({len(obj.ships)})"
+        return f"{obj.name} ({len(obj.ships)})"
     elif is_sector_environment(obj):
         return "Local Radiation Analysis"
     elif is_storm(obj):

@@ -123,6 +123,7 @@ class BaseCommandHandler:
             session: The game session with empires and galaxy.
             fleet_id: The fleet ID to resolve.
             empire_id: Optional empire ID to validate ownership.
+                None or -1 skips validation (backward compat for tests).
 
         Returns:
             tuple[Fleet, None] on success, tuple[None, ValidationResult] on failure.
@@ -131,7 +132,7 @@ class BaseCommandHandler:
         if fleet is None:
             return (None, ValidationResult.error("Fleet not found."))
 
-        if empire_id is not None and fleet.owner_id != empire_id:
+        if empire_id is not None and empire_id != -1 and fleet.owner_id != empire_id:
             return (None, ValidationResult.error("Fleet does not belong to this empire."))
 
         return (fleet, None)
@@ -146,6 +147,7 @@ class BaseCommandHandler:
             session: The game session with empires and galaxy.
             fleet_id: The fleet ID to resolve.
             empire_id: Optional empire ID to validate ownership.
+                None or -1 skips validation (backward compat for tests).
 
         Returns:
             Fleet object if found.
@@ -157,7 +159,7 @@ class BaseCommandHandler:
         if fleet is None:
             raise ValueError("Fleet not found.")
 
-        if empire_id is not None and fleet.owner_id != empire_id:
+        if empire_id is not None and empire_id != -1 and fleet.owner_id != empire_id:
             raise ValueError("Fleet does not belong to this empire.")
 
         return fleet
@@ -313,7 +315,7 @@ class ColonizeCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueColonizeCommand') -> ValidationResult:
         """Handle IssueColonizeCommand."""
         # 1. Resolve Fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -351,7 +353,7 @@ class MoveCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueMoveCommand') -> ValidationResult:
         """Handle IssueMoveCommand."""
         # 1. Resolve Fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -385,7 +387,7 @@ class InterceptCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueInterceptCommand') -> ValidationResult:
         """Handle IssueInterceptCommand - creates a MOVE_TO_FLEET order."""
         # 1. Resolve source fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -415,7 +417,7 @@ class JoinCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueJoinFleetCommand') -> ValidationResult:
         """Handle IssueJoinFleetCommand - creates MOVE_TO_FLEET and JOIN_FLEET orders."""
         # 1. Resolve source fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -455,7 +457,7 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
         from game.strategy.validation import ColonizeValidator
 
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -493,7 +495,7 @@ class ClearOrdersCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'ClearFleetOrdersCommand') -> ValidationResult:
         """Handle ClearFleetOrdersCommand - clears all orders from fleet."""
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -514,7 +516,7 @@ class TransferCommandHandler(BaseCommandHandler):
         logger.info(f"TransferCommandHandler: fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
 
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             logger.warning(f"TransferCommandHandler: Fleet {cmd.fleet_id} not found")
             return error
@@ -582,7 +584,7 @@ class BuildOrderCommandHandler(BaseCommandHandler):
         Clears the fleet path since fleet must stay stationary to build.
         """
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -603,7 +605,7 @@ class RemoveBuildOrderCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'RemoveBuildOrderCommand') -> ValidationResult:
         """Handle RemoveBuildOrderCommand - removes BUILD orders from fleet."""
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -620,7 +622,7 @@ class WarpCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueWarpCommand') -> ValidationResult:
         """Handle IssueWarpCommand - creates WARP order with optional MOVE prefix."""
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -671,7 +673,7 @@ class SplitFleetCommandHandler(BaseCommandHandler):
         with those ships at the same location.
         """
         # 1. Resolve source fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -701,14 +703,16 @@ class SplitFleetCommandHandler(BaseCommandHandler):
             return ValidationResult.error("Fleet owner not found.")
         empire = session.empires[fleet.owner_id]
 
-        # 5. Create new fleet at same location
+        # 5. Create new fleet at same location (globally unique ID from Galaxy)
         from game.strategy.data.fleet import Fleet
-        new_fleet_id = empire.get_next_fleet_id()
+        new_fleet_id = session.galaxy.get_next_fleet_id()
+        display_name = f"Fleet {empire.get_next_fleet_display_number()}"
         new_fleet = Fleet(
             fleet_id=new_fleet_id,
             owner_id=fleet.owner_id,
             location=fleet.location,
-            component_registry=fleet._component_registry
+            component_registry=fleet._component_registry,
+            display_name=display_name,
         )
 
         # 6. Move ships to new fleet
@@ -732,7 +736,7 @@ class DeleteFleetOrderCommandHandler(BaseCommandHandler):
         If the active order (index 0) is deleted, the fleet's path is invalidated.
         """
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 
@@ -756,7 +760,7 @@ class ReorderFleetOrderCommandHandler(BaseCommandHandler):
         If the active order (index 0) is affected, the fleet's path is invalidated.
         """
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
             return error
 

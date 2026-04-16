@@ -93,7 +93,7 @@ class TestColonizeCommandHandler:
         handler = ColonizeCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, planet_id=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, planet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -120,7 +120,7 @@ class TestColonizeCommandHandler:
         mock_session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
         mock_session.turn_engine.validate_colonize_order.return_value = ValidationResult()
 
-        mock_cmd = Mock(fleet_id=1, planet_id=10)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=10)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -137,7 +137,7 @@ class TestMoveCommandHandler:
         handler = MoveCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, target_hex=(0, 0))
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, target_hex=(0, 0))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -155,7 +155,7 @@ class TestMoveCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.preview_fleet_path.return_value = None
 
-        mock_cmd = Mock(fleet_id=1, target_hex=(100, 100))
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_hex=(100, 100))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -175,7 +175,7 @@ class TestMoveCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.preview_fleet_path.return_value = [(1, 0), (2, 0)]
 
-        mock_cmd = Mock(fleet_id=1, target_hex=(2, 0))
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_hex=(2, 0))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -195,7 +195,7 @@ class TestInterceptCommandHandler:
         handler = InterceptCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, target_fleet_id=2)
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, target_fleet_id=2)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -212,7 +212,7 @@ class TestInterceptCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else None
 
-        mock_cmd = Mock(fleet_id=1, target_fleet_id=999)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_fleet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -233,7 +233,7 @@ class TestInterceptCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else mock_target
 
-        mock_cmd = Mock(fleet_id=1, target_fleet_id=2)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_fleet_id=2)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -260,7 +260,7 @@ class TestJoinCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else mock_target
 
-        mock_cmd = Mock(fleet_id=1, target_fleet_id=2)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_fleet_id=2)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -282,7 +282,7 @@ class TestJoinCommandHandlerPursuerTracking:
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 0, HexCoord(5, 5))
         session = self._make_session_with_real_fleets(fleet, target)
-        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
+        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f2")
 
         result = JoinCommandHandler().execute(session, cmd)
 
@@ -293,7 +293,7 @@ class TestJoinCommandHandlerPursuerTracking:
     def test_join_self_targeting_rejected(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         session = self._make_session_with_real_fleets(fleet, fleet)
-        cmd = Mock(fleet_id="f1", target_fleet_id="f1")
+        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f1")
 
         result = JoinCommandHandler().execute(session, cmd)
 
@@ -304,7 +304,7 @@ class TestJoinCommandHandlerPursuerTracking:
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 1, HexCoord(5, 5))  # Different owner
         session = self._make_session_with_real_fleets(fleet, target)
-        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
+        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f2")
 
         result = JoinCommandHandler().execute(session, cmd)
 
@@ -325,7 +325,7 @@ class TestInterceptCommandHandlerPursuerTracking:
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 0, HexCoord(5, 5))
         session = self._make_session_with_real_fleets(fleet, target)
-        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
+        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f2")
 
         result = InterceptCommandHandler().execute(session, cmd)
 
@@ -336,7 +336,7 @@ class TestInterceptCommandHandlerPursuerTracking:
     def test_intercept_self_targeting_rejected(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         session = self._make_session_with_real_fleets(fleet, fleet)
-        cmd = Mock(fleet_id="f1", target_fleet_id="f1")
+        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f1")
 
         result = InterceptCommandHandler().execute(session, cmd)
 
@@ -352,7 +352,7 @@ class TestColonizeMissionCommandHandler:
         handler = ColonizeMissionCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, planet_id=None, target_hex=(0, 0))
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, planet_id=None, target_hex=(0, 0))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -371,7 +371,7 @@ class TestColonizeMissionCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session._get_planet_by_id.return_value = None
 
-        mock_cmd = Mock(fleet_id=1, planet_id=None, target_hex=(100, 100))
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=None, target_hex=(100, 100))
 
         # PROJ-207: Patch at command_handlers where function is imported
         with patch('game.strategy.engine.command_handlers.find_hybrid_path', return_value=None):
@@ -389,7 +389,7 @@ class TestClearOrdersCommandHandler:
         handler = ClearOrdersCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999)
+        mock_cmd = Mock(empire_id=-1, fleet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -406,7 +406,7 @@ class TestClearOrdersCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -422,7 +422,7 @@ class TestTransferCommandHandler:
         handler = TransferCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999)
+        mock_cmd = Mock(empire_id=-1, fleet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -446,7 +446,7 @@ class TestTransferCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = [mock_empire]
 
-        mock_cmd = Mock(fleet_id=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -471,7 +471,7 @@ class TestTransferCommandHandler:
         mock_session.empires = [mock_empire]
         mock_session._get_planet_by_id.return_value = None
 
-        mock_cmd = Mock(fleet_id=1, planet_id=999)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -507,6 +507,7 @@ class TestTransferCommandHandler:
         mock_session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
 
         mock_cmd = Mock(
+            empire_id=-1,
             fleet_id=1,
             planet_id=10,
             cargo_type='fuel',
@@ -687,7 +688,7 @@ class TestSplitFleetCommandHandler:
         handler = SplitFleetCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, ship_instance_ids=['ship-1'])
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, ship_instance_ids=['ship-1'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -705,7 +706,7 @@ class TestSplitFleetCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, ship_instance_ids=[])
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=[])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -726,7 +727,7 @@ class TestSplitFleetCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-nonexistent'])
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-nonexistent'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -749,7 +750,7 @@ class TestSplitFleetCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-1', 'ship-2'])
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-1', 'ship-2'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -774,7 +775,7 @@ class TestSplitFleetCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = []  # No empires
 
-        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-1'])
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-1'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -806,7 +807,7 @@ class TestSplitFleetCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = [mock_empire]
 
-        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-1'])
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-1'])
 
         # Patch Fleet class in the data module where it's imported from
         with patch('game.strategy.data.fleet.Fleet') as MockFleet:
@@ -830,7 +831,7 @@ class TestDeleteFleetOrderCommandHandler:
         handler = DeleteFleetOrderCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, order_index=0)
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, order_index=0)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -848,7 +849,7 @@ class TestDeleteFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=-1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=-1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -866,7 +867,7 @@ class TestDeleteFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=5)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=5)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -884,7 +885,7 @@ class TestDeleteFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=0)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -902,7 +903,7 @@ class TestDeleteFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -918,7 +919,7 @@ class TestReorderFleetOrderCommandHandler:
         handler = ReorderFleetOrderCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, order_index=0, direction=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=999, order_index=0, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -936,7 +937,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=5, direction=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=5, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -954,7 +955,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=0, direction=2)  # Invalid
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0, direction=2)  # Invalid
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -972,7 +973,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=0, direction=-1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0, direction=-1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -990,7 +991,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=1, direction=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1013,7 +1014,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=1, direction=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1036,7 +1037,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(fleet_id=1, order_index=2, direction=-1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=2, direction=-1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1059,7 +1060,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         # Move order 0 down to 1
-        mock_cmd = Mock(fleet_id=1, order_index=0, direction=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1085,7 +1086,7 @@ class TestReorderFleetOrderCommandHandler:
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         # Move order 1 down to 2 (doesn't affect order 0)
-        mock_cmd = Mock(fleet_id=1, order_index=1, direction=1)
+        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1378,7 +1379,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         handler = RemoveFromConstructionQueueCommandHandler()
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="planet", item_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=999, entity_type="planet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1390,7 +1391,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         handler = RemoveFromConstructionQueueCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="fleet", item_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=999, entity_type="fleet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1407,7 +1408,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=-1, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", item_index=-1, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1424,7 +1425,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=5, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", item_index=5, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1443,7 +1444,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1462,7 +1463,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(entity_id=1, entity_type="fleet", item_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="fleet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1561,7 +1562,7 @@ class TestReorderConstructionQueueCommandHandler:
         handler = ReorderConstructionQueueCommandHandler()
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="planet", from_index=0, to_index=1, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=999, entity_type="planet", from_index=0, to_index=1, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1578,7 +1579,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=5, to_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=5, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1595,7 +1596,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=5, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=0, to_index=5, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1616,7 +1617,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session._get_planet_by_id.return_value = mock_planet
 
         # Move item at index 0 to index 2
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=2, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=0, to_index=2, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1638,7 +1639,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session._get_planet_by_id.return_value = mock_planet
 
         # Move item at index 2 to index 0
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=2, to_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=2, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1658,7 +1659,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(entity_id=1, entity_type="fleet", from_index=1, to_index=0, queue_id=None)
+        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="fleet", from_index=1, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 

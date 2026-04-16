@@ -36,8 +36,8 @@ class Empire:
         self.designed_ships = []  # List[DesignMetadata] - cached design list
         self.built_ship_designs = set()  # Set of design_ids that were ever built
 
-        # Fleet ID generator
-        self._next_fleet_id = 10000
+        # Fleet display number generator (per-empire sequential, cosmetic only)
+        self._next_fleet_display_number = 1
 
         # Ship serial number counters - per design_id
         self._design_serial_counters = {}  # Dict[str, int]
@@ -114,11 +114,17 @@ class Empire:
             if self._galaxy:
                 self._galaxy.unregister_fleet(fleet)
 
-    def get_next_fleet_id(self) -> int:
-        """Generate unique sequential fleet ID."""
-        fleet_id = self._next_fleet_id
-        self._next_fleet_id += 1
-        return fleet_id
+    def get_next_fleet_display_number(self) -> int:
+        """Generate per-empire sequential display number for fleet naming.
+
+        This is cosmetic only — used for auto-naming fleets ("Fleet 1",
+        "Fleet 2") without leaking information about other empires' fleet
+        counts. The actual fleet identity is the globally unique ID from
+        Galaxy.get_next_fleet_id().
+        """
+        num = self._next_fleet_display_number
+        self._next_fleet_display_number += 1
+        return num
 
     def get_next_serial(self, design_id: str) -> int:
         """
@@ -257,7 +263,7 @@ class Empire:
             'colony_ids': [p.id for p in self.colonies],  # Store IDs only
             'fleets': [f.to_dict() for f in self.fleets],
             'built_ship_designs': sorted(self.built_ship_designs),
-            '_next_fleet_id': self._next_fleet_id,
+            '_next_fleet_display_number': self._next_fleet_display_number,
             '_design_serial_counters': self._design_serial_counters,
             'resource_pool': dict(self._fleet_resource_pool),
             'max_storage': dict(self.max_storage),
@@ -318,8 +324,8 @@ class Empire:
         # Restore built_ship_designs set
         empire.built_ship_designs = set(data.get('built_ship_designs', []))
 
-        # Restore fleet ID counter
-        empire._next_fleet_id = data.get('_next_fleet_id', 10000)
+        # Restore fleet display number counter
+        empire._next_fleet_display_number = data.get('_next_fleet_display_number', 1)
 
         # Restore ship serial counters
         empire._design_serial_counters = data.get('_design_serial_counters', {})

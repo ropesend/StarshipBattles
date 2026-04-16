@@ -29,8 +29,7 @@ def _fleet_display_label(fleet: 'FleetInfo') -> str:
     Returns:
         Human-readable fleet label.
     """
-    flagship = fleet.ships[0].name if fleet.ships else "Empty"
-    return f"Fleet {fleet.fleet_id} — {flagship} ({fleet.ship_count} ships)"
+    return f"{fleet.name} — {fleet.composition_summary}"
 
 
 class FleetSelectionWindow(UIWindow):

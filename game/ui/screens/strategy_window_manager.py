@@ -408,19 +408,21 @@ class StrategyWindowManager:
             def reorder_order_callback(entity_id: int, order_index: int, direction: int) -> None:
                 pass  # Planet order reordering not yet implemented
         else:
+            owner_id = entity.owner_id
+
             def clear_orders_callback(entity_id: int) -> None:
                 from game.strategy.engine.commands import ClearFleetOrdersCommand
-                cmd = ClearFleetOrdersCommand(fleet_id=entity_id)
+                cmd = ClearFleetOrdersCommand(fleet_id=entity_id, empire_id=owner_id)
                 self.scene.facade.handle_command(cmd)
 
             def delete_order_callback(entity_id: int, order_index: int) -> None:
                 from game.strategy.engine.commands import DeleteFleetOrderCommand
-                cmd = DeleteFleetOrderCommand(fleet_id=entity_id, order_index=order_index)
+                cmd = DeleteFleetOrderCommand(fleet_id=entity_id, order_index=order_index, empire_id=owner_id)
                 self.scene.facade.handle_command(cmd)
 
             def reorder_order_callback(entity_id: int, order_index: int, direction: int) -> None:
                 from game.strategy.engine.commands import ReorderFleetOrderCommand
-                cmd = ReorderFleetOrderCommand(fleet_id=entity_id, order_index=order_index, direction=direction)
+                cmd = ReorderFleetOrderCommand(fleet_id=entity_id, order_index=order_index, direction=direction, empire_id=owner_id)
                 self.scene.facade.handle_command(cmd)
 
         def edit_order_callback(entity_id: int, order_index: int, order) -> None:
@@ -455,10 +457,12 @@ class StrategyWindowManager:
 
         # PROJ-208 Phase 1: Create callback closure for SplitFleetCommand dispatch
         # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
+        fleet_owner_id = fleet.owner_id
+
         def split_fleet_callback(fleet_id: int, ship_instance_ids: list):
             """Dispatch SplitFleetCommand through facade command pipeline."""
             from game.strategy.engine.commands import SplitFleetCommand
-            cmd = SplitFleetCommand(fleet_id=fleet_id, ship_instance_ids=ship_instance_ids)
+            cmd = SplitFleetCommand(fleet_id=fleet_id, ship_instance_ids=ship_instance_ids, empire_id=fleet_owner_id)
             return self.scene.facade.handle_command(cmd)
 
         empire = self.scene.current_empire

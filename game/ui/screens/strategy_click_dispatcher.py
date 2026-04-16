@@ -265,7 +265,7 @@ class ClickModeDispatcher:
             fleet = self.scene.selected_fleet
             if fleet:
                 from game.strategy.engine.commands import IssueWarpCommand
-                cmd = IssueWarpCommand(fleet.id, target_hex)
+                cmd = IssueWarpCommand(fleet.id, target_hex, empire_id=fleet.owner_id)
                 result = self.scene.facade.handle_command(cmd)
                 if result and result.is_valid:
                     self.input_mode = 'SELECT'

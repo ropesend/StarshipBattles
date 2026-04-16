@@ -195,22 +195,27 @@ def test_categories_header_uses_textbox(build_queue_screen):
 
 
 def test_actions_header_uses_textbox(build_queue_screen):
-    """Test that 'Actions' header uses UITextBox for bold formatting."""
+    """Test that 'Roles' header uses UITextBox for bold formatting.
+
+    The filter panel contains: Categories header (UITextBox),
+    categories scrollable, Roles header (UITextBox), roles scrollable.
+    We filter to UITextBox elements only to find the headers.
+    """
     # PROJ-180: Access via panels.*
     filter_panel_elements = build_queue_screen.panels.filter_panel.get_container().elements
 
-    # Find non-button elements
-    non_button_elements = [e for e in filter_panel_elements
-                          if not isinstance(e, pygame_gui.elements.UIButton)]
+    # Find UITextBox header elements specifically
+    header_elements = [e for e in filter_panel_elements
+                      if isinstance(e, pygame_gui.elements.UITextBox)]
 
-    # Should have at least 2 headers
-    assert len(non_button_elements) >= 2, "Should have Categories and Actions headers"
+    # Should have at least 2 headers (Categories and Roles)
+    assert len(header_elements) >= 2, "Should have Categories and Roles headers"
 
-    actions_header = non_button_elements[1]
+    roles_header = header_elements[1]
 
     # Should be UITextBox for HTML formatting
-    assert isinstance(actions_header, pygame_gui.elements.UITextBox), \
-        f"Actions header should use UITextBox, got {type(actions_header)}"
+    assert isinstance(roles_header, pygame_gui.elements.UITextBox), \
+        f"Roles header should use UITextBox, got {type(roles_header)}"
 
 
 def test_html_text_contains_bold_tags(build_queue_screen):

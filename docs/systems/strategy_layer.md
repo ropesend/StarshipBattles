@@ -27,7 +27,7 @@ All queries return **immutable DTOs**, never domain objects.
 `get_all_stars()` caches results per turn. These avoid O(n) scans on every call.
 
 DTO types (defined in `game/strategy/facade/dto/` package, with submodules `fleet_dto.py`, `system_dto.py`, `planet_dto.py`, `empire_dto.py`, re-exported via `__init__.py`):
-- `FleetInfo` -- fleet state snapshot (includes `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`)
+- `FleetInfo` -- fleet state snapshot (includes `name`, `composition_summary`, `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`)
 - `FleetSummary` -- lightweight fleet overview
 - `StarInfo` -- star data with system context (PROJ-231)
 - `SystemInfo` -- star system data
@@ -75,10 +75,18 @@ class ICommandHandler(Protocol):
     def execute(self, session: GameSession, command: Command) -> ValidationResult: ...
 ```
 
+### Command Ownership Validation
+
+All `Command` subclasses carry `empire_id: int` (keyword-only, default -1). The UI
+populates this from `fleet.owner_id` when creating commands. Handlers pass
+`empire_id=cmd.empire_id` to `_resolve_fleet()`, which rejects commands targeting
+fleets owned by a different empire. `empire_id=-1` or `None` skips validation
+(backward compatibility for tests).
+
 ### BaseCommandHandler
 
 Mixin providing resolution helpers used by all handlers:
-- `_resolve_fleet(session, fleet_id, empire_id?)` -- returns `(Fleet, None)` or `(None, ValidationResult)`
+- `_resolve_fleet(session, fleet_id, empire_id?)` -- returns `(Fleet, None)` or `(None, ValidationResult)`. Validates `fleet.owner_id == empire_id` when `empire_id` is not None/-1.
 - `_resolve_fleet_required(session, fleet_id, empire_id?)` -- returns Fleet or raises ValueError
 - `_resolve_planet(session, planet_id)` -- returns `(Planet, None)` or `(None, ValidationResult)`
 - `_resolve_planet_optional(session, planet_id, required?)` -- returns Planet or None/raises
@@ -208,11 +216,20 @@ at WARNING level for profiling.
 ### Fleet Class
 
 Core state:
-- `id`, `owner_id`, `location: HexCoord`
+- `id` -- globally unique int from `Galaxy.get_next_fleet_id()` (not per-empire)
+- `display_name: str` -- renamable label (auto-set to "Fleet N" per-empire at creation)
+- `name` property -- returns `display_name` if set, else `"Fleet {id}"` fallback
+- `composition_summary` property -- ship composition string for tooltips
+- `owner_id`, `location: HexCoord`
 - `ships: List[ShipInstance]` -- canonical flat list of all ships
 - `orders: List[FleetOrder]`, `path: List[HexCoord]`
 - `speed: float` -- minimum of all combat-capable ships' speeds
 - `construction_queue: List[Dict]` -- for fleets with space yards
+
+**Fleet ID generation:** `Galaxy.get_next_fleet_id()` produces globally unique
+sequential IDs across all empires. This prevents ID collisions in the galaxy-wide
+`fleets_by_id` registry. Per-empire display numbering uses
+`Empire.get_next_fleet_display_number()` for cosmetic naming only.
 
 Fleet hierarchy (organizational overlay for combat behavior):
 - `task_forces: List[TaskForce]` -- task forces containing squadrons

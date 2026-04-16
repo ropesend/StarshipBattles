@@ -165,11 +165,11 @@ class StrategyBuildQueueManager:
             )
             if not has_build_order:
                 logger.info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
-                cmd = IssueBuildOrderCommand(fleet_id=fleet.id)
+                cmd = IssueBuildOrderCommand(fleet_id=fleet.id, empire_id=fleet.owner_id)
                 self._screen.facade.handle_command(cmd)
         else:
             # Queue is empty - remove BUILD order if present via command pipeline
-            cmd = RemoveBuildOrderCommand(fleet_id=fleet.id)
+            cmd = RemoveBuildOrderCommand(fleet_id=fleet.id, empire_id=fleet.owner_id)
             self._screen.facade.handle_command(cmd)
 
     def on_navigate_to_hex_build(self, hex_coord, source) -> None:

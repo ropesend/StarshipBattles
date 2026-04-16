@@ -24,6 +24,7 @@ class BuildEntityType(str, Enum):
 class Command:
     """Base class for all game commands."""
     type: CommandType = field(init=False)
+    empire_id: int = field(default=-1, kw_only=True)
 
     def __post_init__(self):
         self.type = CommandType.ISSUE_ORDER

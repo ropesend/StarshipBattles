@@ -219,13 +219,13 @@ class TransferDialog(UIWindow):
             fleet_in_list = any(f.fleet_id == self.source_fleet.id for f in fleets)
             if not fleet_in_list:
                 self.available_sources.append({
-                    'label': f"Fleet {self.source_fleet.id}",
+                    'label': self.source_fleet.name,
                     'type': 'fleet', 'id': self.source_fleet.id
                 })
 
         for f in fleets:
             self.available_sources.append({
-                'label': f"Fleet {f.fleet_id}",
+                'label': f.name,
                 'type': 'fleet', 'id': f.fleet_id
             })
 
@@ -684,6 +684,7 @@ class TransferDialog(UIWindow):
                 amount=transfer_amount,
                 species_id=species_id,
                 target_fleet_id=target_fleet_id,
+                empire_id=self.source_fleet.owner_id if self.source_fleet else -1,
             )
 
             result = self.facade.handle_command(cmd)

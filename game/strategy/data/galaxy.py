@@ -171,6 +171,7 @@ class Galaxy:
 
         # Fleet Registry (PROJ-87 Phase 6: O(1) fleet lookup)
         self.fleets_by_id = {}  # int -> Fleet
+        self._next_fleet_id = 1  # Global fleet ID counter (unique across all empires)
         
         # Initialize Naming Registry
         data_path = Paths.STAR_SYSTEM_NAMES_FILE
@@ -360,6 +361,16 @@ class Galaxy:
 
     # --- Fleet Registry Methods (PROJ-87 Phase 6) ---
     # Facade methods delegating to GalaxyEntityRegistry
+
+    def get_next_fleet_id(self) -> int:
+        """Generate globally unique sequential fleet ID.
+
+        All empires share one counter to prevent ID collisions in the
+        galaxy-wide fleets_by_id registry.
+        """
+        fleet_id = self._next_fleet_id
+        self._next_fleet_id += 1
+        return fleet_id
 
     def register_fleet(self, fleet: 'Fleet') -> None:
         """Register a fleet for O(1) lookup by ID.
@@ -580,7 +591,8 @@ class Galaxy:
         return {
             'radius': self.radius,
             'systems': systems_list,
-            '_next_planet_id': self._next_planet_id
+            '_next_planet_id': self._next_planet_id,
+            '_next_fleet_id': self._next_fleet_id,
         }
 
     @classmethod
@@ -611,6 +623,9 @@ class Galaxy:
 
         # Restore planet ID counter
         galaxy._next_planet_id = data.get('_next_planet_id', 1)
+
+        # Restore fleet ID counter
+        galaxy._next_fleet_id = data.get('_next_fleet_id', 1)
 
         # Deserialize systems with error isolation
         for i, sys_entry in enumerate(data.get('systems', [])):

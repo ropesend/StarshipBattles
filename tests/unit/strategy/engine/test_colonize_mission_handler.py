@@ -138,6 +138,7 @@ class TestColonizeMissionHandlerPodValidation:
 
         # Create command
         cmd = MagicMock()
+        cmd.empire_id = -1
         cmd.fleet_id = 1
         cmd.planet_id = 1
         cmd.target_hex = HexCoord(5, 0)
@@ -164,6 +165,7 @@ class TestColonizeMissionHandlerPodValidation:
 
         # Create command
         cmd = MagicMock()
+        cmd.empire_id = -1
         cmd.fleet_id = 1
         cmd.planet_id = 1
         cmd.target_hex = HexCoord(5, 0)
@@ -194,6 +196,7 @@ class TestColonizeMissionHandlerPodValidation:
 
         # Create command
         cmd = MagicMock()
+        cmd.empire_id = -1
         cmd.fleet_id = 1
         cmd.planet_id = 1
         cmd.target_hex = HexCoord(5, 0)
@@ -217,6 +220,7 @@ class TestColonizeMissionHandlerPodValidation:
 
         # Create command with planet_id=None ("any planet")
         cmd = MagicMock()
+        cmd.empire_id = -1
         cmd.fleet_id = 1
         cmd.planet_id = None  # "Any planet"
         cmd.target_hex = HexCoord(5, 0)
@@ -255,6 +259,7 @@ class TestColonizeMissionHandlerPodValidation:
 
         # Create command
         cmd = MagicMock()
+        cmd.empire_id = -1
         cmd.fleet_id = 1
         cmd.planet_id = 1
         cmd.target_hex = HexCoord(5, 0)
