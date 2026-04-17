@@ -138,6 +138,16 @@ class FleetAuraManager:
         if not stat_key or stat_key == 'placeholder':
             self._log_placeholder_once(source)
             return
+        # PROJ-273 Phase 5: warn once per (stat_key, source) when the key
+        # isn't in `KNOWN_EXTERNAL_STAT_KEYS`. Catches silent-drop bugs
+        # where a compiler emits an entry no reader consumes. Late import
+        # avoids adding a hard circular dep at module load time.
+        from game.simulation.combat.ability_stat_registry import KNOWN_EXTERNAL_STAT_KEYS
+        if stat_key not in KNOWN_EXTERNAL_STAT_KEYS:
+            self._log_unknown_stat_key_once(stat_key, source)
+            # Still record the entry — the engine already aggregates by
+            # stat_key, so unknown keys are harmless (just unused). The
+            # warning is advisory, not a hard filter.
         value = float(getattr(effect, 'value', 0.0) or 0.0)
         # PROJ-271 Phase 7: copy stack_group from the entry so the
         # recalculate path can apply two-phase MAX/SUM aggregation.
@@ -167,6 +177,31 @@ class FleetAuraManager:
             "mapping (placeholder). Effect will NOT be applied to battle "
             "math. Compiler author should map this to a real StatKey.",
             source,
+        )
+
+    def _log_unknown_stat_key_once(self, stat_key: str, source: str) -> None:
+        """Emit one WARNING per unique (stat_key, source) pair.
+
+        PROJ-273 Phase 5: flags stat_keys that aren't in
+        `KNOWN_EXTERNAL_STAT_KEYS`. Advisory only — the entry is still
+        recorded, since the engine aggregates by stat_key and an unknown
+        key is harmless. The warning tells contributors either:
+        (a) they added a stat_key without wiring a reader, or
+        (b) they wired a reader without updating `KNOWN_EXTERNAL_STAT_KEYS`.
+        """
+        if not hasattr(self, '_unknown_stat_key_warned'):
+            self._unknown_stat_key_warned: set = set()
+        key = (stat_key, source)
+        if key in self._unknown_stat_key_warned:
+            return
+        self._unknown_stat_key_warned.add(key)
+        logger.warning(
+            "FleetAuraManager: ModifierEntry source=%r emits unknown stat_key=%r "
+            "(not in KNOWN_EXTERNAL_STAT_KEYS). No downstream reader will "
+            "consume this. Add the key to KNOWN_EXTERNAL_STAT_KEYS in "
+            "game/simulation/combat/ability_stat_registry.py, or check the "
+            "compiler emission.",
+            source, stat_key,
         )
 
     def _scan_ship(self, ship: Any) -> None:

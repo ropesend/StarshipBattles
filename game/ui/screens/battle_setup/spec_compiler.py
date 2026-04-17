@@ -53,9 +53,13 @@ from game.simulation.combat.formation import (
     FormationSpec,
     resolve_default_for_task_force,
 )
+from game.simulation.combat.ability_stat_registry import (
+    ABILITY_STAT_REGISTRY,
+    OPPONENT_SCOPES,
+    emit_entries_for_ability,
+)
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
-from game.simulation.components.modifier_effects import ModifierEffect
 from game.simulation.systems.battle_end_conditions import (
     AnyCondition,
     TeamEliminatedCondition,
@@ -63,19 +67,6 @@ from game.simulation.systems.battle_end_conditions import (
 )
 
 logger = logging.getLogger(__name__)
-
-# PROJ-271 Phase 2.4: ability class name (as it appears in components.json
-# "abilities" dict) → stat_key the compiler emits. Only non-SELF-scoped
-# abilities with entries in this map flow into the ModifierStack.
-_ABILITY_TO_STAT_KEY = {
-    "ShieldProjection": ("shield_bonus_add", "add"),
-    "ShieldModifier": ("shield_capacity_mult", "multiply"),
-    "DamageModifier": ("damage_mult", "multiply"),
-}
-
-# Scopes that route to the OPPONENT team (cross-team suppressors).
-# Everything else routes to the owner team.
-_OPPONENT_SCOPES = {"enemy_sector", "enemy_system"}
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -307,9 +298,9 @@ def _complex_to_entries(
     """Translate one complex toggle into (team_id, ModifierEntry) pairs.
 
     Loads the complex's design JSON, walks its component list, looks up
-    each component's abilities in `registries.components`, and emits
-    one entry per ability class in `_ABILITY_TO_STAT_KEY` whose scope
-    is non-SELF.
+    each component's abilities in `registries.components`, and delegates
+    to the shared `emit_entries_for_ability` helper for each ability in
+    `ABILITY_STAT_REGISTRY` whose scope is non-SELF.
 
     Returns an empty list if the design file is missing, the registries
     are None, or none of the components carry a mapped ability.
@@ -346,32 +337,32 @@ def _complex_to_entries(
         else:
             abilities = getattr(comp_def, "abilities", None) or {}
         for ability_name, ability_data in abilities.items():
-            if ability_name not in _ABILITY_TO_STAT_KEY:
+            if ability_name not in ABILITY_STAT_REGISTRY:
                 continue
             scope_str = _extract_scope(ability_name, ability_data)
             if scope_str == "self":
+                # SELF-scoped abilities are component-local, not team-scoped —
+                # the engine handles them via the normal ability stack, not
+                # the ModifierStack external-bridge.
                 continue
-            stat_key, operation = _ABILITY_TO_STAT_KEY[ability_name]
-            value = _extract_ability_value(ability_name, ability_data)
-            if not value:
-                continue
-            route_team = _route_team_for_scope(scope_str, owner_team)
-            effect = ModifierEffect(
-                stat_key=stat_key,
-                value=value,
-                operation=operation,
-                target_ability=None,
-                source_modifier_id=design_id,
-                source_modifier_name=display,
-                formula_str="",
-                param_value=value,
+            stack_group = (
+                ability_data.get("stack_group")
+                if isinstance(ability_data, dict)
+                else None
             )
-            entry = ModifierEntry(
-                source=f"{scope_prefix}:complex:{design_id}:{ability_name}",
-                stack_group=ability_data.get("stack_group") if isinstance(ability_data, dict) else None,
-                effect=effect,
+            out.extend(
+                emit_entries_for_ability(
+                    ability_name,
+                    ability_data,
+                    scope=scope_str,
+                    owner_team=owner_team,
+                    num_teams=_NUM_TEAMS,
+                    source=f"{scope_prefix}:complex:{design_id}:{ability_name}",
+                    source_modifier_id=design_id,
+                    source_modifier_name=display,
+                    stack_group=stack_group,
+                )
             )
-            out.append((route_team, entry))
     return out
 
 
@@ -430,25 +421,6 @@ def _extract_scope(ability_name: str, ability_data: Any) -> str:
     return get_ability_default_scope(ability_name)
 
 
-def _extract_ability_value(ability_name: str, ability_data: Any) -> float:
-    """Extract the numeric value the compiler should emit for each ability.
-
-    ShieldModifier / DamageModifier → `multiplier` field (defaults 1.0).
-    ShieldProjection → `value` field (capacity points, defaults 0.0).
-    """
-    if ability_name in ("ShieldModifier", "DamageModifier"):
-        if isinstance(ability_data, dict):
-            return float(ability_data.get("multiplier", 1.0))
-        return 1.0
-    if ability_name == "ShieldProjection":
-        if isinstance(ability_data, dict):
-            return float(ability_data.get("value", 0.0))
-        if isinstance(ability_data, (int, float)):
-            return float(ability_data)
-        return 0.0
-    return 0.0
-
-
 def _route_team_for_scope(scope_str: str, owner_team: int) -> int:
     """Return the team_id that an ability with the given scope targets.
 
@@ -472,7 +444,7 @@ def _route_team_for_scope(scope_str: str, owner_team: int) -> int:
             f"to return a list of opponent teams and updating callers to "
             f"emit one ModifierEntry per opponent team."
         )
-    if scope_str in _OPPONENT_SCOPES:
+    if scope_str in OPPONENT_SCOPES:
         return (_NUM_TEAMS - 1) - owner_team
     return owner_team
 

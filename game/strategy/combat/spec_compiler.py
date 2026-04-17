@@ -47,9 +47,9 @@ from game.simulation.combat.formation import (
     FormationSpec,
     resolve_default_for_task_force,
 )
+from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
-from game.simulation.components.modifier_effects import ModifierEffect
 from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
 
 if TYPE_CHECKING:
@@ -333,30 +333,70 @@ def _build_modifier_stack(
     return ModifierStack(per_team=per_team, global_=tuple(global_entries))
 
 
+def _emit_entries_team_scoped(
+    ability_name: str,
+    value: float,
+    *,
+    team_id: int,
+    source: str,
+    display_name: str,
+    design_id: str,
+    stack_group: Optional[str] = None,
+) -> List[ModifierEntry]:
+    """Strategy-side wrapper around `emit_entries_for_ability`.
+
+    Strategy's fleet/empire modifiers always route to a single team
+    (no enemy fan-out — those are ship-mounted abilities, not
+    caller-supplied strategic modifiers). Uses the primitive-numeric
+    path of the registry helper (value passed directly), and strips
+    the team_id from the returned (team_id, entry) tuples since the
+    caller places these entries in a specific per-team bucket it
+    already knows.
+    """
+    team_entries = emit_entries_for_ability(
+        ability_name,
+        value,
+        scope="self",
+        owner_team=team_id,
+        num_teams=team_id + 1,  # arbitrary; "self" routes to owner regardless
+        source=source,
+        source_modifier_id=design_id,
+        source_modifier_name=display_name,
+        stack_group=stack_group,
+    )
+    return [entry for _, entry in team_entries]
+
+
 def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
     """Translate an `EnvironmentalEffects` value into `ModifierEntry` entries.
 
-    PROJ-270 Phase 6.1: storm shield interference now emits a REAL
-    `stat_key="shield_capacity_mult"` (not `"placeholder"`) so the
-    `FleetAuraManager` pipeline applies the effect to ship shield
-    capacity during battle. Replaces the PROJ-269 Phase 5.5 placeholder
-    semantics for this specific effect.
+    PROJ-270 Phase 6.1: storm shield interference emits a REAL
+    `stat_key="shield_capacity_mult"` so the `FleetAuraManager`
+    applies the effect to ship shield capacity during battle.
+
+    PROJ-273 Phase 3: emits via the shared `ability_stat_registry`
+    helper (ShieldModifier → shield_capacity_mult). Returned entries
+    are placed in `ModifierStack.global_` by the caller (they apply
+    to every team on the battlefield). The helper's per-team routing
+    is bypassed by stripping team_ids — global entries don't need them.
     """
     entries: List[ModifierEntry] = []
     shield_mult = getattr(effects, "shield_capacity_mult", 1.0)
     if shield_mult is not None and shield_mult != 1.0:
-        entries.append(
-            _real_entry(
-                source="environment:storm_shield_interference",
-                display_name=f"Storm Shield x{shield_mult:.2f}",
-                design_id="storm_shield_interference",
-                stat_key="shield_capacity_mult",
-                value=shield_mult,
-                operation="multiply",
-                # PROJ-272 Phase 2: overlapping storms MAX, not SUM.
-                stack_group="storm_shield_interference",
-            )
+        # owner_team=0, num_teams=1 yields [(0, entry)]; caller places in global_.
+        team_entries = emit_entries_for_ability(
+            "ShieldModifier",
+            shield_mult,
+            scope="self",
+            owner_team=0,
+            num_teams=1,
+            source="environment:storm_shield_interference",
+            source_modifier_id="storm_shield_interference",
+            source_modifier_name=f"Storm Shield x{shield_mult:.2f}",
+            # PROJ-272 Phase 2: overlapping storms MAX, not SUM.
+            stack_group="storm_shield_interference",
         )
+        entries.extend(entry for _, entry in team_entries)
     return entries
 
 
@@ -365,26 +405,31 @@ def _entries_from_fleet_combat_modifiers(
 ) -> List[ModifierEntry]:
     """Translate a `FleetCombatModifiers` value into `ModifierEntry` entries.
 
-    PROJ-270 Phase 6.2: `shield_mult` and `damage_mult` emit REAL
-    stat_keys (`shield_capacity_mult`, `damage_mult`).
-    PROJ-271 Phase 2.1: `flat_shield_bonus` now ALSO emits a real
-    stat_key (`shield_bonus_add`, operation=add). Ship-level plumbing
-    in `ship_stats.py::_apply_aggregated_stats` consumes it as
-    `(base + flat) × shield_capacity_mult`.
+    PROJ-270/271 emit REAL stat_keys:
+      - `shield_mult` → `shield_capacity_mult` (via ShieldModifier)
+      - `damage_mult` → `damage_mult` (via DamageModifier)
+      - `flat_shield_bonus` → `shield_bonus_add` (via ShieldProjection)
+
+    Ship-level plumbing in `ship_stats.py::_apply_aggregated_stats`
+    consumes the shield pair as `(base + flat) × shield_capacity_mult`.
+
+    PROJ-273 Phase 3: all three emissions now route through the shared
+    `ability_stat_registry` helper. Caller places returned entries in
+    `ModifierStack.per_team[team_id]`.
     """
     entries: List[ModifierEntry] = []
     shield_mult = getattr(modifiers, "shield_mult", 1.0)
     damage_mult = getattr(modifiers, "damage_mult", 1.0)
     flat_shield = getattr(modifiers, "flat_shield_bonus", 0.0)
     if shield_mult != 1.0:
-        entries.append(
-            _real_entry(
+        entries.extend(
+            _emit_entries_team_scoped(
+                "ShieldModifier",
+                shield_mult,
+                team_id=team_id,
                 source=f"team{team_id}:shield_mult",
                 display_name=f"Shield x{shield_mult:.2f}",
                 design_id="team_shield_mult",
-                stat_key="shield_capacity_mult",
-                value=shield_mult,
-                operation="multiply",
                 # PROJ-272 Phase 2: per-team shield multipliers MAX within team.
                 # Collector-aggregated; one entry per team — still grouped for
                 # future source expansion (e.g., multi-empire fleet bonuses).
@@ -392,65 +437,30 @@ def _entries_from_fleet_combat_modifiers(
             )
         )
     if damage_mult != 1.0:
-        entries.append(
-            _real_entry(
+        entries.extend(
+            _emit_entries_team_scoped(
+                "DamageModifier",
+                damage_mult,
+                team_id=team_id,
                 source=f"team{team_id}:damage_mult",
                 display_name=f"Damage x{damage_mult:.2f}",
                 design_id="team_damage_mult",
-                stat_key="damage_mult",
-                value=damage_mult,
-                operation="multiply",
                 stack_group=f"team{team_id}_damage_mult",
             )
         )
     if flat_shield:
-        entries.append(
-            _real_entry(
+        entries.extend(
+            _emit_entries_team_scoped(
+                "ShieldProjection",
+                flat_shield,
+                team_id=team_id,
                 source=f"team{team_id}:flat_shield_bonus",
                 display_name=f"Shield +{flat_shield}",
                 design_id="team_flat_shield_bonus",
-                stat_key="shield_bonus_add",
-                value=flat_shield,
-                operation="add",
                 stack_group=f"team{team_id}_flat_shield",
             )
         )
     return entries
-
-
-def _real_entry(
-    *,
-    source: str,
-    display_name: str,
-    design_id: str,
-    stat_key: str,
-    value: float,
-    operation: str = "multiply",
-    stack_group: Optional[str] = None,
-) -> ModifierEntry:
-    """Build a `ModifierEntry` that the engine will actually apply.
-
-    PROJ-270 Phase 6: used for modifier sources whose real stat_key
-    mapping is known. The `FleetAuraManager` translates this into an
-    `ExternalModifier` via `ability_name=stat_key` and applies it to
-    ship stats at battle start.
-
-    PROJ-272 Phase 2: accepts `stack_group` so entries participate in
-    two-phase MAX/SUM aggregation. Default None means "unique group"
-    (each such entry contributes independently via SUM — matches
-    pre-PROJ-272 behavior).
-    """
-    effect = ModifierEffect(
-        stat_key=stat_key,
-        value=value,
-        operation=operation,
-        target_ability=None,
-        source_modifier_id=design_id,
-        source_modifier_name=display_name,
-        formula_str="",
-        param_value=value,
-    )
-    return ModifierEntry(source=source, stack_group=stack_group, effect=effect)
 
 
 __all__ = ["build_strategy_battle_spec"]
