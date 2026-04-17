@@ -2,18 +2,18 @@
 IBattleResolver interface and BattleResult DTO.
 
 PROJ-11 Phase 4: Interface contract for battle resolution.
+PROJ-275 Phase 7: signature widened from (fleet1, fleet2) to
+(fleets: Sequence[Fleet]) for native N-team support. The legacy
+sequential 2-fleet decomposition in `ConflictResolutionEngine` is
+gone — strategy resolves N>=2 fleets at one sector in a single battle.
+
 This interface allows the strategy layer to depend on an abstraction
 rather than the concrete simulation implementation.
-
-The interface enables:
-- Unit testing with mock resolvers
-- Alternative battle resolution strategies
-- Clean separation between strategy and simulation layers
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import List, Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING
 
 from game.core.protocols import IPostBattleShip
 
@@ -25,68 +25,62 @@ if TYPE_CHECKING:
 
 @dataclass
 class BattleResult:
-    """
-    Data transfer object for battle results.
+    """N-team battle outcome reported up to the strategy layer.
 
-    This is a strategy-layer representation of battle outcomes,
-    decoupled from simulation-layer internals.
+    `winner` is the surviving team's id, or `None` for a draw (≥2 teams
+    still have ships). `team_survivors` carries the post-battle survivors
+    keyed by team_id, with one entry per team that participated — empty
+    list means total loss.
 
-    PROJ-90: Uses IPostBattleShip protocol for survivors typing.
-
-    Attributes:
-        winner: Team that won (0 or 1), or None for a draw
-        tick_count: Number of simulation ticks the battle took
-        team0_survivors: List of surviving ships for team 0
-        team1_survivors: List of surviving ships for team 1
+    PROJ-275 Phase 7: replaced the legacy `team0_survivors` /
+    `team1_survivors` pair (2-team only) with the dict form so any
+    number of teams can be reported.
     """
     winner: Optional[int]
     tick_count: int
-    team0_survivors: List[IPostBattleShip]
-    team1_survivors: List[IPostBattleShip]
+    team_survivors: Dict[int, List[IPostBattleShip]] = field(default_factory=dict)
 
 
 class IBattleResolver(ABC):
     """
     Abstract interface for battle resolution.
 
-    Implementations handle the actual combat simulation between two fleets.
-    The strategy layer uses this interface to remain decoupled from
-    specific simulation implementations.
+    Implementations handle the actual combat simulation between any
+    number of fleets (>=2). The strategy layer uses this interface to
+    remain decoupled from specific simulation implementations.
 
     Example usage:
-        resolver = SimulationBattleResolver()  # or MockBattleResolver for tests
-        result = resolver.resolve_battle(fleet1, fleet2, seed=42)
-        if result.winner == 0:
-            winner = fleet1
-        elif result.winner == 1:
-            winner = fleet2
-        else:
-            # Handle draw
-            pass
+        resolver = SimulationBattleResolver(ai_factory=...)
+        result = resolver.resolve_battle([fleet_a, fleet_b, fleet_c], seed=42)
+        if result.winner is not None:
+            print(f"Team {result.winner} won with "
+                  f"{len(result.team_survivors[result.winner])} survivors")
     """
 
     @abstractmethod
     def resolve_battle(
         self,
-        fleet1: 'Fleet',
-        fleet2: 'Fleet',
+        fleets: Sequence['Fleet'],
+        modifiers: Optional[Mapping[int, Any]] = None,
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
-        environmental_effects: Optional['EnvironmentalEffects'] = None
+        environmental_effects: Optional['EnvironmentalEffects'] = None,
     ) -> BattleResult:
         """
-        Resolve a battle between two fleets.
+        Resolve a battle between N fleets.
 
         Args:
-            fleet1: First fleet (assigned to team 0)
-            fleet2: Second fleet (assigned to team 1)
-            seed: Optional random seed for deterministic battles
-            registries: Optional GameRegistries for DI (PROJ-50)
-            environmental_effects: Optional environmental effects from storms (PROJ-189).
-                                   If provided with shield_capacity_mult < 1.0, ships
-                                   will have reduced shield capacity during combat.
+            fleets: Two or more fleets to fight. Position in the sequence
+                determines team_id (fleets[i] → team i).
+            modifiers: Optional mapping `{team_id: FleetCombatModifiers}`
+                with per-team strategic modifiers.
+            seed: Optional random seed for deterministic battles.
+            registries: Optional GameRegistries for DI (PROJ-50).
+            environmental_effects: Optional environmental effects from
+                storms (PROJ-189). When `shield_capacity_mult < 1.0`,
+                ships have reduced shield capacity during combat.
 
         Returns:
-            BattleResult containing winner, tick count, and survivors
+            BattleResult with winner, tick count, and per-team survivors.
         """
         pass

@@ -35,6 +35,14 @@ def _ship_specs_of(spec, team_id=0):
     return [s for tf in team.fleet_hierarchy for sq in tf.squadrons for s in sq.ships]
 
 
+def _opponent_fleet(ship_factory, fleet_id=99):
+    """PROJ-275 Phase 6: compiler now requires >=2 fleets. Tests focused
+    on a single fleet's formation pair it with this placeholder."""
+    fleet = Fleet(fleet_id=fleet_id, owner_id=1, location=HexCoord(0, 0))
+    fleet.add_ship(ship_factory(_design("line_combatant"), owner_id=1))
+    return fleet
+
+
 # ---------------------------------------------------------------------------
 # Default formation inferred from dominant design_role
 # ---------------------------------------------------------------------------
@@ -49,7 +57,7 @@ def test_default_formation_from_strike_ship_roles(session_registries, ship_facto
     fleet.add_ship(ship_factory(_design("assault_ship"), owner_id=0))
 
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, _opponent_fleet(ship_factory)],
         registries=session_registries,
         settings=None,
     )
@@ -77,7 +85,7 @@ def test_default_formation_from_defender_ship_roles(
         fleet.add_ship(ship_factory(_design("line_combatant"), owner_id=0))
 
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, _opponent_fleet(ship_factory)],
         registries=session_registries,
         settings=None,
     )
@@ -113,15 +121,17 @@ def test_explicit_task_force_formation_overrides_default(
     fleet.add_task_force(tf)
 
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, _opponent_fleet(ship_factory)],
         registries=session_registries,
         settings=None,
     )
 
     ships = _ship_specs_of(spec, team_id=0)
-    xs = sorted(round(s.position.x, 3) for s in ships)
-    ys = {round(s.position.y, 3) for s in ships}
-    # LINE_ASTERN: distinct xs (0, 100, 200), y=0.
+    origin_x = spec.teams[0].entry_vector.origin.x
+    origin_y = spec.teams[0].entry_vector.origin.y
+    xs = sorted(round(s.position.x - origin_x, 3) for s in ships)
+    ys = {round(s.position.y - origin_y, 3) for s in ships}
+    # LINE_ASTERN (relative to entry-vector origin): xs at 0, 100, 200; y=0.
     assert xs == [0.0, 100.0, 200.0]
     assert ys == {0.0}
 
@@ -136,7 +146,7 @@ def test_ship_angles_match_entry_vector_facing(session_registries, ship_factory)
     for _ in range(2):
         fleet.add_ship(ship_factory(_design("line_combatant"), owner_id=0))
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, _opponent_fleet(ship_factory)],
         registries=session_registries,
         settings=None,
     )
@@ -151,11 +161,11 @@ def test_ship_angles_match_entry_vector_facing(session_registries, ship_factory)
 # ---------------------------------------------------------------------------
 
 
-def test_empty_fleet_yields_empty_ship_specs(session_registries):
+def test_empty_fleet_yields_empty_ship_specs(session_registries, ship_factory):
     fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
     # No ships added.
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, _opponent_fleet(ship_factory)],
         registries=session_registries,
         settings=None,
     )

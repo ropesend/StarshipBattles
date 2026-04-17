@@ -903,32 +903,70 @@ method had zero UI consumers.
 
 ---
 
-## 9. Multi-team Battle Limits (PROJ-272 Phase 9)
+## 9. Multi-Team Battle Support (PROJ-275)
 
-**2-team assumption in compilers.** Both `build_manual_battle_spec` (Battle
-Setup compiler) and `SimulationBattleResolver.resolve_battle` (strategy)
-assume exactly 2 teams. Battle Setup uses `_NUM_TEAMS = 2` + a two-team
-`_route_team_for_scope` lookup; strategy's `resolve_battle(fleet1, fleet2,
-...)` takes exactly 2 fleet args. If a hex naturally produces 3+ fleets
-(e.g., three empires meeting at one sector), `ConflictResolutionEngine`
-resolves them as SEQUENTIAL 2-fleet battles — there is no native N-team
-combat resolution today.
+All three entry points — Combat Lab, Battle Setup, Strategy — accept any
+number of teams in `[2, 8]`. The engine itself has always supported N
+teams (§0.N-Team Support above); PROJ-275 closed the remaining compiler,
+UI, and conflict-resolution gaps so that the full stack reaches the
+engine with a proper N-team `BattleSpec`.
 
-`FleetAuraManager._recalculate` already supports N teams in its internal
-structure (iterates all team_ids found on ships), so engine-side
-expansion is feasible. Compiler-side expansion requires: (a) Battle Setup
-UI to surface N sides, (b) strategy resolver to take an N-fleet argument,
-(c) `_route_team_for_scope` to return a list of opponent team_ids instead
-of a single int for multi-enemy routing.
+**Compilers emit one `TeamSpec` per team.** Both `build_manual_battle_spec`
+(Battle Setup) and `build_strategy_battle_spec` (strategy) iterate their
+input (sides / fleets) and emit `len(input)` `TeamSpec`s. Each team's
+`entry_vector` comes from
+`game.simulation.combat.formation.resolve_team_entry_vectors(team_count)`
+— a ring layout that preserves the legacy (-500, 0) / (+500, 0) west/east
+placement for `team_count == 2` and spreads N≥3 teams evenly around a
+circle with each team facing inward toward the origin.
+
+**Enemy-scope fan-out in the registry helper.**
+`game.simulation.combat.ability_stat_registry.emit_entries_for_ability`
+accepts `num_teams` and fans `enemy_*` scope entries out to every
+non-owner team. With 4 teams and owner=0, an `enemy_system` ability
+produces 3 `ModifierEntry` tuples — one targeting each of teams 1, 2, 3.
+The helper is the shared path for both the Battle Setup and strategy
+compilers; callers only need to pass `num_teams=len(teams)`.
+
+**Single N-team conflict resolution.** The strategy
+`ConflictResolutionEngine._resolve_combat_at_hex` makes ONE call into
+`IBattleResolver.resolve_battle(fleets, modifiers, ...)` per contested
+sector, regardless of how many empires are present. The old sequential
+2-fleet decomposition (`while len(fleets_by_emp) > 1: rng.sample(emp_ids, 2)`)
+has been deleted. The losing empire bookkeeping (marking fleets
+destroyed, calling `empire.remove_fleet`) is driven by the `winner` and
+`team_survivors` fields of the returned `BattleResult`.
+
+**Interface shape.** `IBattleResolver.resolve_battle(fleets: Sequence[Fleet],
+modifiers: Optional[Mapping[int, Any]] = None, seed=None, registries=None,
+environmental_effects=None) -> BattleResult`. `BattleResult` carries
+`team_survivors: Dict[int, List[IPostBattleShip]]` keyed by team_id (one
+entry per participating team, including empty lists for teams that got
+wiped).
+
+**Max teams = 8.** UI cap + ring entry-vector sanity cap. The simulation
+engine has no hard cap; the limit lives in `BattleSetupState`, the two
+spec compilers (`_MIN_TEAMS`/`_MAX_TEAMS = 2/8`), and
+`resolve_team_entry_vectors`.
+
+**`TeamEliminatedCondition`** fires when **≤1 team retains alive ships**
+— correct for any N. The `BattleOutcome.winner` is the sole surviving
+team's `team_id`, or `None` for a total wipe / still-in-progress draw.
+
+**AI targeting** stays the same for all N: every non-self team is hostile
+(`AIController._find_enemies_in_radius` filters on `team_id != self.ship.team_id`).
+No alliances, no target preference between enemy teams.
+
+**Mid-battle reinforcements** join the team specified in their
+`ShipSpec`; the engine adds them to `engine.teams[team_id]` via
+`add_ship_mid_battle`. Mid-battle *team creation* is explicitly NOT
+supported — the team roster is fixed at battle start.
 
 **Mid-battle destruction of external modifier sources is NOT supported.**
 External `ModifierStack` entries (from Battle Setup complex toggles,
 strategy planet auras compiled via `CombatModifierCollector`) are static
 for the duration of the battle. They cannot be destroyed or deactivated
 mid-fight, because they aren't ship entities — they're pre-compiled stack
-entries. User-facing implication: a shield-projector planet's aura
-persists even if the planet is conceptually "in the battle sector" and
-conceptually "should" stop projecting when its component is destroyed.
-A future project that wants destructible external modifiers must turn
-them into real in-battle ship entities (with their own ability providers)
-rather than static stack entries.
+entries. A future project that wants destructible external modifiers
+must turn them into real in-battle ship entities (with their own ability
+providers) rather than static stack entries.

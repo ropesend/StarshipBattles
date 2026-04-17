@@ -25,13 +25,17 @@ from tests.conftest import make_mock_ship_instance
 class InstantBattleResolver(IBattleResolver):
     """Battle resolver that instantly declares team 0 the winner."""
 
-    def resolve_battle(self, fleet1, fleet2, seed=None, registries=None,
+    def resolve_battle(self, fleets, modifiers=None, seed=None, registries=None,
                        environmental_effects=None):
+        fleet_list = list(fleets)
+        survivors = {i: [] for i in range(len(fleet_list))}
+        survivors[0] = list(
+            fleet_list[0].battle.to_battle_ships(team_id=0, registries=registries)
+        )
         return BattleResult(
             winner=0,
             tick_count=1,
-            team0_survivors=list(fleet1.battle.to_battle_ships(team_id=0, registries=registries)),
-            team1_survivors=[],
+            team_survivors=survivors,
         )
 
 

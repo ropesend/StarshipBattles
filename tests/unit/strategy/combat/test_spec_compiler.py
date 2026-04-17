@@ -222,8 +222,13 @@ def test_compiler_populates_ship_spec_components_from_instance(
         is_active=cs0.is_active,
     )
 
+    # PROJ-275 Phase 6: compiler now requires >=2 fleets — add an opposing
+    # placeholder fleet so the call validates.
+    opponent = Fleet(fleet_id=43, owner_id=1, location=HexCoord(0, 0))
+    opponent.add_ship(ship_factory(_minimal_design("Opponent"), owner_id=1))
+
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, opponent],
         empires={},
         settings=None,
         registries=session_registries,
@@ -273,8 +278,12 @@ def test_compiler_empty_instance_components_yields_empty_ship_spec_components(
     ship_instance.components = {}
     fleet.add_ship(ship_instance)
 
+    # PROJ-275 Phase 6: compiler now requires >=2 fleets.
+    opponent = Fleet(fleet_id=2, owner_id=1, location=HexCoord(0, 0))
+    opponent.add_ship(ship_factory(_minimal_design("Opponent"), owner_id=1))
+
     spec = build_strategy_battle_spec(
-        [fleet],
+        [fleet, opponent],
         empires={},
         settings=None,
         registries=session_registries,
@@ -334,3 +343,276 @@ class TestStackGroupThreadingInStrategyCompiler:
         bonus_entries = [e for e in entries if e.effect.stat_key == "shield_bonus_add"]
         assert bonus_entries
         assert bonus_entries[0].stack_group == "team0_flat_shield"
+
+
+# ---------------------------------------------------------------------------
+# PROJ-275 Phase 6: N-fleet strategy compiler.
+# ---------------------------------------------------------------------------
+
+
+def _three_fleets(ship_factory):
+    fleets = []
+    for owner_id in range(3):
+        fleet = Fleet(fleet_id=owner_id + 1, owner_id=owner_id, location=HexCoord(0, 0))
+        fleet.add_ship(
+            ship_factory(_minimal_design(f"Fleet{owner_id}Ship"), owner_id=owner_id)
+        )
+        fleets.append(fleet)
+    return fleets
+
+
+class TestStrategyCompilerNFleets:
+    """PROJ-275 Phase 6 — strategy compiler accepts N fleets (2..8)."""
+
+    def test_three_fleets_yields_three_team_battle_spec(
+        self, session_registries, ship_factory
+    ):
+        fleets = _three_fleets(ship_factory)
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+        )
+        assert isinstance(spec, BattleSpec)
+        assert len(spec.teams) == 3
+        assert [t.team_id for t in spec.teams] == [0, 1, 2]
+
+    def test_three_fleets_use_ring_entry_vectors(
+        self, session_registries, ship_factory
+    ):
+        """PROJ-275 Phase 6 — entry vectors come from
+        `resolve_team_entry_vectors(num_teams)`. Ring layout starts at
+        west (180°) and steps by 360/N. For N=3, team 0 at 180°, team 1
+        at 300°, team 2 at 60°."""
+        from game.simulation.combat.formation import resolve_team_entry_vectors
+
+        fleets = _three_fleets(ship_factory)
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+        )
+        expected = resolve_team_entry_vectors(3)
+        for team_id, team in enumerate(spec.teams):
+            ev = team.entry_vector
+            exp = expected[team_id]
+            assert ev.origin.x == pytest.approx(exp.origin.x)
+            assert ev.origin.y == pytest.approx(exp.origin.y)
+            assert ev.facing == pytest.approx(exp.facing)
+
+    def test_two_fleet_entry_vectors_preserve_legacy_west_east(
+        self, session_registries, ship_factory
+    ):
+        """Legacy 2-team behavior: team 0 at (-500, 0), team 1 at (+500, 0)."""
+        fleets = _three_fleets(ship_factory)[:2]
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+        )
+        assert spec.teams[0].entry_vector.origin.x == pytest.approx(-500.0)
+        assert spec.teams[0].entry_vector.origin.y == pytest.approx(0.0)
+        assert spec.teams[1].entry_vector.origin.x == pytest.approx(500.0)
+        assert spec.teams[1].entry_vector.origin.y == pytest.approx(0.0)
+
+    def test_one_fleet_input_raises_value_error(
+        self, session_registries, ship_factory
+    ):
+        fleets = _three_fleets(ship_factory)[:1]
+        with pytest.raises(ValueError):
+            build_strategy_battle_spec(
+                fleets,
+                empires={},
+                settings=None,
+                registries=session_registries,
+            )
+
+    def test_zero_fleet_input_raises_value_error(self, session_registries):
+        with pytest.raises(ValueError):
+            build_strategy_battle_spec(
+                [],
+                empires={},
+                settings=None,
+                registries=session_registries,
+            )
+
+    def test_nine_fleet_input_raises_value_error(
+        self, session_registries, ship_factory
+    ):
+        fleets = []
+        for i in range(9):
+            f = Fleet(fleet_id=i + 1, owner_id=i, location=HexCoord(0, 0))
+            f.add_ship(ship_factory(_minimal_design(f"S{i}"), owner_id=i))
+            fleets.append(f)
+        with pytest.raises(ValueError):
+            build_strategy_battle_spec(
+                fleets,
+                empires={},
+                settings=None,
+                registries=session_registries,
+            )
+
+    def test_storm_global_applies_to_three_team_battle(
+        self, session_registries, ship_factory
+    ):
+        """Environmental effects are global — they apply to every team
+        regardless of N. With 3 fleets present we should still see the
+        single global storm entry."""
+        from game.strategy.services.area_effect_manager import EnvironmentalEffects
+
+        fleets = _three_fleets(ship_factory)
+        effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+            environmental_effects=effects,
+        )
+        storm_entries = [
+            e for e in spec.modifier_stack.global_
+            if e.source == "environment:storm_shield_interference"
+        ]
+        assert len(storm_entries) == 1
+        assert storm_entries[0].effect.stat_key == "shield_capacity_mult"
+        assert storm_entries[0].effect.value == 0.5
+
+    def test_team_modifiers_per_team_routed_correctly_with_three_teams(
+        self, session_registries, ship_factory
+    ):
+        """`FleetCombatModifiers.damage_mult` for team 0 must apply only
+        to team 0 entries; team 1/2 should have no per-team entries when
+        their modifiers are absent / neutral."""
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+
+        fleets = _three_fleets(ship_factory)
+        team_modifiers = {
+            0: FleetCombatModifiers(shield_mult=1.0, damage_mult=2.0, flat_shield_bonus=0.0),
+        }
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+            team_modifiers=team_modifiers,
+        )
+        per_team = spec.modifier_stack.per_team
+        # Team 0 should have a damage_mult entry.
+        team0_entries = per_team.get(0, ())
+        damage_entries = [
+            e for e in team0_entries if e.effect.stat_key == "damage_mult"
+        ]
+        assert damage_entries, "Team 0 should have its damage_mult entry"
+        # Teams 1 and 2 should not have damage_mult entries.
+        for tid in (1, 2):
+            tentries = per_team.get(tid, ())
+            assert not any(
+                e.effect.stat_key == "damage_mult" for e in tentries
+            ), f"Team {tid} should have no damage_mult entry"
+
+    def test_team_modifiers_for_three_teams_each_get_own_entries(
+        self, session_registries, ship_factory
+    ):
+        """When all three teams have distinct modifiers, each per-team
+        bucket should carry only its own entries."""
+        from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
+
+        fleets = _three_fleets(ship_factory)
+        team_modifiers = {
+            0: FleetCombatModifiers(shield_mult=1.5, damage_mult=1.0, flat_shield_bonus=0.0),
+            1: FleetCombatModifiers(shield_mult=1.0, damage_mult=2.0, flat_shield_bonus=0.0),
+            2: FleetCombatModifiers(shield_mult=1.0, damage_mult=1.0, flat_shield_bonus=25.0),
+        }
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+            team_modifiers=team_modifiers,
+        )
+        per_team = spec.modifier_stack.per_team
+        # Team 0 has shield_capacity_mult only.
+        t0_keys = {e.effect.stat_key for e in per_team.get(0, ())}
+        assert "shield_capacity_mult" in t0_keys
+        assert "damage_mult" not in t0_keys
+        assert "shield_bonus_add" not in t0_keys
+        # Team 1 has damage_mult only.
+        t1_keys = {e.effect.stat_key for e in per_team.get(1, ())}
+        assert "damage_mult" in t1_keys
+        assert "shield_capacity_mult" not in t1_keys
+        # Team 2 has shield_bonus_add only.
+        t2_keys = {e.effect.stat_key for e in per_team.get(2, ())}
+        assert "shield_bonus_add" in t2_keys
+
+    def test_three_team_post_battle_hook_routes_outcomes_to_each_team(
+        self, session_registries, ship_factory
+    ):
+        """The compiler-built post-battle hook closes over the input
+        fleets keyed by their assigned team_id (positional). With 3
+        fleets, the hook should route a 3-team outcome correctly."""
+        from game.core.math import Vector2
+        from game.simulation.battle_outcome import (
+            BattleOutcome,
+            EndReason,
+            ShipOutcome,
+            ShipStats,
+            ShipStatus,
+            TeamOutcome,
+        )
+        from game.simulation.combat.telemetry import TelemetryLevel
+
+        fleets = _three_fleets(ship_factory)
+        spec = build_strategy_battle_spec(
+            fleets,
+            empires={},
+            settings=None,
+            registries=session_registries,
+        )
+
+        # Build a synthetic 3-team outcome marking team 1 + team 2's ships
+        # as DESTROYED, team 0 SURVIVED. Hook should remove the destroyed
+        # ships from their respective fleets.
+        zero_stats = ShipStats(
+            total_damage_taken=0.0,
+            peak_speed=0.0,
+            ticks_derelict=0,
+            ticks_alive=0,
+        )
+        teams_outcome = []
+        for tid, fleet in enumerate(fleets):
+            ship = fleet.ships[0]
+            status = ShipStatus.SURVIVED if tid == 0 else ShipStatus.DESTROYED
+            teams_outcome.append(
+                TeamOutcome(
+                    team_id=tid,
+                    name=f"Fleet {fleet.id}",
+                    ships=(
+                        ShipOutcome(
+                            instance_id=ship.instance_id,
+                            status=status,
+                            final_position=Vector2(0.0, 0.0),
+                            final_angle=0.0,
+                            final_velocity=Vector2(0.0, 0.0),
+                            components=(),
+                            weapons=(),
+                            hits_taken=(),
+                            stats=zero_stats,
+                        ),
+                    ),
+                )
+            )
+        outcome = BattleOutcome(
+            end_reason=EndReason.TEAM_ELIMINATED,
+            duration_ticks=10,
+            seed=0,
+            teams=tuple(teams_outcome),
+            telemetry_level=TelemetryLevel.NORMAL,
+        )
+
+        spec.post_battle_hook(outcome)
+        assert len(fleets[0].ships) == 1, "Survivor stays in team 0 fleet"
+        assert len(fleets[1].ships) == 0, "Team 1 ship destroyed → removed"
+        assert len(fleets[2].ships) == 0, "Team 2 ship destroyed → removed"

@@ -753,8 +753,11 @@ Handles instant-apply/revert for activatable planet modifiers (GravityModifier, 
 
 Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`. **Scope routing (PROJ-271):** enemy-scope (`enemy_sector` / `enemy_system`) effects are pre-computed INTO the RECEIVING fleet's `FleetCombatModifiers` before the strategy spec compiler runs. The compiler therefore emits each entry to `per_team[receiver_id]` trivially, with no runtime scope lookup. New enemy-scope abilities must extend the collector, not the compiler.
 
-Passed into `SimulationBattleResolver.resolve_battle(...,
-team0_modifiers=..., team1_modifiers=..., environmental_effects=...)`.
+Passed into `SimulationBattleResolver.resolve_battle(fleets,
+modifiers={team_id: FleetCombatModifiers}, environmental_effects=...)`
+(PROJ-275 Phase 7: signature widened from the legacy `(fleet1, fleet2,
+team0_modifiers, team1_modifiers)` form to a single `fleets` sequence
+plus a `modifiers` mapping, enabling native N-team calls).
 
 PROJ-269 Phase 6 + PROJ-270 Phase 6 changed how these effects flow
 into the engine:
@@ -764,12 +767,11 @@ into the engine:
   `_apply_strategic_modifiers` set `ship.damage_output_mult`, etc.) BEFORE
   handing ships to the engine.
 - Post-PROJ-269 Phase 6: the resolver passes `environmental_effects` and
-  `team_modifiers={0: team0_mods, 1: team1_mods}` into
-  `build_strategy_battle_spec`, which translates each into
-  `ModifierEntry` records on the spec's `ModifierStack`. PROJ-269 Phase
-  5.5 initially emitted these as `stat_key="placeholder"` — recorded
-  in the forensic trace but with NO effect on battle math (a real
-  gameplay regression).
+  a per-team modifier mapping into `build_strategy_battle_spec`, which
+  translates each into `ModifierEntry` records on the spec's
+  `ModifierStack`. PROJ-269 Phase 5.5 initially emitted these as
+  `stat_key="placeholder"` — recorded in the forensic trace but with
+  NO effect on battle math (a real gameplay regression).
 - **Post-PROJ-270 Phase 6 Track A + PROJ-271 Track B:** the strategy compiler emits
   REAL stat_keys for all modifier sources: storm `shield_capacity_mult` →
   `StatKey.SHIELD_CAPACITY_MULT`; fleet `shield_mult` →
@@ -787,7 +789,13 @@ ACTIVE activation phase contribute to combat modifiers. Inactive or activating a
 have no effect. This means planetary complex ShieldModifier/DamageModifier/ShieldProjection
 must be manually activated before they affect combat.
 
-Wired from `ConflictResolutionEngine._resolve_combat_simulated()` which collects modifiers for both fleets and passes them to the resolver.
+Wired from `ConflictResolutionEngine._resolve_combat_at_hex()` which
+collects per-team modifiers for every participating fleet (allied
+boosters from the fleet's own empire, enemy suppressors from all
+opposing empires' facilities) and passes the full `{team_id: modifiers}`
+mapping to `IBattleResolver.resolve_battle(fleets, modifiers, ...)` as a
+single N-team call. PROJ-275 collapsed the legacy sequential 2-fleet
+decomposition into one N-team battle per contested hex.
 
 #### Battle Setup Complex-Toggle Compilation (PROJ-271 Phase 2)
 

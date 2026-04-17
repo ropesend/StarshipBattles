@@ -52,10 +52,10 @@ from game.simulation.combat.formation import (
     FormationResolver,
     FormationSpec,
     resolve_default_for_task_force,
+    resolve_team_entry_vectors,
 )
 from game.simulation.combat.ability_stat_registry import (
     ABILITY_STAT_REGISTRY,
-    OPPONENT_SCOPES,
     emit_entries_for_ability,
 )
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
@@ -80,7 +80,11 @@ if TYPE_CHECKING:
 _DEFAULT_TICK_LIMIT = 10_000
 
 
-_NUM_TEAMS = 2  # Battle Setup is 2-sided; `enemy_*` routing uses `1 - owner`.
+# PROJ-275 Phase 4: `_NUM_TEAMS` removed. `build_manual_battle_spec` now
+# computes `num_teams = len(ui_state.sides)` and emits one `TeamSpec` per
+# side. Ring-based entry vectors (`resolve_team_entry_vectors`) replace
+# the old hardcoded west/east defaults. 2-side behavior is preserved
+# byte-identically.
 
 
 def build_manual_battle_spec(
@@ -94,7 +98,7 @@ def build_manual_battle_spec(
     """Compile `BattleSetupState` into a `BattleSpec`.
 
     Args:
-        ui_state: The current Battle Setup UI state (both sides' fleets
+        ui_state: The current Battle Setup UI state (N sides' fleets
             + system/sector complex toggles).
         registries: GameRegistries for stats access. Accepted for signature
             parity with other compilers; Phase 1 doesn't actively consume
@@ -113,11 +117,31 @@ def build_manual_battle_spec(
         A populated `BattleSpec`. The caller supplies a `ship_builder`
         closure to `run_battle` that materializes each `ShipSpec` via
         `ShipInstance.to_ship(registries)` (or equivalent).
-    """
-    team0 = _build_team_spec(ui_state.side_0, team_id=0, name="Side 0")
-    team1 = _build_team_spec(ui_state.side_1, team_id=1, name="Side 1")
 
-    modifier_stack = _build_modifier_stack(ui_state, registries)
+    PROJ-275 Phase 4: N-team support. Accepts any number of sides in
+    `[2, 8]`; raises `ValueError` otherwise.
+    """
+    num_teams = len(ui_state.sides)
+    if num_teams < 2 or num_teams > 8:
+        raise ValueError(
+            f"build_manual_battle_spec: BattleSetupState must have 2..8 sides; "
+            f"got {num_teams}"
+        )
+
+    entry_vectors = resolve_team_entry_vectors(team_count=num_teams)
+
+    teams: List[TeamSpec] = []
+    for team_id, side in enumerate(ui_state.sides):
+        teams.append(
+            _build_team_spec(
+                side,
+                team_id=team_id,
+                name=f"Side {team_id}",
+                entry_vector=entry_vectors[team_id],
+            )
+        )
+
+    modifier_stack = _build_modifier_stack(ui_state, registries, num_teams=num_teams)
 
     effective_end_condition: "IEndCondition"
     if end_condition is not None:
@@ -136,7 +160,7 @@ def build_manual_battle_spec(
         boundary=UnboundedRegion(),
         end_condition=effective_end_condition,
         absolute_max_ticks=absolute_max,
-        teams=(team0, team1),
+        teams=tuple(teams),
         modifier_stack=modifier_stack,
         post_battle_hook=None,
     )
@@ -147,21 +171,21 @@ def build_manual_battle_spec(
 # ---------------------------------------------------------------------------
 
 
-# PROJ-269 Phase 4: Battle Setup entry-vector defaults.
-# Team 0 enters from the west facing east (+x); team 1 from the east
-# facing west (180°). Gives visual separation so ships don't overlap.
-_SIDE_ENTRY_VECTORS = {
-    0: EntryVector(origin=Vector2(-500.0, 0.0), facing=0.0),
-    1: EntryVector(origin=Vector2(500.0, 0.0), facing=180.0),
-}
+# PROJ-275 Phase 4: entry vectors resolved from `resolve_team_entry_vectors`
+# based on the team count at compile time. The old hardcoded
+# `_SIDE_ENTRY_VECTORS = {0: (-500, 0), 1: (+500, 0)}` is gone — N-team
+# ring layout preserves the 2-team west/east defaults byte-identically
+# (PROJ-275 Phase 2 ring formula starts at angle 180° so team 0 is always
+# at west).
 
 
 def _build_team_spec(
-    side: "BattleSetupSide", *, team_id: int, name: str
+    side: "BattleSetupSide",
+    *,
+    team_id: int,
+    name: str,
+    entry_vector: EntryVector,
 ) -> TeamSpec:
-    entry_vector = _SIDE_ENTRY_VECTORS.get(
-        team_id, EntryVector(origin=Vector2(0.0, 0.0), facing=0.0)
-    )
     task_forces: List[TaskForceSpec] = []
     for fleet in side.fleets:
         task_forces.append(
@@ -260,26 +284,33 @@ def _ship_spec_from_instance(
 def _build_modifier_stack(
     ui_state: "BattleSetupState",
     registries: Optional["GameRegistries"],
+    *,
+    num_teams: int,
 ) -> ModifierStack:
-    """Assemble the ModifierStack from both sides' complex toggles.
+    """Assemble the ModifierStack from all sides' complex toggles.
 
     PROJ-271 Phase 2.4: each complex's design JSON is loaded; its
     non-SELF scoped abilities become `ModifierEntry` entries. Scope
-    drives team routing — `enemy_*` scopes route to the opponent team,
+    drives team routing — `enemy_*` scopes route to ALL opponent teams,
     everything else to the owner team.
+
+    PROJ-275 Phase 4: iterates `ui_state.sides` (N teams). Enemy-scope
+    fan-out goes to every non-owner team via the registry helper.
     """
-    per_team: Dict[int, List[ModifierEntry]] = {0: [], 1: []}
-    for team_id, side in ((0, ui_state.side_0), (1, ui_state.side_1)):
+    per_team: Dict[int, List[ModifierEntry]] = {
+        team_id: [] for team_id in range(num_teams)
+    }
+    for team_id, side in enumerate(ui_state.sides):
         for complex_data in side.system_complexes:
             for route_team, entry in _complex_to_entries(
                 complex_data, scope_prefix="system", owner_team=team_id,
-                registries=registries,
+                registries=registries, num_teams=num_teams,
             ):
                 per_team.setdefault(route_team, []).append(entry)
         for complex_data in side.sector_complexes:
             for route_team, entry in _complex_to_entries(
                 complex_data, scope_prefix="sector", owner_team=team_id,
-                registries=registries,
+                registries=registries, num_teams=num_teams,
             ):
                 per_team.setdefault(route_team, []).append(entry)
 
@@ -297,6 +328,7 @@ def _complex_to_entries(
     scope_prefix: str,
     owner_team: int,
     registries: Optional["GameRegistries"],
+    num_teams: int,
 ) -> List[Tuple[int, ModifierEntry]]:
     """Translate one complex toggle into (team_id, ModifierEntry) pairs.
 
@@ -359,7 +391,7 @@ def _complex_to_entries(
                     ability_data,
                     scope=scope_str,
                     owner_team=owner_team,
-                    num_teams=_NUM_TEAMS,
+                    num_teams=num_teams,
                     source=f"{scope_prefix}:complex:{design_id}:{ability_name}",
                     source_modifier_id=design_id,
                     source_modifier_name=display,
@@ -424,32 +456,12 @@ def _extract_scope(ability_name: str, ability_data: Any) -> str:
     return get_ability_default_scope(ability_name)
 
 
-def _route_team_for_scope(scope_str: str, owner_team: int) -> int:
-    """Return the team_id that an ability with the given scope targets.
-
-    Enemy-scoped abilities target the opponent team; everything else
-    (including allied/player/fleet/system/sector scopes) targets the
-    owner team. Battle Setup is 2-sided (`_NUM_TEAMS == 2`), so
-    `(_NUM_TEAMS - 1) - owner` is the single opponent.
-
-    3+ team extension: replace with a caller that loops over all
-    non-owner teams, emitting one entry per opponent team.
-
-    PROJ-272 Phase 10: explicit NotImplementedError for 3+ team callers
-    instead of a silent misroute. If a future caller hands this function
-    a team index beyond `_NUM_TEAMS - 1`, fail loudly.
-    """
-    if owner_team < 0 or owner_team >= _NUM_TEAMS:
-        raise NotImplementedError(
-            f"Battle Setup compiler is currently 2-team only "
-            f"(_NUM_TEAMS={_NUM_TEAMS}). Got owner_team={owner_team}. "
-            f"Multi-team routing requires extending `_route_team_for_scope` "
-            f"to return a list of opponent teams and updating callers to "
-            f"emit one ModifierEntry per opponent team."
-        )
-    if scope_str in OPPONENT_SCOPES:
-        return (_NUM_TEAMS - 1) - owner_team
-    return owner_team
+# PROJ-275 Phase 3: `_route_team_for_scope` DELETED.
+# Team routing is now handled by `emit_entries_for_ability` in the
+# ability-stat registry (PROJ-273) — `num_teams` kwarg + return list of
+# `(team_id, entry)` tuples. N-team fan-out (enemy_* scopes → all
+# opponents) happens inside the registry helper. The former local wrapper
+# hardcoded 2-team routing via `_NUM_TEAMS`.
 
 
 __all__ = ["build_manual_battle_spec"]

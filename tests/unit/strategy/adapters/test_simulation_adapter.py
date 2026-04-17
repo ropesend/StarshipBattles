@@ -56,8 +56,8 @@ def _make_outcome(winner_team_id, duration=100):
         ship.status = ShipStatus.SURVIVED if is_alive else ShipStatus.DESTROYED
         return [ship]
 
-    team0.ships = _team_ships(winner_team_id != 1)
-    team1.ships = _team_ships(winner_team_id != 0)
+    team0.ships = _team_ships(winner_team_id == 0)
+    team1.ships = _team_ships(winner_team_id == 1)
     outcome.teams = (team0, team1)
     return outcome
 
@@ -77,7 +77,7 @@ class TestSimulationBattleResolverBehavior:
             "game.strategy.adapters.simulation_adapter.run_battle",
             return_value=_make_outcome(winner_team_id=0),
         ):
-            result = resolver.resolve_battle(fleet1, fleet2)
+            result = resolver.resolve_battle([fleet1, fleet2])
 
         assert isinstance(result, BattleResult)
         assert result.winner == 0
@@ -100,7 +100,7 @@ class TestSimulationBattleResolverBehavior:
             "game.strategy.adapters.simulation_adapter.run_battle",
             side_effect=_fake_run_battle,
         ):
-            resolver.resolve_battle(fleet1, fleet2, seed=42)
+            resolver.resolve_battle([fleet1, fleet2], seed=42)
 
         assert seen_spec["seed"] == 42
 
@@ -122,7 +122,7 @@ class TestSimulationBattleResolverBehavior:
             "game.strategy.adapters.simulation_adapter.run_battle",
             side_effect=_fake_run_battle,
         ):
-            resolver.resolve_battle(fleet1, fleet2)
+            resolver.resolve_battle([fleet1, fleet2])
 
         teams = seen_spec["teams"]
         assert len(teams) == 2
@@ -137,7 +137,7 @@ class TestSimulationBattleResolverBehavior:
         fleet1 = _make_fleet(1, [_MockShipInstance("a")])
         fleet2 = _make_fleet(2, [])
 
-        result = resolver.resolve_battle(fleet1, fleet2)
+        result = resolver.resolve_battle([fleet1, fleet2])
 
         assert isinstance(result, BattleResult)
         assert result.winner == 0  # Fleet 1 wins because Fleet 2 is empty
@@ -151,7 +151,7 @@ class TestSimulationBattleResolverBehavior:
         fleet1 = _make_fleet(1, [])
         fleet2 = _make_fleet(2, [])
 
-        result = resolver.resolve_battle(fleet1, fleet2)
+        result = resolver.resolve_battle([fleet1, fleet2])
 
         assert isinstance(result, BattleResult)
         assert result.winner is None
@@ -168,7 +168,7 @@ class TestSimulationBattleResolverBehavior:
         with patch(
             "game.strategy.adapters.simulation_adapter.run_battle",
         ) as mock_run_battle:
-            result = resolver.resolve_battle(fleet1, fleet2)
+            result = resolver.resolve_battle([fleet1, fleet2])
 
         mock_run_battle.assert_not_called()
         assert result.winner == 1
@@ -184,7 +184,7 @@ class TestSimulationBattleResolverBehavior:
             "game.strategy.adapters.simulation_adapter.run_battle",
             return_value=_make_outcome(winner_team_id=1, duration=250),
         ):
-            result = resolver.resolve_battle(fleet1, fleet2)
+            result = resolver.resolve_battle([fleet1, fleet2])
 
         assert result.winner == 1
         assert result.tick_count == 250
@@ -218,7 +218,7 @@ class TestSimulationBattleResolverDependencyInjection:
             "game.strategy.adapters.simulation_adapter.run_battle",
             side_effect=_fake_run_battle,
         ):
-            resolver.resolve_battle(fleet1, fleet2)
+            resolver.resolve_battle([fleet1, fleet2])
 
         assert seen["ai_factory"] is mock_factory
 

@@ -1,7 +1,11 @@
 """
-Unit tests for ConflictResolutionEngine battle resolver integration.
+Unit tests for ConflictResolutionEngine ↔ IBattleResolver integration.
 
-Tests battle resolver injection, result handling, and public API.
+PROJ-275 Phase 7: the legacy sequential 2-fleet decomposition was
+replaced with a single N-team `_resolve_combat_at_hex` call. Tests
+that exercised `_resolve_combat`/`_resolve_combat_simulated` (now
+removed) have been migrated to drive `_resolve_combat_at_hex` with
+synthetic occupants directly.
 """
 
 import pytest
@@ -10,173 +14,171 @@ from unittest.mock import MagicMock
 from game.core.hex_math import HexCoord
 
 
-class TestBattleResolverIntegration:
-    """Tests for battle resolver injection and usage."""
+def _empire(empire_id):
+    emp = MagicMock()
+    emp.id = empire_id
+    emp.fleets = []
+    emp.remove_fleet = MagicMock()
+    return emp
 
-    def test_resolve_combat_simulated_uses_injected_resolver(self):
-        """_resolve_combat_simulated should use injected resolver."""
+
+def _fleet(fleet_id, owner_id, location=None):
+    f = MagicMock()
+    f.id = fleet_id
+    f.owner_id = owner_id
+    f.location = location or HexCoord(0, 0)
+    f.ships = [MagicMock()]
+    return f
+
+
+class TestBattleResolverIntegration:
+    """Tests for battle resolver injection and usage in single N-team mode."""
+
+    def test_resolve_combat_at_hex_uses_injected_resolver(self):
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
-        call_count = 0
-        last_fleets = []
+        calls = []
 
         class TrackingResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
-                nonlocal call_count, last_fleets
-                call_count += 1
-                last_fleets = [fleet1, fleet2]
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                calls.append(list(fleets))
                 return BattleResult(
-                    winner=0,
-                    tick_count=100,
-                    team0_survivors=[],
-                    team1_survivors=[]
+                    winner=0, tick_count=100,
+                    team_survivors={i: [] for i in range(len(list(fleets)))},
                 )
 
         resolver = TrackingResolver()
         engine = ConflictResolutionEngine(battle_resolver=resolver)
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
+        emp1 = _empire(0)
+        emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0)
+        f2 = _fleet(2, owner_id=1)
+        emp1.fleets.append(f1)
+        emp2.fleets.append(f2)
 
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
+        engine._empires = [emp1, emp2]
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-        result = engine._resolve_combat_simulated(fleet1, fleet2)
-
-        assert call_count == 1
-        assert fleet1 in last_fleets
-        assert fleet2 in last_fleets
-        assert result == fleet1  # Winner was team 0 (fleet1)
+        assert len(calls) == 1
+        assert f1 in calls[0] and f2 in calls[0]
 
     def test_mock_resolver_enables_unit_testing(self):
-        """Mock resolver allows unit testing without simulation."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
-        class AlwaysFleet1WinsResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
+        class AlwaysTeam0WinsResolver(IBattleResolver):
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                fleets = list(fleets)
                 return BattleResult(
-                    winner=0,  # Team 0 (fleet1) wins
-                    tick_count=50,
-                    team0_survivors=[MagicMock()],
-                    team1_survivors=[]
+                    winner=0, tick_count=50,
+                    team_survivors={
+                        0: [MagicMock()],
+                        **{i: [] for i in range(1, len(fleets))},
+                    },
                 )
 
-        engine = ConflictResolutionEngine(battle_resolver=AlwaysFleet1WinsResolver())
+        engine = ConflictResolutionEngine(battle_resolver=AlwaysTeam0WinsResolver())
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-        fleet1.get_ship_instances.return_value = [MagicMock()]
-        fleet1.ships = [MagicMock()]
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-        fleet2.get_ship_instances.return_value = [MagicMock()]
-        fleet2.ships = [MagicMock()]
-        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+        emp1 = _empire(0); emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0); f2 = _fleet(2, owner_id=1)
+        emp1.fleets.append(f1); emp2.fleets.append(f2)
+        engine._empires = [emp1, emp2]
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        assert winner == fleet1
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
+
+        # Loser (team 1 = emp2) had its fleet pruned
+        emp2.remove_fleet.assert_called_once_with(f2, event_bus=None)
+        assert engine._fleets_destroyed == [2]
 
     def test_battle_results_not_applied_via_adapter(self):
         """PROJ-269 Phase 6: ConflictResolutionEngine no longer calls
         `fleet.battle.update_from_battle_results` — fleet updates flow
         via the compiler-attached `PostBattleHook` inside `run_battle`.
-
-        This test confirms the caller treats the BattleResult as a
-        read-only report and does NOT invoke any adapter-level update.
         """
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class ResultResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
                 return BattleResult(
-                    winner=0,
-                    tick_count=100,
-                    team0_survivors=[MagicMock()],
-                    team1_survivors=[MagicMock()],
+                    winner=0, tick_count=100,
+                    team_survivors={0: [MagicMock()], 1: [MagicMock()]},
                 )
 
         engine = ConflictResolutionEngine(battle_resolver=ResultResolver())
+        emp1 = _empire(0); emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0); f2 = _fleet(2, owner_id=1)
+        f1.battle = MagicMock(spec=[])  # Adapter exposes NO update method
+        f2.battle = MagicMock(spec=[])
+        emp1.fleets.append(f1); emp2.fleets.append(f2)
+        engine._empires = [emp1, emp2]
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-        fleet1.battle = MagicMock(spec=[])  # Adapter exposes NO update method
+        # Would raise AttributeError if engine called fleet.battle.*.
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-        fleet2.battle = MagicMock(spec=[])
-
-        # Would raise AttributeError if the engine tried to call
-        # fleet.battle.update_from_battle_results — so the fact that
-        # this completes confirms the call path is gone.
-        winner = engine._resolve_combat_simulated(fleet1, fleet2)
-        assert winner is fleet1
-
-    def test_draw_returns_fleet_with_more_survivors(self):
-        """Draw (winner=None) returns fleet with more survivors."""
+    def test_draw_resolves_to_team_with_more_survivors(self):
+        """PROJ-275 Phase 7 — draw winner picked by survivor count."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class DrawResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
                 return BattleResult(
-                    winner=None,  # Draw
-                    tick_count=1000,
-                    team0_survivors=[MagicMock(), MagicMock()],  # 2 survivors
-                    team1_survivors=[MagicMock()]  # 1 survivor
+                    winner=None, tick_count=1000,
+                    team_survivors={0: [MagicMock(), MagicMock()], 1: [MagicMock()]},
                 )
 
         engine = ConflictResolutionEngine(battle_resolver=DrawResolver())
+        emp1 = _empire(0); emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0); f2 = _fleet(2, owner_id=1)
+        emp1.fleets.append(f1); emp2.fleets.append(f2)
+        engine._empires = [emp1, emp2]
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-        # Fleet with more survivors wins on draw
-        assert winner == fleet1
+        # Team 0 had more survivors → loses no fleet; team 1 loses theirs.
+        emp1.remove_fleet.assert_not_called()
+        emp2.remove_fleet.assert_called_once_with(f2, event_bus=None)
 
     def test_seed_passed_to_resolver(self):
-        """Battle seed should be passed to resolver."""
+        """The engine's deterministic seed counter feeds the resolver."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         received_seed = None
 
         class SeedCapturingResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
                 nonlocal received_seed
                 received_seed = seed
                 return BattleResult(
-                    winner=0,
-                    tick_count=0,
-                    team0_survivors=[],
-                    team1_survivors=[]
+                    winner=0, tick_count=0,
+                    team_survivors={i: [] for i in range(len(list(fleets)))},
                 )
 
         engine = ConflictResolutionEngine(battle_resolver=SeedCapturingResolver())
+        emp1 = _empire(0); emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0); f2 = _fleet(2, owner_id=1)
+        emp1.fleets.append(f1); emp2.fleets.append(f2)
+        engine._empires = [emp1, emp2]
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-
-        engine._resolve_combat_simulated(fleet1, fleet2)
-
-        # The engine uses _generate_battle_seed() internally
         assert received_seed is not None
         assert isinstance(received_seed, int)
 
@@ -185,7 +187,6 @@ class TestResolveAllConflicts:
     """Tests for the public resolve_all_conflicts method."""
 
     def test_resolve_all_conflicts_returns_conflict_result(self):
-        """resolve_all_conflicts returns a ConflictResult."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine, ConflictResult
 
         engine = ConflictResolutionEngine(battle_resolver=MagicMock())
@@ -199,91 +200,62 @@ class TestResolveAllConflicts:
         assert isinstance(result, ConflictResult)
 
     def test_resolve_all_conflicts_tracks_combats(self):
-        """resolve_all_conflicts tracks number of combats."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class QuickResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
-                return BattleResult(winner=0, tick_count=10, team0_survivors=[], team1_survivors=[])
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                return BattleResult(
+                    winner=0, tick_count=10,
+                    team_survivors={i: ([MagicMock()] if i == 0 else []) for i in range(len(list(fleets)))},
+                )
 
         engine = ConflictResolutionEngine(battle_resolver=QuickResolver())
 
-        empire1 = MagicMock()
-        empire1.id = 0
-        empire2 = MagicMock()
-        empire2.id = 1
+        emp1 = _empire(0); emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0, location=HexCoord(5, 5))
+        f2 = _fleet(2, owner_id=1, location=HexCoord(5, 5))
+        emp1.fleets = [f1]; emp2.fleets = [f2]
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.location = HexCoord(5, 5)
-        fleet1.owner_id = 0
-        fleet1.ships = [MagicMock()]
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.location = HexCoord(5, 5)
-        fleet2.owner_id = 1
-        fleet2.ships = [MagicMock()]
-        empire1.fleets = [fleet1]
-        empire2.fleets = [fleet2]
-
-        result = engine.resolve_all_conflicts([empire1, empire2])
+        result = engine.resolve_all_conflicts([emp1, emp2])
 
         assert result.combats_resolved >= 1
 
     def test_resolve_all_conflicts_tracks_destroyed_fleets(self):
-        """resolve_all_conflicts tracks destroyed fleet IDs."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
-        # Resolver where the first fleet passed always wins (winner=0)
         class FirstFleetWinsResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
-                return BattleResult(winner=0, tick_count=10, team0_survivors=[MagicMock()], team1_survivors=[])
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                return BattleResult(
+                    winner=0, tick_count=10,
+                    team_survivors={i: ([MagicMock()] if i == 0 else []) for i in range(len(list(fleets)))},
+                )
 
         engine = ConflictResolutionEngine(battle_resolver=FirstFleetWinsResolver())
 
-        empire1 = MagicMock()
-        empire1.id = 0
-        empire1.remove_fleet = MagicMock()
+        emp1 = _empire(0); emp2 = _empire(1)
+        f1 = _fleet(1, owner_id=0, location=HexCoord(5, 5))
+        f2 = _fleet(2, owner_id=1, location=HexCoord(5, 5))
+        emp1.fleets = [f1]; emp2.fleets = [f2]
 
-        empire2 = MagicMock()
-        empire2.id = 1
-        empire2.remove_fleet = MagicMock()
+        result = engine.resolve_all_conflicts([emp1, emp2])
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.location = HexCoord(5, 5)
-        fleet1.owner_id = 0
-        fleet1.ships = [MagicMock()]
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.location = HexCoord(5, 5)
-        fleet2.owner_id = 1
-        fleet2.ships = [MagicMock()]
-        empire1.fleets = [fleet1]
-        empire2.fleets = [fleet2]
-
-        result = engine.resolve_all_conflicts([empire1, empire2])
-
-        # Exactly one fleet should be destroyed (the loser)
-        # Due to random.sample(), either fleet could be picked first
-        assert len(result.fleets_destroyed) == 1
-        assert result.fleets_destroyed[0] in [1, 2]
+        # Team 1's fleet (id=2) was destroyed.
+        assert result.fleets_destroyed == [2]
 
     def test_no_conflicts_returns_zero_combats(self):
-        """No conflicts returns zero combats resolved."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 
         engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         empire = MagicMock()
         empire.id = 0
-
         fleet = MagicMock()
         fleet.location = HexCoord(0, 0)
         fleet.owner_id = 0
-
         empire.fleets = [fleet]
 
         result = engine.resolve_all_conflicts([empire])

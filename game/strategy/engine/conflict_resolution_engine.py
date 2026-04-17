@@ -12,7 +12,7 @@ Responsibilities:
 import logging
 import random
 from dataclasses import dataclass
-from typing import Optional, List, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.interfaces.engines import IConflictEngine
@@ -84,6 +84,13 @@ class ConflictResolutionEngine(IConflictEngine):
         self._event_bus = event_bus
 
         self._battle_resolver = battle_resolver
+
+        # Per-resolution stats — reset at the top of `resolve_all_conflicts`,
+        # but pre-initialized here so `_resolve_combat_at_hex` can be safely
+        # invoked outside the public API (tests, direct calls).
+        self._combats_resolved: int = 0
+        self._fleets_destroyed: List[int] = []
+        self._empires: List[Any] = []
 
     def _generate_battle_seed(self) -> int:
         """Generate a deterministic seed for battles."""
@@ -213,149 +220,151 @@ class ConflictResolutionEngine(IConflictEngine):
                 self._resolve_combat_at_hex(occupants)
 
     def _resolve_combat_at_hex(self, occupants):
-        """Simple RNG resolution. Last standing empire wins."""
-        # occupants: List[(Empire, Fleet)]
+        """Resolve a multi-empire conflict at one hex as a single N-team battle.
 
-        # Group by Empire
-        fleets_by_emp = {}
-        for emp, f in occupants:
-            if emp.id not in fleets_by_emp:
-                fleets_by_emp[emp.id] = []
-            fleets_by_emp[emp.id].append(f)
-
-        # While > 1 empire has ships
-        while len(fleets_by_emp) > 1:
-            emp_ids = list(fleets_by_emp.keys())
-
-            # Pick two random opposing fleets
-            id1, id2 = self._rng.sample(emp_ids, 2)
-            f1 = fleets_by_emp[id1][0]
-            f2 = fleets_by_emp[id2][0]
-
-            # Roll
-            survivor = self._resolve_combat(f1, f2)
-
-            loser = f2 if survivor == f1 else f1
-            loser_owner_id = loser.owner_id
-
-            # Track combat stats
-            self._combats_resolved += 1
-            self._fleets_destroyed.append(loser.id)
-
-            # Remove loser
-            # 1. From list
-            fleets_by_emp[loser_owner_id].remove(loser)
-            if not fleets_by_emp[loser_owner_id]:
-                del fleets_by_emp[loser_owner_id]
-
-            # 2. From Empire (Global State)
-            # We need reference to Empire object.
-            # occupants has (Empire, Fleet). Find empire for loser.
-            start_tuple = next(t for t in occupants if t[1] == loser)
-            loser_empire = start_tuple[0]
-            loser_empire.remove_fleet(loser, event_bus=self._event_bus)
-
-    def _resolve_combat(self, f1: 'Fleet', f2: 'Fleet') -> 'Fleet':
-        """
-        Return the winner of single encounter.
-
-        Uses the full battle simulation via BattleController.
-        Falls back to RNG only if a fleet is empty.
-        """
-        # Check if both fleets have ships for simulation
-        if f1.ships and f2.ships:
-            return self._resolve_combat_simulated(f1, f2)
-
-        # Fallback to simple RNG for empty fleets
-        logger.debug("Using RNG combat resolution (empty fleet)")
-        if self._rng.random() > 0.5:
-            winner, loser = f1, f2
-        else:
-            winner, loser = f2, f1
-
-        self._log_combat_result(winner, loser, f1.location)
-        return winner
-
-    def _resolve_combat_simulated(self, f1: 'Fleet', f2: 'Fleet') -> 'Fleet':
-        """
-        Resolve combat using the injected battle resolver.
-
-        PROJ-11 Phase 4: Uses IBattleResolver interface for clean
-        separation between strategy and simulation layers.
-
-        PROJ-189: Queries environmental effects at combat location and passes
-        them to the battle resolver for shield interference in storms.
+        PROJ-275 Phase 7: replaced the legacy sequential 2-fleet
+        decomposition (the user explicitly called out as "a mistake")
+        with a single call into `IBattleResolver.resolve_battle(fleets)`
+        that resolves all participating fleets at once. Losing empires
+        each lose their participating fleet; the winner keeps theirs.
 
         Args:
-            f1: First fleet (team 0)
-            f2: Second fleet (team 1)
-
-        Returns:
-            The winning fleet
+            occupants: `List[(Empire, Fleet)]` for the contested hex.
+                Order is the empire-iteration order from
+                `_resolve_conflicts`; converted to per-team
+                `fleets[i]` placement for the resolver.
         """
-        # PROJ-189: Query environmental effects at combat location
-        environmental_effects = None
-        if self._area_effect_manager is not None and self._galaxy is not None:
-            # Use f1's location (should be same as f2's since they're in conflict)
-            environmental_effects = self._area_effect_manager.get_effects_at_global_hex(
-                self._galaxy, f1.location
-            )
+        if len(occupants) < 2:
+            return
 
-        # Collect strategic combat modifiers for both fleets
-        team0_mods = None
-        team1_mods = None
-        if self._galaxy is not None:
-            try:
-                from game.strategy.services.combat_modifier_collector import collect_combat_modifiers
-                all_empires = getattr(self, '_empires', [])
-                team0_mods = collect_combat_modifiers(
-                    f1, f2, self._galaxy, all_empires, self._registries
-                )
-                team1_mods = collect_combat_modifiers(
-                    f2, f1, self._galaxy, all_empires, self._registries
-                )
-            except Exception as e:
-                logger.warning(f"Failed to collect combat modifiers: {e}")
+        # One fleet per empire, in deterministic empire-id order. (Empires
+        # with multiple fleets at the hex contribute their first; later
+        # work could merge intra-empire fleets before the call.)
+        fleets_by_empire: Dict[int, 'Fleet'] = {}
+        empire_by_id: Dict[int, Any] = {}
+        for empire, fleet in occupants:
+            if empire.id not in fleets_by_empire:
+                fleets_by_empire[empire.id] = fleet
+                empire_by_id[empire.id] = empire
 
-        # Use the injected battle resolver
-        # PROJ-50: Pass registries for strict DI compliance
-        # PROJ-189: Pass environmental effects for storm shield interference
-        seed = self._generate_battle_seed()
-        # Build kwargs — only include modifiers if non-default to stay compatible
-        # with resolvers that don't accept the new parameters
-        resolve_kwargs = dict(
-            seed=seed, registries=self._registries,
-            environmental_effects=environmental_effects,
-        )
-        if team0_mods is not None:
-            resolve_kwargs['team0_modifiers'] = team0_mods
-        if team1_mods is not None:
-            resolve_kwargs['team1_modifiers'] = team1_mods
+        if len(fleets_by_empire) < 2:
+            return  # Only one empire actually present after dedup.
 
-        try:
-            result = self._battle_resolver.resolve_battle(f1, f2, **resolve_kwargs)
-        except TypeError:
-            # Fallback: resolver doesn't accept modifier params (e.g., test mocks)
+        empire_order: List[int] = sorted(fleets_by_empire.keys())
+        fleets: List['Fleet'] = [fleets_by_empire[eid] for eid in empire_order]
+        location = fleets[0].location
+
+        environmental_effects = self._lookup_environmental_effects(location)
+        # Empty-fleet edge case: no participating fleet has ships. Skip the
+        # resolver entirely (no real combat possible) and pick a winner via
+        # the engine's RNG so the empire/fleet bookkeeping still happens.
+        if not any(f.ships for f in fleets):
+            result = self._rng_resolve_empty_fleets(fleets)
+        else:
+            modifiers = self._collect_team_modifiers(fleets)
+            seed = self._generate_battle_seed()
             result = self._battle_resolver.resolve_battle(
-                f1, f2, seed=seed, registries=self._registries,
+                fleets,
+                modifiers=modifiers,
+                seed=seed,
+                registries=self._registries,
                 environmental_effects=environmental_effects,
             )
 
-        # PROJ-269 Phase 6: fleet updates happen via the compiler's
-        # `PostBattleHook` inside `run_battle` — the caller treats the
-        # BattleResult as a read-only report.
+        # PROJ-269 Phase 6: fleet updates (component HP, ship pruning)
+        # happen via the compiler's `PostBattleHook` inside `run_battle`.
+        # All we do here is empire-level fleet bookkeeping based on the
+        # team-level survivor data.
+        winner_team_id = self._resolve_winner_team(result, fleets)
 
-        # Determine winner
-        if result.winner == 0:
-            winner, loser = f1, f2
-        elif result.winner == 1:
-            winner, loser = f2, f1
-        else:
-            # Draw - return fleet with more survivors
-            if len(result.team0_survivors) >= len(result.team1_survivors):
-                winner, loser = f1, f2
-            else:
-                winner, loser = f2, f1
+        self._combats_resolved += 1
+        for team_id, fleet in enumerate(fleets):
+            if team_id == winner_team_id:
+                continue
+            empire = empire_by_id[empire_order[team_id]]
+            self._fleets_destroyed.append(fleet.id)
+            empire.remove_fleet(fleet, event_bus=self._event_bus)
 
-        self._log_combat_result(winner, loser, f1.location, environmental_effects)
-        return winner
+        # Event logging — pair winner against each loser for the audit log.
+        if winner_team_id is not None:
+            winner_fleet = fleets[winner_team_id]
+            for team_id, fleet in enumerate(fleets):
+                if team_id == winner_team_id:
+                    continue
+                self._log_combat_result(
+                    winner_fleet, fleet, location, environmental_effects
+                )
+
+    def _rng_resolve_empty_fleets(self, fleets: List['Fleet']):
+        """Edge-case resolver for empty-fleet "combat" — no ships exist
+        so the simulation isn't applicable; the engine's RNG just picks
+        one team to win so empire bookkeeping still happens.
+        """
+        from game.strategy.interfaces.battle_resolver import BattleResult
+
+        winner_team_id = self._rng.randrange(len(fleets))
+        return BattleResult(
+            winner=winner_team_id,
+            tick_count=0,
+            team_survivors={i: [] for i in range(len(fleets))},
+        )
+
+    def _lookup_environmental_effects(self, location):
+        """PROJ-189: Query environmental effects at the combat location."""
+        if self._area_effect_manager is None or self._galaxy is None:
+            return None
+        return self._area_effect_manager.get_effects_at_global_hex(
+            self._galaxy, location
+        )
+
+    def _collect_team_modifiers(
+        self, fleets: List['Fleet']
+    ) -> Optional[Dict[int, Any]]:
+        """Collect strategic combat modifiers for each team.
+
+        For N teams, each fleet's modifiers are computed against the
+        union of opposing fleets (one representative is enough — only
+        the opponent's empire id matters for facility scope queries).
+        """
+        if self._galaxy is None:
+            return None
+        all_empires = getattr(self, '_empires', [])
+        modifiers: Dict[int, Any] = {}
+        try:
+            from game.strategy.services.combat_modifier_collector import (
+                collect_combat_modifiers,
+            )
+            for team_id, fleet in enumerate(fleets):
+                opponents = [f for tid, f in enumerate(fleets) if tid != team_id]
+                if not opponents:
+                    continue
+                modifiers[team_id] = collect_combat_modifiers(
+                    fleet, opponents[0], self._galaxy, all_empires,
+                    self._registries,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to collect combat modifiers: {e}")
+            return None
+        return modifiers or None
+
+    def _resolve_winner_team(
+        self, result, fleets: List['Fleet']
+    ) -> Optional[int]:
+        """Map a `BattleResult` to a winning team_id.
+
+        Honors `result.winner` directly when present. On a draw,
+        breaks the tie by survivor count (most survivors wins) — and
+        ultimately falls back to team 0 when even that is ambiguous so
+        the empire bookkeeping stays deterministic.
+        """
+        if result.winner is not None:
+            return result.winner
+        # Draw — pick the team with the most survivors.
+        survivors = result.team_survivors or {}
+        if not survivors:
+            return None
+        # Most survivors wins; ties broken by lowest team_id.
+        return max(
+            range(len(fleets)),
+            key=lambda tid: (len(survivors.get(tid, [])), -tid),
+        )

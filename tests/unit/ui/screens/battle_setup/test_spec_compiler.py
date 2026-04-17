@@ -345,42 +345,221 @@ def test_compiler_empty_ui_state_yields_empty_teams(session_registries):
 
 
 # ---------------------------------------------------------------------------
+# PROJ-275 Phase 4: N-team compiler support
+# ---------------------------------------------------------------------------
+
+
+class TestNTeamBattleSetupCompiler:
+    """PROJ-275 Phase 4: `build_manual_battle_spec` now emits N `TeamSpec`s
+    matching `len(ui_state.sides)`. Entry vectors use the ring layout from
+    Phase 2. Enemy-scope modifiers fan out to all opponents."""
+
+    def test_three_sides_yields_three_teams(
+        self, session_registries, ship_factory
+    ):
+        state = BattleSetupState(side_count=3)
+        for i in range(3):
+            fleet = state.sides[i].create_fleet(name=f"Side {i} Fleet")
+            fleet.add_ship(
+                ship_factory(_minimal_design_data(f"Ship{i}"), owner_id=i)
+            )
+        spec = build_manual_battle_spec(state, session_registries)
+        assert len(spec.teams) == 3
+        team_ids = [t.team_id for t in spec.teams]
+        assert team_ids == [0, 1, 2]
+
+    def test_four_sides_yields_four_teams(
+        self, session_registries, ship_factory
+    ):
+        state = BattleSetupState(side_count=4)
+        for i in range(4):
+            fleet = state.sides[i].create_fleet(name=f"Side {i} Fleet")
+            fleet.add_ship(
+                ship_factory(_minimal_design_data(f"S{i}"), owner_id=i)
+            )
+        spec = build_manual_battle_spec(state, session_registries)
+        assert len(spec.teams) == 4
+
+    def test_three_side_entry_vectors_match_ring_layout(
+        self, session_registries, ship_factory
+    ):
+        import math
+        state = BattleSetupState(side_count=3)
+        for i in range(3):
+            fleet = state.sides[i].create_fleet(name=f"Side {i} Fleet")
+            fleet.add_ship(
+                ship_factory(_minimal_design_data(f"Ship{i}"), owner_id=i)
+            )
+        spec = build_manual_battle_spec(state, session_registries)
+        # Entry vectors should be 120° apart on a ring.
+        for team in spec.teams:
+            dist = math.hypot(team.entry_vector.origin.x, team.entry_vector.origin.y)
+            assert dist == pytest.approx(500.0, abs=1e-6)
+        # Team 0 sits at west (-500, 0) — preserves 2-team convention.
+        assert spec.teams[0].entry_vector.origin.x == pytest.approx(-500.0)
+
+    def test_two_side_entry_vectors_unchanged(
+        self, ui_state_with_ships, session_registries
+    ):
+        """Regression canary: 2-side compile produces the same entry vectors
+        the old hardcoded `_SIDE_ENTRY_VECTORS` emitted."""
+        spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
+        assert spec.teams[0].entry_vector.origin.x == pytest.approx(-500.0)
+        assert spec.teams[0].entry_vector.origin.y == pytest.approx(0.0, abs=1e-6)
+        assert spec.teams[0].entry_vector.facing == pytest.approx(0.0)
+        assert spec.teams[1].entry_vector.origin.x == pytest.approx(500.0)
+        assert spec.teams[1].entry_vector.origin.y == pytest.approx(0.0, abs=1e-6)
+        assert spec.teams[1].entry_vector.facing == pytest.approx(180.0)
+
+    def test_enemy_scope_complex_fans_out_to_all_opponents_3_teams(
+        self, session_registries, ship_factory
+    ):
+        """A shield-suppressor complex on side 0 in a 3-team battle routes
+        to BOTH opposing teams (1 and 2), not just one.
+        """
+        state = BattleSetupState(side_count=3)
+        for i in range(3):
+            fleet = state.sides[i].create_fleet(name=f"Side {i} Fleet")
+            fleet.add_ship(
+                ship_factory(_minimal_design_data(f"S{i}"), owner_id=i)
+            )
+        # Side 0 toggles a shield suppressor (enemy_system scope).
+        state.sides[0].system_complexes.append({
+            "design_id": "qs_system_shield_suppressor_complex",
+            "display_name": "Shield Suppressor",
+        })
+        spec = build_manual_battle_spec(state, session_registries)
+        # Team 1 and Team 2 both receive the suppressor entry.
+        for opp in (1, 2):
+            entries = spec.modifier_stack.per_team.get(opp, ())
+            suppressors = [
+                e for e in entries
+                if e.effect.stat_key == "shield_capacity_mult"
+                and e.effect.value < 1.0
+            ]
+            assert suppressors, (
+                f"Team {opp}: expected enemy_system-scoped shield suppressor "
+                f"to fan out from team 0"
+            )
+
+    def test_one_side_raises_value_error(self):
+        """`BattleSetupState(side_count=1)` itself is rejected."""
+        with pytest.raises(ValueError):
+            BattleSetupState(side_count=1)
+
+    def test_nine_sides_raises_value_error(self):
+        """`BattleSetupState(side_count=9)` is rejected (max is 8)."""
+        with pytest.raises(ValueError):
+            BattleSetupState(side_count=9)
+
+    def test_add_side_and_remove_side_stay_within_bounds(self):
+        state = BattleSetupState(side_count=2)
+        # Add 6 sides (now 8 total).
+        for _ in range(6):
+            state.add_side()
+        assert len(state.sides) == 8
+        with pytest.raises(ValueError):
+            state.add_side()
+        # Remove 6 sides (back to 2).
+        for _ in range(6):
+            state.remove_side(len(state.sides) - 1)
+        assert len(state.sides) == 2
+        with pytest.raises(ValueError):
+            state.remove_side(0)
+
+
+# ---------------------------------------------------------------------------
 # PROJ-272 Phase 1: `_extract_scope` must resolve class-level `default_scope`
 # when JSON omits `scope`. Compiler/runtime disagreement would silently drop
 # a complex whose author forgot to specify scope.
 # ---------------------------------------------------------------------------
 
 
-class TestRouteTeamForScope3PlusTeamsLoud:
-    """PROJ-272 Phase 10: 3+ team usage must raise NotImplementedError
-    explicitly instead of silently misrouting. The compiler is 2-team
-    today (`_NUM_TEAMS = 2`); expansion is a deliberate future project."""
+class TestEmitEntriesForAbilityTeamRouting:
+    """PROJ-275 Phase 3: N-team routing now lives in
+    `emit_entries_for_ability` (PROJ-273's registry helper). The obsolete
+    `_route_team_for_scope` wrapper and its 2-team guard were deleted —
+    fan-out to N teams happens via the registry helper's `num_teams`
+    kwarg and returned list of `(team_id, entry)` tuples.
 
-    def test_route_team_for_scope_rejects_owner_team_2(self):
-        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
-        import pytest
-        with pytest.raises(NotImplementedError, match="2-team only"):
-            _route_team_for_scope("enemy_sector", owner_team=2)
+    Replaces the older `TestRouteTeamForScope3PlusTeamsLoud` class that
+    asserted the 2-team NotImplementedError guard."""
 
-    def test_route_team_for_scope_rejects_owner_team_3(self):
-        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
-        import pytest
-        with pytest.raises(NotImplementedError):
-            _route_team_for_scope("enemy_system", owner_team=5)
+    def test_enemy_sector_fans_out_to_all_opponents_3_teams(self):
+        from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
+        entries = emit_entries_for_ability(
+            "DamageModifier",
+            {"multiplier": 0.5},
+            scope="enemy_sector",
+            owner_team=0,
+            num_teams=3,
+            source="test:3teams",
+            source_modifier_id="test",
+            source_modifier_name="Test",
+        )
+        # Expect 2 entries — one per opponent team (1 and 2).
+        routed = sorted(team_id for team_id, _ in entries)
+        assert routed == [1, 2]
 
-    def test_route_team_for_scope_rejects_negative_owner_team(self):
-        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
-        import pytest
-        with pytest.raises(NotImplementedError):
-            _route_team_for_scope("self", owner_team=-1)
+    def test_enemy_sector_from_middle_team_in_4_team_battle(self):
+        from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
+        entries = emit_entries_for_ability(
+            "DamageModifier",
+            {"multiplier": 0.5},
+            scope="enemy_sector",
+            owner_team=1,
+            num_teams=4,
+            source="test:4teams",
+            source_modifier_id="test",
+            source_modifier_name="Test",
+        )
+        # Owner is team 1; opponents are 0, 2, 3.
+        routed = sorted(team_id for team_id, _ in entries)
+        assert routed == [0, 2, 3]
 
-    def test_route_team_for_scope_accepts_teams_0_and_1(self):
-        """Current 2-team assumption: owner=0 → opponent=1; owner=1 → opponent=0."""
-        from game.ui.screens.battle_setup.spec_compiler import _route_team_for_scope
-        assert _route_team_for_scope("enemy_sector", owner_team=0) == 1
-        assert _route_team_for_scope("enemy_system", owner_team=1) == 0
-        assert _route_team_for_scope("self", owner_team=0) == 0
-        assert _route_team_for_scope("allied_sector", owner_team=1) == 1
+    def test_enemy_sector_2_teams_preserves_legacy_single_opponent(self):
+        from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
+        entries = emit_entries_for_ability(
+            "DamageModifier",
+            {"multiplier": 0.5},
+            scope="enemy_sector",
+            owner_team=0,
+            num_teams=2,
+            source="test:2teams",
+            source_modifier_id="test",
+            source_modifier_name="Test",
+        )
+        routed = sorted(team_id for team_id, _ in entries)
+        assert routed == [1]
+
+    def test_self_scope_routes_only_to_owner_in_any_n(self):
+        from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
+        for n in (2, 3, 5, 8):
+            entries = emit_entries_for_ability(
+                "DamageModifier",
+                {"multiplier": 0.9},
+                scope="self",
+                owner_team=0,
+                num_teams=n,
+                source="test:self",
+                source_modifier_id="test",
+                source_modifier_name="Test",
+            )
+            routed = [team_id for team_id, _ in entries]
+            assert routed == [0], f"n={n}: self scope should stay on owner only"
+
+    def test_route_team_for_scope_is_removed(self):
+        """The legacy `_route_team_for_scope` wrapper was deleted in
+        PROJ-275 Phase 3 — N-team routing lives exclusively in the
+        ability-stat registry helper now.
+        """
+        import importlib
+        mod = importlib.import_module(
+            "game.ui.screens.battle_setup.spec_compiler"
+        )
+        assert not hasattr(mod, "_route_team_for_scope"), (
+            "_route_team_for_scope should have been removed in PROJ-275 Phase 3"
+        )
 
 
 class TestExtractScopeResolvesClassDefault:

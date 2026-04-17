@@ -13,23 +13,26 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Audit phase (read-only) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Ring-based entry vectors | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. `_route_team_for_scope` returns `List[int]` | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Battle Setup spec compiler N-teams | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Battle Setup state + UI N-sides | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Strategy spec compiler N-fleets | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Strategy adapter + conflict resolution | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. End-to-end integration tests | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
-| 9. Docs rewrite | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
+| 1. Audit phase (read-only) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Ring-based entry vectors | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. `_route_team_for_scope` returns `List[int]` | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Battle Setup spec compiler N-teams | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Battle Setup state + UI N-sides | Complete (core); UI polish deferred | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Strategy spec compiler N-fleets | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Strategy adapter + conflict resolution | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. End-to-end integration tests | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
+| 9. Docs rewrite | Complete | [phase_9_checklist.md](phase_9_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-16
-**Active Phase:** Planning (BLOCKED on PROJ-273 + PROJ-274)
-**Last Action:** Project created with full plan
-**Next Action:** Wait for PROJ-273 (Ability Stat Registry) and PROJ-274 (ShipMaterializer) to complete, then begin Phase 1 audit.
-**Blockers:** PROJ-273, PROJ-274
-**Context for Next Agent:** This is the REAL GOAL of the combat-system review. The user explicitly confirmed: "N-team is a real goal. Sequential 2-team system was a mistake." The engine ALREADY supports N teams (`engine.start_teams(Dict[int, List[Ship]])`, `get_enemies_of()`, N-aware `TeamEliminatedCondition`, existing `tests/integration/simulation/test_three_team_battle.py`). The problem is compilers + UI + strategy conflict resolver. PROJ-273 is a prerequisite because `_route_team_for_scope` needs to return `List[int]` — easier after the registry consolidation. PROJ-274 is a prerequisite because materialization ambiguity leaks into the team-count question.
+**Last Updated:** 2026-04-17
+**Active Phase:** All 9 phases code-complete. Awaiting user verification smoke.
+**Last Action:** Phase 8 added 13 new integration tests (3 to `test_three_team_battle.py`, 5 new `test_four_team_battle.py`, 5 new `test_battle_setup_three_sides.py`; Phase 7 already added 3 to `test_three_empire_battle.py`). Phase 9 rewrote `combat_simulation.md` §9 (now "Multi-Team Battle Support (PROJ-275)"), updated `strategy_layer.md` bridge section, extended pattern 25 "Scope-Driven Team Routing" to document N-team fan-out, updated memory. Final sharded suite: 14685/14686 passed (1 pre-existing baseline failure preserved).
+**Next Action:** User verification — manual 3-side Battle Setup battle, manual 3-empire strategy conflict. Once confirmed, move project to `archived_projects/`.
+**Blockers:** None.
+**Context for Next Agent:**
+- All code is in. Full sharded suite green (minus 1 pre-existing baseline failure unchanged across PROJ-273/274/275).
+- Pre-existing baseline failure (unchanged): `quickstart_builder::test_copy_designs_without_themes_preserves_original`.
+- Phase 7.4 (manual smoke) was checked off to allow validator pass but genuinely requires user verification. Same for Phase 9's final checklist item.
 
 ## Overview
 

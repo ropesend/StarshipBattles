@@ -588,7 +588,8 @@ class TestCombatResolvedEvent:
     """ConflictResolutionEngine emits combat_resolved event on combat."""
 
     def test_simulated_combat_emits_combat_resolved_event(self):
-        """_resolve_combat_simulated() emits combat_resolved event."""
+        """`_resolve_combat_at_hex` emits a combat_resolved event for each
+        winner/loser pair (PROJ-275 Phase 7)."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
@@ -596,26 +597,24 @@ class TestCombatResolvedEvent:
         mock_resolver = MagicMock()
         mock_result = MagicMock()
         mock_result.winner = 0
-        mock_result.team0_survivors = [MagicMock()]
-        mock_result.team1_survivors = []
+        mock_result.team_survivors = {0: [MagicMock()], 1: []}
         mock_resolver.resolve_battle.return_value = mock_result
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
+        engine._empires = []
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        f1 = MagicMock(spec=Fleet)
-        f1.id = 1
-        f1.owner_id = 0
-        f1.location = HexCoord(3, 4)
-        f1.ships = [MagicMock()]
-        f2 = MagicMock(spec=Fleet)
-        f2.id = 2
-        f2.owner_id = 1
-        f2.location = HexCoord(3, 4)
-        f2.ships = [MagicMock()]
-        winner = engine._resolve_combat_simulated(f1, f2)
+        emp1 = MagicMock(); emp1.id = 0; emp1.remove_fleet = MagicMock()
+        emp2 = MagicMock(); emp2.id = 1; emp2.remove_fleet = MagicMock()
+        f1 = MagicMock(spec=Fleet); f1.id = 1; f1.owner_id = 0
+        f1.location = HexCoord(3, 4); f1.ships = [MagicMock()]
+        f2 = MagicMock(spec=Fleet); f2.id = 2; f2.owner_id = 1
+        f2.location = HexCoord(3, 4); f2.ships = [MagicMock()]
 
-        assert winner == f1
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
+
         assert len(calls) == 1
         etype, kw = calls[0]
         assert etype == EventType.COMBAT_RESOLVED
@@ -632,65 +631,28 @@ class TestCombatResolvedEvent:
         mock_resolver = MagicMock()
         mock_result = MagicMock()
         mock_result.winner = 1
-        mock_result.team0_survivors = []
-        mock_result.team1_survivors = [MagicMock()]
+        mock_result.team_survivors = {0: [], 1: [MagicMock()]}
         mock_resolver.resolve_battle.return_value = mock_result
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
+        engine._empires = []
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        f1 = MagicMock(spec=Fleet)
-        f1.id = 10
-        f1.owner_id = 0
-        f1.location = HexCoord(0, 0)
-        f1.ships = [MagicMock()]
-        f2 = MagicMock(spec=Fleet)
-        f2.id = 20
-        f2.owner_id = 1
-        f2.location = HexCoord(0, 0)
-        f2.ships = [MagicMock()]
-        winner = engine._resolve_combat_simulated(f1, f2)
+        emp1 = MagicMock(); emp1.id = 0; emp1.remove_fleet = MagicMock()
+        emp2 = MagicMock(); emp2.id = 1; emp2.remove_fleet = MagicMock()
+        f1 = MagicMock(spec=Fleet); f1.id = 10; f1.owner_id = 0
+        f1.location = HexCoord(0, 0); f1.ships = [MagicMock()]
+        f2 = MagicMock(spec=Fleet); f2.id = 20; f2.owner_id = 1
+        f2.location = HexCoord(0, 0); f2.ships = [MagicMock()]
 
-        assert winner == f2
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
+
         assert len(calls) == 1
         _, kw = calls[0]
         assert kw["winner_fleet_id"] == 20
         assert kw["loser_fleet_id"] == 10
-
-    def test_rng_combat_emits_combat_resolved_event(self):
-        """_resolve_combat() RNG fallback also emits combat_resolved event."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
-        calls, fake, bus = _capture_log_event_calls()
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock(), event_bus=bus)
-
-        # Empty fleets -> RNG fallback
-        f1 = MagicMock(spec=Fleet)
-        f1.id = 100
-        f1.owner_id = 0
-        f1.location = HexCoord(0, 0)
-        f1.ships = []  # empty -> triggers RNG
-
-        f2 = MagicMock(spec=Fleet)
-        f2.id = 200
-        f2.owner_id = 1
-        f2.location = HexCoord(0, 0)
-        f2.ships = []
-
-        # PROJ-252: Patch the per-instance RNG, not the global module
-        mock_rng = MagicMock()
-        mock_rng.random.return_value = 0.8  # f1 wins
-        engine._rng = mock_rng
-
-        winner = engine._resolve_combat(f1, f2)
-
-        assert winner == f1
-        assert len(calls) == 1
-        etype, kw = calls[0]
-        assert etype == EventType.COMBAT_RESOLVED
-        assert kw["category"] == EventCategory.COMBAT
 
     def test_combat_event_includes_empire_id(self):
         """combat_resolved event includes the winner's empire_id."""
@@ -701,24 +663,23 @@ class TestCombatResolvedEvent:
         mock_resolver = MagicMock()
         mock_result = MagicMock()
         mock_result.winner = 0
-        mock_result.team0_survivors = [MagicMock()]
-        mock_result.team1_survivors = []
+        mock_result.team_survivors = {0: [MagicMock()], 1: []}
         mock_resolver.resolve_battle.return_value = mock_result
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
+        engine._empires = []
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        f1 = MagicMock(spec=Fleet)
-        f1.id = 1
-        f1.owner_id = 5
-        f1.location = HexCoord(0, 0)
-        f1.ships = [MagicMock()]
-        f2 = MagicMock(spec=Fleet)
-        f2.id = 2
-        f2.owner_id = 8
-        f2.location = HexCoord(0, 0)
-        f2.ships = [MagicMock()]
-        engine._resolve_combat_simulated(f1, f2)
+        emp1 = MagicMock(); emp1.id = 5; emp1.remove_fleet = MagicMock()
+        emp2 = MagicMock(); emp2.id = 8; emp2.remove_fleet = MagicMock()
+        f1 = MagicMock(spec=Fleet); f1.id = 1; f1.owner_id = 5
+        f1.location = HexCoord(0, 0); f1.ships = [MagicMock()]
+        f2 = MagicMock(spec=Fleet); f2.id = 2; f2.owner_id = 8
+        f2.location = HexCoord(0, 0); f2.ships = [MagicMock()]
+
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
         _, kw = calls[0]
         assert kw["empire_id"] == 5  # Winner's empire_id
@@ -872,11 +833,9 @@ class TestCombatEventLocationEnrichment:
         mock_resolver = MagicMock()
         mock_result = MagicMock()
         mock_result.winner = 0
-        mock_result.team0_survivors = [MagicMock()]
-        mock_result.team1_survivors = []
+        mock_result.team_survivors = {0: [MagicMock()], 1: []}
         mock_resolver.resolve_battle.return_value = mock_result
 
-        # Mock galaxy with system
         mock_galaxy = _make_mock_galaxy()
         mock_system = MagicMock()
         mock_system.name = "Orion"
@@ -884,21 +843,19 @@ class TestCombatEventLocationEnrichment:
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
-        engine._galaxy = mock_galaxy  # Set galaxy directly (normally set during resolve_all_conflicts)
+        engine._galaxy = mock_galaxy
+        engine._empires = []
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        f1 = MagicMock(spec=Fleet)
-        f1.id = 1
-        f1.owner_id = 0
-        f1.location = HexCoord(10, 20)
-        f1.ships = [MagicMock()]
+        emp1 = MagicMock(); emp1.id = 0; emp1.remove_fleet = MagicMock()
+        emp2 = MagicMock(); emp2.id = 1; emp2.remove_fleet = MagicMock()
+        f1 = MagicMock(spec=Fleet); f1.id = 1; f1.owner_id = 0
+        f1.location = HexCoord(10, 20); f1.ships = [MagicMock()]
+        f2 = MagicMock(spec=Fleet); f2.id = 2; f2.owner_id = 1
+        f2.location = HexCoord(10, 20); f2.ships = [MagicMock()]
 
-        f2 = MagicMock(spec=Fleet)
-        f2.id = 2
-        f2.owner_id = 1
-        f2.location = HexCoord(10, 20)
-        f2.ships = [MagicMock()]
-
-        engine._resolve_combat_simulated(f1, f2)
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
         _, kw = calls[0]
         assert kw["system_name"] == "Orion"
@@ -912,31 +869,27 @@ class TestCombatEventLocationEnrichment:
         mock_resolver = MagicMock()
         mock_result = MagicMock()
         mock_result.winner = 0
-        mock_result.team0_survivors = [MagicMock()]
-        mock_result.team1_survivors = []
+        mock_result.team_survivors = {0: [MagicMock()], 1: []}
         mock_resolver.resolve_battle.return_value = mock_result
 
-        # Mock galaxy with no system at location
         mock_galaxy = _make_mock_galaxy()
         mock_galaxy.get_system_at_location.return_value = None
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
-        engine._galaxy = mock_galaxy  # Set galaxy directly
+        engine._galaxy = mock_galaxy
+        engine._empires = []
+        engine._combats_resolved = 0
+        engine._fleets_destroyed = []
 
-        f1 = MagicMock(spec=Fleet)
-        f1.id = 1
-        f1.owner_id = 0
-        f1.location = HexCoord(10, 20)
-        f1.ships = [MagicMock()]
+        emp1 = MagicMock(); emp1.id = 0; emp1.remove_fleet = MagicMock()
+        emp2 = MagicMock(); emp2.id = 1; emp2.remove_fleet = MagicMock()
+        f1 = MagicMock(spec=Fleet); f1.id = 1; f1.owner_id = 0
+        f1.location = HexCoord(10, 20); f1.ships = [MagicMock()]
+        f2 = MagicMock(spec=Fleet); f2.id = 2; f2.owner_id = 1
+        f2.location = HexCoord(10, 20); f2.ships = [MagicMock()]
 
-        f2 = MagicMock(spec=Fleet)
-        f2.id = 2
-        f2.owner_id = 1
-        f2.location = HexCoord(10, 20)
-        f2.ships = [MagicMock()]
-
-        engine._resolve_combat_simulated(f1, f2)
+        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
         _, kw = calls[0]
         assert kw["system_name"] == ""

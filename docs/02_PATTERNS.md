@@ -1324,22 +1324,24 @@ different-stack_group entries correctly SUM.
 
 ---
 
-## 25. Scope-Driven Team Routing (PROJ-271, PROJ-273)
+## 25. Scope-Driven Team Routing (PROJ-271, PROJ-273, PROJ-275)
 
-**Where:** `game/simulation/combat/ability_stat_registry.py` (`OPPONENT_SCOPES`, `emit_entries_for_ability`), `game/ui/screens/battle_setup/spec_compiler.py` (`_route_team_for_scope`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
+**Where:** `game/simulation/combat/ability_stat_registry.py` (`OPPONENT_SCOPES`, `emit_entries_for_ability`, `_route_team_ids`), `game/ui/screens/battle_setup/spec_compiler.py` (`_complex_to_entries`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
 
 **How It Works:**
-- An ability's `AbilityScope` value encodes who it targets: `fleet`/`allied_*`/`player_*`/`system`/`sector` -> owner's team; `enemy_sector`/`enemy_system` -> opponent team.
+- An ability's `AbilityScope` value encodes who it targets: `fleet`/`allied_*`/`player_*`/`system`/`sector` -> owner's team; `enemy_sector`/`enemy_system` -> opponent teams (plural — see fan-out below).
 - Both compilers delegate enemy-scope detection to the shared `OPPONENT_SCOPES` frozenset in the ability-stat registry (single source of truth; PROJ-273 consolidated the previously-duplicated `_OPPONENT_SCOPES` locals).
-- The registry's `emit_entries_for_ability(...)` helper fans `enemy_*` scopes out to ALL non-owner teams (N-team forward-compat); current callers pass `num_teams=2`, so fan-out degenerates to a single opposing team.
-- Strategy compiler path is simpler: `CombatModifierCollector` pre-computes enemy-scope effects INTO the receiving fleet's `FleetCombatModifiers` before the compiler runs, so the compiler emits to `per_team[receiver_id]` trivially.
+- The registry's `emit_entries_for_ability(..., num_teams=N, ...)` helper fans `enemy_*` scopes out to ALL non-owner teams and returns `List[Tuple[team_id, ModifierEntry]]`. For `num_teams == 2` the fan-out degenerates to a single opposing entry; for `num_teams == 4` with `owner_team == 0` the helper returns three entries targeting teams 1, 2, 3 (PROJ-275 verified end-to-end).
+- PROJ-275 Phase 3 removed the local 2-team `_route_team_for_scope` wrapper from the Battle Setup compiler. Routing lives in one place (`_route_team_ids` inside the registry), and `num_teams` is now threaded all the way from the compiler entry points.
+- Strategy compiler path is simpler for the same three "classic" mods: `CombatModifierCollector` pre-computes enemy-scope effects INTO the receiving fleet's `FleetCombatModifiers` before the compiler runs, so the compiler emits to `per_team[receiver_id]` trivially.
 
 **Why:**
 - User clarified 2026-04-13: "the suppressor and booster effect is just the difference between multiplying by less than 1 or more than 1; the scope determines what vehicles/designs are impacted." No separate suppressor architecture — scope IS the routing mechanism.
+- PROJ-275 extended the same logic to N teams; the single `_route_team_ids` helper returns a list regardless of N, so the compilers iterate without caring about team count.
 
 **When to Use:**
 - Any new ability type with fleet/system/sector scope options needs scope-driven routing when its effects are compiled into `ModifierStack` entries.
-- Extending `OPPONENT_SCOPES` (now a single shared constant) requires adding tests proving each scope routes correctly.
+- Extending `OPPONENT_SCOPES` (now a single shared constant) requires adding tests proving each scope routes correctly across N-team fan-out.
 
 ---
 
