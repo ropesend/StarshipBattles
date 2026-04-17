@@ -264,59 +264,41 @@ class TestAutoDisableLogic:
 class TestComponentToggleIntegration:
     """Group 5.6: Component Toggle Integration Tests"""
 
-    def test_disabled_component_not_consumed_per_turn(self):
-        """Verify disabled components don't contribute to per-turn consumption."""
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-        from game.core.registry import GameRegistries
+    def test_disabled_component_not_counted_in_stats(self, fresh_registries):
+        """Verify toggled-off components don't contribute to aggregated stats.
 
-        # Create design with a component that has per-turn consumption
+        Uses the real `standard_engine` component which has a
+        `strategic_per_hex` fuel consumption. Disabling it via
+        component_toggles should drop its consumption from the
+        aggregated resource_consumption_per_hex dict.
+        """
+        from game.simulation.entities.ship_design_stats import calculate_design_stats
+
         design_data = {
             'name': 'TestShip',
+            'ship_class': 'frigate',
             'layers': {
-                'CORE': [{'id': 'energy_consumer'}]
+                'CORE': [{'id': 'standard_engine'}]
             }
         }
 
-        mock_comp_def = create_mock_component_def(
-            abilities={
-                'ResourceConsumption': {
-                    'trigger': 'per_turn',
-                    'resource': 'energy',
-                    'amount': 20
-                }
-            },
-            max_hp=100,
-            mass=10
-        )
-
-        # PROJ-42: Create mock registries and use instance pattern
-        registries = GameRegistries(
-            components={'energy_consumer': mock_comp_def},
-            modifiers={},
-            vehicle_classes={},
-            resources={}
-        )
-        service = ShipStatsCalculator(registries=registries)
-
-        # Component enabled - should have consumption
-        enabled_stats = service.calculate_stats(
+        enabled_stats = calculate_design_stats(
             design_data,
-            component_damage={},
-            component_toggles={'energy_consumer': True}
+            fresh_registries,
+            component_toggles={'standard_engine': True},
         )
-
-        # Component disabled - should not have consumption
-        disabled_stats = service.calculate_stats(
+        disabled_stats = calculate_design_stats(
             design_data,
-            component_damage={},
-            component_toggles={'energy_consumer': False}
+            fresh_registries,
+            component_toggles={'standard_engine': False},
         )
 
-        # Enabled should have the per-turn cost
-        assert enabled_stats['resource_consumption_per_turn'].get('energy', 0) == 20.0
+        # Enabled: standard_engine contributes 100 fuel/hex
+        assert enabled_stats['resource_consumption_per_hex'].get('fuel', 0) == 100.0
 
-        # Disabled should have zero per-turn cost
-        assert disabled_stats['resource_consumption_per_turn'].get('energy', 0) == 0.0
+        # Disabled: engine is filtered out of the design before Ship
+        # construction, so it contributes nothing
+        assert disabled_stats['resource_consumption_per_hex'].get('fuel', 0) == 0.0
 
     def test_auto_disabled_component_reenabled_via_manual_toggle(self):
         """Verify manually re-enabling an auto-disabled component works."""

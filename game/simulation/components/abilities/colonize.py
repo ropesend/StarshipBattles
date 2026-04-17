@@ -43,9 +43,8 @@ class ColonizePlanet(Ability):
     # No stat bindings - this is a marker ability
     STAT_BINDINGS = []
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse planet_type and action_time from data; called from __init__ and sync_data."""
         # Handle both string shorthand and dict format
         if isinstance(data, str):
             self.planet_type = data

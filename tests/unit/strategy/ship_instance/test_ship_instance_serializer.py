@@ -4,6 +4,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.core.exceptions import PersistenceException
+from game.strategy.data.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
 
@@ -18,7 +19,11 @@ def full_ship():
         owner_id=1,
         design_data={'name': 'TestDesign', 'layers': {}},
         current_hp=80,
-        component_damage={'comp_1': 50},
+        components={
+            component_state_key('comp_1', 0): ComponentState(
+                component_id='comp_1', instance_index=0, current_hp=50.0,
+            ),
+        },
         consumable_levels={'fuel': 100.0, 'energy': 50.0},
         component_toggles={'comp_2': False},
         cargo_contents={'passengers': 10},
@@ -44,7 +49,10 @@ class TestToDict:
         assert restored.owner_id == full_ship.owner_id
         assert restored.design_data == full_ship.design_data
         assert restored.current_hp == full_ship.current_hp
-        assert restored.component_damage == full_ship.component_damage
+        assert set(restored.components) == set(full_ship.components)
+        for key, cs in full_ship.components.items():
+            assert restored.components[key].current_hp == cs.current_hp
+            assert restored.components[key].instance_index == cs.instance_index
         assert restored.consumable_levels == full_ship.consumable_levels
         assert restored.component_toggles == full_ship.component_toggles
         assert restored.cargo_contents == full_ship.cargo_contents
@@ -54,6 +62,24 @@ class TestToDict:
         assert restored.kills == full_ship.kills
         assert restored.battles_survived == full_ship.battles_survived
         assert restored.serial == full_ship.serial
+
+    def test_to_dict_does_not_emit_legacy_component_damage_key(self, full_ship):
+        """PROJ-276 Phase 5: new saves no longer carry `component_damage`."""
+        data = ShipInstanceSerializer.to_dict(full_ship)
+        assert 'component_damage' not in data
+
+    def test_from_dict_ignores_legacy_component_damage_key(self):
+        """Old saves containing `component_damage` load without error;
+        the key is simply ignored. Per CLAUDE.md saves-are-disposable
+        policy we don't migrate — but we must not crash."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            # Legacy key from a pre-PROJ-276 save; should be ignored.
+            'component_damage': {'laser_1': 5, 'shield_2': 10},
+        }
+        # Should not raise.
+        instance = ShipInstanceSerializer.from_dict(data)
+        assert instance.components == {}
 
     def test_cargo_contents_omitted_when_empty(self):
         """to_dict does not include cargo_contents key when empty."""
@@ -112,14 +138,17 @@ class TestClone:
         assert cloned.owner_id == full_ship.owner_id
         assert cloned.design_data == full_ship.design_data
         assert cloned.current_hp == full_ship.current_hp
-        assert cloned.component_damage == full_ship.component_damage
+        assert set(cloned.components) == set(full_ship.components)
         assert cloned.cargo_contents == full_ship.cargo_contents
 
     def test_clone_deep_copies_mutable_fields(self, full_ship):
         """clone deep copies dicts so mutations don't propagate."""
         cloned = ShipInstanceSerializer.clone(full_ship)
-        cloned.component_damage['new_comp'] = 10
-        assert 'new_comp' not in full_ship.component_damage
+        new_key = component_state_key('new_comp', 0)
+        cloned.components[new_key] = ComponentState(
+            component_id='new_comp', instance_index=0, current_hp=10.0,
+        )
+        assert new_key not in full_ship.components
 
 
 class TestJson:

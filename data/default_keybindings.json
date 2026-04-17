@@ -2,8 +2,6 @@
   "_version": 1,
   "bindings": {
     "global.exit": {"key": "K_x", "modifiers": ["alt"]},
-    "global.screenshot_full": {"key": "K_F12", "modifiers": []},
-    "global.screenshot_viewport": {"key": "K_F11", "modifiers": []},
     "global.toggle_profiler": {"key": "K_F9", "modifiers": []},
 
     "strategy.next_turn": {"key": "K_RETURN", "modifiers": []},

@@ -9,8 +9,7 @@ Semantics per `ShipStatus`:
   - **SURVIVED** / **DERELICT**: update `ShipInstance.components` from
     `ShipOutcome.components` (per-instance HP round-trip); keep the
     ship in its fleet; flip `is_alive` / `is_derelict` flags.
-  - **DESTROYED**: remove from parent `Fleet.ships`. Legacy
-    `component_damage` is cleared.
+  - **DESTROYED**: remove from parent `Fleet.ships`.
   - **RETREATED**: remove from parent `Fleet.ships` (MVP — see
     PROJ-269 decisions.md entry for the "retreated ships disperse"
     choice). Later projects may introduce a scattered-remnant fleet.
@@ -139,6 +138,13 @@ def _apply_survivor_outcome(
     is_derelict: bool,
 ) -> None:
     """Write outcome per-component HP into instance.components + flags."""
+    # Preserve max_hp per instance from the pre-battle state so the
+    # rebuilt ComponentState stays self-describing. ComponentStateSpec
+    # doesn't carry max_hp today, but the instance's existing dict does.
+    prior_max_hp: Dict[str, float] = {
+        key: cs.max_hp for key, cs in instance.components.items()
+    }
+
     # Build a fresh components dict from the outcome — authoritative.
     new_components: Dict[str, ComponentState] = {}
     for cs in ship_outcome.components:
@@ -147,28 +153,16 @@ def _apply_survivor_outcome(
             component_id=cs.component_id,
             instance_index=cs.instance_index,
             current_hp=float(cs.current_hp),
+            max_hp=prior_max_hp.get(key, 0.0),
             is_active=bool(cs.is_active),
         )
     instance.components = new_components
-    # Mirror legacy `component_damage` (first-instance granularity) for
-    # backwards-compat stat-calc code paths. Reset and rebuild.
-    instance.component_damage = {}
-    for cs in ship_outcome.components:
-        # Only record damage (< full HP would normally be inferred from
-        # the design max; we record any non-zero outcome HP keyed by id
-        # without recomputing max_hp here — callers of component_damage
-        # accept any current_hp value).
-        if cs.component_id not in instance.component_damage:
-            instance.component_damage[cs.component_id] = int(cs.current_hp)
 
     # Status flags.
     instance.is_alive = True
     instance.is_derelict = bool(is_derelict)
-    # current_hp (ship-level summary) — leave at None (full) unless we
-    # have evidence otherwise. The engine-side summary HP propagates
-    # through the legacy `ShipInstanceBridge.update_from_ship` path when
-    # the caller uses that; for the PROJ-269 hook path we rely on
-    # per-component state for truth.
+    # Ship-level current_hp summary: leave at None (full) unless
+    # evidence otherwise. Per-component state is the source of truth.
     instance.battles_survived += 1
     instance.invalidate_stats_cache()
 

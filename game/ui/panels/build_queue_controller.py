@@ -243,10 +243,10 @@ class BuildQueueController:
     def _get_design_cost(self, design_id: str) -> Dict[str, int]:
         """Load design as ship and return its construction cost.
 
-        This loads the design, creates a ship object (which triggers
-        ShipStatsCalculator.recalculate_stats()), and extracts the
-        construction_cost field. This is more reliable than reading
-        from design metadata which may not have cost data.
+        This loads the design and creates a Ship object, whose
+        construction_cost is populated during stat aggregation in
+        Ship.recalculate_stats(). More reliable than reading from
+        design metadata which may not have cost data.
 
         Args:
             design_id: ID of the design to get cost for.

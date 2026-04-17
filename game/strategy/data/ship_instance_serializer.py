@@ -23,7 +23,11 @@ class ShipInstanceSerializer:
 
     @staticmethod
     def to_dict(ship: 'ShipInstance') -> Dict[str, Any]:
-        """Serialize a ShipInstance for save game."""
+        """Serialize a ShipInstance for save game.
+
+        PROJ-276 Phase 5: `component_damage` is NOT emitted. Per-component
+        HP lives under the `components` key as `ComponentState` dicts.
+        """
         data = {
             'instance_id': ship.instance_id,
             'design_id': ship.design_id,
@@ -31,7 +35,6 @@ class ShipInstanceSerializer:
             'owner_id': ship.owner_id,
             'design_data': ship.design_data,
             'current_hp': ship.current_hp,
-            'component_damage': ship.component_damage,
             'consumable_levels': ship.consumable_levels,
             'component_toggles': ship.component_toggles,
             'activation_states': ship.activation_states if ship.activation_states else {},
@@ -94,6 +97,8 @@ class ShipInstanceSerializer:
         if data.get('battles_survived') is not None:
             validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
 
+        # PROJ-276 Phase 5: legacy `component_damage` key in old saves
+        # is silently ignored — saves are disposable per CLAUDE.md.
         instance = ShipInstance(
             instance_id=data['instance_id'],
             design_id=data['design_id'],
@@ -101,7 +106,6 @@ class ShipInstanceSerializer:
             owner_id=data['owner_id'],
             design_data=data.get('design_data', {}),
             current_hp=data.get('current_hp'),
-            component_damage=data.get('component_damage', {}),
             consumable_levels=data.get('consumable_levels', data.get('resource_levels', {})),
             component_toggles=data.get('component_toggles', {}),
             activation_states=data.get('activation_states', {}),
@@ -158,7 +162,6 @@ class ShipInstanceSerializer:
             owner_id=ship.owner_id,
             design_data=copy.deepcopy(ship.design_data),
             current_hp=ship.current_hp,
-            component_damage=copy.deepcopy(ship.component_damage),
             consumable_levels=copy.deepcopy(ship.consumable_levels),
             component_toggles=copy.deepcopy(ship.component_toggles),
             cargo_contents=copy.deepcopy(ship.cargo_contents),

@@ -3,6 +3,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
+from game.strategy.data.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
 
@@ -17,7 +18,12 @@ def ship():
         owner_id=1,
         design_data={'name': 'TestDesign', 'layers': {}},
         current_hp=80,
-        component_damage={'comp_1': 50},
+        components={
+            component_state_key('comp_1', 0): ComponentState(
+                component_id='comp_1', instance_index=0, current_hp=50.0,
+                max_hp=100.0,
+            ),
+        },
         consumable_levels={'fuel': 75.0},
     )
     return s
@@ -96,15 +102,21 @@ class TestUpdateFromShip:
         assert ship.is_alive is False
         assert ship.current_hp == 0
 
-    def test_captures_component_damage(self, bridge, ship):
-        """Captures damaged component HP values."""
+    def test_captures_per_instance_component_state(self, bridge, ship):
+        """Captures per-instance HP into the authoritative `components` dict."""
         comp = MagicMock()
         comp.id = 'engine_0'
         comp.current_hp = 30
         comp.max_hp = 50
+        comp.is_active = True
         mock_ship = _make_mock_post_battle_ship(components=[comp])
         bridge.update_from_ship(mock_ship)
-        assert ship.component_damage == {'engine_0': 30}
+        # PROJ-276 Phase 3: legacy `component_damage` mirror is no longer
+        # written by the bridge; `components` is the sole source of truth.
+        key = component_state_key('engine_0', 0)
+        assert key in ship.components
+        assert ship.components[key].current_hp == 30.0
+        assert ship.components[key].instance_index == 0
 
     def test_increments_battles_survived(self, bridge, ship):
         """Increments battles_survived counter."""
@@ -177,3 +189,97 @@ class TestToShip:
         bridge.to_ship((0, 0), team_id=0, registries=MagicMock())
 
         mock_resources.set_value.assert_called_once_with('fuel', 50.0)
+
+
+class TestToShipPerInstanceDamage:
+    """PROJ-276: per-instance damage must be applied from `components`,
+    and the legacy `component_damage` dict must NOT be consulted."""
+
+    @patch('game.simulation.entities.ship_serialization.ShipSerializer')
+    def test_per_instance_damage_only_targets_matching_instance(
+        self, mock_serializer_cls
+    ):
+        """A ship with 3 identical components and damage on instance #1
+        only should produce a Ship where only that specific instance
+        takes damage — the other two stay at full HP."""
+        # Three identical laser_cannon components on the simulation side.
+        comp0, comp1, comp2 = MagicMock(), MagicMock(), MagicMock()
+        for c in (comp0, comp1, comp2):
+            c.id = 'laser_cannon'
+            c.current_hp = 40
+            c.max_hp = 40
+        mock_layer = MagicMock()
+        mock_layer.components = [comp0, comp1, comp2]
+
+        mock_sim_ship = MagicMock()
+        mock_sim_ship.max_hp = 100
+        mock_sim_ship.resources = None
+        mock_sim_ship.layers = {'OUTER': mock_layer}
+        mock_serializer_cls.from_dict.return_value = mock_sim_ship
+
+        instance = ShipInstance(
+            instance_id='multi-1',
+            design_id='Tri-Laser',
+            name='Tri',
+            owner_id=0,
+            design_data={'layers': {}},
+        )
+        # Instance #1 damaged to 20 HP; #0 and #2 at full 40.
+        instance.components = {
+            component_state_key('laser_cannon', 0): ComponentState(
+                'laser_cannon', 0, current_hp=40
+            ),
+            component_state_key('laser_cannon', 1): ComponentState(
+                'laser_cannon', 1, current_hp=20
+            ),
+            component_state_key('laser_cannon', 2): ComponentState(
+                'laser_cannon', 2, current_hp=40
+            ),
+        }
+        bridge = ShipInstanceBridge(instance)
+
+        bridge.to_ship((0, 0), team_id=0, registries=MagicMock())
+
+        # Only instance #1 takes damage (40 - 20 = 20 HP).
+        comp0.take_damage.assert_not_called()
+        comp1.take_damage.assert_called_once_with(20)
+        comp2.take_damage.assert_not_called()
+
+    @patch('game.simulation.entities.ship_serialization.ShipSerializer')
+    def test_ship_with_empty_components_applies_no_damage(
+        self, mock_serializer_cls
+    ):
+        """After PROJ-276 the bridge only reads `components`. A ship
+        with no per-instance state attached leaves every component at
+        full HP — no damage is applied."""
+        # Three laser_cannons on the simulation side, all full HP.
+        comp0, comp1, comp2 = MagicMock(), MagicMock(), MagicMock()
+        for c in (comp0, comp1, comp2):
+            c.id = 'laser_cannon'
+            c.current_hp = 40
+            c.max_hp = 40
+        mock_layer = MagicMock()
+        mock_layer.components = [comp0, comp1, comp2]
+
+        mock_sim_ship = MagicMock()
+        mock_sim_ship.max_hp = 100
+        mock_sim_ship.resources = None
+        mock_sim_ship.layers = {'OUTER': mock_layer}
+        mock_serializer_cls.from_dict.return_value = mock_sim_ship
+
+        instance = ShipInstance(
+            instance_id='no-state-1',
+            design_id='Tri-Laser',
+            name='Tri',
+            owner_id=0,
+            design_data={'layers': {}},
+            # `components` intentionally empty.
+        )
+        assert instance.components == {}
+        bridge = ShipInstanceBridge(instance)
+
+        bridge.to_ship((0, 0), team_id=0, registries=MagicMock())
+
+        comp0.take_damage.assert_not_called()
+        comp1.take_damage.assert_not_called()
+        comp2.take_damage.assert_not_called()

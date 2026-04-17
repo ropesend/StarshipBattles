@@ -6,7 +6,6 @@ PROJ-08: Data-Driven Resource System Test Fixtures
 import pytest
 import json
 from typing import Dict, Any, List
-from unittest.mock import MagicMock, patch
 
 from game.core.registry import get_default_registry_manager
 
@@ -123,17 +122,6 @@ def ship_stats_with_custom_resources():
         'strategic_movement': 100,
         'warp_max_tonnage': 5000,
     }
-
-
-@pytest.fixture
-def mock_component_registry():
-    """Fixture that provides a mock component registry context manager."""
-    def _create_mock_registry(components_dict: Dict[str, MockComponent]):
-        return patch(
-            'game.strategy.services.ship_stats_calculator.get_default_registry_provider',
-            return_value=MagicMock(get_components=MagicMock(return_value=components_dict))
-        )
-    return _create_mock_registry
 
 
 @pytest.fixture

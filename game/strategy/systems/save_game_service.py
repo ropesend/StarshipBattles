@@ -25,7 +25,12 @@ logger = logging.getLogger(__name__)
 class SaveGameService:
     """Manages saving and loading complete game state"""
 
-    SAVE_VERSION = "2.0.0"
+    # PROJ-276 Phase 5: bumped from "2.0.0" to "3.0.0" — removed the
+    # legacy `component_damage` dict from ShipInstance saves in favor
+    # of the per-instance `components` dict. Old saves are rejected
+    # with a clear message (see _is_compatible_version); saves are
+    # disposable per CLAUDE.md.
+    SAVE_VERSION = "3.0.0"
 
     @staticmethod
     def save_game(game_session, save_name: Optional[str] = None) -> Tuple[bool, str, Optional[str]]:

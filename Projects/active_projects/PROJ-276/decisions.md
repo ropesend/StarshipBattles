@@ -11,3 +11,4 @@
 | 2026-04-16 | TDD per migration group | Each site gets a failing test before the read/write is migrated. Parity tests for single-instance behavior. |
 | 2026-04-16 | Field deletion is its own phase (Phase 6) | The pass-point where backward compat is severed. Must be atomic — either `component_damage` exists or it doesn't; no half-state allowed. |
 | 2026-04-16 | Independent of PROJ-273/274/275 | Can run in parallel. No shared files with other combat-review projects. |
+| 2026-04-16 | Save format bumped 2.0.0 → 3.0.0 (major) | Breaking change: removed `component_damage` from serialized `ShipInstance`. Pre-existing `SaveGameService._is_compatible_version` enforces strict equality so old saves are rejected with a clear message. Per CLAUDE.md saves are disposable; no migration shim. |

@@ -3,6 +3,7 @@
 import json
 import pytest
 
+from game.strategy.data.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 from tests.fixtures.strategy_entities import create_test_ship_instance
 from tests.integration.save_load.conftest import assert_round_trip_fidelity, assert_field_preserved
@@ -64,10 +65,29 @@ class TestShipInstanceRoundTrip:
         restored = ShipInstance.from_dict(d)
         assert restored.cargo_contents == {} or restored.cargo_contents is not None
 
-    def test_component_damage(self):
-        si = create_test_ship_instance(component_damage={"laser_1": 5, "shield_2": 10})
+    def test_per_instance_component_state_round_trip(self):
+        """PROJ-276 Phase 5: `components` dict carries per-instance HP
+        across a save/load round-trip. Multi-instance ships preserve
+        which specific instance was damaged."""
+        si = create_test_ship_instance(components={
+            component_state_key("laser_1", 0): ComponentState(
+                component_id="laser_1", instance_index=0, current_hp=5.0,
+            ),
+            component_state_key("shield_2", 0): ComponentState(
+                component_id="shield_2", instance_index=0, current_hp=10.0,
+            ),
+            # Same component id, different instance — the key test for
+            # per-instance precision.
+            component_state_key("laser_1", 1): ComponentState(
+                component_id="laser_1", instance_index=1, current_hp=40.0,
+            ),
+        })
         restored = assert_round_trip_fidelity(si, ShipInstance)
-        assert restored.component_damage == si.component_damage
+        assert set(restored.components) == set(si.components)
+        for key, cs in si.components.items():
+            assert restored.components[key].current_hp == cs.current_hp
+            assert restored.components[key].instance_index == cs.instance_index
+            assert restored.components[key].component_id == cs.component_id
 
     def test_registries_parameter(self, fresh_registries):
         si = create_test_ship_instance()

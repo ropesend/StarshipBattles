@@ -273,7 +273,6 @@ class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
                 }
             },
             'current_hp': 800,
-            'component_damage': {'engine_0': 50},
             'consumable_levels': {'fuel': 25000},
             # Note: component_toggles is intentionally missing
             'is_alive': True,

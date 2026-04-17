@@ -564,7 +564,6 @@ Some tests are conditionally skipped. This is intentional:
 - Uses `@pytest.mark.skipif` decorator properly
 
 ### Feature Not Implemented
-- `test_bug_15_screenshot_strategy.py`: Skips if `capture_strategy_layer()` not implemented
 - Reproduction tests for features under development
 
 ---

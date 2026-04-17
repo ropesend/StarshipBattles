@@ -745,7 +745,7 @@
         },
         "pod_storage_mass": 0.0,
         "strategic_movement": 2600.0,
-        "warp_max_tonnage": 1000.0,
+        "warp_max_tonnage": 64000.0,
         "warp_resource_costs": {
             "energy": 7999.999999999996
         },

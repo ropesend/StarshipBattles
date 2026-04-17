@@ -12,8 +12,10 @@ class TestComponents:
 
         bridge = create_component('bridge', registries=fresh_registries)
         assert bridge is not None
-        # Recalculate stats to resolve formulas (uses default context k=1000)
-        bridge.recalculate_stats()
+        # Bridge mass formula references ship_class_mass — supply explicit context
+        # since no ship is attached. The previous silent default of 1000 was removed
+        # to make malformed designs fail loudly.
+        bridge.recalculate_stats({'ship_class_mass': 1000})
         assert bridge.name == "Bridge"
         assert bridge.mass == 50
 

@@ -19,7 +19,7 @@ The most critical file. Provides two autouse fixtures that run for **every test*
    - Calls `mgr.hydrate()` to populate the registry from cached data
    - Patches `ComponentCacheManager` and `load_vehicle_classes` to prevent disk I/O
    - Hydrates `PolicyManager` from cache
-   - Post-test: resets all service instances (RegistryManager, event handler, component caches, PolicyManager, ShipThemeManager, ScreenshotManager, SpriteManager) via `set_default_xxx()` calls
+   - Post-test: resets all service instances (RegistryManager, event handler, component caches, PolicyManager, ShipThemeManager, SpriteManager) via `set_default_xxx()` calls
 
 2. **`enforce_headless`** (session-scoped, autouse) -- Sets `SDL_VIDEODRIVER=dummy`, initializes Pygame, creates a dummy display at `DisplayConfig.test_resolution()`.
 

@@ -139,7 +139,6 @@ class TestFleetCapabilityCalculatorDI:
                 'current_hp': 100,
                 'max_hp': 100,
                 'status': 'operational',
-                'component_damage': {},
                 'component_toggles': {},
                 'fuel': 100,
                 'energy': 100,

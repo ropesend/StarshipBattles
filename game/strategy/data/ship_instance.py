@@ -79,10 +79,12 @@ def _build_full_hp_components_from_design(
             idx = per_id_index.get(comp_id, 0)
             per_id_index[comp_id] = idx + 1
             key = component_state_key(comp_id, idx)
+            comp_max_hp = float(getattr(comp, "max_hp", 0))
             components[key] = ComponentState(
                 component_id=comp_id,
                 instance_index=idx,
-                current_hp=float(getattr(comp, "current_hp", getattr(comp, "max_hp", 0))),
+                current_hp=float(getattr(comp, "current_hp", comp_max_hp)),
+                max_hp=comp_max_hp,
                 is_active=bool(getattr(comp, "is_active", True)),
             )
     return components
@@ -110,17 +112,17 @@ class ShipInstance:
     # Current state (may differ from design defaults)
     # None values mean "use design default"
     current_hp: Optional[int] = None
-    component_damage: Dict[str, int] = field(default_factory=dict)  # component_id -> current_hp (legacy; single-instance granularity)
     consumable_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
     component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
     activation_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # component_key -> activation state
 
-    # PROJ-269 Phase 2: per-component-instance persistent state.
-    # Key format: `component_state_key(component_id, instance_index)` =
-    # `"{component_id}#{instance_index}"`. Authoritative source for battle
-    # round-trip (BattleSpec.components / BattleOutcome.components).
-    # `component_damage` above is kept in sync for backwards-compatible stat
-    # calculations during the PROJ-269 transition.
+    # Per-component-instance persistent state. Key format:
+    # `component_state_key(component_id, instance_index)` =
+    # `"{component_id}#{instance_index}"`. Authoritative source for
+    # battle round-trip (BattleSpec.components / BattleOutcome.components)
+    # and for per-instance HP in stat calculation. PROJ-269 Phase 2 +
+    # PROJ-276 (closed the transition; removed the legacy `component_damage`
+    # dict).
     components: Dict[str, ComponentState] = field(default_factory=dict)
 
     # Cargo contents (cargo_type -> current amount)
@@ -294,10 +296,10 @@ class ShipInstance:
         return instance
 
     def is_damaged(self) -> bool:
-        """Check if ship has any damage."""
+        """Check if ship has any damage — hull, per-component, or derelict."""
         return (
             self.current_hp is not None or
-            bool(self.component_damage) or
+            any(cs.is_damaged for cs in self.components.values()) or
             self.is_derelict
         )
 
@@ -347,8 +349,8 @@ class ShipInstance:
             self._cached_stats = calculate_design_stats(
                 self.design_data,
                 registries,
-                self.component_damage,
-                self.component_toggles
+                components=self.components,
+                component_toggles=self.component_toggles,
             )
         return self._cached_stats
 
@@ -516,12 +518,13 @@ class ShipInstance:
 
     def get_damaged_component_count(self) -> int:
         """
-        Get count of damaged components.
+        Get count of damaged component instances.
 
         Returns:
-            Number of components with recorded damage.
+            Number of component instances whose current_hp is below their
+            design max_hp.
         """
-        return len(self.component_damage)
+        return sum(1 for cs in self.components.values() if cs.is_damaged)
 
     def get_status_text(self) -> str:
         """Get human-readable status text."""
@@ -547,45 +550,40 @@ class ShipInstance:
 
     def get_damaged_components_by_layer(self) -> Dict[str, List[Tuple[str, int]]]:
         """
-        Get damaged components grouped by layer.
+        Get damaged component instances grouped by layer.
 
-        Matches damaged component IDs against the design's layer structure
-        to determine which layer each damaged component belongs to.
+        Walks the design's layers to map each `component_id` to its layer,
+        then iterates per-instance `components` picking out the ones whose
+        `current_hp` is below `max_hp`.
 
         Returns:
-            Dict mapping layer name to list of (component_id, current_hp) tuples
-            for damaged components in that layer.
+            Dict mapping layer name to a list of
+            `(component_state_key, current_hp)` tuples for each damaged
+            instance in that layer. `component_state_key` is the
+            `{comp_id}#{idx}` format — callers that need the raw
+            `component_id` can split on `#`.
         """
-        if not self.component_damage:
+        damaged_states = [
+            (key, cs) for key, cs in self.components.items() if cs.is_damaged
+        ]
+        if not damaged_states:
             return {}
 
-        # Build lookup from component base ID to layer
-        layers = self.design_data.get('layers', {})
-        comp_to_layer: Dict[str, str] = {}
+        # Build lookup from component_id to layer.
+        comp_id_to_layer: Dict[str, str] = {}
+        for layer_name, components in self.design_data.get('layers', {}).items():
+            for comp_entry in components:
+                comp_id = (
+                    comp_entry.get('id') if isinstance(comp_entry, dict)
+                    else comp_entry
+                )
+                if comp_id:
+                    comp_id_to_layer[comp_id] = layer_name
 
-        for layer_name, components in layers.items():
-            for i, comp_entry in enumerate(components):
-                # Component IDs in damage dict are typically "base_id_index"
-                comp_id = comp_entry.get('id') if isinstance(comp_entry, dict) else comp_entry
-                # Map both the base ID and indexed versions
-                comp_to_layer[comp_id] = layer_name
-                comp_to_layer[f"{comp_id}_{i}"] = layer_name
-
-        # Group damaged components by layer
         result: Dict[str, List[Tuple[str, int]]] = {}
-
-        for comp_id, current_hp in self.component_damage.items():
-            # Try to find layer for this component
-            layer_name = comp_to_layer.get(comp_id)
-
-            if layer_name is None:
-                # Try matching by base ID (strip trailing _N)
-                base_id = '_'.join(comp_id.rsplit('_', 1)[:-1]) if '_' in comp_id else comp_id
-                layer_name = comp_to_layer.get(base_id, 'UNKNOWN')
-
-            if layer_name not in result:
-                result[layer_name] = []
-            result[layer_name].append((comp_id, current_hp))
+        for key, cs in damaged_states:
+            layer_name = comp_id_to_layer.get(cs.component_id, 'UNKNOWN')
+            result.setdefault(layer_name, []).append((key, int(cs.current_hp)))
 
         return result
 
@@ -629,10 +627,11 @@ class ShipInstance:
         old_hp = self.current_hp
         self.current_hp = min(max_hp, self.current_hp + amount)
 
-        # If fully repaired, clear damage tracking
+        # If fully repaired, restore every component to full HP.
         if self.current_hp >= max_hp:
             self.current_hp = None
-            self.component_damage.clear()
+            for cs in self.components.values():
+                cs.current_hp = cs.max_hp
 
         # Invalidate stats cache (damage changed)
         self.invalidate_stats_cache()

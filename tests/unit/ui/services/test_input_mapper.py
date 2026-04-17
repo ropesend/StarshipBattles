@@ -123,15 +123,15 @@ class TestInputMapperResolve:
 
     def test_resolve_global_always_matches(self, mapper, make_keydown):
         """Global actions match regardless of context filter."""
-        event = make_keydown(pygame.K_F12)
+        event = make_keydown(pygame.K_F9)
         result = mapper.resolve(event, contexts=["strategy"])
-        assert result == InputAction.GLOBAL_SCREENSHOT_FULL
+        assert result == InputAction.GLOBAL_TOGGLE_PROFILER
 
     def test_resolve_global_with_no_context(self, mapper, make_keydown):
         """Global actions match even when no contexts provided."""
-        event = make_keydown(pygame.K_F12)
+        event = make_keydown(pygame.K_F9)
         result = mapper.resolve(event, contexts=[])
-        assert result == InputAction.GLOBAL_SCREENSHOT_FULL
+        assert result == InputAction.GLOBAL_TOGGLE_PROFILER
 
     def test_resolve_non_keydown_returns_none(self, mapper):
         """Non-KEYDOWN events return None."""
@@ -247,10 +247,10 @@ class TestInputMapperConflicts:
 
     def test_global_conflicts_with_everything(self, mapper):
         """Global actions conflict with any context."""
-        # F12 is global.screenshot_full
-        binding = KeyBinding(key="K_F12", modifiers=frozenset())
+        # F9 is global.toggle_profiler
+        binding = KeyBinding(key="K_F9", modifiers=frozenset())
         conflicts = mapper.get_conflicts(binding, context="strategy")
-        assert InputAction.GLOBAL_SCREENSHOT_FULL in conflicts
+        assert InputAction.GLOBAL_TOGGLE_PROFILER in conflicts
 
     def test_conflict_with_global_context(self, mapper):
         """Binding in global context conflicts with all actions on same key."""
@@ -536,13 +536,13 @@ class TestContextOverlap:
     def test_contexts_overlap_global_always_true(self, mapper):
         """global overlaps with any context."""
         # Try to bind to a key used by global action
-        binding = KeyBinding(key="K_F12", modifiers=frozenset())
+        binding = KeyBinding(key="K_F9", modifiers=frozenset())
         # When checking from any context, global should conflict
         conflicts = mapper.get_conflicts(binding, context="fleet")
-        assert InputAction.GLOBAL_SCREENSHOT_FULL in conflicts
+        assert InputAction.GLOBAL_TOGGLE_PROFILER in conflicts
 
         conflicts = mapper.get_conflicts(binding, context="build_queue")
-        assert InputAction.GLOBAL_SCREENSHOT_FULL in conflicts
+        assert InputAction.GLOBAL_TOGGLE_PROFILER in conflicts
 
     def test_contexts_overlap_fleet_strategy(self, mapper):
         """fleet and strategy overlap (both can be active together)."""

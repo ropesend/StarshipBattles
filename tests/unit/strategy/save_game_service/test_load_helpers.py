@@ -104,7 +104,7 @@ class TestLoadSaveMetadata:
         save_path = os.path.join(saves_dir, save_name)
         os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
         metadata = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 1
@@ -121,7 +121,7 @@ class TestLoadSaveMetadata:
 
         assert error is None
         assert result is not None
-        assert result["version"] == "2.0.0"
+        assert result["version"] == "3.0.0"
         assert result["player_name"] == "Test"
         assert "_resolved_path" in result
         assert result["_resolved_path"] == save_path

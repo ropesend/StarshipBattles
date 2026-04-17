@@ -102,7 +102,7 @@ class TestCalculateDesignStatsValues:
 
 
 class TestCalculateDesignStatsWithDamage:
-    """Stats should respect component damage when provided."""
+    """Stats should respect per-component damage when provided."""
 
     def test_undamaged_returns_full_hp(self, fresh_registries):
         data = load_json(str(FIXTURES_DIR / "qs_escort.json"))
@@ -111,10 +111,80 @@ class TestCalculateDesignStatsWithDamage:
 
     def test_damage_does_not_affect_mass(self, fresh_registries):
         """Mass is dead weight — damage shouldn't change it."""
+        from game.strategy.data.component_state import (
+            ComponentState, component_state_key,
+        )
         data = load_json(str(FIXTURES_DIR / "qs_escort.json"))
         undamaged = calculate_design_stats(data, fresh_registries)
         damaged = calculate_design_stats(
             data, fresh_registries,
-            component_damage={'bridge': 0}
+            components={
+                component_state_key('bridge', 0): ComponentState(
+                    component_id='bridge', instance_index=0, current_hp=0,
+                ),
+            },
         )
         assert damaged['mass'] == undamaged['mass']
+
+    def test_per_instance_damage_applied_via_component_state(
+        self, fresh_registries
+    ):
+        """PROJ-276 Phase 4: per-instance damage keyed by
+        `component_state_key(component_id, instance_index)` flows
+        through to the underlying Ship component's HP.
+
+        Uses `warp_drive`, which contributes zero `warp_max_tonnage`
+        when inactive — an observable downstream effect.
+        """
+        from game.strategy.data.component_state import (
+            ComponentState, component_state_key,
+        )
+        data = load_json(str(FIXTURES_DIR / "qs_escort.json"))
+
+        undamaged = calculate_design_stats(data, fresh_registries)
+        assert undamaged['warp_max_tonnage'] > 0
+
+        # Set warp_drive#0 to 0 HP — component becomes inactive and
+        # contributes no warp tonnage.
+        damaged = calculate_design_stats(
+            data, fresh_registries,
+            components={
+                component_state_key('warp_drive', 0): ComponentState(
+                    component_id='warp_drive',
+                    instance_index=0,
+                    current_hp=0,
+                ),
+            },
+        )
+
+        assert damaged['warp_max_tonnage'] == 0
+        # Mass unchanged (dead weight).
+        assert damaged['mass'] == undamaged['mass']
+
+    def test_missing_component_state_entry_leaves_hp_unchanged(
+        self, fresh_registries
+    ):
+        """Components without a `ComponentState` entry keep full HP."""
+        from game.strategy.data.component_state import (
+            ComponentState, component_state_key,
+        )
+        data = load_json(str(FIXTURES_DIR / "qs_escort.json"))
+
+        baseline = calculate_design_stats(data, fresh_registries)
+        # Provide a `components` dict that only covers warp_drive, not
+        # the other components.
+        partial = calculate_design_stats(
+            data, fresh_registries,
+            components={
+                component_state_key('warp_drive', 0): ComponentState(
+                    component_id='warp_drive',
+                    instance_index=0,
+                    current_hp=999,  # cap at max_hp internally
+                ),
+            },
+        )
+
+        # All other stats should match baseline — only warp_drive was
+        # touched (and it's still at full HP).
+        assert partial['max_hp'] == baseline['max_hp']
+        assert partial['warp_max_tonnage'] == baseline['warp_max_tonnage']

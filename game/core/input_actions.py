@@ -28,8 +28,6 @@ class InputAction(str, Enum):
 
     # --- Global (always active) ---
     GLOBAL_EXIT = "global.exit"
-    GLOBAL_SCREENSHOT_FULL = "global.screenshot_full"
-    GLOBAL_SCREENSHOT_VIEWPORT = "global.screenshot_viewport"
     GLOBAL_TOGGLE_PROFILER = "global.toggle_profiler"
 
     # --- Strategy screen ---
@@ -102,8 +100,6 @@ class InputAction(str, Enum):
 ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     # Global
     InputAction.GLOBAL_EXIT: "Exit Game",
-    InputAction.GLOBAL_SCREENSHOT_FULL: "Screenshot (Full)",
-    InputAction.GLOBAL_SCREENSHOT_VIEWPORT: "Screenshot (Viewport)",
     InputAction.GLOBAL_TOGGLE_PROFILER: "Toggle Profiler",
     # Strategy
     InputAction.STRATEGY_NEXT_TURN: "End Turn",
@@ -166,8 +162,6 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
 ACTION_GROUPS: Dict[str, List[InputAction]] = {
     "Global": [
         InputAction.GLOBAL_EXIT,
-        InputAction.GLOBAL_SCREENSHOT_FULL,
-        InputAction.GLOBAL_SCREENSHOT_VIEWPORT,
         InputAction.GLOBAL_TOGGLE_PROFILER,
     ],
     "Strategy": [

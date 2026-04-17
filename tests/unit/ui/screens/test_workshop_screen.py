@@ -89,9 +89,6 @@ def _make_workshop_screen(context=None):
     event_bus = MagicMock()
     screen.event_bus = event_bus
 
-    # Screenshot manager
-    screen.screenshot_manager = MagicMock()
-
     # UI Manager
     ui_manager = MagicMock()
     screen.ui_manager = ui_manager

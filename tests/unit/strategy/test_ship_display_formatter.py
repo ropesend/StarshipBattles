@@ -25,7 +25,7 @@ class TestShipDisplayFormatter:
             'energy': 200,
             'ammo': 100,
         }
-        ship.component_damage = {}
+        ship.components = {}
         ship.get_calculated_stats = Mock(return_value={
             'max_hp': 100,
             'resource_storage': {

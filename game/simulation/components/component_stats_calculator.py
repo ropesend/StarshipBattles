@@ -25,6 +25,47 @@ if TYPE_CHECKING:
     from game.simulation.components.component_constants import ApplicationModifier
 
 
+def build_formula_context(
+    component: 'Component',
+    context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Build the formula evaluation context for a component.
+
+    Resolves `ship_class_mass` from explicit context first, then from the
+    component's owning ship. If neither source is available, the key is
+    omitted from the returned context — `FormulaEvaluator.evaluate` will
+    then raise `FormulaException` if a formula actually references it.
+
+    This permissive return is intentional: it lets components with no
+    `ship_class_mass`-dependent formulas evaluate without a ship attached
+    (e.g. test fixtures, simple resource costs) while still catching
+    misuse loudly when a real formula needs the value.
+
+    Previously this code silently substituted `ship_class_mass = 1000` —
+    that masked a bug where the wrong ship class was used during
+    evaluation, producing ability instances frozen at the wrong values.
+
+    Args:
+        component: The component whose abilities/resource costs are being
+            evaluated.
+        context: Optional explicit context. Takes precedence over the
+            component's ship reference.
+
+    Returns:
+        Dict containing whatever context could be resolved. May be empty.
+    """
+    result = dict(context) if context else {}
+
+    if 'ship_class_mass' not in result:
+        ship = getattr(component, 'ship', None)
+        if ship is not None:
+            mass = getattr(ship, 'max_mass_budget', None)
+            if mass is not None:
+                result['ship_class_mass'] = mass
+
+    return result
+
+
 class ComponentStatsCalculator:
     """
     Utility class for component stats calculation.
@@ -183,15 +224,10 @@ class ComponentStatsCalculator:
         # Reset abilities from raw data
         component.abilities = copy.deepcopy(component.data.get('abilities', {}))
 
-        # Context building - Priority: explicit context > ship reference > default
-        eval_context = {
-            'ship_class_mass': 1000  # Default fallback
-        }
-        if context and 'ship_class_mass' in context:
-            eval_context['ship_class_mass'] = context['ship_class_mass']
-        elif component.ship:
-            # Ships have max_mass_budget set by ShipStatsCalculator
-            eval_context['ship_class_mass'] = getattr(component.ship, 'max_mass_budget', 1000)
+        # Context building - explicit context > ship reference. Raise if neither —
+        # silently defaulting to 1000 previously masked the bug where formulas
+        # evaluated against the wrong ship class.
+        eval_context = build_formula_context(component, context)
 
         # Evaluate Formulas for attributes
         for attr, formula in component.formulas.items():

@@ -21,6 +21,7 @@ from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.order_types import OrderType, FleetOrder
+from game.strategy.data.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
@@ -311,7 +312,11 @@ def create_test_ship_instance(
             "layers": {"hull": {"components": []}},
         },
         current_hp=180,
-        component_damage={"laser_1": 5},
+        components={
+            component_state_key("laser_1", 0): ComponentState(
+                component_id="laser_1", instance_index=0, current_hp=5.0,
+            ),
+        },
         consumable_levels={"fuel": 80.0, "energy": 50.0},
         component_toggles={"shield_1": True, "cloak_1": False},
         cargo_contents={"minerals": 10},

@@ -322,8 +322,12 @@ writes the post-battle HP back into `ShipInstance.components`. See
 Ships accumulate damage across battles — no automatic repair between
 strategy turns. Repair is a future project.
 
-Legacy `ShipInstance.component_damage: Dict[str, int]` (single-instance
-granularity) coexists with `components` during the PROJ-269 transition.
+`ShipInstance.components: Dict[str, ComponentState]` is the sole source
+of truth for per-instance HP. The legacy single-instance
+`component_damage: Dict[str, int]` dict was removed in PROJ-276, which
+closed out the PROJ-269 Phase 2 transition. `ComponentState` carries
+`current_hp`, `max_hp`, `is_active`, with an `is_damaged` property
+driving UI damage indicators.
 
 **DesignMetadata field:** `design_role: str` — extracted during `from_design_file()`,
 used by `DesignSelectorWindow` role filter dropdown.

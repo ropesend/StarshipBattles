@@ -32,7 +32,7 @@ class TestCorruptedSaves:
         os.makedirs(save_path)
 
         # Create metadata but no turns folder
-        metadata = {"version": "2.0.0", "timestamp": "2026-01-23", "player_name": "Test"}
+        metadata = {"version": "3.0.0", "timestamp": "2026-01-23", "player_name": "Test"}
         with open(os.path.join(save_path, "save_metadata.json"), 'w') as f:
             json.dump(metadata, f)
 
