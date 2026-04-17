@@ -25,7 +25,6 @@ from game.ui.screens.builder.schematic_view import SchematicView
 from game.ui.screens.builder.interaction_controller import InteractionController
 from game.ui.screens.builder.event_bus import EventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
-from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
@@ -66,7 +65,6 @@ class DesignWorkshopScreen:
         self.on_start_battle = context.on_return  # Use context's callback
 
         self.event_bus = EventBus()
-        self.screenshot_manager = get_default_screenshot_manager()
 
         # PROJ-211: Initialize ModifierLogic with registry provider
         ModifierLogic.init_service(context.registries)

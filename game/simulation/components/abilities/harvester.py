@@ -13,9 +13,7 @@ class ResourceHarvesterAbility(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-
+    def _parse_attrs(self, data: Any) -> None:
         if isinstance(data, dict):
             self.resource_type = data.get("resource_type", "Unknown")
             self.base_harvest_rate = data.get("base_harvest_rate", 0.0)
@@ -56,16 +54,13 @@ class LocalStorageAbility(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-
+    def _parse_attrs(self, data: Any) -> None:
         if isinstance(data, dict):
             self.resource_type = data.get("resource_type", "")
             self.capacity = data.get("capacity", 0.0)
         else:
             self.resource_type = ""
             self.capacity = 0.0
-
         self._base_capacity = self.capacity
 
     def recalculate(self) -> None:
@@ -102,8 +97,7 @@ class StagingYardAbility(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
+    def _parse_attrs(self, data: Any) -> None:
         if isinstance(data, dict):
             self.capacity_mass = data.get('capacity_mass', 0.0)
         else:
@@ -141,9 +135,7 @@ class SpaceShipyardAbility(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-
+    def _parse_attrs(self, data: Any) -> None:
         if isinstance(data, dict):
             self.construction_speed_bonus = data.get("construction_speed_bonus", 1.0)
             self.max_ship_mass = data.get("max_ship_mass", 100000)

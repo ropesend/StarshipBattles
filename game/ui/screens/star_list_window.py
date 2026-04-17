@@ -14,7 +14,6 @@ from game.ui.config import UIConfig
 import logging
 
 logger = logging.getLogger(__name__)
-from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.ui.screens.star_list_filters import (
     gather_stars, filter_stars, sort_stars,
     compute_star_ranges, get_system_name, get_star_type_display,
@@ -302,12 +301,6 @@ class StarListWindow(UIWindow):
                     except ValueError:
                         pass
 
-        # Screenshot
-        if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_F12, pygame.K_F11):
-                self._take_screenshot()
-                return True
-
         # Mouse wheel scrolling
         if event.type == pygame.MOUSEWHEEL:
             m_pos = pygame.mouse.get_pos()
@@ -448,13 +441,6 @@ class StarListWindow(UIWindow):
             loc = getattr(self.selected_star, '_cached_system_global_location', None)
             if loc:
                 self.on_navigate_callback(loc)
-
-    def _take_screenshot(self):
-        """Take a screenshot of the current screen."""
-        sm = get_default_screenshot_manager()
-        sm.capture(label="star_list")
-        logger.info("Screenshot: Star List window captured")
-        sm.show_toast(self.ui_manager, self.rect.width)
 
     def set_dimensions(self, dimensions, clamp_to_container=False):
         """Handle window resize."""

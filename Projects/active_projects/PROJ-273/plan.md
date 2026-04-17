@@ -13,20 +13,32 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Create registry module + unit tests (TDD) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate Battle Setup compiler | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate Strategy compiler | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Glob-driven coverage test | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Runtime unknown-stat_key warning | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Docs | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Create registry module + unit tests (TDD) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate Battle Setup compiler | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate Strategy compiler | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Glob-driven coverage test | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Runtime unknown-stat_key warning | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Docs | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-16
-**Active Phase:** Planning (ready to start Phase 1)
-**Last Action:** Project created with full plan, derived from combat system review
-**Next Action:** Begin Phase 1 — create registry module and failing unit tests
+**Active Phase:** COMPLETE — awaiting user verification + audit
+**Last Action:** Phase 6 complete. All 6 phases delivered. Docs updated: added "Pattern 26: Ability-Stat Registry" to `docs/02_PATTERNS.md` (immediately after pattern 25), updated pattern 25 to reference shared `OPPONENT_SCOPES`, updated Quick Reference table (L1400) to include both patterns 25+26 with new file references. Rewrote strategy_layer.md L790-800 paragraph to describe registry-driven emission. Rewrote combat_simulation.md L422-442 external-modifiers section to reference `ABILITY_STAT_REGISTRY`, `OPPONENT_SCOPES`, `KNOWN_EXTERNAL_STAT_KEYS`, and the new `_log_unknown_stat_key_once` behavior. All remaining `_ABILITY_TO_STAT_KEY` / `_OPPONENT_SCOPES` mentions in docs are intentional historical context ("Pre-PROJ-273..." / "PROJ-273 consolidated..."). Final full-suite check: 513 incremental tests passed, 1 failed + 3 errors (ALL PRE-EXISTING per baseline captured pre-Phase-1).
+**Next Action:** User verification steps:
+1. Manual launch: Battle Setup with a shield-booster complex → verify aura labels appear on battle HUD (no warnings in console for known stat_keys).
+2. Optional: run full `pytest tests/` (no testmon) for pure belt-and-braces baseline confirmation.
+3. Audit the project (`Projects/protocols/04_audit_project.md`) once user verifies.
 **Blockers:** None
-**Context for Next Agent:** This project unblocks PROJ-275 (N-team combat). Can be executed in parallel with PROJ-274. Core insight: `_ABILITY_TO_STAT_KEY` at `game/ui/screens/battle_setup/spec_compiler.py:70-74` and the hardcoded `stat_key=...` calls in `game/strategy/combat/spec_compiler.py:353,385,400,412,444` are emitting the same three mappings independently. No test enforces consistency. Registry consolidates them.
+**Context for Next Agent:** PROJECT COMPLETE. All acceptance criteria met:
+- Registry module exists (`game/simulation/combat/ability_stat_registry.py`) with `ABILITY_STAT_REGISTRY` (3 entries), `AbilityStatMapping` frozen dataclass, `OPPONENT_SCOPES` frozenset, `KNOWN_EXTERNAL_STAT_KEYS` frozenset (10 keys), `emit_entries_for_ability(...)` helper.
+- Battle Setup compiler (`game/ui/screens/battle_setup/spec_compiler.py`) consumes registry. Deleted: `_ABILITY_TO_STAT_KEY`, `_OPPONENT_SCOPES`, `_extract_ability_value`. Kept: `_route_team_for_scope` (PROJ-275 handoff).
+- Strategy compiler (`game/strategy/combat/spec_compiler.py`) consumes registry via thin `_emit_entries_team_scoped` wrapper. Deleted: `_real_entry`, direct `ModifierEffect` construction.
+- `FleetAuraManager` (`game/simulation/combat/fleet_aura_manager.py`) warns once per (stat_key, source) on unknown stat_keys via `_log_unknown_stat_key_once`.
+- Glob-driven tests in `tests/unit/simulation/combat/test_ability_stat_registry.py` iterate all 27 `qs_*_complex.json` designs automatically. Forward-compat: adding a combat-class ability without updating the registry fails `test_all_complex_abilities_have_registry_coverage`.
+- 32 registry tests + 5 warning tests = 37 new tests added. Hardcoded 10-design guard in `test_unified_entry_guard.py` deleted; coverage superseded by the glob test (2.7x broader).
+- Docs updated: patterns catalog (pattern 26 added), strategy_layer.md (rewrite L790-800), combat_simulation.md (external-modifiers section).
+- Test baseline: 14693 passed, 1 failed (quickstart), 3 errors (ai/ x2 + strategy/engine x1) — all pre-existing and unrelated to PROJ-273.
+- Unblocks PROJ-275 (N-team combat). Helper already supports N-team fan-out via `num_teams` kwarg.
 
 ## Overview
 

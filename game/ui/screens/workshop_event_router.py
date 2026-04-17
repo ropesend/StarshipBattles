@@ -100,9 +100,7 @@ class WorkshopEventRouter:
             return self._handle_confirmation(event)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             return self._handle_right_click(event)
-        elif event.type == pygame.KEYDOWN:
-            return self._handle_keydown(event)
-        
+
         return False
     
     def _handle_panel_action(self, action) -> bool:
@@ -531,21 +529,3 @@ class WorkshopEventRouter:
         # Preset deletion removed - no longer applicable
         return False
     
-    def _handle_keydown(self, event) -> bool:
-        """Handle keyboard events."""
-        gui = self.gui
-        
-        if event.key == pygame.K_F12:
-            # Full screenshot
-            gui.screenshot_manager.capture(label="full_window")
-            return True
-        elif event.key == pygame.K_F11:
-            # Focused screenshot centered on mouse
-            mx, my = pygame.mouse.get_pos()
-            size = 1024
-            rect = pygame.Rect(0, 0, size, size)
-            rect.center = (mx, my)
-            gui.screenshot_manager.capture(region=rect, label="mouse_focus")
-            return True
-
-        return False

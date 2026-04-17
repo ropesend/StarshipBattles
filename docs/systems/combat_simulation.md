@@ -421,7 +421,7 @@ The `update()` method is a concise coordinator that delegates to focused helpers
 Initialized at battle start, recalculated every tick. Bonuses removed immediately when provider
 ship is destroyed. Stacking follows two-phase aggregation (same group = MAX, different groups = SUM).
 
-**External modifiers** (PROJ-270 Phase 6.4a + Phase 9, PROJ-271 Phase 7, PROJ-272 Phase 2):
+**External modifiers** (PROJ-270 Phase 6.4a + Phase 9, PROJ-271 Phase 7, PROJ-272 Phase 2, PROJ-273):
 per-team and global battle conditions flow into the aura manager via
 `spec.modifier_stack` only — the legacy `BattleConfig.team_modifiers` /
 `global_modifiers` kwargs were deleted. `FleetAuraManager._apply_bonuses`
@@ -431,11 +431,20 @@ two-phase MAX/SUM aggregation (`_aggregate_ability_groups`) — but only
 WITHIN-SOURCE: provider auras (ship-mounted `type(ab).__name__` key) and
 external entries (`effect.stat_key` key) use different top-level buckets
 and DO NOT cross-compose even with matching stack_group. Strategy compiler
-threads `stack_group` through every `_real_entry` emission (storm entries
-share `"storm_shield_interference"`; team multipliers share
+threads `stack_group` through every emission (storm entries share
+`"storm_shield_interference"`; team multipliers share
 `"team{N}_shield_mult"` / `"team{N}_damage_mult"` / `"team{N}_flat_shield"`).
-Unknown stat_keys emit a once-per-source WARNING; placeholders no longer
-exist (PROJ-271 Phase 9 deleted `_entries_from_modifier_source`).
+All compilers route ability->stat_key mappings through the shared
+`ABILITY_STAT_REGISTRY` + `emit_entries_for_ability` helper in
+`game/simulation/combat/ability_stat_registry.py` (PROJ-273 consolidated
+the previously-duplicated `_ABILITY_TO_STAT_KEY` dicts and hand-rolled
+`stat_key="..."` literals). The registry also exports a canonical
+`OPPONENT_SCOPES` constant and a `KNOWN_EXTERNAL_STAT_KEYS` allowlist.
+Unknown stat_keys emit a once-per-(stat_key, source) WARN from
+`FleetAuraManager._log_unknown_stat_key_once` when an entry's stat_key
+isn't in `KNOWN_EXTERNAL_STAT_KEYS` (catches silent-drop bugs).
+Placeholders no longer exist (PROJ-271 Phase 9 deleted
+`_entries_from_modifier_source`).
 
 **Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A + PROJ-271 Track B):
 All strategic modifier sources emit real stat_keys now. Storm hex shield

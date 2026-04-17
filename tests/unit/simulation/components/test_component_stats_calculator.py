@@ -63,7 +63,9 @@ class TestComponentStatsCalculatorFormulas:
         """Should evaluate formulas nested in abilities."""
         # Components with formula-based abilities should work
         bridge = create_component('bridge', registries=fresh_registries)
-        bridge.recalculate_stats()
+        # Bridge mass formula references ship_class_mass — must supply context
+        # when no ship is attached.
+        bridge.recalculate_stats({'ship_class_mass': 2000})
 
         # Just verify no crash and abilities are instantiated
         assert len(bridge.ability_instances) >= 0

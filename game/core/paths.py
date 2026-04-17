@@ -60,7 +60,6 @@ class Paths:
     SAVES_DIR: str = os.path.join(OUTPUT_DIR, "saves")
     SHIPS_DIR: str = os.path.join(OUTPUT_DIR, "ships")
     RACES_DIR: str = os.path.join(OUTPUT_DIR, "races")
-    SCREENSHOTS_DIR: str = os.path.join(OUTPUT_DIR, "screenshots")
     LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
     SETTINGS_DIR: str = os.path.join(OUTPUT_DIR, "settings")
 

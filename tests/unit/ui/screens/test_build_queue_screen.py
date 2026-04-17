@@ -109,9 +109,6 @@ def _make_build_queue_screen():
     screen.category_buttons = {}
     screen.planet_selection_window = None
 
-    # Screenshot
-    screen.screenshot_manager = MagicMock()
-
     # Queue selector
     screen._queue_selector = MagicMock()
 

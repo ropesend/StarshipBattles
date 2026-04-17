@@ -396,6 +396,11 @@ class ShipState:
                 if comp_state.component_id in comp_registry:
                     new_comp = comp_registry[comp_state.component_id].clone()
 
+                    # Set ship BEFORE adding modifiers. add_modifier triggers
+                    # recalculate_stats, which evaluates ship_class_mass formulas
+                    # against component.ship.max_mass_budget.
+                    new_comp.ship = ship
+
                     # Apply modifiers
                     for mod_data in comp_state.modifiers:
                         mid = mod_data['id']

@@ -94,20 +94,16 @@ class ComponentResourceManager:
         base_costs = getattr(component, 'evaluated_resource_cost', None) or component.data.get("resource_cost", {})
         multiplier = component.stats.get('cost_mult', 1.0)
 
-        # Build context for formula evaluation
-        # Priority: explicit context > ship reference > default
-        eval_context = {'ship_class_mass': 1000}
-        if context and 'ship_class_mass' in context:
-            eval_context['ship_class_mass'] = context['ship_class_mass']
-        elif component.ship:
-            # Ships have max_mass_budget set by ShipStatsCalculator
-            eval_context['ship_class_mass'] = getattr(
-                component.ship, 'max_mass_budget', 1000
-            )
+        # Lazily build the formula context only if we actually encounter a formula.
+        # Components without formula-driven costs don't need a ship attached.
+        eval_context = None
 
         result = {}
         for res, amount in base_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
+                if eval_context is None:
+                    from game.simulation.components.component_stats_calculator import build_formula_context
+                    eval_context = build_formula_context(component, context)
                 # Evaluate formula on-demand
                 amount = FormulaEvaluator.safe_evaluate(
                     amount[1:], eval_context, default=0

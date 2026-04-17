@@ -547,56 +547,18 @@ class TestBattleSetupCompilerBehavioralStatKeys:
         ]
         assert suppressors, "Expected suppressor routed to team 1 (opponent)"
 
-    def test_no_placeholder_from_any_real_complex(self):
-        """PROJ-271 Phase 11.1: glob every `data/designs/qs_*_complex.json`
-        (not a hardcoded list) — if any complex design carries a
-        `ShieldModifier`/`DamageModifier`/`ShieldProjection` ability,
-        its compiled entries must have no placeholders. New complexes
-        added to disk are automatically checked."""
-        import json
-        complex_files = sorted((REPO_ROOT / "data" / "designs").glob("qs_*_complex.json"))
-        assert complex_files, "No complex design files found — pattern drift?"
-
-        for path in complex_files:
-            with open(path, "r", encoding="utf-8") as f:
-                design = json.load(f)
-            # Only complex designs with at least one scoped modifier-
-            # producing ability can emit real entries. Skip economy /
-            # logistics complexes that don't affect combat.
-            if not _design_has_combat_ability(design):
-                continue
-            design_id = path.stem
-            scope = "system" if "system" in design_id else "sector"
-            spec = self._compile(design_id, scope, 0)
-            all_entries = []
-            for entries in spec.modifier_stack.per_team.values():
-                all_entries.extend(entries)
-            placeholders = [e for e in all_entries if e.effect.stat_key == "placeholder"]
-            assert not placeholders, (
-                f"Complex '{design_id}' emitted placeholder entries: "
-                f"{[e.effect.source_modifier_name for e in placeholders]}"
-            )
-
-
-def _design_has_combat_ability(design: dict) -> bool:
-    """Check if a complex design has at least one component whose
-    abilities include ShieldModifier/DamageModifier/ShieldProjection."""
-    # Need to inspect component abilities which requires registry lookup.
-    # Simpler heuristic: the design mentions one of the relevant
-    # component IDs by scanning layers for specific component types.
-    target_components = {
-        "sector_shield_projector", "system_shield_projector",
-        "shield_booster_system", "shield_booster_sector",
-        "shield_suppressor_system", "shield_suppressor_sector",
-        "damage_booster_system", "damage_booster_sector",
-        "damage_suppressor_system", "damage_suppressor_sector",
-    }
-    layers = design.get("layers", {})
-    for layer_comps in layers.values():
-        for comp in (layer_comps or []):
-            if isinstance(comp, dict) and comp.get("id") in target_components:
-                return True
-    return False
+    # `test_no_placeholder_from_any_real_complex` + `_design_has_combat_ability`
+    # DELETED in PROJ-273 Phase 4. Their coverage is superseded by:
+    #   - `tests/unit/simulation/combat/test_ability_stat_registry.py
+    #      ::test_no_placeholder_from_any_complex_via_registry`
+    #   - `tests/unit/simulation/combat/test_ability_stat_registry.py
+    #      ::test_all_complex_abilities_have_registry_coverage`
+    # The new tests use the `ABILITY_STAT_REGISTRY` to decide which
+    # components carry combat-affecting abilities (registry-driven),
+    # replacing the brittle hardcoded component-ID allowlist that used
+    # to live in `_design_has_combat_ability`. Any new `qs_*_complex.json`
+    # design referencing a registered combat ability is automatically
+    # covered — no allowlist maintenance required.
 
 
 class TestBattleScreenLegacyBypassDeprecated:
@@ -714,7 +676,7 @@ class TestNoPlaceholderStatKeyInStrategyCompiler:
         path = REPO_ROOT / "game/strategy/combat/spec_compiler.py"
         text = path.read_text(encoding="utf-8")
         match = re.search(
-            r"def _entries_from_fleet_combat_modifiers.*?(?=\ndef )",
+            r"def _entries_from_fleet_combat_modifiers.*?(?=\ndef |\Z)",
             text,
             flags=re.DOTALL,
         )

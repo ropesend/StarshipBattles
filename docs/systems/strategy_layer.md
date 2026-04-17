@@ -791,7 +791,7 @@ Wired from `ConflictResolutionEngine._resolve_combat_simulated()` which collects
 
 #### Battle Setup Complex-Toggle Compilation (PROJ-271 Phase 2)
 
-The Battle Setup screen lets users toggle complex designs onto either side without those complexes being real ships in the battle. `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` translates a toggled complex design into `ModifierEntry` entries by walking the design JSON's components and mapping each non-SELF-scoped ability class to a stat_key:
+The Battle Setup screen lets users toggle complex designs onto either side without those complexes being real ships in the battle. `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` translates a toggled complex design into `ModifierEntry` entries by walking the design JSON's components and delegating each non-SELF-scoped ability to `emit_entries_for_ability` from the shared registry. Currently-mapped abilities:
 
 | Ability class in complex design | Emitted stat_key | Operation |
 |---------------------------------|------------------|-----------|
@@ -799,9 +799,9 @@ The Battle Setup screen lets users toggle complex designs onto either side witho
 | `ShieldModifier` | `shield_capacity_mult` | multiply |
 | `DamageModifier` | `damage_mult` | multiply |
 
-Each entry is routed to a team bucket by `_route_team_for_scope(scope_str, owner_team)` — `enemy_*` scopes go to the opponent team, all other scopes go to the owner's team (`_OPPONENT_SCOPES = {"enemy_sector", "enemy_system"}`). Adding a new complex ability type that should influence combat requires extending `_ABILITY_TO_STAT_KEY`; adding a new enemy-scope value requires extending `_OPPONENT_SCOPES` AND adding a scope-routing test.
+Routing is handled inside `emit_entries_for_ability` via the shared `OPPONENT_SCOPES` constant (`{"enemy_sector", "enemy_system"}` in `game/simulation/combat/ability_stat_registry.py`). Enemy scopes fan out to all non-owner teams (N-team forward-compat); other scopes route to the owner's team. Adding a new combat-affecting ability is now a one-line edit to `ABILITY_STAT_REGISTRY` in the registry module — the glob-driven test in `tests/unit/simulation/combat/test_ability_stat_registry.py` picks up new `qs_*_complex.json` designs automatically. Adding a new enemy-scope value requires extending `OPPONENT_SCOPES` AND adding a scope-routing test.
 
-Unlike the strategy path (where `CombatModifierCollector` pre-computes enemy-scope routing before compile), the Battle Setup compiler does per-ability scope routing at compile time because complex toggles are synthetic inputs — there's no `CombatModifierCollector` equivalent for Battle Setup.
+Unlike the strategy path (where `CombatModifierCollector` pre-computes enemy-scope routing before compile), the Battle Setup compiler does per-ability scope routing at compile time because complex toggles are synthetic inputs — there's no `CombatModifierCollector` equivalent for Battle Setup. Both paths share the same `ABILITY_STAT_REGISTRY` / `emit_entries_for_ability` entry-emission code since PROJ-273.
 
 ### Activatable Abilities & Stabilizer Pattern
 

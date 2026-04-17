@@ -39,7 +39,6 @@ All tests in this directory now pass, indicating the bugs have been fixed.
 | ~~test_bug_13_colony_flags.py~~ | BUG-13 | DELETED | Colony flag loading — covered by test_race_asset_loader.py and test_empire_asset_loading.py |
 | test_bug_13_weapons_report.py | BUG-13 | FIXED | Weapons report drawing structure |
 | test_bug_14_multi_planet_offset.py | BUG-14 | FIXED | Multi-planet position offset |
-| test_bug_15_screenshot_strategy.py | BUG-15 | FIXED | Screenshot strategy layer support |
 | test_bug_16_raw_data_button.py | BUG-16 | FIXED | Raw data button position |
 | test_bug_17_drag_preview.py | BUG-17 | FIXED | Drag preview icon rendering |
 | test_bug_27_ordertype.py | BUG-27 | FIXED | OrderType import in strategy screen |

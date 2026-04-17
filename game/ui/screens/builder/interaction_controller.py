@@ -92,6 +92,11 @@ class InteractionController:
                  
                  if shift_held:
                      self.dragged_item = item_to_clone.clone()
+                     # Carry over the ship reference BEFORE adding modifiers.
+                     # add_modifier triggers recalculate_stats which evaluates
+                     # `=ship_class_mass` formulas; without a ship reference
+                     # those formulas raise FormulaException.
+                     self.dragged_item.ship = item_to_clone.ship
                      for m in item_to_clone.modifiers:
                         self.dragged_item.add_modifier(m.definition.id)
                         new_m = self.dragged_item.get_modifier(m.definition.id)

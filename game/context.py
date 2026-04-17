@@ -37,7 +37,6 @@ class ApplicationContext:
         asset_manager: Any,
         sprite_manager: Any,
         ship_theme_manager: Any,
-        screenshot_manager: Any,
         game_settings: Any,
     ):
         self.registry_manager = registry_manager
@@ -47,7 +46,6 @@ class ApplicationContext:
         self.asset_manager = asset_manager
         self.sprite_manager = sprite_manager
         self.ship_theme_manager = ship_theme_manager
-        self.screenshot_manager = screenshot_manager
         self.game_settings = game_settings
 
     @classmethod
@@ -65,7 +63,6 @@ class ApplicationContext:
         from game.assets.asset_manager import AssetManager
         from game.ui.renderer.sprites import SpriteManager
         from game.ui.assets.ship_theme_manager import ShipThemeManager
-        from game.ui.services.screenshot_manager import ScreenshotManager
         from game.ui.services.game_settings import GameSettings
 
         # Create all service instances
@@ -76,7 +73,6 @@ class ApplicationContext:
         asset_manager = AssetManager()
         sprite_manager = SpriteManager()
         ship_theme_manager = ShipThemeManager()
-        screenshot_manager = ScreenshotManager()
         game_settings = GameSettings()
 
         # PROJ-258: Set ALL module-level references so get_default_xxx()
@@ -87,7 +83,6 @@ class ApplicationContext:
         from game.assets.asset_manager import set_default_asset_manager
         from game.ui.renderer.sprites import set_default_sprite_manager
         from game.ui.assets.ship_theme_manager import set_default_ship_theme_manager
-        from game.ui.services.screenshot_manager import set_default_screenshot_manager
         from game.ui.services.game_settings import set_default_game_settings
 
         set_default_registry_manager(registry_mgr)
@@ -97,7 +92,6 @@ class ApplicationContext:
         set_default_asset_manager(asset_manager)
         set_default_sprite_manager(sprite_manager)
         set_default_ship_theme_manager(ship_theme_manager)
-        set_default_screenshot_manager(screenshot_manager)
         set_default_game_settings(game_settings)
 
         # Set module-level refs for services with only _default_xxx (no setter)
@@ -114,7 +108,6 @@ class ApplicationContext:
             asset_manager=asset_manager,
             sprite_manager=sprite_manager,
             ship_theme_manager=ship_theme_manager,
-            screenshot_manager=screenshot_manager,
             game_settings=game_settings,
         )
 
@@ -134,7 +127,6 @@ class ApplicationContext:
         from game.assets.asset_manager import AssetManager
         from game.ui.renderer.sprites import SpriteManager
         from game.ui.assets.ship_theme_manager import ShipThemeManager
-        from game.ui.services.screenshot_manager import ScreenshotManager
         from game.ui.services.game_settings import GameSettings
 
         defaults = {
@@ -145,7 +137,6 @@ class ApplicationContext:
             'asset_manager': AssetManager.__new__(AssetManager),
             'sprite_manager': SpriteManager.__new__(SpriteManager),
             'ship_theme_manager': ShipThemeManager.__new__(ShipThemeManager),
-            'screenshot_manager': ScreenshotManager.__new__(ScreenshotManager),
             'game_settings': GameSettings.__new__(GameSettings),
         }
         defaults.update(overrides)

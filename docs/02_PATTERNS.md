@@ -54,11 +54,11 @@ that needs service references. **Not a singleton** — the caller manages lifeti
 class ApplicationContext:
     def __init__(self, registry_manager, profiler,
                  component_cache, policy_manager, asset_manager,
-                 sprite_manager, ship_theme_manager, screenshot_manager,
+                 sprite_manager, ship_theme_manager,
                  game_settings):
         self.registry_manager = registry_manager
         self.profiler = profiler
-        # ... all 9 services
+        # ... all 8 services
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -71,7 +71,7 @@ class ApplicationContext:
         ...
 ```
 
-### Services Managed (10 total)
+### Services Managed (8 total)
 
 | Service | File | Layer |
 |---------|------|-------|
@@ -82,7 +82,6 @@ class ApplicationContext:
 | AssetManager | `game/assets/asset_manager.py` | Assets |
 | SpriteManager | `game/ui/renderer/sprites.py` | UI |
 | ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
-| ScreenshotManager | `game/ui/services/screenshot_manager.py` | UI |
 | GameSettings | `game/ui/services/game_settings.py` | UI |
 
 ### How Services Are Accessed
@@ -1325,13 +1324,14 @@ different-stack_group entries correctly SUM.
 
 ---
 
-## 25. Scope-Driven Team Routing (PROJ-271)
+## 25. Scope-Driven Team Routing (PROJ-271, PROJ-273)
 
-**Where:** `game/ui/screens/battle_setup/spec_compiler.py` (`_route_team_for_scope`, `_OPPONENT_SCOPES`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
+**Where:** `game/simulation/combat/ability_stat_registry.py` (`OPPONENT_SCOPES`, `emit_entries_for_ability`), `game/ui/screens/battle_setup/spec_compiler.py` (`_route_team_for_scope`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
 
 **How It Works:**
 - An ability's `AbilityScope` value encodes who it targets: `fleet`/`allied_*`/`player_*`/`system`/`sector` -> owner's team; `enemy_sector`/`enemy_system` -> opponent team.
-- Battle Setup compiler's `_route_team_for_scope(scope_str, owner_team)` routes each emitted `ModifierEntry` to the correct `per_team[team_id]` bucket at compile time (currently 2-team assumption via `_NUM_TEAMS`).
+- Both compilers delegate enemy-scope detection to the shared `OPPONENT_SCOPES` frozenset in the ability-stat registry (single source of truth; PROJ-273 consolidated the previously-duplicated `_OPPONENT_SCOPES` locals).
+- The registry's `emit_entries_for_ability(...)` helper fans `enemy_*` scopes out to ALL non-owner teams (N-team forward-compat); current callers pass `num_teams=2`, so fan-out degenerates to a single opposing team.
 - Strategy compiler path is simpler: `CombatModifierCollector` pre-computes enemy-scope effects INTO the receiving fleet's `FleetCombatModifiers` before the compiler runs, so the compiler emits to `per_team[receiver_id]` trivially.
 
 **Why:**
@@ -1339,7 +1339,27 @@ different-stack_group entries correctly SUM.
 
 **When to Use:**
 - Any new ability type with fleet/system/sector scope options needs scope-driven routing when its effects are compiled into `ModifierStack` entries.
-- Extending `_OPPONENT_SCOPES` requires adding tests proving each scope routes correctly.
+- Extending `OPPONENT_SCOPES` (now a single shared constant) requires adding tests proving each scope routes correctly.
+
+---
+
+## 26. Ability-Stat Registry (PROJ-273)
+
+**Where:** `game/simulation/combat/ability_stat_registry.py` (`ABILITY_STAT_REGISTRY`, `AbilityStatMapping`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS`), consumed by `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` and `game/strategy/combat/spec_compiler.py::_emit_entries_team_scoped`.
+
+**How It Works:**
+- One canonical dict maps ability class name -> `AbilityStatMapping(stat_key, operation, value_field)`. Currently three entries: `ShieldProjection -> shield_bonus_add/add/value`, `ShieldModifier -> shield_capacity_mult/multiply/multiplier`, `DamageModifier -> damage_mult/multiply/multiplier`.
+- `emit_entries_for_ability(ability_name, ability_data, *, scope, owner_team, num_teams, source, source_modifier_id, source_modifier_name, stack_group=None)` returns `List[Tuple[int, ModifierEntry]]`. Team routing + N-team fan-out + value extraction all happen in one call. Returns `[]` for unknown abilities (silent skip) or zero values (nothing to apply).
+- Battle Setup compiler delegates via `_complex_to_entries`. Strategy compiler delegates via a thin team-scoped wrapper (`_emit_entries_team_scoped`) since `FleetCombatModifiers` stores raw floats rather than dict-shaped ability data.
+- `KNOWN_EXTERNAL_STAT_KEYS: FrozenSet[str]` enumerates every stat_key the engine actually consumes downstream of `ship.external_stats`. `FleetAuraManager._append_external_from_entry` warns once per (stat_key, source) when an entry's stat_key isn't in this set — catches silent-drop bugs where a compiler emits an entry no reader picks up.
+- Glob-driven guard tests (`tests/unit/simulation/combat/test_ability_stat_registry.py`) iterate every `data/designs/qs_*_complex.json` and validate: (a) no placeholder stat_keys, (b) every combat-class ability in data is covered by the registry. New complex designs are auto-covered.
+
+**Why:**
+- Pre-PROJ-273, `_ABILITY_TO_STAT_KEY` lived in Battle Setup's spec_compiler AND the same three stat_keys were emitted via hand-rolled calls in Strategy's spec_compiler. A new ability class required touching both compilers + the ability class, with nothing alerting you if you missed a compiler. Registry consolidates this into a one-line edit.
+
+**When to Use:**
+- Adding a new combat-affecting ability (class ending in `Modifier` / `Projection`): add one entry to `ABILITY_STAT_REGISTRY`; the glob test picks up coverage automatically. Also add the `stat_key` to `KNOWN_EXTERNAL_STAT_KEYS` so the runtime warning doesn't false-positive.
+- Any future caller (beyond Battle Setup + Strategy) that walks design JSONs and emits `ModifierEntry` objects should use `emit_entries_for_ability` rather than constructing `ModifierEffect` + `ModifierEntry` by hand.
 
 ---
 
@@ -1376,7 +1396,8 @@ different-stack_group entries correctly SUM.
 | TurnEngineConfig | `game/strategy/engine/turn_engine_config.py` | `TurnEngineConfig` |
 | Tick Phase Registry | `game/simulation/systems/tick_phase.py` | `ITickPhase`, `TickPhaseRegistry` |
 | External-Stats Bridge | `game/simulation/entities/ship.py` + `fleet_aura_manager.py` | `ship.external_stats`, `FleetAuraManager._apply_bonuses` |
-| Scope-Driven Team Routing | `game/ui/screens/battle_setup/spec_compiler.py` | `_route_team_for_scope`, `_OPPONENT_SCOPES` |
+| Scope-Driven Team Routing | `game/simulation/combat/ability_stat_registry.py` | `OPPONENT_SCOPES`, `emit_entries_for_ability` |
+| Ability-Stat Registry | `game/simulation/combat/ability_stat_registry.py` | `ABILITY_STAT_REGISTRY`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS` |
 
 ### Critical Naming Reminders
 
@@ -1384,6 +1405,5 @@ different-stack_group entries correctly SUM.
 - Config classes in `game/core/config.py` are **plain classes, not dataclasses**.
 - Use **BattleScreen / StrategyScreen**, not BattleScene / StrategyScene.
 - Use **VehicleDesignService**, not ShipBuilderService.
-- **ScreenshotManager** is at `game/ui/services/screenshot_manager.py`.
 - **PolicyManager** is at `game/ai/policy_manager.py`.
 - **EventBus** is at `game/ui/screens/builder/event_bus.py`.

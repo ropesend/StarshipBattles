@@ -4,7 +4,6 @@ Tkinter Utilities - Consolidated Tkinter initialization and helpers.
 DUP-UI2-001: Extracted from multiple files to eliminate duplication of
 Tkinter root initialization pattern across:
 - ship_io.py
-- screenshot_manager.py
 - formation_editor.py
 - workshop_ship_io.py
 

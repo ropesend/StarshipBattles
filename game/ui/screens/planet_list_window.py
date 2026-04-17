@@ -17,7 +17,6 @@ from game.ui.config import UIConfig
 import logging
 
 logger = logging.getLogger(__name__)
-from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.ui.screens.planet_list_filters import (
     gather_planets, filter_planets, sort_planets,
     compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str
@@ -330,12 +329,6 @@ class PlanetListWindow(UIWindow):
                     except ValueError:
                         pass # Ignore invalid
 
-        # Screenshot Handling
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_F12 or event.key == pygame.K_F11:
-                self._take_screenshot()
-                return True
-
         # Wheel Handling - Use VirtualTable's scrollbar
         if event.type == pygame.MOUSEWHEEL:
             m_pos = pygame.mouse.get_pos()
@@ -487,14 +480,6 @@ class PlanetListWindow(UIWindow):
             loc = getattr(self.selected_planet, '_cached_system_global_location', None)
             if loc:
                 self.on_navigate_callback(loc)
-
-    def _take_screenshot(self):
-        """Take a screenshot of the current screen including the planet list."""
-        sm = get_default_screenshot_manager()
-        sm.capture(label="planet_list")
-        logger.info("Screenshot: Planet List window captured")
-        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
-        sm.show_toast(self.ui_manager, self.rect.width)
 
     def _on_planet_selected(self, planet):
         """Handle planet selection - create/update detail panel."""

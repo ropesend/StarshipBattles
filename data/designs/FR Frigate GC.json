@@ -495,7 +495,7 @@
         "strategic_movement": 100.0,
         "mass": 1570.5866572705806,
         "armor_hp_pool": 800,
-        "warp_max_tonnage": 1000.0,
+        "warp_max_tonnage": 2000.0,
         "warp_energy_cost": 0.0,
         "mass_valid": true
     }

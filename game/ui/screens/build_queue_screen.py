@@ -13,7 +13,6 @@ import pygame_gui
 from typing import TYPE_CHECKING, List, Optional, Callable, Set
 
 from game.core.input_actions import InputAction
-from game.ui.services.screenshot_manager import get_default_screenshot_manager
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -492,10 +491,7 @@ class BuildQueueScreen:
 
     def _handle_keyboard_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard events."""
-        if self._handle_keydown(event):
-            return
-        if event.key in (pygame.K_F11, pygame.K_F12):
-            self._take_screenshot()
+        self._handle_keydown(event)
 
     def _handle_keydown(self, event: pygame.event.Event) -> bool:
         """Dispatch keyboard events via InputMapper."""
@@ -574,16 +570,6 @@ class BuildQueueScreen:
             show_any_button=False
         )
         logger.info(f"BuildQueue: Opened planet selection for {len(planets)} colonies")
-
-    # -----------------------------------------------------------------------
-    # Screenshot
-    # -----------------------------------------------------------------------
-
-    def _take_screenshot(self):
-        """Take a screenshot of the current screen."""
-        sm = get_default_screenshot_manager()
-        sm.capture(label="build_queue")
-        sm.show_toast(self.manager, self.screen_width)
 
     # -----------------------------------------------------------------------
     # Lifecycle
