@@ -4,13 +4,13 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-272 | Strategic Modifier System Cleanup + Round-2 Audit Fixes | Planning | 2026-04-13 | 2026-04-13 |
-| PROJ-269 | Unified Battle Simulator Entry/Exit | Planning | 2026-04-12 | 2026-04-12 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-272 | Strategic Modifier System Cleanup + Round-2 Audit Fixes | Archived | 2026-04-13 | 2026-04-16 |
+| PROJ-269 | Unified Battle Simulator Entry/Exit | Archived | 2026-04-12 | 2026-04-16 |
 | PROJ-271 | Strategic Modifier Battle-Math Track B | Archived | 2026-04-12 | 2026-04-13 |
 | PROJ-270 | Unified Battle Simulator Entry/Exit - Closure | Archived | 2026-04-12 | 2026-04-13 |
 | PROJ-267 | Test Infrastructure Consolidation | Archived | 2026-04-09 | 2026-04-10 |
@@ -24,13 +24,11 @@ w# Projects Index
 | PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | Archived | 2026-04-08 | 2026-04-09 |
 | PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | Archived | 2026-04-08 | 2026-04-09 |
 | PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | Archived | 2026-04-08 | 2026-04-09 |
-| PROJ-250 | Dual-Source Retreat Config Ambiguity | Archived | 2026-04-06 | 2026-04-08 |
 | PROJ-256 | Centralize All File Paths via Paths Class | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-255 | Code Quality & Decomposition | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-254 | Identity, Indexing & Correctness | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-253 | Hot-Loop & Cache Optimization | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-252 | Determinism & Global State Isolation | Archived | 2026-04-08 | 2026-04-08 |
-| PROJ-251 | Error Boundary Architecture Refactor | Archived | 2026-04-08 | 2026-04-08 |
 
 ---
 
