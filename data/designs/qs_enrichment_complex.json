@@ -328,6 +328,19 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
             }
         ],
         "INNER": [],
@@ -410,8 +423,8 @@
         "times_built": 0
     },
     "expected_stats": {
-        "max_hp": 3790,
-        "mass": 2820.0,
+        "max_hp": 3850,
+        "mass": 2850.0,
         "resource_storage": {},
         "cargo_storage": {},
         "pod_storage_mass": 0.0,

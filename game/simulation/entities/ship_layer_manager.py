@@ -18,13 +18,12 @@ from game.core.error_codes import ErrorCode
 from game.core.exceptions import ValidationException
 from game.simulation.entities.layer_data import LayerData
 from game.simulation.components.component_loader import create_component
+from game.simulation.physics_constants import DEFAULT_MAX_MASS
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_MAX_MASS = 500
 
 
 class ShipLayerManager:

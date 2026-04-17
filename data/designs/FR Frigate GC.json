@@ -156,6 +156,19 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
             }
         ],
         "OUTER": [
@@ -484,7 +497,7 @@
         "last_modified": "2026-04-11T00:00:00.000000"
     },
     "expected_stats": {
-        "max_hp": 2914,
+        "max_hp": 2974,
         "max_fuel": 50000.0,
         "max_energy": 2000.0,
         "max_ammo": 5000.0,
@@ -493,7 +506,7 @@
         "turn_speed": 36.148448554082584,
         "total_thrust": 150.0,
         "strategic_movement": 100.0,
-        "mass": 1570.5866572705806,
+        "mass": 1600.5866572705806,
         "armor_hp_pool": 800,
         "warp_max_tonnage": 2000.0,
         "warp_energy_cost": 0.0,

@@ -58,20 +58,14 @@ class CrewRequired(Ability):
         AbilityStatBinding(StatKey.CREW_REQ_MULT, 'amount', 'multiply', '_base_amount'),
     ]
 
-    def __init__(self, component, data: Any) -> None:
-        super().__init__(component, data)
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse crew amount from data. Called from __init__ and sync_data, so
+        formula-driven values (e.g. =ceil(sqrt(ship_class_mass / 1000))) refresh
+        whenever the abilities dict is re-evaluated — including when the
+        component is attached to a ship and ship_class_mass becomes resolvable.
+        """
         self.amount = int(self._parse_primary_value(data, fallback_keys=('amount',)))
         self._base_amount = self.amount
-
-    # NOTE: This ability does NOT override _parse_attrs. Doing so would refresh
-    # the (formula-driven) crew amount whenever component data is re-evaluated —
-    # which is correct behavior — but currently exposes that all production ship
-    # designs were silently relying on the buggy crew=0 default and don't have
-    # enough crew_quarters to operate their weapons. Migrating this to use
-    # _parse_attrs is a separate change that requires either rebalancing every
-    # design's crew capacity or tuning the crew_req formulas in components.json.
-    # Tracked for follow-up; kept as __init__-only parsing to preserve current
-    # behavior until the design-data side is addressed.
 
     def recalculate(self):
         # Crew requirements scale with mass (sqrt) AND specific multiplier
