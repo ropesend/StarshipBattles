@@ -1,7 +1,7 @@
 """
 UI action routing for strategy input.
 
-Handles UI-related actions: zoom, screenshots, button-triggered actions, cycle selection.
+Handles UI-related actions: zoom, button-triggered actions, cycle selection.
 Extracted from StrategyInputHandler for router decomposition (PROJ-173 Phase 3).
 """
 from __future__ import annotations
@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from game.core.input_actions import InputAction
-from game.ui.services.screenshot_manager import get_default_screenshot_manager
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_input_handler import StrategyInputHandler
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 class UIActionRouter:
     """Routes UI-related keyboard commands.
 
-    Handles zoom controls, screenshots, panel opening, and selection cycling.
+    Handles zoom controls, panel opening, and selection cycling.
     """
 
     def __init__(self, handler: "StrategyInputHandler") -> None:
@@ -38,7 +37,7 @@ class UIActionRouter:
         return self._handler.scene
 
     def handle_ui_action(self, action: InputAction) -> bool:
-        """Handle UI actions (zoom, screenshot, button-triggered, cycle selection).
+        """Handle UI actions (zoom, button-triggered, cycle selection).
 
         Args:
             action: The input action to process.
@@ -52,14 +51,6 @@ class UIActionRouter:
             return True
         elif action == InputAction.STRATEGY_ZOOM_SYSTEM:
             self.scene._camera_nav.zoom_to_system()
-            return True
-
-        # --- Screenshot shortcuts ---
-        elif action == InputAction.GLOBAL_SCREENSHOT_FULL:
-            self.take_screenshot_full()
-            return True
-        elif action == InputAction.GLOBAL_SCREENSHOT_VIEWPORT:
-            self.take_screenshot_viewport()
             return True
 
         # --- Button-triggered actions ---
@@ -98,18 +89,3 @@ class UIActionRouter:
 
         return False
 
-    def take_screenshot_full(self) -> None:
-        """Take a full screenshot of the strategy layer including UI."""
-        sm = get_default_screenshot_manager()
-        sm.capture_strategy_layer(self.scene, include_ui=True, label="strategy_full")
-        logger.info("Screenshot: Full strategy layer captured (F12)")
-        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
-        sm.show_toast(self.scene.ui.manager, self.scene.screen_width, "Screenshot saved (full view)")
-
-    def take_screenshot_viewport(self) -> None:
-        """Take a screenshot of only the galaxy viewport (no UI)."""
-        sm = get_default_screenshot_manager()
-        sm.capture_strategy_layer(self.scene, include_ui=False, label="strategy_viewport")
-        logger.info("Screenshot: Galaxy viewport captured (F11)")
-        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
-        sm.show_toast(self.scene.ui.manager, self.scene.screen_width, "Screenshot saved (viewport only)")

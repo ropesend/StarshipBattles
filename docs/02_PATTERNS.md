@@ -54,11 +54,11 @@ that needs service references. **Not a singleton** — the caller manages lifeti
 class ApplicationContext:
     def __init__(self, registry_manager, profiler,
                  component_cache, policy_manager, asset_manager,
-                 sprite_manager, ship_theme_manager, screenshot_manager,
+                 sprite_manager, ship_theme_manager,
                  game_settings):
         self.registry_manager = registry_manager
         self.profiler = profiler
-        # ... all 9 services
+        # ... all 8 services
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -71,7 +71,7 @@ class ApplicationContext:
         ...
 ```
 
-### Services Managed (10 total)
+### Services Managed (8 total)
 
 | Service | File | Layer |
 |---------|------|-------|
@@ -82,7 +82,6 @@ class ApplicationContext:
 | AssetManager | `game/assets/asset_manager.py` | Assets |
 | SpriteManager | `game/ui/renderer/sprites.py` | UI |
 | ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
-| ScreenshotManager | `game/ui/services/screenshot_manager.py` | UI |
 | GameSettings | `game/ui/services/game_settings.py` | UI |
 
 ### How Services Are Accessed
@@ -1406,6 +1405,5 @@ different-stack_group entries correctly SUM.
 - Config classes in `game/core/config.py` are **plain classes, not dataclasses**.
 - Use **BattleScreen / StrategyScreen**, not BattleScene / StrategyScene.
 - Use **VehicleDesignService**, not ShipBuilderService.
-- **ScreenshotManager** is at `game/ui/services/screenshot_manager.py`.
 - **PolicyManager** is at `game/ai/policy_manager.py`.
 - **EventBus** is at `game/ui/screens/builder/event_bus.py`.

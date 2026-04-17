@@ -10,8 +10,6 @@ __all__ = [
     'CombatConstants',
     'SimulationConstants',
     'EARTH_MASS',
-    # Feature flags
-    'ENABLE_SCREENSHOTS',
     # PROJ-113: Colors and FONT_MAIN moved to game.ui.colors
 ]
 
@@ -37,10 +35,6 @@ class GameState(IntEnum):
     KEYBINDINGS = 10
 
 # PROJ-113: Colors (WHITE, BLACK, BLUE, RED, GREEN) and FONT_MAIN moved to game.ui.colors
-
-# Feature Flags
-# PROJ-121: Renamed from DEBUG_SCREENSHOTS - this is a feature toggle, not debug
-ENABLE_SCREENSHOTS = True
 
 
 # Layer Defaults - radius percentages for ship layer zones

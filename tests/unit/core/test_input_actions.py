@@ -55,7 +55,6 @@ class TestInputAction:
         assert InputAction.STRATEGY_ZOOM_GALAXY.value == "strategy.zoom_galaxy"
         assert InputAction.STRATEGY_ZOOM_SYSTEM.value == "strategy.zoom_system"
         assert InputAction.GLOBAL_EXIT.value == "global.exit"
-        assert InputAction.GLOBAL_SCREENSHOT_FULL.value == "global.screenshot_full"
 
 
 class TestActionDisplayNames:

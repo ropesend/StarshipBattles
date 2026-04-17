@@ -21,7 +21,7 @@ def reset_game_state(monkeypatch, request):
         Core (RegistryManager, Logger, Profiler) ->
         Simulation (ComponentCacheManager) ->
         AI (PolicyManager) ->
-        UI (ShipThemeManager, ScreenshotManager, SpriteManager)
+        UI (ShipThemeManager, SpriteManager)
 
     Use @pytest.mark.use_custom_data to skip production data hydration
     for tests that need custom/empty registries.
@@ -104,9 +104,6 @@ def reset_game_state(monkeypatch, request):
         # 4. Reset UI module-level defaults
         from game.ui.assets import ShipThemeManager, set_default_ship_theme_manager
         set_default_ship_theme_manager(ShipThemeManager())
-
-        from game.ui.services.screenshot_manager import ScreenshotManager, set_default_screenshot_manager
-        set_default_screenshot_manager(ScreenshotManager())
 
         from game.ui.renderer.sprites import SpriteManager, set_default_sprite_manager
         set_default_sprite_manager(SpriteManager())

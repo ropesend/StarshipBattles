@@ -7,13 +7,13 @@ from game.context import ApplicationContext
 
 
 class TestApplicationContextInit:
-    """ApplicationContext constructor accepts all 9 service instances."""
+    """ApplicationContext constructor accepts all 8 service instances."""
 
     def test_constructor_accepts_all_services(self):
         services = {name: MagicMock() for name in [
             'registry_manager', 'profiler',
             'component_cache', 'policy_manager', 'asset_manager',
-            'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
+            'sprite_manager', 'ship_theme_manager',
             'game_settings',
         ]}
         ctx = ApplicationContext(**services)
@@ -23,7 +23,7 @@ class TestApplicationContextInit:
         services = {name: MagicMock(name=name) for name in [
             'registry_manager', 'profiler',
             'component_cache', 'policy_manager', 'asset_manager',
-            'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
+            'sprite_manager', 'ship_theme_manager',
             'game_settings',
         ]}
         ctx = ApplicationContext(**services)
@@ -40,7 +40,6 @@ class TestApplicationContextInit:
             asset_manager="fake_assets",
             sprite_manager="fake_sprites",
             ship_theme_manager="fake_themes",
-            screenshot_manager="fake_screenshots",
             game_settings="fake_settings",
         )
         assert ctx.registry_manager == "fake_registry"
@@ -59,7 +58,7 @@ class TestCreateProduction:
         for name in [
             'registry_manager', 'profiler',
             'component_cache', 'policy_manager', 'asset_manager',
-            'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
+            'sprite_manager', 'ship_theme_manager',
             'game_settings',
         ]:
             assert getattr(ctx, name) is not None, f"{name} is None"
@@ -87,7 +86,7 @@ class TestCreateTest:
         for name in [
             'registry_manager', 'profiler',
             'component_cache', 'policy_manager', 'asset_manager',
-            'sprite_manager', 'ship_theme_manager', 'screenshot_manager',
+            'sprite_manager', 'ship_theme_manager',
             'game_settings',
         ]:
             assert getattr(ctx, name) is not None, f"{name} is None"
