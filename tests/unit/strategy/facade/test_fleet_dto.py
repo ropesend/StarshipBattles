@@ -114,6 +114,8 @@ class TestFleetInfo:
         fleet = FleetInfo(
             fleet_id=1,
             owner_id=0,
+            name="Fleet 1",
+            composition_summary="3 ships",
             location=HexCoord(10, 5),
             speed=5.0,
             ship_count=3,
@@ -147,6 +149,8 @@ class TestFleetInfo:
         fleet = FleetInfo(
             fleet_id=1,
             owner_id=0,
+            name="Fleet 1",
+            composition_summary="2 ships",
             location=HexCoord(10, 5),
             speed=5.0,
             ship_count=2,
@@ -173,6 +177,8 @@ class TestFleetInfo:
         fleet = FleetInfo(
             fleet_id=1,
             owner_id=0,
+            name="Fleet 1",
+            composition_summary="3 ships",
             location=HexCoord(10, 5),
             speed=5.0,
             ship_count=3,
@@ -196,6 +202,8 @@ class TestFleetInfo:
         fleet = FleetInfo(
             fleet_id=1,
             owner_id=0,
+            name="Fleet 1",
+            composition_summary="Ship A",
             location=HexCoord(10, 5),
             speed=5.0,
             ship_count=1,

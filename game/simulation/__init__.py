@@ -63,7 +63,6 @@ from game.simulation.validation.ship_validator import ShipDesignValidator
 
 # Unified Battle Spec/Outcome DTOs (PROJ-269 Phase 1)
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     ComponentStateSpec,
@@ -82,7 +81,6 @@ from game.simulation.battle_outcome import (
     ShipOutcome,
     ShipStats,
     ShipStatus,
-    TaskForceOutcome,
     TeamOutcome,
     WeaponSummary,
 )
@@ -110,7 +108,6 @@ __all__ = [
     # Validation
     'ShipDesignValidator',
     # BattleSpec DTOs (PROJ-269)
-    'AIPolicy',
     'BattleSpec',
     'CombatPolicies',
     'ComponentStateSpec',
@@ -128,7 +125,6 @@ __all__ = [
     'ShipOutcome',
     'ShipStats',
     'ShipStatus',
-    'TaskForceOutcome',
     'TeamOutcome',
     'WeaponSummary',
 ]

@@ -23,6 +23,7 @@ comparable and safe to stuff into a BattleSpec.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol, runtime_checkable
@@ -46,6 +47,21 @@ class BoundaryRegion(Protocol):
     Per `docs/02_PATTERNS.md` — runtime-checkable protocol. Callers that
     need a narrow type check should use duck-typing (`hasattr`) rather
     than `isinstance(obj, BoundaryRegion)` for mock compatibility.
+
+    **PROJ-270 Phase 12.4:** the protocol now covers the universal ops
+    (`contains`, `closest_inside_point`) that ALL regions support.
+    Edge-query methods (`closest_edge_point`, `distance_to_edge`) are
+    still on the protocol for back-compat — `UnboundedRegion`
+    implementations raise `NotImplementedError` / return `math.inf`
+    respectively. Callers that only need edge queries can narrow to
+    the concrete `RectBoundary` / `CircleBoundary` types at runtime
+    via `isinstance` — those implementations guarantee meaningful
+    values. A full type-model split (`Region` base + `BoundedRegion`
+    subtype) was considered but deferred because `BattleSpec.boundary`
+    is typed `Optional[BoundaryRegion]` and widely passed through —
+    splitting would cascade into spec compilers, tests, and archived
+    saves. The current sentinel approach (`isinstance(b, UnboundedRegion)`
+    guard in RetreatManager) is pragmatic and working.
     """
 
     exit_policy: ExitPolicy
@@ -59,6 +75,27 @@ class BoundaryRegion(Protocol):
 
         Used by `BOUNCE` exit policy to reflect ships back in-bounds.
         For points already inside, returns `pos` unchanged.
+        """
+        ...
+
+    def closest_edge_point(self, pos: Vector2) -> Vector2:
+        """Return the closest point ON the boundary (perimeter) to `pos`.
+
+        Used by `RetreatManager.find_nearest_edge` to navigate a
+        retreating ship toward the arena edge. Unbounded regions have
+        no edge — `UnboundedRegion.closest_edge_point` raises
+        `NotImplementedError`. Callers wanting a strict type-level
+        guarantee should narrow to `RectBoundary` / `CircleBoundary`.
+        """
+        ...
+
+    def distance_to_edge(self, pos: Vector2) -> float:
+        """Return the distance from `pos` to the nearest boundary edge.
+
+        Used by `RetreatManager.at_map_edge` with a threshold check.
+        For points inside the boundary, returns the positive gap to
+        the perimeter. `UnboundedRegion.distance_to_edge` returns
+        `math.inf` so edge-threshold checks naturally return False.
         """
         ...
 
@@ -88,6 +125,31 @@ class RectBoundary:
         clamped_y = max(-half_h, min(half_h, pos.y))
         return Vector2(clamped_x, clamped_y)
 
+    def closest_edge_point(self, pos: Vector2) -> Vector2:
+        half_w = self.width / 2.0
+        half_h = self.height / 2.0
+        dist_left = pos.x - (-half_w)
+        dist_right = half_w - pos.x
+        dist_top = pos.y - (-half_h)
+        dist_bottom = half_h - pos.y
+        min_dist = min(dist_left, dist_right, dist_top, dist_bottom)
+        if min_dist == dist_left:
+            return Vector2(-half_w, pos.y)
+        if min_dist == dist_right:
+            return Vector2(half_w, pos.y)
+        if min_dist == dist_top:
+            return Vector2(pos.x, -half_h)
+        return Vector2(pos.x, half_h)
+
+    def distance_to_edge(self, pos: Vector2) -> float:
+        half_w = self.width / 2.0
+        half_h = self.height / 2.0
+        dist_left = pos.x - (-half_w)
+        dist_right = half_w - pos.x
+        dist_top = pos.y - (-half_h)
+        dist_bottom = half_h - pos.y
+        return min(dist_left, dist_right, dist_top, dist_bottom)
+
 
 @dataclass(frozen=True)
 class CircleBoundary:
@@ -109,6 +171,19 @@ class CircleBoundary:
         scale = self.radius / dist
         return Vector2(pos.x * scale, pos.y * scale)
 
+    def closest_edge_point(self, pos: Vector2) -> Vector2:
+        dist_sq = pos.x * pos.x + pos.y * pos.y
+        if dist_sq == 0.0:
+            # Ambiguous — pick +x direction by convention.
+            return Vector2(self.radius, 0.0)
+        dist = dist_sq ** 0.5
+        scale = self.radius / dist
+        return Vector2(pos.x * scale, pos.y * scale)
+
+    def distance_to_edge(self, pos: Vector2) -> float:
+        dist = (pos.x * pos.x + pos.y * pos.y) ** 0.5
+        return abs(self.radius - dist)
+
 
 @dataclass(frozen=True)
 class UnboundedRegion:
@@ -125,6 +200,16 @@ class UnboundedRegion:
 
     def closest_inside_point(self, pos: Vector2) -> Vector2:
         return pos
+
+    def closest_edge_point(self, pos: Vector2) -> Vector2:
+        raise NotImplementedError(
+            "UnboundedRegion has no edge — callers must check "
+            "`distance_to_edge() != math.inf` or type-check before "
+            "invoking closest_edge_point."
+        )
+
+    def distance_to_edge(self, pos: Vector2) -> float:
+        return math.inf
 
 
 __all__ = [

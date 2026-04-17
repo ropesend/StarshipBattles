@@ -324,3 +324,95 @@ class TestProviderOperationalCheck:
         manager._recalculate([ship])
 
         assert ship.fleet_attack_bonus == 0.0
+
+
+# =============================================================================
+# PROJ-270 Phase 9 Task 9.5: _log_placeholder_once coverage
+# =============================================================================
+
+
+class TestLogPlaceholderOnce:
+    """Verify `_log_placeholder_once` emits a WARNING exactly once per source.
+
+    PROJ-270 Phase 6.4 added the warning so compiler authors get feedback
+    when a new modifier source lacks a stat_key mapping. Task 6.4 was marked
+    complete but had no test — skeptic audit flagged this as test-quality gap.
+    """
+
+    def test_placeholder_entry_emits_warning_once_per_source(self, caplog):
+        """Two entries from the same source → exactly one WARNING."""
+        import logging
+        from game.simulation.combat.modifier_stack import (
+            ModifierEntry, ModifierStack,
+        )
+        from game.simulation.components.modifier_effects import ModifierEffect
+
+        def _placeholder_entry(source: str) -> ModifierEntry:
+            effect = ModifierEffect(
+                stat_key="placeholder",
+                value=0.0,
+                operation="multiply",
+                target_ability=None,
+                source_modifier_id=source,
+                source_modifier_name=source,
+                formula_str="",
+                param_value=0.0,
+            )
+            return ModifierEntry(source=source, stack_group=None, effect=effect)
+
+        stack = ModifierStack(
+            per_team={
+                0: (
+                    _placeholder_entry("Storm A"),
+                    _placeholder_entry("Storm A"),  # duplicate source
+                    _placeholder_entry("Storm B"),
+                ),
+            },
+            global_=(),
+        )
+        ship = _make_ship(team_id=0)
+        manager = FleetAuraManager()
+
+        with caplog.at_level(logging.WARNING, logger="game.simulation.combat.fleet_aura_manager"):
+            manager.initialize([ship], modifier_stack=stack)
+
+        placeholder_warnings = [
+            r for r in caplog.records
+            if "placeholder" in r.getMessage().lower()
+        ]
+        # Storm A warned once (not twice); Storm B warned once. Total = 2.
+        assert len(placeholder_warnings) == 2, (
+            f"Expected 2 warnings (one per unique source), got "
+            f"{len(placeholder_warnings)}: {[r.getMessage() for r in placeholder_warnings]}"
+        )
+
+    def test_placeholder_warning_mentions_source_name(self, caplog):
+        """Warning message must identify which source was placeholder."""
+        import logging
+        from game.simulation.combat.modifier_stack import (
+            ModifierEntry, ModifierStack,
+        )
+        from game.simulation.components.modifier_effects import ModifierEffect
+
+        effect = ModifierEffect(
+            stat_key="placeholder",
+            value=0.0,
+            operation="multiply",
+            target_ability=None,
+            source_modifier_id="TestStorm",
+            source_modifier_name="TestStorm",
+            formula_str="",
+            param_value=0.0,
+        )
+        entry = ModifierEntry(source="TestStorm", stack_group=None, effect=effect)
+        stack = ModifierStack(per_team={0: (entry,)}, global_=())
+        ship = _make_ship(team_id=0)
+        manager = FleetAuraManager()
+
+        with caplog.at_level(logging.WARNING, logger="game.simulation.combat.fleet_aura_manager"):
+            manager.initialize([ship], modifier_stack=stack)
+
+        messages = [r.getMessage() for r in caplog.records if "placeholder" in r.getMessage().lower()]
+        assert any("TestStorm" in m for m in messages), (
+            f"Warning should mention source 'TestStorm'; got: {messages}"
+        )

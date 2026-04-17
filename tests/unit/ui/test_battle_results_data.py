@@ -14,7 +14,6 @@ from game.simulation.battle_outcome import (
     ShipOutcome,
     ShipStats,
     ShipStatus,
-    TaskForceOutcome,
     TeamOutcome,
     WeaponSummary,
 )
@@ -80,7 +79,6 @@ def _team_outcome(team_id, ships):
     return TeamOutcome(
         team_id=team_id,
         name=f"Team {team_id}",
-        fleet_hierarchy=(),
         ships=tuple(ships),
     )
 

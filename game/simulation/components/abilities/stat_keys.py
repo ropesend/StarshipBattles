@@ -56,6 +56,7 @@ class StatKey(Enum):
     ARC_ADD = "arc_add"
     ACCURACY_ADD = "accuracy_add"
     PROJECTILE_STEALTH_LEVEL = "projectile_stealth_level"
+    SHIELD_BONUS_ADD = "shield_bonus_add"
 
     # Set/Override stats (default None)
     ARC_SET = "arc_set"
@@ -74,6 +75,7 @@ class StatKey(Enum):
             cls.ARC_ADD,
             cls.ACCURACY_ADD,
             cls.PROJECTILE_STEALTH_LEVEL,
+            cls.SHIELD_BONUS_ADD,
         }
         set_stats = {
             cls.ARC_SET,

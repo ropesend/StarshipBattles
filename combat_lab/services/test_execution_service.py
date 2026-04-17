@@ -58,7 +58,8 @@ class TestExecutionService:
             # `_is_started=True` hack.
             from combat_lab.runner import _snapshot_ship_state
             from game.ai.ai_factory import AIControllerFactory
-            from game.simulation.battle_config import BattleConfig, ReturnDestination
+            from game.simulation.battle_config import BattleConfig
+            from game.core.return_destination import ReturnDestination
             from game.simulation.battle_controller import BattleController
             from game.simulation.battle_runner import materialize_spec_ships
 
@@ -73,27 +74,28 @@ class TestExecutionService:
                 end_condition=spec.end_condition,
                 absolute_max_ticks=spec.absolute_max_ticks,
             )
-            controller = BattleController(ai_factory=AIControllerFactory())
-            controller.configure(config)
-            controller.set_spec(spec)
-            engine = controller.service.get_engine()
 
-            if spec.boundary is not None:
-                engine.boundary = spec.boundary
-            engine.modifier_stack = spec.modifier_stack
-
-            teams_by_id, ships_by_role = materialize_spec_ships(
+            # Pre-materialize ships for initial_state snapshots (role-keyed).
+            # start_from_spec re-materializes internally — ship_builder is
+            # deterministic per design_id.
+            _pre_teams, pre_ships_by_role = materialize_spec_ships(
                 spec,
-                ship_builder=lambda ship_spec: scenario._load_ship(ship_spec.design_id),
+                ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
             )
             initial_state = {
                 role: _snapshot_ship_state(ship)
-                for role, ship in ships_by_role.items()
+                for role, ship in pre_ships_by_role.items()
             }
-            for team_id, ships in teams_by_id.items():
-                controller.add_ships(ships, team_id=team_id)
 
-            controller.start()
+            # PROJ-270 Phase 10: unified spec-in path.
+            controller = BattleController()
+            _result, ships_by_role = controller.start_from_spec(
+                spec,
+                ai_factory=AIControllerFactory(),
+                ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
+                config=config,
+            )
+            engine = controller.service.get_engine()
 
             scenario._effective_seed = spec.seed
             scenario.wire_ships(

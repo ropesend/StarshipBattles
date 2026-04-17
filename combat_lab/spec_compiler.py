@@ -36,7 +36,6 @@ from combat_lab.scenarios.templates import (
 )
 from game.core.math import Vector2
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -134,7 +133,6 @@ def _one_ship_team(
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 

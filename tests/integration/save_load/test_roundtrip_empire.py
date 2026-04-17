@@ -116,12 +116,12 @@ class TestEmpireRoundTrip:
         restored = Empire.from_dict(d)
         assert restored.built_ship_designs == {"frigate", "escort", "dreadnought"}
 
-    def test_next_fleet_id_preserved(self):
+    def test_next_fleet_display_number_preserved(self):
         e = create_test_empire()
-        e._next_fleet_id = 10042
+        e._next_fleet_display_number = 42
         d = e.to_dict()
         restored = Empire.from_dict(d)
-        assert restored._next_fleet_id == 10042
+        assert restored._next_fleet_display_number == 42
 
     def test_design_serial_counters_preserved(self):
         e = create_test_empire()

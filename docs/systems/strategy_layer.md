@@ -27,7 +27,7 @@ All queries return **immutable DTOs**, never domain objects.
 `get_all_stars()` caches results per turn. These avoid O(n) scans on every call.
 
 DTO types (defined in `game/strategy/facade/dto/` package, with submodules `fleet_dto.py`, `system_dto.py`, `planet_dto.py`, `empire_dto.py`, re-exported via `__init__.py`):
-- `FleetInfo` -- fleet state snapshot (includes `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`)
+- `FleetInfo` -- fleet state snapshot (includes `name`, `composition_summary`, `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`)
 - `FleetSummary` -- lightweight fleet overview
 - `StarInfo` -- star data with system context (PROJ-231)
 - `SystemInfo` -- star system data
@@ -75,10 +75,18 @@ class ICommandHandler(Protocol):
     def execute(self, session: GameSession, command: Command) -> ValidationResult: ...
 ```
 
+### Command Ownership Validation
+
+All `Command` subclasses carry `empire_id: int` (keyword-only, default -1). The UI
+populates this from `fleet.owner_id` when creating commands. Handlers pass
+`empire_id=cmd.empire_id` to `_resolve_fleet()`, which rejects commands targeting
+fleets owned by a different empire. `empire_id=-1` or `None` skips validation
+(backward compatibility for tests).
+
 ### BaseCommandHandler
 
 Mixin providing resolution helpers used by all handlers:
-- `_resolve_fleet(session, fleet_id, empire_id?)` -- returns `(Fleet, None)` or `(None, ValidationResult)`
+- `_resolve_fleet(session, fleet_id, empire_id?)` -- returns `(Fleet, None)` or `(None, ValidationResult)`. Validates `fleet.owner_id == empire_id` when `empire_id` is not None/-1.
 - `_resolve_fleet_required(session, fleet_id, empire_id?)` -- returns Fleet or raises ValueError
 - `_resolve_planet(session, planet_id)` -- returns `(Planet, None)` or `(None, ValidationResult)`
 - `_resolve_planet_optional(session, planet_id, required?)` -- returns Planet or None/raises
@@ -208,11 +216,20 @@ at WARNING level for profiling.
 ### Fleet Class
 
 Core state:
-- `id`, `owner_id`, `location: HexCoord`
+- `id` -- globally unique int from `Galaxy.get_next_fleet_id()` (not per-empire)
+- `display_name: str` -- renamable label (auto-set to "Fleet N" per-empire at creation)
+- `name` property -- returns `display_name` if set, else `"Fleet {id}"` fallback
+- `composition_summary` property -- ship composition string for tooltips
+- `owner_id`, `location: HexCoord`
 - `ships: List[ShipInstance]` -- canonical flat list of all ships
 - `orders: List[FleetOrder]`, `path: List[HexCoord]`
 - `speed: float` -- minimum of all combat-capable ships' speeds
 - `construction_queue: List[Dict]` -- for fleets with space yards
+
+**Fleet ID generation:** `Galaxy.get_next_fleet_id()` produces globally unique
+sequential IDs across all empires. This prevents ID collisions in the galaxy-wide
+`fleets_by_id` registry. Per-empire display numbering uses
+`Empire.get_next_fleet_display_number()` for cosmetic naming only.
 
 Fleet hierarchy (organizational overlay for combat behavior):
 - `task_forces: List[TaskForce]` -- task forces containing squadrons
@@ -730,7 +747,7 @@ Handles instant-apply/revert for activatable planet modifiers (GravityModifier, 
 
 **File:** `game/strategy/services/combat_modifier_collector.py`
 
-Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`.
+Collects strategic combat modifiers (ShieldModifier, DamageModifier, scoped ShieldProjection) for fleets entering combat. Returns `FleetCombatModifiers(shield_mult, damage_mult, flat_shield_bonus)`. **Scope routing (PROJ-271):** enemy-scope (`enemy_sector` / `enemy_system`) effects are pre-computed INTO the RECEIVING fleet's `FleetCombatModifiers` before the strategy spec compiler runs. The compiler therefore emits each entry to `per_team[receiver_id]` trivially, with no runtime scope lookup. New enemy-scope abilities must extend the collector, not the compiler.
 
 Passed into `SimulationBattleResolver.resolve_battle(...,
 team0_modifiers=..., team1_modifiers=..., environmental_effects=...)`.
@@ -749,13 +766,17 @@ into the engine:
   5.5 initially emitted these as `stat_key="placeholder"` — recorded
   in the forensic trace but with NO effect on battle math (a real
   gameplay regression).
-- **Post-PROJ-270 Phase 6 Track A:** the strategy compiler now emits
-  REAL stat_keys: storm `shield_capacity_mult` → `StatKey.SHIELD_CAPACITY_MULT`;
-  fleet `shield_mult` → `StatKey.SHIELD_CAPACITY_MULT`; fleet `damage_mult`
-  → `StatKey.DAMAGE_MULT`. `FleetAuraManager._append_external_from_entry`
-  applies them to ship stats during battle. `flat_shield_bonus` +
-  suppressor effects remain placeholders pending PROJ-271 (new additive
-  stat_key + opponent-team routing).
+- **Post-PROJ-270 Phase 6 Track A + PROJ-271 Track B:** the strategy compiler emits
+  REAL stat_keys for all modifier sources: storm `shield_capacity_mult` →
+  `StatKey.SHIELD_CAPACITY_MULT`; fleet `shield_mult` →
+  `StatKey.SHIELD_CAPACITY_MULT`; fleet `damage_mult` → `StatKey.DAMAGE_MULT`;
+  fleet `flat_shield_bonus` → `StatKey.SHIELD_BONUS_ADD` (additive, ship-level).
+  Enemy-scope suppressors are pre-computed into the RECEIVER fleet's
+  `FleetCombatModifiers` by `CombatModifierCollector` before compile, so
+  routing at compile time is trivial. `FleetAuraManager._recalculate`
+  applies entries to `ship.external_stats` and respects `stack_group`
+  (same-group MAX, different-group SUM). PROJ-271 Phase 9 deleted the
+  dead-with-landmine `_entries_from_modifier_source` placeholder path.
 
 All `find_abilities_in_scope()` calls use `require_active=True` — only abilities in the
 ACTIVE activation phase contribute to combat modifiers. Inactive or activating abilities
@@ -763,6 +784,20 @@ have no effect. This means planetary complex ShieldModifier/DamageModifier/Shiel
 must be manually activated before they affect combat.
 
 Wired from `ConflictResolutionEngine._resolve_combat_simulated()` which collects modifiers for both fleets and passes them to the resolver.
+
+#### Battle Setup Complex-Toggle Compilation (PROJ-271 Phase 2)
+
+The Battle Setup screen lets users toggle complex designs onto either side without those complexes being real ships in the battle. `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` translates a toggled complex design into `ModifierEntry` entries by walking the design JSON's components and delegating each non-SELF-scoped ability to `emit_entries_for_ability` from the shared registry. Currently-mapped abilities:
+
+| Ability class in complex design | Emitted stat_key | Operation |
+|---------------------------------|------------------|-----------|
+| `ShieldProjection` | `shield_bonus_add` | add |
+| `ShieldModifier` | `shield_capacity_mult` | multiply |
+| `DamageModifier` | `damage_mult` | multiply |
+
+Routing is handled inside `emit_entries_for_ability` via the shared `OPPONENT_SCOPES` constant (`{"enemy_sector", "enemy_system"}` in `game/simulation/combat/ability_stat_registry.py`). Enemy scopes fan out to all non-owner teams (N-team forward-compat); other scopes route to the owner's team. Adding a new combat-affecting ability is now a one-line edit to `ABILITY_STAT_REGISTRY` in the registry module — the glob-driven test in `tests/unit/simulation/combat/test_ability_stat_registry.py` picks up new `qs_*_complex.json` designs automatically. Adding a new enemy-scope value requires extending `OPPONENT_SCOPES` AND adding a scope-routing test.
+
+Unlike the strategy path (where `CombatModifierCollector` pre-computes enemy-scope routing before compile), the Battle Setup compiler does per-ability scope routing at compile time because complex toggles are synthetic inputs — there's no `CombatModifierCollector` equivalent for Battle Setup. Both paths share the same `ABILITY_STAT_REGISTRY` / `emit_entries_for_ability` entry-emission code since PROJ-273.
 
 ### Activatable Abilities & Stabilizer Pattern
 

@@ -159,7 +159,7 @@ Six layers with strict downward-only dependency flow:
 | `panels/`        | BattlePanels, BuilderWidgets |
 | `components/`    | Reusable UI components including `table/` subpackage |
 | `widgets/`       | PanelFactory, ScrollableJsonPanel, UIElementRegistry |
-| `services/`      | BattleFactories, InputMapper, ShipFactory, ShipIO, ComponentService, ValidationService |
+| `services/`      | InputMapper, ShipFactory, ShipIO, ComponentService, ValidationService (BattleFactories deleted in PROJ-270 Phase 8.2) |
 | `orchestration/` | (Package retained for future UI orchestration; `BattleOrchestrator` removed — `AIControllerFactory` is the canonical AI creation path) |
 | `research/`      | Research/tech tree UI visualization |
 | `interfaces/`    | UI-layer interface definitions |
@@ -196,9 +196,9 @@ PhysicsBody, CollisionSystem, SpatialGrid
 
 Existing: Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, IEndCondition, TeamEliminatedCondition, TickLimitCondition, end_condition_from_dict, BattleService, BattleServiceResult, BattleState, ShipDesignValidator.
 
-PROJ-269 BattleSpec DTOs: AIPolicy, BattleSpec, CombatPolicies, ComponentStateSpec, EntryVector, PostBattleHook, ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec.
+PROJ-269 BattleSpec DTOs: BattleSpec, CombatPolicies, ComponentStateSpec, EntryVector, PostBattleHook, ShipSpec, SquadronSpec, TaskForceSpec, TeamSpec.
 
-PROJ-269 BattleOutcome DTOs: BattleOutcome, EndReason, HitRecord, ModifierApplication, ShipOutcome, ShipStats, ShipStatus, TaskForceOutcome, TeamOutcome, WeaponSummary.
+PROJ-269 BattleOutcome DTOs: BattleOutcome, EndReason, HitRecord, ModifierApplication, ShipOutcome, ShipStats, ShipStatus, TeamOutcome, WeaponSummary.
 
 PROJ-269 entry: `game.simulation.battle_runner.run_battle(spec, ai_factory, ship_builder, ...) -> BattleOutcome`.
 
@@ -366,17 +366,21 @@ spec.post_battle_hook(outcome)  (optional)
 
 **Visual mode (Combat Lab UI, Battle Setup screen):** uses
 `BattleController` as a thin per-frame tick-loop driver around
-`BattleEngine`. Construction goes through the spec compiler +
-`materialize_spec_ships(spec, ship_builder)` + `controller.add_ships`
-+ `controller.start()`. PROJ-269 Phase 6 deleted the `BattleMode` /
+`BattleEngine`. PROJ-269 Phase 6 deleted the `BattleMode` /
 `BattleModeHandler` / `create_*_battle` factory machinery; the
-controller is now config-flag-driven only.
+controller is now spec-in only.
 
-**PROJ-270 Phase 4:** `BattleController` now also accepts the compiled
-spec via `controller.set_spec(spec)` and — once `is_battle_over()`
-first returns True — calls `extract_outcome(engine, spec)` to produce a
-`BattleOutcome` via `controller.get_outcome()`. Visual-mode battles
-therefore honour the same "every battle emits a `BattleOutcome`"
+**PROJ-270 Phase 10:** visual-mode construction goes through the
+single unified entry `controller.start_from_spec(spec, ai_factory=...,
+ship_builder=...)` which internally calls `start_engine_from_spec`
+(the same code path `run_battle` uses) — eliminating the previously-
+duplicated `engine.boundary = spec.boundary; engine.modifier_stack =
+spec.modifier_stack; materialize_spec_ships; controller.add_ships +
+controller.start` block that used to live in each visual call site.
+
+At battle end, `BattleController` calls `extract_outcome(engine, spec)`
+to produce a `BattleOutcome` via `controller.get_outcome()`. Visual-mode
+battles therefore honour the same "every battle emits a `BattleOutcome`"
 contract that headless callers already satisfied.
 
 ### Strategy Turn Flow

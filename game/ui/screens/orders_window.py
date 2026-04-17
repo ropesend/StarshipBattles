@@ -66,7 +66,7 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
         if entity_type == "planet":
             title = f"Orders: {entity.name}"
         else:
-            title = f"Orders: Fleet {entity.id}"
+            title = f"Orders: {entity.name}"
 
         super().__init__(
             rect=rect,

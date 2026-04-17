@@ -138,6 +138,15 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.damage_output_mult: float = 1.0   # Strategic damage modifier (pre-battle)
         self.total_maneuver_points: int = 0
 
+        # PROJ-270 Phase 9: external stat_key bonuses from ModifierStack (fleet /
+        # environmental / storm modifiers) — populated by
+        # `FleetAuraManager._apply_bonuses` every tick and read via
+        # `Ability.get_effective_stat(stat_key)` as a third fallback after
+        # `component.ability_stats` and `component.stats`. Keys are stat_key
+        # strings ("shield_capacity_mult", "damage_mult", etc.); values are
+        # the aggregated multiplier/add amount for the ship's team.
+        self.external_stats: Dict[str, float] = {}
+
         # === Strategic Stats (populated by ShipStatsCalculator) ===
         self.total_strategic_movement: float = 0.0
         self.warp_max_tonnage: float = 0.0

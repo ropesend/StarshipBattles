@@ -357,6 +357,11 @@ class DesignSelectorWindow(UIWindow):
         # Update container size
         self.list_container.set_scrollable_area_dimensions((row_width, max(y_offset, self.list_container.get_container().get_rect().height)))
 
+    @staticmethod
+    def _sanitize_object_id(text: str) -> str:
+        """Sanitize text for use in pygame_gui object_id (no spaces or fullstops)."""
+        return text.replace(".", "_").replace(" ", "_")
+
     def _create_design_row(self, design: DesignMetadata, y_offset: int, width: int) -> UIPanel:
         """
         Create a single design row.
@@ -374,7 +379,7 @@ class DesignSelectorWindow(UIWindow):
             relative_rect=pygame.Rect(10, y_offset, width, self.row_height),
             manager=self.ui_manager,
             container=self.list_container,
-            object_id=f"#design_row_{design.design_id}"
+            object_id=f"#design_row_{self._sanitize_object_id(design.design_id)}"
         )
 
         # Obsolete indicator (visual marker on left side)
@@ -453,7 +458,7 @@ class DesignSelectorWindow(UIWindow):
             text=obsolete_text,
             manager=self.ui_manager,
             container=row,
-            object_id=f"#obsolete_{design.design_id}"
+            object_id=f"#obsolete_{self._sanitize_object_id(design.design_id)}"
         )
         self._button_design_map[obsolete_btn] = design.design_id
         self._obsolete_buttons.add(obsolete_btn)
@@ -465,7 +470,7 @@ class DesignSelectorWindow(UIWindow):
             text="Select",
             manager=self.ui_manager,
             container=row,
-            object_id=f"#select_{design.design_id}"
+            object_id=f"#select_{self._sanitize_object_id(design.design_id)}"
         )
 
         # Store design_id in map for event handling

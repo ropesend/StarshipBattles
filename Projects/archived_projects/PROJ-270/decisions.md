@@ -24,4 +24,4 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| | | |
+| 2026-04-12 | **Phase 9 Task 9.2 — Track A bridge: OPTION A (external-stats dict on Ship).** `ship.external_stats: Dict[str, float] = {}` populated by `FleetAuraManager._apply_bonuses` with all keys from `_team_bonuses[team_id]`. `Ability.get_effective_stat` gains a third fallback checking `self.component.ship.external_stats` if the stat_key is not in component-local `ability_stats` / `stats`. After populating, FleetAuraManager triggers `ship.recalculate_stats()` so cached derived values (e.g. `ShieldProjection.capacity`) pick up the new multiplier. `fleet_attack_bonus` / `fleet_defense_bonus` direct-attribute setters retained for collision.py back-compat. | Preserves PROJ-269 "ships enter unmutated" principle — `ModifierStack` remains the single source of truth; external_stats is read-only at consumption time. Option B (synthesize per-component `AppliedModifier`) violates that principle by writing into `component.modifiers`. Option C (direct attribute on Ship per stat_key) doesn't scale. Option A is the minimum, reversible, protocol-compatible fix. |

@@ -248,6 +248,16 @@ class BattleResultsScreen:
         hp_surf = self._small_font.render(hp_text, True, HUD_TEXT)
         screen.blit(hp_surf, (bar_x + bar_w + 5, bar_y))
 
+        # PROJ-271 Phase 8: shield numbers so users observe flat bonuses,
+        # storm multipliers, and suppressor effects. Only render when
+        # the ship has shields.
+        if ship.max_shields > 0:
+            shields_text = (
+                f"Shields: {ship.current_shields:.0f}/{ship.max_shields:.0f}"
+            )
+            shields_surf = self._small_font.render(shields_text, True, HUD_TEXT)
+            screen.blit(shields_surf, (bar_x + bar_w + 75, bar_y))
+
         # Weapon accuracy (compact table)
         weapon_x = x + 8
         weapon_y = y + 48

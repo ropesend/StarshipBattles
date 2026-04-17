@@ -283,7 +283,9 @@ class AbilityManager:
 
         return found
 
-    # ---- DEPRECATED static methods (kept for transition) ----
+    # ---- DEPRECATED static methods ----
+    # NOQA: legacy-retained — static-method access pattern retained for
+    # pre-instance-facade callers; removal tracked separately from PROJ-270.
 
     @staticmethod
     def get_abilities_static(

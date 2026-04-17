@@ -154,6 +154,47 @@ class TestBuildCapabilitiesCache:
         assert isinstance(entry['has_pdc'], bool)
         assert isinstance(entry['pdc_components'], list)
 
+    def test_build_capabilities_cache_skips_projectiles_without_crash(self, ai_controller):
+        """Regression: when the enemies list contains `Projectile` instances
+        (PDC targets — missiles), `_build_capabilities_cache` must not crash
+        with `AttributeError: 'Projectile' has no attribute 'get_components_by_ability'`.
+
+        Root cause (pre-fix): PROJ-269 Phase 3.4 widened the enemy filter to
+        include any non-self team, and `_find_enemies_in_radius(include_missiles=True)`
+        extends the list with projectile instances when the targeting policy
+        has a `pdc_arc` rule. The capabilities cache builder assumed every
+        element was a Ship-like entity and called `get_components_by_ability`
+        unconditionally.
+
+        Fix: filter via `is_combat_ship` TypeGuard (patterns §2) so only
+        ship-like entities are cached. Projectiles are absent from the cache
+        — the normal path, already handled by `TargetEvaluator` per-rule
+        fallbacks and `is_projectile`-based rule guards.
+        """
+        # Projectile-like stand-in: grid entity, combatant, BUT no
+        # `get_components_by_ability` and no `layers`/`angle` (Projectile
+        # inherits only PhysicsBody, doesn't implement ICombatShip).
+        import types
+        projectile = types.SimpleNamespace(
+            id='missile_1',
+            name='missile_1',
+            position=pygame.math.Vector2(50, 0),
+            team_id=1,
+            is_alive=True,
+            type='MISSILE',
+        )
+
+        armed_ship = create_mock_enemy('armed_ship', has_weapons=True)
+
+        # Must not raise AttributeError.
+        cache = ai_controller._build_capabilities_cache([projectile, armed_ship])
+
+        # Projectile is skipped — absence from cache is the expected path.
+        assert 'missile_1' not in cache
+        # Ship entries still built normally.
+        assert 'armed_ship' in cache
+        assert cache['armed_ship']['has_weapons'] is True
+
     def test_build_capabilities_cache_uses_unique_ids_for_duplicate_names(self, ai_controller):
         """Duplicate ship names should not collide in the cache."""
         armed_enemy = create_mock_enemy('enemy_a', has_weapons=True)

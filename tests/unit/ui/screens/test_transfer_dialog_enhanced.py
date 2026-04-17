@@ -23,14 +23,18 @@ class TestTransferDialogEnhanced:
     def mock_fleet(self):
         fleet = MagicMock()
         fleet.id = 1
+        fleet.configure_mock(name="Fleet 1")
         return fleet
 
     def test_transfer_dialog_allows_fleet_to_fleet_selection(self, mock_manager, mock_scene, mock_fleet):
         """Dialog should allow selecting another fleet as target."""
         # Arrange
+        # Note: 'name' is reserved in MagicMock; must set via configure_mock
         f1 = MagicMock(fleet_id=1, owner_id=0)
+        f1.configure_mock(name="Fleet 1")
         f1.location = (0, 0)
         f2 = MagicMock(fleet_id=2, owner_id=0)
+        f2.configure_mock(name="Fleet 2")
         f2.location = (0, 0)
         mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
         mock_scene._facade.get_planets_at_hex.return_value = []

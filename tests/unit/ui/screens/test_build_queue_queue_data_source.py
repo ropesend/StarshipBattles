@@ -111,7 +111,7 @@ class TestBuildQueueColumns:
     def test_expected_columns_present(self):
         """Expected columns should be present."""
         ids = {col["id"] for col in BUILD_QUEUE_COLUMNS}
-        expected = {"order", "item", "turns", "met_rate", "org_rate", "vap_rate",
+        expected = {"actions", "item", "turns", "met_rate", "org_rate", "vap_rate",
                     "rad_rate", "exo_rate", "met_rem", "org_rem", "vap_rem",
                     "rad_rem", "exo_rem"}
         for col_id in expected:

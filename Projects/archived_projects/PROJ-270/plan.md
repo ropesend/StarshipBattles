@@ -16,18 +16,54 @@
 | 1. Headless single-entry cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Combat Lab outcome adoption | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle Setup spec migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Visual-mode BattleOutcome contract | Partial (4.4 outcome-emission + 4.5 UI consumer done; 4.2/4.3/4.7 deferred) | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. DTO cleanup | Partial (5.1/5.2/5.3/5.5 done; 5.4 `map_bounds`/`boundary` collapse remains) | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Strategic-modifier battle-math restoration (bounded) | Complete (Track A) | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Test coverage backfill | Partial (7.1/7.2/7.4 done; 7.3/7.5 remain) | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. Final cleanup + acceptance audit | Partial (8.1/8.2/8.3/8.5-partial done; 8.4/8.5-residual/8.6/8.7 remain) | [phase_8_checklist.md](phase_8_checklist.md) |
+| 4. Visual-mode BattleOutcome contract | **PARTIAL** (shim-covered; see Phase 10 for real completion) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. DTO cleanup | Complete (5.1/5.2/5.3/5.4/5.5 all done) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Strategic-modifier battle-math restoration (bounded) | Restored by Phase 9 (compiler emits real stat_keys; bridge now propagates) | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Test coverage backfill | Partial (7.1/7.2/7.4/7.5 done; 7.3 deferred; assertions weak — see Phase 11) | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. Final cleanup + acceptance audit | Partial (8.1/8.2/8.3/8.5 done; 8.4 audit revised; 8.6/8.7 await Phases 10-12) | [phase_8_checklist.md](phase_8_checklist.md) |
+| **9. Track A battle-math integrity (CRITICAL)** | **Complete** — bridge landed, 3 integration tests green | [phase_9_checklist.md](phase_9_checklist.md) |
+| **10. Visual-mode contract completion + shim eradication** | **Mostly complete** — 10.1/10.2/10.5/10.6/10.7 done; 10.3/10.4 scope-trimmed | [phase_10_checklist.md](phase_10_checklist.md) |
+| **11. Test + doc hardening** | **Substantially complete** — 11.1/11.2/11.3/11.4/11.7/11.8/11.9/11.10 done; 11.5/11.6 covered by earlier | [phase_11_checklist.md](phase_11_checklist.md) |
+| **12. Dead scaffolding + type-model cleanup** | **Partial** — 12.5/12.6 done; 12.4 documented; 12.1/12.2/12.3 completed in Phase 13 after round-2 verification challenge | [phase_12_checklist.md](phase_12_checklist.md) |
+| **13. Round-2 verification findings — doc rewrites + dead scaffolding** | **Complete** — 9/9 tasks done, AIPolicy + TaskForceOutcome deleted, 4 doc rewrites, fallback synthesis fixed | [phase_13_checklist.md](phase_13_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-12 — Extended session (7 of 8 phases have partial or complete landings; only Phase 4.5 BattleResultsScreen UI consumer + residual DTO cleanup + manual smoke remain)
-**Active Phase:** Phase 4 — Visual-Mode BattleOutcome Contract (deferred — highest-risk remaining work)
-**Last Action:** Massive single-session progress. Phases 1, 2, 3, 6 (Track A), 8.3 complete. Phase 5.3, 7.1, 7.4, 8.1 done (partial coverage of those phases). The user-facing PROJ-270 acceptance criteria is now largely met for headless, strategy, Combat Lab, and Battle Setup paths — only visual-mode (Phase 4) and residual DTO cleanup (Phase 5.1/5.2/5.4/5.5) remain.
-**Next Action:** Phase 4 — refactor `BattleController` to accept a `BattleSpec` and emit a `BattleOutcome` at battle end. `BattleResultsScreen` reads outcome. Highest-risk remaining work; requires careful TDD + manual smoke at end of phase. Once Phase 4 lands, the pytest guard in `tests/unit/simulation/test_unified_entry_guard.py` should be extended with a `TestVisualModeEmitsOutcome` class.
-**Blockers:** None.
+**Last Updated:** 2026-04-12 — Phases 9-13 complete; only manual launcher smoke + archival remain
+**Active Phase:** Phase 8 — Final cleanup + acceptance audit (awaiting manual smoke)
+**Last Action:** Round-2 verification skeptics (3 parallel agents) challenged the Phase 11+12 scope-trims. Key findings: doc banners left canonical legacy examples intact below (contributors following top-down reads still landed on deleted API); `_build_fallback_outcome` synthesized 3 false fields (seed=0, end_reason=TEAM_ELIMINATED, telemetry=NORMAL); AIPolicy + TaskForceOutcome had zero attribute reads anywhere (genuine YAGNI, mechanical to delete). **Phase 13** delivered all 9 tasks: rewrote `simulation_testing.md` §3 + `COMBAT_LAB_DOCUMENTATION.md` §8 Step 4 + `combat_simulation.md` Visual Mode section + `QUICK_START.md` validator examples to the current `to_spec/wire_ships/custom_setup/validate(outcome, telemetry)` API; fixed `_build_fallback_outcome` to derive seed from config, end_reason from engine.end_condition, and use MINIMAL telemetry; copied 7 skeptic+verification reports into `findings/`; deleted `AIPolicy` (19 files cleaned, 0 refs remain) + `TaskForceOutcome` (6 files cleaned, 0 refs remain). Regression gate: **14642 pytest passed** (Phases 9-13), Combat Lab fast 162/162 + full 170/170 green.
+**Next Action:** Manual launcher smoke (Combat Lab visual+headless+batch, Battle Setup 2v2 complex toggles, Strategy fleet conflict). Then archive PROJ-270 via protocol 05.
+**Blockers:** Only manual launcher smoke remains.
+
+### Skeptic-Audit Summary (2026-04-12)
+
+4 adversarial skeptic agents reviewed PROJ-269+270. Converging consensus across 3+ agents:
+
+**CRITICAL findings (blockers for archival):**
+1. **Track A battle-math broken.** Pipeline: compiler→modifier_stack→FleetAuraManager dies at `_apply_bonuses` 2-key sink. Empirically reproduced. (Phase 9)
+2. **Visual mode duplicates `engine.boundary`/`engine.modifier_stack` plumbing across 3 call sites** because the controller path was never routed through `start_engine_from_spec`. Task 4.2 admits the scope trim. Any future BattleSpec field silently drops for visual. (Phase 10)
+
+**HIGH findings:**
+3. `BattleScreen.start(team0, team1)` + `_build_fallback_outcome` — two-layer shim preserving one legacy entry. Synthesizes fake outcomes with hardcoded seed=0, end_reason. (Phase 10)
+4. `BattleScreen._run_single_tick` has `else: self.engine.update()` bypass — no regression guard covers it. (Phase 10)
+5. `battle_config.py` re-exports `ReturnDestination` for backwards compat — self-admitted Rule 3 violation. 5 importers still on old path. "10-minute task left hanging." (Phase 10)
+6. `set_spec` + optional `spec=None` on configure — kept solely for ~60 legacy tests. (Phase 10)
+7. Task 6.3 Battle Setup complex toggles still emit `stat_key="placeholder"`. Checklist claimed complete. (Phase 9)
+8. Task 6.5 deferral reasoning inverted — integration test wasn't written because it would have failed. (Phase 9)
+9. Doc drift: `docs/guides/simulation_testing.md` (Step-4 how-to from README) still teaches `def setup(self, battle_engine)`. `COMBAT_LAB_DOCUMENTATION.md` base-class section same. (Phase 11)
+10. `test_outcome_emission.py` asserts plumbing only — uses `MagicMock(name="BattleOutcome")`. `BattleOutcome(teams=())` regression would pass every test. (Phase 11)
+
+**MEDIUM findings:**
+11. `TestNoLegacyScenarioSetup` regex defeatable by renaming `battle_engine`→`engine`. (Phase 11)
+12. `TestNoLegacyCompatibleComments` regex + scope too narrow; `game/strategy|ai|core` uncovered. Missing `deprecated` pattern; ~17 live files have DEPRECATED markers. (Phase 11)
+13. `TestNoPlaceholderStatKeyInStrategyCompiler` is source-text grep not behavioral. (Phase 11)
+14. Integration coverage asymmetric — only `build_strategy_battle_spec` is end-to-end tested. (Phase 11)
+15. `AIPolicy` = zero-field `pass` dataclass; zero attribute reads. Textbook YAGNI violation. (Phase 12)
+16. `TaskForceOutcome` = placeholder DTO; no consumers. (Phase 12)
+17. `UnboundedRegion.closest_edge_point` raises — should be type-model split (`Region`/`BoundedRegion`). (Phase 12)
+18. `ComponentStateSpec.is_active` half-wired — read path exists, write path broken. (Phase 12)
+19. `load_state` silently defaults to `UnboundedRegion` — CLAUDE.md misapplication. (Phase 10)
+
+Full reports: `.agent_reports/proj-269-270-skeptic-review/{unified_entry_exit,battle_math,test_docs,clean_sheet}_skeptic.md`
 **Context for Next Agent:**
 - **Completed this session:**
   - Phase 1: Headless single-entry bypasses eliminated (`test_execution_service.run_headless`, `BattleController.run_headless`, all 7 scenario `setup()` methods); new shared helper `combat_lab/services/scenario_run_helper.py`
@@ -49,17 +85,19 @@
   - Phase 8.2: 2 stub production modules (`battle_factories.py`, `battle_mode_handler.py`) deleted along with `PROJ-132` comment in `battle_controller.py`
   - Phase 8.3: `tests/unit/simulation/test_unified_entry_guard.py` — 10 guard tests locking the acceptance criteria (8 + 2 new Phase 4 guards)
   - Phase 8.5 (partial): `docs/01_ARCHITECTURE.md` Battle Flow updated with Phase 4 outcome-emission note; `docs/systems/combat_simulation.md` §0 rewritten to reflect PROJ-270 state
-- **Regression state:** `pytest tests/` **14572 passed** / 3 pre-existing build-queue UI failures / 3 pre-existing AI import errors. Combat Lab **162/162 fast** + **170/170 full** green.
-- **Deferred to follow-up sessions:**
-  - **Phase 4.2/4.3 (spec-via-configure):** tighten `BattleController.configure` to require a spec (currently `set_spec` is a separate call — works, but could be tidier)
-  - **Phase 4.7 (manual launcher smoke):** requires interactive desktop
-  - **Phase 5.4:** collapse `BattleConfig.map_bounds` into `BattleSpec.boundary` (requires `RetreatManager` to consume `BoundaryRegion`)
-  - **PROJ-271:** `flat_shield_bonus` additive stat_key + suppressor opponent-team routing (battle-math Track B)
-  - **Phase 7.3:** rewrite visual-mode UI fixture with real spec (`tests/fixtures/test_scenarios.py`) — low ROI, defer
-  - **Phase 8.4:** manual-audit walkthrough of acceptance criteria
-  - **Phase 8.5 (residual):** refresh scenario `base.py` + `__init__.py` docstring examples that still show legacy `battle_engine.start(...)` API
-  - **Phase 8.6:** archive PROJ-269 + PROJ-270 after user verification
-  - **Phase 8.7:** final project regression gate including manual launcher smoke
+- **Regression state (closure session):** `pytest tests/` **14629 passed** (+20 vs PROJ-269 baseline) / 3 pre-existing build-queue UI failures / 3 pre-existing AI import errors. Combat Lab **162/162 fast** + **170/170 full** green. All 28 regression guards green.
+- **Closure session landings:**
+  - **Task 4.2/4.3:** `BattleController.configure(config, spec=...)` tightened; 3 production callers migrated (`app.py`, `test_lab/screen.py`, `test_execution_service.py`); 3 new tests in `TestBattleControllerConfigureAcceptsSpec`
+  - **Task 5.4:** `BattleConfig.map_bounds` deleted. `BoundaryRegion` protocol extended with `closest_edge_point` + `distance_to_edge`. `RetreatManager` refactored to consume `BoundaryRegion` directly; `UnboundedRegion` gracefully disables edge retreat (warp retreat continues). All retreat test fixtures re-centered from corner-rooted to origin-centered. 13 new boundary tests + 2 new retreat unbounded tests.
+  - **Task 8.4:** acceptance audit document written to `findings/acceptance_audit.md` — all 5 criteria verified with test-evidence.
+  - **Task 8.5:** docstring sweep completed — residual `battle_engine.start(` / `scenario.setup(` references cleaned from `docs/systems/combat_simulation.md`, `combat_lab/battle_state_capture.py`, `tests/unit/combat_lab/test_test_metadata_end_conditions.py`; `TEMPLATE_MIGRATION_GUIDE.md` marked historical.
+  - **Tasks 4.1/4.6/7.5:** verified de-facto satisfied by existing coverage (documented in respective checklists).
+  - **Task 7.3:** intentionally deferred (low ROI, self-flagged by checklist).
+  - **Task 6.5:** deferred to PROJ-271 Phase 4 for ergonomic grouping with full Track A+B end-to-end modifier testing.
+- **Remaining work:**
+  - **Phase 8.7 Part B:** manual launcher smoke (requires interactive desktop — user verification)
+  - **Phase 8.6:** archive PROJ-270 via protocol 05 after user confirms smoke
+  - **PROJ-271 scaffold:** create planning package (see Step 10 in closure plan)
 - **Key files created this session:**
   - `combat_lab/services/scenario_run_helper.py` (shared headless driver)
   - `combat_lab/telemetry.py` (Combat Lab forensic bundle)

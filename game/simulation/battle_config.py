@@ -5,19 +5,21 @@ PROJ-269 Phase 6 reshape: `BattleMode` enum + the per-mode variant fields
 `source_fleets`, `per_tick_callback`) were deleted. All variant behavior
 moved to `BattleSpec` / `run_battle`. What remains here is a thin
 operational-options bag for the visual-mode `BattleController` flow that
-`BattleScreen` still drives per-frame (until Task 6.9 migrates that path
-through `run_battle` as well).
+`BattleScreen` still drives per-frame.
 
-PROJ-270 Phase 5.2: `ReturnDestination` moved to
-`game.core.return_destination`. This module re-exports it only for
-backwards compatibility during the transition — new callers should
-import from `game.core.return_destination` directly.
+PROJ-270 Task 5.4: `map_bounds` tuple deleted. Arena boundary is
+carried on `BattleSpec.boundary` (`BoundaryRegion` ADT — origin-centered
+rect, circle, or unbounded). `BattleController.configure(config, spec)`
+consumes it directly.
+
+PROJ-270 Phase 10: `ReturnDestination` re-export deleted. Import from
+`game.core.return_destination` directly.
 """
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from game.core.constants import SimulationConstants
-from game.core.return_destination import ReturnDestination
+from game.core.return_destination import ReturnDestination  # Used by default= below
 
 if TYPE_CHECKING:
     from game.simulation.systems.battle_end_conditions import IEndCondition
@@ -54,8 +56,3 @@ class BattleConfig:
     # Battle features (visual-mode toggles).
     allow_retreat: bool = False
     allow_reinforcements: bool = False
-
-    # Map bounds for retreat calculations.
-    map_bounds: Tuple[float, float, float, float] = (
-        0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE
-    )

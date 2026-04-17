@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase (20 patterns).
+Agent-optimized reference for every core pattern in the codebase (25 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -30,6 +30,8 @@ Each section: **Where**, **How It Works**, **When to Use**.
 21. [Screen State Machine](#21-screen-state-machine-proj-259)
 22. [TurnEngineConfig](#22-turnengineconfig-proj-259)
 23. [Tick Phase Registry](#23-tick-phase-registry-proj-259)
+24. [External-Stats Bridge](#24-external-stats-bridge-proj-270-phase-9--proj-271)
+25. [Scope-Driven Team Routing](#25-scope-driven-team-routing-proj-271)
 
 ---
 
@@ -1011,7 +1013,7 @@ Phase 6 removed `BattleModeHandler` + 4 concrete handlers + the
 | `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
 | `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
 | `should_clone_ships` | Caller's `ship_builder` returns a clone |
-| `is_headless_default` | `run_battle(spec, headless=...)` kwarg |
+| `is_headless_default` | Driver choice: blocking `run_battle(spec)` vs per-frame `BattleController.start_from_spec(spec, ...)` |
 | `apply_results(...)` | `BattleSpec.post_battle_hook` |
 
 See `docs/systems/combat_simulation.md` §0–§1 and
@@ -1285,6 +1287,83 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 
 ---
 
+## 24. External-Stats Bridge (PROJ-270 Phase 9 + PROJ-271)
+
+**Where:** `game/simulation/entities/ship.py` (`Ship.external_stats`), `game/simulation/combat/fleet_aura_manager.py` (`_apply_bonuses`), `game/simulation/components/abilities/base.py` (`Ability.get_effective_stat` composition), `game/simulation/entities/ship_stats.py` (`_apply_aggregated_stats` for ship-level keys).
+
+**How It Works:**
+- `ModifierStack` entries (from spec compilers) flow through `FleetAuraManager._recalculate` which aggregates per-team bonuses into `ship.external_stats: Dict[str, float]`.
+- At ability-level consumption, `Ability.get_effective_stat(stat_key)` composes ability-local / component-local / ship-external values: `_mult` keys multiply (local × external); `_add` keys sum (local + external).
+- At ship-level consumption (for keys like `shield_bonus_add`), `Ship.recalculate_stats` reads `ship.external_stats[stat_key]` directly and applies it to aggregated stats.
+- External_stats is battle-scoped and never serialized — it's read-only composition layer preserving "ships enter unmutated".
+
+**Why:**
+- Pre-Phase 9, `FleetAuraManager._apply_bonuses` was a hardcoded 2-key sink that silently discarded every stat_key except `fleet_attack_bonus` / `fleet_defense_bonus`. Track A battle math (storm, fleet boosters) compiled real stat_keys that never reached ship stats.
+- Option A (external-stats dict) chosen over Option B (synthesize `AppliedModifier` entries) because B would write back into `component.modifiers`, violating PROJ-269's invariant.
+
+**When to Use:**
+- New stat_key that applies across all components on a ship uniformly -> per-ability lookup via `STAT_BINDINGS` + `get_effective_stat`.
+- New stat_key that adds "virtual" capacity/effect at the ship level (no specific ability owns it) -> ship-level read in `_apply_aggregated_stats`. `shield_bonus_add` is the reference example.
+
+**Don't:**
+- Mutate `component.stats` from outside `Component._calculate_modifier_stats`.
+- Populate `ship.external_stats` from anywhere except `FleetAuraManager._apply_bonuses`.
+- Serialize `external_stats` in save data — it's battle-scoped composition, rebuilt each battle.
+
+**Known Limitation — within-source stack_group composition only (PROJ-272):**
+Stack-group aggregation is WITHIN-SOURCE only. Provider auras (ship-mounted
+abilities with fleet-scope) bucket under `type(ab).__name__` (e.g.,
+`"ShieldModifier"`), while external `ModifierStack` entries bucket under
+`effect.stat_key` (e.g., `"shield_capacity_mult"`). These are semantically
+different dict keys — a provider `ShieldModifier` aura with
+`stack_group="shield_boost"` and an external `shield_capacity_mult` entry
+with the same `stack_group="shield_boost"` do NOT compose via MAX; they
+aggregate independently. Cross-source unification would require a class-name
+→ stat_key registry and is out of scope. Within each source (provider-only
+OR external-only), same-stack_group entries correctly MAX and
+different-stack_group entries correctly SUM.
+
+---
+
+## 25. Scope-Driven Team Routing (PROJ-271, PROJ-273)
+
+**Where:** `game/simulation/combat/ability_stat_registry.py` (`OPPONENT_SCOPES`, `emit_entries_for_ability`), `game/ui/screens/battle_setup/spec_compiler.py` (`_route_team_for_scope`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
+
+**How It Works:**
+- An ability's `AbilityScope` value encodes who it targets: `fleet`/`allied_*`/`player_*`/`system`/`sector` -> owner's team; `enemy_sector`/`enemy_system` -> opponent team.
+- Both compilers delegate enemy-scope detection to the shared `OPPONENT_SCOPES` frozenset in the ability-stat registry (single source of truth; PROJ-273 consolidated the previously-duplicated `_OPPONENT_SCOPES` locals).
+- The registry's `emit_entries_for_ability(...)` helper fans `enemy_*` scopes out to ALL non-owner teams (N-team forward-compat); current callers pass `num_teams=2`, so fan-out degenerates to a single opposing team.
+- Strategy compiler path is simpler: `CombatModifierCollector` pre-computes enemy-scope effects INTO the receiving fleet's `FleetCombatModifiers` before the compiler runs, so the compiler emits to `per_team[receiver_id]` trivially.
+
+**Why:**
+- User clarified 2026-04-13: "the suppressor and booster effect is just the difference between multiplying by less than 1 or more than 1; the scope determines what vehicles/designs are impacted." No separate suppressor architecture — scope IS the routing mechanism.
+
+**When to Use:**
+- Any new ability type with fleet/system/sector scope options needs scope-driven routing when its effects are compiled into `ModifierStack` entries.
+- Extending `OPPONENT_SCOPES` (now a single shared constant) requires adding tests proving each scope routes correctly.
+
+---
+
+## 26. Ability-Stat Registry (PROJ-273)
+
+**Where:** `game/simulation/combat/ability_stat_registry.py` (`ABILITY_STAT_REGISTRY`, `AbilityStatMapping`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS`), consumed by `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` and `game/strategy/combat/spec_compiler.py::_emit_entries_team_scoped`.
+
+**How It Works:**
+- One canonical dict maps ability class name -> `AbilityStatMapping(stat_key, operation, value_field)`. Currently three entries: `ShieldProjection -> shield_bonus_add/add/value`, `ShieldModifier -> shield_capacity_mult/multiply/multiplier`, `DamageModifier -> damage_mult/multiply/multiplier`.
+- `emit_entries_for_ability(ability_name, ability_data, *, scope, owner_team, num_teams, source, source_modifier_id, source_modifier_name, stack_group=None)` returns `List[Tuple[int, ModifierEntry]]`. Team routing + N-team fan-out + value extraction all happen in one call. Returns `[]` for unknown abilities (silent skip) or zero values (nothing to apply).
+- Battle Setup compiler delegates via `_complex_to_entries`. Strategy compiler delegates via a thin team-scoped wrapper (`_emit_entries_team_scoped`) since `FleetCombatModifiers` stores raw floats rather than dict-shaped ability data.
+- `KNOWN_EXTERNAL_STAT_KEYS: FrozenSet[str]` enumerates every stat_key the engine actually consumes downstream of `ship.external_stats`. `FleetAuraManager._append_external_from_entry` warns once per (stat_key, source) when an entry's stat_key isn't in this set — catches silent-drop bugs where a compiler emits an entry no reader picks up.
+- Glob-driven guard tests (`tests/unit/simulation/combat/test_ability_stat_registry.py`) iterate every `data/designs/qs_*_complex.json` and validate: (a) no placeholder stat_keys, (b) every combat-class ability in data is covered by the registry. New complex designs are auto-covered.
+
+**Why:**
+- Pre-PROJ-273, `_ABILITY_TO_STAT_KEY` lived in Battle Setup's spec_compiler AND the same three stat_keys were emitted via hand-rolled calls in Strategy's spec_compiler. A new ability class required touching both compilers + the ability class, with nothing alerting you if you missed a compiler. Registry consolidates this into a one-line edit.
+
+**When to Use:**
+- Adding a new combat-affecting ability (class ending in `Modifier` / `Projection`): add one entry to `ABILITY_STAT_REGISTRY`; the glob test picks up coverage automatically. Also add the `stat_key` to `KNOWN_EXTERNAL_STAT_KEYS` so the runtime warning doesn't false-positive.
+- Any future caller (beyond Battle Setup + Strategy) that walks design JSONs and emits `ModifierEntry` objects should use `emit_entries_for_ability` rather than constructing `ModifierEffect` + `ModifierEntry` by hand.
+
+---
+
 ## Quick Reference
 
 | Pattern | Primary File | Key Class/Function |
@@ -1317,6 +1396,9 @@ Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__(
 | Screen State Machine | `game/core/state_machine.py` | `ScreenStateMachine` |
 | TurnEngineConfig | `game/strategy/engine/turn_engine_config.py` | `TurnEngineConfig` |
 | Tick Phase Registry | `game/simulation/systems/tick_phase.py` | `ITickPhase`, `TickPhaseRegistry` |
+| External-Stats Bridge | `game/simulation/entities/ship.py` + `fleet_aura_manager.py` | `ship.external_stats`, `FleetAuraManager._apply_bonuses` |
+| Scope-Driven Team Routing | `game/simulation/combat/ability_stat_registry.py` | `OPPONENT_SCOPES`, `emit_entries_for_ability` |
+| Ability-Stat Registry | `game/simulation/combat/ability_stat_registry.py` | `ABILITY_STAT_REGISTRY`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS` |
 
 ### Critical Naming Reminders
 

@@ -10,7 +10,6 @@ from game.core.math import Vector2
 from game.simulation.battle_outcome import BattleOutcome, EndReason, ShipStatus
 from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -60,7 +59,6 @@ def _team(team_id: int, ship: ShipSpec) -> TeamSpec:
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 
@@ -94,7 +92,7 @@ def test_three_team_battle_resolves_with_team_eliminated(fresh_registries):
     for ≤1 team.
     """
 
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design(), registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship
@@ -151,7 +149,7 @@ def test_three_team_team_eliminated_fires_only_when_last_team_standing(
     and attack each other; the surviving team triggers end."""
     # Use the `TeamEliminatedCondition(check_derelict=True)` so
     # derelicts count as eliminated — makes the end trigger more reliably.
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design(), registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship

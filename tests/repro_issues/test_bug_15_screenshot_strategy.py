@@ -321,13 +321,20 @@ class TestBuildQueueScreenshotSupport:
 
         # PROJ-172: Patches moved to panel factory module
         # PROJ-221: Added VirtualTable and TableColumnManager patches
+        # Mock UIScrollingContainer so get_relative_rect() returns a usable Rect
+        mock_scrollable_cls = MagicMock()
+        mock_scrollable_instance = MagicMock()
+        mock_scrollable_instance.get_relative_rect.return_value = pygame.Rect(0, 0, 300, 400)
+        mock_scrollable_instance.get_container.return_value.elements = []
+        mock_scrollable_cls.return_value = mock_scrollable_instance
+
         with patch('game.ui.screens.build_queue_panel_factory.PlanetReportPanel'), \
              patch('game.ui.screens.build_queue_panel_factory.DesignReportPanel'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UIPanel'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UIButton'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UITextBox'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UILabel'), \
-             patch('game.ui.screens.build_queue_panel_factory.ui.UIScrollingContainer'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIScrollingContainer', mock_scrollable_cls), \
              patch('game.ui.screens.build_queue_panel_factory.VirtualTable'), \
              patch('game.ui.screens.build_queue_panel_factory.TableColumnManager'), \
              patch('game.ui.screens.build_queue_panel_factory.SingleSelect'), \

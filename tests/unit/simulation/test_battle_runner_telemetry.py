@@ -16,7 +16,6 @@ from game.core.math import Vector2
 from game.simulation.battle_outcome import BattleOutcome
 from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -49,8 +48,8 @@ def _design() -> dict:
 
 
 @pytest.fixture
-def ship_builder(fresh_registries) -> Callable[[ShipSpec], Ship]:
-    def _build(ship_spec):
+def ship_builder(fresh_registries) -> Callable[[ShipSpec, int], Ship]:
+    def _build(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design(), registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship
@@ -76,7 +75,6 @@ def _team(team_id: int, ship: ShipSpec) -> TeamSpec:
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 

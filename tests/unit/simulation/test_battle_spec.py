@@ -2,7 +2,7 @@
 
 Covers:
 - Frozen dataclass shape of BattleSpec + nested DTOs per design.md §2.1-§2.3
-- EntryVector, AIPolicy, CombatPolicies, ComponentStateSpec, ShipSpec,
+- EntryVector, CombatPolicies, ComponentStateSpec, ShipSpec,
   SquadronSpec, TaskForceSpec, TeamSpec, BattleSpec
 - Round-trip: attribute access + pickle reproduces identical DTO
 - Exports via `from game.simulation import ...`
@@ -14,7 +14,6 @@ import pytest
 
 from game.core.math import Vector2
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     ComponentStateSpec,
@@ -72,7 +71,6 @@ def _minimal_team(team_id: int = 0) -> TeamSpec:
         name=f"Team {team_id}",
         entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
         fleet_hierarchy=(_minimal_task_force(),),
-        ai_policy=AIPolicy(),
     )
 
 
@@ -98,7 +96,6 @@ def _minimal_battle_spec() -> BattleSpec:
     "cls",
     [
         EntryVector,
-        AIPolicy,
         CombatPolicies,
         ComponentStateSpec,
         ShipSpec,
@@ -180,7 +177,6 @@ def test_team_spec_fields():
     assert team.team_id == 3
     assert isinstance(team.fleet_hierarchy, tuple)
     assert isinstance(team.entry_vector, EntryVector)
-    assert isinstance(team.ai_policy, AIPolicy)
 
 
 def test_battle_spec_all_fields_from_design():

@@ -86,7 +86,8 @@ class TestSceneCallback:
             callback_received.append((action, kwargs))
 
         from game.ui.screens.battle_screen import BattleScreen
-        from game.simulation.battle_config import BattleConfig, ReturnDestination
+        from game.simulation.battle_config import BattleConfig
+        from game.core.return_destination import ReturnDestination
         from unittest.mock import Mock
 
         scene = BattleScreen(800, 600, callback)

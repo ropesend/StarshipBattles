@@ -214,7 +214,7 @@ class SimulationBattleResolver(IBattleResolver):
             for instance in fleet.ships:
                 lookup[instance.instance_id] = instance
 
-        def ship_builder(ship_spec):
+        def ship_builder(ship_spec, team_id):
             instance = lookup.get(ship_spec.instance_id)
             if instance is None:
                 raise ValueError(
@@ -222,7 +222,7 @@ class SimulationBattleResolver(IBattleResolver):
                     f"instance_id={ship_spec.instance_id!r}"
                 )
             return instance.to_ship(
-                (0.0, 0.0), team_id=0, registries=registries,
+                (0.0, 0.0), team_id=team_id, registries=registries,
             )
 
         return ship_builder

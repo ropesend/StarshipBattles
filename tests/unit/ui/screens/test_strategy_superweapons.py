@@ -43,6 +43,7 @@ def mock_fleet():
     """Create mock fleet with capabilities."""
     fleet = Mock()
     fleet.id = "F-001"
+    fleet.owner_id = 0
     fleet.capabilities = Mock()
     fleet.capabilities.has_ability = Mock(return_value=True)
     fleet.capabilities.ships_with_ability = Mock(return_value=[Mock(id=1), Mock(id=2)])
@@ -516,7 +517,7 @@ class TestCommandDispatch:
         # Execute the confirmation callback
         confirm_callback()
 
-        mock_cmd_class.assert_called_once_with("F-001", (5, 5), "planet-1")
+        mock_cmd_class.assert_called_once_with("F-001", (5, 5), "planet-1", empire_id=0)
         mock_facade.handle_command.assert_called_once()
 
     @patch('game.ui.screens.strategy_superweapons.IssueSelfDestructCommand')
@@ -540,5 +541,5 @@ class TestCommandDispatch:
         # Execute the picker callback
         picker_callback([1, 2])
 
-        mock_cmd_class.assert_called_once_with("F-001", [1, 2])
+        mock_cmd_class.assert_called_once_with("F-001", [1, 2], empire_id=0)
         mock_facade.handle_command.assert_called_once()

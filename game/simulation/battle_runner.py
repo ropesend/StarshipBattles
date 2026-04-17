@@ -38,7 +38,6 @@ from game.simulation.battle_outcome import (
     ShipOutcome,
     ShipStats,
     ShipStatus,
-    TaskForceOutcome,
     TeamOutcome,
     WeaponSummary,
 )
@@ -91,16 +90,24 @@ _END_REASON_BY_CLASS = {
 def materialize_spec_ships(
     spec: BattleSpec,
     *,
-    ship_builder: Callable[[ShipSpec], "Ship"],
+    ship_builder: Callable[[ShipSpec, int], "Ship"],
 ) -> "tuple[Dict[int, List[Ship]], Dict[str, Ship]]":
     """Materialize every `ShipSpec` in `spec.teams` into a `Ship`.
 
     Shared by `run_battle` (which calls `engine.start_teams` with the
-    result) and visual-mode callers (which go through
-    `BattleController.add_ships` + `controller.start` instead). The
-    function applies the spec pose, velocity, instance_id, and
+    result) and visual-mode callers (`BattleController.start_from_spec`).
+    The function applies the spec pose, velocity, instance_id, and
     per-component HP — everything that's purely spec-driven, before
     any engine participation.
+
+    Args:
+        spec: The `BattleSpec` to materialize.
+        ship_builder: `(ShipSpec, team_id) -> Ship` callable. The team_id
+            is the `TeamSpec.team_id` of the enclosing team — ship_builders
+            that construct ships from strategy `ShipInstance` objects need
+            this to call `ShipInstance.to_ship(position, team_id, registries)`.
+            Builders that don't need team context (Combat Lab scenarios
+            loading from JSON) can ignore the second argument.
 
     Returns:
         `(teams_by_id, ships_by_role)`:
@@ -117,7 +124,7 @@ def materialize_spec_ships(
         for task_force in team_spec.fleet_hierarchy:
             for squadron in task_force.squadrons:
                 for ship_spec in squadron.ships:
-                    ship = ship_builder(ship_spec)
+                    ship = ship_builder(ship_spec, team_spec.team_id)
                     ship.x = ship_spec.position.x
                     ship.y = ship_spec.position.y
                     ship.angle = ship_spec.angle
@@ -136,7 +143,7 @@ def start_engine_from_spec(
     spec: BattleSpec,
     *,
     ai_factory: "IAIControllerFactory",
-    ship_builder: Callable[[ShipSpec], "Ship"],
+    ship_builder: Callable[[ShipSpec, int], "Ship"],
 ) -> "tuple[BattleEngine, Dict[str, Ship]]":
     """Construct and start a `BattleEngine` from a `BattleSpec`.
 
@@ -167,7 +174,7 @@ def run_battle(
     spec: BattleSpec,
     *,
     ai_factory: "IAIControllerFactory",
-    ship_builder: Callable[[ShipSpec], "Ship"],
+    ship_builder: Callable[[ShipSpec, int], "Ship"],
     headless: bool = True,
     per_tick_callback: Optional[Callable[["BattleEngine"], None]] = None,
     pre_tick_loop_callback: Optional[Callable[["BattleEngine"], None]] = None,
@@ -317,11 +324,7 @@ def extract_outcome(
     team_outcomes = []
     for team_spec in spec.teams:
         ship_outcomes = []
-        task_force_outcomes = []
         for task_force in team_spec.fleet_hierarchy:
-            task_force_outcomes.append(
-                TaskForceOutcome(task_force_id=task_force.task_force_id)
-            )
             for squadron in task_force.squadrons:
                 for ship_spec in squadron.ships:
                     ship_outcomes.append(
@@ -338,7 +341,6 @@ def extract_outcome(
             TeamOutcome(
                 team_id=team_spec.team_id,
                 name=team_spec.name,
-                fleet_hierarchy=tuple(task_force_outcomes),
                 ships=tuple(ship_outcomes),
             )
         )

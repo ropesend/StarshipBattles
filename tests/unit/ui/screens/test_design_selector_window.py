@@ -544,6 +544,54 @@ class TestDesignSelectorUICreation:
                                 row = window._create_design_row(design, 0, 400)
                                 assert row is not None
 
+    def test_design_row_with_spaces_in_design_id(self):
+        """Test _create_design_row sanitizes design_id for object_id (spaces).
+
+        Regression test: design IDs from filenames can contain spaces
+        (e.g. 'BS Battleship GC'), which pygame_gui rejects in object_id.
+        """
+        window, _ = _make_selector_window()
+        design = _make_design_metadata("BS Battleship GC", "BS Battleship GC")
+
+        with patch('game.ui.screens.design_selector_window.UIPanel') as mock_panel:
+            mock_panel.return_value = MagicMock()
+            with patch('game.ui.screens.design_selector_window.UILabel'):
+                with patch('game.ui.screens.design_selector_window.UIButton'):
+                    with patch('game.ui.screens.design_selector_window.UIImage'):
+                        with patch.object(window, '_load_portrait_thumbnail', return_value=MagicMock()):
+                            with patch.object(window, '_load_topdown_thumbnail', return_value=None):
+                                row = window._create_design_row(design, 0, 400)
+                                assert row is not None
+
+                                # Verify object_id passed to UIPanel has no spaces
+                                panel_call = mock_panel.call_args
+                                object_id = panel_call[1]['object_id']
+                                assert ' ' not in object_id
+                                assert '.' not in object_id
+
+    def test_design_row_with_fullstops_in_design_id(self):
+        """Test _create_design_row sanitizes design_id for object_id (fullstops).
+
+        Regression test: design IDs could contain fullstops (e.g. 'v2.0_cruiser'),
+        which pygame_gui rejects in object_id.
+        """
+        window, _ = _make_selector_window()
+        design = _make_design_metadata("v2.0_cruiser", "V2.0 Cruiser")
+
+        with patch('game.ui.screens.design_selector_window.UIPanel') as mock_panel:
+            mock_panel.return_value = MagicMock()
+            with patch('game.ui.screens.design_selector_window.UILabel'):
+                with patch('game.ui.screens.design_selector_window.UIButton'):
+                    with patch('game.ui.screens.design_selector_window.UIImage'):
+                        with patch.object(window, '_load_portrait_thumbnail', return_value=MagicMock()):
+                            with patch.object(window, '_load_topdown_thumbnail', return_value=None):
+                                row = window._create_design_row(design, 0, 400)
+                                assert row is not None
+
+                                panel_call = mock_panel.call_args
+                                object_id = panel_call[1]['object_id']
+                                assert '.' not in object_id
+
 
 # --- Mode-Specific Tests ---
 

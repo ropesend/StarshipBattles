@@ -6,6 +6,13 @@ Tests the extracted RetreatManager class that handles:
 - Retreat state tracking and updates
 - Ship escape detection
 - Reinforcement handling
+
+PROJ-270 Task 5.4: RetreatManager now consumes a `BoundaryRegion` via
+`boundary=...`. The legacy `map_bounds=(min_x, min_y, max_x, max_y)`
+tuple (corner-rooted, axis-aligned only) has been replaced with a
+`BoundaryRegion` API. Fixtures use `RectBoundary(width=100000,
+height=100000)` centered on origin — ship positions re-centered from
+the old 0..100000 coordinate range to -50000..+50000.
 """
 import pytest
 from unittest.mock import Mock, MagicMock, patch
@@ -18,32 +25,41 @@ from game.simulation.managers.retreat_manager import (
     RetreatState,
     RetreatMethod,
 )
+from game.simulation.combat.boundary import (
+    RectBoundary,
+    UnboundedRegion,
+    ExitPolicy,
+)
 
 
 # === Fixtures ===
 
 @pytest.fixture
 def mock_ship():
-    """Create a mock Ship object."""
+    """Create a mock Ship object (at origin — center of 100k x 100k rect)."""
     ship = Mock()
     ship.name = "Test Ship"
     ship.id = "mock-ship-uuid-001"
     ship.is_alive = True
-    ship.x = 50000
-    ship.y = 50000
+    ship.x = 0
+    ship.y = 0
     return ship
 
 
 @pytest.fixture
-def default_map_bounds():
-    """Default map bounds for testing."""
-    return (0, 0, 100000, 100000)
+def default_boundary():
+    """Default `RectBoundary` for testing — 100k x 100k centered on origin."""
+    return RectBoundary(
+        width=100000.0,
+        height=100000.0,
+        exit_policy=ExitPolicy.RETREAT,
+    )
 
 
 @pytest.fixture
-def retreat_manager(default_map_bounds):
-    """Create a RetreatManager with default map bounds."""
-    return RetreatManager(map_bounds=default_map_bounds)
+def retreat_manager(default_boundary):
+    """Create a RetreatManager with the default rectangular boundary."""
+    return RetreatManager(boundary=default_boundary)
 
 
 @pytest.fixture
@@ -57,10 +73,10 @@ def ship_id_map(mock_ship):
 class TestRetreatManagerInit:
     """Tests for RetreatManager initialization."""
 
-    def test_init_with_map_bounds(self, default_map_bounds):
-        """RetreatManager initializes with map bounds."""
-        manager = RetreatManager(map_bounds=default_map_bounds)
-        assert manager.map_bounds == default_map_bounds
+    def test_init_with_boundary(self, default_boundary):
+        """RetreatManager initializes with a BoundaryRegion."""
+        manager = RetreatManager(boundary=default_boundary)
+        assert manager.boundary is default_boundary
 
     def test_init_empty_state(self, retreat_manager):
         """RetreatManager starts with empty state."""
@@ -70,6 +86,11 @@ class TestRetreatManagerInit:
     def test_init_no_escape_callback(self, retreat_manager):
         """RetreatManager starts with no escape callback."""
         assert retreat_manager._on_ship_escaped is None
+
+    def test_init_accepts_unbounded_region(self):
+        """`UnboundedRegion` is a valid boundary (edge-retreat disabled)."""
+        manager = RetreatManager(boundary=UnboundedRegion())
+        assert isinstance(manager.boundary, UnboundedRegion)
 
 
 # === Request Retreat Tests ===
@@ -101,7 +122,7 @@ class TestRetreatManagerRequestRetreat:
         """request_retreat fails if ship already retreating."""
         ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
-            method=RetreatMethod.EDGE, target=(0, 50000)
+            method=RetreatMethod.EDGE, target=(-50000, 0)
         )
 
         success, error = retreat_manager.request_retreat(
@@ -141,18 +162,19 @@ class TestRetreatManagerRequestRetreat:
 
     def test_request_retreat_edge_calculates_nearest_edge(self, retreat_manager, ship_id_map):
         """request_retreat calculates target for nearest edge."""
-        # Ship close to left edge
+        # Ship close to left edge (origin-centered 100k x 100k: half-extent
+        # is 50000, so x=-49900 is 100 units from left edge).
         mock_ship = Mock()
         mock_ship.id = "left-ship-uuid"
         mock_ship.is_alive = True
-        mock_ship.x = 100
-        mock_ship.y = 50000
+        mock_ship.x = -49900
+        mock_ship.y = 0
         ship_id_map[mock_ship.id] = "left-ship"
 
         retreat_manager.request_retreat(mock_ship, ship_id_map, method=RetreatMethod.EDGE)
 
         state = retreat_manager.retreating_ships["left-ship"]
-        assert state.target == (0, 50000)  # Should target left edge
+        assert state.target == (-50000, 0)  # Should target left edge
 
 
 # === Cancel Retreat Tests ===
@@ -164,7 +186,7 @@ class TestRetreatManagerCancelRetreat:
         """cancel_retreat removes retreat state."""
         ship_id = ship_id_map[mock_ship.id]
         retreat_manager.retreating_ships[ship_id] = RetreatState(
-            method=RetreatMethod.EDGE, target=(0, 50000)
+            method=RetreatMethod.EDGE, target=(-50000, 0)
         )
 
         success, error = retreat_manager.cancel_retreat(mock_ship, ship_id_map)
@@ -217,17 +239,18 @@ class TestRetreatManagerUpdateRetreats:
 
     def test_update_edge_escape_at_map_edge(self, retreat_manager, ship_id_map):
         """update triggers escape when ship reaches map edge."""
-        # Ship at left edge
+        # Ship near left edge (x=-49900 → 100 units from -50000 edge,
+        # within DEFAULT_MAP_EDGE_THRESHOLD).
         mock_ship = Mock()
         mock_ship.id = "edge-ship-uuid"
         mock_ship.is_alive = True
-        mock_ship.x = 100  # Within edge threshold
-        mock_ship.y = 50000
+        mock_ship.x = -49900  # Within edge threshold
+        mock_ship.y = 0
         ship_id = "edge-ship"
         ship_id_map[mock_ship.id] = ship_id
 
         retreat_manager.retreating_ships[ship_id] = RetreatState(
-            method=RetreatMethod.EDGE, target=(0, 50000)
+            method=RetreatMethod.EDGE, target=(-50000, 0)
         )
 
         def get_ship_by_id(sid):
@@ -275,86 +298,102 @@ class TestRetreatManagerUpdateRetreats:
 # === Find Nearest Edge Tests ===
 
 class TestRetreatManagerFindNearestEdge:
-    """Tests for RetreatManager.find_nearest_edge()."""
+    """Tests for RetreatManager.find_nearest_edge().
+
+    Fixtures use `RectBoundary(width=100000, height=100000)` centered on
+    origin, so edges are at ±50000 in each axis.
+    """
 
     def test_find_nearest_edge_left(self, retreat_manager):
         """find_nearest_edge finds left edge when closest."""
         mock_ship = Mock()
-        mock_ship.x = 100
-        mock_ship.y = 50000
+        mock_ship.x = -49900
+        mock_ship.y = 0
 
         target = retreat_manager.find_nearest_edge(mock_ship)
 
-        assert target == (0, 50000)
+        assert target == (-50000, 0)
 
     def test_find_nearest_edge_right(self, retreat_manager):
         """find_nearest_edge finds right edge when closest."""
         mock_ship = Mock()
-        mock_ship.x = 99900
-        mock_ship.y = 50000
-
-        target = retreat_manager.find_nearest_edge(mock_ship)
-
-        assert target == (100000, 50000)
-
-    def test_find_nearest_edge_top(self, retreat_manager):
-        """find_nearest_edge finds top edge when closest."""
-        mock_ship = Mock()
-        mock_ship.x = 50000
-        mock_ship.y = 100
+        mock_ship.x = 49900
+        mock_ship.y = 0
 
         target = retreat_manager.find_nearest_edge(mock_ship)
 
         assert target == (50000, 0)
 
-    def test_find_nearest_edge_bottom(self, retreat_manager):
-        """find_nearest_edge finds bottom edge when closest."""
+    def test_find_nearest_edge_top(self, retreat_manager):
+        """find_nearest_edge finds top edge when closest."""
         mock_ship = Mock()
-        mock_ship.x = 50000
-        mock_ship.y = 99900
+        mock_ship.x = 0
+        mock_ship.y = -49900
 
         target = retreat_manager.find_nearest_edge(mock_ship)
 
-        assert target == (50000, 100000)
+        assert target == (0, -50000)
+
+    def test_find_nearest_edge_bottom(self, retreat_manager):
+        """find_nearest_edge finds bottom edge when closest."""
+        mock_ship = Mock()
+        mock_ship.x = 0
+        mock_ship.y = 49900
+
+        target = retreat_manager.find_nearest_edge(mock_ship)
+
+        assert target == (0, 50000)
 
 
 # === At Map Edge Tests ===
 
 class TestRetreatManagerAtMapEdge:
-    """Tests for RetreatManager.at_map_edge()."""
+    """Tests for RetreatManager.at_map_edge().
+
+    `RectBoundary` 100k x 100k origin-centered → edges at ±50000.
+    DEFAULT_EDGE_THRESHOLD governs how close counts as "at edge".
+    """
 
     def test_at_map_edge_left(self, retreat_manager):
         """at_map_edge detects left edge."""
         mock_ship = Mock()
-        mock_ship.x = 400
-        mock_ship.y = 50000
+        mock_ship.x = -49600  # 400 units from -50000 edge
+        mock_ship.y = 0
 
         assert retreat_manager.at_map_edge(mock_ship) is True
 
     def test_at_map_edge_right(self, retreat_manager):
         """at_map_edge detects right edge."""
         mock_ship = Mock()
-        mock_ship.x = 99600
-        mock_ship.y = 50000
+        mock_ship.x = 49600  # 400 units from 50000 edge
+        mock_ship.y = 0
 
         assert retreat_manager.at_map_edge(mock_ship) is True
 
     def test_at_map_edge_center(self, retreat_manager):
         """at_map_edge returns False for center position."""
         mock_ship = Mock()
-        mock_ship.x = 50000
-        mock_ship.y = 50000
+        mock_ship.x = 0
+        mock_ship.y = 0
 
         assert retreat_manager.at_map_edge(mock_ship) is False
 
     def test_at_map_edge_custom_threshold(self, retreat_manager):
         """at_map_edge respects custom threshold."""
         mock_ship = Mock()
-        mock_ship.x = 800
-        mock_ship.y = 50000
+        mock_ship.x = -49200  # 800 units from -50000 edge
+        mock_ship.y = 0
 
         assert retreat_manager.at_map_edge(mock_ship, threshold=500) is False
         assert retreat_manager.at_map_edge(mock_ship, threshold=1000) is True
+
+    def test_at_map_edge_false_for_unbounded(self):
+        """`UnboundedRegion` → at_map_edge always False (no edge)."""
+        manager = RetreatManager(boundary=UnboundedRegion())
+        mock_ship = Mock()
+        mock_ship.x = 1e9
+        mock_ship.y = 1e9
+        assert manager.at_map_edge(mock_ship) is False
 
 
 # === Is Retreating Tests ===
@@ -428,3 +467,45 @@ class TestRetreatManagerCallbacks:
         retreat_manager.set_on_ship_escaped(callback)
 
         assert retreat_manager._on_ship_escaped is callback
+
+
+# === Unbounded-region behavior (PROJ-270 Task 5.4) ===
+
+class TestRetreatManagerUnbounded:
+    """Edge-retreat must gracefully refuse when the arena is unbounded."""
+
+    def test_request_retreat_edge_rejected_for_unbounded(self):
+        """EDGE retreat fails with a clear error when no edge exists."""
+        manager = RetreatManager(boundary=UnboundedRegion())
+        ship = Mock()
+        ship.name = "Probe"
+        ship.id = "probe-uuid"
+        ship.is_alive = True
+        ship.x = 0
+        ship.y = 0
+        ship_id_map = {ship.id: "probe"}
+
+        success, error = manager.request_retreat(
+            ship, ship_id_map, method=RetreatMethod.EDGE
+        )
+
+        assert success is False
+        assert "unbounded" in error.lower() or "no edge" in error.lower(), (
+            f"Expected mention of 'unbounded' or 'no edge', got: {error!r}"
+        )
+
+    def test_warp_retreat_still_works_in_unbounded(self):
+        """WARP retreat is shape-independent and still functions."""
+        manager = RetreatManager(boundary=UnboundedRegion())
+        ship = Mock()
+        ship.name = "Probe"
+        ship.id = "probe-uuid"
+        ship.is_alive = True
+        ship_id_map = {ship.id: "probe"}
+
+        success, error = manager.request_retreat(
+            ship, ship_id_map, method=RetreatMethod.WARP
+        )
+
+        assert success is True
+        assert error is None

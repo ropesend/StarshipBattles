@@ -20,7 +20,6 @@ from game.ai.ai_factory import AIControllerFactory
 from game.core.math import Vector2
 from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -72,7 +71,6 @@ def _team(team_id: int, ship: ShipSpec) -> TeamSpec:
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 
@@ -110,7 +108,7 @@ def _make_spec(level: TelemetryLevel) -> BattleSpec:
 
 
 def _run_once(fresh_registries, level: TelemetryLevel) -> float:
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_DESIGN, registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship

@@ -153,20 +153,11 @@ class ShipOutcome:
 
 
 @dataclass(frozen=True)
-class TaskForceOutcome:
-    """Per-task-force roll-up. Phase 1 carries the id only; richer fields
-    (survivors, casualties, resolved formations) land in later phases."""
-
-    task_force_id: str
-
-
-@dataclass(frozen=True)
 class TeamOutcome:
     """Per-team outcome — mirrors the team order of `BattleSpec.teams`."""
 
     team_id: int
     name: str
-    fleet_hierarchy: Tuple[TaskForceOutcome, ...]
     ships: Tuple[ShipOutcome, ...]
 
 
@@ -199,7 +190,6 @@ __all__ = [
     "ShipOutcome",
     "ShipStats",
     "ShipStatus",
-    "TaskForceOutcome",
     "TeamOutcome",
     "WeaponSummary",
 ]

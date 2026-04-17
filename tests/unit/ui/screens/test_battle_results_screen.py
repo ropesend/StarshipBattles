@@ -154,3 +154,67 @@ class TestHandleResize:
         screen.handle_resize(2560, 1440)
         assert screen.screen_width == 2560
         assert screen.screen_height == 1440
+
+
+class TestShieldsRenderedOnResultsCard:
+    """PROJ-271 Phase 8 Task 8.1: shield numbers must appear on the
+    per-ship results card. Previously `ShipResult.max_shields` /
+    `current_shields` were populated but hidden — user could not
+    observe PROJ-270/271 modifier effects."""
+
+    def _ship_result(self, **overrides):
+        """Build a ShipResult with sensible defaults."""
+        from game.ui.screens.battle_results_data import ShipResult, WeaponStats
+        defaults = dict(
+            name="TestShip",
+            team_id=0,
+            is_alive=True,
+            is_derelict=False,
+            hp=400.0,
+            max_hp=500.0,
+            hp_percent=80.0,
+            current_shields=300.0,
+            max_shields=575.0,
+            weapons=[],
+            total_shots_fired=0,
+            total_shots_hit=0,
+            overall_accuracy=0.0,
+        )
+        defaults.update(overrides)
+        return ShipResult(**defaults)
+
+    def test_shields_row_rendered_on_ship_card(self, screen):
+        """`_draw_ship_card` must call small_font.render with a string
+        containing both current and max shields."""
+        import pygame
+        # Patch pygame.draw calls to no-op so we can focus on text.
+        with patch("pygame.draw.rect"):
+            ship = self._ship_result()
+            # Intercept all text renders.
+            screen._small_font.render = MagicMock(return_value=MagicMock(
+                get_width=lambda: 50, get_height=lambda: 12,
+            ))
+            screen._body_font.render = MagicMock(return_value=MagicMock(
+                get_width=lambda: 50, get_height=lambda: 16,
+            ))
+            mock_screen = MagicMock()
+            screen._draw_ship_card(mock_screen, 0, 0, 300, ship)
+
+            rendered_strings = [
+                call.args[0]
+                for call in screen._small_font.render.call_args_list
+            ]
+            shields_lines = [
+                s for s in rendered_strings
+                if "Shields" in s or "shields" in s
+            ]
+            assert shields_lines, (
+                f"Expected a shields row on ship card; got rendered strings: "
+                f"{rendered_strings}"
+            )
+            # At least one line should contain both the current and max values.
+            combined = " ".join(shields_lines)
+            assert "300" in combined and "575" in combined, (
+                f"Expected shield numbers 300/575 in render output; got: "
+                f"{shields_lines}"
+            )

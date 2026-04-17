@@ -95,3 +95,32 @@ class TestStatKeyEnum:
         # All should have string values
         for key in stat_keys:
             assert isinstance(key.value, str)
+
+
+class TestShieldBonusAddStatKey:
+    """PROJ-271 Phase 1 Task 1.1: SHIELD_BONUS_ADD additive stat_key."""
+
+    def test_shield_bonus_add_exists(self):
+        """StatKey.SHIELD_BONUS_ADD must exist for flat shield bonus wiring."""
+        from game.simulation.components.abilities.stat_keys import StatKey
+        assert hasattr(StatKey, 'SHIELD_BONUS_ADD'), (
+            "StatKey.SHIELD_BONUS_ADD is required for PROJ-271 Track B "
+            "(flat shield bonus from planet auras)"
+        )
+
+    def test_shield_bonus_add_value(self):
+        """Value must be 'shield_bonus_add' — keyed by this string in external_stats."""
+        from game.simulation.components.abilities.stat_keys import StatKey
+        assert StatKey.SHIELD_BONUS_ADD.value == 'shield_bonus_add'
+
+    def test_shield_bonus_add_default_is_zero(self):
+        """Additive stats default to 0.0 so absent bonus is neutral."""
+        from game.simulation.components.abilities.stat_keys import StatKey
+        assert StatKey.get_default(StatKey.SHIELD_BONUS_ADD) == 0.0
+
+    def test_shield_bonus_add_in_default_stats_dict(self):
+        """create_default_stats_dict() should include shield_bonus_add with default 0.0."""
+        from game.simulation.components.abilities.stat_keys import StatKey
+        stats = StatKey.create_default_stats_dict()
+        assert 'shield_bonus_add' in stats
+        assert stats['shield_bonus_add'] == 0.0

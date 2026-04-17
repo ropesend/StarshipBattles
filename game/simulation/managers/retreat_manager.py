@@ -7,13 +7,20 @@ Manages:
 - Retreat state tracking and updates
 - Ship escape detection
 - Escape callbacks
+
+PROJ-270 Task 5.4: accepts a `BoundaryRegion` (origin-centered ADT)
+instead of the legacy corner-rooted `map_bounds=(min_x, min_y, max_x,
+max_y)` tuple. `UnboundedRegion` disables edge retreat (warp retreat
+still works).
 """
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional, Callable, Tuple, List, Any, TYPE_CHECKING
+from typing import Dict, Optional, Callable, Tuple, List, TYPE_CHECKING
 
 from game.core.constants import SimulationConstants
+from game.core.math import Vector2
+from game.simulation.combat.boundary import BoundaryRegion, UnboundedRegion
 
 logger = logging.getLogger(__name__)
 
@@ -51,14 +58,18 @@ class RetreatManager:
     # Default edge detection threshold in world units
     DEFAULT_EDGE_THRESHOLD = SimulationConstants.DEFAULT_MAP_EDGE_THRESHOLD
 
-    def __init__(self, map_bounds: Tuple[float, float, float, float]):
+    def __init__(self, boundary: BoundaryRegion):
         """
         Initialize RetreatManager.
 
         Args:
-            map_bounds: (min_x, min_y, max_x, max_y) map boundaries
+            boundary: `BoundaryRegion` ADT (origin-centered rect, circle,
+                or unbounded). Used by edge-retreat logic to find the
+                closest edge and detect when a ship has arrived there.
+                `UnboundedRegion` disables EDGE retreat (no edge to
+                reach); WARP retreat continues to work.
         """
-        self.map_bounds = map_bounds
+        self.boundary = boundary
         self.retreating_ships: Dict[str, RetreatState] = {}
         self.escaped_ships: List[str] = []
         self._on_ship_escaped: Optional[Callable[['Ship'], None]] = None
@@ -91,6 +102,8 @@ class RetreatManager:
             return False, "Ship already retreating"
 
         if method == RetreatMethod.EDGE:
+            if isinstance(self.boundary, UnboundedRegion):
+                return False, "Cannot edge-retreat in unbounded arena — no edge to reach"
             target = self.find_nearest_edge(ship)
             self.retreating_ships[ship_id] = RetreatState(
                 method=RetreatMethod.EDGE,
@@ -180,31 +193,21 @@ class RetreatManager:
 
     def find_nearest_edge(self, ship: 'Ship') -> Tuple[float, float]:
         """
-        Find the nearest map edge for retreat.
+        Find the nearest boundary edge for retreat.
 
         Args:
             ship: Ship to find edge for
 
         Returns:
-            (x, y) target position at nearest edge
+            (x, y) target position on the nearest boundary edge
+
+        Raises:
+            NotImplementedError: if boundary is `UnboundedRegion` (no edge
+                exists). Callers should check `isinstance(self.boundary,
+                UnboundedRegion)` before invoking this method.
         """
-        min_x, min_y, max_x, max_y = self.map_bounds
-
-        dist_left = ship.x - min_x
-        dist_right = max_x - ship.x
-        dist_top = ship.y - min_y
-        dist_bottom = max_y - ship.y
-
-        min_dist = min(dist_left, dist_right, dist_top, dist_bottom)
-
-        if min_dist == dist_left:
-            return (min_x, ship.y)
-        elif min_dist == dist_right:
-            return (max_x, ship.y)
-        elif min_dist == dist_top:
-            return (ship.x, min_y)
-        else:
-            return (ship.x, max_y)
+        edge = self.boundary.closest_edge_point(Vector2(ship.x, ship.y))
+        return (edge.x, edge.y)
 
     def at_map_edge(
         self,
@@ -212,22 +215,19 @@ class RetreatManager:
         threshold: float = DEFAULT_EDGE_THRESHOLD
     ) -> bool:
         """
-        Check if ship is at map edge.
+        Check if ship is at boundary edge.
 
         Args:
             ship: Ship to check
             threshold: Distance from edge to consider "at edge"
 
         Returns:
-            True if ship is within threshold of any edge
+            True if ship is within `threshold` of the boundary edge.
+            `UnboundedRegion` always returns False (its
+            `distance_to_edge` is `math.inf`).
         """
-        min_x, min_y, max_x, max_y = self.map_bounds
-        return (
-            ship.x <= min_x + threshold or
-            ship.x >= max_x - threshold or
-            ship.y <= min_y + threshold or
-            ship.y >= max_y - threshold
-        )
+        dist = self.boundary.distance_to_edge(Vector2(ship.x, ship.y))
+        return dist <= threshold
 
     def is_retreating(
         self,

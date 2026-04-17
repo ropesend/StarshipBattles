@@ -176,9 +176,21 @@ class TestBattleControllerRetreat:
         assert "already retreating" in result.errors[0].lower()
 
     def test_request_retreat_edge_creates_retreat_state(self, controller, mock_service, mock_ship):
-        """request_retreat with edge method creates proper state."""
+        """request_retreat with edge method creates proper state.
+
+        PROJ-270 Task 5.4: edge retreat requires a bounded arena — spec
+        carries a `RectBoundary`. Without a spec (or with `UnboundedRegion`),
+        `request_retreat(method=EDGE)` rejects with a clear error.
+        """
+        from unittest.mock import MagicMock
+        from game.simulation.combat.boundary import RectBoundary, ExitPolicy
+
         config = BattleConfig(allow_retreat=True)
-        controller.configure(config)
+        spec = MagicMock(name="BattleSpec")
+        spec.boundary = RectBoundary(
+            width=100000.0, height=100000.0, exit_policy=ExitPolicy.RETREAT,
+        )
+        controller.configure(config, spec=spec)
         controller.start()
 
         ship_id = "ship-id"

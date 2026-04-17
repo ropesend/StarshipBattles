@@ -194,7 +194,7 @@ from `combat_lab/scenarios/validation.py`:
 
 Example (from `BeamAccuracyScenario` in `beam_scenarios.py`):
 ```python
-def validate(self, engine) -> List[Check]:
+def validate(self, outcome, telemetry=None) -> List[Check]:
     checks = []
     # Data: verify loaded weapon stats
     checks.append(check_exact("Weapon Damage", 1, self.attacker.weapon.damage))

@@ -21,7 +21,6 @@ from game.core.math import Vector2
 from game.simulation.battle_outcome import BattleOutcome, EndReason, ShipStatus
 from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -76,27 +75,29 @@ def _make_team(team_id: int, ships: tuple) -> TeamSpec:
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 
 @pytest.fixture
-def ship_builder(fresh_registries) -> Callable[[ShipSpec], Ship]:
+def ship_builder(fresh_registries) -> Callable[[ShipSpec, int], Ship]:
     """Minimal Phase-1 ship builder.
 
     Builds a bare Ship entity at the spec's requested pose, preserving
     `instance_id` so the outcome can round-trip. Uses the default Escort
     vehicle class — no explicit components — which is enough for a
     tick-limit smoke test.
+
+    PROJ-270 follow-up: takes (ship_spec, team_id) per widened
+    materialize_spec_ships callback signature.
     """
 
-    def _build(ship_spec: ShipSpec) -> Ship:
+    def _build(ship_spec: ShipSpec, team_id: int) -> Ship:
         ship = Ship(
             name=ship_spec.name,
             x=ship_spec.position.x,
             y=ship_spec.position.y,
             color=(200, 100, 50),
-            team_id=0,  # overridden by run_battle via spec team_id
+            team_id=team_id,
             ship_class="Escort",
             theme_id=ship_spec.theme_id,
             registries=fresh_registries,
@@ -110,6 +111,56 @@ def ship_builder(fresh_registries) -> Callable[[ShipSpec], Ship]:
 # ---------------------------------------------------------------------------
 # run_battle return type + function signature
 # ---------------------------------------------------------------------------
+
+
+class TestShipBuilderReceivesTeamId:
+    """PROJ-270 follow-up: `ship_builder` callback signature is
+    `Callable[[ShipSpec, int], Ship]` — team_id is passed as the second
+    positional argument so builders constructing ships from strategy
+    `ShipInstance` objects have the team context `ShipInstance.to_ship`
+    requires.
+
+    Before this change: unary `Callable[[ShipSpec], Ship]`. `game/app.py:
+    _ship_builder` could not call `ship_instance.to_ship(position,
+    team_id, registries=...)` because `team_id` was not available inside
+    the closure — it lives on `TeamSpec`, one level up from `ShipSpec`.
+
+    Regression symptom: `TypeError: ShipInstance.to_ship() missing 2
+    required positional arguments: 'position' and 'team_id'` at app.py:
+    580 during Battle Setup → Start Battle.
+    """
+
+    def test_materialize_spec_ships_passes_team_id_to_builder(
+        self, ship_builder,
+    ):
+        """materialize_spec_ships must invoke ship_builder(ship_spec, team_id)."""
+        from game.simulation.battle_runner import materialize_spec_ships
+
+        received: list = []
+
+        def _binary_builder(ship_spec: ShipSpec, team_id: int) -> Ship:
+            received.append((ship_spec.instance_id, team_id))
+            return ship_builder(ship_spec, team_id)
+
+        spec = BattleSpec(
+            seed=42,
+            telemetry_level=TelemetryLevel.NORMAL,
+            boundary=None,
+            end_condition=TickLimitCondition(max_ticks=2),
+            absolute_max_ticks=10,
+            teams=(
+                _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
+                _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
+            ),
+            modifier_stack=ModifierStack.empty(),
+            post_battle_hook=None,
+        )
+
+        materialize_spec_ships(spec, ship_builder=_binary_builder)
+
+        # Each builder call received the TeamSpec.team_id of its enclosing team.
+        assert ("s0", 0) in received, f"expected (s0, 0) in {received}"
+        assert ("s1", 1) in received, f"expected (s1, 1) in {received}"
 
 
 def test_run_battle_returns_battle_outcome(ship_builder):

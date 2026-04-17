@@ -59,10 +59,6 @@ from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.core.config import PhysicsConfig
 from game.core.constants import CombatConstants
 from game.simulation.interfaces import (
-    IResourceStorageAbility,
-    IResourceGenerationAbility,
-    IResourceConsumptionAbility,
-    IWarpJumpAbility,
     is_resource_storage,
     is_resource_generation,
     is_resource_consumption,
@@ -454,6 +450,25 @@ class ShipStatsCalculator:
         ship.turn_speed = acc['turn_speed']
         ship.total_maneuver_points = acc['maneuver_points']
         ship.max_shields = acc['max_shields']
+        # PROJ-271 Phase 1: flat shield bonus from external_stats acts as
+        # a virtual extra shield component. Pipeline order (base + flat) × mult:
+        # real shield components already have external shield_capacity_mult
+        # applied via ShieldProjection.recalculate(); we apply the same
+        # multiplier to the flat bonus so both compose identically.
+        # isinstance(dict) guard matches abilities/base.py:281 — test Mocks
+        # often have external_stats as a bare MagicMock, not a real dict.
+        external_stats = getattr(ship, 'external_stats', None)
+        if isinstance(external_stats, dict):
+            flat_shield_bonus = external_stats.get('shield_bonus_add', 0.0)
+            if flat_shield_bonus:
+                # PROJ-272 Phase 6: reverted PROJ-271 Phase 12.1's
+                # `capacity_mult` read. No current aura populates
+                # `capacity_mult` — reading it from external_stats was
+                # a latent double-multiply the moment any future aura
+                # would populate it. Revisit if a real `capacity_mult`
+                # team aura is ever added. See PROJ-272 decisions.md.
+                shield_cap_mult = external_stats.get('shield_capacity_mult', 1.0)
+                ship.max_shields += flat_shield_bonus * shield_cap_mult
         ship.shield_regen_rate = acc['shield_regen']
         ship.shield_regen_cost = acc['shield_cost']
         ship.warp_max_tonnage = acc['warp_max_tonnage']

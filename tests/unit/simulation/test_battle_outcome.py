@@ -21,7 +21,6 @@ from game.simulation.battle_outcome import (
     ShipOutcome,
     ShipStats,
     ShipStatus,
-    TaskForceOutcome,
     TeamOutcome,
     WeaponSummary,
 )
@@ -41,7 +40,6 @@ from game.simulation.battle_spec import ComponentStateSpec
         WeaponSummary,
         ShipStats,
         ShipOutcome,
-        TaskForceOutcome,
         TeamOutcome,
         BattleOutcome,
     ],
@@ -202,12 +200,10 @@ def test_team_outcome_fields_and_shape():
     team = TeamOutcome(
         team_id=1,
         name="Federation",
-        fleet_hierarchy=(TaskForceOutcome(task_force_id="tf-1"),),
         ships=(_minimal_ship_outcome(),),
     )
     assert team.team_id == 1
     assert team.name == "Federation"
-    assert isinstance(team.fleet_hierarchy, tuple)
     assert isinstance(team.ships, tuple)
 
 
@@ -220,7 +216,6 @@ def test_battle_outcome_fields():
             TeamOutcome(
                 team_id=0,
                 name="Team 0",
-                fleet_hierarchy=(),
                 ships=(),
             ),
         ),

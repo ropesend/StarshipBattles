@@ -34,15 +34,19 @@ class TestTransferDialog:
         fleet = MagicMock()
         fleet.id = 1
         fleet.fleet_id = 1
+        fleet.configure_mock(name="Fleet 1")
         fleet.location = (0, 0)
         return fleet
 
     def test_transfer_dialog_init_populates_sources(self, mock_manager, mock_scene, mock_fleet):
         """Dialog should find fleets and colonies at hex upon init."""
         # Arrange
+        # Note: 'name' is reserved in MagicMock; must set via configure_mock
         f1 = MagicMock(fleet_id=1, owner_id=0)
+        f1.configure_mock(name="Fleet 1")
         f1.location = (0, 0)
         f2 = MagicMock(fleet_id=2, owner_id=0)
+        f2.configure_mock(name="Fleet 2")
         f2.location = (0, 0)
         mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
 
@@ -79,7 +83,9 @@ class TestTransferDialog:
         """Changing source should remove it from target options."""
         # Arrange
         f1 = MagicMock(fleet_id=1, owner_id=0)
+        f1.configure_mock(name="Fleet 1")
         f2 = MagicMock(fleet_id=2, owner_id=0)
+        f2.configure_mock(name="Fleet 2")
         mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
         mock_scene._facade.get_planets_at_hex.return_value = []
         

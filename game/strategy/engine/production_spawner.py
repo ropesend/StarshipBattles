@@ -305,9 +305,10 @@ class ProductionSpawner:
                 system_name = parent_sys.name
                 local_hex = [planet.location.q, planet.location.r]
 
-        # Create fleet with unique ID
-        fleet_id = empire.get_next_fleet_id()
-        new_fleet = Fleet(fleet_id, empire.id, spawn_loc)
+        # Create fleet with globally unique ID from Galaxy
+        fleet_id = galaxy.get_next_fleet_id() if galaxy else 0
+        display_name = f"Fleet {empire.get_next_fleet_display_number()}"
+        new_fleet = Fleet(fleet_id, empire.id, spawn_loc, display_name=display_name)
         new_fleet.add_ship(ship_instance)
         empire.add_fleet(new_fleet)  # PROJ-219: Auto-registers via empire._galaxy
 

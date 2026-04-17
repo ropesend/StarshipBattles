@@ -68,6 +68,11 @@ def capture_battle_state(
     Returns:
         Path to saved file, or None if capture failed
     """
+    # PROJ-271 Phase 5.3: narrowed from `except Exception` (which
+    # swallowed a `TypeError: unexpected keyword 'mode'` for months
+    # after PROJ-270 Phase 5.3 deleted the kwarg) to `OSError` only.
+    # Programming errors (AttributeError, TypeError, ValueError) now
+    # propagate as real failures instead of hiding behind warnings.
     try:
         ensure_states_dir()
 
@@ -76,10 +81,10 @@ def capture_battle_state(
         filename = generate_state_filename(test_id, timestamp, state_type)
         filepath = os.path.join(BATTLE_STATES_DIR, filename)
 
-        # Capture state using BattleState
+        # Capture state using BattleState. PROJ-270 Phase 5.3 deleted
+        # the `mode` field + kwarg — do not pass it.
         state = BattleState.capture_from_engine(
             engine,
-            mode="test",
             seed=seed,
         )
 
@@ -90,8 +95,10 @@ def capture_battle_state(
         logger.debug(f"Saved {state_type} battle state to {filepath}")
         return filepath
 
-    except Exception as e:
-        logger.warning(f"Failed to capture {state_type} battle state: {e}")
+    except OSError as e:
+        # IO failure (disk full, permission denied, directory missing).
+        # These are environmental and appropriately non-fatal.
+        logger.warning(f"Failed to write {state_type} battle state to disk: {e}")
         return None
 
 
@@ -105,8 +112,9 @@ def capture_test_states(
     Capture both initial and final states for a test run.
 
     This is a convenience function for capturing both states. The initial state
-    should be captured right after scenario.setup(), and the final state should
-    be captured after the test completes.
+    should be captured right after ships materialize via `materialize_spec_ships`
+    (before the first tick), and the final state should be captured after the
+    test completes.
 
     Args:
         engine: BattleEngine with final state
@@ -257,16 +265,23 @@ class BattleStateCapture:
         return False  # Don't suppress exceptions
 
     def _capture_state(self, state_type: str) -> Optional[str]:
-        """Capture state with consistent timestamp, battle_id, and ship IDs."""
+        """Capture state with consistent timestamp, battle_id, and ship IDs.
+
+        PROJ-271 Phase 6 (audit follow-up): narrowed `except Exception`
+        to `except OSError`. Phase 5 narrowed the module-level
+        `capture_battle_state()` but missed this class method — which is
+        the LIVE production path via `test_executor.py:247` context
+        manager. Programming errors now propagate.
+        """
         try:
             ensure_states_dir()
 
             filename = generate_state_filename(self.test_id, self._timestamp, state_type)
             filepath = os.path.join(BATTLE_STATES_DIR, filename)
 
+            # PROJ-270 Phase 5.3 deleted the `mode` field — do not pass it.
             state = BattleState.capture_from_engine(
                 self.engine,
-                mode="test",
                 seed=self.seed,
                 battle_id=self._battle_id,
                 ship_id_map=self._ship_id_map,
@@ -278,8 +293,8 @@ class BattleStateCapture:
             logger.debug(f"Captured {state_type} state: {filepath}")
             return filepath
 
-        except Exception as e:
-            logger.warning(f"Failed to capture {state_type} state: {e}")
+        except OSError as e:
+            logger.warning(f"Failed to write {state_type} state to disk: {e}")
             return None
 
     def get_results_dict(self) -> dict:

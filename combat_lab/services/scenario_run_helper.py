@@ -64,7 +64,7 @@ def run_scenario_via_run_battle(
     ships_by_role: Dict[str, Any] = {}
     initial_state_by_role: Dict[str, Any] = {}
 
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = scenario._load_ship(ship_spec.design_id)
         role = _role_from_instance_id(ship_spec.instance_id)
         if role is not None:

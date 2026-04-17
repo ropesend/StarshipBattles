@@ -12,19 +12,34 @@
 
 ### Data Flow
 
+Modifiers reach ability/ship math via TWO parallel paths — component-born
+modifiers (left) and battle-scoped team auras (right):
+
 ```
-JSON Modifier Definition
-         |
-ModifierEffectEvaluator.evaluate_modifier()
-         |
-List[ModifierEffect] (evaluated concrete values)
-         |
-apply_modifier_effects() aggregates into stats dict
-         |
-Component.stats / Component.ability_stats
-         |
-Ability.recalculate() applies via STAT_BINDINGS
+Component-born modifiers                   Battle-scoped team auras
+(persistent ship state)                    (rebuilt each battle from ModifierStack)
+
+JSON Modifier Definition                   spec compilers emit ModifierEntry
+         |                                          |
+ModifierEffectEvaluator.evaluate_modifier()         v
+         |                                  FleetAuraManager._apply_bonuses
+List[ModifierEffect]                                |
+         |                                  ship.external_stats[stat_key]: float
+apply_modifier_effects()                            |
+         |                                          +--------------------------+
+Component.stats / Component.ability_stats                                      |
+         |                                                                     |
+Ability.recalculate() via STAT_BINDINGS <----- composed in              read directly in
+                                               Ability.get_effective_stat      ship_stats._apply_aggregated_stats
+                                               (per-ability keys,              (ship-level keys,
+                                                e.g. damage_mult)                e.g. shield_bonus_add)
 ```
+
+Component-born modifiers live on `component.stats` and survive
+serialization; battle-scoped team auras live on `ship.external_stats`
+and are NEVER serialized (they are recomputed from
+`ModifierStack` each battle). See patterns 24 (External-Stats Bridge)
+and 25 (Scope-Driven Team Routing) in [02_PATTERNS.md](../02_PATTERNS.md).
 
 ## Architecture Components
 

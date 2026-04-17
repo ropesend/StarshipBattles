@@ -1,5 +1,14 @@
 # Scenario Template Migration Guide
 
+> **HISTORICAL — PROJ-270 updates this pattern.** The code examples
+> below (`def setup(self, battle_engine)`, `battle_engine.start(...)`,
+> `def validate(self, engine)`) predate PROJ-269 + PROJ-270, which
+> eliminated scenario `setup()` methods and the direct engine entry.
+> Current scenarios override `to_spec()` / `custom_setup(ship_specs)`
+> and `validate(outcome, telemetry)`. This guide is retained only as
+> a historical reference for the template-vs-non-template migration
+> that took place before PROJ-269; do not copy the patterns shown.
+
 ## Overview
 
 The scenario template system eliminates **~2000 lines of duplicated code** across 35+ test scenarios by providing reusable base classes for common test patterns.

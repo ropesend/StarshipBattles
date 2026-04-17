@@ -552,9 +552,7 @@ class Game:
         """
         from game.simulation.battle_config import BattleConfig
         from game.simulation.battle_controller import BattleController
-        from game.simulation.battle_runner import materialize_spec_ships
         from game.ai.ai_factory import AIControllerFactory
-        from game.core.registry import get_default_registry_provider
 
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
@@ -566,36 +564,43 @@ class Game:
             absolute_max_ticks=spec.absolute_max_ticks,
         )
 
-        controller = BattleController(ai_factory=AIControllerFactory())
-        controller.configure(config)
-        controller.set_spec(spec)
-        engine = controller.service.get_engine()
-        if spec.boundary is not None:
-            engine.boundary = spec.boundary
-        engine.modifier_stack = spec.modifier_stack
+        # Use the DI container already initialized on Game.__init__ (app.py:175)
+        # rather than calling a non-existent factory method. This matches the
+        # DI pattern documented in docs/01_ARCHITECTURE.md — GameRegistries is
+        # owned by Game and passed through the call chain.
+        registries = self.registries
 
-        registries = get_default_registry_provider().get_registries()
-
-        def _ship_builder(ship_spec):
+        def _ship_builder(ship_spec, team_id):
             # Look up the original ShipInstance by instance_id so we can
-            # call `to_ship(registries)` to preserve accumulated component HP.
+            # call `to_ship(position, team_id, registries=)` to preserve
+            # accumulated component HP. `team_id` is threaded through by
+            # `materialize_spec_ships` from the enclosing `TeamSpec.team_id`.
+            # `position` comes from the spec (will be overwritten to the
+            # spec pose by materialize_spec_ships post-build — we still
+            # pass it here so ShipInstance.to_ship's contract is satisfied).
+            position = (ship_spec.position.x, ship_spec.position.y)
             for side in (self.battle_setup.state.side_0, self.battle_setup.state.side_1):
                 for fleet in side.fleets:
                     for ship_instance in fleet.ships:
                         if ship_instance.instance_id == ship_spec.instance_id:
-                            return ship_instance.to_ship(registries=registries)
+                            return ship_instance.to_ship(
+                                position,
+                                team_id,
+                                registries=registries,
+                            )
             raise KeyError(
                 f"ShipInstance with instance_id={ship_spec.instance_id!r} not "
                 f"found in BattleSetupState fleets"
             )
 
-        teams_by_id, _ships_by_role = materialize_spec_ships(
-            spec, ship_builder=_ship_builder,
+        # PROJ-270 Phase 10: single spec-in path — no hand-rolled plumbing.
+        controller = BattleController()
+        controller.start_from_spec(
+            spec,
+            ai_factory=AIControllerFactory(),
+            ship_builder=_ship_builder,
+            config=config,
         )
-        for team_id, ships in teams_by_id.items():
-            controller.add_ships(ships, team_id=team_id)
-
-        controller.start()
 
         self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)

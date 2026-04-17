@@ -9,7 +9,6 @@ from game.core.math import Vector2
 from game.simulation.battle_outcome import BattleOutcome, ShipStatus
 from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import (
-    AIPolicy,
     BattleSpec,
     CombatPolicies,
     EntryVector,
@@ -60,7 +59,6 @@ def _team(team_id: int, ship: ShipSpec) -> TeamSpec:
                 ),
             ),
         ),
-        ai_policy=AIPolicy(),
     )
 
 
@@ -68,7 +66,7 @@ def test_ship_outside_retreat_boundary_is_marked_retreated(fresh_registries):
     """Ship starts outside the RETREAT boundary → `status=RETREATED`
     in the outcome."""
 
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design(), registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship
@@ -136,7 +134,7 @@ def test_unbounded_region_never_marks_ships_retreated(fresh_registries):
     """With `boundary=None` (unbounded), nobody should be retreated —
     regression gate for the 2-team common case."""
 
-    def ship_builder(ship_spec):
+    def ship_builder(ship_spec, team_id):
         ship = ShipSerializer.from_dict(_design(), registries=fresh_registries)
         ship.instance_id = ship_spec.instance_id
         return ship

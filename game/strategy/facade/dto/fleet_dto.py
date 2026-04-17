@@ -77,6 +77,8 @@ class FleetInfo:
 
     fleet_id: int
     owner_id: int
+    name: str
+    composition_summary: str
     location: HexCoord
     speed: float
     ship_count: int
@@ -154,7 +156,7 @@ class FleetInfo:
                 # Target is a Fleet
                 if isinstance(order.target, Fleet):
                     target_id = order.target.id
-                    target_description = f"Fleet {order.target.id}"
+                    target_description = order.target.name
             elif order.type.name == "BUILD":
                 # BUILD order - fleet is constructing
                 target_description = f"Building ({len(fleet.construction_queue)} items)"
@@ -188,6 +190,8 @@ class FleetInfo:
         return cls(
             fleet_id=fleet.id,
             owner_id=fleet.owner_id,
+            name=fleet.name,
+            composition_summary=fleet.composition_summary,
             location=fleet.location,
             speed=fleet.speed,
             ship_count=len(fleet.ships),

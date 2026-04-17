@@ -49,12 +49,14 @@ class Fleet:
         owner_id,
         location,
         speed=5.0,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        display_name: str = "",
     ):
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
         self.location = location  # HexCoord
         self._component_registry = component_registry
+        self.display_name = display_name  # Renamable label; empty = fallback to "Fleet {id}"
 
         # Master ship list (flat, canonical list of all ships in the fleet)
         self.ships: List[ShipInstance] = []
@@ -119,18 +121,27 @@ class Fleet:
 
     @property
     def name(self) -> str:
-        """
-        Display name for the fleet.
+        """Renamable display name for the fleet.
 
-        Returns a descriptive name based on fleet composition.
+        Returns display_name if set, otherwise falls back to "Fleet {id}".
+        """
+        if self.display_name:
+            return self.display_name
+        return f"Fleet {self.id}"
+
+    @property
+    def composition_summary(self) -> str:
+        """Ship composition summary for tooltips.
+
+        Returns a descriptive string based on fleet contents.
         """
         ship_count = len(self.ships)
         if ship_count == 0:
-            return f"Empty Fleet {self.id}"
+            return "Empty fleet"
         elif ship_count == 1:
-            return f"Fleet {self.id}: {self.ships[0].name}"
+            return self.ships[0].name
         else:
-            return f"Fleet {self.id} ({ship_count} ships)"
+            return f"{ship_count} ships"
 
     @property
     def context_type(self) -> str:
@@ -398,6 +409,7 @@ class Fleet:
             'owner_id': self.owner_id,
             'location': location_data,
             'speed': self.speed,
+            'display_name': self.display_name,
             'ships': ships_data,
             'orders': [o.to_dict() for o in self.orders],
             'path': [{'q': p.q, 'r': p.r} if isinstance(p, HexCoord) else list(p) if isinstance(p, tuple) else p for p in self.path],
@@ -454,6 +466,7 @@ class Fleet:
             location=location,
             speed=data.get('speed', 5.0),
             component_registry=component_registry,
+            display_name=data.get('display_name', ''),
         )
 
         # PROJ-251: Strict deserialization — corrupt ships fail the load

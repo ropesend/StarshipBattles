@@ -153,6 +153,39 @@ def create_ability(name: str, component, data: Any) -> Optional[Ability]:
     return None
 
 
+def get_ability_default_scope(ability_name: str) -> str:
+    """Resolve the class-level `default_scope` for an ability by name.
+
+    Mirrors the runtime behavior of `Ability._parse_scope`: when JSON data
+    omits `scope`, the runtime falls back to the ability class's
+    `default_scope`. Compilers and collectors that pre-compute scope for
+    routing must use THIS helper (not a hardcoded "self" fallback) to
+    agree with the runtime.
+
+    PROJ-272 Phase 1: fixes compiler/runtime disagreement that silently
+    dropped complexes whose author forgot to specify `scope` on
+    ShieldModifier/DamageModifier abilities (class default ALLIED_SYSTEM).
+
+    Args:
+        ability_name: Registry key (e.g., "ShieldModifier", "DamageModifier").
+
+    Returns:
+        String scope value (e.g., "allied_system"). Falls back to "self"
+        for unknown abilities, logging a warning once per name.
+    """
+    ability_cls = ABILITY_REGISTRY.get(ability_name)
+    if ability_cls is None:
+        logger.warning(
+            "get_ability_default_scope: unknown ability %r in registry; "
+            "falling back to 'self'.", ability_name,
+        )
+        return "self"
+    default = getattr(ability_cls, 'default_scope', None)
+    if default is None:
+        return "self"
+    return default.value if hasattr(default, 'value') else str(default)
+
+
 # Color constants for UI hints
 from . import ui_colors
 

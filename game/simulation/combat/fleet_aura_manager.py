@@ -35,11 +35,18 @@ class AuraProvider:
 
 @dataclass
 class ExternalModifier:
-    """A battle condition modifier not tied to a ship (permanent for the battle)."""
+    """A battle condition modifier not tied to a ship (permanent for the battle).
+
+    PROJ-271 Phase 7: `stack_group` drives two-phase aggregation —
+    entries sharing a stack_group compose MAX; distinct stack_groups
+    compose SUM. `None` means "unique group" (each entry contributes
+    independently via SUM). Mirrors the ship-provider aura semantics.
+    """
     ability_name: str
     value: float
     source_name: str
     team_id: Optional[int]  # None = global (all teams)
+    stack_group: Optional[str] = None
 
 
 class FleetAuraManager:
@@ -131,12 +138,26 @@ class FleetAuraManager:
         if not stat_key or stat_key == 'placeholder':
             self._log_placeholder_once(source)
             return
+        # PROJ-273 Phase 5: warn once per (stat_key, source) when the key
+        # isn't in `KNOWN_EXTERNAL_STAT_KEYS`. Catches silent-drop bugs
+        # where a compiler emits an entry no reader consumes. Late import
+        # avoids adding a hard circular dep at module load time.
+        from game.simulation.combat.ability_stat_registry import KNOWN_EXTERNAL_STAT_KEYS
+        if stat_key not in KNOWN_EXTERNAL_STAT_KEYS:
+            self._log_unknown_stat_key_once(stat_key, source)
+            # Still record the entry — the engine already aggregates by
+            # stat_key, so unknown keys are harmless (just unused). The
+            # warning is advisory, not a hard filter.
         value = float(getattr(effect, 'value', 0.0) or 0.0)
+        # PROJ-271 Phase 7: copy stack_group from the entry so the
+        # recalculate path can apply two-phase MAX/SUM aggregation.
+        stack_group = getattr(entry, 'stack_group', None)
         self._external.append(ExternalModifier(
             ability_name=stat_key,
             value=value,
             source_name=source,
             team_id=team_id,
+            stack_group=stack_group,
         ))
 
     def _log_placeholder_once(self, source: str) -> None:
@@ -156,6 +177,31 @@ class FleetAuraManager:
             "mapping (placeholder). Effect will NOT be applied to battle "
             "math. Compiler author should map this to a real StatKey.",
             source,
+        )
+
+    def _log_unknown_stat_key_once(self, stat_key: str, source: str) -> None:
+        """Emit one WARNING per unique (stat_key, source) pair.
+
+        PROJ-273 Phase 5: flags stat_keys that aren't in
+        `KNOWN_EXTERNAL_STAT_KEYS`. Advisory only — the entry is still
+        recorded, since the engine aggregates by stat_key and an unknown
+        key is harmless. The warning tells contributors either:
+        (a) they added a stat_key without wiring a reader, or
+        (b) they wired a reader without updating `KNOWN_EXTERNAL_STAT_KEYS`.
+        """
+        if not hasattr(self, '_unknown_stat_key_warned'):
+            self._unknown_stat_key_warned: set = set()
+        key = (stat_key, source)
+        if key in self._unknown_stat_key_warned:
+            return
+        self._unknown_stat_key_warned.add(key)
+        logger.warning(
+            "FleetAuraManager: ModifierEntry source=%r emits unknown stat_key=%r "
+            "(not in KNOWN_EXTERNAL_STAT_KEYS). No downstream reader will "
+            "consume this. Add the key to KNOWN_EXTERNAL_STAT_KEYS in "
+            "game/simulation/combat/ability_stat_registry.py, or check the "
+            "compiler emission.",
+            source, stat_key,
         )
 
     def _scan_ship(self, ship: Any) -> None:
@@ -291,35 +337,81 @@ class FleetAuraManager:
                 groups[group] = []
             groups[group].append(provider.value)
 
-        # PROJ-253: Delegate two-phase aggregation to shared function
+        # PROJ-271 Phase 7: external ModifierEntry values now route
+        # through the same team_ability_groups structure BEFORE
+        # aggregation, so they participate in the two-phase MAX/SUM
+        # alongside ship-provider auras. Same-stack_group entries MAX;
+        # different stack_groups SUM; None stack_group becomes a
+        # unique group (preserves pre-Phase-7 additive behavior for
+        # un-grouped ToHitAttack/Defense entries).
+        for idx, ext in enumerate(self._external):
+            group = ext.stack_group or f"_default_ext_{idx}"
+            target_teams = team_ids if ext.team_id is None else (
+                {ext.team_id} if ext.team_id in team_ability_groups else set()
+            )
+            for team_id in target_teams:
+                if ext.ability_name not in team_ability_groups[team_id]:
+                    team_ability_groups[team_id][ext.ability_name] = {}
+                groups = team_ability_groups[team_id][ext.ability_name]
+                if group not in groups:
+                    groups[group] = []
+                groups[group].append(ext.value)
+
+        # PROJ-253: Delegate two-phase aggregation to shared function.
+        # PROJ-272 Phase 8: narrowed `if v` truthy filter → `if v is not None`
+        # so legitimate 0.0 values (e.g., `damage_mult=0.0` = "deal zero
+        # damage" suppressor) are preserved. 0.0 and "no modifier" are
+        # semantically different game states and must not be conflated.
         for team_id, ability_groups in team_ability_groups.items():
             totals = _aggregate_ability_groups(ability_groups)
-            self._team_bonuses[team_id] = {k: v for k, v in totals.items() if v}
-
-        # Add external modifiers (always active, no stacking groups)
-        for ext in self._external:
-            if ext.team_id is None:
-                for team_id in team_ids:
-                    current = self._team_bonuses[team_id].get(ext.ability_name, 0.0)
-                    self._team_bonuses[team_id][ext.ability_name] = current + ext.value
-            else:
-                team_id = ext.team_id
-                if team_id in self._team_bonuses:
-                    current = self._team_bonuses[team_id].get(ext.ability_name, 0.0)
-                    self._team_bonuses[team_id][ext.ability_name] = current + ext.value
+            self._team_bonuses[team_id] = {
+                k: v for k, v in totals.items() if v is not None
+            }
 
         self._apply_bonuses(ships)
 
     def _apply_bonuses(self, ships: List[Any]) -> None:
-        """Apply cached team bonuses to ship attributes."""
+        """Apply cached team bonuses to ship attributes.
+
+        PROJ-270 Phase 9: writes ALL team-bonus stat_keys onto
+        `ship.external_stats` so the ability pipeline
+        (`Ability.get_effective_stat`) can consume them. Previously this
+        method read only the hardcoded `ToHitAttackModifier` /
+        `ToHitDefenseModifier` keys and silently discarded every other
+        stat_key in `_team_bonuses`, which meant `shield_capacity_mult`
+        / `damage_mult` / `shield_mult` compiled by the strategy spec
+        compiler never reached ship stats — the Track A battle-math
+        regression from PROJ-269 Phase 5.5 that PROJ-270 Phase 6 falsely
+        claimed to have restored.
+        """
         for ship in ships:
+            new_external_stats = {}
             if ship.is_alive:
                 team = self._team_bonuses.get(ship.team_id, {})
+                # Direct-attribute setters for fleet_attack_bonus /
+                # fleet_defense_bonus — consumed by name in collision.py:115-120.
                 ship.fleet_attack_bonus = team.get('ToHitAttackModifier', 0.0)
                 ship.fleet_defense_bonus = team.get('ToHitDefenseModifier', 0.0)
+                # Expose the FULL team-bonus dict via ship.external_stats
+                # so ability-level stat lookup picks it up.
+                new_external_stats = dict(team)
             else:
                 ship.fleet_attack_bonus = 0.0
                 ship.fleet_defense_bonus = 0.0
+
+            # PROJ-270 Phase 9: cached derived values (e.g. ShieldProjection.capacity)
+            # only re-compute on recalculate_stats(). Trigger it only when
+            # external_stats actually changed — not every tick — to avoid
+            # needless full recalculation of every ship's stat pipeline.
+            prev = getattr(ship, 'external_stats', None)
+            ship.external_stats = new_external_stats
+            if prev != new_external_stats and ship.is_alive:
+                # Guard for test-shim ships (SimpleNamespace, bare Mocks)
+                # that don't implement recalculate_stats. Real `Ship`
+                # always has it.
+                recalc = getattr(ship, 'recalculate_stats', None)
+                if callable(recalc):
+                    recalc()
 
     def get_attack_bonus(self, ship: Any) -> float:
         """Get the fleet to-hit attack bonus for a ship."""

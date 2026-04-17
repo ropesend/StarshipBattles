@@ -110,8 +110,9 @@ class TestLabExecutor:
                 self.output_log.append("ERROR: Could not create battle engine!")
                 return
 
-            # Switch to battle scene for visual execution
-            # (_switch_to_battle handles engine.start + scenario.setup)
+            # Switch to battle scene for visual execution. `_switch_to_battle`
+            # compiles the spec, drives BattleController.start_from_spec, and
+            # wires the scenario's initial_state + custom_setup.
             self.switch_to_battle(scenario)
 
             self.output_log.append(f"Started test {test_id}")

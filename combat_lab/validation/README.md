@@ -116,7 +116,7 @@ Scenarios implement a `validate(engine)` method that returns a list of `Check`
 objects. The runner collects these into a `ValidationReport`.
 
 ```python
-def validate(self, engine) -> List[Check]:
+def validate(self, outcome, telemetry=None) -> List[Check]:
     checks = []
 
     # Phase 1: data — verify loaded values match expectations
