@@ -7,6 +7,10 @@ accesses variant attributes, it crashes with AttributeError.
 
 The fix: ComparisonScenario._run_validation() should skip validate()
 in visual baseline mode and return a baseline-only report.
+
+PROJ-277: `validate()` now takes a single `ab: ABBattleOutcome` arg;
+the visual-baseline skip is still in place pending Phase 3.6 proper
+fix (render_mode on ABBattleRunner).
 """
 import pytest
 from unittest.mock import MagicMock, patch
@@ -40,8 +44,8 @@ class _DummyComparisonScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
 
-    def validate(self, outcome, telemetry=None) -> list:
-        # This accesses variant_damage_dealt — crashes in visual baseline mode
+    def validate(self, ab) -> list:
+        # Reads `self.variant_damage_dealt` — populated by collect_results.
         return [check_true(
             "Variant Did Damage",
             self.variant_damage_dealt > 0,
@@ -93,6 +97,11 @@ class TestComparisonVisualBaselineCrash:
         scenario.variant_final_hp = 925.0
         scenario.variant_ticks = 10
         scenario.results = {'ticks_run': 10}
+
+        # Stash a baseline outcome as `_run_baseline_battle` would;
+        # the runtime outcome we pass in represents the variant.
+        scenario._baseline_outcome = MagicMock(duration_ticks=10)
+        scenario._baseline_telemetry = MagicMock()
 
         engine = MagicMock()
         engine.tick_counter = 10

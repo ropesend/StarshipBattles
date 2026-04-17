@@ -35,7 +35,13 @@ def _design_with_shields() -> dict:
         "design_role": "fleet_escort",
         "theme_id": "Federation",
         "layers": {
-            "CORE": [{"id": "bridge"}, {"id": "shield_generator"}],
+            # crew_quarters + life_support required so bridge (CrewRequired) has crew.
+            "CORE": [
+                {"id": "bridge"},
+                {"id": "crew_quarters"},
+                {"id": "life_support"},
+                {"id": "shield_generator"},
+            ],
             "OUTER": [{"id": "laser_cannon"}],
             "ARMOR": [],
         },

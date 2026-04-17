@@ -3,7 +3,7 @@
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-277 2`
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Implement the runner such that Phase 1 tests pass.
 
 ---
@@ -14,21 +14,20 @@
 **File:** `combat_lab/services/ab_battle_runner.py`
 **Tests:** `pytest tests/unit/combat_lab/services/test_ab_battle_runner.py -v`
 
-- [ ] Create a `CombatLabTelemetry()` instance
-- [ ] Call `run_battle(spec, ai_factory=self._ai_factory, ship_builder=self._ship_builder, per_tick_callback=telemetry.on_tick)`
-- [ ] Return `(outcome, telemetry)` tuple
-- [ ] Run tests — some pass
+- [x] `_run_one` builds a kwargs dict forwarding the stored `ai_factory` + optional `ship_builder` / `pre_tick_loop_callback` / `per_tick_callback` to `run_battle`
+- [x] Returns `(outcome, CombatLabTelemetry())` tuple
+- [x] Deviation from design sketch: sketch used `per_tick_callback=telemetry.on_tick` but `CombatLabTelemetry` is frozen with no `on_tick` method. Minimal implementation returns an empty telemetry; Phase 3's `ComparisonScenario` integration wires actual role-tracking via a scenario-supplied `per_tick_callback` that closes over a `ships_by_role` dict (same pattern as `scenario_run_helper.py`).
+- [x] All 5 mock-based `run()` tests pass
 
-**Notes:**
+**Notes:** Chose explicit kwargs forwarding rather than passing `None` for unused callbacks — keeps `run_battle`'s defaults clean and makes the mock assertion `call.kwargs["ship_builder"] is ship_builder` pass only when actually forwarded.
 
 ### Task 2.2: Implement `run` [Simple]
 **File:** `combat_lab/services/ab_battle_runner.py`
 **Tests:** `pytest tests/unit/combat_lab/services/test_ab_battle_runner.py -v`
 
-- [ ] Call `_run_one(baseline_spec)` → `(baseline_outcome, baseline_telemetry)`
-- [ ] Call `_run_one(variant_spec)` → `(variant_outcome, variant_telemetry)`
-- [ ] Construct and return `ABBattleOutcome(baseline_outcome, baseline_telemetry, variant_outcome, variant_telemetry)`
-- [ ] Run tests — all pass
+- [x] `run` calls `_run_one(baseline_spec)` then `_run_one(variant_spec)`
+- [x] Constructs and returns `ABBattleOutcome(baseline_outcome=..., baseline_telemetry=..., variant_outcome=..., variant_telemetry=...)`
+- [x] All 6 Phase-1 tests pass
 
 **Notes:**
 
@@ -36,17 +35,15 @@
 **File:** `tests/unit/combat_lab/services/test_ab_battle_runner.py`
 **Tests:** `pytest tests/unit/combat_lab/services/test_ab_battle_runner.py::test_parity -v`
 
-- [ ] Construct identical baseline and variant specs (same seed)
-- [ ] Run through ABBattleRunner
-- [ ] Assert `baseline_outcome.duration_ticks == variant_outcome.duration_ticks` (deterministic)
-- [ ] Assert `baseline_telemetry.ship_stats` matches `variant_telemetry.ship_stats` (no role remapping; same role keys)
-- [ ] Run — passes
+- [x] `test_parity_identical_specs_produce_identical_outcomes` constructs two structurally identical `BattleSpec`s with the same seed (4242), runs through `ABBattleRunner` with a real `ship_builder` that loads a minimal Escort design
+- [x] Asserts `duration_ticks`, `end_reason`, and the set of ship `instance_id`s match between baseline and variant outcomes
+- [x] Passes — confirms runner-level determinism; no seed bleed-through between baseline and variant runs
 
-**Notes:**
+**Notes:** Telemetry-content assertion in the task description was skipped — `CombatLabTelemetry` only carries `in_flight_by_role` today, which is always empty under the Phase-2 minimal implementation. Phase 3 will add a proper telemetry-content parity check once role-tracking is wired.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] Update plan.md
-- [ ] Run `python Projects/scripts/validate_phase.py PROJ-277 2`
+- [x] All task checkboxes above are checked
+- [x] Update plan.md
+- [x] Run `python Projects/scripts/validate_phase.py PROJ-277 2`

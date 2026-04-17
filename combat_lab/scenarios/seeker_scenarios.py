@@ -98,7 +98,7 @@ class SeekerSpeedComparisonScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = 1000
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -166,7 +166,7 @@ class SeekerEnduranceComparisonScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = SEEKER_ENDURANCE_TEST_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -245,7 +245,7 @@ class SeekerTurnRateComparisonScenario(ComparisonScenario):
     def configure_variant(self, engine):
         self.attacker.angle = 90.0
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -319,7 +319,7 @@ class SeekerTurnRate180Scenario(ComparisonScenario):
     def configure_variant(self, engine):
         self.attacker.angle = 180.0
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -381,7 +381,7 @@ class SeekerDamageComparisonScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -450,7 +450,7 @@ class SeekerHPvsPDCScenario(_PDCMixin, ComparisonScenario):
     variant_target_ship = PDC_TARGET
     distance = 400  # Far enough for PDC to have time to intercept seekers in flight
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -513,7 +513,7 @@ class SeekerNoAmmoScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
         checks.append(check_true("Baseline Dealt Damage", self.baseline_damage_dealt > 0,
                                  detail=f"damage={self.baseline_damage_dealt}"))
@@ -548,7 +548,7 @@ class SeekerLimitedAmmoScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
         checks.append(check_true("Baseline Dealt Damage", self.baseline_damage_dealt > 0,
                                  detail=f"damage={self.baseline_damage_dealt}"))
@@ -595,7 +595,7 @@ class SeekerAmmoControlScenario(ComparisonScenario):
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
         checks.append(check_true("Baseline Dealt Damage", self.baseline_damage_dealt > 0,
                                  detail=f"damage={self.baseline_damage_dealt}"))
@@ -636,7 +636,7 @@ class SeekerPDCReducesDamageScenario(_PDCMixin, ComparisonScenario):
     variant_target_ship = PDC_TARGET
     distance = 400  # Give PDC time to intercept seekers in flight
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: undefended target took damage
@@ -682,7 +682,7 @@ class SeekerDefenseVsPDCScenario(_PDCMixin, ComparisonScenario):
     variant_target_ship = PDC_TARGET
     distance = 400  # Give PDC time to intercept seekers in flight
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: high defense seekers survive PDC better, deal more damage

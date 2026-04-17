@@ -924,7 +924,7 @@ class ProjectileStopsWithoutAmmoScenario(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired and dealt damage
@@ -992,7 +992,7 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline dealt damage
@@ -1076,7 +1076,7 @@ class ProjectileControlWithAmmoScenario(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: identical damage
@@ -1136,7 +1136,7 @@ class ProjectileWithMetalsFires(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         checks.append(check_true(
@@ -1194,7 +1194,7 @@ class ProjectileWithMetalsControl(ComparisonScenario):
     variant_target_ship = PROJ_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
         checks.append(check_exact(
             "Control — Identical Damage",

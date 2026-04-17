@@ -93,7 +93,7 @@ class PipelineShieldEmissiveScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Pipeline_Shield100_Emissive5.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took hull damage (shields depleted)
@@ -171,7 +171,7 @@ class PipelineShieldSRAScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_SRA_SmallShield.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took hull damage
@@ -258,7 +258,7 @@ class PipelineEmissiveSRAScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Pipeline_Emissive5_SRA15.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took hull damage (emissive only reduces, doesn't block all)
@@ -327,7 +327,7 @@ class PipelineFullVsNoneScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Pipeline_Full.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took substantial hull damage
@@ -412,7 +412,7 @@ class PipelineFullRegenScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Pipeline_Full_Regen.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: regen variant takes less damage
@@ -488,7 +488,7 @@ class PipelineSRAOverflowScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_SRA_SmallShield.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took substantial hull damage

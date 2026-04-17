@@ -208,7 +208,7 @@ class ModStack002_IndependentStatsScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify both modifiers applied on variant
@@ -288,7 +288,7 @@ class ModStack003_CompoundRatioScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage
@@ -364,7 +364,7 @@ class ModStack004_CombinedEffectScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage
@@ -436,7 +436,7 @@ class ModStack005_CompoundNotAdditiveScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt substantial damage

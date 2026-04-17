@@ -539,7 +539,7 @@ class BeamErraticMidRangeComparisonScenario(ComparisonScenario):
     distance = MID_RANGE_DISTANCE
     force_fire = True
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: erratic target should take less damage than stationary
@@ -612,7 +612,7 @@ class BeamErraticMaxRangeComparisonScenario(ComparisonScenario):
     force_fire = True
     expect_different_damage = True
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: erratic target should take less damage than stationary
@@ -778,7 +778,7 @@ class BeamStopsWithoutEnergyScenario(ComparisonScenario):
     variant_target_ship = BEAM_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired and dealt damage
@@ -846,7 +846,7 @@ class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
     variant_target_ship = BEAM_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired all ticks
@@ -931,7 +931,7 @@ class BeamControlWithEnergyScenario(ComparisonScenario):
     variant_target_ship = BEAM_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: identical damage
@@ -996,7 +996,7 @@ class BeamWithMetalsFires(ComparisonScenario):
     variant_target_ship = BEAM_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         checks.append(check_true(
@@ -1057,7 +1057,7 @@ class BeamWithMetalsControl(ComparisonScenario):
     variant_target_ship = BEAM_RES_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
         checks.append(check_exact(
             "Control — Identical Damage",

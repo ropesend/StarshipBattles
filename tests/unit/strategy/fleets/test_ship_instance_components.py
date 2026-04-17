@@ -20,7 +20,12 @@ from game.strategy.data.ship_instance import ShipInstance
 
 
 def _design_with_single_component() -> dict:
-    """Design with one Bridge component."""
+    """Design with one Bridge component (+ minimum crew support).
+
+    The bridge has CrewRequired (formula-driven), so the design needs
+    crew_quarters + life_support — otherwise the bridge goes inactive
+    for lack of crew.
+    """
     return {
         "name": "TestShip",
         "ship_class": "Escort",
@@ -28,7 +33,11 @@ def _design_with_single_component() -> dict:
         "design_role": "fleet_escort",
         "theme_id": "Federation",
         "layers": {
-            "CORE": [{"id": "bridge"}],
+            "CORE": [
+                {"id": "bridge"},
+                {"id": "crew_quarters"},
+                {"id": "life_support"},
+            ],
             "ARMOR": [],
         },
         "_metadata": {},

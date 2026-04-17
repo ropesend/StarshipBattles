@@ -82,6 +82,19 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
             }
         ],
         "INNER": [
@@ -185,8 +198,8 @@
         "last_modified": "2026-04-10T00:00:00.000000"
     },
     "expected_stats": {
-        "mass": 1976.07,
-        "max_hp": 5400,
+        "mass": 2006.071385147455,
+        "max_hp": 5460,
         "mass_valid": true
     }
 }

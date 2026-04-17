@@ -221,7 +221,7 @@ class ModAcc002_MidRangeComparisonScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both battles dealt damage
@@ -320,7 +320,7 @@ class ModAcc003_RangeDependentEffectScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = LONG_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both battles dealt meaningful damage
@@ -416,7 +416,7 @@ class ModAcc004_NegativePenaltyScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty was applied
@@ -518,7 +518,7 @@ class ModAcc005_LongRangeEffectivenessScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = LONG_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt meaningful damage

@@ -772,7 +772,7 @@ class EnergyContentionBeamRegenScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline fired all ticks (plenty of energy)

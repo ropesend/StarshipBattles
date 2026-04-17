@@ -89,7 +89,7 @@ class EmissiveBlocksLowDamageScenario(ComparisonScenario):
     variant_target_ship = EMISSIVE_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify emissive armor value
@@ -161,7 +161,7 @@ class EmissiveReducesHighDamageScenario(ComparisonScenario):
     variant_target_ship = EMISSIVE_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify emissive armor and beam damage
@@ -242,7 +242,7 @@ class EmissiveSameGroupNoStackScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Same-group MAX means identical damage
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify both have same emissive armor value (MAX = 5)
@@ -315,7 +315,7 @@ class EmissiveDiffGroupStackScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_EmissiveArmor_2x_DiffGroup.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has double emissive armor (SUM = 10)
@@ -388,7 +388,7 @@ class EmissiveNegativeValueScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_EmissiveArmor_Negative.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has reduced armor (5 + (-3) = 2)
@@ -475,7 +475,7 @@ class EmissiveThreeSameGroupScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Same-group MAX means identical damage
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has same emissive armor value (MAX = 5)
@@ -546,7 +546,7 @@ class EmissiveExactDamageBlockScenario(ComparisonScenario):
     variant_target_ship = EMISSIVE_TARGET
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify emissive armor value

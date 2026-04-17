@@ -779,7 +779,7 @@ class ComparisonScenario(TestScenario):
             variant_target_ship = "Test_Target_ECM.json"      # Has ECM
             distance = 400
 
-            def validate(self, outcome, telemetry=None) -> list:
+            def validate(self, ab) -> list:
                 checks = self._template_preconditions()
                 checks.append(check_true(
                     "ECM Reduces Damage",
@@ -922,6 +922,12 @@ class ComparisonScenario(TestScenario):
             baseline_target, "baseline_target", telemetry=baseline_telemetry
         )
 
+        # PROJ-277: stash the raw outcome + telemetry so `_run_validation`
+        # can package them into an `ABBattleOutcome` for the new
+        # single-arg `validate(ab)` contract.
+        self._baseline_outcome = baseline_outcome
+        self._baseline_telemetry = baseline_telemetry
+
     def _build_baseline_battle_spec(self):
         """Build the BattleSpec for the private baseline battle.
 
@@ -1018,6 +1024,67 @@ class ComparisonScenario(TestScenario):
         before the runner's simulation loop begins.
         """
         pass
+
+    # ------------------------------------------------------------------
+    # PROJ-277 Phase 3 — first-class A/B spec hooks (additive)
+    # ------------------------------------------------------------------
+    #
+    # These hooks are the target API for `ABBattleRunner` (Phase 4). The
+    # defaults delegate to the existing implementations so legacy
+    # orchestration (`_run_baseline_battle` + `_compile_comparison`)
+    # continues to work unchanged. Subclasses wanting to express the
+    # A/B contrast as a spec transformation (rather than swapping ship
+    # files) can override either method.
+    #
+    # Once Phase 4 flips dispatch to use `ABBattleRunner` and Phase 5
+    # migrates all subclasses, `_run_baseline_battle` and
+    # `_build_baseline_battle_spec` will be deleted in favor of these
+    # hooks.
+
+    def build_baseline_spec(self):
+        """Produce the baseline-side `BattleSpec` for this comparison.
+
+        Default implementation returns the spec built by
+        `_build_baseline_battle_spec()` — same shape used by the legacy
+        private-baseline path. Subclasses can override to express
+        baseline as "base spec with a modifier stripped" or similar.
+        """
+        return self._build_baseline_battle_spec()
+
+    def build_variant_spec(self):
+        """Produce the variant-side `BattleSpec` for this comparison.
+
+        Default implementation calls `to_spec()` with
+        `_visual_baseline=False` so the spec-compiler's variant branch
+        is selected regardless of the scenario's current rendering
+        mode. Subclasses can override to apply ability swaps,
+        modifier additions, etc. on top of a common template.
+        """
+        prior_mode = getattr(self, "_visual_baseline", False)
+        object.__setattr__(self, "_visual_baseline", False)
+        try:
+            return self.to_spec(registries=None)
+        finally:
+            object.__setattr__(self, "_visual_baseline", prior_mode)
+
+    # ------------------------------------------------------------------
+    # PROJ-277 Phase 3 — single-arg validate(ab) contract
+    # ------------------------------------------------------------------
+
+    def validate(self, ab):
+        """Validate an `ABBattleOutcome` from the paired runs.
+
+        PROJ-277: replaced the legacy `validate(self, outcome, telemetry=None)`
+        signature on `ComparisonScenario`. The `ab` parameter carries both
+        `baseline_outcome` / `baseline_telemetry` and `variant_outcome` /
+        `variant_telemetry`. Subclasses typically read `self.baseline_*` /
+        `self.variant_*` attrs (populated by `collect_results`) rather
+        than reaching into `ab` directly, but both are available.
+
+        Default implementation returns only the auto-preconditions; real
+        subclasses override with their assertion-specific checks.
+        """
+        return self._template_preconditions()
 
     def before_run_battle(self, spec) -> None:
         """Run the private baseline battle before the main run_battle.
@@ -1130,17 +1197,22 @@ class ComparisonScenario(TestScenario):
         self._collect_extra_results(outcome, telemetry)
 
     def _run_validation(self, outcome, telemetry=None):
-        """
-        Override base _run_validation for visual baseline mode.
+        """Run validation under the PROJ-277 single-arg `validate(ab)` contract.
 
-        In visual baseline mode only baseline results exist — calling
-        validate() would crash because variant attributes are absent.
-        Collect results and return a baseline-only precondition report.
+        Builds an `ABBattleOutcome` from the stashed baseline (populated
+        by `_run_baseline_battle`) + the current run's variant outcome +
+        telemetry, then calls `self.validate(ab)`.
+
+        Visual-baseline mode still skips validate because only the
+        baseline ran — no variant outcome exists yet. Proper fix is
+        PROJ-277 Phase 3.6 (`render_mode` on `ABBattleRunner` so both
+        battles always run regardless of which is rendered).
         """
-        if self._visual_baseline:
-            self.collect_results(outcome, telemetry)
-            checks = self._template_preconditions()
-            from combat_lab.scenarios.validation import ValidationReport
+        from combat_lab.scenarios.ab_outcome import ABBattleOutcome
+        from combat_lab.scenarios.validation import ValidationReport
+        from combat_lab.telemetry import CombatLabTelemetry
+
+        def _emit(checks):
             report = ValidationReport(checks=checks)
             self.results['validation'] = report.to_dict()
             self.results['validation_results'] = [
@@ -1165,7 +1237,39 @@ class ComparisonScenario(TestScenario):
             }
             self.results['has_validation_failures'] = not report.passed
             return report
-        return super()._run_validation(outcome, telemetry)
+
+        if self._visual_baseline:
+            # VB mode: baseline ran on runner's engine; no variant exists.
+            # Keep the preconditions-only report; flag for Phase 3.6 fix.
+            self.collect_results(outcome, telemetry)
+            return _emit(self._template_preconditions())
+
+        # Normal mode: baseline was stashed by `_run_baseline_battle`;
+        # (outcome, telemetry) here are the variant's.
+        self.collect_results(outcome, telemetry)
+        baseline_outcome = getattr(self, '_baseline_outcome', None)
+        baseline_telemetry = getattr(
+            self, '_baseline_telemetry', CombatLabTelemetry(),
+        )
+        if baseline_outcome is None:
+            # Defensive: baseline should have run by now. Emit
+            # preconditions so we don't crash, but the report will
+            # be missing outcome checks — surface as a loud failure.
+            from combat_lab.scenarios.validation import check_true
+            return _emit([check_true(
+                "ComparisonScenario: baseline_outcome missing",
+                False,
+                detail="_run_baseline_battle did not run before validation.",
+                phase="precondition",
+            )])
+        ab = ABBattleOutcome(
+            baseline_outcome=baseline_outcome,
+            baseline_telemetry=baseline_telemetry,
+            variant_outcome=outcome,
+            variant_telemetry=telemetry if telemetry is not None
+                              else CombatLabTelemetry(),
+        )
+        return _emit(self.validate(ab))
 
     def _template_preconditions(self):
         """

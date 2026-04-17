@@ -237,7 +237,7 @@
         "last_modified": "2026-04-10T00:00:00.000000"
     },
     "expected_stats": {
-        "mass": 2304.72,
+        "mass": 2304.7230676329737,
         "max_hp": 7300,
         "mass_valid": true
     }

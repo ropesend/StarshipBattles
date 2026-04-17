@@ -509,3 +509,23 @@ class TestDefaultMaxMass:
         ship.change_class("nonexistent_class_xyz")
         # The ship_class should NOT have changed (early guard returns before mutation)
         assert ship.ship_class == "Escort"
+
+    def test_ship_layer_manager_uses_canonical_default_max_mass(self):
+        """ship_layer_manager must use the canonical DEFAULT_MAX_MASS from
+        physics_constants (1000), not a divergent local definition.
+
+        Previously ship_layer_manager.py defined its own DEFAULT_MAX_MASS = 500
+        — different from physics_constants.DEFAULT_MAX_MASS = 1000. The local 500
+        was effectively dead code (Ship.recalculate_stats always overwrote it
+        with the canonical 1000), but the divergence was a smell. This test
+        asserts the two are unified.
+        """
+        from game.simulation.entities import ship_layer_manager
+        from game.simulation.physics_constants import DEFAULT_MAX_MASS as CANONICAL_DEFAULT
+
+        assert ship_layer_manager.DEFAULT_MAX_MASS == CANONICAL_DEFAULT, (
+            f"ship_layer_manager.DEFAULT_MAX_MASS = "
+            f"{ship_layer_manager.DEFAULT_MAX_MASS}, but physics_constants."
+            f"DEFAULT_MAX_MASS = {CANONICAL_DEFAULT}. The two must be unified — "
+            f"ship_layer_manager should import from physics_constants."
+        )

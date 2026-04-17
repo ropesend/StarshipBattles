@@ -140,17 +140,44 @@ ABILITY_REGISTRY = {
 
 
 
+def _contains_unevaluated_formula(data: Any) -> bool:
+    """Detect whether `data` contains any unevaluated formula strings (starting with '=').
+
+    Component definitions in the registry may have formula strings like
+    '=ship_class_mass' that cannot be evaluated until a ship context exists.
+    Attempting to construct an ability from such data will raise; we'd rather
+    skip silently and let the ability be instantiated later when formulas
+    resolve to numbers.
+    """
+    if isinstance(data, str):
+        return data.startswith('=')
+    if isinstance(data, dict):
+        return any(_contains_unevaluated_formula(v) for v in data.values())
+    if isinstance(data, list):
+        return any(_contains_unevaluated_formula(v) for v in data)
+    return False
+
+
 def create_ability(name: str, component, data: Any) -> Optional[Ability]:
-    if name in ABILITY_REGISTRY:
-        try:
-            # Handle primitive shortcut inputs (e.g. "CombatPropulsion": 100)
-            # passed as 'data'. Constructor must handle it, or we normalize here.
-            # Our constructors above handle `isinstance(data, (int, float))` checks.
-            return ABILITY_REGISTRY[name](component, data)
-        except (TypeError, ValueError, KeyError, AttributeError, ValidationException, ComponentException) as e:
-            logger.warning(f"Failed to create ability '{name}': {e}")
+    if name not in ABILITY_REGISTRY:
+        return None
+    try:
+        # Handle primitive shortcut inputs (e.g. "CombatPropulsion": 100)
+        # passed as 'data'. Constructor must handle it, or we normalize here.
+        # Our constructors above handle `isinstance(data, (int, float))` checks.
+        return ABILITY_REGISTRY[name](component, data)
+    except (TypeError, ValueError, KeyError, AttributeError, ValidationException, ComponentException) as e:
+        # If the failure was due to unevaluated formula strings in the data
+        # (typical at registry-load time for components with =ship_class_mass
+        # formulas), skip silently. The ability will be instantiated later by
+        # ComponentStatsCalculator.recalculate once the component is attached
+        # to a ship and formulas resolve to numbers. Only genuine
+        # misconfiguration (bad scope, malformed data without formulas) still
+        # logs a warning so it's visible.
+        if _contains_unevaluated_formula(data):
             return None
-    return None
+        logger.warning(f"Failed to create ability '{name}': {e}")
+        return None
 
 
 def get_ability_default_scope(ability_name: str) -> str:
