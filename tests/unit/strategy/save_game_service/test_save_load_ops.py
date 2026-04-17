@@ -154,8 +154,8 @@ class TestSaveGameServiceVersion:
             yield tmpdir
         shutil.rmtree(tmpdir)
 
-    def test_save_version_is_2_0_0(self, setup_tmpdir):
-        """New saves use version 2.0.0"""
+    def test_save_version_is_3_0_0(self, setup_tmpdir):
+        """New saves use version 3.0.0 (PROJ-276 Phase 5 bump)"""
         session = MockGameSession()
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
@@ -164,7 +164,7 @@ class TestSaveGameServiceVersion:
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
-        assert metadata['version'] == "2.0.0"
+        assert metadata['version'] == "3.0.0"
 
     def test_load_rejects_old_version(self, setup_tmpdir):
         """Loading incompatible version save returns error"""

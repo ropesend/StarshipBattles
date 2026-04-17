@@ -99,7 +99,7 @@ class TestShipInstanceValidation:
         assert ship.experience == 0
         assert ship.kills == 0
         assert ship.battles_survived == 0
-        assert ship.component_damage == {}
+        assert ship.components == {}
         assert ship.consumable_levels == {}
 
     @pytest.mark.parametrize("field_name", [

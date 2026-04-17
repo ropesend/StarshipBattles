@@ -154,7 +154,7 @@ class TestSaveGameServiceErrorLogging:
             f.write("{ invalid json }")  # Corrupted JSON
 
         metadata = {
-            "version": "2.0.0",  # Must match SaveGameService.SAVE_VERSION
+            "version": "3.0.0",  # Must match SaveGameService.SAVE_VERSION
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 1
@@ -194,7 +194,7 @@ class TestSaveGameServiceUserFriendlyErrors:
         os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
 
         metadata = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 1
@@ -226,7 +226,7 @@ class TestSaveGameServiceUserFriendlyErrors:
         os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
 
         metadata = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 1
@@ -280,7 +280,7 @@ class TestSaveGameServicePathResolution:
 
         # Valid metadata and game state
         metadata = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 1
@@ -397,7 +397,7 @@ class TestSaveGameServiceExceptionHandling:
 
         # Valid metadata
         metadata = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 1
@@ -421,7 +421,7 @@ class TestSaveGameServiceExceptionHandling:
 
         # Valid metadata pointing to turn 5
         metadata = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "timestamp": "2026-01-24T12:00:00",
             "player_name": "Test",
             "latest_turn_number": 5

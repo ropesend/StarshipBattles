@@ -248,10 +248,12 @@ Ships are never "repaired" between battles — component HP only
 decreases over a ship's lifetime unless an explicit repair mechanic
 adjusts it. Repair is a separate future project.
 
-Legacy `ShipInstance.component_damage: Dict[str, int]` (single-instance
-granularity) coexists with `components` during the PROJ-269 transition
-so 40+ existing call sites continue to work. Consolidation is a
-follow-up.
+`ShipInstance.components: Dict[str, ComponentState]` is the only
+persistent per-component HP store. The PROJ-269 Phase 2 transition was
+closed out by PROJ-276, which removed the legacy
+`ShipInstance.component_damage: Dict[str, int]` dict along with its
+lossy single-instance semantics (three identical components on one ship
+now track independent HP rather than flattening to one value).
 
 ---
 

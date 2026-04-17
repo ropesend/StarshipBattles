@@ -7,16 +7,20 @@ Replaces the strategy layer's ShipStatsCalculator by using Ship.from_dict()
 Returns a dict matching the interface contract that ShipInstance.get_calculated_stats()
 callers expect.
 """
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from game.core.registry import GameRegistries
 from game.simulation.entities.ship import Ship
+from game.strategy.data.component_state import component_state_key
+
+if TYPE_CHECKING:
+    from game.strategy.data.component_state import ComponentState
 
 
 def calculate_design_stats(
     design_data: Dict[str, Any],
     registries: GameRegistries,
-    component_damage: Optional[Dict[str, int]] = None,
+    components: Optional[Dict[str, "ComponentState"]] = None,
     component_toggles: Optional[Dict[str, bool]] = None,
 ) -> Dict[str, Any]:
     """Calculate ship stats from design JSON using the simulation Ship.
@@ -28,8 +32,11 @@ def calculate_design_stats(
     Args:
         design_data: Serialized ship design with 'layers', 'ship_class', etc.
         registries: GameRegistries with components, modifiers, vehicle_classes.
-        component_damage: Optional dict of component_id -> current_hp.
-            If provided, component HP is set before recalculation.
+        components: Optional dict of `ComponentState` keyed by
+            `component_state_key(component_id, instance_index)`. When
+            provided, each per-instance `current_hp` is applied to the
+            matching Ship component before recalculation. Components
+            with no entry start at full HP.
         component_toggles: Optional dict of component_id -> enabled.
             If provided, components can be toggled off before recalculation.
 
@@ -54,12 +61,16 @@ def calculate_design_stats(
     # If Ship.from_dict() fails, that's a real error (invalid design data).
     ship = Ship.from_dict(effective_design, registries=registries)
 
-    # Apply damage state if provided
-    if component_damage:
-        for layer_type, comp in ship.iter_components():
-            hp = _lookup_damage(comp.id, comp.max_hp, component_damage)
-            if hp < comp.max_hp:
-                comp.current_hp = hp
+    # Apply per-instance damage: iterate components by per-id occurrence
+    # index so identical components are disambiguated.
+    if components:
+        per_id_index: Dict[str, int] = {}
+        for _layer_type, comp in ship.iter_components():
+            idx = per_id_index.get(comp.id, 0)
+            per_id_index[comp.id] = idx + 1
+            cs = components.get(component_state_key(comp.id, idx))
+            if cs is not None and cs.current_hp < comp.max_hp:
+                comp.current_hp = cs.current_hp
 
     ship.recalculate_stats()
 
@@ -98,17 +109,3 @@ def calculate_design_stats(
         'resource_consumption_per_hex': per_hex,
         'resource_consumption_per_turn': per_turn,
     }
-
-
-def _lookup_damage(comp_id: str, max_hp: float, damage: Dict[str, int]) -> float:
-    """Look up current HP for a component, checking indexed forms."""
-    if comp_id in damage:
-        return damage[comp_id]
-    for key, hp in damage.items():
-        if key.startswith(comp_id + '_'):
-            try:
-                int(key[len(comp_id) + 1:])
-                return hp
-            except ValueError:
-                pass
-    return max_hp

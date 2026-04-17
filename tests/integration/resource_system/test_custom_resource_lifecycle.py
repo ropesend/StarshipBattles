@@ -22,7 +22,7 @@ from game.core.registry import GameRegistries, get_default_registry_manager
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.harvesting_engine import HarvestingEngine
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+from game.simulation.entities.ship_design_stats import calculate_design_stats
 from tests.fixtures.strategy_entities import create_test_planet
 
 
@@ -174,27 +174,33 @@ class TestCustomResourceShipStorage:
 
     def test_custom_resource_storage_in_stats(self):
         """A component with ResourceStorage for a custom resource appears in ship stats."""
-        # Register a test component with dilithium storage
-        registry = get_default_registry_manager()
-        registry.components["dilithium_tank"] = {
-            "id": "dilithium_tank",
-            "type": "ResourceStorage",
-            "mass": 50,
-            "hp": 100,
-            "allowed_vehicle_types": ["Ship"],
-            "abilities": {
-                "ResourceStorage": {
-                    "resource": "dilithium",
-                    "amount": 500.0,
-                }
-            },
-        }
+        from game.simulation.components.component import Component
 
+        registry = get_default_registry_manager()
         registries = GameRegistries(
-            components=registry.components,
+            components=dict(registry.components),
             modifiers=registry.modifiers,
             vehicle_classes=registry.vehicle_classes,
             resources=registry.resources,
+        )
+
+        # `Ship.from_dict` requires Component objects, not dicts — build one.
+        registries.components["dilithium_tank"] = Component(
+            {
+                "id": "dilithium_tank",
+                "name": "Dilithium Tank",
+                "type": "ResourceStorage",
+                "mass": 50,
+                "hp": 100,
+                "allowed_vehicle_types": ["Ship"],
+                "abilities": {
+                    "ResourceStorage": {
+                        "resource": "dilithium",
+                        "amount": 500.0,
+                    }
+                },
+            },
+            registries=registries,
         )
 
         design_data = {
@@ -205,7 +211,6 @@ class TestCustomResourceShipStorage:
             },
         }
 
-        calc = ShipStatsCalculator(registries=registries)
-        stats = calc.calculate_stats(design_data)
+        stats = calculate_design_stats(design_data, registries)
 
         assert stats.get("resource_storage", {}).get("dilithium", 0.0) == pytest.approx(500.0)

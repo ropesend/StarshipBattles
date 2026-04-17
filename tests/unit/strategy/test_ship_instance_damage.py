@@ -2,6 +2,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
+from game.strategy.data.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 
 
@@ -39,16 +40,29 @@ class TestShipInstanceDamageInfo:
         }
 
     def test_get_damaged_component_count(self, design_data, ship_factory):
-        """Should count number of damaged components."""
+        """Should count number of damaged component instances."""
         instance = ship_factory(design_data, owner_id=0)
 
         assert instance.get_damaged_component_count() == 0
 
-        instance.component_damage = {
-            'reactor_standard_0': 50,
-            'weapon_laser_0': 25,
-            'armor_plate_0': 10,
-        }
+        # Drop three specific instances below full HP.
+        def _damage(cid: str, idx: int, current: float) -> None:
+            key = component_state_key(cid, idx)
+            cs = instance.components.get(key)
+            if cs is None:
+                # Design-driven tests may start with empty components dict
+                # if the ship_factory short-circuits stat initialization —
+                # populate directly with synthetic max_hp.
+                instance.components[key] = ComponentState(
+                    component_id=cid, instance_index=idx,
+                    current_hp=current, max_hp=100.0,
+                )
+            else:
+                cs.current_hp = current
+
+        _damage('reactor_standard', 0, 50)
+        _damage('weapon_laser', 0, 25)
+        _damage('armor_plate', 0, 10)
 
         assert instance.get_damaged_component_count() == 3
 
@@ -263,18 +277,24 @@ class TestShipInstanceLayerInfo:
     def test_get_damaged_components_by_layer(self, design_data_with_layers, ship_factory):
         """Should extract only damaged components grouped by layer."""
         instance = ship_factory(design_data_with_layers, owner_id=0)
-        instance.component_damage = {
-            'reactor_standard_0': 50,  # CORE layer
-            'weapon_laser_0': 25,      # OUTER layer
-        }
+        # Seed per-instance state for the two components we want to damage.
+        instance.components[component_state_key('reactor_standard', 0)] = ComponentState(
+            component_id='reactor_standard', instance_index=0,
+            current_hp=50.0, max_hp=100.0,
+        )
+        instance.components[component_state_key('weapon_laser', 0)] = ComponentState(
+            component_id='weapon_laser', instance_index=0,
+            current_hp=25.0, max_hp=100.0,
+        )
 
         damaged_by_layer = instance.get_damaged_components_by_layer()
 
         assert 'CORE' in damaged_by_layer
         assert len(damaged_by_layer['CORE']) == 1
-        assert damaged_by_layer['CORE'][0] == ('reactor_standard_0', 50)
+        assert damaged_by_layer['CORE'][0] == ('reactor_standard#0', 50)
         assert 'OUTER' in damaged_by_layer
         assert len(damaged_by_layer['OUTER']) == 1
+        assert damaged_by_layer['OUTER'][0] == ('weapon_laser#0', 25)
         assert 'INNER' not in damaged_by_layer  # No damaged components
         assert 'ARMOR' not in damaged_by_layer
 

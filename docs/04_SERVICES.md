@@ -493,7 +493,7 @@ FleetSpeedCalculator.update_fleet_speed(fleet)
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `calculate_design_stats` | `(design_data, registries, component_damage=None, component_toggles=None) -> Dict` | Calculate all ship stats from design JSON, respecting damage and toggles |
+| `calculate_design_stats` | `(design_data, registries, components=None, component_toggles=None) -> Dict` | Calculate all ship stats from design JSON, respecting per-instance damage and toggles |
 
 **Return dict:**
 ```python
@@ -513,21 +513,36 @@ FleetSpeedCalculator.update_fleet_speed(fleet)
 
 **Component toggles:** Toggled-off components are excluded from the design before Ship creation, so their stats don't contribute.
 
-**Component damage:** Damaged components have their `current_hp` set before `recalculate_stats()`, which applies the simulation's 5-phase damage model (threshold-based deactivation, crew reallocation, etc.).
+**Per-instance damage:** The `components` kwarg accepts a
+`Dict[str, ComponentState]` keyed by
+`component_state_key(component_id, instance_index)` (i.e. `"{id}#{idx}"`).
+Each `ComponentState.current_hp` is applied to the matching Ship
+component before `recalculate_stats()` runs, which then applies the
+simulation's damage model (threshold-based deactivation, crew
+reallocation, etc.). PROJ-276 replaced the old
+`component_damage: Dict[str, int]` param with this per-instance form.
 
 **Usage:**
 ```python
 from game.simulation.entities.ship_design_stats import calculate_design_stats
+from game.strategy.data.component_state import ComponentState, component_state_key
 
 # Calculate stats for undamaged ship
 stats = calculate_design_stats(design_data, registries)
 print(f"HP: {stats['max_hp']}, Mass: {stats['mass']}")
 
-# Calculate with damage
-damage = {'bridge_0': 50, 'engine_0': 30}
-stats = calculate_design_stats(design_data, registries, component_damage=damage)
+# Calculate with per-instance damage
+components = {
+    component_state_key('bridge', 0): ComponentState(
+        component_id='bridge', instance_index=0, current_hp=50.0, max_hp=100.0,
+    ),
+    component_state_key('standard_engine', 0): ComponentState(
+        component_id='standard_engine', instance_index=0, current_hp=30.0, max_hp=100.0,
+    ),
+}
+stats = calculate_design_stats(design_data, registries, components=components)
 
-# Check warp capability (now in component_inspector)
+# Check warp capability (lives in component_inspector)
 from game.strategy.services.component_inspector import has_warp_capability
 if has_warp_capability(ship_instance):
     print("Ship can use warp points")
@@ -539,7 +554,7 @@ if has_warp_capability(ship_instance):
 - `Tools/validate_designs/validate_designs.py` — mass consistency checks
 - `Tools/fix_designs/fix_designs.py` — expected_stats recalculation
 
-> **Note:** The strategy layer's `ShipStatsCalculator` (`game/strategy/services/ship_stats_calculator.py`) is deprecated. No production code imports it. Its utility methods `has_warp_capability()` and `get_ability_list()` have been moved to `component_inspector`.
+> **Note:** The strategy layer previously contained a duplicate `ShipStatsCalculator` at `game/strategy/services/ship_stats_calculator.py`. It was deleted in PROJ-276 after an audit confirmed zero production importers. Its utility methods `has_warp_capability()` and `get_ability_list()` live in `component_inspector`. Stat calculation now has a single source of truth: `calculate_design_stats()` above.
 
 ---
 
