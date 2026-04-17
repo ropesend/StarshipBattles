@@ -4,6 +4,11 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-273 | Shared Ability Stat Key Registry | Planning | 2026-04-16 | 2026-04-16 |
+| PROJ-274 | Unified ShipMaterializer Service | Planning | 2026-04-16 | 2026-04-16 |
+| PROJ-275 | N-Team Combat Support | Planning (BLOCKED on PROJ-273, PROJ-274) | 2026-04-16 | 2026-04-16 |
+| PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | Planning | 2026-04-16 | 2026-04-16 |
+| PROJ-277 | First-Class A/B Comparison Runner | Planning | 2026-04-16 | 2026-04-16 |
 
 ## Archived Projects
 
