@@ -291,6 +291,11 @@ def _ship_spec_from_instance(
         angle=float(angle),
         velocity=Vector2(0.0, 0.0),
         components=component_specs,
+        # PROJ-274: InstanceBackedMaterializer reads this via duck typing
+        # to call `ship.to_ship(position, team_id, registries=...)`. Ship
+        # materialization no longer requires caller-provided ship_builder
+        # closures in production.
+        instance_ref=ship,
     )
 
 

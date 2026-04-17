@@ -61,11 +61,18 @@ def run_scenario_via_run_battle(
 
     scenario.before_run_battle(spec)
 
+    # PROJ-274: route materialization through the context materializer
+    # (Combat Lab sets this to DesignOnlyMaterializer in TestExecutionService.__init__).
+    # The closure keeps its role-tagging bookkeeping — that's orthogonal
+    # to the ship-building pipeline and would otherwise need to be
+    # replicated via post-hoc lookup on the outcome.
+    from game.simulation.battle_runner import _default_ship_builder_from_context
     ships_by_role: Dict[str, Any] = {}
     initial_state_by_role: Dict[str, Any] = {}
+    _context_builder = _default_ship_builder_from_context()
 
     def ship_builder(ship_spec, team_id):
-        ship = scenario._load_ship(ship_spec.design_id)
+        ship = _context_builder(ship_spec, team_id)
         role = _role_from_instance_id(ship_spec.instance_id)
         if role is not None:
             ships_by_role[role] = ship

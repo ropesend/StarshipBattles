@@ -69,9 +69,26 @@ class TestRunner:
     __test__ = False  # Not a pytest test class
 
     def __init__(self):
+        """Initialize the Combat Lab TestRunner.
+
+        PROJ-274: switches the default ship materializer to
+        `DesignOnlyMaterializer` backed by `load_combat_lab_design`. Covers
+        both the CLI entry point (`python -m combat_lab.run_tests`) and the
+        UI entry point (`TestExecutionService`) — both instantiate a
+        `TestRunner` before scenario execution, so this is the single
+        install point.
+        """
         self.engine = None  # Created fresh per scenario in run_scenario()
         self.current_scenario = None
         self.test_log = []
+        from combat_lab.design_loader import load_combat_lab_design
+        from game.simulation.services.ship_materializer import (
+            DesignOnlyMaterializer,
+            set_default_ship_materializer,
+        )
+        set_default_ship_materializer(
+            DesignOnlyMaterializer(design_loader=load_combat_lab_design)
+        )
         
     def load_data_for_scenario(self, scenario):
         """

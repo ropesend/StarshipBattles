@@ -60,10 +60,11 @@ spec = build_test_battle_spec(scenario, registries)
 outcome = run_battle(
     spec,
     ai_factory=AIControllerFactory(),
-    ship_builder=my_ship_builder,     # Phase-1 transitional; Phase 2 folds in
     per_tick_callback=on_tick,        # optional — rendering / observation
 )
 ```
+
+`ship_builder` is an optional override. Production callers omit it — `run_battle` pulls the default `IShipMaterializer` from ApplicationContext (`InstanceBackedMaterializer` in production; Combat Lab installs `DesignOnlyMaterializer` at `TestRunner.__init__`). Test code passes an explicit stub for isolation. See PROJ-274 + `docs/04_SERVICES.md::ShipMaterializer` for details.
 
 All four Phase-1 hooks are wired into the engine:
 - `boundary` — fully enforced as of Phase 3 (per-tick + `ExitPolicy`

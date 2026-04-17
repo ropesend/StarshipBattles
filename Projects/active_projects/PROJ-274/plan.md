@@ -13,21 +13,39 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Design interface + failing tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Implement InstanceBackedMaterializer | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Implement DesignOnlyMaterializer | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Wire into ApplicationContext | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Make `ship_builder` kwarg optional | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Migrate three production call sites | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Docs update | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 1. Design interface + failing tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Implement InstanceBackedMaterializer | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Implement DesignOnlyMaterializer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Wire into ApplicationContext | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Make `ship_builder` kwarg optional | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Migrate three production call sites | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Docs update | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-16
-**Active Phase:** Planning (ready to start Phase 1)
-**Last Action:** Project created with full plan
-**Next Action:** Begin Phase 1 — design `IShipMaterializer` protocol and write failing tests
+**Active Phase:** COMPLETE — awaiting user verification
+**Last Action:** Phase 7 complete. All 7 phases delivered.
+- **Docs updated:** New "ShipMaterializer (PROJ-274)" section at top of `docs/04_SERVICES.md` covering protocol, 2 implementations, module accessors, `run_battle` integration, `ShipSpec.instance_ref`, and caller table. `docs/01_ARCHITECTURE.md` ApplicationContext description updated. `docs/systems/combat_simulation.md` canonical `run_battle` example trimmed (no more `ship_builder=my_ship_builder`).
+- **Memory updated:** `MEMORY.md` In-Progress Projects section now covers both PROJ-273 + PROJ-274.
+- **Bonus Phase 6 cleanup:** Eliminated the 30-line `_make_ship_builder` method in `game/strategy/adapters/simulation_adapter.py` that was doing redundant `instance_id → ShipInstance` lookup. With `instance_ref` set by the strategy compiler, the context materializer reads it directly.
+
+**Regression:** Final full-suite run: **14800 passed, 1 failed (quickstart — pre-existing), 2 skipped, 3 errors (ai x2 + strategy/engine x1 — all pre-existing)** in 221.87s. Exactly matches pre-PROJ-274 baseline. Combat Lab 162/162.
+**Next Action:** User verification steps:
+1. Manual smoke: launch strategy battle (verify InstanceBackedMaterializer used) + launch Combat Lab test (verify DesignOnlyMaterializer used). Both should work with no error messages about missing ship_builder or instance_ref.
+2. Audit per `Projects/protocols/04_audit_project.md`, then archive.
 **Blockers:** None
-**Context for Next Agent:** This project unblocks PROJ-275 (N-team combat). Can be executed in parallel with PROJ-273. The `ship_builder` kwarg in `game/simulation/battle_runner.py` is a Phase-1 transitional placeholder (acknowledged in the docstring at L105-110) that every caller has to handle independently. Six forks exist: `game/app.py::_ship_builder`, `combat_lab/services/test_execution_service.py:83,95`, `combat_lab/services/scenario_run_helper.py:67`, `combat_lab/scenarios/templates.py:844` (ComparisonScenario), plus three test-only variants in `tests/integration/simulation/test_three_team_battle.py`, `test_boundary_retreat.py`, `tests/performance/test_telemetry_overhead.py`. This project replaces the production forks with a single context-registered service, keeping the kwarg as a test-override path.
+**Context for Next Agent:** PROJECT COMPLETE. All acceptance criteria met:
+- New module at `game/simulation/combat/services/ship_materializer.py` (typo — actually `game/simulation/services/ship_materializer.py`) with `IShipMaterializer` protocol, `InstanceBackedMaterializer`, `DesignOnlyMaterializer`, `get_default_ship_materializer()` / `set_default_ship_materializer()` accessors.
+- `ShipSpec.instance_ref: Optional[Any] = None` added to `game/simulation/battle_spec.py`.
+- Strategy + battle_setup compilers pass `instance_ref=ship` when building ShipSpecs.
+- `run_battle(spec, *, ai_factory, ship_builder=None, ...)` — ship_builder optional; None → context materializer via `_default_ship_builder_from_context()`.
+- `BattleController.start_from_spec(spec, *, ai_factory, ship_builder=None, config=None)` — same.
+- 5 production `_ship_builder` closures eliminated (`game/app.py`, `game/strategy/adapters/simulation_adapter.py::_make_ship_builder`, `game/ui/screens/test_lab/screen.py` x2, `combat_lab/services/test_execution_service.py` x2).
+- Combat Lab `TestRunner.__init__` installs DesignOnlyMaterializer via new `combat_lab/design_loader.py::load_combat_lab_design`.
+- ComparisonScenario + scenario_run_helper keep role-tagging closures but delegate to context builder.
+- 4 test-only `ship_builder=` overrides preserved (`test_three_team_battle.py`, `test_boundary_retreat.py`, `test_telemetry_overhead.py`, + 3 strategy/combat tests).
+- 24+ new tests added (`test_ship_materializer.py` — 17 tests; `test_battle_runner.py::TestShipBuilderDefaultsFromContext` — 2 tests; plus Phase 1-4 test subsets).
+- Unblocks **PROJ-275** (N-Team Combat Support).
 
 ## Overview
 

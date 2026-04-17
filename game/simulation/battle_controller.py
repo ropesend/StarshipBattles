@@ -247,7 +247,7 @@ class BattleController:
         spec: "BattleSpec",
         *,
         ai_factory: "IAIControllerFactory",
-        ship_builder: "Callable",
+        ship_builder: Optional["Callable"] = None,
         config: Optional[BattleConfig] = None,
     ) -> "tuple[BattleServiceResult, Dict[str, 'Ship']]":
         """Configure + start a battle directly from a `BattleSpec`.
@@ -263,7 +263,11 @@ class BattleController:
         Args:
             spec: The `BattleSpec` describing the battle.
             ai_factory: AI controller factory (UI/strategy-owned).
-            ship_builder: Callable that builds a `Ship` from a `ShipSpec`.
+            ship_builder: Optional callable that builds a `Ship` from a
+                `ShipSpec`. When `None` (PROJ-274 default), the
+                materializer is pulled from ApplicationContext — same
+                fallback path as `run_battle`. Production drops this
+                kwarg; tests keep it for isolation.
             config: Optional `BattleConfig` for operational concerns
                 (`headless`, `start_paused`, `return_destination`). If
                 None, a default `BattleConfig` is constructed using
@@ -276,7 +280,12 @@ class BattleController:
             ship lookup from `materialize_spec_ships` for callers that
             need it (Combat Lab scenarios).
         """
-        from game.simulation.battle_runner import start_engine_from_spec  # noqa: PLC0415
+        from game.simulation.battle_runner import (  # noqa: PLC0415
+            _default_ship_builder_from_context,
+            start_engine_from_spec,
+        )
+        if ship_builder is None:
+            ship_builder = _default_ship_builder_from_context()
 
         # Build / merge the operational config.
         if config is None:

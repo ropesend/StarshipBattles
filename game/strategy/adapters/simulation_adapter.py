@@ -127,15 +127,16 @@ class SimulationBattleResolver(IBattleResolver):
             team0_modifiers=team0_modifiers,
             team1_modifiers=team1_modifiers,
         )
-        ship_builder = self._make_ship_builder(fleet1, fleet2, registries)
-
+        # PROJ-274: no ship_builder closure needed. The strategy compiler
+        # sets `ShipSpec.instance_ref = ship_instance` on each spec; the
+        # default InstanceBackedMaterializer (context-registered) reads
+        # it via duck typing and calls `instance.to_ship(...)`.
         # `run_battle` invokes the compiler's `PostBattleHook` which
         # writes outcome data back into the ShipInstances and prunes
         # destroyed/retreated ships from the fleets.
         outcome = run_battle(
             spec,
             ai_factory=self._ai_factory,
-            ship_builder=ship_builder,
         )
 
         winner = self._determine_winner(outcome)
@@ -194,38 +195,6 @@ class SimulationBattleResolver(IBattleResolver):
             environmental_effects=environmental_effects,
             team_modifiers=team_modifiers if team_modifiers else None,
         )
-
-    def _make_ship_builder(
-        self,
-        fleet1: 'Fleet',
-        fleet2: 'Fleet',
-        registries: Optional['GameRegistries'],
-    ):
-        """Build a ship_builder closure that materializes Ships from
-        ShipInstances, keyed by instance_id.
-
-        The compiler emits `ShipSpec.instance_id = ship_instance.instance_id`
-        — the builder looks up the original ShipInstance and calls its
-        `to_ship(pos, team_id, registries)` method. Position and team_id
-        are overwritten by `run_battle` (spec pose + `controller.add_ships`).
-        """
-        lookup = {}
-        for fleet in (fleet1, fleet2):
-            for instance in fleet.ships:
-                lookup[instance.instance_id] = instance
-
-        def ship_builder(ship_spec, team_id):
-            instance = lookup.get(ship_spec.instance_id)
-            if instance is None:
-                raise ValueError(
-                    f"No ShipInstance in source fleets for "
-                    f"instance_id={ship_spec.instance_id!r}"
-                )
-            return instance.to_ship(
-                (0.0, 0.0), team_id=team_id, registries=registries,
-            )
-
-        return ship_builder
 
     def _determine_winner(self, outcome) -> Optional[int]:
         """Map BattleOutcome team survival → winner team_id (or None).

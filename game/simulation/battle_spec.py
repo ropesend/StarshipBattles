@@ -19,7 +19,7 @@ only interprets them in Task 1.6 and later phases.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Callable, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
 
 from game.core.math import Vector2
 
@@ -106,6 +106,14 @@ class ShipSpec:
     `instance_id` is the stable identifier that the outcome uses to match
     ships back to their spec. Pose fields (`position`, `angle`, `velocity`)
     are produced by `FormationResolver` during compilation.
+
+    `instance_ref` (PROJ-274): optional opaque reference to a strategy-
+    layer `ShipInstance` for instance-backed materialization. Typed
+    `Optional[Any]` because the simulation layer cannot import
+    `ShipInstance` from the strategy layer (layer violation per
+    `docs/01_ARCHITECTURE.md`). `InstanceBackedMaterializer` uses duck
+    typing to invoke `instance.to_ship(...)`. Design-only callers
+    (Combat Lab) leave this `None` and use `DesignOnlyMaterializer`.
     """
 
     instance_id: str
@@ -116,6 +124,7 @@ class ShipSpec:
     angle: float
     velocity: Vector2
     components: Tuple[ComponentStateSpec, ...]
+    instance_ref: Optional[Any] = None
 
 
 @dataclass(frozen=True)

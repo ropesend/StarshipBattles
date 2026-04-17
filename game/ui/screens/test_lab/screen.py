@@ -433,24 +433,29 @@ class TestLabScreen:
 
         # 3. Pre-snapshot ship state — need ships materialized BEFORE
         # start_from_spec drives start_teams (for role-keyed initial state).
-        # Use the shared materializer so role tagging matches.
-        from game.simulation.battle_runner import materialize_spec_ships
+        # PROJ-274: use the context materializer (DesignOnlyMaterializer
+        # installed by Combat Lab's TestRunner) instead of a per-call
+        # closure.
+        from game.simulation.battle_runner import (
+            _default_ship_builder_from_context,
+            materialize_spec_ships,
+        )
         _pre_teams, pre_ships_by_role = materialize_spec_ships(
-            spec, ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
+            spec, ship_builder=_default_ship_builder_from_context(),
         )
         initial_state = {
             role: _snapshot_ship_state(ship)
             for role, ship in pre_ships_by_role.items()
         }
 
-        # 4. PROJ-270 Phase 10: start via unified spec-in path.
-        # NOTE: start_from_spec calls materialize_spec_ships again internally;
-        # ship_builder is deterministic per design_id so this is safe.
+        # 4. PROJ-270 Phase 10 + PROJ-274: start via unified spec-in path
+        # with context materializer. `start_from_spec` calls
+        # `materialize_spec_ships` again internally; the DesignOnlyMaterializer
+        # loads ships deterministically per design_id so this is safe.
         controller = BattleController()
         _result, ships_by_role = controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
-            ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
             config=config,
         )
         engine = controller.service.get_engine()

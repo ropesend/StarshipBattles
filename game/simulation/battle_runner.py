@@ -170,11 +170,51 @@ def start_engine_from_spec(
     return engine, ships_by_role
 
 
+def _default_ship_builder_from_context() -> Callable[[ShipSpec, int], "Ship"]:
+    """Build a ship_builder closure from the context materializer.
+
+    PROJ-274: when callers drop the `ship_builder` kwarg, `run_battle` and
+    `BattleController.start_from_spec` fall back here. Pulls the default
+    `IShipMaterializer` from `ApplicationContext` (lazy-init to
+    `InstanceBackedMaterializer` unless overridden via
+    `set_default_ship_materializer`) and assembles a `GameRegistries` from
+    the default registry provider. The resulting closure has the same
+    `(ship_spec, team_id) -> Ship` signature `materialize_spec_ships`
+    expects.
+
+    Combat Lab switches the context to `DesignOnlyMaterializer` at service
+    init (see PROJ-274 Phase 6) so its `run_battle` calls route ship
+    loading through the injected design loader.
+    """
+    from game.core.registry import (  # noqa: PLC0415
+        GameRegistries,
+        get_default_registry_provider,
+    )
+    from game.simulation.services.ship_materializer import (  # noqa: PLC0415
+        get_default_ship_materializer,
+    )
+
+    materializer = get_default_ship_materializer()
+    provider = get_default_registry_provider()
+    registries = GameRegistries(
+        components=provider.get_components(),
+        modifiers=provider.get_modifiers(),
+        vehicle_classes=provider.get_vehicle_classes(),
+        resources=provider.get_resources(),
+        resource_catalog=provider.get_resource_catalog(),
+    )
+
+    def _build(ship_spec: ShipSpec, team_id: int) -> "Ship":
+        return materializer.materialize(ship_spec, team_id, registries)
+
+    return _build
+
+
 def run_battle(
     spec: BattleSpec,
     *,
     ai_factory: "IAIControllerFactory",
-    ship_builder: Callable[[ShipSpec, int], "Ship"],
+    ship_builder: Optional[Callable[[ShipSpec, int], "Ship"]] = None,
     headless: bool = True,
     per_tick_callback: Optional[Callable[["BattleEngine"], None]] = None,
     pre_tick_loop_callback: Optional[Callable[["BattleEngine"], None]] = None,
@@ -184,10 +224,12 @@ def run_battle(
     Args:
         spec: The BattleSpec describing initial conditions.
         ai_factory: Injected AI controller factory (UI/strategy owns this).
-        ship_builder: Callable that materializes a `Ship` from a `ShipSpec`.
-            Each compiler supplies the builder appropriate for its inputs
-            (Combat Lab loads JSON; strategy invokes `ShipInstance.to_ship`;
-            Battle Setup pre-builds via the design library).
+        ship_builder: Optional callable that materializes a `Ship` from a
+            `ShipSpec`. When `None` (PROJ-274 default), the materializer
+            is pulled from ApplicationContext
+            (`get_default_ship_materializer()`) and wrapped into a
+            `(ship_spec, team_id) -> Ship` closure. Production code drops
+            this kwarg; test code passes a stub for isolation.
         headless: Whether to run without rendering. Reserved for future
             visual-mode integration; today the engine ticks synchronously
             until `is_battle_over()` regardless. Visual callers drive
@@ -208,6 +250,9 @@ def run_battle(
             - `outcome.seed == spec.seed`
     """
     _ = headless  # Reserved for Task 6.9's visual-mode integration.
+
+    if ship_builder is None:
+        ship_builder = _default_ship_builder_from_context()
 
     engine, _ships_by_role = start_engine_from_spec(
         spec, ai_factory=ai_factory, ship_builder=ship_builder,

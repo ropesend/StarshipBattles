@@ -49,6 +49,71 @@ game/strategy/services/
 
 ## Simulation Layer Services
 
+### ShipMaterializer (PROJ-274)
+
+**Location:** `game/simulation/services/ship_materializer.py`
+
+**Purpose:** Turn a `ShipSpec` into a live `Ship` without forcing every caller to supply a `ship_builder` closure. Before PROJ-274, six forks of that closure lived across `game/app.py`, Combat Lab services, and test fixtures; ShipMaterializer consolidates them into a protocol + two implementations, registered on ApplicationContext.
+
+**Protocol:**
+```python
+@runtime_checkable
+class IShipMaterializer(Protocol):
+    def materialize(
+        self,
+        ship_spec: ShipSpec,
+        team_id: int,
+        registries: GameRegistries,
+    ) -> Ship: ...
+```
+
+**Implementations:**
+
+| Class | Use case | Requires |
+|-------|----------|----------|
+| `InstanceBackedMaterializer` | Strategy, Battle Setup, `game/app.py::start_battle` — callers with a `ShipInstance` already populated | `ship_spec.instance_ref` set to the `ShipInstance` |
+| `DesignOnlyMaterializer(design_loader)` | Combat Lab scenarios — construct ships from JSON by filename | A `design_loader(design_id: str) -> dict` closure |
+
+**Module accessors (PROJ-258 pattern):**
+
+```python
+from game.simulation.services.ship_materializer import (
+    get_default_ship_materializer,
+    set_default_ship_materializer,
+    InstanceBackedMaterializer,
+    DesignOnlyMaterializer,
+)
+
+# Production default (lazy-init): InstanceBackedMaterializer.
+mat = get_default_ship_materializer()
+
+# Combat Lab swaps at TestRunner.__init__:
+set_default_ship_materializer(
+    DesignOnlyMaterializer(design_loader=load_combat_lab_design)
+)
+```
+
+**run_battle integration:**
+
+Both `run_battle(spec, ai_factory=..., ship_builder=None)` and `BattleController.start_from_spec(spec, ..., ship_builder=None)` fall back to the context materializer when no explicit `ship_builder` is supplied (PROJ-274 Phase 5). Internally `_default_ship_builder_from_context()` in `game/simulation/battle_runner.py` assembles a `(ship_spec, team_id) -> Ship` closure using the default materializer + default registry provider. Test code keeps the kwarg for isolation.
+
+**ShipSpec extension:**
+
+`ShipSpec` carries a new `instance_ref: Optional[Any] = None` field. Instance-backed compilers (strategy, battle_setup) set it to the owning `ShipInstance`; Combat Lab leaves it `None`. Typed `Optional[Any]` so the simulation layer doesn't import from strategy.
+
+**Call sites (after migration):**
+
+| Caller | Ship builder supplied? | Materializer used |
+|--------|------------------------|-------------------|
+| `game/app.py::start_battle` | No | InstanceBackedMaterializer (default) |
+| `combat_lab/services/test_execution_service.py` | No | DesignOnlyMaterializer (installed by TestRunner) |
+| `combat_lab/services/scenario_run_helper.py` | Yes (role-tagging wrapper) | Wraps context builder |
+| `game/ui/screens/test_lab/screen.py` | No | DesignOnlyMaterializer |
+| `combat_lab/scenarios/templates.py::ComparisonScenario` | Yes (role-tagging wrapper) | Wraps context builder |
+| Tests (test_three_team_battle, test_boundary_retreat, etc.) | Yes (explicit stub) | Override takes priority |
+
+---
+
 ### BattleService
 
 **Location:** `game/simulation/services/battle_service.py`

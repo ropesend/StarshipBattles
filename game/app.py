@@ -564,41 +564,16 @@ class Game:
             absolute_max_ticks=spec.absolute_max_ticks,
         )
 
-        # Use the DI container already initialized on Game.__init__ (app.py:175)
-        # rather than calling a non-existent factory method. This matches the
-        # DI pattern documented in docs/01_ARCHITECTURE.md — GameRegistries is
-        # owned by Game and passed through the call chain.
-        registries = self.registries
-
-        def _ship_builder(ship_spec, team_id):
-            # Look up the original ShipInstance by instance_id so we can
-            # call `to_ship(position, team_id, registries=)` to preserve
-            # accumulated component HP. `team_id` is threaded through by
-            # `materialize_spec_ships` from the enclosing `TeamSpec.team_id`.
-            # `position` comes from the spec (will be overwritten to the
-            # spec pose by materialize_spec_ships post-build — we still
-            # pass it here so ShipInstance.to_ship's contract is satisfied).
-            position = (ship_spec.position.x, ship_spec.position.y)
-            for side in (self.battle_setup.state.side_0, self.battle_setup.state.side_1):
-                for fleet in side.fleets:
-                    for ship_instance in fleet.ships:
-                        if ship_instance.instance_id == ship_spec.instance_id:
-                            return ship_instance.to_ship(
-                                position,
-                                team_id,
-                                registries=registries,
-                            )
-            raise KeyError(
-                f"ShipInstance with instance_id={ship_spec.instance_id!r} not "
-                f"found in BattleSetupState fleets"
-            )
-
-        # PROJ-270 Phase 10: single spec-in path — no hand-rolled plumbing.
+        # PROJ-270 Phase 10 + PROJ-274: single spec-in path — no hand-rolled
+        # plumbing. The Battle Setup compiler (build_manual_battle_spec)
+        # now sets `ship_spec.instance_ref` on every ShipSpec, so the
+        # default `InstanceBackedMaterializer` (pulled from
+        # ApplicationContext) handles materialization. No ship_builder
+        # closure required.
         controller = BattleController()
         controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
-            ship_builder=_ship_builder,
             config=config,
         )
 

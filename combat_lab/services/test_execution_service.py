@@ -19,7 +19,13 @@ class TestExecutionService:
     """Service for executing test scenarios."""
 
     def __init__(self):
-        """Initialize test execution service."""
+        """Initialize test execution service.
+
+        PROJ-274: constructing `TestRunner` installs the Combat Lab
+        `DesignOnlyMaterializer` as the default context materializer, so
+        both headless (CLI) and visual (UI) paths share the same
+        ship-materialization pipeline with no `ship_builder` closures.
+        """
         self.runner = TestRunner()
 
     def run_visual(
@@ -77,10 +83,15 @@ class TestExecutionService:
 
             # Pre-materialize ships for initial_state snapshots (role-keyed).
             # start_from_spec re-materializes internally — ship_builder is
-            # deterministic per design_id.
+            # deterministic per design_id. PROJ-274: both calls rely on
+            # the context materializer (DesignOnlyMaterializer installed
+            # in __init__); no explicit ship_builder kwarg required.
+            from game.simulation.battle_runner import (
+                _default_ship_builder_from_context,
+            )
             _pre_teams, pre_ships_by_role = materialize_spec_ships(
                 spec,
-                ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
+                ship_builder=_default_ship_builder_from_context(),
             )
             initial_state = {
                 role: _snapshot_ship_state(ship)
@@ -92,7 +103,6 @@ class TestExecutionService:
             _result, ships_by_role = controller.start_from_spec(
                 spec,
                 ai_factory=AIControllerFactory(),
-                ship_builder=lambda ship_spec, team_id: scenario._load_ship(ship_spec.design_id),
                 config=config,
             )
             engine = controller.service.get_engine()

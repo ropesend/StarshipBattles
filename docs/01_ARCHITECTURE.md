@@ -60,7 +60,7 @@ Six layers with strict downward-only dependency flow:
 
 | Module                | Description |
 |-----------------------|-------------|
-| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages all 9 services. |
+| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages the production service graph; additional services (e.g., `ship_materializer` in PROJ-274) follow the same module-level `get_default_*` / `set_default_*` pattern and are consulted on demand rather than wired into the context constructor. |
 
 ### `game/core/` -- Foundation layer, no game-layer dependencies
 

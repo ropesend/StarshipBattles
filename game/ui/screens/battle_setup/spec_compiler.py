@@ -246,6 +246,9 @@ def _ship_spec_from_instance(
         angle=float(angle),
         velocity=Vector2(0.0, 0.0),
         components=(),  # Phase 2 wires ShipInstance.components round-trip.
+        # PROJ-274: InstanceBackedMaterializer reads this via duck typing
+        # to call `ship.to_ship(position, team_id, registries=...)`.
+        instance_ref=ship,
     )
 
 

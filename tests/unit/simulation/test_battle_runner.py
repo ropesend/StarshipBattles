@@ -163,6 +163,89 @@ class TestShipBuilderReceivesTeamId:
         assert ("s1", 1) in received, f"expected (s1, 1) in {received}"
 
 
+class TestShipBuilderDefaultsFromContext:
+    """PROJ-274 Phase 5: `run_battle(spec, ..., ship_builder=None)` pulls
+    the ship materializer from ApplicationContext
+    (`get_default_ship_materializer()`) instead of requiring every caller
+    to supply a closure. Production callers drop the kwarg; tests keep
+    explicit override support for isolation.
+
+    Invariant: when ship_builder is explicit, the context materializer
+    is NOT touched — the explicit override always wins.
+    """
+
+    def _minimal_spec(self) -> BattleSpec:
+        return BattleSpec(
+            seed=7,
+            telemetry_level=TelemetryLevel.NORMAL,
+            boundary=None,
+            end_condition=TickLimitCondition(max_ticks=2),
+            absolute_max_ticks=10,
+            teams=(
+                _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
+                _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
+            ),
+            modifier_stack=ModifierStack.empty(),
+            post_battle_hook=None,
+        )
+
+    def test_ship_builder_omitted_uses_context_materializer(self, ship_builder):
+        """When `ship_builder=None`, `run_battle` pulls from context."""
+        from game.simulation.services import ship_materializer as mat_mod
+
+        # Materializer-spy that adapts the ship_builder fixture into the
+        # IShipMaterializer interface and records invocations.
+        invocations: list = []
+
+        class SpyMaterializer:
+            def materialize(self, ship_spec, team_id, registries):
+                invocations.append(ship_spec.instance_id)
+                return ship_builder(ship_spec, team_id)
+
+        original = mat_mod._default_ship_materializer
+        try:
+            mat_mod._default_ship_materializer = SpyMaterializer()
+            spec = self._minimal_spec()
+            outcome = run_battle(
+                spec,
+                ai_factory=AIControllerFactory(),
+                # No ship_builder — relies on context default.
+            )
+        finally:
+            mat_mod._default_ship_materializer = original
+
+        assert isinstance(outcome, BattleOutcome)
+        # Both ships were materialized via the context materializer.
+        assert set(invocations) == {"s0", "s1"}
+
+    def test_explicit_ship_builder_bypasses_context(self, ship_builder):
+        """Passing `ship_builder=stub` takes priority over the context."""
+        from game.simulation.services import ship_materializer as mat_mod
+
+        context_called = [False]
+
+        class ShouldNotBeCalledMaterializer:
+            def materialize(self, ship_spec, team_id, registries):
+                context_called[0] = True
+                raise AssertionError("Context materializer was called "
+                                     "despite explicit ship_builder override")
+
+        original = mat_mod._default_ship_materializer
+        try:
+            mat_mod._default_ship_materializer = ShouldNotBeCalledMaterializer()
+            spec = self._minimal_spec()
+            outcome = run_battle(
+                spec,
+                ai_factory=AIControllerFactory(),
+                ship_builder=ship_builder,  # explicit override
+            )
+        finally:
+            mat_mod._default_ship_materializer = original
+
+        assert isinstance(outcome, BattleOutcome)
+        assert context_called[0] is False
+
+
 def test_run_battle_returns_battle_outcome(ship_builder):
     spec = BattleSpec(
         seed=42,

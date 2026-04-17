@@ -834,15 +834,23 @@ class ComparisonScenario(TestScenario):
         legacy code exposed.
         """
         from game.ai.ai_factory import AIControllerFactory
-        from game.simulation.battle_runner import run_battle
+        from game.simulation.battle_runner import (
+            _default_ship_builder_from_context,
+            run_battle,
+        )
 
         baseline_spec = self._build_baseline_battle_spec()
 
-        # Role-keyed ship registry populated by ship_builder.
+        # Role-keyed ship registry populated by ship_builder. PROJ-274:
+        # delegate actual ship construction to the context materializer
+        # (DesignOnlyMaterializer installed by Combat Lab's TestRunner);
+        # the closure only handles role tagging, which is scenario-specific
+        # bookkeeping orthogonal to materialization.
         baseline_ships: dict = {}
+        _context_builder = _default_ship_builder_from_context()
 
         def ship_builder(ship_spec, team_id):
-            ship = self._load_ship(ship_spec.design_id)
+            ship = _context_builder(ship_spec, team_id)
             if ship_spec.instance_id.endswith(":baseline_attacker"):
                 baseline_ships["attacker"] = ship
             elif ship_spec.instance_id.endswith(":baseline_target"):
