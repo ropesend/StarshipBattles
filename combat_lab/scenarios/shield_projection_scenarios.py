@@ -92,7 +92,7 @@ class ShieldAbsorbsDamageComparisonScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_1B.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify shield capacity on variant
@@ -172,7 +172,7 @@ class ShieldDepletionOverflowScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_100.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify shield capacity on variant
@@ -255,7 +255,7 @@ class MultipleShieldsStackScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_2x100.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has double shield capacity
@@ -350,7 +350,7 @@ class SingleHitOverflowScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_100.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify shield capacity and weapon damage
@@ -449,7 +449,7 @@ class ShieldWithSufficientEnergyScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_100_LargeBattery.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify shield and energy
@@ -529,7 +529,7 @@ class ShieldWithEnergyZeroDamageScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_1B_LargeBattery.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took damage
@@ -609,7 +609,7 @@ class ShieldFailsOnEnergyDepletionScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Shield_1B_SmallBattery.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: baseline (full power) took zero armor damage
@@ -692,7 +692,7 @@ class ShieldWithoutEnergyScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Energy-starved shields = same as unshielded
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took damage
@@ -768,7 +768,7 @@ class ShieldWithMetalsProtects(ComparisonScenario):
     variant_target_ship = SHIELD_METALS_TARGET_FULL
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took damage
@@ -846,7 +846,7 @@ class ShieldWithoutMetalsNoProtection(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Resource-starved shields = same as unshielded
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         checks.append(check_true(

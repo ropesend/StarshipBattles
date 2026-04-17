@@ -100,7 +100,7 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify sensor is present on variant
@@ -196,7 +196,7 @@ class SameGroupDoesNotStackScenario(ComparisonScenario):
     distance = MID_RANGE_DISTANCE
     expect_different_damage = False  # Same-group MAX means identical damage
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both battles dealt damage
@@ -263,7 +263,7 @@ class DifferentGroupsStackScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt damage
@@ -342,7 +342,7 @@ class NegativeModifierReducesAccuracyScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty is present on variant
@@ -436,7 +436,7 @@ class MixedModifiersNetPositiveScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_Stationary.json"
     distance = MID_RANGE_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant has both modifiers (net = +0.5)

@@ -4,7 +4,7 @@
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-277 1`
 > 2. Only proceed if output shows PASSED
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Define `ABBattleOutcome` DTO and `ABBattleRunner` interface. Write comprehensive failing tests before implementation.
 
 ---
@@ -15,40 +15,41 @@
 **File:** `combat_lab/scenarios/ab_outcome.py` (NEW)
 **Tests:** N/A (scaffold)
 
-- [ ] Create module with docstring explaining A/B pairing
-- [ ] Define `@dataclass(frozen=True) class ABBattleOutcome` with fields: `baseline_outcome: BattleOutcome`, `baseline_telemetry: CombatLabTelemetry`, `variant_outcome: BattleOutcome`, `variant_telemetry: CombatLabTelemetry`
-- [ ] Exports: add to module `__init__.py` if relevant
+- [x] Module created with docstring explaining the A/B pairing contract and why it replaces `_baseline_*` attribute stashing
+- [x] `@dataclass(frozen=True) class ABBattleOutcome` defined with all 4 fields: `baseline_outcome`, `baseline_telemetry`, `variant_outcome`, `variant_telemetry`
+- [x] `__all__ = ["ABBattleOutcome"]` exported
 
-**Notes:**
+**Notes:** DTO is intentionally minimal — no computed properties yet. Convenience helpers (e.g. `ab.get_role_outcome("variant", "attacker")`) are deferred until Phase 3 shows a clear need.
 
 ### Task 1.2: Create `ABBattleRunner` skeleton [Simple]
 **File:** `combat_lab/services/ab_battle_runner.py` (NEW)
 **Tests:** N/A (scaffold)
 
-- [ ] Create module with docstring
-- [ ] Define class `ABBattleRunner` with constructor accepting `ai_factory, ship_builder=None`
-- [ ] Define `run(baseline_spec, variant_spec) -> ABBattleOutcome` method — stub raises NotImplementedError
-- [ ] Define private helper `_run_one(spec) -> Tuple[BattleOutcome, CombatLabTelemetry]` — stub
+- [x] Module created with docstring
+- [x] `ABBattleRunner.__init__` accepts `ai_factory` + optional `ship_builder`, `pre_tick_loop_callback`, `per_tick_callback` — the full set of hooks `run_battle` exposes, so scenarios that need role-tracking can route through the runner unchanged
+- [x] `run(baseline_spec, variant_spec) -> ABBattleOutcome` stub raises NotImplementedError
+- [x] `_run_one(spec) -> Tuple[BattleOutcome, CombatLabTelemetry]` stub raises NotImplementedError
+- [x] `run_battle` imported so Phase 1 tests can patch the module-level binding
 
-**Notes:**
+**Notes:** Extended the design's 2-param constructor to include `pre_tick_loop_callback` + `per_tick_callback` after reading `scenario_run_helper.py`. ComparisonScenario's current ship_builder already relies on both hooks to populate `ships_by_role` and `in_flight_by_role`. Phase 3 will decide whether to inline that bookkeeping into the runner or keep it scenario-side.
 
 ### Task 1.3: Write failing tests [Medium]
 **File:** `tests/unit/combat_lab/services/test_ab_battle_runner.py` (NEW)
 **Tests:** `pytest tests/unit/combat_lab/services/test_ab_battle_runner.py -v`
 
-- [ ] Test: `ABBattleRunner.run(baseline, variant)` calls `run_battle` exactly twice
-- [ ] Test: returned `ABBattleOutcome` has matching outcomes (baseline first, variant second)
-- [ ] Test: each `run_battle` call uses the provided `ai_factory` and `ship_builder`
-- [ ] Test: telemetry captured separately for each run (no remapping; use identical role keys in both)
-- [ ] Test: a `ship_builder` override is forwarded to both calls
-- [ ] Test: `ABBattleOutcome` is frozen (mutation raises FrozenInstanceError)
-- [ ] Run — all fail (stub returns nothing)
+- [x] `test_run_calls_run_battle_exactly_twice` — asserts 2 invocations
+- [x] `test_run_order_is_baseline_then_variant` — asserts first call's spec is baseline, second's is variant
+- [x] `test_run_returns_ab_battle_outcome_with_paired_results` — outcome identity is preserved into the DTO
+- [x] `test_run_forwards_ai_factory_and_ship_builder_to_both_calls` — both runs get identical plumbing so telemetry role keys match
+- [x] `test_run_captures_separate_telemetry_per_run` — baseline and variant telemetry are distinct `CombatLabTelemetry` instances
+- [x] `test_ab_battle_outcome_is_frozen` — DTO is immutable
+- [x] Run — 5 fail (`NotImplementedError: Phase 2 implements run()`), 1 passes (DTO frozen check)
 
-**Notes:**
+**Notes:** TDD-red confirmed. The single passing test exercises only the DTO, not the runner stub.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] Update plan.md
-- [ ] Run `python Projects/scripts/validate_phase.py PROJ-277 1`
+- [x] All task checkboxes above are checked
+- [x] Update plan.md
+- [x] Run `python Projects/scripts/validate_phase.py PROJ-277 1`

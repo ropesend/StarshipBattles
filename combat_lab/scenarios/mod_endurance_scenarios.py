@@ -185,7 +185,7 @@ class ModEndur002_BoostExtendsRangeScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = BOOST_TEST_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify endurance values on variant
@@ -257,7 +257,7 @@ class ModEndur003_NearLimitReachScenario(ComparisonScenario):
     distance = NEAR_LIMIT_DISTANCE
     expect_different_damage = False  # Both hit — same damage expected
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: both seekers reached target
@@ -317,7 +317,7 @@ class ModEndur004_PenaltyShortensRangeScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = PENALTY_TEST_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty was applied

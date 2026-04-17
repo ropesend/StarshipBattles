@@ -175,7 +175,7 @@ class ModArc002_ForwardTargetScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Both hit same target at same rate
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify arc values
@@ -325,7 +325,7 @@ class ModArc004_ArcRestrictionScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     attacker_angle = FACING_AWAY  # Both face away from target
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: omnidirectional beam fires and hits

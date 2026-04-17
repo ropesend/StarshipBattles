@@ -13,20 +13,29 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Design A/B runner + DTO + failing tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Implement ABBattleRunner | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Refactor ComparisonScenario | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Design A/B runner + DTO + failing tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Implement ABBattleRunner | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Refactor ComparisonScenario | Partial (validate signature migrated; deletion waits on Phase 4) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Update scenario_run_helper dispatch | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Migrate existing comparison tests | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Migrate existing comparison tests | Mostly Complete (validate-signature migrated; attribute cleanup in Phase 4) | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Docs | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-16
-**Active Phase:** Planning (ready to start Phase 1)
-**Last Action:** Project created with full plan
-**Next Action:** Begin Phase 1 — design A/B runner API, write failing tests
+**Last Updated:** 2026-04-17
+**Active Phase:** Phases 1, 2, 5 effectively complete; Phase 3 partial (scaffolding kept for Phase 4). Ready for Phase 4.
+**Last Action:** Atomic swap done. Added `validate(self, ab)` default to `ComparisonScenario`; rewrote `_run_validation` to build an `ABBattleOutcome` from stashed baseline + current variant; migrated all 102 ComparisonScenario descendants' validate signatures via AST-aware script; updated visual-baseline regression test. 288 combat_lab unit tests + 170 Combat Lab scenarios + 14,647 pytest tests pass. Only pre-existing unrelated failures remain.
+**Next Action:** Phase 4 — update `scenario_run_helper.run_scenario_via_run_battle` to detect `ComparisonScenario` instances and dispatch through `ABBattleRunner.run(build_baseline_spec(), build_variant_spec())` instead of the scenario-driven embedded `_run_baseline_battle`. After dispatch flip, delete `_run_baseline_battle` + `_build_baseline_battle_spec` + role-remapping + `_baseline_*` attribute stash (freed because `collect_results` switches to reading `ab` directly). Then Task 3.6's `render_mode` lands.
 **Blockers:** None (independent of other combat-review projects)
+
+### Phase 3.1 audit findings (still relevant for Phase 4)
+
+102 ComparisonScenario descendants across 21 scenario files; no multi-level chains. Subclass bodies are mostly `self.baseline_*` / `self.variant_*` attribute reads + `check_*` calls — they don't care whether those attrs were populated via `_run_baseline_battle` stash or directly from an `ABBattleOutcome`. Phase 4 flips the population source.
 **Context for Next Agent:** Today `ComparisonScenario` (`combat_lab/scenarios/templates.py:827-920`) calls `run_battle()` from within its own `before_run_battle()` method to produce a "baseline" run, then stashes results on `self._baseline_*` attributes. This inverts orchestration: scenarios should be INPUT to a runner, not callers of it. Consequences: telemetry role-remapping hack (`"baseline_attacker"` vs `"attacker"` at L915-920); `_run_validation()` override at L1120-1166 skips `validate()` in visual-baseline mode — a silent contract violation. This project makes A/B a first-class orchestration pattern.
+
+**Phase 2 implementation notes:**
+- `_run_one` needs per-tick role-tracking (ships_by_role / in_flight_by_role) to populate `CombatLabTelemetry.in_flight_by_role`. The pattern lives in `combat_lab/services/scenario_run_helper.py:70-115` (`pre_tick_loop` + `per_tick` closures + final `CombatLabTelemetry(...)` construction).
+- Decision point for Phase 3: ship_builder currently lives on the scenario. The cleanest cut is for the runner to OWN the role-tracking ship_builder (identical across baseline/variant → roles match), and accept a pass-through scenario hook for any per-scenario customization. But Phase 2 should preserve the current structure — just invoke `run_battle` twice using the ship_builder passed in at construction time.
+- Tests already assert: `run_battle` called exactly twice, baseline-first order, identical ai_factory/ship_builder forwarded, distinct telemetry instances, immutable outcome.
 
 ## Overview
 

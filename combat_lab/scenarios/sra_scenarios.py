@@ -89,7 +89,7 @@ class SRABasicRechargeScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_SRA.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline took hull damage
@@ -163,7 +163,7 @@ class SRAShieldCapScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_SRA_SmallShield.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify variant shield cap
@@ -228,7 +228,7 @@ class SRADestroyedStopsEffectScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_SRA_Destructible.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Outcome: destructible SRA variant takes more damage
@@ -284,7 +284,7 @@ class SRASameGroupNoStackScenario(ComparisonScenario):
     distance = POINT_BLANK_DISTANCE
     expect_different_damage = False  # Same-group MAX means identical damage
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: variant SRA value should equal baseline (MAX, not SUM)
@@ -344,7 +344,7 @@ class SRADiffGroupStackScenario(ComparisonScenario):
     variant_target_ship = "Test_Target_SRA_2x_DiffGroup.json"
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: variant SRA value should be double (SUM)

@@ -331,7 +331,7 @@ class RangeBoostComparisonScenario(ComparisonScenario):
     variant_target_ship = STATIONARY_TARGET
     distance = 1200
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: baseline beam has unmodified range
@@ -507,7 +507,7 @@ class RangePenaltyOutOfRangeScenario(ComparisonScenario):
     variant_target_ship = STATIONARY_TARGET
     distance = 600
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: variant beam range should be ~400 (800 * 0.5)

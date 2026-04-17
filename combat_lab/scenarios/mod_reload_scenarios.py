@@ -187,7 +187,7 @@ class ModReload002_ShotCountScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         b_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
@@ -263,7 +263,7 @@ class ModReload003_DamageRatioScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Precondition: both dealt damage
@@ -348,7 +348,7 @@ class ModReload004_PenaltyReducesFireRateScenario(ComparisonScenario):
     variant_target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
         checks = self._template_preconditions()
 
         # Data: verify penalty applied
