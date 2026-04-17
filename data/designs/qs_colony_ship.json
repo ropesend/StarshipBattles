@@ -68,6 +68,19 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
             }
         ],
         "OUTER": [
@@ -150,8 +163,8 @@
     },
     "cargo": {},
     "expected_stats": {
-        "max_hp": 2909,
-        "mass": 1749.9605249474364,
+        "max_hp": 2969,
+        "mass": 1779.9605249474364,
         "resource_storage": {
             "fuel": 50000.0,
             "energy": 2000.0

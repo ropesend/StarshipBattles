@@ -22,6 +22,57 @@ Data format conventions:
 - **Dict**: `{"damage": 100, "range": 5000}` — named parameters
 - **Boolean**: `true` — marker presence
 - **Formula**: `"=50 + range_to_target * 0.1"` — runtime-evaluated expression (weapons only)
+- **Load-time formula**: `"=ceil(sqrt(ship_class_mass / 1000))"` — evaluated when the
+  component is recalculated with a ship context. Used to scale ability values per
+  ship class. See "Formula-Driven Abilities" below.
+
+---
+
+## Formula-Driven Abilities (`_parse_attrs` requirement)
+
+Some ability values are scaled by `ship_class_mass` (the owning ship class's
+`max_mass`). These appear in `components.json` as formula strings starting with
+`=`, e.g. `"max_tonnage": "=ship_class_mass"`.
+
+Such formulas are evaluated by `ComponentStatsCalculator.reset_and_evaluate_formulas`
+when a component is attached to a ship and `recalculate_stats` runs. The evaluated
+numeric value is then placed in `component.abilities[name]`. A subsequent
+`Ability._instantiate` call either constructs the ability fresh or refreshes an
+existing instance via `sync_data`.
+
+**Implementation contract for ability authors**: any ability that parses
+numeric/string attributes from `data` MUST do so in `_parse_attrs(data)`, NOT
+in `__init__`. The base `Ability` class wires `_parse_attrs` into BOTH `__init__`
+and `sync_data`, so attributes refresh automatically when the underlying data
+changes — including when formulas re-evaluate to new values.
+
+If an ability overrides `__init__` to parse data instead, the instance keeps the
+value parsed at construction time even after the abilities dict is updated to
+the correct evaluated value. This was the cause of the original "Frigate has no
+warp capability" bug (WarpJump.max_tonnage frozen at 1000 instead of 2000) and
+the same-pattern bug on CrewRequired.
+
+See `docs/guides/component_system.md` (section "Refreshing data-derived
+attributes") for the design rationale.
+
+### Abilities with formula-driven data in production components
+
+The following ability instances have at least one production component
+(`data/components.json`) whose data is formula-driven on `ship_class_mass`.
+These abilities MUST use `_parse_attrs` (and currently do):
+
+| Ability | Component | Formula |
+|---------|-----------|---------|
+| `WarpJump` | `warp_drive` | `"max_tonnage": "=ship_class_mass"` |
+| `EmissiveArmor` | `emissive_armor` | `"=8 * (ship_class_mass / 1000)**(1/3)"` |
+| `ShieldRegeneratingArmor` | `shield_regenerating_armor` | `"=5 * (ship_class_mass / 1000)**(1/3)"` |
+| `CrewRequired` | `bridge` | `"=ceil(sqrt(ship_class_mass / 1000))"` |
+| `CrewRequired` | `central_complex_command` | `"=ceil(sqrt(ship_class_mass / 1000))"` |
+| `ResourceConsumption` | `warp_drive` | `"amount": "=5 * (ship_class_mass ** (2/3))"` |
+
+Other abilities not on this list may still parse attributes from data — they
+should also use `_parse_attrs` defensively, in case future content adds a
+formula-driven value.
 
 ---
 
@@ -343,6 +394,10 @@ Flat damage reduction per hit (damage ignored). Damage pipeline: Shields → Emi
 |-----------|------|----------|-------------|
 | value | int | Yes | Damage points ignored per hit |
 
+**Formula-driven in production:** the `emissive_armor` component uses
+`"=8 * (ship_class_mass / 1000)**(1/3)"` so the ignored-damage value scales
+with ship class. Refresh is handled by `StaticValueAbility._parse_attrs`.
+
 **Stat Bindings:** None (static value, not modified)
 
 ---
@@ -364,6 +419,10 @@ Absorbs overflow damage (after shields and emissive armor) and recharges shields
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | value | int | Yes | Damage absorption capacity per hit |
+
+**Formula-driven in production:** the `shield_regenerating_armor` component uses
+`"=5 * (ship_class_mass / 1000)**(1/3)"` so the absorption value scales with
+ship class. Refresh is handled by `StaticValueAbility._parse_attrs`.
 
 **Stat Bindings:** None (static value, not modified)
 
@@ -486,6 +545,11 @@ Binary capability for warp transit between star systems.
 
 Scalar format: `5000` is interpreted as `max_tonnage = 5000`.
 
+**Formula-driven in production:** the `warp_drive` component uses
+`"max_tonnage": "=ship_class_mass"` so the limit equals the owning ship class's
+`max_mass` (e.g. 2000 for a Frigate, 64000 for a Battle Cruiser). Refresh is
+handled by `WarpJump._parse_attrs`.
+
 **Stat Bindings:** None
 
 ---
@@ -510,7 +574,11 @@ Consumes resources (fuel, ammo, energy) based on a trigger type.
 |-----------|------|----------|-------------|
 | `resource` | string | Yes | Resource type to consume (fuel, ammo, energy) |
 | `amount` | float | Yes | Consumption amount per trigger |
-| `trigger` | string | Yes | `"constant"` (per-tick), `"activation"` (per-use), `"strategic_per_hex"` (per-hex movement), or `"per_turn"` (per-turn strategic cost) |
+| `trigger` | string | Yes | `"constant"` (per-tick), `"activation"` (per-use), `"strategic_per_hex"` (per-hex movement), `"warp_jump"` (per warp transit), or `"per_turn"` (per-turn strategic cost) |
+
+**Formula-driven in production:** the `warp_drive` component uses
+`"amount": "=5 * (ship_class_mass ** (2/3))"` so the energy cost of a warp
+jump scales with ship class.
 
 **Stat Bindings:**
 
@@ -645,6 +713,16 @@ Specifies crew required to operate the component. Also scales with mass via sqrt
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | value | int | Yes | Crew members required to operate |
+
+**Formula-driven in production:** the `bridge` and `central_complex_command`
+components use `"=ceil(sqrt(ship_class_mass / 1000))"` so command-tier crew
+scales with ship class. Refresh is handled by `CrewRequired._parse_attrs`.
+
+> **Design note:** the formulas were tuned to gentle scaling (multiplier 1)
+> after the original `5` and `10` multipliers caused production designs to go
+> derelict for lack of crew once the formula started evaluating correctly. If
+> you increase the multipliers, audit `data/designs/*.json` for crew-deficit
+> regressions before merging.
 
 **Stat Bindings:**
 

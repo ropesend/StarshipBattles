@@ -117,6 +117,42 @@ class TestFrigateWarpCapability:
         )
 
 
+class TestFrigateCrewRequiredFormulaIsEvaluated:
+    """The bridge component's CrewRequired formula must evaluate to a per-class
+    value on the actual ability instance (not just in the abilities dict).
+
+    Original bug: CrewRequired overrode __init__ to parse data into _base_amount,
+    but the base Ability.sync_data was a no-op for numeric attributes. So the
+    instance was constructed with the stale data parsed at registry-load time
+    (numeric value 0 for an unevaluated formula string), and never refreshed
+    when the abilities dict re-evaluated to the correct numeric value.
+
+    Fix: migrate CrewRequired to use the _parse_attrs template method, which
+    the base Ability class wires into both __init__ and sync_data.
+
+    Coupled change: the bridge formula was tuned from
+    `=ceil(5 * sqrt(ship_class_mass / 1000))` down to
+    `=ceil(sqrt(ship_class_mass / 1000))` to keep production designs balanced
+    after CrewRequired starts demanding crew correctly.
+    """
+
+    def test_frigate_bridge_crew_required_matches_tuned_formula(self, real_registries, frigate_design):
+        """Bridge on Frigate (max_mass=2000) → ceil(sqrt(2)) = 2 crew."""
+        ship = Ship.from_dict(frigate_design, registries=real_registries)
+        bridge = next((c for _, c in ship.iter_components() if c.id == 'bridge'), None)
+        assert bridge is not None
+
+        crew_reqs = bridge.get_abilities('CrewRequired')
+        assert crew_reqs, "bridge has no CrewRequired ability instance"
+        # ceil(sqrt(2000/1000)) = ceil(1.414) = 2
+        assert crew_reqs[0]._base_amount == 2, (
+            f"CrewRequired._base_amount={crew_reqs[0]._base_amount}, expected 2 "
+            f"from =ceil(sqrt(ship_class_mass / 1000)) with ship_class_mass=2000. "
+            f"Either the formula in components.json is wrong, or CrewRequired's "
+            f"sync_data is not refreshing formula-derived attributes."
+        )
+
+
 class TestSyncDataRefreshesFormulaAttributes:
     """Direct test for the sync_data staleness bug.
 

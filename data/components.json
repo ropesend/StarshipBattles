@@ -12,7 +12,7 @@
             "sprite_index": 4,
             "abilities": {
                 "CommandAndControl": true,
-                "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
+                "CrewRequired": "=ceil(sqrt(ship_class_mass / 1000))"
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -36,7 +36,7 @@
             "sprite_index": 4,
             "abilities": {
                 "CommandAndControl": true,
-                "CrewRequired": "=ceil(10 * sqrt(ship_class_mass / 1000))"
+                "CrewRequired": "=ceil(sqrt(ship_class_mass / 1000))"
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
