@@ -15,11 +15,17 @@ class VehicleLaunchAbility(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
+        self.cooldown = 0.0  # runtime state, NOT data-derived
+
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse data attributes; called from __init__ and sync_data so
+        formula-driven attributes refresh on data updates."""
+        if not isinstance(data, dict):
+            data = {}
         self.fighter_class = data.get('fighter_class', 'Fighter (Small)')
         self.capacity = data.get('capacity', 0)
         self._base_capacity = self.capacity
         self.cycle_time = data.get('cycle_time', 5.0)
-        self.cooldown = 0.0
 
     def recalculate(self):
         # Apply capacity mult

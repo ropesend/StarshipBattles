@@ -201,6 +201,13 @@ class ShipSerializer:
                 new_comp = comps[comp_id].clone()
                 new_comp._registries = registries
 
+                # Set ship reference BEFORE adding modifiers. add_modifier triggers
+                # Component.recalculate_stats(), which evaluates ship_class_mass
+                # formulas against component.ship.max_mass_budget. With ship unset,
+                # the evaluator falls back to a default and ability instances are
+                # constructed with the wrong values.
+                new_comp.ship = ship
+
                 for m_dat in c_entry.get("modifiers", []):
                     mid = m_dat['id']
                     if mid in mods:

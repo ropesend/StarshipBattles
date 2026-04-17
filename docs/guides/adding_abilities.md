@@ -82,9 +82,20 @@ class CustomAbility(Ability):
         AbilityStatBinding(StatKey.RANGE_MULT, 'range', 'multiply', '_base_range'),
     ]
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse data-derived attributes here, NOT in __init__.
 
+        The base Ability class wires _parse_attrs into BOTH __init__ and
+        sync_data, so any attribute set here refreshes whenever the
+        underlying data changes — including when formulas like
+        `=ship_class_mass` re-evaluate after the component is attached
+        to a ship.
+
+        Don't override __init__ to parse data; override _parse_attrs
+        instead. Doing both leads to staleness bugs where the instance
+        keeps the value parsed at construction even when the data dict
+        is later updated to a new (correct) value.
+        """
         # Parse data (handle dict or direct value)
         if isinstance(data, dict):
             self.damage = float(data.get('damage', 0))

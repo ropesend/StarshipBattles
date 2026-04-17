@@ -41,8 +41,9 @@ class SuperweaponMarker(Ability):
 
     weapon_name: str = ''
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse action_time from data. Called from __init__ and sync_data
+        so formula-driven values refresh correctly."""
         # PROJ-187: Parse action_time for tick-based execution
         # Boolean marker (True) defaults to 1, dict format supports action_time
         self.action_time = data.get('action_time', 1) if isinstance(data, dict) else 1

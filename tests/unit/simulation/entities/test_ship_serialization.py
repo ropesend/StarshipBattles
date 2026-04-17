@@ -751,10 +751,11 @@ class TestModifierSerialization:
             registries=registries
         )
 
-        # Add component with modifier
+        # Attach to ship FIRST so component.ship is set; bridge has formula-based
+        # mass referencing ship_class_mass which add_modifier triggers via recalc.
         bridge = create_component('bridge', registries=registries)
-        bridge.add_modifier('simple_size_mount', 2.0)
         ship.add_component(bridge, LayerType.CORE)
+        bridge.add_modifier('simple_size_mount', 2.0)
 
         # Round-trip
         data = ShipSerializer.to_dict(ship)
@@ -778,12 +779,10 @@ class TestModifierSerialization:
             registries=registries
         )
 
+        # Attach to ship before adding modifiers (bridge mass formula needs ship_class_mass)
         bridge = create_component('bridge', registries=registries)
-
-        # Add a modifier before adding to ship
-        bridge.add_modifier('simple_size_mount', 1.5)
-
         ship.add_component(bridge, LayerType.CORE)
+        bridge.add_modifier('simple_size_mount', 1.5)
 
         # Get the modifier count AFTER adding to ship (which may add additional modifiers)
         original_modifiers = ship.layers[LayerType.CORE].components[0].modifiers

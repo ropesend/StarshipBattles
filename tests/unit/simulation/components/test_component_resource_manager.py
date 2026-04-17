@@ -325,8 +325,10 @@ class TestGetResourceCost:
         mock_component.evaluated_resource_cost = None
         manager = ComponentResourceManager(mock_component)
 
-        # Without context, uses default ship_class_mass of 1000
-        result = manager.get_resource_cost()
+        # Explicit context required — there is no longer a silent default
+        # for ship_class_mass. Formulas referencing it without a ship or
+        # context now raise FormulaException loudly.
+        result = manager.get_resource_cost(context={'ship_class_mass': 1000})
 
         assert result == {'fuel': 10}  # 1000 * 0.01 = 10
 

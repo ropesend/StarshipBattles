@@ -130,14 +130,18 @@ class ShipStatsCalculator:
         total_strategic_movement = 0.0
         warp_max_tonnage = 0
 
-        # Build formula evaluation context from ship class
-        formula_context = {'ship_class_mass': 1000}  # Default fallback
+        # Build formula evaluation context from ship class. Resolve
+        # ship_class_mass from the registered class; if unavailable, omit it
+        # entirely — formulas that reference it will raise FormulaException
+        # at evaluation time. Silently defaulting to 1000 previously masked
+        # bugs where designs without a recognized class evaluated everything
+        # against the wrong mass.
+        formula_context: Dict[str, Any] = {}
         ship_class = design_data.get('ship_class', '')
-
         if ship_class:
-            class_data = vehicle_classes.get(ship_class, {})
-            if isinstance(class_data, dict):
-                formula_context['ship_class_mass'] = class_data.get('max_mass', 1000)
+            class_data = vehicle_classes.get(ship_class)
+            if isinstance(class_data, dict) and 'max_mass' in class_data:
+                formula_context['ship_class_mass'] = class_data['max_mass']
 
         # Iterate through all components in design
         components_found = self._iterate_design_components(design_data)

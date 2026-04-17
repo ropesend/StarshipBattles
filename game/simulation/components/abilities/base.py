@@ -88,6 +88,30 @@ class Ability:
         # Parse scope from JSON data
         self.scope = self._parse_scope(data)
 
+        # Parse subclass-specific numeric/string attributes from data.
+        # Subclasses override _parse_attrs(data) instead of overriding both
+        # __init__ and sync_data — see _parse_attrs docstring.
+        self._parse_attrs(data)
+
+    def _parse_attrs(self, data: Any) -> None:
+        """Hook for subclasses to parse data into instance attributes.
+
+        Called from BOTH __init__ and sync_data, so any attribute set here
+        is automatically refreshed when component data is re-evaluated
+        (e.g. after the component's ship reference becomes available and
+        formula-driven values resolve to their correct ship-class-scaled
+        results).
+
+        This is the structural answer to the WarpJump / CrewRequired
+        staleness bug class: instead of each ability remembering to
+        override sync_data, just override _parse_attrs. The base
+        class wires it into both lifecycle entry points.
+
+        Default: no extra attributes. Override in subclasses that parse
+        numeric or string attributes from `data`.
+        """
+        pass
+
     def _parse_scope(self, data: Any) -> AbilityScope:
         """
         Parse and validate scope from JSON data.
@@ -184,15 +208,20 @@ class Ability:
         return bool(self.layer & layer)
 
     def sync_data(self, data: Any):
-        """Update internal state when component data changes."""
+        """Update internal state when component data changes.
+
+        Always re-runs _parse_attrs(data) so subclass-specific attributes
+        (parsed from numeric/string data fields) refresh whenever the
+        underlying data changes — e.g. when formulas like `=ship_class_mass`
+        re-evaluate after the component is attached to a ship.
+        """
         self.data = data
         if isinstance(data, dict):
             self._tags = set(data.get('tags', []))
             self.stack_group = data.get('stack_group')
             # Re-parse scope if data changes
             self.scope = self._parse_scope(data)
-        else:
-            pass
+        self._parse_attrs(data)
 
     @property
     def tags(self):
@@ -387,8 +416,8 @@ class StaticValueAbility(Ability):
             if not val and cls.__name__ != 'StaticValueAbility':
                 raise TypeError(f"{cls.__name__} must set class attribute '{attr}'")
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse the static value from data. Called from __init__ and sync_data."""
         val = self._parse_primary_value(data)
         if self.int_result:
             val = int(val)
@@ -439,17 +468,8 @@ class SimpleMultiplierAbility(Ability):
             if not val and cls.__name__ != 'SimpleMultiplierAbility':
                 raise TypeError(f"{cls.__name__} must set class attribute '{attr}'")
 
-    def __init__(self, component, data):
-        super().__init__(component, data)
-        base_val = self._parse_primary_value(data)
-        if self.int_result:
-            base_val = int(base_val)
-        setattr(self, self.base_attr, base_val)
-        setattr(self, self.value_attr, base_val)
-
-    def sync_data(self, data):
-        """Update internal state when component data changes."""
-        super().sync_data(data)
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse base/value attributes from data. Called from __init__ and sync_data."""
         base_val = self._parse_primary_value(data)
         if self.int_result:
             base_val = int(base_val)

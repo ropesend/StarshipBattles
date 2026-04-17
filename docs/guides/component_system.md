@@ -291,6 +291,52 @@ Ability data supports three formats:
 - **Primitive:** `5` or `true` - shorthand for single-value abilities
 - **Formula:** `"=50 * sqrt(ship_class_mass / 1000)"` - runtime evaluated expression
 
+### Formula evaluation context
+
+Formulas like `"=ship_class_mass"` need a value for `ship_class_mass` at
+evaluation time. The context is built from:
+
+1. An explicit `context` dict passed to `Component.recalculate_stats(context)`, or
+2. `component.ship.max_mass_budget` if the component is attached to a ship.
+
+If neither is available and a formula references `ship_class_mass`, the
+evaluator raises `FormulaException` rather than silently substituting a
+default. This is intentional: a previous silent default of `1000` masked
+a bug where formulas evaluated against the wrong ship class (e.g. a
+Frigate's WarpJump computing as if it were on an Escort, blocking warp).
+
+**Order of operations matters during component load.** `Component.add_modifier`
+triggers `recalculate_stats`, which evaluates formulas. So if you build a
+component from a registered definition and add modifiers, attach the
+component to its ship FIRST so `ship_class_mass` is resolvable. See
+`ship_serialization._load_components` and `BattleState._restore_components`
+for the canonical pattern.
+
+### Refreshing data-derived attributes (`_parse_attrs` template method)
+
+The `Ability` base class uses a template-method pattern to keep
+data-derived instance attributes in sync with their data:
+
+- Subclasses override `_parse_attrs(data)` to parse numeric/string
+  attributes from `data` (e.g. `max_tonnage`, `capacity`, `amount`).
+- The base `Ability.__init__` calls `self._parse_attrs(data)` once.
+- The base `Ability.sync_data(data)` ALSO calls `self._parse_attrs(data)`,
+  so attributes refresh whenever the underlying data changes.
+
+This matters because formula-driven values like `=ship_class_mass` are
+evaluated in the abilities dict at recalculation time. The ability
+instance is reused across recalculations (to preserve runtime state like
+cooldowns), so without `_parse_attrs` being re-invoked the instance would
+remain frozen at the first (often wrong) evaluation.
+
+Don't override both `__init__` and `sync_data` to do the same parsing.
+Override `_parse_attrs` once and the lifecycle is wired up automatically.
+
+`SimpleMultiplierAbility` and `StaticValueAbility` provide
+`_parse_attrs` implementations that handle their respective
+single-value patterns. Raw `Ability` subclasses that parse data into
+instance attributes should override `_parse_attrs` themselves.
+
 ## Related Documentation
 
 - [ability_reference.md](../systems/ability_reference.md) - Complete catalog of all 39 abilities with registry keys, parameters, and stat bindings

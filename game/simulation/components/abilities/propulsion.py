@@ -88,8 +88,13 @@ class WarpJump(Ability):
     # WarpJump does not consume any modifier stats
     STAT_BINDINGS: List[AbilityStatBinding] = []
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse max_tonnage / energy_cost from data.
+
+        Called from both Ability.__init__ and Ability.sync_data so the values
+        refresh when formula-driven data (e.g. `=ship_class_mass`) re-evaluates
+        after the component's ship reference is set.
+        """
         # Handle primitive shortcut: "WarpJump": 5000 means max_tonnage=5000
         if isinstance(data, (int, float)):
             self.max_tonnage = float(data)

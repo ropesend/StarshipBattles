@@ -658,8 +658,14 @@ class TestVehicleClassesFormulaContext:
         # Formula "=ship_class_mass / 100" with ship_class_mass=20000 = 200
         assert stats['resource_consumption_per_hex']['fuel'] == 200.0
 
-    def test_unknown_ship_class_uses_default(self):
-        """Unknown ship class should use default ship_class_mass of 1000."""
+    def test_unknown_ship_class_yields_zero_consumption(self):
+        """Unknown ship class — formulas referencing ship_class_mass evaluate to 0.
+
+        Previously the calculator silently substituted ship_class_mass=1000.
+        That masked bugs where designs referenced classes missing from the
+        registry. With the fallback removed, missing context surfaces as a
+        zeroed value (via FormulaEvaluator.safe_evaluate's default).
+        """
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.core.registry import GameRegistries
 
@@ -689,11 +695,15 @@ class TestVehicleClassesFormulaContext:
 
         stats = service.calculate_stats(design_data, {})
 
-        # Default ship_class_mass = 1000, so 1000 / 100 = 10
-        assert stats['resource_consumption_per_hex']['fuel'] == 10.0
+        # No ship_class_mass in context → safe_evaluate returns 0
+        assert stats['resource_consumption_per_hex']['fuel'] == 0.0
 
-    def test_no_ship_class_uses_default(self):
-        """Missing ship_class should use default ship_class_mass of 1000."""
+    def test_no_ship_class_yields_zero_consumption(self):
+        """Missing ship_class — formulas referencing ship_class_mass evaluate to 0.
+
+        See test_unknown_ship_class_yields_zero_consumption: the previous
+        magic 1000 default has been removed in favour of explicit failure.
+        """
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.core.registry import GameRegistries
 
@@ -723,8 +733,8 @@ class TestVehicleClassesFormulaContext:
 
         stats = service.calculate_stats(design_data, {})
 
-        # Default ship_class_mass = 1000, so 1000 / 10 = 100
-        assert stats['resource_consumption_per_hex']['fuel'] == 100.0
+        # No ship_class in design → no ship_class_mass → safe_evaluate returns 0
+        assert stats['resource_consumption_per_hex']['fuel'] == 0.0
 
 
 class TestConsumptionMultiplier:
