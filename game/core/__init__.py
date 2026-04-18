@@ -44,6 +44,9 @@ Paths (game.core.paths):
 Protocols (game.core.protocols):
     IRegistryProvider, IFleet, IPlanet, ICombatant,
     is_fleet, is_planet, is_combatant
+
+Roles (game.core.roles, PROJ-278):
+    Role, RoleRegistry, RoleRegistryReadOnlyError
 """
 
 # Exceptions (PROJ-45)
@@ -118,6 +121,13 @@ from game.core.protocols import (
     is_combatant,
 )
 
+# Roles (PROJ-278)
+from game.core.roles import (
+    Role,
+    RoleRegistry,
+    RoleRegistryReadOnlyError,
+)
+
 
 __all__ = [
     # Exceptions (PROJ-45)
@@ -146,4 +156,6 @@ __all__ = [
     # Protocols
     'IRegistryProvider', 'IFleet', 'IPlanet', 'ICombatant',
     'is_fleet', 'is_planet', 'is_combatant',
+    # Roles (PROJ-278)
+    'Role', 'RoleRegistry', 'RoleRegistryReadOnlyError',
 ]
