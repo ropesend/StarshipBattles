@@ -40,9 +40,13 @@ class TestRaceAptitudesPanel:
         """Panel should create without errors."""
         assert aptitudes_panel is not None
 
-    def test_aptitudes_panel_has_9_sliders(self, aptitudes_panel):
-        """Panel should have 9 aptitude sliders."""
-        assert len(aptitudes_panel.aptitude_sliders) == 9
+    def test_aptitudes_panel_has_7_sliders(self, aptitudes_panel):
+        """Panel should have 7 aptitude sliders.
+
+        PROJ-283 Phase 4: dropped `happiness` (now `base_happiness`,
+        derived in PROJ-284) and `population_growth` (now
+        `base_reproduction_rate`)."""
+        assert len(aptitudes_panel.aptitude_sliders) == 7
 
     def test_aptitudes_panel_has_budget_display(self, aptitudes_panel):
         """Panel should have budget label."""
@@ -55,12 +59,12 @@ class TestRaceAptitudesPanel:
         assert "100" in text or "Points" in text
 
     def test_aptitudes_panel_stores_references(self, aptitudes_panel):
-        """Panel should store slider and label references."""
-        # Check sliders dictionary
+        """Panel should store slider and label references for all 7
+        paid aptitudes (PROJ-283 Phase 4 dropped happiness +
+        population_growth)."""
         expected_names = [
             "strength", "intelligence", "constitution", "dexterity",
-            "tolerance_other_species", "cooperation", "happiness",
-            "population_growth", "conflict_tolerance"
+            "tolerance_other_species", "cooperation", "conflict_tolerance"
         ]
         for name in expected_names:
             assert name in aptitudes_panel.aptitude_sliders, f"Missing slider: {name}"
@@ -126,15 +130,11 @@ class TestRaceAptitudesPanel:
         assert "100" in text
 
     def test_update_budget_display_after_slider_change(self, aptitudes_panel, race_config):
-        """Budget should update after slider changes."""
-        # Zero out tolerance costs for predictable test
-        race_config.gravity_tolerance = 0.0
-        race_config.temperature_tolerance = 0.0
-        race_config.water_tolerance = 0.0
-        race_config.radiation_tolerance = 0.0
-        for gas in race_config.atmosphere_preferences:
-            race_config.atmosphere_preferences[gas] = 0.0
+        """Budget should update after slider changes.
 
+        PROJ-283 Phase 4: legacy environment fields are gone; the default
+        race_config has every preference at registry default (0 cost), so
+        no zeroing is needed for a predictable test."""
         # Start with fresh budget display
         aptitudes_panel.update_budget_display()
 
@@ -147,18 +147,18 @@ class TestRaceAptitudesPanel:
         assert "97" in text  # 100 - 3
 
     def test_budget_display_red_when_over(self, aptitudes_panel, race_config):
-        """Budget label should be red when over budget."""
-        # Set config to be over budget
+        """Budget label should be red when over budget.
+
+        PROJ-283 Phase 4: dropped happiness + population_growth aptitudes
+        and the legacy `gravity_tolerance` field. Maxing the 7 paid
+        aptitudes alone exceeds the 100-point budget by ~3000."""
         race_config.aptitude_strength = 100
         race_config.aptitude_intelligence = 100
         race_config.aptitude_constitution = 100
         race_config.aptitude_dexterity = 100
         race_config.aptitude_tolerance_other_species = 100
         race_config.aptitude_cooperation = 100
-        race_config.aptitude_happiness = 100
-        race_config.aptitude_population_growth = 100
         race_config.aptitude_conflict_tolerance = 100
-        race_config.gravity_tolerance = 1.0  # Adds 1023 points
 
         aptitudes_panel.update_budget_display()
 
@@ -183,8 +183,22 @@ class TestRaceAptitudesPanel:
         assert aptitudes_panel.tolerance_cost_label is not None
 
     def test_tolerance_cost_updates_from_config(self, aptitudes_panel, race_config):
-        """Tolerance cost should reflect config values."""
-        race_config.gravity_tolerance = 0.3  # 7 points
+        """Tolerance cost should reflect config values.
+
+        PROJ-283 Phase 4: gravity_tolerance field deleted. Replicate the
+        old "7-point tolerance cost" by widening the gravity preference's
+        tolerance by 3 steps (`_exponential_cost(3) = 7`)."""
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.strategy.data.habitability_factors import get_factor
+
+        gravity = get_factor("gravity")
+        race_config.preferences["gravity"] = EnvironmentalPreference(
+            setpoint=gravity.default_setpoint,
+            tolerance=gravity.default_tolerance + 3 * gravity.step,
+            min_value=gravity.min_value,
+            max_value=gravity.max_value,
+            step=gravity.step,
+        )
         aptitudes_panel.update_budget_display()
 
         text = aptitudes_panel.tolerance_cost_label.text

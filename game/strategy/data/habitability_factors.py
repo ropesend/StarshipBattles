@@ -163,8 +163,10 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         weight=1.0,
         default_setpoint=293.0,
         default_tolerance=50.0,
-        min_value=100.0,
-        max_value=500.0,
+        min_value=50.0,   # PROJ-283 Phase 5: lowered from 100K to admit
+                          # ice-giant-style cryogenic preferences (~80 K)
+        max_value=2000.0, # PROJ-283 Phase 5: raised from 500K to admit
+                          # chthonian-style irradiated preferences (~1500 K)
         step=10.0,
         extractor=_make_scalar_extractor("surface_temperature"),
         scorer=_default_gaussian_scorer,

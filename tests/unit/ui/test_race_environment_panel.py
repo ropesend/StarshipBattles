@@ -1,701 +1,256 @@
-"""
-Unit tests for RaceEnvironmentPanel.
+"""Tests for the rebuilt `RaceEnvironmentPanel` (PROJ-283 Phase 5).
 
-PROJ-12 Phase 4: TDD tests written before extraction.
-Tests the race environment configuration panel functionality.
-"""
+The new panel iterates `FACTOR_REGISTRY`:
+    * One `PreferenceRow` per scalar factor (7 rows)
+    * One `PreferenceRow` per gas factor (10 rows, under "Atmosphere")
+    * Two single-slider rows for `base_reproduction_rate` and `base_happiness`
+    * A homeworld dropdown at the top
+    * A live points-remaining label
 
-import pytest
+Tests rely on heavy mocking of pygame_gui widgets — we don't need real
+rendering, just verification that the right rows are constructed and
+that `update_config` / `set_from_config` / `apply_homeworld_preset`
+read/write the expected `race_config` attributes.
+"""
+from __future__ import annotations
+
 from unittest.mock import MagicMock, patch
+
 import pygame
+import pytest
+
+from game.strategy.data.environmental_preference import EnvironmentalPreference
+from game.strategy.data.habitability_factors import (
+    FACTOR_REGISTRY,
+    iter_gas_factors,
+    iter_scalar_factors,
+)
+from game.strategy.data.race_config import RaceConfig
 
 
-# =============================================================================
+# ---------------------------------------------------------------------------
 # Fixtures
-# =============================================================================
-
-@pytest.fixture
-def mock_race_config():
-    """Create a mock RaceConfig with environment properties."""
-    config = MagicMock()
-    config.gravity_ideal = 1.0
-    config.gravity_tolerance = 0.3
-    config.temperature_ideal = 293.0
-    config.temperature_tolerance = 50.0
-    config.radiation_tolerance = 0.0
-    config.atmosphere_preferences = {
-        "Oxygen": 0.0,
-        "Nitrogen": 0.0,
-        "Carbon Dioxide": 0.0,
-        "Methane": 0.0,
-        "Hydrogen": 0.0,
-        "Helium": 0.0,
-    }
-    return config
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
-def mock_ui_manager():
-    """Create a mock pygame_gui UIManager."""
-    manager = MagicMock()
-    return manager
+def mock_panel():
+    p = MagicMock()
+    # Panel rect — make it tall enough for ~17 rows
+    p.get_relative_rect.return_value = pygame.Rect(0, 0, 800, 1200)
+    return p
 
 
-# =============================================================================
-# Test: RaceEnvironmentPanel Import and Creation
-# =============================================================================
+@pytest.fixture
+def mock_manager():
+    return MagicMock()
 
-class TestRaceEnvironmentPanelCreation:
-    """Tests for RaceEnvironmentPanel initialization."""
 
-    def test_race_environment_panel_has_slider_references(self):
-        """RaceEnvironmentPanel has expected slider reference attributes."""
+@pytest.fixture
+def race_config():
+    return RaceConfig(
+        name="Test Race",
+        flag_id="flag_test",
+        portrait_id="portrait_test",
+        theme_id="Federation",
+    )
+
+
+def _make_panel(mock_panel, mock_manager, race_config):
+    """Construct a `RaceEnvironmentPanel` with all the pygame_gui /
+    pygame_gui-derived classes patched out.
+
+    Each pygame_gui constructor call returns a fresh `MagicMock` so that
+    `panel.reproduction_slider` and `panel.happiness_slider` (and the
+    individual labels) are distinct instances — otherwise tests that
+    inspect calls on one widget would see the most recent call on a
+    shared mock.
+    """
+    from game.ui.panels import race_environment_panel as rep_module
+
+    def _fresh_mock_class():
+        m = MagicMock()
+        m.side_effect = lambda *a, **kw: MagicMock()
+        return m
+
+    patches = [
+        patch.object(rep_module, "UILabel", _fresh_mock_class()),
+        patch.object(rep_module, "UIDropDownMenu", _fresh_mock_class()),
+        patch.object(rep_module, "UIHorizontalSlider", _fresh_mock_class()),
+        patch.object(rep_module, "PreferenceRow", _fresh_mock_class()),
+        patch.object(rep_module, "create_section_header", MagicMock()),
+    ]
+    for p in patches:
+        p.start()
+    try:
+        return rep_module.RaceEnvironmentPanel(
+            panel=mock_panel,
+            manager=mock_manager,
+            race_config=race_config,
+        )
+    finally:
+        for p in patches:
+            p.stop()
+
+
+# ---------------------------------------------------------------------------
+# Construction: one row per registry factor
+# ---------------------------------------------------------------------------
+
+
+class TestPanelConstruction:
+    def test_panel_has_row_for_every_scalar_factor(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        scalar_ids = {f.id for f in iter_scalar_factors()}
+        assert scalar_ids.issubset(set(panel.preference_rows.keys()))
+
+    def test_panel_has_row_for_every_gas_factor(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        gas_ids = {f.id for f in iter_gas_factors()}
+        assert gas_ids.issubset(set(panel.preference_rows.keys()))
+
+    def test_panel_has_17_total_rows(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        assert len(panel.preference_rows) == len(FACTOR_REGISTRY)
+
+    def test_panel_has_reproduction_and_happiness_sliders(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        assert panel.reproduction_slider is not None
+        assert panel.happiness_slider is not None
+
+    def test_panel_has_homeworld_dropdown(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        assert panel.homeworld_dropdown is not None
+
+    def test_panel_has_points_label(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        assert panel.points_label is not None
+
+
+# ---------------------------------------------------------------------------
+# update_config: PreferenceRow callback writes to race_config.preferences
+# ---------------------------------------------------------------------------
+
+
+class TestUpdateConfig:
+    def test_update_config_reads_each_row_into_preferences(
+        self, mock_panel, mock_manager, race_config,
+    ):
         from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
 
-        # Use mock to avoid pygame initialization
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.gravity_ideal_slider = None
-            panel.gravity_tolerance_slider = None
-            panel.temp_ideal_slider = None
-            panel.temp_tolerance_slider = None
-            panel.radiation_slider = None
-            panel.atmosphere_sliders = {}
-
-            # Verify the attributes exist
-            assert hasattr(panel, 'gravity_ideal_slider')
-            assert hasattr(panel, 'gravity_tolerance_slider')
-            assert hasattr(panel, 'temp_ideal_slider')
-            assert hasattr(panel, 'temp_tolerance_slider')
-            assert hasattr(panel, 'radiation_slider')
-            assert hasattr(panel, 'atmosphere_sliders')
-
-
-# =============================================================================
-# Test: Value Formatting
-# =============================================================================
-
-class TestValueFormatting:
-    """Tests for value formatting methods."""
-
-    def test_format_radiation_sensitive(self):
-        """Radiation values below -50 show 'Sens' suffix."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            result = panel._format_radiation(-75)
-
-            assert "Sens" in result
-            assert "-75" in result
-
-    def test_format_radiation_resistant(self):
-        """Radiation values above 50 show 'Res' suffix."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            result = panel._format_radiation(75)
-
-            assert "Res" in result
-            assert "75" in result
-
-    def test_format_radiation_neutral_positive(self):
-        """Positive neutral radiation values show plus sign."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            result = panel._format_radiation(25)
-
-            assert result == "+25"
-
-    def test_format_radiation_neutral_negative(self):
-        """Negative neutral radiation values show minus sign."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            result = panel._format_radiation(-25)
-
-            assert result == "-25"
-
-    def test_format_atmosphere_positive(self):
-        """Positive atmosphere values show plus sign."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            result = panel._format_atmosphere(50)
-
-            assert result == "+50"
-
-    def test_format_atmosphere_negative(self):
-        """Negative atmosphere values show minus sign."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            result = panel._format_atmosphere(-50)
-
-            assert result == "-50"
-
-
-# =============================================================================
-# Test: Configuration Updates
-# =============================================================================
-
-class TestConfigurationUpdates:
-    """Tests for updating RaceConfig from panel values."""
-
-    def test_update_config_reads_gravity_sliders(self, mock_race_config):
-        """update_config reads gravity values from sliders."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-
-            # Mock sliders
-            panel.gravity_ideal_slider = MagicMock()
-            panel.gravity_ideal_slider.get_current_value.return_value = 1.5
-            panel.gravity_tolerance_slider = MagicMock()
-            panel.gravity_tolerance_slider.get_current_value.return_value = 0.5
-            panel.temp_ideal_slider = None
-            panel.temp_tolerance_slider = None
-            panel.radiation_slider = None
-            panel.water_ideal_slider = None
-            panel.water_tolerance_slider = None
-            panel.homeworld_dropdown = None
-            panel.atmosphere_sliders = {}
-
-            panel.update_config()
-
-            assert mock_race_config.gravity_ideal == 1.5
-            assert mock_race_config.gravity_tolerance == 0.5
-
-    def test_update_config_reads_temperature_sliders(self, mock_race_config):
-        """update_config reads temperature values from sliders."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-
-            # Mock sliders
-            panel.gravity_ideal_slider = None
-            panel.gravity_tolerance_slider = None
-            panel.temp_ideal_slider = MagicMock()
-            panel.temp_ideal_slider.get_current_value.return_value = 310.0
-            panel.temp_tolerance_slider = MagicMock()
-            panel.temp_tolerance_slider.get_current_value.return_value = 75.0
-            panel.radiation_slider = None
-            panel.water_ideal_slider = None
-            panel.water_tolerance_slider = None
-            panel.homeworld_dropdown = None
-            panel.atmosphere_sliders = {}
-
-            panel.update_config()
-
-            assert mock_race_config.temperature_ideal == 310.0
-            assert mock_race_config.temperature_tolerance == 75.0
-
-    def test_update_config_reads_radiation_slider(self, mock_race_config):
-        """update_config reads radiation value from slider."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-
-            # Mock sliders
-            panel.gravity_ideal_slider = None
-            panel.gravity_tolerance_slider = None
-            panel.temp_ideal_slider = None
-            panel.temp_tolerance_slider = None
-            panel.radiation_slider = MagicMock()
-            panel.radiation_slider.get_current_value.return_value = 50.0
-            panel.water_ideal_slider = None
-            panel.water_tolerance_slider = None
-            panel.homeworld_dropdown = None
-            panel.atmosphere_sliders = {}
-
-            panel.update_config()
-
-            assert mock_race_config.radiation_tolerance == 50.0
-
-    def test_update_config_reads_atmosphere_sliders(self, mock_race_config):
-        """update_config reads atmosphere values from sliders."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-
-            # Mock sliders
-            panel.gravity_ideal_slider = None
-            panel.gravity_tolerance_slider = None
-            panel.temp_ideal_slider = None
-            panel.temp_tolerance_slider = None
-            panel.radiation_slider = None
-            panel.water_ideal_slider = None
-            panel.water_tolerance_slider = None
-            panel.homeworld_dropdown = None
-
-            oxygen_slider = MagicMock()
-            oxygen_slider.get_current_value.return_value = 80.0
-            nitrogen_slider = MagicMock()
-            nitrogen_slider.get_current_value.return_value = -20.0
-            panel.atmosphere_sliders = {
-                "Oxygen": oxygen_slider,
-                "Nitrogen": nitrogen_slider,
-            }
-
-            panel.update_config()
-
-            assert mock_race_config.atmosphere_preferences["Oxygen"] == 80.0
-            assert mock_race_config.atmosphere_preferences["Nitrogen"] == -20.0
-
-
-# =============================================================================
-# Test: Label Updates
-# =============================================================================
-
-class TestLabelUpdates:
-    """Tests for updating display labels from slider values."""
-
-    def test_update_labels_updates_gravity_labels(self):
-        """update_labels updates gravity display labels."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            # Mock sliders and labels
-            panel.gravity_ideal_slider = MagicMock()
-            panel.gravity_ideal_slider.get_current_value.return_value = 1.5
-            panel.gravity_ideal_label = MagicMock()
-
-            panel.gravity_tolerance_slider = MagicMock()
-            panel.gravity_tolerance_slider.get_current_value.return_value = 0.4
-            panel.gravity_tolerance_label = MagicMock()
-
-            panel.temp_ideal_slider = None
-            panel.temp_ideal_label = None
-            panel.temp_tolerance_slider = None
-            panel.temp_tolerance_label = None
-            panel.radiation_slider = None
-            panel.radiation_label = None
-            panel.water_ideal_slider = None
-            panel.water_ideal_label = None
-            panel.water_tolerance_slider = None
-            panel.water_tolerance_label = None
-            panel.atmosphere_sliders = {}
-            panel.atmosphere_labels = {}
-
-            panel.update_labels()
-
-            panel.gravity_ideal_label.set_text.assert_called_with("1.5")
-            panel.gravity_tolerance_label.set_text.assert_called_with("±0.40")
-
-    def test_update_labels_updates_temperature_labels(self):
-        """update_labels updates temperature display labels."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            # Mock sliders and labels
-            panel.gravity_ideal_slider = None
-            panel.gravity_ideal_label = None
-            panel.gravity_tolerance_slider = None
-            panel.gravity_tolerance_label = None
-
-            panel.temp_ideal_slider = MagicMock()
-            panel.temp_ideal_slider.get_current_value.return_value = 300.0
-            panel.temp_ideal_label = MagicMock()
-
-            panel.temp_tolerance_slider = MagicMock()
-            panel.temp_tolerance_slider.get_current_value.return_value = 60.0
-            panel.temp_tolerance_label = MagicMock()
-
-            panel.radiation_slider = None
-            panel.radiation_label = None
-            panel.water_ideal_slider = None
-            panel.water_ideal_label = None
-            panel.water_tolerance_slider = None
-            panel.water_tolerance_label = None
-            panel.atmosphere_sliders = {}
-            panel.atmosphere_labels = {}
-
-            panel.update_labels()
-
-            panel.temp_ideal_label.set_text.assert_called_with("300")
-            panel.temp_tolerance_label.set_text.assert_called_with("±60")
-
-    def test_update_labels_updates_radiation_label(self):
-        """update_labels updates radiation display label."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            # Mock sliders and labels
-            panel.gravity_ideal_slider = None
-            panel.gravity_ideal_label = None
-            panel.gravity_tolerance_slider = None
-            panel.gravity_tolerance_label = None
-            panel.temp_ideal_slider = None
-            panel.temp_ideal_label = None
-            panel.temp_tolerance_slider = None
-            panel.temp_tolerance_label = None
-
-            panel.radiation_slider = MagicMock()
-            panel.radiation_slider.get_current_value.return_value = 75.0
-            panel.radiation_label = MagicMock()
-
-            panel.water_ideal_slider = None
-            panel.water_ideal_label = None
-            panel.water_tolerance_slider = None
-            panel.water_tolerance_label = None
-            panel.atmosphere_sliders = {}
-            panel.atmosphere_labels = {}
-
-            panel.update_labels()
-
-            # Should show "+75 Res" for resistant
-            panel.radiation_label.set_text.assert_called()
-            call_arg = panel.radiation_label.set_text.call_args[0][0]
-            assert "75" in call_arg
-            assert "Res" in call_arg
-
-
-# =============================================================================
-# Test: Default Atmosphere Gases
-# =============================================================================
-
-class TestDefaultGases:
-    """Tests for default atmosphere gas list."""
-
-    def test_has_default_gases_constant(self):
-        """RaceEnvironmentPanel has DEFAULT_GASES constant."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        assert hasattr(RaceEnvironmentPanel, 'DEFAULT_GASES')
-        gases = RaceEnvironmentPanel.DEFAULT_GASES
-        assert "Oxygen" in gases
-        assert "Nitrogen" in gases
-        assert "Carbon Dioxide" in gases
-        assert "Methane" in gases
-        assert "Hydrogen" in gases
-        assert "Helium" in gases
-
-
-# =============================================================================
-# Test: Homeworld Dropdown (PROJ-66 Phase 4)
-# =============================================================================
-
-class TestHomeworldDropdown:
-    """Tests for homeworld type dropdown."""
-
-    def test_panel_has_homeworld_dropdown(self):
-        """RaceEnvironmentPanel has homeworld_dropdown attribute."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.homeworld_dropdown = None
-
-            assert hasattr(panel, 'homeworld_dropdown')
-
-    def test_homeworld_dropdown_has_all_planet_types(self):
-        """Homeworld dropdown includes all planet type names plus Custom."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-        from game.strategy.data.homeworld_presets import get_available_homeworld_names
-
-        # Get expected names from presets
-        expected_names = get_available_homeworld_names()
-
-        # Verify we have 11 planet types
-        assert len(expected_names) == 11
-        assert "Continental" in expected_names
-        assert "Jovian" in expected_names
-        assert "Arid" in expected_names
-
-
-# =============================================================================
-# Test: Water Sliders (PROJ-66 Phase 4)
-# =============================================================================
-
-class TestWaterSliders:
-    """Tests for water preference sliders."""
-
-    def test_panel_has_water_ideal_slider(self):
-        """RaceEnvironmentPanel has water_ideal_slider attribute."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.water_ideal_slider = None
-            panel.water_ideal_label = None
-
-            assert hasattr(panel, 'water_ideal_slider')
-            assert hasattr(panel, 'water_ideal_label')
-
-    def test_panel_has_water_tolerance_slider(self):
-        """RaceEnvironmentPanel has water_tolerance_slider attribute."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.water_tolerance_slider = None
-            panel.water_tolerance_label = None
-
-            assert hasattr(panel, 'water_tolerance_slider')
-            assert hasattr(panel, 'water_tolerance_label')
-
-    def test_format_water_shows_percentage(self):
-        """_format_water returns percentage format."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            assert panel._format_water(0.5) == "50%"
-            assert panel._format_water(1.0) == "100%"
-            assert panel._format_water(0.0) == "0%"
-            assert panel._format_water(0.75) == "75%"
-
-    def test_update_config_reads_water_sliders(self, mock_race_config):
-        """update_config reads water values from sliders."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.water_ideal = 0.5
-            mock_race_config.water_tolerance = 0.2
-
-            # Mock existing sliders to None
-            panel.gravity_ideal_slider = None
-            panel.gravity_tolerance_slider = None
-            panel.temp_ideal_slider = None
-            panel.temp_tolerance_slider = None
-            panel.radiation_slider = None
-            panel.atmosphere_sliders = {}
-            panel.homeworld_dropdown = None
-
-            # Mock water sliders
-            panel.water_ideal_slider = MagicMock()
-            panel.water_ideal_slider.get_current_value.return_value = 0.7
-            panel.water_tolerance_slider = MagicMock()
-            panel.water_tolerance_slider.get_current_value.return_value = 0.3
-
-            panel.update_config()
-
-            assert mock_race_config.water_ideal == 0.7
-            assert mock_race_config.water_tolerance == 0.3
-
-    def test_update_labels_formats_water_values(self):
-        """update_labels updates water display labels with percentage."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-
-            # Mock all sliders/labels to None except water
-            panel.gravity_ideal_slider = None
-            panel.gravity_ideal_label = None
-            panel.gravity_tolerance_slider = None
-            panel.gravity_tolerance_label = None
-            panel.temp_ideal_slider = None
-            panel.temp_ideal_label = None
-            panel.temp_tolerance_slider = None
-            panel.temp_tolerance_label = None
-            panel.radiation_slider = None
-            panel.radiation_label = None
-            panel.atmosphere_sliders = {}
-            panel.atmosphere_labels = {}
-
-            # Mock water sliders and labels
-            panel.water_ideal_slider = MagicMock()
-            panel.water_ideal_slider.get_current_value.return_value = 0.6
-            panel.water_ideal_label = MagicMock()
-
-            panel.water_tolerance_slider = MagicMock()
-            panel.water_tolerance_slider.get_current_value.return_value = 0.2
-            panel.water_tolerance_label = MagicMock()
-
-            panel.update_labels()
-
-            panel.water_ideal_label.set_text.assert_called_with("60%")
-            panel.water_tolerance_label.set_text.assert_called_with("±20%")
-
-    def test_set_from_config_sets_water_sliders(self, mock_race_config):
-        """set_from_config sets water slider values from race_config."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.water_ideal = 0.8
-            mock_race_config.water_tolerance = 0.15
-
-            # Mock all sliders to None except water
-            panel.gravity_ideal_slider = None
-            panel.gravity_tolerance_slider = None
-            panel.temp_ideal_slider = None
-            panel.temp_tolerance_slider = None
-            panel.radiation_slider = None
-            panel.atmosphere_sliders = {}
-            panel.homeworld_dropdown = None
-
-            # Mock water sliders - get_current_value for update_labels
-            panel.water_ideal_slider = MagicMock()
-            panel.water_ideal_slider.get_current_value.return_value = 0.8
-            panel.water_tolerance_slider = MagicMock()
-            panel.water_tolerance_slider.get_current_value.return_value = 0.15
-
-            # Mock labels for update_labels call
-            panel.gravity_ideal_label = None
-            panel.gravity_tolerance_label = None
-            panel.temp_ideal_label = None
-            panel.temp_tolerance_label = None
-            panel.radiation_label = None
-            panel.atmosphere_labels = {}
-            panel.water_ideal_label = MagicMock()
-            panel.water_tolerance_label = MagicMock()
-
-            panel.set_from_config()
-
-            panel.water_ideal_slider.set_current_value.assert_called_with(0.8)
-            panel.water_tolerance_slider.set_current_value.assert_called_with(0.15)
-
-
-# =============================================================================
-# Test: Homeworld Preset Auto-Populate (PROJ-66 Phase 4)
-# =============================================================================
-
-class TestHomeworldPresetAutoPopulate:
-    """Tests for homeworld preset auto-populate functionality."""
-
-    def _setup_all_mocks(self, panel):
-        """Helper to set up all slider and label mocks for preset tests."""
-        # Mock all sliders with get_current_value for update_labels
-        panel.gravity_ideal_slider = MagicMock()
-        panel.gravity_ideal_slider.get_current_value.return_value = 1.0
-        panel.gravity_tolerance_slider = MagicMock()
-        panel.gravity_tolerance_slider.get_current_value.return_value = 0.3
-        panel.temp_ideal_slider = MagicMock()
-        panel.temp_ideal_slider.get_current_value.return_value = 293
-        panel.temp_tolerance_slider = MagicMock()
-        panel.temp_tolerance_slider.get_current_value.return_value = 50
-        panel.water_ideal_slider = MagicMock()
-        panel.water_ideal_slider.get_current_value.return_value = 0.6
-        panel.water_tolerance_slider = MagicMock()
-        panel.water_tolerance_slider.get_current_value.return_value = 0.2
-        panel.radiation_slider = MagicMock()
-        panel.radiation_slider.get_current_value.return_value = 0
-
-        atmo_gases = ["Oxygen", "Nitrogen", "Carbon Dioxide", "Methane", "Hydrogen", "Helium"]
-        panel.atmosphere_sliders = {}
-        panel.atmosphere_labels = {}
-        for gas in atmo_gases:
-            slider = MagicMock()
-            slider.get_current_value.return_value = 0
-            panel.atmosphere_sliders[gas] = slider
-            panel.atmosphere_labels[gas] = MagicMock()
-
-        # Mock labels
-        panel.gravity_ideal_label = MagicMock()
-        panel.gravity_tolerance_label = MagicMock()
-        panel.temp_ideal_label = MagicMock()
-        panel.temp_tolerance_label = MagicMock()
-        panel.water_ideal_label = MagicMock()
-        panel.water_tolerance_label = MagicMock()
-        panel.radiation_label = MagicMock()
-
-    def test_apply_homeworld_preset_continental_sets_gravity(self, mock_race_config):
-        """apply_homeworld_preset for Continental sets gravity to 1.0."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-            self._setup_all_mocks(panel)
-
-            panel.apply_homeworld_preset("CONTINENTAL")
-
-            panel.gravity_ideal_slider.set_current_value.assert_called_with(1.0)
-
-    def test_apply_homeworld_preset_continental_sets_temperature(self, mock_race_config):
-        """apply_homeworld_preset for Continental sets temperature to 293K."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-            self._setup_all_mocks(panel)
-
-            panel.apply_homeworld_preset("CONTINENTAL")
-
-            panel.temp_ideal_slider.set_current_value.assert_called_with(293)
-
-    def test_apply_homeworld_preset_jovian_sets_high_gravity(self, mock_race_config):
-        """apply_homeworld_preset for Jovian sets gravity to 2.5."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-            self._setup_all_mocks(panel)
-
-            panel.apply_homeworld_preset("JOVIAN")
-
-            panel.gravity_ideal_slider.set_current_value.assert_called_with(2.5)
-
-    def test_apply_homeworld_preset_custom_does_nothing(self, mock_race_config):
-        """apply_homeworld_preset for (Custom) leaves sliders unchanged."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-
-            # Mock all sliders
-            panel.gravity_ideal_slider = MagicMock()
-            panel.gravity_tolerance_slider = MagicMock()
-            panel.temp_ideal_slider = MagicMock()
-            panel.temp_tolerance_slider = MagicMock()
-            panel.water_ideal_slider = MagicMock()
-            panel.water_tolerance_slider = MagicMock()
-            panel.radiation_slider = MagicMock()
-            panel.atmosphere_sliders = {}
-
-            panel.apply_homeworld_preset("(Custom)")
-
-            # No slider should have been set
-            panel.gravity_ideal_slider.set_current_value.assert_not_called()
-            panel.temp_ideal_slider.set_current_value.assert_not_called()
-            panel.water_ideal_slider.set_current_value.assert_not_called()
-            panel.radiation_slider.set_current_value.assert_not_called()
-
-    def test_apply_homeworld_preset_updates_config(self, mock_race_config):
-        """apply_homeworld_preset updates race_config.homeworld_type."""
-        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
-
-        with patch.object(RaceEnvironmentPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceEnvironmentPanel.__new__(RaceEnvironmentPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.homeworld_type = None
-            self._setup_all_mocks(panel)
-
-            panel.apply_homeworld_preset("ARID")
-
-            assert mock_race_config.homeworld_type == "ARID"
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        # Make every PreferenceRow.current_preference return a known
+        # marker so update_config writes them into race_config.preferences.
+        for fid, row in panel.preference_rows.items():
+            factor = FACTOR_REGISTRY[fid]
+            row.current_preference.return_value = EnvironmentalPreference(
+                setpoint=factor.default_setpoint,
+                tolerance=factor.default_tolerance + factor.step,  # 1 step deviation
+                min_value=factor.min_value,
+                max_value=factor.max_value,
+                step=factor.step,
+            )
+
+        panel.update_config()
+
+        # Every preference should now reflect the row's reported value.
+        for fid in panel.preference_rows:
+            factor = FACTOR_REGISTRY[fid]
+            assert race_config.preferences[fid].tolerance == pytest.approx(
+                factor.default_tolerance + factor.step
+            )
+
+    def test_update_config_reads_repro_and_happiness_sliders(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        panel.reproduction_slider.get_current_value.return_value = 0.05
+        panel.happiness_slider.get_current_value.return_value = 0.7
+
+        panel.update_config()
+
+        assert race_config.base_reproduction_rate == pytest.approx(0.05)
+        assert race_config.base_happiness == pytest.approx(0.7)
+
+
+# ---------------------------------------------------------------------------
+# set_from_config: panel mirrors race_config state into rows + sliders
+# ---------------------------------------------------------------------------
+
+
+class TestSetFromConfig:
+    def test_set_from_config_calls_set_preference_per_row(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        panel.set_from_config()
+        for fid, row in panel.preference_rows.items():
+            row.set_preference.assert_called()
+            arg = row.set_preference.call_args.args[0]
+            assert arg is race_config.preferences[fid]
+
+    def test_set_from_config_writes_repro_and_happiness_sliders(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        race_config.base_reproduction_rate = 0.04
+        race_config.base_happiness = 0.7
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        panel.set_from_config()
+        panel.reproduction_slider.set_current_value.assert_called_with(0.04)
+        panel.happiness_slider.set_current_value.assert_called_with(0.7)
+
+
+# ---------------------------------------------------------------------------
+# Homeworld preset application
+# ---------------------------------------------------------------------------
+
+
+class TestApplyHomeworldPreset:
+    def test_apply_continental_overrides_relevant_factors(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+
+        # Continental's preferences include gravity/temperature/water/...
+        panel.apply_homeworld_preset("CONTINENTAL")
+
+        # Race's gravity preference should now reflect Continental's setpoint.
+        assert race_config.preferences["gravity"].setpoint == pytest.approx(9.81)
+        assert race_config.homeworld_type == "CONTINENTAL"
+
+    def test_apply_custom_does_not_mutate(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        original_gravity_setpoint = race_config.preferences["gravity"].setpoint
+        panel.apply_homeworld_preset("(Custom)")
+        assert race_config.preferences["gravity"].setpoint == original_gravity_setpoint
+
+
+# ---------------------------------------------------------------------------
+# Live points label
+# ---------------------------------------------------------------------------
+
+
+class TestPointsLabel:
+    def test_update_points_display_calls_set_text(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        panel.points_label.set_text.reset_mock()
+        panel._update_points_display()
+        panel.points_label.set_text.assert_called()
+        text = panel.points_label.set_text.call_args.args[0]
+        assert "100" in text or "Points" in text

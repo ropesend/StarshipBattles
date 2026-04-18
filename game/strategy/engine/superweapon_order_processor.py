@@ -589,26 +589,26 @@ class SuperweaponOrderProcessor:
         system.stars = []
 
         # Extract environmental conditions from creator's race_config
+        # PROJ-283 Phase 4: registry-driven preferences. Each scalar
+        # factor's `setpoint` is the race's ideal value; gas factors store
+        # ideal partial pressure in Pa under the `gas.<formula>` id.
         race = empire.race_config if empire else None
         if race:
-            # Use race's ideal conditions for perfect habitability
-            gravity = race.gravity_ideal * 9.81  # Convert g to m/s^2
-            temperature = race.temperature_ideal
-            water = race.water_ideal
-            # Build atmosphere from positive preferences (scaled to partial pressure)
-            # Translate display names ("Oxygen") to chemical formulas ("O2")
-            from game.strategy.data.race_config import GAS_NAME_TO_FORMULA
-            atmosphere = {}
-            for gas, preference in race.atmosphere_preferences.items():
-                if preference > 0:
-                    formula = GAS_NAME_TO_FORMULA.get(gas, gas)
-                    atmosphere[formula] = preference * 10.0
+            prefs = race.preferences
+            gravity = prefs["gravity"].setpoint  # already m/s^2
+            temperature = prefs["temperature"].setpoint  # K
+            water = prefs["water"].setpoint  # 0..1 fraction
+            atmosphere = {
+                factor_id.split(".", 1)[1]: pref.setpoint
+                for factor_id, pref in prefs.items()
+                if factor_id.startswith("gas.") and pref.setpoint > 0
+            }
         else:
             # Fallback to human-comfortable defaults
             gravity = 9.81  # 1g
             temperature = 288.0  # ~15°C
             water = 0.3
-            atmosphere = {"O2": 210.0, "N2": 780.0}  # Earth-like
+            atmosphere = {"O2": 21000.0, "N2": 79000.0}  # Earth-like (Pa)
 
         # Create Dyson Sphere planet at system center
         # Dyson Sphere properties (mega-engineering structure enclosing a star)

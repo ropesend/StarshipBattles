@@ -43,21 +43,26 @@ def make_earth_like_planet(
 
 def make_human_race_config(
     race_id: str = "human",
-    aptitude_population_growth: int = 50
+    aptitude_population_growth: int = 50,
+    base_reproduction_rate: float = None,
 ) -> RaceConfig:
-    """Create a human-like race config for testing."""
+    """Create a human-like race config for testing.
+
+    PROJ-283 Phase 4: `aptitude_population_growth` is no longer a stored
+    field. We accept the parameter for source-stability of existing
+    callers and translate it to `base_reproduction_rate` using the same
+    `0.0005 * aptitude` scale the old `_aptitude_to_growth_rate` helper
+    used (so test expectations stay numerically stable).
+    """
+    if base_reproduction_rate is None:
+        base_reproduction_rate = 0.0005 * aptitude_population_growth
     return RaceConfig(
         race_id=race_id,
         name="Human",
-        gravity_ideal=1.0,
-        gravity_tolerance=0.3,
-        temperature_ideal=293.0,  # 20°C
-        temperature_tolerance=50.0,
-        water_ideal=0.7,
-        water_tolerance=0.2,
-        atmosphere_preferences={"Oxygen": 50, "Nitrogen": 20},
-        radiation_tolerance=0.0,
-        aptitude_population_growth=aptitude_population_growth
+        flag_id="flag_test",
+        portrait_id="portrait_test",
+        theme_id="Federation",
+        base_reproduction_rate=base_reproduction_rate,
     )
 
 
@@ -228,15 +233,10 @@ class TestPopulationDynamics:
         race_alien = RaceConfig(
             race_id="alien",
             name="Alien",
-            gravity_ideal=1.0,
-            gravity_tolerance=0.5,  # More tolerant
-            temperature_ideal=300.0,
-            temperature_tolerance=80.0,
-            water_ideal=0.6,
-            water_tolerance=0.3,
-            atmosphere_preferences={"Oxygen": 30, "Nitrogen": 30},
-            radiation_tolerance=50.0,  # More resistant
-            aptitude_population_growth=55  # Slightly faster growth
+            flag_id="flag_test",
+            portrait_id="portrait_test",
+            theme_id="Federation",
+            base_reproduction_rate=0.0275,  # 0.0005 * 55 (was: aptitude=55)
         )
 
         # Empire has multiple species (we store primary race_config)
@@ -292,38 +292,11 @@ class TestAptitudeEffects:
         assert growth_high > growth_low, "Higher aptitude should mean faster growth"
 
 
-class TestAptitudeConversion:
-    """Test aptitude to growth rate conversion."""
-
-    def test_aptitude_to_growth_rate_boundaries(self):
-        """Verify aptitude conversion at boundaries."""
-        engine = PopulationEngine()
-
-        # Aptitude 1 -> 0.05% per turn
-        rate_1 = engine._aptitude_to_growth_rate(1)
-        assert abs(rate_1 - 0.0005) < 0.0001, "Aptitude 1 should give ~0.05% rate"
-
-        # Aptitude 50 -> 2.5% per turn
-        rate_50 = engine._aptitude_to_growth_rate(50)
-        assert abs(rate_50 - 0.025) < 0.001, "Aptitude 50 should give ~2.5% rate"
-
-        # Aptitude 100 -> 5.0% per turn
-        rate_100 = engine._aptitude_to_growth_rate(100)
-        assert abs(rate_100 - 0.05) < 0.001, "Aptitude 100 should give ~5.0% rate"
-
-    def test_aptitude_to_growth_rate_linear(self):
-        """Growth rate increases linearly with aptitude."""
-        engine = PopulationEngine()
-
-        rate_30 = engine._aptitude_to_growth_rate(30)
-        rate_70 = engine._aptitude_to_growth_rate(70)
-
-        # Linear: rate(30) should be 30/70 of rate(70) approximately
-        # Rate = 0.0005 * aptitude, so rate_30/rate_70 = 30/70
-        ratio = rate_30 / rate_70
-        expected_ratio = 30 / 70
-
-        assert abs(ratio - expected_ratio) < 0.1, "Growth rate should scale linearly"
+# PROJ-283 Phase 4: TestAptitudeConversion deleted — the
+# `_aptitude_to_growth_rate` helper is gone. Reproduction rate is now
+# read directly from `RaceConfig.base_reproduction_rate`. The
+# point-budget cost curve for that field is exercised by
+# `tests/unit/strategy/data/test_race_point_budget_v2.py::TestCalculateReproductionCost`.
 
 
 class TestTurnEngineIntegration:

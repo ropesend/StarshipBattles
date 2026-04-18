@@ -42,7 +42,7 @@ class RadiationShieldEditor(UIWindow):
             on_apply_callback: Called with (planet_id, shielding_target) when Apply clicked.
                 shielding_target is None when clearing, otherwise a float 0.0-2.0.
             on_close_callback: Called when window is closed.
-            race_config: Optional RaceConfig with radiation_tolerance attribute.
+            race_config: Optional RaceConfig; reads `preferences["radiation"].setpoint` for the auto-shielding default.
         """
         super().__init__(
             rect, manager,
@@ -200,29 +200,29 @@ class RadiationShieldEditor(UIWindow):
         self.kill()
 
     def _set_auto(self):
-        """Calculate and set the needed shielding from selected species' radiation tolerance.
+        """Set the slider to the selected species' preferred shielding level.
 
-        Formula:
-            threshold = 0.5 - (radiation_tolerance / 200)
-            needed = max(0, threshold - planet.magnetic_field)
+        PROJ-283 Phase 4: the radiation factor's `setpoint` is the
+        race's ideal `radiation_shielding` value (the registry default
+        is 0, "doesn't care"). Just write that to the slider — no
+        threshold-vs-magnetic-field arithmetic needed; the new model
+        decouples shielding preference from magnetic field (magnetic is
+        its own factor).
         """
         rc = self._get_active_race_config()
         if rc is None:
             return
 
-        radiation_tolerance = getattr(rc, 'radiation_tolerance', None)
-        if radiation_tolerance is None:
+        rad_pref = rc.preferences.get("radiation")
+        if rad_pref is None:
             return
 
-        threshold = 0.5 - (radiation_tolerance / 200.0)
-        needed = max(0.0, threshold - self.magnetic_field)
-        clamped = max(MIN_SHIELDING, min(MAX_SHIELDING, needed))
-
+        clamped = max(MIN_SHIELDING, min(MAX_SHIELDING, rad_pref.setpoint))
         self.slider.set_current_value(clamped)
         self.lbl_target.set_text(f"Target Shielding: {clamped:.2f}")
         logger.debug(
-            "Auto shielding: tolerance=%s, threshold=%.3f, field=%.3f, needed=%.3f",
-            radiation_tolerance, threshold, self.magnetic_field, clamped,
+            "Auto shielding: setpoint=%.3f, field=%.3f, clamped=%.3f",
+            rad_pref.setpoint, self.magnetic_field, clamped,
         )
 
     def _get_active_race_config(self):

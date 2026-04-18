@@ -134,56 +134,11 @@ class TestRaceValidatorBudget:
         assert result.is_valid is True
 
 
-class TestRaceValidatorWaterRanges:
-    """Tests for water preference validation."""
-
-    @pytest.fixture
-    def validator(self):
-        """Create a validator instance."""
-        return RaceValidator()
-
-    @pytest.fixture
-    def valid_config(self):
-        """Create a valid race config."""
-        config = RaceConfig()
-        config.name = "Test Race"
-        config.flag_id = "flag_001"
-        config.portrait_id = "portrait_001"
-        config.theme_id = "Federation"
-        return config
-
-    def test_validate_water_ideal_out_of_range_high(self, validator, valid_config):
-        """Test that water_ideal > 1.0 fails validation."""
-        valid_config.water_ideal = 1.5
-
-        result = validator.validate(valid_config)
-        assert result.is_valid is False
-        assert "water" in result.message.lower()
-        assert "Environment" in result.message
-
-    def test_validate_water_ideal_out_of_range_low(self, validator, valid_config):
-        """Test that water_ideal < 0.0 fails validation."""
-        valid_config.water_ideal = -0.1
-
-        result = validator.validate(valid_config)
-        assert result.is_valid is False
-        assert "water" in result.message.lower()
-
-    def test_validate_water_tolerance_out_of_range_high(self, validator, valid_config):
-        """Test that water_tolerance > 1.0 fails validation."""
-        valid_config.water_tolerance = 1.5
-
-        result = validator.validate(valid_config)
-        assert result.is_valid is False
-        assert "water" in result.message.lower() or "tolerance" in result.message.lower()
-
-    def test_validate_water_valid_range(self, validator, valid_config):
-        """Test that valid water ranges pass (within budget)."""
-        valid_config.water_ideal = 0.0
-        valid_config.water_tolerance = 0.2  # Low tolerance to stay within budget
-
-        result = validator.validate(valid_config)
-        assert result.is_valid is True
+# PROJ-283 Phase 4: TestRaceValidatorWaterRanges deleted — `water_ideal`
+# / `water_tolerance` fields no longer exist on `RaceConfig`. Bounds are
+# enforced by `EnvironmentalPreference.validate()` at construction time
+# on `race_config.preferences["water"]`. The Phase 5 UI rebuild will
+# reintroduce per-tab range messaging if needed.
 
 
 class TestRaceValidatorAptitudes:

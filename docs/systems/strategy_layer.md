@@ -718,7 +718,7 @@ population growth and quality improvement.
 **Command flow:**
 1. Player opens Atmosphere Target Editor from planet detail (button shown only if planet has operational `AtmosphereModifier` facility)
 2. Editor provides sliders for 10 gases (N2, O2, CO2, H2O, CH4, H2, He, Ar, NH3, SO2), range 0-150 kPa
-3. Presets: "Species Ideal" (from race atmosphere preferences), "Match Current", "Clear Target"
+3. Presets: "Species Ideal" (reads `race_config.preferences["gas.<formula>"].setpoint` for each gas — PROJ-283), "Match Current", "Clear Target"
 4. "Apply" dispatches `SetAtmosphereTargetCommand(planet_id, atmosphere_target)` via facade
 5. Handler validates ownership, sets `planet.atmosphere_target` (empty dict clears target)
 
@@ -736,7 +736,7 @@ population growth and quality improvement.
 - Earth-like planet at default rate (7.8e15 kg/turn): ~150 Pa/turn, ~1000 turns to reach 150 kPa
 - Multiple facilities stack additively
 
-**Related:** `AtmosphereModifier` ability in [ability_reference.md](ability_reference.md#atmospheremodifier), race atmosphere preferences in `game/strategy/data/race_config.py` (`GAS_NAME_TO_FORMULA`, `GAS_FORMULA_TO_NAME`).
+**Related:** `AtmosphereModifier` ability in [ability_reference.md](ability_reference.md#atmospheremodifier); race gas preferences in [§7 Race Preferences & Habitability](#7-race-preferences--habitability-proj-283) — gas factors keyed `gas.O2`, `gas.N2`, ... store partial pressure in Pa directly. `GAS_NAME_TO_FORMULA` / `GAS_FORMULA_TO_NAME` constants in `race_config.py` are kept for the few legacy display-name → formula translations that still exist in the UI layer (PROJ-283 Phase 4 dropped most callers).
 
 ### Water Modification Pipeline
 
@@ -757,7 +757,7 @@ Handles instant-apply/revert for activatable planet modifiers (GravityModifier, 
 
 - **GravityModifier:** When ACTIVE + `gravity_target` set, stores original in `gravity_original` and overrides `surface_gravity`. Reverts when INACTIVE or facility destroyed.
 - **RadiationShield:** When ACTIVE + `radiation_shielding_target` set, applies to `radiation_shielding`. Reverts to 0.0 when INACTIVE or facility destroyed.
-- **Habitability:** `score_planet_for_race()` uses `magnetic_field + radiation_shielding` for the radiation factor. Gravity and water read directly from the (possibly modified) planet fields.
+- **Habitability:** `score_planet_for_race()` and the underlying registry-driven `calculate_habitability()` (PROJ-283 — see [§7 Race Preferences & Habitability](#7-race-preferences--habitability-proj-283)) read `surface_gravity`, `surface_water`, `radiation_shielding`, `magnetic_field`, etc. directly via the per-factor extractors in `FACTOR_REGISTRY`. After PROJ-283, `radiation` and `magnetic` are independent factors (v1 had merged them as `magnetic_field + radiation_shielding`); a `RadiationShield` facility now pulls the `radiation` factor's score up directly without touching the `magnetic` factor's score.
 
 ### Strategic-to-Combat Bridge
 
@@ -1185,3 +1185,172 @@ Orbital generation parameters are data-driven via `astrophysics.json`. Follows t
 - `mass_generation` -- log-normal mu/sigma per bias type (small, large, default), max iterations
 - `moon_system` -- mass threshold log-interpolation (Jupiter/Earth/Ceres breakpoints and chances), moon mass ratio bounds, max moons per body
 - `surface` -- tectonic activity and magnetic field ranges per body mass class, water temperature thresholds
+
+## 7. Race Preferences & Habitability (PROJ-283)
+
+PROJ-283 replaced an ad-hoc set of `_ideal`/`_tolerance` field pairs on `RaceConfig` (one for gravity, one for temperature, one for water, one for radiation, plus a free-form `atmosphere_preferences: Dict[gas_name, score]`) with a **registry-driven preference model**. Every habitability axis — gravity, temperature, water, total surface pressure, tectonic activity, magnetic field, radiation shielding, and each of 10 atmospheric gases — is now represented by one entry in `FACTOR_REGISTRY`. The habitability formula and the race-setup UI both iterate the registry, so adding a new axis is a single data-edit.
+
+### Core data model
+
+**Files:**
+- `game/strategy/data/environmental_preference.py` — `EnvironmentalPreference` dataclass
+- `game/strategy/data/habitability_factors.py` — `HabitabilityFactor`, `FACTOR_REGISTRY`, factor iterators
+- `game/strategy/data/race_config.py` — `RaceConfig.preferences`, `base_reproduction_rate`, `base_happiness`
+- `game/strategy/formulas/habitability.py` — `calculate_habitability(planet, race_config)`, `score_planet_for_race()`
+
+```python
+@dataclass
+class EnvironmentalPreference:
+    setpoint: float       # the race's preferred value (free; no point cost)
+    tolerance: float      # Gaussian sigma for habitability scoring (costs points to deviate from default)
+    min_value: float      # legal slider range
+    max_value: float      # legal slider range
+    step: float           # one unit of the tolerance cost curve
+
+@dataclass(frozen=True)
+class HabitabilityFactor:
+    id: str               # e.g. "gravity", "gas.O2"
+    display_name: str
+    unit: str             # "m/s^2", "K", "Pa", "fraction", "earth_equiv"
+    display_scale: float  # multiplier for UI display (Pa→kPa = 0.001, m/s²→g = 1/9.81)
+    weight: float         # weight in the weighted geometric mean
+    default_setpoint: float
+    default_tolerance: float
+    min_value: float
+    max_value: float
+    step: float
+    extractor: Callable[[Planet], Optional[float]]
+    scorer:    Callable[[Optional[float], EnvironmentalPreference], float]
+```
+
+### `FACTOR_REGISTRY` contents
+
+7 scalar factors + 10 gas factors = 17 total. Per-factor weights:
+
+| Factor id     | Display name        | Unit  | Weight | Default setpoint | Default tolerance |
+|---------------|---------------------|-------|--------|------------------|-------------------|
+| `gravity`     | Gravity             | m/s²  | 1.0    | 9.81             | 2.0               |
+| `temperature` | Temperature         | K     | 1.0    | 293.0            | 50.0              |
+| `pressure`    | Surface Pressure    | Pa    | 0.9    | 101325.0         | 20000.0           |
+| `water`       | Water Coverage      | frac  | 0.8    | 0.5              | 0.2               |
+| `radiation`   | Radiation Shielding | —     | 0.6    | 0.0              | 50.0              |
+| `magnetic`    | Magnetic Field      | EE    | 0.6    | 1.0              | 0.3               |
+| `tectonic`    | Tectonic Activity   | frac  | 0.4    | 0.3              | 0.2               |
+| `gas.O2`      | Oxygen              | Pa    | 0.15   | 21000.0          | 5000.0            |
+| `gas.N2`      | Nitrogen            | Pa    | 0.15   | 79000.0          | 20000.0           |
+| `gas.CO2` …   | (8 more gases)      | Pa    | 0.15   | 0.0              | 10000.0           |
+
+Total weight = 6.8 (1.0 + 1.0 + 0.9 + 0.8 + 0.6 + 0.6 + 0.4 + 1.5). Per-gas weight is `1.5/10 = 0.15` so the gas bucket sums to 1.5.
+
+`gas.N2` has a non-zero default setpoint because Earth-derived life requires an inert dilutent — without that default, an unconfigured "Earth-like default race" would silently flunk every Earth-like planet (8σ N2 mismatch dragging composite score from 1.0 to 0.82). The other non-O2/non-N2 gases keep `setpoint=0` ("don't want this gas").
+
+### Habitability formula (weighted geometric mean)
+
+`calculate_habitability(planet, race_config)` at [habitability.py:50-94](../../game/strategy/formulas/habitability.py#L50-L94):
+
+```python
+log_sum = 0.0
+weight_sum = 0.0
+for factor_id, factor in FACTOR_REGISTRY.items():
+    pref  = race_config.preferences.get(factor_id) or factory_default(factor)
+    value = factor.extractor(planet)
+    score = factor.scorer(value, pref)               # in [0, 1]
+    log_sum    += factor.weight * math.log(max(score, 1e-10))
+    weight_sum += factor.weight
+return math.exp(log_sum / weight_sum)
+```
+
+Numerical floor `1e-10` matches v1; with total weight 6.8, a single weight-1.0 factor at score 0 drags composite to ~0.034 (`exp(-23 × 1.0 / 6.8)`). The default scorer is `_default_gaussian_scorer`: `exp(-0.5 × ((value - setpoint) / tolerance)²)` with `value=None` coerced to `0.0`.
+
+**Tank-all property by axis weight:**
+- A single high-weight scalar (gravity, temperature) at score 0 → composite ≈ 0.034 (strong tank).
+- A single low-weight gas at score 0 → composite ≈ 0.6 (weak tank — the gas-bucket weight allocation deliberately bounds individual gas impact). This is by design: a race with full life-support tech can survive a missing critical gas at reduced productivity. If a future requirement is "missing critical gas → uninhabitable", promote the relevant gas to a scalar weight≥1.0.
+
+**Lazy import:** `calculate_habitability` lazy-imports `FACTOR_REGISTRY` and `EnvironmentalPreference` to break the otherwise-circular dependency (`habitability_factors.py` already imports `_gaussian_factor` from `habitability.py`).
+
+### Adding a new factor
+
+Single-edit recipe — add an entry to `_SCALAR_FACTORS` (or `_GAS_FORMULAS`) in `habitability_factors.py`:
+
+```python
+HabitabilityFactor(
+    id="solar_flux",
+    display_name="Solar Flux",
+    unit="W/m^2",
+    display_scale=1.0,
+    weight=0.5,
+    default_setpoint=1361.0,    # Earth's solar constant
+    default_tolerance=200.0,
+    min_value=0.0, max_value=5000.0, step=50.0,
+    extractor=_make_scalar_extractor("solar_flux"),
+    scorer=_default_gaussian_scorer,
+),
+```
+
+After this single edit:
+- `calculate_habitability` automatically includes the new factor.
+- `RaceConfig.__post_init__` automatically backfills `preferences["solar_flux"]` with the registry default for every existing race.
+- `RacePointBudget.calculate_preferences_cost` automatically prices tolerance deviations on the new axis.
+- `RaceEnvironmentPanel` automatically renders a new `PreferenceRow` (no panel-side change).
+- Homeworld presets that don't list `solar_flux` keep the registry default.
+
+### Race point budget
+
+`RacePointBudget` (`game/strategy/data/race_point_budget.py`) iterates `race_config.preferences` to compute the per-axis cost contribution. Setpoint is **free** — moving the slider anywhere in `[min_value, max_value]` costs 0 points. Tolerance deviation from the registry default costs `_exponential_cost(steps) = 2^steps - 1` per axis, where `steps = round(|tolerance - default_tolerance| / step)`. Direction-symmetric: tighter and wider both cost.
+
+Method index:
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `calculate_aptitude_cost(rc)` | int | Sum across the 7 paid aptitudes (Phase 3 dropped `happiness` and `population_growth`). |
+| `calculate_preferences_cost(rc)` | int | Sum of per-axis tolerance-deviation costs across all 17 factors. |
+| `calculate_reproduction_cost(rate)` | int | `_exponential_cost(steps)` above default 3%; linear refund (2 pts per 1% step) below default down to 0.5% floor. |
+| `calculate_total_cost(rc)` | int | Sum of the three above. |
+| `get_remaining_points(rc)` | int | `total_budget − total_cost`. |
+| `get_breakdown(rc)` | Dict[str, int] | Flat per-source dict: `aptitude:strength`, `pref:gravity`, `reproduction`, etc. Sum equals `calculate_total_cost(rc)`. |
+
+**Reproduction-rate refund** uses linear-in-rate math (not integer-step) so the 0.5% floor returns exactly -5 points: Python's banker's `round(-2.5) == -2` would yield -4 instead. See `decisions.md` (PROJ-283 2026-04-18, Phase 3 entry).
+
+### Homeworld presets
+
+`data/homeworld_presets.json` declares 11 planet-type presets in the registry-native shape:
+
+```json
+{
+  "id": "CONTINENTAL",
+  "name": "Continental",
+  "description": "Earth-like world with varied terrain and temperate climate",
+  "preferences": {
+    "gravity":     { "setpoint": 9.81,    "tolerance": 2.94 },
+    "temperature": { "setpoint": 293.0,   "tolerance": 50.0 },
+    "water":       { "setpoint": 0.6,     "tolerance": 0.2 },
+    "gas.O2":      { "setpoint": 21000.0, "tolerance": 5000.0 },
+    "gas.N2":      { "setpoint": 79000.0, "tolerance": 20000.0 }
+  }
+}
+```
+
+`apply_preset_to_config(preset, race_config)` iterates the preset's `preferences` map and overlays each entry onto `race_config.preferences`. Factors not listed are not touched — this is a partial-override semantic that minimises preset-edit churn when adding a new factor to the registry.
+
+### `RaceConfig` field reference (post-Phase 4)
+
+The legacy `gravity_ideal`, `gravity_tolerance`, `temperature_ideal`, `temperature_tolerance`, `water_ideal`, `water_tolerance`, `atmosphere_preferences`, `radiation_tolerance`, `aptitude_happiness`, `aptitude_population_growth` fields are **GONE**. Code that references them will `AttributeError`.
+
+| Old field | Replacement |
+|-----------|-------------|
+| `race.gravity_ideal` (g) | `race.preferences["gravity"].setpoint / 9.81` |
+| `race.gravity_tolerance` (g) | `race.preferences["gravity"].tolerance / 9.81` |
+| `race.temperature_ideal` | `race.preferences["temperature"].setpoint` |
+| `race.temperature_tolerance` | `race.preferences["temperature"].tolerance` |
+| `race.water_ideal` | `race.preferences["water"].setpoint` |
+| `race.water_tolerance` | `race.preferences["water"].tolerance` |
+| `race.atmosphere_preferences[gas_name]` | `race.preferences[f"gas.{formula}"].setpoint` (Pa) |
+| `race.radiation_tolerance` | `race.preferences["radiation"].tolerance` (and `setpoint` for shielding-target prefs) |
+| `race.aptitude_happiness` | `race.base_happiness` (0.0–1.0; PROJ-284 derives `pop.happiness` from this seed) |
+| `race.aptitude_population_growth` | `race.base_reproduction_rate` (0.005–0.10; PopulationEngine reads directly) |
+
+### UI surface
+
+`RaceEnvironmentPanel` (`game/ui/panels/race_environment_panel.py`) iterates `iter_scalar_factors()` + `iter_gas_factors()` and renders one `PreferenceRow` per factor. The `PreferenceRow` widget (`game/ui/widgets/preference_row.py`) is reusable: `PreferenceRow.format_value(factor, raw)` handles unit-aware display (Pa → kPa, m/s² → g, fraction → %) and `PreferenceRow.calculate_factor_cost(factor, pref)` mirrors the budget cost curve for the per-row cost label.
+
+The four planet-modifier editor windows (`gravity_target_editor.py`, `water_target_editor.py`, `radiation_shield_editor.py`, `atmosphere_target_editor.py`) read `race_config.preferences[<id>].setpoint` for their "Species Ideal" / "Auto" buttons.

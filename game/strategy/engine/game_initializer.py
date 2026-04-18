@@ -218,28 +218,23 @@ class GameInitializer:
             except KeyError:
                 pass  # Keep existing type if invalid
 
-        # Set surface conditions to species ideals
-        planet.surface_gravity = race_config.gravity_ideal * 9.81
-        planet.surface_temperature = race_config.temperature_ideal
-        planet.surface_water = race_config.water_ideal
+        # PROJ-283 Phase 4: read setpoints from registry-driven preferences
+        # (replaces the deleted `gravity_ideal`/`temperature_ideal`/etc. fields).
+        prefs = race_config.preferences
+        planet.surface_gravity = prefs["gravity"].setpoint  # already m/s^2
+        planet.surface_temperature = prefs["temperature"].setpoint
+        planet.surface_water = prefs["water"].setpoint
 
-        # Build atmosphere from preferences (positive preferences = present gases)
-        # Use 1 ATM total pressure, distributed by positive preference weights
-        # Translate display names ("Oxygen") to chemical formulas ("O2") for rendering
-        from game.strategy.data.race_config import GAS_NAME_TO_FORMULA
-        atm_prefs = race_config.atmosphere_preferences
-        positive_gases = {gas: val for gas, val in atm_prefs.items() if val > 0}
-
-        if positive_gases:
-            total_weight = sum(positive_gases.values())
-            one_atm = 101325.0  # Pa
-            planet.atmosphere = {}
-            for gas, val in positive_gases.items():
-                formula = GAS_NAME_TO_FORMULA.get(gas, gas)
-                planet.atmosphere[formula] = (val / total_weight) * one_atm
-            planet.surface_pressure = one_atm
+        # Build atmosphere from gas-factor setpoints (Pa already).
+        atmosphere = {
+            factor_id.split(".", 1)[1]: pref.setpoint
+            for factor_id, pref in prefs.items()
+            if factor_id.startswith("gas.") and pref.setpoint > 0
+        }
+        if atmosphere:
+            planet.atmosphere = atmosphere
+            planet.surface_pressure = sum(atmosphere.values())
         else:
-            # No positive gas preferences - minimal atmosphere
             planet.atmosphere = {}
             planet.surface_pressure = 0.0
 

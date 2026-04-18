@@ -408,3 +408,58 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
     if registries is not None:
         ship.set_registries(registries)
     return ship
+
+
+# --------------------------------------------------------------------------- #
+# Race construction helper (PROJ-283 Phase 4)                                  #
+# --------------------------------------------------------------------------- #
+
+
+def make_test_race(
+    *,
+    preferences_overrides=None,
+    base_reproduction_rate=0.03,
+    base_happiness=0.5,
+    name="Test Race",
+    flag_id="flag_test",
+    portrait_id="portrait_test",
+    theme_id="Federation",
+    **aptitude_overrides,
+):
+    """Construct a valid `RaceConfig` from `FACTOR_REGISTRY` defaults.
+
+    Reduces boilerplate in tests that need a working race object without
+    caring about the specific environmental preferences. The default
+    construction returns a race that scores ~1.0 habitability on an
+    Earth-like planet (every preference at registry default).
+
+    Args:
+        preferences_overrides: Optional `Dict[str, EnvironmentalPreference]`
+            applied on top of the registry defaults. Useful for
+            tightening tolerance on a specific axis or shifting a
+            setpoint for a single test.
+        base_reproduction_rate: Override for `RaceConfig.base_reproduction_rate`.
+        base_happiness: Override for `RaceConfig.base_happiness`.
+        name, flag_id, portrait_id, theme_id: Identity fields required by
+            `RaceConfig.validate()`. Defaults satisfy validation so tests
+            don't need to duplicate the boilerplate.
+        **aptitude_overrides: Any `aptitude_*` keyword propagated to the
+            `RaceConfig` constructor (e.g. `aptitude_strength=80`).
+
+    Returns:
+        A constructed `RaceConfig` with `preferences` backfilled from
+        `FACTOR_REGISTRY` defaults via `__post_init__`. Caller-supplied
+        overrides win over defaults (already the constructor's behaviour).
+    """
+    from game.strategy.data.race_config import RaceConfig
+
+    return RaceConfig(
+        name=name,
+        flag_id=flag_id,
+        portrait_id=portrait_id,
+        theme_id=theme_id,
+        preferences=preferences_overrides or {},
+        base_reproduction_rate=base_reproduction_rate,
+        base_happiness=base_happiness,
+        **aptitude_overrides,
+    )

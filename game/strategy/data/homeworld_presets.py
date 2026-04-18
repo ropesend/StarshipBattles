@@ -61,38 +61,46 @@ def get_preset_for_planet_type(planet_type_name: str) -> Optional[dict]:
 
 
 def apply_preset_to_config(preset: dict, race_config: RaceConfig) -> None:
-    """
-    Apply a homeworld preset to a RaceConfig, setting all environment fields.
+    """Apply a homeworld preset to a RaceConfig.
+
+    PROJ-283 Phase 5: presets now declare partial `preferences` keyed by
+    `FACTOR_REGISTRY` ids — see `data/homeworld_presets.json` `_schema`.
+    For each factor listed in the preset, build a fresh
+    `EnvironmentalPreference` (filling unspecified setpoint/tolerance
+    from registry defaults). Factors not listed in the preset are NOT
+    touched — the race keeps whatever value it already had.
 
     Args:
-        preset: The preset dictionary from get_preset_for_planet_type()
-        race_config: The RaceConfig to update
+        preset: The preset dictionary from `get_preset_for_planet_type`,
+            or None (no-op).
+        race_config: The RaceConfig to mutate in place.
     """
     if preset is None:
         return
 
-    # Set homeworld type
+    from game.strategy.data.environmental_preference import EnvironmentalPreference
+    from game.strategy.data.habitability_factors import get_factor
+
     race_config.homeworld_type = preset["id"]
 
-    # Set gravity
-    race_config.gravity_ideal = preset["gravity_ideal"]
-    race_config.gravity_tolerance = preset["gravity_tolerance"]
+    for factor_id, override in preset.get("preferences", {}).items():
+        factor = get_factor(factor_id)
+        # Default to registry values when the preset omits a field; this
+        # lets a preset say `{"setpoint": 0}` without restating tolerance.
+        setpoint = float(override.get("setpoint", factor.default_setpoint))
+        tolerance = float(override.get("tolerance", factor.default_tolerance))
+        race_config.preferences[factor_id] = EnvironmentalPreference(
+            setpoint=setpoint,
+            # `EnvironmentalPreference.validate` requires tolerance >= 0;
+            # `step` is the cost-curve unit, not a hard floor on tolerance.
+            tolerance=max(tolerance, 0.0),
+            min_value=factor.min_value,
+            max_value=factor.max_value,
+            step=factor.step,
+        )
 
-    # Set temperature
-    race_config.temperature_ideal = preset["temperature_ideal"]
-    race_config.temperature_tolerance = preset["temperature_tolerance"]
-
-    # Set water
-    race_config.water_ideal = preset["water_ideal"]
-    race_config.water_tolerance = preset["water_tolerance"]
-
-    # Set radiation
-    race_config.radiation_tolerance = preset["radiation_tolerance"]
-
-    # Set atmosphere preferences
-    for gas, value in preset["atmosphere_preferences"].items():
-        if gas in race_config.atmosphere_preferences:
-            race_config.atmosphere_preferences[gas] = value
+    if "base_reproduction_rate" in preset:
+        race_config.base_reproduction_rate = float(preset["base_reproduction_rate"])
 
 
 def get_available_homeworld_names() -> List[str]:

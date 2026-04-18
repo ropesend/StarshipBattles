@@ -803,16 +803,32 @@ class TestProcessCreateDysonSphere:
 
         processor = SuperweaponOrderProcessor()
 
-        # Setup empire with custom race_config
+        # PROJ-283 Phase 4: race_config now expresses environmental
+        # preferences via `preferences` (registry-keyed). Override
+        # individual factors after construction; everything else
+        # backfills from registry defaults via `__post_init__`.
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.strategy.data.habitability_factors import get_factor
+
         race_config = RaceConfig(
             name="TestRace",
             flag_id="test_flag",
             portrait_id="test_portrait",
-            gravity_ideal=1.5,  # 1.5g ideal
-            temperature_ideal=320.0,  # Hot preference
-            water_ideal=0.1,  # Desert preference
-            atmosphere_preferences={"Oxygen": 30.0, "Nitrogen": 50.0, "Methane": -20.0}
         )
+
+        def _set(fid, setpoint):
+            f = get_factor(fid)
+            race_config.preferences[fid] = EnvironmentalPreference(
+                setpoint=setpoint, tolerance=f.default_tolerance,
+                min_value=f.min_value, max_value=f.max_value, step=f.step,
+            )
+
+        _set("gravity", 1.5 * 9.81)       # 1.5 g
+        _set("temperature", 320.0)         # hot preference
+        _set("water", 0.1)                 # desert preference
+        _set("gas.O2", 30000.0)            # 30 kPa O2 (race wants O2)
+        _set("gas.N2", 50000.0)            # 50 kPa N2 (race wants N2)
+        _set("gas.CH4", 0.0)               # 0 setpoint → CH4 NOT in seeded atmosphere
         empire = MagicMock()
         empire.race_config = race_config
         empire.colonies = []

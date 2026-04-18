@@ -12,6 +12,9 @@ class TestRaceConfigRoundTrip:
     """RaceConfig round-trip serialization tests."""
 
     def test_to_dict_includes_all_fields(self):
+        """PROJ-283 Phase 4: legacy `gravity_ideal`/`atmosphere_preferences`/etc.
+        keys deleted; the new schema uses `preferences`, `base_reproduction_rate`,
+        `base_happiness`."""
         rc = create_test_race_config()
         d = rc.to_dict()
         # Identity fields
@@ -22,10 +25,15 @@ class TestRaceConfigRoundTrip:
         # Visual
         assert 'flag_id' in d
         assert 'portrait_id' in d
-        # Environment
-        assert 'gravity_ideal' in d
-        assert 'temperature_ideal' in d
-        assert 'water_ideal' in d
+        # Environment (registry-driven)
+        assert 'preferences' in d
+        assert 'base_reproduction_rate' in d
+        assert 'base_happiness' in d
+        # Preferences should round-trip per-factor
+        assert 'gravity' in d['preferences']
+        assert 'temperature' in d['preferences']
+        assert 'water' in d['preferences']
+        assert 'gas.O2' in d['preferences']
         # Aptitudes
         assert 'aptitude_strength' in d
         assert 'aptitude_intelligence' in d
@@ -40,29 +48,37 @@ class TestRaceConfigRoundTrip:
         assert restored.race_id == original.race_id
         assert restored.name == original.name
         assert restored.faction_name == original.faction_name
-        assert restored.gravity_ideal == original.gravity_ideal
+        assert restored.preferences["gravity"].setpoint == original.preferences["gravity"].setpoint
         assert restored.aptitude_strength == original.aptitude_strength
 
     def test_round_trip_field_level(self):
         assert_round_trip_fidelity(create_test_race_config(), RaceConfig)
 
-    def test_atmosphere_preferences_round_trip(self):
-        """atmosphere_preferences dict with default gases survives round-trip."""
+    def test_preferences_round_trip(self):
+        """PROJ-283 Phase 4: `preferences` dict (formerly `atmosphere_preferences`
+        + scalar `_ideal`/`_tolerance` fields) survives round-trip."""
         rc = create_test_race_config()
         d = rc.to_dict()
         restored = RaceConfig.from_dict(d)
-        assert restored.atmosphere_preferences == rc.atmosphere_preferences
+        assert set(restored.preferences.keys()) == set(rc.preferences.keys())
+        for fid in rc.preferences:
+            assert restored.preferences[fid].setpoint == rc.preferences[fid].setpoint
+            assert restored.preferences[fid].tolerance == rc.preferences[fid].tolerance
 
     def test_optional_field_defaults(self):
-        """Optional fields default correctly when not in dict."""
+        """Optional fields default correctly when not in dict.
+
+        PROJ-283 Phase 4: legacy `gravity_ideal` default check replaced by
+        the registry-default for `preferences["gravity"]` (9.81 m/s²)."""
         minimal = {
             'race_id': 'minimal',
             'name': 'Minimal Race',
         }
         restored = RaceConfig.from_dict(minimal)
         assert restored.race_id == 'minimal'
-        assert restored.gravity_ideal == 1.0  # default
+        assert restored.preferences["gravity"].setpoint == 9.81  # registry default
         assert restored.aptitude_strength == 50  # default
+        assert restored.base_reproduction_rate == 0.03  # default
 
 
 # =============================================================================

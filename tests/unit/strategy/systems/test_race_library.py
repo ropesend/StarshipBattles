@@ -161,7 +161,14 @@ class TestRaceLibrarySaveLoad:
         assert os.path.exists(os.path.join(temp_races_folder, "my_custom_id.json"))
 
     def test_save_and_load_race(self, temp_races_folder):
-        """Test saving and loading a race."""
+        """Test saving and loading a race.
+
+        PROJ-283 Phase 4: legacy `gravity_ideal` field deleted; gravity
+        preference is now expressed via `preferences["gravity"].setpoint`
+        (m/s², so 1.5 g = 14.715 m/s²)."""
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.strategy.data.habitability_factors import get_factor
+
         lib = RaceLibrary(temp_races_folder)
         config = RaceConfig(
             race_id="save_load_test",
@@ -169,8 +176,13 @@ class TestRaceLibrarySaveLoad:
             flag_id="flag_sl",
             portrait_id="sl_portrait.jpg",
             theme_id="Klingons",
-            gravity_ideal=1.5,
             bio_description="Test description",
+        )
+        gravity = get_factor("gravity")
+        config.preferences["gravity"] = EnvironmentalPreference(
+            setpoint=1.5 * 9.81, tolerance=gravity.default_tolerance,
+            min_value=gravity.min_value, max_value=gravity.max_value,
+            step=gravity.step,
         )
 
         # Save
@@ -186,7 +198,7 @@ class TestRaceLibrarySaveLoad:
         assert loaded.flag_id == "flag_sl"
         assert loaded.portrait_id == "sl_portrait.jpg"
         assert loaded.theme_id == "Klingons"
-        assert loaded.gravity_ideal == 1.5
+        assert loaded.preferences["gravity"].setpoint == pytest.approx(1.5 * 9.81)
         assert loaded.bio_description == "Test description"
 
     def test_get_race_nonexistent(self, temp_races_folder):

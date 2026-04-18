@@ -12,7 +12,6 @@ from pygame_gui.elements import (
 )
 from typing import Dict, Optional, Callable
 
-from game.strategy.data.race_config import GAS_NAME_TO_FORMULA, GAS_FORMULA_TO_NAME
 from game.ui.screens.species_selector_mixin import (
     build_species_selector, get_selected_race_id, load_race_config,
 )
@@ -252,44 +251,20 @@ class AtmosphereTargetEditor(UIWindow):
     def _set_species_ideal(self):
         """Set sliders to the selected species' ideal atmosphere composition.
 
-        Converts race atmosphere preferences (-100 to +100) into target Pa values.
-        Positive preferences get proportional partial pressures targeting Earth-like total.
+        PROJ-283 Phase 4: gas factor setpoints store partial pressure (Pa)
+        directly — no proportional translation needed. Read each
+        `preferences["gas.<formula>"].setpoint` and write it to the
+        matching slider.
         """
         rc = self._get_active_race_config()
         if rc is None:
             return
 
-        prefs = getattr(rc, 'atmosphere_preferences', {})
-        if not prefs:
-            return
-
-        # Target total pressure: 1 atm (101325 Pa) as a baseline
-        target_total = 101325.0
-
-        # Calculate proportional targets from preferences
-        # Positive preferences get proportional allocation
-        # Negative/zero preferences get 0
-        positive_weights = {}
-        for gas_name, score in prefs.items():
-            if score > 0:
-                formula = GAS_NAME_TO_FORMULA.get(gas_name)
-                if formula:
-                    positive_weights[formula] = score
-
-        if not positive_weights:
-            return
-
-        total_weight = sum(positive_weights.values())
-
         for gas, slider in self.sliders.items():
-            if gas in positive_weights:
-                fraction = positive_weights[gas] / total_weight
-                target_pa = fraction * target_total
-                slider.set_current_value(target_pa)
-                self.value_labels[gas].set_text(f"{target_pa:.0f} Pa")
-            else:
-                slider.set_current_value(0.0)
-                self.value_labels[gas].set_text("0 Pa")
+            pref = rc.preferences.get(f"gas.{gas}")
+            target_pa = pref.setpoint if pref is not None else 0.0
+            slider.set_current_value(target_pa)
+            self.value_labels[gas].set_text(f"{target_pa:.0f} Pa")
 
     def _set_match_current(self):
         """Set sliders to match current atmosphere (no change target)."""

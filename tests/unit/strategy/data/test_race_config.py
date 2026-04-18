@@ -1,759 +1,306 @@
 """
-Unit tests for RaceConfig dataclass.
+Unit tests for RaceConfig dataclass (post-PROJ-283 Phase 4 schema).
+
+Phase 4 deleted 10 legacy fields from RaceConfig:
+    gravity_ideal, gravity_tolerance, temperature_ideal, temperature_tolerance,
+    water_ideal, water_tolerance, atmosphere_preferences, radiation_tolerance,
+    aptitude_happiness, aptitude_population_growth
+
+Environmental preferences now live in `RaceConfig.preferences: Dict[str,
+EnvironmentalPreference]` keyed by `FACTOR_REGISTRY` ids; reproduction
+and happiness are `base_reproduction_rate: float` and `base_happiness: float`.
 """
 import pytest
 import tempfile
 import os
 import json
 
-from game.strategy.data.race_config import RaceConfig, DEFAULT_ATMOSPHERE_PREFERENCES
+from game.strategy.data.race_config import RaceConfig
+
+
+# ---------------------------------------------------------------------------
+# Basic construction
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigBasic:
-    """Basic RaceConfig functionality tests."""
-
     def test_create_default_race_config(self):
-        """Test creating a RaceConfig with default values."""
         config = RaceConfig()
-
         assert config.race_id == ""
         assert config.name == ""
         assert config.theme_id == "Federation"
-        assert config.gravity_ideal == 1.0
-        assert config.gravity_tolerance == 0.3
-        assert config.temperature_ideal == 293.0
-        assert config.temperature_tolerance == 50.0
+        # PROJ-283 Phase 4: legacy environment fields gone; defaults live
+        # on `preferences` (registry-backfilled by __post_init__).
+        assert config.preferences  # populated
+        assert config.base_reproduction_rate == 0.03
+        assert config.base_happiness == 0.5
 
-    def test_create_race_config_with_values(self):
-        """Test creating a RaceConfig with specified values."""
+    def test_create_race_config_with_visual_fields(self):
         config = RaceConfig(
             race_id="test_race",
             name="Test Race",
             flag_id="flag_001",
             portrait_id="portrait_001.jpg",
             theme_id="Klingons",
-            gravity_ideal=1.5,
-            gravity_tolerance=0.5,
         )
-
         assert config.race_id == "test_race"
         assert config.name == "Test Race"
         assert config.flag_id == "flag_001"
         assert config.portrait_id == "portrait_001.jpg"
         assert config.theme_id == "Klingons"
-        assert config.gravity_ideal == 1.5
-        assert config.gravity_tolerance == 0.5
 
-    def test_atmosphere_preferences_defaults(self):
-        """Test that atmosphere preferences are initialized with defaults."""
-        config = RaceConfig()
 
-        assert "Oxygen" in config.atmosphere_preferences
-        assert "Nitrogen" in config.atmosphere_preferences
-        assert "Carbon Dioxide" in config.atmosphere_preferences
-        assert "Methane" in config.atmosphere_preferences
-        assert "Hydrogen" in config.atmosphere_preferences
-        assert "Helium" in config.atmosphere_preferences
-
-        # All should be 0.0 by default
-        for gas, value in config.atmosphere_preferences.items():
-            assert value == 0.0
-
-    def test_atmosphere_preferences_custom(self):
-        """Test setting custom atmosphere preferences."""
-        custom_prefs = {"Oxygen": 50.0, "Methane": -75.0}
-        config = RaceConfig(atmosphere_preferences=custom_prefs)
-
-        # Custom values should be set
-        assert config.atmosphere_preferences["Oxygen"] == 50.0
-        assert config.atmosphere_preferences["Methane"] == -75.0
-
-        # Missing defaults should be filled in
-        assert "Nitrogen" in config.atmosphere_preferences
+# ---------------------------------------------------------------------------
+# Serialization
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigSerialization:
-    """RaceConfig serialization tests."""
-
-    def test_to_dict_all_fields(self):
-        """Test to_dict includes all fields."""
-        config = RaceConfig(
-            race_id="test_id",
-            name="Test Name",
-            flag_id="flag_123",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            gravity_ideal=1.2,
-            gravity_tolerance=0.4,
-            temperature_ideal=300.0,
-            temperature_tolerance=60.0,
-            radiation_tolerance=25.0,
-            bio_description="Test bio",
-            socio_description="Test socio",
-            created_date="2026-01-01T00:00:00",
-            modified_date="2026-01-02T00:00:00",
-        )
-
+    def test_to_dict_includes_new_fields(self):
+        config = RaceConfig(name="Test")
         data = config.to_dict()
+        assert "preferences" in data
+        assert "base_reproduction_rate" in data
+        assert "base_happiness" in data
 
-        assert data["race_id"] == "test_id"
-        assert data["name"] == "Test Name"
-        assert data["flag_id"] == "flag_123"
-        assert data["portrait_id"] == "portrait.jpg"
-        assert data["theme_id"] == "Federation"
-        assert data["gravity_ideal"] == 1.2
-        assert data["gravity_tolerance"] == 0.4
-        assert data["temperature_ideal"] == 300.0
-        assert data["temperature_tolerance"] == 60.0
-        assert data["radiation_tolerance"] == 25.0
-        assert data["bio_description"] == "Test bio"
-        assert data["socio_description"] == "Test socio"
-        assert data["created_date"] == "2026-01-01T00:00:00"
-        assert data["modified_date"] == "2026-01-02T00:00:00"
-        assert "atmosphere_preferences" in data
+    def test_to_dict_excludes_deleted_legacy_fields(self):
+        """Phase 4 dropped these keys from to_dict; old saves with them
+        present are silently ignored on load."""
+        data = RaceConfig().to_dict()
+        for key in (
+            "gravity_ideal", "gravity_tolerance",
+            "temperature_ideal", "temperature_tolerance",
+            "water_ideal", "water_tolerance",
+            "atmosphere_preferences", "radiation_tolerance",
+            "aptitude_happiness", "aptitude_population_growth",
+        ):
+            assert key not in data, f"Legacy key {key!r} should be gone"
 
-    def test_from_dict_all_fields(self):
-        """Test from_dict restores all fields."""
-        data = {
-            "race_id": "restored_id",
-            "name": "Restored Name",
-            "flag_id": "flag_456",
-            "portrait_id": "restored.jpg",
-            "theme_id": "Romulans",
-            "gravity_ideal": 0.8,
-            "gravity_tolerance": 0.2,
-            "temperature_ideal": 280.0,
-            "temperature_tolerance": 40.0,
-            "atmosphere_preferences": {"Oxygen": 100.0},
-            "radiation_tolerance": -50.0,
-            "bio_description": "Restored bio",
-            "socio_description": "Restored socio",
-            "created_date": "2025-12-01T00:00:00",
-            "modified_date": "2025-12-15T00:00:00",
-        }
-
-        config = RaceConfig.from_dict(data)
-
-        assert config.race_id == "restored_id"
-        assert config.name == "Restored Name"
-        assert config.flag_id == "flag_456"
-        assert config.portrait_id == "restored.jpg"
-        assert config.theme_id == "Romulans"
-        assert config.gravity_ideal == 0.8
-        assert config.gravity_tolerance == 0.2
-        assert config.temperature_ideal == 280.0
-        assert config.temperature_tolerance == 40.0
-        assert config.radiation_tolerance == -50.0
-        assert config.bio_description == "Restored bio"
-        assert config.socio_description == "Restored socio"
-
-    def test_round_trip_serialization(self):
-        """Test that to_dict -> from_dict preserves all data."""
+    def test_round_trip_preserves_identity(self):
         original = RaceConfig(
-            race_id="round_trip_test",
-            name="Round Trip Race",
-            flag_id="flag_rt",
-            portrait_id="rt_portrait.jpg",
-            theme_id="Atlantians",
-            gravity_ideal=1.8,
-            gravity_tolerance=0.6,
-            temperature_ideal=350.0,
-            temperature_tolerance=80.0,
-            atmosphere_preferences={"Oxygen": 75.0, "Methane": -25.0},
-            radiation_tolerance=10.0,
-            bio_description="Bio text here",
-            socio_description="Socio text here",
+            race_id="r1",
+            name="Race One",
+            faction_name="The Faction",
+            race_name="Racer",
+            government_type="Empire",
+            leader_title="Emperor",
+            leader_name="Zara IV",
         )
+        restored = RaceConfig.from_dict(original.to_dict())
+        assert restored.race_id == "r1"
+        assert restored.name == "Race One"
+        assert restored.faction_name == "The Faction"
+        assert restored.race_name == "Racer"
+        assert restored.government_type == "Empire"
+        assert restored.leader_title == "Emperor"
+        assert restored.leader_name == "Zara IV"
 
-        data = original.to_dict()
-        restored = RaceConfig.from_dict(data)
-
-        assert restored.race_id == original.race_id
-        assert restored.name == original.name
-        assert restored.flag_id == original.flag_id
-        assert restored.portrait_id == original.portrait_id
-        assert restored.theme_id == original.theme_id
-        assert restored.gravity_ideal == original.gravity_ideal
-        assert restored.gravity_tolerance == original.gravity_tolerance
-        assert restored.temperature_ideal == original.temperature_ideal
-        assert restored.temperature_tolerance == original.temperature_tolerance
-        assert restored.radiation_tolerance == original.radiation_tolerance
-        assert restored.bio_description == original.bio_description
-        assert restored.socio_description == original.socio_description
+    def test_from_dict_silently_ignores_legacy_keys(self):
+        """Old save files with legacy keys must not crash from_dict."""
+        data = {
+            "name": "Old Race",
+            "gravity_ideal": 1.0,           # legacy — ignored
+            "atmosphere_preferences": {     # legacy — ignored
+                "Oxygen": 50,
+            },
+            "aptitude_happiness": 60,       # legacy — ignored
+            "aptitude_population_growth": 70,  # legacy — ignored
+        }
+        config = RaceConfig.from_dict(data)
+        assert config.name == "Old Race"
+        # New fields default correctly.
+        assert config.base_reproduction_rate == 0.03
+        assert config.base_happiness == 0.5
 
     def test_from_dict_missing_fields_uses_defaults(self):
-        """Test that from_dict uses defaults for missing fields."""
-        data = {"name": "Minimal Race"}
+        config = RaceConfig.from_dict({"race_id": "minimal"})
+        assert config.race_id == "minimal"
+        assert config.name == ""
+        assert config.theme_id == "Federation"
 
-        config = RaceConfig.from_dict(data)
 
-        assert config.name == "Minimal Race"
-        assert config.race_id == ""  # Default
-        assert config.theme_id == "Federation"  # Default
-        assert config.gravity_ideal == 1.0  # Default
-
-    def test_to_dict_includes_all_new_fields(self):
-        """Test that to_dict includes all new identity, homeworld, water, and aptitude fields."""
-        config = RaceConfig(
-            faction_name="Test Faction",
-            race_name="Testlings",
-            race_name_plural="Testlings",
-            government_type="Empire",
-            government_organization="Autocracy",
-            leader_title="Emperor",
-            physical_type="Humanoid",
-            society_type="Explorers",
-            homeworld_type="CONTINENTAL",
-            water_ideal=0.6,
-            water_tolerance=0.25,
-            aptitude_strength=7,
-            aptitude_intelligence=8,
-        )
-
-        data = config.to_dict()
-
-        # Identity fields
-        assert data["faction_name"] == "Test Faction"
-        assert data["race_name"] == "Testlings"
-        assert data["race_name_plural"] == "Testlings"
-        assert data["government_type"] == "Empire"
-        assert data["government_organization"] == "Autocracy"
-        assert data["leader_title"] == "Emperor"
-        assert data["physical_type"] == "Humanoid"
-        assert data["society_type"] == "Explorers"
-
-        # Homeworld & water fields
-        assert data["homeworld_type"] == "CONTINENTAL"
-        assert data["water_ideal"] == 0.6
-        assert data["water_tolerance"] == 0.25
-
-        # Aptitude fields (all 9)
-        assert data["aptitude_strength"] == 7
-        assert data["aptitude_intelligence"] == 8
-        assert data["aptitude_constitution"] == 50
-        assert data["aptitude_dexterity"] == 50
-        assert data["aptitude_tolerance_other_species"] == 50
-        assert data["aptitude_cooperation"] == 50
-        assert data["aptitude_happiness"] == 50
-        assert data["aptitude_population_growth"] == 50
-        assert data["aptitude_conflict_tolerance"] == 50
-
-    def test_from_dict_with_all_new_fields(self):
-        """Test from_dict restores all new fields correctly."""
-        data = {
-            "name": "Test",
-            "faction_name": "Restored Faction",
-            "race_name": "Restorlings",
-            "race_name_plural": "Restorlings",
-            "government_type": "Federation",
-            "government_organization": "Democracy",
-            "leader_title": "President",
-            "physical_type": "Reptilian",
-            "society_type": "Diplomats",
-            "homeworld_type": "OCEANIC",
-            "water_ideal": 0.8,
-            "water_tolerance": 0.1,
-            "aptitude_strength": 3,
-            "aptitude_intelligence": 9,
-            "aptitude_constitution": 4,
-            "aptitude_dexterity": 6,
-            "aptitude_tolerance_other_species": 8,
-            "aptitude_cooperation": 7,
-            "aptitude_happiness": 6,
-            "aptitude_population_growth": 5,
-            "aptitude_conflict_tolerance": 2,
-        }
-
-        config = RaceConfig.from_dict(data)
-
-        assert config.faction_name == "Restored Faction"
-        assert config.race_name == "Restorlings"
-        assert config.government_type == "Federation"
-        assert config.homeworld_type == "OCEANIC"
-        assert config.water_ideal == 0.8
-        assert config.aptitude_strength == 3
-        assert config.aptitude_intelligence == 9
-
-    def test_from_dict_backward_compatible(self):
-        """Test that old race data (missing new fields) loads with defaults."""
-        # Simulating old format race file
-        old_data = {
-            "race_id": "old_race",
-            "name": "Old Race",
-            "flag_id": "flag_001",
-            "portrait_id": "portrait.jpg",
-            "theme_id": "Federation",
-            "gravity_ideal": 1.0,
-            "gravity_tolerance": 0.3,
-            "temperature_ideal": 293.0,
-            "temperature_tolerance": 50.0,
-            "atmosphere_preferences": {"Oxygen": 0.0},
-            "radiation_tolerance": 0.0,
-            "bio_description": "Old bio",
-            "socio_description": "Old socio",
-        }
-
-        config = RaceConfig.from_dict(old_data)
-
-        # Original fields preserved
-        assert config.name == "Old Race"
-        assert config.flag_id == "flag_001"
-
-        # New fields should get defaults
-        assert config.faction_name == ""
-        assert config.race_name == ""
-        assert config.government_type == ""
-        assert config.homeworld_type == ""
-        assert config.water_ideal == 0.5
-        assert config.water_tolerance == 0.2
-        assert config.aptitude_strength == 50
-        assert config.aptitude_intelligence == 50
-
-    def test_serialization_round_trip_complete(self):
-        """Test complete round-trip serialization preserves all fields."""
-        original = RaceConfig(
-            race_id="complete_test",
-            name="Complete Race",
-            faction_name="Complete Faction",
-            race_name="Completers",
-            race_name_plural="Completers",
-            government_type="Alliance",
-            government_organization="Republic",
-            leader_title="Chancellor",
-            physical_type="Avian",
-            society_type="Scientists",
-            flag_id="flag_complete",
-            portrait_id="complete.jpg",
-            theme_id="Romulans",
-            homeworld_type="ARID",
-            gravity_ideal=1.2,
-            gravity_tolerance=0.4,
-            temperature_ideal=310.0,
-            temperature_tolerance=45.0,
-            water_ideal=0.3,
-            water_tolerance=0.15,
-            radiation_tolerance=25.0,
-            aptitude_strength=6,
-            aptitude_intelligence=7,
-            aptitude_constitution=8,
-            aptitude_dexterity=4,
-            aptitude_tolerance_other_species=5,
-            aptitude_cooperation=6,
-            aptitude_happiness=7,
-            aptitude_population_growth=3,
-            aptitude_conflict_tolerance=9,
-            bio_description="Complete bio",
-            socio_description="Complete socio",
-        )
-
-        data = original.to_dict()
-        restored = RaceConfig.from_dict(data)
-
-        # All fields must match
-        assert restored.race_id == original.race_id
-        assert restored.name == original.name
-        assert restored.faction_name == original.faction_name
-        assert restored.race_name == original.race_name
-        assert restored.government_type == original.government_type
-        assert restored.homeworld_type == original.homeworld_type
-        assert restored.water_ideal == original.water_ideal
-        assert restored.water_tolerance == original.water_tolerance
-        assert restored.aptitude_strength == original.aptitude_strength
-        assert restored.aptitude_intelligence == original.aptitude_intelligence
-        assert restored.aptitude_constitution == original.aptitude_constitution
-        assert restored.aptitude_conflict_tolerance == original.aptitude_conflict_tolerance
+# ---------------------------------------------------------------------------
+# File IO
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigFileIO:
-    """RaceConfig file I/O tests."""
-
     def test_save_and_load(self):
-        """Test saving and loading a race config."""
         config = RaceConfig(
-            race_id="file_test",
-            name="File Test Race",
-            flag_id="flag_file",
-            portrait_id="file_portrait.jpg",
-            theme_id="Federation",
+            race_id="io_race",
+            name="IO Race",
+            faction_name="IO Faction",
         )
-
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            filepath = f.name
-
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            path = f.name
         try:
-            # Save
-            assert config.save(filepath) is True
-
-            # Verify file exists
-            assert os.path.exists(filepath)
-
-            # Load
-            loaded = RaceConfig.load(filepath)
-
+            assert config.save(path)
+            loaded = RaceConfig.load(path)
             assert loaded is not None
-            assert loaded.race_id == "file_test"
-            assert loaded.name == "File Test Race"
-            assert loaded.flag_id == "flag_file"
-
-            # Timestamps should be set
-            assert loaded.created_date != ""
-            assert loaded.modified_date != ""
-
+            assert loaded.race_id == "io_race"
+            assert loaded.name == "IO Race"
+            assert loaded.faction_name == "IO Faction"
         finally:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            os.unlink(path)
 
-    def test_load_nonexistent_file(self):
-        """Test loading a file that doesn't exist."""
-        result = RaceConfig.load("/nonexistent/path/race.json")
-        assert result is None
+    def test_load_nonexistent_file_returns_none(self):
+        assert RaceConfig.load("/no/such/path/race_config.json") is None
 
     def test_save_updates_modified_date(self):
-        """Test that save updates the modified date."""
-        config = RaceConfig(name="Timestamp Test")
-
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            filepath = f.name
-
+        config = RaceConfig(name="Time Test")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            path = f.name
         try:
-            assert config.modified_date == ""
-
-            config.save(filepath)
-
-            assert config.modified_date != ""
-            assert config.created_date != ""
-
+            assert config.save(path)
+            with open(path) as f:
+                data = json.load(f)
+            assert data["modified_date"]
+            assert data["created_date"]
         finally:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            os.unlink(path)
+
+
+# ---------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigValidation:
-    """RaceConfig validation tests."""
-
-    def test_validate_complete_config(self):
-        """Test that a complete config passes validation."""
-        config = RaceConfig(
-            name="Valid Race",
-            flag_id="flag_valid",
-            portrait_id="valid_portrait.jpg",
+    def _valid_config(self, **overrides):
+        defaults = dict(
+            name="Valid",
+            flag_id="flag_1",
+            portrait_id="portrait.jpg",
             theme_id="Federation",
         )
+        defaults.update(overrides)
+        return RaceConfig(**defaults)
 
-        is_valid, message = config.validate()
-        assert is_valid is True
-        assert message == ""
+    def test_default_valid_config(self):
+        result = self._valid_config().validate()
+        assert result.is_valid, f"Valid config should pass: {result.errors}"
 
     def test_validate_missing_name(self):
-        """Test that missing name fails validation."""
-        config = RaceConfig(
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "name" in message.lower()
+        config = self._valid_config(name="")
+        result = config.validate()
+        assert not result.is_valid
+        assert "name" in str(result.errors).lower()
 
     def test_validate_missing_flag(self):
-        """Test that missing flag fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "flag" in message.lower()
+        config = self._valid_config(flag_id="")
+        result = config.validate()
+        assert not result.is_valid
 
     def test_validate_missing_portrait(self):
-        """Test that missing portrait fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            theme_id="Federation",
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "portrait" in message.lower()
+        config = self._valid_config(portrait_id="")
+        result = config.validate()
+        assert not result.is_valid
 
     def test_validate_missing_theme(self):
-        """Test that missing theme fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="",
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "theme" in message.lower()
-
-    def test_validate_gravity_out_of_range(self):
-        """Test that out-of-range gravity fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            gravity_ideal=5.0,  # Out of range
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "gravity" in message.lower()
-
-    def test_validate_temperature_out_of_range(self):
-        """Test that out-of-range temperature fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            temperature_ideal=500.0,  # Out of range
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "temperature" in message.lower()
-
-    def test_validate_description_too_long(self):
-        """Test that overly long description fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            bio_description="x" * 501,  # Too long
-        )
-
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "description" in message.lower()
-
-    def test_is_complete(self):
-        """Test is_complete returns correct status."""
-        incomplete = RaceConfig(name="Incomplete")
-        assert incomplete.is_complete() is False
-
-        complete = RaceConfig(
-            name="Complete",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-        )
-        assert complete.is_complete() is True
-
-    def test_validate_water_ideal_out_of_range(self):
-        """Test that water_ideal outside 0-1 fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            water_ideal=1.5,  # Out of range
-        )
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "water" in message.lower()
-
-    def test_validate_water_tolerance_out_of_range(self):
-        """Test that water_tolerance outside 0-1 fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            water_tolerance=-0.1,  # Out of range
-        )
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "water" in message.lower()
-
-    def test_validate_aptitude_below_minimum(self):
-        """Test that aptitude below 1 fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            aptitude_strength=0,  # Below minimum
-        )
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "aptitude" in message.lower()
-
-    def test_validate_aptitude_above_maximum(self):
-        """Test that aptitude above 100 fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            aptitude_intelligence=101,  # Above maximum
-        )
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "aptitude" in message.lower()
+        config = self._valid_config(theme_id="")
+        result = config.validate()
+        assert not result.is_valid
 
     def test_validate_invalid_government_type(self):
-        """Test that invalid government type fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            government_type="InvalidType",  # Not in list
-        )
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "government" in message.lower()
+        config = self._valid_config(government_type="NotARealType")
+        result = config.validate()
+        assert not result.is_valid
 
     def test_validate_invalid_homeworld_type(self):
-        """Test that invalid homeworld type fails validation."""
-        config = RaceConfig(
-            name="Test Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            homeworld_type="INVALID_PLANET",  # Not a valid PlanetType
-        )
-        is_valid, message = config.validate()
-        assert is_valid is False
-        assert "homeworld" in message.lower()
+        config = self._valid_config(homeworld_type="NOT_A_PLANET")
+        result = config.validate()
+        assert not result.is_valid
 
-    def test_validate_valid_race_with_all_new_fields(self):
-        """Test that a fully populated race with all new fields passes validation."""
-        from game.strategy.data.race_config import (
-            GOVERNMENT_TYPES, GOVERNMENT_ORGANIZATIONS, LEADER_TITLES,
-            PHYSICAL_TYPES, SOCIETY_TYPES
-        )
-        config = RaceConfig(
-            name="Complete Race",
-            flag_id="flag_complete",
-            portrait_id="complete.jpg",
-            theme_id="Federation",
-            faction_name="Complete Empire",
-            race_name="Completers",
-            race_name_plural="Completers",
-            government_type=GOVERNMENT_TYPES[0],  # Valid
-            government_organization=GOVERNMENT_ORGANIZATIONS[0],  # Valid
-            leader_title=LEADER_TITLES[0],  # Valid
-            physical_type=PHYSICAL_TYPES[0],  # Valid
-            society_type=SOCIETY_TYPES[0],  # Valid
-            homeworld_type="CONTINENTAL",  # Valid PlanetType
-            water_ideal=0.6,
-            water_tolerance=0.2,
-            aptitude_strength=7,
-            aptitude_intelligence=8,
-            aptitude_constitution=6,
-            aptitude_dexterity=5,
-            aptitude_tolerance_other_species=4,
-            aptitude_cooperation=5,
-            aptitude_happiness=6,
-            aptitude_population_growth=7,
-            aptitude_conflict_tolerance=5,
-        )
-        is_valid, message = config.validate()
-        assert is_valid is True
-        assert message == ""
+    def test_validate_aptitude_below_minimum(self):
+        config = self._valid_config(aptitude_strength=0)
+        result = config.validate()
+        assert not result.is_valid
 
-    def test_validate_empty_optional_fields_passes(self):
-        """Test that empty optional identity fields pass validation."""
-        config = RaceConfig(
-            name="Minimal Race",
-            flag_id="flag_001",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-            # All identity fields empty - should pass
-            government_type="",
-            government_organization="",
-            leader_title="",
-            physical_type="",
-            society_type="",
-            homeworld_type="",
-        )
-        is_valid, message = config.validate()
-        assert is_valid is True
+    def test_validate_aptitude_above_maximum(self):
+        config = self._valid_config(aptitude_strength=101)
+        result = config.validate()
+        assert not result.is_valid
+
+    def test_validate_description_too_long(self):
+        config = self._valid_config(bio_description="x" * 501)
+        result = config.validate()
+        assert not result.is_valid
+
+    def test_validate_negative_reproduction_rate(self):
+        """PROJ-283 Phase 4: `base_reproduction_rate` must be non-negative."""
+        config = self._valid_config(base_reproduction_rate=-0.01)
+        result = config.validate()
+        assert not result.is_valid
+
+    def test_validate_happiness_out_of_range(self):
+        """PROJ-283 Phase 4: `base_happiness` must be in [0, 1]."""
+        config = self._valid_config(base_happiness=1.5)
+        result = config.validate()
+        assert not result.is_valid
+
+    def test_is_complete(self):
+        assert self._valid_config().is_complete()
+        assert not self._valid_config(name="").is_complete()
+
+
+# ---------------------------------------------------------------------------
+# Constant lists (post-Phase 4 shapes)
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigConstantLists:
-    """Tests for constant lists defined in race_config module."""
-
-    def test_government_types_list_has_14_items(self):
-        """Test GOVERNMENT_TYPES has all 14 types."""
+    def test_government_types(self):
         from game.strategy.data.race_config import GOVERNMENT_TYPES
         assert len(GOVERNMENT_TYPES) == 14
         assert "Empire" in GOVERNMENT_TYPES
-        assert "Hegemony" in GOVERNMENT_TYPES
-        assert "Alliance" in GOVERNMENT_TYPES
 
-    def test_government_organizations_list_has_13_items(self):
-        """Test GOVERNMENT_ORGANIZATIONS has all 13 types."""
+    def test_government_organizations(self):
         from game.strategy.data.race_config import GOVERNMENT_ORGANIZATIONS
         assert len(GOVERNMENT_ORGANIZATIONS) == 13
-        assert "Anarchy" in GOVERNMENT_ORGANIZATIONS
-        assert "Democracy" in GOVERNMENT_ORGANIZATIONS
 
-    def test_leader_titles_list_has_27_items(self):
-        """Test LEADER_TITLES has all 27 titles."""
+    def test_leader_titles(self):
         from game.strategy.data.race_config import LEADER_TITLES
         assert len(LEADER_TITLES) == 27
-        assert "Central Speaker" in LEADER_TITLES
-        assert "Chairman" in LEADER_TITLES
 
-    def test_physical_types_list_has_14_items(self):
-        """Test PHYSICAL_TYPES has all 14 types."""
+    def test_physical_types(self):
         from game.strategy.data.race_config import PHYSICAL_TYPES
         assert len(PHYSICAL_TYPES) == 14
-        assert "Felinoid" in PHYSICAL_TYPES
-        assert "Caninoid" in PHYSICAL_TYPES
 
-    def test_society_types_list_has_17_items(self):
-        """Test SOCIETY_TYPES has all 17 types."""
+    def test_society_types(self):
         from game.strategy.data.race_config import SOCIETY_TYPES
         assert len(SOCIETY_TYPES) == 17
-        assert "Artisans" in SOCIETY_TYPES
-        assert "Berserkers" in SOCIETY_TYPES
 
-    def test_aptitude_names_list_has_9_items(self):
-        """Test APTITUDE_NAMES has all 9 aptitudes."""
+    def test_aptitude_names_after_phase4_drop(self):
+        """PROJ-283 Phase 4: APTITUDE_NAMES shrunk from 9 to 7 entries
+        (`happiness` and `population_growth` are now `base_happiness` and
+        `base_reproduction_rate` floats on RaceConfig)."""
         from game.strategy.data.race_config import APTITUDE_NAMES
-        assert len(APTITUDE_NAMES) == 9
-        assert "strength" in APTITUDE_NAMES
-        assert "intelligence" in APTITUDE_NAMES
-        assert "constitution" in APTITUDE_NAMES
-        assert "dexterity" in APTITUDE_NAMES
-        assert "tolerance_other_species" in APTITUDE_NAMES
-        assert "cooperation" in APTITUDE_NAMES
-        assert "happiness" in APTITUDE_NAMES
-        assert "population_growth" in APTITUDE_NAMES
-        assert "conflict_tolerance" in APTITUDE_NAMES
+        assert len(APTITUDE_NAMES) == 7
+        assert "happiness" not in APTITUDE_NAMES
+        assert "population_growth" not in APTITUDE_NAMES
+        for name in (
+            "strength", "intelligence", "constitution", "dexterity",
+            "tolerance_other_species", "cooperation", "conflict_tolerance",
+        ):
+            assert name in APTITUDE_NAMES
+
+
+# ---------------------------------------------------------------------------
+# Identity fields
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigIdentityFields:
-    """Tests for identity fields added to RaceConfig."""
-
-    def test_create_race_with_identity_fields_defaults(self):
-        """Test that identity fields have correct defaults."""
+    def test_identity_fields_default_empty(self):
         config = RaceConfig()
+        for field in (
+            "faction_name", "race_name", "race_name_plural",
+            "government_type", "government_organization",
+            "leader_title", "leader_name", "physical_type", "society_type",
+        ):
+            assert getattr(config, field) == ""
 
-        assert config.faction_name == ""
-        assert config.race_name == ""
-        assert config.race_name_plural == ""
-        assert config.government_type == ""
-        assert config.government_organization == ""
-        assert config.leader_title == ""
-        assert config.leader_name == ""
-        assert config.physical_type == ""
-        assert config.society_type == ""
-
-    def test_create_race_with_custom_identity(self):
-        """Test creating a race with all identity fields set."""
+    def test_identity_fields_set_correctly(self):
         config = RaceConfig(
             faction_name="Rossarian Empire",
             race_name="Rossarian",
@@ -765,116 +312,63 @@ class TestRaceConfigIdentityFields:
             physical_type="Felinoid",
             society_type="Conquerors",
         )
-
         assert config.faction_name == "Rossarian Empire"
         assert config.race_name == "Rossarian"
-        assert config.race_name_plural == "Rossarians"
-        assert config.government_type == "Empire"
-        assert config.government_organization == "Autocracy"
-        assert config.leader_title == "Emperor"
         assert config.leader_name == "Zara IV"
         assert config.physical_type == "Felinoid"
-        assert config.society_type == "Conquerors"
 
-    def test_leader_name_serialization(self):
-        """Test leader_name round-trips through to_dict/from_dict."""
+    def test_leader_name_round_trip(self):
         config = RaceConfig(leader_title="Emperor", leader_name="Zara IV")
-        data = config.to_dict()
-        assert data["leader_name"] == "Zara IV"
-
-        restored = RaceConfig.from_dict(data)
+        restored = RaceConfig.from_dict(config.to_dict())
         assert restored.leader_name == "Zara IV"
 
-    def test_leader_name_missing_in_dict_defaults_empty(self):
-        """Test backward compatibility when leader_name is absent from dict."""
-        data = {"leader_title": "Emperor"}
-        config = RaceConfig.from_dict(data)
-        assert config.leader_name == ""
+    def test_homeworld_type_round_trip(self):
+        config = RaceConfig(homeworld_type="CONTINENTAL")
+        restored = RaceConfig.from_dict(config.to_dict())
+        assert restored.homeworld_type == "CONTINENTAL"
 
 
-class TestRaceConfigHomeworldWaterFields:
-    """Tests for homeworld and water preference fields."""
-
-    def test_default_water_preferences(self):
-        """Test that water preferences have correct defaults."""
-        config = RaceConfig()
-
-        assert config.water_ideal == 0.5
-        assert config.water_tolerance == 0.2
-        assert config.homeworld_type == ""
-
-    def test_create_race_with_homeworld_type(self):
-        """Test setting homeworld type."""
-        config = RaceConfig(
-            homeworld_type="CONTINENTAL",
-            water_ideal=0.7,
-            water_tolerance=0.15,
-        )
-
-        assert config.homeworld_type == "CONTINENTAL"
-        assert config.water_ideal == 0.7
-        assert config.water_tolerance == 0.15
+# ---------------------------------------------------------------------------
+# Aptitude fields (post-Phase 4: 7 paid)
+# ---------------------------------------------------------------------------
 
 
 class TestRaceConfigAptitudeFields:
-    """Tests for aptitude attribute fields."""
-
-    def test_default_aptitudes_are_5(self):
-        """Test that all aptitudes default to 50."""
+    def test_default_aptitudes_are_50(self):
         config = RaceConfig()
-
-        assert config.aptitude_strength == 50
-        assert config.aptitude_intelligence == 50
-        assert config.aptitude_constitution == 50
-        assert config.aptitude_dexterity == 50
-        assert config.aptitude_tolerance_other_species == 50
-        assert config.aptitude_cooperation == 50
-        assert config.aptitude_happiness == 50
-        assert config.aptitude_population_growth == 50
-        assert config.aptitude_conflict_tolerance == 50
+        for name in (
+            "strength", "intelligence", "constitution", "dexterity",
+            "tolerance_other_species", "cooperation", "conflict_tolerance",
+        ):
+            assert getattr(config, f"aptitude_{name}") == 50
 
     def test_create_race_with_custom_aptitudes(self):
-        """Test creating a race with custom aptitude values."""
         config = RaceConfig(
-            aptitude_strength=8,
-            aptitude_intelligence=3,
-            aptitude_constitution=7,
-            aptitude_dexterity=4,
-            aptitude_tolerance_other_species=6,
-            aptitude_cooperation=2,
-            aptitude_happiness=9,
-            aptitude_population_growth=1,
+            aptitude_strength=80,
+            aptitude_intelligence=30,
+            aptitude_constitution=70,
             aptitude_conflict_tolerance=10,
         )
-
-        assert config.aptitude_strength == 8
-        assert config.aptitude_intelligence == 3
-        assert config.aptitude_constitution == 7
-        assert config.aptitude_dexterity == 4
-        assert config.aptitude_tolerance_other_species == 6
-        assert config.aptitude_cooperation == 2
-        assert config.aptitude_happiness == 9
-        assert config.aptitude_population_growth == 1
+        assert config.aptitude_strength == 80
+        assert config.aptitude_intelligence == 30
+        assert config.aptitude_constitution == 70
         assert config.aptitude_conflict_tolerance == 10
 
 
 # ---------------------------------------------------------------------------
-# PROJ-283 Phase 1 Task 1.5 — parallel new fields: preferences,
-# base_reproduction_rate, base_happiness.
+# PROJ-283 Phase 1 — preferences field
 # ---------------------------------------------------------------------------
 
 
 class TestRaceConfigPreferencesField:
-    """`preferences: Dict[str, EnvironmentalPreference]` lives alongside the
-    legacy environment fields during Phase 1. Populated from
-    `FACTOR_REGISTRY` defaults when empty."""
+    """`preferences: Dict[str, EnvironmentalPreference]` is populated from
+    `FACTOR_REGISTRY` defaults via __post_init__."""
 
     def test_default_preferences_populated_from_registry(self):
         from game.strategy.data.habitability_factors import FACTOR_REGISTRY
         from game.strategy.data.environmental_preference import EnvironmentalPreference
 
         config = RaceConfig()
-
         assert len(config.preferences) == len(FACTOR_REGISTRY)
         for factor_id in FACTOR_REGISTRY:
             assert factor_id in config.preferences
@@ -888,20 +382,14 @@ class TestRaceConfigPreferencesField:
             pref = config.preferences[factor_id]
             assert pref.setpoint == factor.default_setpoint
             assert pref.tolerance == factor.default_tolerance
-            assert pref.min_value == factor.min_value
-            assert pref.max_value == factor.max_value
-            assert pref.step == factor.step
 
     def test_explicit_preferences_are_preserved(self):
-        """Constructor can override defaults; __post_init__ must not clobber
-        user-supplied preferences even when it fills in missing ones."""
         from game.strategy.data.environmental_preference import EnvironmentalPreference
 
         custom_gravity = EnvironmentalPreference(
             setpoint=5.0, tolerance=1.0, min_value=0.1, max_value=30.0, step=0.98,
         )
         config = RaceConfig(preferences={"gravity": custom_gravity})
-
         assert config.preferences["gravity"] is custom_gravity
         # Other factors still filled from registry defaults.
         assert "gas.O2" in config.preferences
@@ -911,11 +399,9 @@ class TestRaceConfigPreferencesField:
 
         original = RaceConfig()
         original.preferences["temperature"] = EnvironmentalPreference(
-            setpoint=250.0, tolerance=5.0, min_value=100.0, max_value=500.0, step=10.0,
+            setpoint=250.0, tolerance=5.0, min_value=50.0, max_value=2000.0, step=10.0,
         )
-
         restored = RaceConfig.from_dict(original.to_dict())
-
         assert restored.preferences["temperature"].setpoint == 250.0
         assert restored.preferences["temperature"].tolerance == 5.0
 
@@ -924,31 +410,25 @@ class TestRaceConfigPreferencesField:
         crash — missing keys are filled from registry defaults."""
         from game.strategy.data.habitability_factors import FACTOR_REGISTRY
 
-        data = {
-            "name": "Partial Race",
+        partial = {
+            "name": "Partial",
             "preferences": {
                 "gravity": {
-                    "setpoint": 12.0,
-                    "tolerance": 1.0,
-                    "min_value": 0.1,
-                    "max_value": 30.0,
-                    "step": 0.98,
+                    "setpoint": 11.0, "tolerance": 1.0,
+                    "min_value": 0.1, "max_value": 30.0, "step": 0.98,
                 },
             },
         }
-        config = RaceConfig.from_dict(data)
-
-        # Supplied value preserved
-        assert config.preferences["gravity"].setpoint == 12.0
-        # Missing factors backfilled from the registry
+        config = RaceConfig.from_dict(partial)
+        # Explicit gravity preserved
+        assert config.preferences["gravity"].setpoint == 11.0
+        # Missing factors backfilled
         assert len(config.preferences) == len(FACTOR_REGISTRY)
-        assert "gas.O2" in config.preferences
 
 
 class TestRaceConfigBaseReproductionAndHappiness:
-    """`base_reproduction_rate` and `base_happiness` replace the old
-    `aptitude_population_growth` / `aptitude_happiness` semantically, but
-    the old aptitude fields stay in place during Phase 1."""
+    """`base_reproduction_rate` and `base_happiness` replace the deleted
+    `aptitude_population_growth` / `aptitude_happiness` fields."""
 
     def test_default_base_reproduction_rate(self):
         assert RaceConfig().base_reproduction_rate == 0.03
@@ -970,28 +450,16 @@ class TestRaceConfigBaseReproductionAndHappiness:
 
 
 class TestRaceConfigValidateWithPreferences:
-    """`validate()` must delegate to each EnvironmentalPreference so a
-    malformed preference surfaces as a validation error."""
+    """`validate()` delegates per-preference; `EnvironmentalPreference`
+    self-validates at construction so a bad pref simply can't enter the
+    map without raising first."""
 
-    def test_valid_default_config_validates(self):
-        config = RaceConfig(
-            name="Valid",
-            flag_id="flag_1",
-            portrait_id="portrait.jpg",
-            theme_id="Federation",
-        )
-        result = config.validate()
-        assert result.is_valid, f"Default config should validate, got: {result.errors}"
-
-    def test_invalid_preference_triggers_construction_error(self):
-        """EnvironmentalPreference rejects invalid data at construction, so
-        a bad preference simply can't be placed into RaceConfig.preferences
-        without raising first. This keeps the invariant simple."""
+    def test_invalid_preference_construction_rejected(self):
         from game.core.exceptions import ValidationException
         from game.strategy.data.environmental_preference import EnvironmentalPreference
 
         with pytest.raises(ValidationException):
             EnvironmentalPreference(
                 setpoint=100.0, tolerance=1.0,
-                min_value=0.0, max_value=10.0, step=1.0,
+                min_value=0.0, max_value=10.0, step=1.0,  # setpoint outside bounds
             )

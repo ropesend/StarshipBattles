@@ -26,7 +26,7 @@ class PopulationEngine(IPopulationEngine):
         growth = r * P * (1 - P/K) * happiness_modifier
 
     Where:
-        r = base growth rate (from aptitude_population_growth)
+        r = base growth rate (from race_config.base_reproduction_rate, PROJ-283)
         P = current population
         K = effective carrying capacity (max_population * habitability)
         happiness_modifier = population happiness (0.0 to 1.0)
@@ -108,8 +108,9 @@ class PopulationEngine(IPopulationEngine):
         if effective_capacity <= 0:
             effective_capacity = 1
 
-        # Get growth rate from aptitude
-        base_rate = self._aptitude_to_growth_rate(race_config.aptitude_population_growth)
+        # PROJ-283 Phase 4: read directly from RaceConfig.base_reproduction_rate
+        # (replaces the old aptitude_population_growth → rate conversion).
+        base_rate = race_config.base_reproduction_rate
 
         # Logistic growth: r * P * (1 - P/K)
         current_pop = pop.count
@@ -158,21 +159,3 @@ class PopulationEngine(IPopulationEngine):
         # Future: look up in multi-species registry
         return race_config
 
-    @staticmethod
-    def _aptitude_to_growth_rate(aptitude: int) -> float:
-        """
-        Convert population_growth aptitude to base growth rate.
-
-        Scale: 1 -> 0.05%, 50 -> 2.5%, 100 -> 5.0% per turn
-
-        Args:
-            aptitude: Aptitude value (1-100)
-
-        Returns:
-            Growth rate as decimal (e.g., 0.025 for 2.5%)
-        """
-        # Linear scale: rate = 0.0005 * aptitude
-        # aptitude 1 = 0.0005 (0.05%)
-        # aptitude 50 = 0.025 (2.5%)
-        # aptitude 100 = 0.05 (5.0%)
-        return 0.0005 * aptitude

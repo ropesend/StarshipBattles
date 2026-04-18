@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 
 # Aptitude display names (nicer formatting for UI)
+# PROJ-283 Phase 4: dropped `happiness` (now `base_happiness`, derived) and
+# `population_growth` (now `base_reproduction_rate`).
 APTITUDE_DISPLAY_NAMES = {
     "strength": "Strength",
     "intelligence": "Intelligence",
@@ -28,8 +30,6 @@ APTITUDE_DISPLAY_NAMES = {
     "dexterity": "Dexterity",
     "tolerance_other_species": "Species Tolerance",
     "cooperation": "Cooperation",
-    "happiness": "Happiness",
-    "population_growth": "Population Growth",
     "conflict_tolerance": "Conflict Tolerance",
 }
 
@@ -41,8 +41,6 @@ APTITUDE_ORDER = [
     "dexterity",
     "tolerance_other_species",
     "cooperation",
-    "happiness",
-    "population_growth",
     "conflict_tolerance",
 ]
 
@@ -190,8 +188,8 @@ class RaceAptitudesPanel:
         )
         y += 24
 
-        # Tolerance cost (from environment tab)
-        tol_cost = self.point_budget.calculate_tolerance_cost(self.race_config)
+        # Preferences cost (from environment tab) — PROJ-283 Phase 3
+        tol_cost = self.point_budget.calculate_preferences_cost(self.race_config)
         self.tolerance_cost_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(20, y, width - 40, 22),
             text=f"Tolerance Cost: {tol_cost} (set on Environment tab)",
@@ -274,7 +272,7 @@ class RaceAptitudesPanel:
             apt_cost = self.point_budget.calculate_aptitude_cost(self.race_config)
             self.aptitude_cost_label.set_text(f"Aptitude Cost: {apt_cost}")
 
-        # Update tolerance cost label
+        # Update tolerance cost label (PROJ-283 Phase 3: registry-driven)
         if self.tolerance_cost_label:
-            tol_cost = self.point_budget.calculate_tolerance_cost(self.race_config)
+            tol_cost = self.point_budget.calculate_preferences_cost(self.race_config)
             self.tolerance_cost_label.set_text(f"Tolerance Cost: {tol_cost} (set on Environment tab)")

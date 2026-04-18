@@ -237,7 +237,12 @@ def create_test_star_system(
 
 
 def create_test_race_config(**overrides) -> RaceConfig:
-    """Create a RaceConfig with all fields populated."""
+    """Create a RaceConfig with all fields populated.
+
+    PROJ-283 Phase 4: legacy environment fields (`gravity_ideal`,
+    `atmosphere_preferences`, `aptitude_happiness`, etc.) deleted;
+    `__post_init__` backfills `preferences` from `FACTOR_REGISTRY` defaults.
+    """
     defaults = dict(
         race_id="test_race",
         name="Testarians",
@@ -253,23 +258,16 @@ def create_test_race_config(**overrides) -> RaceConfig:
         flag_id="flag_test",
         portrait_id="portrait_test",
         theme_id="Federation",
-        homeworld_type="continental",
-        gravity_ideal=1.0,
-        gravity_tolerance=0.3,
-        temperature_ideal=293.0,
-        temperature_tolerance=50.0,
-        water_ideal=0.5,
-        water_tolerance=0.2,
-        radiation_tolerance=0.1,
+        homeworld_type="CONTINENTAL",
         aptitude_strength=55,
         aptitude_intelligence=60,
         aptitude_constitution=50,
         aptitude_dexterity=45,
         aptitude_tolerance_other_species=50,
         aptitude_cooperation=55,
-        aptitude_happiness=50,
-        aptitude_population_growth=50,
         aptitude_conflict_tolerance=40,
+        base_reproduction_rate=0.03,
+        base_happiness=0.5,
         bio_description="A test species.",
         socio_description="A test society.",
         created_date="2026-01-01T00:00:00",
