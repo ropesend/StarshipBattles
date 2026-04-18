@@ -11,6 +11,8 @@ from datetime import datetime
 
 from game.core.json_utils import load_json, save_json
 from game.core.validation import ValidationResult
+from game.strategy.data.environmental_preference import EnvironmentalPreference
+from game.strategy.data.habitability_factors import FACTOR_REGISTRY
 
 
 # Government types for race factions
@@ -143,6 +145,20 @@ class RaceConfig:
     aptitude_population_growth: int = 50
     aptitude_conflict_tolerance: int = 50
 
+    # PROJ-283: New registry-driven preferences. Populated from
+    # FACTOR_REGISTRY defaults in __post_init__ when not explicitly supplied.
+    # Runs alongside the legacy environment fields during Phase 1; the
+    # legacy fields are deleted in Phase 4.
+    preferences: Dict[str, EnvironmentalPreference] = field(default_factory=dict)
+
+    # PROJ-283: Replaces aptitude_population_growth. 0.03 = 3%/turn base
+    # reproduction. Exponential cost to raise; linear refund to 0.5% floor.
+    base_reproduction_rate: float = 0.03
+
+    # PROJ-283: Replaces aptitude_happiness. Seed value for the (PROJ-284)
+    # derived-happiness engine. 0.5 = neutral disposition.
+    base_happiness: float = 0.5
+
     # Descriptions
     bio_description: str = ""  # Biological description (max 500 chars)
     socio_description: str = ""  # Sociological description (max 500 chars)
@@ -152,7 +168,7 @@ class RaceConfig:
     modified_date: str = ""  # ISO timestamp
 
     def __post_init__(self):
-        """Ensure atmosphere_preferences has all required keys."""
+        """Ensure atmosphere_preferences and preferences have all required keys."""
         if self.atmosphere_preferences is None:
             self.atmosphere_preferences = DEFAULT_ATMOSPHERE_PREFERENCES.copy()
         else:
@@ -160,6 +176,21 @@ class RaceConfig:
             for gas in DEFAULT_ATMOSPHERE_PREFERENCES:
                 if gas not in self.atmosphere_preferences:
                     self.atmosphere_preferences[gas] = 0.0
+
+        # PROJ-283: Backfill `preferences` from FACTOR_REGISTRY defaults.
+        # Explicit entries provided by the caller (via constructor or
+        # from_dict) are preserved; only missing factor ids are filled.
+        if self.preferences is None:
+            self.preferences = {}
+        for factor_id, factor in FACTOR_REGISTRY.items():
+            if factor_id not in self.preferences:
+                self.preferences[factor_id] = EnvironmentalPreference(
+                    setpoint=factor.default_setpoint,
+                    tolerance=factor.default_tolerance,
+                    min_value=factor.min_value,
+                    max_value=factor.max_value,
+                    step=factor.step,
+                )
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to JSON-compatible dictionary."""
@@ -200,6 +231,13 @@ class RaceConfig:
             "aptitude_happiness": self.aptitude_happiness,
             "aptitude_population_growth": self.aptitude_population_growth,
             "aptitude_conflict_tolerance": self.aptitude_conflict_tolerance,
+            # PROJ-283 new fields
+            "preferences": {
+                factor_id: pref.to_dict()
+                for factor_id, pref in self.preferences.items()
+            },
+            "base_reproduction_rate": self.base_reproduction_rate,
+            "base_happiness": self.base_happiness,
             # Descriptions
             "bio_description": self.bio_description,
             "socio_description": self.socio_description,
@@ -249,6 +287,13 @@ class RaceConfig:
             aptitude_happiness=data.get("aptitude_happiness", 50),
             aptitude_population_growth=data.get("aptitude_population_growth", 50),
             aptitude_conflict_tolerance=data.get("aptitude_conflict_tolerance", 50),
+            # PROJ-283 new fields
+            preferences={
+                factor_id: EnvironmentalPreference.from_dict(pref_data)
+                for factor_id, pref_data in (data.get("preferences") or {}).items()
+            },
+            base_reproduction_rate=float(data.get("base_reproduction_rate", 0.03)),
+            base_happiness=float(data.get("base_happiness", 0.5)),
             # Descriptions
             bio_description=data.get("bio_description", ""),
             socio_description=data.get("socio_description", ""),
@@ -307,6 +352,7 @@ class RaceConfig:
             self._validate_identity_enums,
             self._validate_homeworld_and_atmosphere,
             self._validate_descriptions,
+            self._validate_preferences,
         ]:
             ok, msg = check()
             if not ok:
@@ -393,6 +439,18 @@ class RaceConfig:
             return False, "Biological description exceeds 500 characters"
         if len(self.socio_description) > 500:
             return False, "Sociological description exceeds 500 characters"
+        return True, ""
+
+    def _validate_preferences(self) -> tuple[bool, str]:
+        """PROJ-283: Each EnvironmentalPreference self-validates at construction,
+        so this only defends against preferences that have been mutated
+        in-place to invalid values after creation."""
+        from game.core.exceptions import ValidationException
+        for factor_id, pref in self.preferences.items():
+            try:
+                pref.validate()
+            except ValidationException as exc:
+                return False, f"preferences[{factor_id!r}]: {exc}"
         return True, ""
 
     def is_complete(self) -> bool:

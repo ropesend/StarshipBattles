@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. EnvironmentalPreference + Factor Registry | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. EnvironmentalPreference + Factor Registry | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. New habitability pipeline (parallel to old) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Unified point budget | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Switch callers + delete legacy fields | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,11 +22,18 @@
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Planning complete, ready for implementation
-**Last Action:** Project scaffolded from master plan at `C:\Users\rossr\.claude\plans\i-want-to-effervescent-hennessy.md`
-**Next Action:** Begin Phase 1 — create `EnvironmentalPreference` dataclass and `FACTOR_REGISTRY`
-**Blockers:** None. PROJ-284 and PROJ-285 both depend on this project completing.
-**Context for Next Agent:** User wants `(setpoint, tolerance)` to unify atmosphere + temperature + gravity + water preferences. Setpoint is free; tolerance costs exponentially in width. `aptitude_population_growth` and `aptitude_happiness` are being replaced by `base_reproduction_rate` (default 0.03) and `base_happiness` (default 0.5) — happiness will become fully derived in PROJ-284. User confirmed disposable races/saves; no migration code.
+**Active Phase:** Phase 1 Complete; ready to start Phase 2
+**Last Action:** Phase 1 complete. All 6 tasks done, all 62 new tests passing (12 `EnvironmentalPreference` + 39 `HabitabilityFactor` + 11 new `RaceConfig` preference/repro/happiness tests). Full sharded suite 14776/14777 (sole failure is pre-existing flaky quickstart test). `validate_phase.py PROJ-283 1` → PASSED.
+**Next Action:** Phase 2 Task 2.1 — add `calculate_habitability_v2(planet, race_config)` to `game/strategy/formulas/habitability.py` iterating `FACTOR_REGISTRY`. Keep v1 intact until Phase 4.
+**Blockers:** None. PROJ-284 and PROJ-285 both still depend on PROJ-283 Phase 4+ completing.
+**Context for Next Agent:**
+- New modules to build on: `game/strategy/data/environmental_preference.py` and `game/strategy/data/habitability_factors.py`. Import `_gaussian_factor` from `habitability.py` — no circular dep because habitability.py only references `RaceConfig` under `TYPE_CHECKING`.
+- Each `HabitabilityFactor` carries `weight`, `extractor(planet)->Optional[float]`, and `scorer(value, pref)->[0,1]`. Default scorer is `_default_gaussian_scorer` which coerces `None` to `0.0` before calling `_gaussian_factor`.
+- Every `RaceConfig` now carries `preferences: Dict[str, EnvironmentalPreference]` (17 entries: 7 scalar + 10 gas) backfilled from `FACTOR_REGISTRY` defaults via `__post_init__`. Explicit constructor entries are preserved.
+- New `base_reproduction_rate: float = 0.03` and `base_happiness: float = 0.5` replace `aptitude_population_growth`/`aptitude_happiness` (still parallel; both live side-by-side during Phase 1–3, deleted in Phase 4).
+- Factor weights (tunable, set in Phase 1): gravity=1.0, temperature=1.0, water=0.8, pressure=0.9, tectonic=0.4, magnetic=0.6, radiation=0.6, each gas=0.15 (gas bucket totals 1.5). Phase 2 parity tests may retune.
+- Radiation extractor reads `planet.radiation_shielding` — Planet has no intrinsic "incident radiation" field. Default setpoint 0 / tolerance 50 documents "race doesn't care by default." Phase 2 parity tests should flag if this feels off.
+- Pre-existing bug: `TestRaceConfigValidation` in `tests/unit/strategy/data/test_race_config.py` has 16 tests that unpack `config.validate()` as a tuple but it returns `ValidationResult`. These failures have been hidden in sharded runs because collection-errors in a sibling file abort the `tests/unit/strategy/` collection before this file is reached. Not in PROJ-283 scope; flagged for later cleanup.
 
 ## Overview
 
