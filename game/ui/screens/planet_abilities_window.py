@@ -39,6 +39,12 @@ _ENVIRONMENT_EDITORS = [
     ('RadiationShield', 'Radiation'),
 ]
 
+# Food allocation (PROJ-284 Phase 4) — shown on any colony with populations.
+# Unlike environment editors, it does NOT require a specific facility ability;
+# every colony has populations that consume food.
+_FOOD_EDITOR_LABEL = 'Food'
+_FOOD_EDITOR_TYPE = 'food'
+
 
 class PlanetAbilitiesWindow(UIWindow):
     """Window listing all toggleable abilities on a planet with toggle buttons.
@@ -92,7 +98,8 @@ class PlanetAbilitiesWindow(UIWindow):
 
         # --- Environment editor buttons (conditional on facility presence) ---
         available_editors = self._get_available_editors()
-        if available_editors:
+        show_food_editor = self._should_show_food_editor()
+        if available_editors or show_food_editor:
             btn_w = 100
             btn_h = 30
             gap = 8
@@ -108,6 +115,16 @@ class PlanetAbilitiesWindow(UIWindow):
                 self._editor_buttons.append(btn)
                 self._widgets.append(btn)
                 x += btn_w + gap
+            if show_food_editor:
+                food_btn = UIButton(
+                    relative_rect=pygame.Rect(x, y, btn_w, btn_h),
+                    text=_FOOD_EDITOR_LABEL,
+                    manager=self.ui_manager,
+                    container=container,
+                )
+                food_btn._editor_type = _FOOD_EDITOR_TYPE
+                self._editor_buttons.append(food_btn)
+                self._widgets.append(food_btn)
             y += btn_h + 10
 
         # --- Toggleable ability rows ---
@@ -185,6 +202,13 @@ class PlanetAbilitiesWindow(UIWindow):
             self._toggle_buttons[row_key] = btn
 
             y += self.ROW_HEIGHT
+
+    def _should_show_food_editor(self) -> bool:
+        """PROJ-284 Phase 4: show the Food button on any colony that
+        has at least one population. Unlike environment editors, food
+        allocation is population-driven, not facility-driven."""
+        populations = getattr(self.planet, 'populations', None) or []
+        return len(populations) > 0
 
     def _get_available_editors(self) -> List[tuple]:
         """Return list of (ability_key, label) for editors where the planet has the facility."""

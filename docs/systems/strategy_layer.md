@@ -1354,3 +1354,67 @@ The legacy `gravity_ideal`, `gravity_tolerance`, `temperature_ideal`, `temperatu
 `RaceEnvironmentPanel` (`game/ui/panels/race_environment_panel.py`) iterates `iter_scalar_factors()` + `iter_gas_factors()` and renders one `PreferenceRow` per factor. The `PreferenceRow` widget (`game/ui/widgets/preference_row.py`) is reusable: `PreferenceRow.format_value(factor, raw)` handles unit-aware display (Pa → kPa, m/s² → g, fraction → %) and `PreferenceRow.calculate_factor_cost(factor, pref)` mirrors the budget cost curve for the per-row cost label.
 
 The four planet-modifier editor windows (`gravity_target_editor.py`, `water_target_editor.py`, `radiation_shield_editor.py`, `atmosphere_target_editor.py`) read `race_config.preferences[<id>].setpoint` for their "Species Ideal" / "Auto" buttons.
+
+## 8. Colony Demographics Loop (PROJ-284)
+
+Per-turn pipeline that converts a colony's food stockpile + per-species sliders into population growth. Runs AFTER the 100-tick loop in `TurnEngine.process_turn`, BEFORE `QualityEngine`:
+
+```
+[100-tick loop]
+  → OrganicsConsumptionEngine.process_consumption
+  → HappinessEngine.process_happiness
+  → PopulationEngine.process_population_growth
+  → QualityEngine / AtmosphereEngine / WaterEngine (unchanged)
+```
+
+### Data model
+
+`ColonySpeciesConfig` (`game/strategy/data/colony_species_config.py`) is a per-colony per-species dataclass attached to `Planet.species_configs: Dict[race_id, ColonySpeciesConfig]`. Fields:
+
+- `food_allocation: float = 1.0` — player-set linear scalar. Default 1.0 ("normal rations"). Range 0 to ∞ (UI slider capped at 5.0 with typed-input override). Scales BOTH organics consumption AND the derived happiness/reproduction chain.
+- `last_food_ratio: float = 1.0` — **TRANSIENT** cache written by `OrganicsConsumptionEngine` each turn (`supplied / needed`). Read by `HappinessEngine` and `PopulationEngine`. NOT serialized — `ColonySpeciesConfig.to_dict` excludes it and `from_dict` always resets to 1.0. Downstream readers rely on the engine overwriting it every turn; the engine explicitly writes 1.0 for zero-population / zero-allocation edge cases to prevent stale values.
+
+`Planet.get_species_config(race_id)` is a lazy-create-and-store helper — callers can read or mutate the returned config without checking for absence first.
+
+### Data-driven food resource
+
+`data/economy.json` declares which resource population consumes and at what base rate:
+
+```json
+{
+    "population_food_resource": "organics",
+    "food_per_pop_per_turn": 0.001
+}
+```
+
+`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this via the CLAUDE.md `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to hardcoded defaults on missing/malformed JSON. Modders swap `"organics"` for any other resource id (e.g. `"metals"`) and the UI auto-relabels via `ResourceCatalog.get(id).name` — never hardcode "Organics" outside `economy.json`.
+
+### Formulas
+
+- **Consumption** (`OrganicsConsumptionEngine`): per species per colony, `needed = pop.count * cfg.food_allocation * economy.food_per_pop_per_turn`. Drains `min(needed, available)` from `planet.stockpile[food_resource]`. Writes `cfg.last_food_ratio = supplied / needed`.
+- **Happiness** (`HappinessEngine`): `happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. Unbounded above 1.0 on purpose — over-supply + ideal habitability can push happiness past neutral. Clamp at 3 prevents runaway values.
+- **Population growth** (`PopulationEngine`): `growth = (race.base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, planet.max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` in `population_engine.py`. The defensive `min(1.0, happiness)` clamp from the pre-PROJ-284 formula was removed so the new [0, 3] happiness range is honored — `happiness=3` triples the logistic term.
+
+### UI surface
+
+`FoodAllocationEditor` (`game/ui/screens/food_allocation_editor.py`) is a pygame_gui window with one row per species on a colony. Each row: slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title auto-derives from `ResourceCatalog.get(economy.population_food_resource).name` — default label reads "Organics Allocation — {planet.name}". Apply writes to `planet.get_species_config(race_id).food_allocation`.
+
+The button appears on `PlanetAbilitiesWindow` when the colony has at least one population (unlike the facility-gated environment editors). Routed via `StrategyEventRouter._open_food_allocation_editor` → direct mutation on `ColonySpeciesConfig` (no command dispatch — food allocation is a player-facing dial, not a strategy-layer command with replay semantics).
+
+### Swapping the population food resource
+
+Modders and designers can change which resource populations consume without touching code. Recipe:
+
+1. **Edit `data/economy.json`** — set `population_food_resource` to any `resources.json` id. Example:
+   ```json
+   {
+       "population_food_resource": "metals",
+       "food_per_pop_per_turn": 0.001
+   }
+   ```
+2. **Ensure the target resource exists in `data/resources.json`** and is harvestable somewhere in the game (some existing ResourceHarvester ability must target it, or the colony stockpile will never fill). Quality-bearing (`has_quality: true`) is preferred but not required.
+3. **Restart the game** so `get_default_economy_config()` re-reads the JSON. In tests and at runtime, `set_default_economy_config(new_config)` swaps the cached singleton without restart.
+
+The UI auto-relabels: `FoodAllocationEditor`'s title goes from "Organics Allocation — Earth" to "Metals Allocation — Earth", the consumption preview reads "0.100 metals/turn", and the engine drains `metals` from the colony stockpile. The `ResourceCatalog.get(id).name` lookup (with graceful fallback to the raw id) is what makes this a one-line data edit.
+
+Cross-reference: [§7 Race Preferences & Habitability](strategy_layer.md#7-race-preferences--habitability-proj-283) is where the `habitability` factor in the happiness formula comes from.

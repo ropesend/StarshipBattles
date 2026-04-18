@@ -602,6 +602,8 @@ class StrategyWindowManager:
             'gravity': router._open_gravity_editor,
             'water': router._open_water_editor,
             'radiation': router._open_radiation_shield_editor,
+            # PROJ-284 Phase 4: per-colony per-species food allocation.
+            'food': router._open_food_allocation_editor,
         }
         opener = editor_map.get(editor_type)
         if opener:

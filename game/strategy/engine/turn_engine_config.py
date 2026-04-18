@@ -49,3 +49,5 @@ class TurnEngineConfig:
     # PROJ-284: Per-colony per-species food consumption (drains the
     # configured food resource after the tick loop, before pop growth).
     organics_consumption_engine: Optional[Any] = None
+    # PROJ-284 Phase 3: Derives happiness between consumption and pop growth.
+    happiness_engine: Optional[Any] = None

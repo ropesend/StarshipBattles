@@ -41,6 +41,7 @@ __all__ = [
     'IPlanetActionEngine',
     'IComponentActivationEngine',
     'IOrganicsConsumptionEngine',
+    'IHappinessEngine',
 ]
 
 
@@ -623,6 +624,42 @@ class IOrganicsConsumptionEngine(ABC):
 
         Args:
             empires: List of Empire objects to process
+        """
+        pass
+
+
+class IHappinessEngine(ABC):
+    """
+    Abstract interface for per-colony per-species happiness derivation.
+
+    PROJ-284 Phase 3: Derives `SpeciesPopulation.happiness` each turn
+    from `race.base_happiness * cfg.last_food_ratio * habitability`,
+    clamped to [0, 3]. Happiness is therefore a per-turn cache, not a
+    stored-and-mutated field.
+
+    Runs ONCE per turn, AFTER `OrganicsConsumptionEngine.process_consumption`
+    (which writes `last_food_ratio`) and BEFORE
+    `PopulationEngine.process_population_growth` (which reads happiness).
+
+    Example usage:
+        engine = HappinessEngine()
+        engine.process_happiness(empires, galaxy)
+    """
+
+    @abstractmethod
+    def process_happiness(
+        self,
+        empires: List,
+        galaxy: Any,
+    ) -> None:
+        """
+        Derive happiness for every species on every colony.
+
+        Args:
+            empires: List of Empire objects to process.
+            galaxy: Galaxy reference — currently unused but accepted for
+                forward compatibility with future factors (e.g. neighbor
+                empires, storm overlays).
         """
         pass
 

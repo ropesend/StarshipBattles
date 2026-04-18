@@ -85,6 +85,7 @@ if TYPE_CHECKING:
         IPlanetActionEngine,
         IComponentActivationEngine,
         IOrganicsConsumptionEngine,
+        IHappinessEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -152,6 +153,7 @@ class TurnEngine:
         planet_action_engine: Optional['IPlanetActionEngine'] = None,
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
         organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = None,
+        happiness_engine: Optional['IHappinessEngine'] = None,
         event_bus=None,
     ):
         """Initialize the turn engine.
@@ -197,6 +199,10 @@ class TurnEngine:
         # food resource, writes last_food_ratio for happiness + population)
         self._organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = (
             organics_consumption_engine or cfg.organics_consumption_engine
+        )
+        # PROJ-284 Phase 3: happiness = base_happiness * last_food_ratio * habitability
+        self._happiness_engine: Optional['IHappinessEngine'] = (
+            happiness_engine or cfg.happiness_engine
         )
 
         # PROJ-189: Environmental event storage for UI notification
@@ -424,6 +430,18 @@ class TurnEngine:
             self._organics_consumption_engine = OrganicsConsumptionEngine()
         return self._organics_consumption_engine
 
+    @property
+    def happiness_engine(self) -> 'IHappinessEngine':
+        """Return happiness engine, lazily creating default if not injected.
+
+        PROJ-284 Phase 3: Derives `SpeciesPopulation.happiness` between
+        consumption and population growth.
+        """
+        if self._happiness_engine is None:
+            from game.strategy.engine.happiness_engine import HappinessEngine
+            self._happiness_engine = HappinessEngine()
+        return self._happiness_engine
+
     def process_turn(self, empires: List['Empire'], galaxy: 'Galaxy', save_path: Optional[str] = None, *, session: Optional['GameSession'] = None) -> None:
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
@@ -483,11 +501,15 @@ class TurnEngine:
             # [BUG-109] Log resource state after all ticks
             self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
 
-            # PROJ-284 Phase 2: Food consumption runs BEFORE population
-            # growth so `last_food_ratio` is fresh when the growth
-            # formula reads it (Phase 3 wires HappinessEngine between
-            # consumption and population growth).
+            # PROJ-284 Phase 2: Food consumption runs BEFORE happiness
+            # so `last_food_ratio` is fresh for the happiness formula.
             self.organics_consumption_engine.process_consumption(empires)
+
+            # PROJ-284 Phase 3: Happiness = base * ratio * habitability.
+            # Derived fresh each turn between consumption and population
+            # growth so `pop.happiness` carries no stale value into
+            # `PopulationEngine._grow_species`.
+            self.happiness_engine.process_happiness(empires, galaxy)
 
             # 2. Population Growth Phase (PROJ-68)
             t0 = time.perf_counter()

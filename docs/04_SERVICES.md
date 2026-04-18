@@ -962,6 +962,26 @@ if has_warp_capability(ship_instance):
 
 See [docs/systems/strategy_layer.md §7](systems/strategy_layer.md#7-race-preferences--habitability-proj-283) for the full architecture, weight table, adding-a-factor recipe, and the legacy → new field migration table.
 
+### Colony Demographics Loop (PROJ-284)
+
+**Locations:**
+- `game/strategy/data/colony_species_config.py` — `ColonySpeciesConfig(food_allocation: float = 1.0, last_food_ratio: float = 1.0)` per-colony per-species dataclass stored as `Planet.species_configs: Dict[race_id, ColonySpeciesConfig]`. `to_dict` excludes the transient `last_food_ratio`; `from_dict` always resets it to 1.0. `__post_init__` validates `food_allocation >= 0`. `Planet.get_species_config(race_id)` is a lazy-create-and-store helper.
+- `game/strategy/config/economy_config.py` — `EconomyConfig(population_food_resource, food_per_pop_per_turn)` frozen dataclass. Loader `load_economy_config(path=None)` + module-accessor singleton (`get_default_economy_config` / `set_default_economy_config`) per the CLAUDE.md `get_default_*` pattern. Graceful fallback to defaults on missing/malformed `data/economy.json`.
+- `data/economy.json` — `{"population_food_resource": "organics", "food_per_pop_per_turn": 0.001}`. Modders swap `"organics"` for any `resources.json` id; UI auto-relabels via `ResourceCatalog.get(id).name`.
+- `game/strategy/engine/organics_consumption_engine.py` — `OrganicsConsumptionEngine.process_consumption(empires) -> None`. Drains `needed = pop.count * food_allocation * food_per_pop_per_turn` from each colony's `stockpile[food_resource]`, caps at available, writes `cfg.last_food_ratio = supplied / needed` (or 1.0 for zero-need edge cases).
+- `game/strategy/engine/happiness_engine.py` — `HappinessEngine.process_happiness(empires, galaxy) -> None`. Writes `pop.happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. Unbounded above 1.0 (up to 3x) so over-supply + ideal habitability can boost growth past the neutral point.
+- `game/strategy/engine/population_engine.py` — `PopulationEngine._grow_species` reworked: `growth = (base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` module constant.
+- `game/strategy/interfaces/engines.py` — `IOrganicsConsumptionEngine`, `IHappinessEngine` protocols. Both wired onto `TurnEngineConfig` (fields 14 + 15) and `TurnEngine.__init__` kwargs.
+- `game/ui/screens/food_allocation_editor.py` — `FoodAllocationEditor` pygame_gui window with per-species slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title reads `{resource.name} Allocation — {planet.name}`. Apply callback writes to `planet.get_species_config(race_id).food_allocation`. Module-level pure helpers (`gather_rows`, `resolve_food_resource_name`, `compute_consumption_preview`, `apply_allocations`) are testable without pygame.
+
+**Turn order (post-PROJ-284):** `[100-tick loop] → OrganicsConsumptionEngine.process_consumption → HappinessEngine.process_happiness → PopulationEngine.process_population_growth → QualityEngine → AtmosphereEngine → WaterEngine`.
+
+**Transient-field contract:** `ColonySpeciesConfig.last_food_ratio` is TRANSIENT. Engines MUST overwrite it every turn — `OrganicsConsumptionEngine` writes 1.0 explicitly for zero-population / zero-allocation edge cases so downstream readers (HappinessEngine, PopulationEngine) never see a stale carry-over. Saving it would misrepresent post-load demographic state.
+
+**UI surface:** `FoodAllocationEditor` is opened from `PlanetAbilitiesWindow` via the "Food" button (population-driven — shown when `planet.populations` is non-empty, NOT gated on a facility ability). Routed through `strategy_window_manager._open_planet_editor` → `strategy_event_router._open_food_allocation_editor`. Direct mutation on `ColonySpeciesConfig.food_allocation` (no command class; food allocation is a player-facing dial, not a replayable strategy command).
+
+See [docs/systems/strategy_layer.md §8](systems/strategy_layer.md#8-colony-demographics-loop-proj-284) for the full pipeline, formula derivations, and the "swap the food resource" recipe.
+
 ---
 
 ## Design Principles

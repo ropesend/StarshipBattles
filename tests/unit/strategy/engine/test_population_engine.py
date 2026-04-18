@@ -329,6 +329,127 @@ class TestTurnEngineIntegration:
         mock_pop_engine.process_population_growth.assert_called_once_with(empires)
 
 
+class TestFoodRatioAndDecline:
+    """PROJ-284 Phase 3 Task 3.5: new growth formula uses
+    `base_reproduction_rate * last_food_ratio` plus a starvation decline
+    term when `last_food_ratio < 1.0`.
+
+    These tests seed `ColonySpeciesConfig.last_food_ratio` AND
+    `pop.happiness` explicitly, simulating what TurnEngine does by
+    running OrganicsConsumptionEngine → HappinessEngine before
+    PopulationEngine. The PopulationEngine tests don't call those
+    engines — they just set the fields directly.
+    """
+
+    def test_green_state_positive_growth(self):
+        """Full food + decent habitability + decent happiness -> growth."""
+        engine = PopulationEngine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        planet = make_earth_like_planet(populations=[pop])
+        planet.get_species_config("human").last_food_ratio = 1.0
+        race = make_human_race_config()
+        empire = make_empire(1, [planet], race)
+
+        initial = pop.count
+        engine.process_population_growth([empire])
+        assert pop.count > initial, "Green state should produce growth"
+
+    def test_amber_state_food_ratio_half_halves_effective_rate(self):
+        """food_ratio=0.5 halves effective_r AND adds decline term.
+
+        With pop=1000 and decline_rate=0.02:
+            decline = -0.02 * 1000 * (1 - 0.5) = -10 pop/turn.
+        Effective_r is halved, so logistic output is halved relative to
+        a green-state run with the same happiness/hab. Net result is
+        less growth than green (possibly net decline when growth is small).
+        """
+        engine = PopulationEngine()
+
+        # Green-state baseline
+        green_pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        green_planet = make_earth_like_planet(name="Green", populations=[green_pop])
+        green_planet.get_species_config("human").last_food_ratio = 1.0
+        green_empire = make_empire(1, [green_planet], make_human_race_config(race_id="human"))
+
+        amber_pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        amber_planet = make_earth_like_planet(name="Amber", populations=[amber_pop])
+        amber_planet.get_species_config("human").last_food_ratio = 0.5
+        amber_empire = make_empire(2, [amber_planet], make_human_race_config(race_id="human"))
+
+        engine.process_population_growth([green_empire, amber_empire])
+
+        green_growth = green_pop.count - 1000
+        amber_growth = amber_pop.count - 1000
+        assert amber_growth < green_growth, (
+            "Amber (half food) should grow slower OR decline relative to green"
+        )
+
+    def test_red_state_zero_food_declines_population(self):
+        """food_ratio=0 zeros effective_r; decline term alone applies."""
+        engine = PopulationEngine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        planet = make_earth_like_planet(populations=[pop])
+        planet.get_species_config("human").last_food_ratio = 0.0
+        race = make_human_race_config()
+        empire = make_empire(1, [planet], race)
+
+        engine.process_population_growth([empire])
+
+        # decline_rate=0.02 * 1000 * (1-0) = -20
+        assert pop.count < 1000, "Starvation must shrink population"
+        assert pop.count == pytest.approx(980, abs=2)
+
+    def test_zero_pop_with_starvation_stays_zero(self):
+        """Zero-pop colonies skip growth AND decline — 0 * anything = 0."""
+        engine = PopulationEngine()
+        pop = SpeciesPopulation(race_id="human", count=0, happiness=0.5)
+        planet = make_earth_like_planet(populations=[pop])
+        planet.get_species_config("human").last_food_ratio = 0.0
+        race = make_human_race_config()
+        empire = make_empire(1, [planet], race)
+
+        engine.process_population_growth([empire])
+
+        assert pop.count == 0
+
+    def test_over_capacity_still_declines_logistically(self):
+        """P > K_eff gives a negative logistic term regardless of food."""
+        engine = PopulationEngine()
+        # Small planet so K_eff ~ 1000; pop at 5000 > K.
+        pop = SpeciesPopulation(race_id="human", count=5000, happiness=0.5)
+        planet = make_earth_like_planet(populations=[pop], surface_area=1e10)
+        planet.get_species_config("human").last_food_ratio = 1.0
+        race = make_human_race_config()
+        empire = make_empire(1, [planet], race)
+
+        engine.process_population_growth([empire])
+        # P > K so logistic_factor (1 - P/K) is negative -> negative growth.
+        assert pop.count < 5000
+
+    def test_happiness_clamp_above_one_still_honored(self):
+        """PROJ-284 Phase 3: `HappinessEngine` can push happiness to 3.0
+        on over-supplied ideal planets. The growth formula should use
+        that value directly (no internal re-clamp to [0, 1])."""
+        engine = PopulationEngine()
+        pop_one = SpeciesPopulation(race_id="human", count=1000, happiness=1.0)
+        planet_one = make_earth_like_planet(name="Baseline", populations=[pop_one])
+        planet_one.get_species_config("human").last_food_ratio = 1.0
+        empire_one = make_empire(1, [planet_one], make_human_race_config(race_id="human"))
+
+        pop_three = SpeciesPopulation(race_id="human", count=1000, happiness=3.0)
+        planet_three = make_earth_like_planet(name="OverSupplied", populations=[pop_three])
+        planet_three.get_species_config("human").last_food_ratio = 1.0
+        empire_three = make_empire(2, [planet_three], make_human_race_config(race_id="human"))
+
+        engine.process_population_growth([empire_one, empire_three])
+
+        growth_one = pop_one.count - 1000
+        growth_three = pop_three.count - 1000
+        assert growth_three > growth_one, (
+            "happiness=3 must drive more growth than happiness=1 (no internal clamp)"
+        )
+
+
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 

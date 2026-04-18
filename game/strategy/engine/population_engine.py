@@ -2,10 +2,21 @@
 Population Growth Engine.
 
 PROJ-68 Phase 3: Logistic population growth processing.
+PROJ-284 Phase 3: Reworked formula.
+    growth = (base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness
+           + decline_term
+    decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)  when ratio < 1.0
+                 = 0                                          otherwise
 
-Handles per-turn population growth for all species on all colonies,
-using logistic growth curves influenced by habitability, happiness,
-and race aptitudes.
+The decline term captures starvation: when food supply falls short,
+populations shrink on top of the reduced logistic growth. Separation
+of the two terms means a well-fed over-capacity colony still declines
+logistically (P > K), and a starving below-capacity colony still declines
+via the decline term — no interaction between the two.
+
+Reads `ColonySpeciesConfig.last_food_ratio` (written by
+`OrganicsConsumptionEngine` in Phase 2) and `SpeciesPopulation.happiness`
+(written by `HappinessEngine` in Phase 3).
 """
 from typing import TYPE_CHECKING, Optional
 
@@ -18,18 +29,17 @@ if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
 
 
+# PROJ-284 Phase 3: Starvation decline rate. 0.02 = 2% pop loss per turn
+# at last_food_ratio=0. Tunable in playtesting; keep here (not in
+# economy.json) because it's a balance knob, not a data-driven resource.
+DECLINE_RATE: float = 0.02
+
+
 class PopulationEngine(IPopulationEngine):
     """
     Engine for processing population growth on colonies.
 
-    Uses logistic growth model:
-        growth = r * P * (1 - P/K) * happiness_modifier
-
-    Where:
-        r = base growth rate (from race_config.base_reproduction_rate, PROJ-283)
-        P = current population
-        K = effective carrying capacity (max_population * habitability)
-        happiness_modifier = population happiness (0.0 to 1.0)
+    See module docstring for the reworked PROJ-284 formula.
     """
 
     def _validate_tick_inputs(self, empires) -> None:
@@ -82,14 +92,18 @@ class PopulationEngine(IPopulationEngine):
         empire: 'Empire'
     ) -> None:
         """
-        Apply logistic growth to a single species population.
+        Apply the PROJ-284 growth formula to a single species population.
+
+        growth = (base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness
+               + decline_term(last_food_ratio, P)
 
         Args:
             pop: SpeciesPopulation to grow
             colony: Planet the population lives on
             empire: Empire that owns the colony
         """
-        # Skip if no population (can't grow from nothing)
+        # Skip if no population (can't grow from nothing — decline also
+        # can't shrink zero).
         if pop.count <= 0:
             return
 
@@ -98,34 +112,35 @@ class PopulationEngine(IPopulationEngine):
         if race_config is None:
             return
 
-        # Calculate habitability score
-        habitability = score_planet_for_race(colony, race_config)
+        # PROJ-284: read the consumption-engine-written food ratio.
+        cfg = colony.get_species_config(pop.race_id)
+        last_food_ratio = cfg.last_food_ratio
 
         # Effective carrying capacity = max_population * habitability
-        effective_capacity = int(colony.max_population * habitability)
+        habitability = score_planet_for_race(colony, race_config)
+        effective_capacity = max(1.0, colony.max_population * habitability)
 
-        # Avoid division by zero
-        if effective_capacity <= 0:
-            effective_capacity = 1
+        # PROJ-284 Phase 3: effective reproduction rate scales with food.
+        # Zero food -> zero logistic growth (decline term alone applies).
+        effective_r = race_config.base_reproduction_rate * last_food_ratio
 
-        # PROJ-283 Phase 4: read directly from RaceConfig.base_reproduction_rate
-        # (replaces the old aptitude_population_growth → rate conversion).
-        base_rate = race_config.base_reproduction_rate
+        # PROJ-284: Use happiness as-is (HappinessEngine produces [0, 3]).
+        # Defensive floor at 0 so a pathological pre-turn value can't
+        # flip the sign of a logistic-declining term.
+        happiness = max(0.0, pop.happiness)
 
-        # Logistic growth: r * P * (1 - P/K)
         current_pop = pop.count
         logistic_factor = 1.0 - (current_pop / effective_capacity)
+        logistic_term = effective_r * current_pop * logistic_factor * happiness
 
-        # Happiness modifier (0.0 to 1.0)
-        happiness = max(0.0, min(1.0, pop.happiness))
+        # Starvation decline: linear in pop, scales with unmet demand.
+        decline_term = 0.0
+        if last_food_ratio < 1.0:
+            decline_term = -DECLINE_RATE * current_pop * (1.0 - last_food_ratio)
 
-        # Calculate growth (can be negative if P > K)
-        growth = base_rate * current_pop * logistic_factor * happiness
+        growth = logistic_term + decline_term
 
-        # Apply growth (round to integer)
         new_pop = current_pop + int(growth)
-
-        # Clamp to non-negative
         pop.count = max(0, new_pop)
 
     def _get_race_config(

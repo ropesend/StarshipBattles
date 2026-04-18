@@ -288,6 +288,61 @@ class StrategyEventRouter:
             on_apply_callback=on_apply, race_config=race_config,
         )
 
+    def _open_food_allocation_editor(self, planet) -> None:
+        """Open the PROJ-284 food allocation editor for a colony.
+
+        Unlike the environment editors (atmosphere / gravity / water /
+        radiation), food allocation is a direct mutation on
+        `ColonySpeciesConfig.food_allocation` rather than a
+        strategy-layer command — there's no need for replay / undo and
+        the config lives on the planet, not in a command-sourced
+        register. Direct mutation is also what the PROJ-284 Phase 4
+        checklist explicitly allows ("direct mutation — follow the
+        local pattern").
+        """
+        from game.ui.screens.food_allocation_editor import (
+            FoodAllocationEditor,
+            apply_allocations,
+        )
+        from game.strategy.config.economy_config import get_default_economy_config
+        from game.ui.utils import create_centered_rect
+
+        ui = self.ui
+
+        economy = get_default_economy_config()
+        resource_catalog = None
+        try:
+            from game.core.registry import get_default_registry_provider
+            resource_catalog = get_default_registry_provider().get_resource_catalog()
+        except Exception:
+            pass
+
+        def resolve_race(race_id):
+            # Prefer empire's own race_config when race_ids match.
+            empire_race = self._get_race_config(planet)
+            if empire_race is not None and getattr(empire_race, "race_id", None) == race_id:
+                return empire_race
+            # Fallback: try RaceLibrary (covers multi-species colonies).
+            try:
+                from game.strategy.systems.race_library import RaceLibrary
+                return RaceLibrary().get_race(race_id)
+            except Exception:
+                return None
+
+        def on_apply(planet_id, allocations):
+            apply_allocations(planet, allocations)
+
+        rect = create_centered_rect(640, 420, ui.width, ui.height)
+        FoodAllocationEditor(
+            rect=rect,
+            manager=ui.manager,
+            planet=planet,
+            economy_config=economy,
+            resource_catalog=resource_catalog,
+            race_resolver=resolve_race,
+            on_apply_callback=on_apply,
+        )
+
     def _get_race_config(self, planet):
         """Get the race config for the planet's owning empire."""
         ui = self.ui
