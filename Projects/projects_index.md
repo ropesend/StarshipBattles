@@ -4,6 +4,11 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-282 | FleetBattleSetupScreen MVVM Decomposition | Planning | 2026-04-17 | 2026-04-17 |
+| PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | Planning | 2026-04-17 | 2026-04-17 |
+| PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | Planning | 2026-04-17 | 2026-04-17 |
+| PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | Planning | 2026-04-17 | 2026-04-17 |
+| PROJ-278 | Unified Role Registry (design_role + Combat Lab scenario_role) | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-273 | Shared Ability Stat Key Registry | Planning | 2026-04-16 | 2026-04-16 |
 | PROJ-274 | Unified ShipMaterializer Service | Planning | 2026-04-16 | 2026-04-16 |
 | PROJ-275 | N-Team Combat Support | Planning (BLOCKED on PROJ-273, PROJ-274) | 2026-04-16 | 2026-04-16 |
