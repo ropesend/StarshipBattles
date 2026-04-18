@@ -127,6 +127,10 @@ class TestTemplatePreconditions:
         scenario.variant_initial_hp = 1000.0
         scenario.baseline_damage_dealt = 50.0
         scenario.variant_damage_dealt = 75.0
+        # PROJ-280: ComparisonScenario._template_preconditions now includes
+        # the universal "Simulation Ran" check via _common_preconditions(),
+        # which reads results['ticks_run']. Populate it so the check passes.
+        scenario.results['ticks_run'] = 10
         for key, value in overrides.items():
             setattr(scenario, key, value)
         return scenario

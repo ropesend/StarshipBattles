@@ -257,3 +257,4 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-256 | Centralize All File Paths via Paths Class | 2026-04-08 | PROJ-251-300 |
 | PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | 2026-04-09 | PROJ-251-300 |
 | PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | 2026-04-09 | PROJ-251-300 |
+| PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | 2026-04-09 | PROJ-251-300 |

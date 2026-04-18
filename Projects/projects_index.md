@@ -6,12 +6,12 @@ w# Projects Index
 |----|-------|--------|---------|--------------|
 | PROJ-282 | FleetBattleSetupScreen MVVM Decomposition | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | Planning | 2026-04-17 | 2026-04-17 |
-| PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | Planning | 2026-04-17 | 2026-04-17 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | Archived | 2026-04-17 | 2026-04-18 |
 | PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | Archived | 2026-04-17 | 2026-04-18 |
 | PROJ-277 | First-Class A/B Comparison Runner | Archived | 2026-04-16 | 2026-04-18 |
 | PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | Archived | 2026-04-16 | 2026-04-18 |
@@ -31,7 +31,6 @@ w# Projects Index
 | PROJ-262 | Delete Dead and Reimplemented Tests | Archived | 2026-04-09 | 2026-04-10 |
 | PROJ-261 | Fix Test Suite Production Bugs | Archived | 2026-04-09 | 2026-04-10 |
 | PROJ-260 | Ship Further Decomposition - LayerManager and ResourceManager Extraction | Archived | 2026-04-08 | 2026-04-09 |
-| PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | Archived | 2026-04-08 | 2026-04-09 |
 
 ---
 

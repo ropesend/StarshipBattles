@@ -142,15 +142,13 @@ class StaticTargetScenario(TestScenario):
     skip_test: bool = False  # If True, skip this test
     skip_reason: str = ""  # Reason for skipping
 
-    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
-        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
+    def _snapshot_initial_state(self, ships_by_role, initial_state=None):
+        """PROJ-280: role → attribute mapping + initial HP snapshot.
 
-        Used by `combat_lab/runner.py::_run_scenario_via_battle_runner` —
-        replaces the side-effect wiring previously done inside `setup()`.
-        Mirrors `setup()`'s tail: cache attacker/target refs, store
-        `initial_hp`, and apply movement policies.
+        Extracted from wire_ships so templates share a single hook for
+        the universal snapshot phase. `wire_ships` still owns the
+        template-specific policy assignment.
         """
-        _ = engine
         self.attacker = ships_by_role["attacker"]
         self.target = ships_by_role["target"]
         # Prefer pre-start snapshot so `initial_hp` matches the
@@ -158,6 +156,15 @@ class StaticTargetScenario(TestScenario):
         self.initial_hp = _pre_start_hp(
             initial_state, "target", fallback=self.target.hp
         )
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
+
+        Used by `combat_lab/runner.py::_run_scenario_via_battle_runner` —
+        replaces the side-effect wiring previously done inside `setup()`.
+        """
+        _ = engine
+        self._snapshot_initial_state(ships_by_role, initial_state)
         if self.force_fire:
             self.attacker.movement_policy = "test_stationary"
         else:
@@ -206,22 +213,13 @@ class StaticTargetScenario(TestScenario):
         self._collect_extra_results(outcome, telemetry)
 
     def _template_preconditions(self):
-        """
-        Return automatic precondition checks based on template config.
+        """Return automatic precondition checks for StaticTargetScenario.
 
-        StaticTargetScenario checks:
-        - Simulation ran (ticks > 0)
-        - Weapon fired if force_fire was set
+        PROJ-280: delegates to `_common_preconditions()` since
+        StaticTargetScenario has no template-specific preconditions
+        beyond the universal "Simulation Ran" check.
         """
-        from combat_lab.scenarios.validation import check_true
-        checks = []
-        ticks = self.results.get('ticks_run', 0)
-        checks.append(check_true(
-            "Simulation Ran",
-            ticks > 0,
-            actual=ticks,
-        ))
-        return checks
+        return self._common_preconditions()
 
 # ============================================================================
 # DUEL SCENARIO TEMPLATE
@@ -295,9 +293,8 @@ class DuelScenario(TestScenario):
     auto_target: bool = True
     force_fire: bool = True
 
-    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
-        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
-        _ = engine
+    def _snapshot_initial_state(self, ships_by_role, initial_state=None):
+        """PROJ-280: role → attribute + initial HP snapshot for DuelScenario."""
         self.ship1 = ships_by_role["ship1"]
         self.ship2 = ships_by_role["ship2"]
         self.ship1_initial_hp = _pre_start_hp(
@@ -306,6 +303,11 @@ class DuelScenario(TestScenario):
         self.ship2_initial_hp = _pre_start_hp(
             initial_state, "ship2", fallback=self.ship2.hp
         )
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
+        _ = engine
+        self._snapshot_initial_state(ships_by_role, initial_state)
         if self.force_fire:
             self.ship1.movement_policy = "test_stationary"
             self.ship2.movement_policy = "test_stationary"
@@ -362,12 +364,11 @@ class DuelScenario(TestScenario):
         self.results['winner'] = self.winner
 
     def _template_preconditions(self):
-        """Return automatic precondition checks for DuelScenario."""
-        from combat_lab.scenarios.validation import check_true
-        checks = []
-        ticks = self.results.get('ticks_run', 0)
-        checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
-        return checks
+        """Return automatic precondition checks for DuelScenario.
+
+        PROJ-280: delegates to `_common_preconditions()`.
+        """
+        return self._common_preconditions()
 
 # ============================================================================
 # PROPULSION SCENARIO TEMPLATE
@@ -438,17 +439,22 @@ class PropulsionScenario(TestScenario):
     turn_left: bool = False
     turn_right: bool = False
 
-    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
-        """Wire materialized Ship onto the scenario (PROJ-269 Task 6.7a).
-
-        Mirrors the tail of `setup()`: cache start pose, compute physics
-        expectations, apply movement policy based on thrust/turn flags.
-        """
-        _ = engine, initial_state
+    def _snapshot_initial_state(self, ships_by_role, initial_state=None):
+        """PROJ-280: role → attribute + start-pose snapshot for PropulsionScenario."""
+        _ = initial_state
         self.ship = ships_by_role["ship"]
         self.start_position = self.ship.position.copy()
         self.start_velocity = self.ship.velocity.copy()
         self.start_angle = self.ship.angle
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ship onto the scenario (PROJ-269 Task 6.7a).
+
+        Cache start pose (via `_snapshot_initial_state`), compute physics
+        expectations, apply movement policy based on thrust/turn flags.
+        """
+        _ = engine
+        self._snapshot_initial_state(ships_by_role, initial_state)
 
         from combat_lab.scenarios.propulsion_scenarios import K_SPEED, K_THRUST
         self.expected_max_speed = (self.ship.total_thrust * K_SPEED) / self.ship.mass
@@ -522,18 +528,12 @@ class PropulsionScenario(TestScenario):
         Return automatic precondition checks based on template config.
 
         PropulsionScenario checks:
-        - Simulation ran (ticks > 0)
+        - Simulation ran (ticks > 0) — via `_common_preconditions` (PROJ-280)
         - Ship moved if thrust was commanded
         - Angle changed if turn was commanded
         """
         from combat_lab.scenarios.validation import check_true
-        checks = []
-        ticks = self.results.get('ticks_run', 0)
-        checks.append(check_true(
-            "Simulation Ran",
-            ticks > 0,
-            actual=ticks,
-        ))
+        checks = self._common_preconditions()
         if self.thrust_forward or self.thrust_backward:
             checks.append(check_true(
                 "Ship Moved",
@@ -638,9 +638,8 @@ class ResourceScenario(TestScenario):
     final_value: float = 0
     value_consumed: float = 0
 
-    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
-        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
-        _ = engine
+    def _snapshot_initial_state(self, ships_by_role, initial_state=None):
+        """PROJ-280: role → attribute + initial resource/HP snapshot for ResourceScenario."""
         self.ship = ships_by_role["ship"]
         # Always prefer the pre-engine-start snapshot for initial_value —
         # `engine.start()` runs an initial component-update cycle that
@@ -656,6 +655,11 @@ class ResourceScenario(TestScenario):
             self.initial_hp = _pre_start_hp(
                 initial_state, "target", fallback=self.target.hp
             )
+
+    def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+        """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a)."""
+        _ = engine
+        self._snapshot_initial_state(ships_by_role, initial_state)
 
         if self.thrust_forward and self.force_fire:
             self.ship.movement_policy = "test_straight_line"
@@ -713,21 +717,11 @@ class ResourceScenario(TestScenario):
         self._collect_extra_results(outcome, telemetry)
 
     def _template_preconditions(self):
-        """
-        Return automatic precondition checks for ResourceScenario.
+        """Return automatic precondition checks for ResourceScenario.
 
-        Checks:
-        - Simulation ran (ticks > 0)
+        PROJ-280: delegates to `_common_preconditions()`.
         """
-        from combat_lab.scenarios.validation import check_true
-        checks = []
-        ticks = self.results.get('ticks_run', 0)
-        checks.append(check_true(
-            "Simulation Ran",
-            ticks > 0,
-            actual=ticks,
-        ))
-        return checks
+        return self._common_preconditions()
 
 # ============================================================================
 # COMPARISON SCENARIO TEMPLATE
@@ -1108,6 +1102,24 @@ class ComparisonScenario(TestScenario):
         self._effective_seed = spec.seed
         self._run_baseline_battle()
 
+    def _snapshot_initial_state(self, ships_by_role, initial_state=None):
+        """PROJ-280: resolve A/B roles, cache refs, snapshot initial HP.
+
+        ComparisonScenario routes ships through `baseline_*` roles in
+        visual-baseline mode and `variant_*` roles otherwise. The snapshot
+        hook hides that routing from `wire_ships`.
+        """
+        if self._visual_baseline:
+            role_attacker, role_target = "baseline_attacker", "baseline_target"
+        else:
+            role_attacker, role_target = "variant_attacker", "variant_target"
+
+        self.attacker = ships_by_role[role_attacker]
+        self.target = ships_by_role[role_target]
+        self.initial_hp = _pre_start_hp(
+            initial_state, role_target, fallback=self.target.hp
+        )
+
     def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
         """Wire materialized Ships onto the scenario (PROJ-269 Task 6.7a).
 
@@ -1115,19 +1127,7 @@ class ComparisonScenario(TestScenario):
         battle in normal mode — this method handles variant wiring only
         (or baseline wiring in visual-baseline mode).
         """
-        if self._visual_baseline:
-            role_attacker, role_target = "baseline_attacker", "baseline_target"
-        else:
-            role_attacker, role_target = "variant_attacker", "variant_target"
-
-        attacker = ships_by_role[role_attacker]
-        target = ships_by_role[role_target]
-
-        self.attacker = attacker
-        self.target = target
-        self.initial_hp = _pre_start_hp(
-            initial_state, role_target, fallback=self.target.hp
-        )
+        self._snapshot_initial_state(ships_by_role, initial_state)
 
         if self.force_fire:
             self.attacker.movement_policy = "test_stationary"
@@ -1284,6 +1284,7 @@ class ComparisonScenario(TestScenario):
         Return automatic precondition checks for ComparisonScenario.
 
         Validates setup correctness:
+        - Simulation ran (ticks > 0) — via `_common_preconditions` (PROJ-280)
         - Both battles ran the expected number of ticks
         - Both targets were loaded (initial HP > 0)
         - Baseline and variant produced different results (when configs differ)
@@ -1291,7 +1292,7 @@ class ComparisonScenario(TestScenario):
         In Visual Baseline mode, only checks baseline.
         """
         from combat_lab.scenarios.validation import check_exact, check_true
-        checks = []
+        checks = self._common_preconditions()
 
         # Verify baseline battle ran full duration
         checks.append(check_exact(

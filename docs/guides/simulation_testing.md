@@ -128,6 +128,87 @@ The Combat Lab UI supports ability-specific test categories:
 
 ---
 
+## 2.4 Template Authoring Rules (PROJ-280)
+
+The 5 canonical templates in [combat_lab/scenarios/templates.py](../../combat_lab/scenarios/templates.py)
+(`StaticTargetScenario`, `DuelScenario`, `PropulsionScenario`, `ResourceScenario`, `ComparisonScenario`)
+share two extraction points enforced by the `TestScenario` base class.
+Adding a NEW template requires understanding both.
+
+### 2.4.1 `_template_preconditions` must include `_common_preconditions`
+
+Every template's `_template_preconditions()` MUST start by including
+`self._common_preconditions()` — either via `super()._template_preconditions()`
+or by calling `self._common_preconditions()` directly. The common check is
+the universal "Simulation Ran" (ticks > 0) assertion. Skipping it silently
+masks tests that never actually executed the simulation — a subtle bug
+the framework now refuses to allow.
+
+**Enforcement mechanism (runtime sentinel):**
+`_common_preconditions()` sets `self._preconditions_base_called = True` as
+a side effect. `_run_validation()` resets the flag before `validate()`
+runs and re-checks it after. If a subclass has overridden
+`_template_preconditions` but the sentinel never flipped, the framework
+raises `RuntimeError` with a clear remediation message. Subclasses that
+don't override `_template_preconditions` inherit the base default (which
+IS `self._common_preconditions()`) automatically — no enforcement needed.
+
+**Canonical pattern** (matches 4 of the 5 templates):
+```python
+def _template_preconditions(self):
+    """Simple template — no template-specific checks beyond the universal one."""
+    return self._common_preconditions()
+```
+
+**Extension pattern** (for `PropulsionScenario` / `ComparisonScenario`):
+```python
+def _template_preconditions(self):
+    """Template with extra template-specific checks."""
+    checks = self._common_preconditions()  # MUST call this — raises otherwise
+    if self.thrust_forward:
+        checks.append(check_true("Ship Moved", ...))
+    return checks
+```
+
+### 2.4.2 `wire_ships` should use `_snapshot_initial_state`
+
+Every template's `wire_ships()` SHOULD start by calling
+`self._snapshot_initial_state(ships_by_role, initial_state)` to handle
+the role-caching + initial-HP/resource snapshot boilerplate. The template
+method then owns the template-specific policy assignment and any
+post-wire hooks (e.g. `ComparisonScenario.configure_variant`).
+
+This separation keeps `wire_ships()` focused on "what policy applies"
+rather than the mechanical "which ships go where + what was their HP"
+part. Future templates that follow the pattern get consistent structure;
+templates that need non-canonical wiring (e.g. fleet scenarios'
+`ExternalBattleConditionApplied`) can skip the helper — it's opt-in.
+
+**Canonical pattern** (all 5 templates follow this shape):
+```python
+def _snapshot_initial_state(self, ships_by_role, initial_state=None):
+    """Template-specific role → attribute mapping + initial-state snapshot."""
+    self.attacker = ships_by_role["attacker"]
+    self.target = ships_by_role["target"]
+    self.initial_hp = _pre_start_hp(initial_state, "target", fallback=self.target.hp)
+
+def wire_ships(self, ships_by_role, *, engine=None, initial_state=None):
+    """Template-specific policy assignment + post-wire hooks."""
+    self._snapshot_initial_state(ships_by_role, initial_state)
+    # ... template-specific movement policy logic ...
+```
+
+### 2.4.3 Anti-rebloat checklist for new templates
+
+When you add a new template:
+- [ ] Define `_snapshot_initial_state` for role caching — do NOT inline the boilerplate in `wire_ships`
+- [ ] Either inherit the default `_template_preconditions` (fine for simple templates) OR override it — in which case it MUST call `_common_preconditions()` (the sentinel enforces this)
+- [ ] Do NOT duplicate the "Simulation Ran" check — `_common_preconditions()` owns it
+- [ ] If your preconditions need `results['ticks_run']`, ensure `collect_results` populates it
+- [ ] Run the Combat Lab simulation suite (`python -m combat_lab.run_tests --fast`) to catch any sentinel regression on your template
+
+---
+
 ## 2.5 Scenario Role Labels (PROJ-278 Phases 3 + 4)
 
 Combat Lab scenarios wire ships into their test scaffold via a string-keyed

@@ -537,6 +537,13 @@ class TestScenario:
         state (hp, resources), and assign movement policies. The base
         implementation is a no-op for non-template scenarios.
 
+        **PROJ-280 authoring rule:** template overrides should call
+        `self._snapshot_initial_state(ships_by_role, initial_state)` at
+        the top to handle the role-caching + initial-HP/resource snapshot
+        boilerplate, then perform their template-specific policy
+        assignment + hooks. See `StaticTargetScenario.wire_ships` for the
+        canonical pattern.
+
         Args:
             ships_by_role: Mapping of role name (e.g. "attacker",
                 "target", "ship1", "ship") to materialized Ship.
@@ -549,6 +556,67 @@ class TestScenario:
                 before `engine.start()` has drained any.
         """
         _ = ships_by_role, engine, initial_state
+
+    # ------------------------------------------------------------------
+    # PROJ-280 — Shared template lifecycle helpers + enforcement
+    # ------------------------------------------------------------------
+
+    def _common_preconditions(self) -> 'List[Check]':
+        """Universal precondition checks every template must run (PROJ-280).
+
+        Currently a single check: the simulation ran for at least one
+        tick. Templates extend by calling this from
+        `_template_preconditions()` and appending their own checks.
+
+        Sets `self._preconditions_base_called = True` as a sentinel that
+        `_run_validation` reads to enforce the authoring rule "subclass
+        overrides of `_template_preconditions` MUST call
+        `super()._template_preconditions()` (which calls this) or
+        `self._common_preconditions()` directly."
+        """
+        from combat_lab.scenarios.validation import check_true
+
+        self._preconditions_base_called = True
+        checks = []
+        ticks = self.results.get('ticks_run', 0)
+        checks.append(check_true(
+            "Simulation Ran",
+            ticks > 0,
+            actual=ticks,
+        ))
+        return checks
+
+    def _template_preconditions(self) -> 'List[Check]':
+        """Template-level precondition checks (PROJ-280).
+
+        Default: returns `_common_preconditions()`. Templates that need
+        additional template-specific checks (e.g. `PropulsionScenario`'s
+        movement/rotation validation) override this AND must include the
+        common checks via `super()._template_preconditions()` or
+        `self._common_preconditions()` — otherwise the
+        `_run_validation` sentinel raises a loud `RuntimeError`.
+        """
+        return self._common_preconditions()
+
+    def _snapshot_initial_state(
+        self, ships_by_role: dict, initial_state: 'Optional[dict]' = None,
+    ) -> None:
+        """Snapshot pre-engine-start state into scenario attributes (PROJ-280).
+
+        Default: no-op. Each template overrides this to define its
+        role-to-attribute mapping (`self.attacker = ships_by_role["attacker"]`,
+        `self.initial_hp = _pre_start_hp(initial_state, "target", ...)`,
+        etc.) — extracts the boilerplate snapshot phase out of
+        `wire_ships()` so the override only contains the template-specific
+        policy assignment.
+
+        Templates' `wire_ships(...)` override should call this at the top
+        before doing template-specific policy work. Concrete scenarios
+        that override `wire_ships` in non-canonical ways
+        (`ExternalBattleConditionApplied`, `PropThrustMassRatioScenario`)
+        may skip the helper — it is opt-in.
+        """
+        _ = ships_by_role, initial_state
 
     def _collect_extra_results(self, outcome, telemetry=None) -> None:
         """Optional hook for templates to attach scenario-specific metrics.
@@ -566,11 +634,34 @@ class TestScenario:
         2. Calls validate(outcome, telemetry) to get all Check objects.
         3. Builds a ValidationReport that determines pass/fail.
 
-        Returns:
-            ValidationReport with the authoritative pass/fail result.
+        PROJ-280 enforcement: if the scenario's class overrides
+        `_template_preconditions`, the override MUST call
+        `super()._template_preconditions()` or `self._common_preconditions()` —
+        otherwise the universal "Simulation Ran" check is silently skipped.
+        We detect missing super-call via a sentinel flag set inside
+        `_common_preconditions()` and raise `RuntimeError` if the override
+        ran but the sentinel never flipped. Subclasses that don't override
+        `_template_preconditions` get the base behavior automatically and
+        the sentinel check is skipped.
         """
         self.collect_results(outcome, telemetry)
+
+        # PROJ-280 sentinel: reset before validate(), check after.
+        overrides_preconditions = '_template_preconditions' in self.__class__.__dict__
+        if overrides_preconditions:
+            self._preconditions_base_called = False
+
         checks = self.validate(outcome, telemetry)
+
+        if overrides_preconditions and not getattr(
+            self, '_preconditions_base_called', False
+        ):
+            raise RuntimeError(
+                f"{self.__class__.__name__}._template_preconditions() must "
+                f"call super()._template_preconditions() or "
+                f"self._common_preconditions() (PROJ-280). The universal "
+                f"'Simulation Ran' check was silently skipped."
+            )
         report = ValidationReport(checks=checks)
         self.results['validation'] = report.to_dict()
 
