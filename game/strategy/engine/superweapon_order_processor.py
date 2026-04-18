@@ -18,7 +18,7 @@ from game.strategy.data.order_types import OrderType
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
+from game.strategy.data.galaxy import Galaxy, WarpPoint
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
 from game.strategy.data.pathfinding import get_system_at_hex
@@ -160,13 +160,16 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No target planet")
 
-        # Check for geologic stabilizer protection (replaces old shield_active check)
-        if self._is_planet_stabilized(target_planet, galaxy, empires):
-            logger.info(f"Planet {target_planet.name} protected by geologic stabilizer, canceling IMPLODE_PLANET")
+        # Check for stabilizer protection via StabilizerRegistry.
+        blocker = self._check_blocking_stabilizer(
+            OrderType.IMPLODE_PLANET, target_planet, galaxy, empires, component_registry
+        )
+        if blocker is not None:
+            logger.info(f"Planet {target_planet.name} protected by {blocker.ability_name}, canceling IMPLODE_PLANET")
             fleet.pop_order()
             return SuperweaponResult(
                 success=False,
-                message=f"Planet {target_planet.name} is protected by a geologic stabilizer"
+                message=f"Planet {target_planet.name} is protected by a {blocker.ability_name}"
             )
 
         # Find ship with DestroyPlanet ability
@@ -239,34 +242,32 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
 
-        # Check for stellar stabilizer protection
-        if self._is_system_stellar_stabilized(fleet.location, galaxy, empires):
-            logger.info(f"System {system.name} protected by stellar stabilizer, canceling STELLERATE_STAR")
+        # Check for stabilizer protection via StabilizerRegistry.
+        blocker = self._check_blocking_stabilizer(
+            OrderType.STELLERATE_STAR,
+            self._get_reference_planet(fleet.location, galaxy),
+            galaxy, empires, component_registry,
+        )
+        if blocker is not None:
+            logger.info(f"System {system.name} protected by {blocker.ability_name}, canceling STELLERATE_STAR")
             fleet.pop_order()
             return SuperweaponResult(
                 success=False,
-                message=f"System {system.name} is protected by a stellar stabilizer"
+                message=f"System {system.name} is protected by a {blocker.ability_name}"
             )
 
         system_name = system.name
 
-        # 1. Remove all planets from system and galaxy
-        for planet in list(system.planets):
-            # Remove from empire colonies if owned
-            if planet.owner_id is not None:
-                for emp in empires:
-                    if planet in emp.colonies:
-                        emp.colonies.remove(planet)
-            galaxy.unregister_planet(planet)
-
-        # 2. Collect and destroy ALL fleets in the system (including actor)
-        all_fleets_in_system = galaxy.get_all_fleets_in_system(system, empires)
-        for (owner_empire, victim_fleet) in all_fleets_in_system:
-            # PROJ-219: Auto-unregisters from galaxy via empire._galaxy
-            owner_empire.remove_fleet(victim_fleet, event_bus=self._event_bus)
-
-        # 3. Remove all stars (but NOT warp points)
-        system.stars = []
+        # PROJ-277: Use SystemDestroyer (collect-then-mutate) so every fleet
+        # within the 50-hex system radius is destroyed — not just fleets
+        # at entity hexes, and not dependent on planets still being in
+        # `system.planets` at fleet-collection time.
+        from game.strategy.services.system_destroyer import (
+            collect_system_contents,
+            destroy_system,
+        )
+        plan = collect_system_contents(system, galaxy, empires)
+        destroy_system(plan, galaxy, empires, event_bus=self._event_bus)
 
         logger.info(f"Star system {system_name} stellerated by fleet {fleet.id}")
         if self._event_bus:
@@ -328,13 +329,18 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
 
-        # Check for warp field stabilizer protection
-        if self._is_system_warp_stabilized(fleet.location, galaxy, empires or []):
-            logger.info(f"System {current_system.name} protected by warp field stabilizer, canceling OPEN_WARP_POINT")
+        # Check for stabilizer protection via StabilizerRegistry.
+        blocker = self._check_blocking_stabilizer(
+            OrderType.OPEN_WARP_POINT,
+            self._get_reference_planet(fleet.location, galaxy),
+            galaxy, empires or [], component_registry,
+        )
+        if blocker is not None:
+            logger.info(f"System {current_system.name} protected by {blocker.ability_name}, canceling OPEN_WARP_POINT")
             fleet.pop_order()
             return SuperweaponResult(
                 success=False,
-                message=f"System {current_system.name} is protected by a warp field stabilizer"
+                message=f"System {current_system.name} is protected by a {blocker.ability_name}"
             )
 
         # Find target system
@@ -439,13 +445,18 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
 
-        # Check for warp field stabilizer protection
-        if self._is_system_warp_stabilized(fleet.location, galaxy, empires or []):
-            logger.info(f"System {current_system.name} protected by warp field stabilizer, canceling CLOSE_WARP_POINT")
+        # Check for stabilizer protection via StabilizerRegistry.
+        blocker = self._check_blocking_stabilizer(
+            OrderType.CLOSE_WARP_POINT,
+            self._get_reference_planet(fleet.location, galaxy),
+            galaxy, empires or [], component_registry,
+        )
+        if blocker is not None:
+            logger.info(f"System {current_system.name} protected by {blocker.ability_name}, canceling CLOSE_WARP_POINT")
             fleet.pop_order()
             return SuperweaponResult(
                 success=False,
-                message=f"System {current_system.name} is protected by a warp field stabilizer"
+                message=f"System {current_system.name} is protected by a {blocker.ability_name}"
             )
 
         # Validate fleet is at the exact warp point sector (hex), not just the right system
@@ -527,13 +538,18 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="System has no stars")
 
-        # Check for stellar stabilizer protection
-        if self._is_system_stellar_stabilized(fleet.location, galaxy, empires):
-            logger.info(f"System {system.name} protected by stellar stabilizer, canceling CREATE_DYSON_SPHERE")
+        # Check for stabilizer protection via StabilizerRegistry.
+        blocker = self._check_blocking_stabilizer(
+            OrderType.CREATE_DYSON_SPHERE,
+            self._get_reference_planet(fleet.location, galaxy),
+            galaxy, empires, component_registry,
+        )
+        if blocker is not None:
+            logger.info(f"System {system.name} protected by {blocker.ability_name}, canceling CREATE_DYSON_SPHERE")
             fleet.pop_order()
             return SuperweaponResult(
                 success=False,
-                message=f"System {system.name} is protected by a stellar stabilizer"
+                message=f"System {system.name} is protected by a {blocker.ability_name}"
             )
 
         # Get primary star location for distance calculations
@@ -710,82 +726,37 @@ class SuperweaponOrderProcessor:
             message=f"{len(ships_to_remove)} ships self-destructed"
         )
 
-    def _is_stabilized(
-        self, ability_name: str, scopes: List[str],
-        reference_entity, galaxy, empires: List['Empire']
-    ) -> bool:
-        """Check if a location is protected by an active stabilizer ability.
+    def _check_blocking_stabilizer(
+        self,
+        order_type: OrderType,
+        reference_planet,
+        galaxy,
+        empires: List['Empire'],
+        component_registry,
+    ):
+        """Delegate to StabilizerRegistry for order-blocking lookup.
 
-        PROJ-239: Unified from three near-identical methods (_is_planet_stabilized,
-        _is_system_stellar_stabilized, _is_system_warp_stabilized).
+        Centralizes the "what blocks what" mapping in
+        `game/strategy/services/stabilizer_registry.py`. Handlers just pass
+        their order type + a reference planet (for spatial scope resolution)
+        and receive the blocking StabilizerSpec or None.
 
-        Scans for the named ability across the given scopes from any empire's
-        facilities. A stabilizer on any empire's colony can protect any entity
-        in its scope.
-
-        Args:
-            ability_name: Stabilizer ability to scan for (e.g., "GeologicStabilizer").
-            scopes: List of scopes to check (e.g., ["planet", "sector", "system"]).
-            reference_entity: Planet or entity for spatial scope resolution.
-            galaxy: Galaxy for spatial queries.
-            empires: All empires to scan for stabilizers.
-
-        Returns:
-            True if any active stabilizer of the given type protects the location.
+        `component_registry` MUST be threaded through — facility design_data
+        typically stores bare component ids, so ability data is looked up
+        via the registry. Omitting it silently hides every stabilizer
+        (PROJ-277).
         """
-        from game.strategy.services.strategic_ability_scanner import find_abilities_in_scope
-
-        for empire in empires:
-            for scope in scopes:
-                stabilizers = find_abilities_in_scope(
-                    ability_name, reference_entity, galaxy, empire, scope,
-                    require_active=True
-                )
-                if stabilizers:
-                    return True
-        return False
-
-    def _is_planet_stabilized(
-        self, target_planet, galaxy, empires: List['Empire']
-    ) -> bool:
-        """Check if a planet is protected by any active GeologicStabilizer."""
-        return self._is_stabilized(
-            "GeologicStabilizer", ["planet", "sector", "system"],
-            target_planet, galaxy, empires
+        from game.strategy.services.stabilizer_registry import find_blocking_stabilizer
+        return find_blocking_stabilizer(
+            order_type, reference_planet, galaxy, empires, component_registry
         )
 
-    def _is_system_stellar_stabilized(
-        self, fleet_location, galaxy, empires: List['Empire']
-    ) -> bool:
-        """Check if a system is protected by any active StellarStabilizer."""
-        ref_planet = self._get_reference_planet(fleet_location, galaxy, empires)
-        if ref_planet is None:
-            return False
-        return self._is_stabilized(
-            "StellarStabilizer", ["sector", "system"],
-            ref_planet, galaxy, empires
-        )
+    def _get_reference_planet(self, fleet_location, galaxy):
+        """Find any planet in the system at fleet_location — needed so the
+        strategic ability scanner can resolve system/sector scope from a
+        concrete planet reference.
 
-    def _is_system_warp_stabilized(
-        self, fleet_location, galaxy, empires: List['Empire']
-    ) -> bool:
-        """Check if a system is protected by any active WarpFieldStabilizer."""
-        ref_planet = self._get_reference_planet(fleet_location, galaxy, empires)
-        if ref_planet is None:
-            return False
-        return self._is_stabilized(
-            "WarpFieldStabilizer", ["sector", "system"],
-            ref_planet, galaxy, empires
-        )
-
-    def _get_reference_planet(self, fleet_location, galaxy, empires):
-        """Find any planet in the system at fleet_location to use as reference for scanning.
-
-        The strategic ability scanner needs a planet as the target for scope resolution.
-        We find any planet in the system to use as a reference point.
-
-        Returns:
-            A planet in the system, or None if no planets exist.
+        Returns the first planet in the system, or None if there are none.
         """
         system = get_system_at_hex(galaxy, fleet_location) if galaxy else None
         if system is None:
@@ -794,5 +765,5 @@ class SuperweaponOrderProcessor:
         if not isinstance(planets, list):
             return None
         for planet in planets:
-            return planet  # Return first planet found
+            return planet
         return None

@@ -726,9 +726,41 @@ cmd = CargoTransferService.build_transfer_command(
 | `system` | All empire-owned planets in the target's **star system** (via `galaxy.get_system_of_planet`) |
 | `empire` | All empire colonies |
 
-**Activation filtering (`require_active`):** When `True`, only returns abilities from components whose `ComponentActivationState.phase` is `ACTIVE`. Used by `SuperweaponOrderProcessor._is_stabilized()` to ensure stabilizers must be manually activated before they provide protection. Always-on abilities (harvest boosters, build rate boosters) use the default `False`.
+**Activation filtering (`require_active`):** When `True`, only returns abilities from components whose `ComponentActivationState.phase` is `ACTIVE`. Used by `StabilizerRegistry.find_blocking_stabilizer()` to ensure stabilizers must be manually activated before they provide protection. Always-on abilities (harvest boosters, build rate boosters) use the default `False`.
 
-**Used by:** `SuperweaponOrderProcessor` (stabilizer protection checks), `HarvestingEngine` (harvest rate boosters), `build_queue_source` (build rate boosters), `SystemEffectsCollector` (aggregation only).
+**Registry parameter is critical** — facility `design_data` typically stores bare component IDs
+(`{"id": "stellar_stabilizer"}`) and the ability data is looked up via the component registry.
+Callers that omit the `registries` argument will silently get no abilities back, even from ACTIVE
+stabilizers. The scanner's `_extract_ability` delegates to
+`component_inspector.extract_abilities_from_component`, which accepts either a `GameRegistries`
+or a plain components dict. PROJ-277 regression.
+
+**Used by:** `StabilizerRegistry` (superweapon blocking), `HarvestingEngine` (harvest rate boosters), `build_queue_source` (build rate boosters), `SystemEffectsCollector` (system/sector effect display).
+
+### StabilizerRegistry (`game/strategy/services/stabilizer_registry.py`)
+
+Data-driven "which stabilizer blocks which superweapon" mapping. `STABILIZERS` is a tuple of
+`StabilizerSpec(ability_name, scopes, blocks)` — one entry per stabilizer ability.
+`find_blocking_stabilizer(order_type, reference_planet, galaxy, empires, component_registry)`
+returns the first matching `StabilizerSpec` with an ACTIVE instance in scope, or `None`.
+
+Adding a new stabilizer or extending an existing one to cover a new superweapon is a single
+edit to `STABILIZERS`. Superweapon handlers call
+`self._check_blocking_stabilizer(order_type, ref_planet, galaxy, empires, component_registry)`
+which delegates to this registry.
+
+### SystemDestroyer (`game/strategy/services/system_destroyer.py`)
+
+Centralizes the tear-down of an entire star system for superweapons like `STELLERATE_STAR`.
+Uses a **collect-then-mutate** protocol: `collect_system_contents(system, galaxy, empires)`
+returns an immutable `SystemDestructionPlan` listing every planet, star, and fleet to
+remove, then `destroy_system(plan, galaxy, empires)` applies the removals.
+
+Fleet inclusion is by hex distance (any fleet within `SYSTEM_RADIUS_HEXES = 50` of the
+system's `global_location`), matching `pathfinding.get_system_at_hex(radius=50)`. This is
+broader than `GalaxySpatialIndex.get_all_fleets_in_system`, which only checked hexes with a
+placed entity — the collect-then-mutate protocol also makes the pre-PROJ-277 ordering bug
+(planets unregistered before fleet scan) structurally impossible.
 
 ---
 

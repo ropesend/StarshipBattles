@@ -277,7 +277,10 @@ class TestProcessStellerateStar:
     def test_all_fleets_destroyed_including_actor(
         self, mock_fleet, mock_system, component_registry
     ):
-        """All fleets in system (including the acting fleet) should be destroyed."""
+        """All fleets within the 50-hex system radius (including the acting
+        fleet) should be destroyed. Post-PROJ-277: SystemDestroyer iterates
+        `empire.fleets` directly and filters by hex distance — no longer
+        relies on `galaxy.get_all_fleets_in_system`."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         ship = MagicMock()
@@ -286,10 +289,11 @@ class TestProcessStellerateStar:
         mock_fleet.ships = [ship]
         mock_fleet.location = mock_system.global_location
 
-        # Another fleet in the system
+        # Another fleet in the system (at system center, distance 0).
         other_fleet = MagicMock(spec=Fleet)
         other_fleet.id = 2
         other_fleet.location = mock_system.global_location
+        other_fleet.ships = []
 
         order = FleetOrder(OrderType.STELLERATE_STAR)
         mock_fleet.get_current_order.return_value = order
@@ -300,14 +304,13 @@ class TestProcessStellerateStar:
 
         empire1 = MagicMock()
         empire1.id = 0
+        empire1.colonies = []
+        empire1.fleets = [mock_fleet]
+
         empire2 = MagicMock()
         empire2.id = 1
-
-        # Both fleets in system
-        mock_galaxy.get_all_fleets_in_system.return_value = [
-            (empire1, mock_fleet),
-            (empire2, other_fleet)
-        ]
+        empire2.colonies = []
+        empire2.fleets = [other_fleet]
 
         processor = SuperweaponOrderProcessor()
         empires = [empire1, empire2]
@@ -317,7 +320,7 @@ class TestProcessStellerateStar:
             mock_fleet, empire1, mock_galaxy, empires, component_registry
         )
 
-        # Assert - both empires should have remove_fleet called
+        # Assert - both empires should have remove_fleet called on their fleet.
         empire1.remove_fleet.assert_called_with(mock_fleet, event_bus=None)
         empire2.remove_fleet.assert_called_with(other_fleet, event_bus=None)
 
