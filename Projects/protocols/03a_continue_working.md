@@ -29,7 +29,37 @@ Run full suite (no --testmon) to establish baseline and initialize testmon datab
 ```bash
 python Projects/scripts/validate_phase.py PROJ-XX [current_phase]
 ```
-Only update Current State if validation PASSES. If it FAILS, fix the issues first.
+
+**Interpreting the result:**
+
+The validator checks whether *every* task in the phase is complete. Two
+different outcomes produce a FAIL verdict — treat them differently:
+
+1. **Structural FAIL** — you claimed a task complete (`- [x]`) that has
+   incomplete subtasks, OR the phase status says "Complete" but tasks are
+   not all checked. **This is a real failure: fix it before stopping.**
+   Either finish the work, or honestly mark the subtasks incomplete.
+
+2. **Mid-phase FAIL** — you finished the task(s) you worked on (all their
+   subtasks checked), but later tasks in the same phase are still at
+   0% because you haven't reached them yet. The validator reports FAIL
+   because the phase isn't complete. **This is a legitimate stop** — do
+   not roll back completed work to "pass" the validator. Acknowledge the
+   partial state in `## Current State`, include "Phase <N> partial:
+   Task <M>.<X> done; Tasks <M>.<Y>..<M>.<Z> pending" in the handoff, and
+   proceed to write the handoff prompt.
+
+If you're unsure which kind of FAIL you have: read the failure lines
+carefully. "Task X.Y: K/K subtasks complete" passing combined with
+"Task X.(Y+1): 0/N subtasks complete" failing is the mid-phase-stop
+signature. Acceptable.
+
+**Also run:**
+```bash
+python Projects/scripts/validate_close_ready.py PROJ-XX
+```
+Only relevant when closing the project (all phases complete). Skip at
+mid-project stops.
 
 ---
 
@@ -117,7 +147,11 @@ For each task until an exit condition (§3) is met:
      ```
    - If this completes a phase, update phase status to `Complete`
    - **If changes affect architecture, patterns, or conventions, update the relevant `docs/` file**
-   - **If you edited a file not listed in `manifest.md`**, add it to the manifest (required for `/proj-parallel` conflict detection). If no `manifest.md` exists, skip this step.
+   - **Update `manifest.md`** — every time you edit a file not yet listed,
+     add a row explaining the change. Do this DURING the task, not at
+     handoff — it's easy to forget at stop time. An up-to-date manifest is
+     required for `/proj-parallel` conflict detection AND for the next
+     agent to understand what's in flight.
 
    **f. Update Current State**
 
@@ -211,10 +245,32 @@ See `handoff_prompt.md` for the copy-paste prompt.
 
 ### 6. Write the Handoff Prompt
 
-When exiting due to context threshold, write
+When exiting due to context threshold (or any other stop condition), write
 `Projects/active_projects/PROJ-XX/handoff_prompt.md` using the template in
-`Projects/protocols/context_config.md` §3. Print the prompt to chat so the user
-can copy-paste it into a new session.
+`Projects/protocols/context_config.md` §Handoff prompt template. Print the
+prompt to chat so the user can copy-paste it into a new session.
+
+**The handoff prompt MUST instruct the next agent to read all project-related
+documentation and related code BEFORE reading the project plan.** This is
+non-negotiable. The plan's author took surrounding context for granted; if the
+next agent reads the plan cold, they make short-sighted decisions.
+
+**Bias toward loading extra context, not minimal context.** A few thousand
+extra tokens spent on orientation is cheap compared to a bad architectural
+choice made in a context-starved state. Short handoff prompts produce
+confident-but-wrong work.
+
+The template in `context_config.md` enforces this ordering:
+1. Foundation docs (01, 02, 03 — always)
+2. Task-specific docs
+3. Related code (for understanding, not just for modification)
+4. Related tests
+5. *Only then* the project files (design.md → decisions.md → plan.md → phase checklist)
+
+Fill in every section thoughtfully. If you're unsure whether a file is
+relevant, include it. Also populate the "Watchouts" section with the
+landmines and interpretation questions this session discovered — this is
+how institutional knowledge propagates between sessions.
 
 Do **not** duplicate the `## Current State` content in the handoff prompt —
 point at `plan.md` and let that be the source of truth.

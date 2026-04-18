@@ -136,6 +136,81 @@ def make_minimal_spec(
     )
 
 
+def start_battle_screen_with_minimal_spec(
+    screen,
+    ships_by_team: Dict[int, List["Ship"]],
+    *,
+    headless: bool = False,
+    start_paused: bool = False,
+    seed: int = 0,
+    max_ticks: int = 1000,
+):
+    """PROJ-281: drop-in replacement for legacy ``BattleScreen.start(team0, team1)``.
+
+    Encapsulates the 8-line spec-based migration pattern so each of the 47
+    test call sites can be a single function call instead of repeating the
+    boilerplate:
+
+        # Before (legacy shim):
+        scene.start([ship1], [ship2], headless=True)
+
+        # After (spec-based):
+        start_battle_screen_with_minimal_spec(
+            scene, {0: [ship1], 1: [ship2]}, headless=True,
+        )
+
+    Args:
+        screen: A ``BattleScreen`` instance — the target of ``start_battle``.
+        ships_by_team: {team_id: [Ship, ...]} — typically
+            ``{0: team0_ships, 1: team1_ships}``.
+        headless: Passed into ``BattleConfig``.
+        start_paused: Passed into ``BattleConfig``.
+        seed: Deterministic seed for the spec and BattleConfig.
+        max_ticks: Duration for the default ``TickLimitCondition``.
+
+    Returns:
+        The running ``BattleController`` (for tests that need to drive
+        ``controller.update()`` or query ``controller.service.get_engine()``).
+    """
+    from game.ai.ai_factory import AIControllerFactory
+    from game.simulation.battle_config import BattleConfig
+    from game.simulation.battle_controller import BattleController
+
+    spec = make_minimal_spec(ships_by_team, seed=seed, max_ticks=max_ticks)
+
+    # Flatten ships in the same iteration order the spec compiler uses.
+    ordered_ships: List["Ship"] = []
+    for team_id in sorted(ships_by_team.keys()):
+        ordered_ships.extend(ships_by_team[team_id])
+
+    idx = [0]
+
+    def _ship_builder(ship_spec, team_id):
+        _ = ship_spec, team_id
+        ship = ordered_ships[idx[0]]
+        idx[0] += 1
+        return ship
+
+    config = BattleConfig(
+        headless=headless,
+        start_paused=start_paused,
+        seed=seed,
+        end_condition=spec.end_condition,
+        absolute_max_ticks=spec.absolute_max_ticks,
+    )
+
+    controller = BattleController()
+    controller.start_from_spec(
+        spec,
+        ai_factory=AIControllerFactory(),
+        ship_builder=_ship_builder,
+        config=config,
+    )
+
+    screen.start_battle(controller)
+    return controller
+
+
 # =============================================================================
 # Factory Functions
 # =============================================================================

@@ -84,30 +84,64 @@ When `check_context.py` returns STOP at a natural handoff point, write a handoff
 prompt to `Projects/active_projects/PROJ-XX/handoff_prompt.md` using the template
 below, then print it to the chat so the user can copy-paste it into a new session.
 
+> **Principle:** prefer loading extra context over making a short-sighted
+> decision. The next agent starts with zero memory of the project and the
+> full repo as a cold cache. A few thousand extra tokens spent on
+> orientation is cheap compared to a bad architectural choice. Over-brief
+> prompts produce confident-but-wrong work.
+
 ```markdown
 # Handoff: PROJ-XX — <phase/task name>
 
 Resume **PROJ-XX** at **Phase <N>**. The previous session ended at <threshold>%
 context after completing <what was completed>.
 
-## Read first (docs)
-- docs/README.md (reading order)
-- docs/01_ARCHITECTURE.md
-- docs/02_PATTERNS.md
-- docs/03_CONVENTIONS.md
-- <task-specific docs with line ranges if narrow>
+## Orientation (read BEFORE touching the project plan)
 
-## Read first (code)
-- <file:line-range> — <why it matters>
-- <file:line-range> — <why it matters>
+The instinct is to open `plan.md` first. Resist it. The project plan assumes
+you understand the surrounding architecture, conventions, and related code
+— if you don't, you'll make short-sighted decisions that the plan's author
+took for granted. Prefer loading extra context.
 
-## Current State
-Open `Projects/active_projects/PROJ-XX/plan.md` and read the `## Current State`
-section in full. It contains the authoritative handoff notes from the previous
-session — do not rely on this prompt as a substitute.
+### 1. Foundation docs (always read these first)
+- docs/README.md — doc index + task-driven reading order
+- docs/01_ARCHITECTURE.md — layer structure + package APIs + dependency rules
+- docs/02_PATTERNS.md — design patterns used in this codebase
+- docs/03_CONVENTIONS.md — naming, file org, test conventions, line budgets
+
+### 2. Task-specific docs (whichever apply to Phase <N>)
+- <docs/systems/*.md or docs/guides/*.md with line ranges if narrow>
+- <CLAUDE.md memory files if relevant>
+
+### 3. Related code (read for context, even if you won't modify it)
+- <file:line-range> — <why it matters / what pattern it demonstrates>
+- <file:line-range> — <adjacent/upstream/downstream code that constrains the task>
+- <test fixtures / helpers that Phase <N> will interact with>
+
+If a previous phase introduced a helper/pattern (e.g. `make_minimal_spec`,
+`_common_preconditions`), read its source + docstring before using it —
+docstrings often encode constraints the plan doesn't repeat.
+
+### 4. Related tests (read so you know what "working" looks like)
+- <test files that Phase <N> will modify>
+- <existing tests that exercise the same subsystem>
+
+## Only now: read the project files
+Read in this order — the plan depends on all of the above:
+1. `Projects/active_projects/PROJ-XX/design.md` — architectural rationale
+2. `Projects/active_projects/PROJ-XX/decisions.md` — full decision log
+3. `Projects/active_projects/PROJ-XX/plan.md` § Current State — authoritative handoff
+4. `Projects/active_projects/PROJ-XX/phase_<N>_checklist.md` — task list
+5. `Projects/active_projects/PROJ-XX/manifest.md` — file manifest
+6. `.agent_reports/PROJ-XX-*` if any exist — audit outputs from prior sessions
 
 ## First action
 <literal next checklist item, copied verbatim from phase_N_checklist.md>
+
+## Watchouts (from the previous session)
+- <landmine / complication / interpretation question discovered last session>
+- <non-obvious constraint the next agent might miss>
+- <anything the previous session ALMOST got wrong that the next agent should not>
 
 ## Protocol
 Follow Projects/protocols/03a_continue_working.md. Check context at natural
@@ -116,11 +150,21 @@ handoff points via `python Projects/scripts/check_context.py`.
 
 Rules for filling it in:
 
-- **Docs section**: list only files relevant to the next phase. Always include
-  01–03 as the foundation. If a doc section is narrow, add `:L<start>-<end>`.
-- **Code section**: list files the next agent *must* read before touching
-  anything — not a full file tour. Include line ranges where helpful.
-- **Current State**: do **not** duplicate the content. Point at `plan.md` and
-  let that be the source of truth. Duplication creates drift.
+- **Bias toward extra context**, not minimal: when in doubt, list the file.
+  A next-agent who reads 3 extra files produces better work than one who
+  missed a constraint.
+- **Foundation docs**: ALWAYS include 01–03. Non-negotiable.
+- **Task-specific docs**: list every doc even tangentially relevant. Add line
+  ranges only when a file is large and the relevant section is narrow.
+- **Related code**: list files the next agent should read for *understanding*,
+  not just files they'll *modify*. Include helpers/fixtures introduced by
+  prior phases — their docstrings encode the contract.
+- **Related tests**: list the tests that will be changed AND neighbouring
+  tests that demonstrate how the subsystem is exercised.
+- **Current State**: do **not** duplicate into this prompt. Point at `plan.md`
+  and let it be the source of truth. Duplication creates drift.
 - **First action**: copy the literal next `- [ ]` item from the active phase
   checklist. No paraphrasing.
+- **Watchouts**: document what the previous session learned the hard way so
+  the next agent doesn't repeat the discovery. Decisions made under time
+  pressure belong here.

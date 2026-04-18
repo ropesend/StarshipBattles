@@ -20,36 +20,26 @@
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Phase 2 (ready to start) — migrate 47 test callers
-**Last Action:** Phase 1 complete. `make_minimal_spec` helper shipped in [tests/fixtures/battle.py](../../../tests/fixtures/battle.py) with 19 unit tests ([tests/fixtures/test_make_minimal_spec.py](../../../tests/fixtures/test_make_minimal_spec.py)) + 2 smoke integration tests ([tests/integration/test_make_minimal_spec_smoke.py](../../../tests/integration/test_make_minimal_spec_smoke.py)) proving the helper feeds both `BattleController.start_from_spec` and headless `run_battle(spec)`. Audit confirmed 47 callers across 3 files (not "~46"): `test_battle_screen.py` (7), `test_battle_screen_simulation.py` (37), `test_battle_setup_logic.py` (3).
-**Next Action:** Phase 2 — migrate the 47 callers to use `make_minimal_spec` + the spec-based entry path. This is the bulk of the project work (substantial grep + edit across 3 files). Defer to a fresh session — context budget matters here.
-**Blockers:** None. Phase 1 unblocks Phase 2; no cross-project dependencies remain.
+**Active Phase:** Phase 2 — Task 2.1 complete; Tasks 2.2-2.5 (47-caller migration) pending fresh session
+**Last Action:** Phase 2 Task 2.1 complete. Added module-level helper [tests/fixtures/battle.py::start_battle_screen_with_minimal_spec](../../../tests/fixtures/battle.py) that encapsulates the spec-based migration pattern into a single function call. Added 4 smoke tests in `TestStartBattleScreenWithMinimalSpec` — 23 helper tests pass total. With the helper in place, each of the 47 migrations becomes a 1-line replacement instead of 8 lines of boilerplate.
+**Next Action:** Phase 2 Tasks 2.2-2.5 — migrate the 47 callers using the new `start_battle_screen_with_minimal_spec` helper. Start with the smallest file (`test_battle_setup_logic.py`, 3 callers) to validate the pattern end-to-end including the assertion-reshaping issue documented below.
+**Blockers:** None.
 
-**Context for Next Agent (Phase 2):**
-- Helper signature: `make_minimal_spec(ships_by_team: Dict[int, List[Ship]], *, seed=0, max_ticks=1000, telemetry_level=None) -> BattleSpec`
-- Canonical migration pattern for each test:
+**Context for Next Agent (Phase 2 migration):**
+- **Use the helper:** `from tests.fixtures.battle import start_battle_screen_with_minimal_spec`
+- **Canonical migration:**
   ```python
   # Before:
-  self.scene.start([self.ship1], [self.ship2], headless=True)
+  scene.start([ship1], [ship2], headless=True)
 
   # After:
-  from tests.fixtures.battle import make_minimal_spec
-  from game.simulation.battle_controller import BattleController
-  from game.ai.ai_factory import AIControllerFactory
-
-  ships = [self.ship1, self.ship2]
-  spec = make_minimal_spec({0: [self.ship1], 1: [self.ship2]})
-
-  def _builder(ship_spec, team_id):
-      return ships[team_id]
-
-  controller = BattleController()
-  controller.start_from_spec(spec, ai_factory=AIControllerFactory(), ship_builder=_builder)
-  self.scene.start_battle(controller)
+  controller = start_battle_screen_with_minimal_spec(
+      scene, {0: [ship1], 1: [ship2]}, headless=True,
+  )
   ```
-- For `headless=True` tests, consider using `run_battle(spec, ship_builder=_builder)` directly instead of the controller path — simpler
-- Some tests may need `max_ticks` or seed overrides passed to `make_minimal_spec`
-- A test-local helper (inside the test class or at module-top) that wraps the migration pattern is recommended to avoid repeating the builder boilerplate 47 times
+- **IMPORTANT — assertion reshape:** tests that assert on `scene.ships`, `scene.ai_controllers`, `scene.projectiles` directly (seen in `test_battle_setup_logic.py`) need assertion updates because those attrs now live on the controller's engine. Use `controller.service.get_engine().ships` etc., OR verify if `BattleScreen.start_battle(controller)` proxies these (check during migration).
+- **Shim-specific tests:** `test_battle_scene_clear_state` in `test_battle_setup_logic.py` tests the shim's "calling start() twice clears state" behavior. Under the spec path, each battle creates a new controller — the "clearing" contract doesn't map cleanly. Recommend: delete this test (shim behavior going away) OR rewrite to test controller-level state management. Escalate to user if ambiguous.
+- **Migration order suggestion:** start with `test_battle_setup_logic.py` (3 callers, small file) to validate the pattern + uncover any surprises; then `test_battle_screen.py` (7 callers); then `test_battle_screen_simulation.py` (37 callers, bulk).
 - Phase 2 validation: `pytest tests/unit/ui/test_battle_screen.py tests/unit/ui/test_battle_screen_simulation.py tests/unit/ui/screens/test_battle_setup_logic.py` should pass
 - Phase 3 (delete shim) comes AFTER Phase 2 migration completes — zero callers remain
 

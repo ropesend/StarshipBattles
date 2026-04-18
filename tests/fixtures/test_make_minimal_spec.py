@@ -152,6 +152,69 @@ class TestMakeMinimalSpecShipPose:
         assert ship_spec.angle == 90.0
 
 
+class TestStartBattleScreenWithMinimalSpec:
+    """PROJ-281: drop-in replacement for legacy BattleScreen.start()."""
+
+    def test_returns_battle_controller(self, fresh_registries):
+        from game.simulation.battle_controller import BattleController
+        from game.ui.screens.battle_screen import BattleScreen
+        from tests.fixtures.battle import start_battle_screen_with_minimal_spec
+
+        screen = BattleScreen(1000, 1000)
+        s1 = _make_ship(fresh_registries)
+        s2 = _make_ship(fresh_registries)
+
+        controller = start_battle_screen_with_minimal_spec(
+            screen, {0: [s1], 1: [s2]}, headless=True,
+        )
+        assert isinstance(controller, BattleController)
+
+    def test_screen_has_running_controller(self, fresh_registries):
+        from game.ui.screens.battle_screen import BattleScreen
+        from tests.fixtures.battle import start_battle_screen_with_minimal_spec
+
+        screen = BattleScreen(1000, 1000)
+        s1 = _make_ship(fresh_registries)
+        s2 = _make_ship(fresh_registries)
+
+        controller = start_battle_screen_with_minimal_spec(
+            screen, {0: [s1], 1: [s2]}, headless=True,
+        )
+        # The screen now holds the started controller
+        assert screen._controller is controller
+
+    def test_ships_materialized_via_builder(self, fresh_registries):
+        """The helper's ship_builder must use the passed ships verbatim —
+        otherwise tests that check ship identity after start break."""
+        from game.ui.screens.battle_screen import BattleScreen
+        from tests.fixtures.battle import start_battle_screen_with_minimal_spec
+
+        screen = BattleScreen(1000, 1000)
+        s1 = _make_ship(fresh_registries)
+        s2 = _make_ship(fresh_registries)
+
+        controller = start_battle_screen_with_minimal_spec(
+            screen, {0: [s1], 1: [s2]}, headless=True,
+        )
+        engine = controller.service.get_engine()
+        # Both ships should be present in the engine as the exact same objects
+        assert s1 in engine.ships
+        assert s2 in engine.ships
+
+    def test_single_ship_team_works(self, fresh_registries):
+        from game.ui.screens.battle_screen import BattleScreen
+        from tests.fixtures.battle import start_battle_screen_with_minimal_spec
+
+        screen = BattleScreen(1000, 1000)
+        s1 = _make_ship(fresh_registries)
+
+        controller = start_battle_screen_with_minimal_spec(
+            screen, {0: [s1]}, headless=True,
+        )
+        engine = controller.service.get_engine()
+        assert s1 in engine.ships
+
+
 # --- helpers --------------------------------------------------------------
 
 def _make_ship(registries):

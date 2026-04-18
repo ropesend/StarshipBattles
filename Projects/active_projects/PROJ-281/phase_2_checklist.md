@@ -47,21 +47,33 @@ outcome = run_battle(spec, ai_factory=AIControllerFactory(), ship_builder=_build
 
 ## Tasks
 
-### Task 2.1: Write a test-local migration helper (or extend the module-level helper) [Simple]
-**File:** Decide during task — either inline per-file helpers, or extend `tests/fixtures/battle.py` with a higher-level helper
-**Tests:** `pytest tests/fixtures/`
+### Task 2.1: Write a module-level migration helper [Simple]
+**File:** `tests/fixtures/battle.py`
+**Tests:** `pytest tests/fixtures/test_make_minimal_spec.py`
 
-- [ ] Decide: module-level helper in `tests/fixtures/battle.py` (e.g. `start_minimal_battle_on_screen(screen, ships_by_team, **kwargs)`) OR test-class-local helpers per file
-- [ ] If module-level: add it to `tests/fixtures/battle.py`, add 2-3 smoke tests
-- [ ] If per-file: note the pattern in this checklist so the 3 file migrations stay consistent
+- [x] Decided: module-level helper (reduces per-call-site diff from ~8 lines to 1 line; worth it for 47 callers)
+- [x] Added `start_battle_screen_with_minimal_spec(screen, ships_by_team, *, headless=False, start_paused=False, seed=0, max_ticks=1000) -> BattleController` to `tests/fixtures/battle.py`
+- [x] Added 4 smoke tests in a new `TestStartBattleScreenWithMinimalSpec` class in `tests/fixtures/test_make_minimal_spec.py`: returns controller, screen has running controller, ships materialized via builder (identity preserved), single-ship-team works
+- [x] 23 tests pass total (19 existing + 4 new)
 
-**Notes:** A module-level helper that encapsulates the `make_minimal_spec + controller + ship_builder` dance would reduce the Phase 2 diff significantly. Consider a helper signature like:
+**Notes:** Helper internally wires `make_minimal_spec` + `BattleController` + `ship_builder` + `BattleConfig`. Ship identity is preserved — the builder returns the exact ship objects passed in (in iteration order). This matters for tests that assert `ship in engine.ships` or depend on ship object identity post-start.
+
+**Canonical Phase 2.2/2.3/2.4 migration pattern (using the new helper):**
 ```python
-def start_minimal_battle_on_screen(
-    screen, *, team0_ships, team1_ships, headless=False, seed=None, **spec_kwargs
-) -> BattleController:
-    ...
+# BEFORE:
+self.scene.start([self.ship1], [self.ship2], headless=True)
+
+# AFTER:
+from tests.fixtures.battle import start_battle_screen_with_minimal_spec
+
+controller = start_battle_screen_with_minimal_spec(
+    self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+)
+# For tests that need the engine: engine = controller.service.get_engine()
+# For tests that query scene.ships: that still works — screen.start_battle(controller) wires them
 ```
+
+**Complication discovered in `test_battle_setup_logic.py`:** Some tests assert on `scene.ships`, `scene.ai_controllers`, `scene.projectiles` directly. Under the spec-based path, these live on the controller's engine. Tests querying these attributes need to change assertions to use `controller.service.get_engine()` or equivalent. `test_battle_scene_clear_state` specifically tests the shim's "calling start() twice clears state" contract — that test may need to be deleted or rewritten since the spec path uses a fresh controller per battle.
 
 ### Task 2.2: Migrate `tests/unit/ui/test_battle_screen.py` [Medium]
 **File:** `tests/unit/ui/test_battle_screen.py` (7 callers at lines 57, 67, 83, 93, 117, 137, 149)
