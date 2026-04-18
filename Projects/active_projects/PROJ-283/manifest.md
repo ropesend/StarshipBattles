@@ -12,7 +12,8 @@
 | game/strategy/data/race_config.py | Production (MODIFY) | Phase 1 ✓ added `preferences` field + `base_reproduction_rate` + `base_happiness` + `_validate_preferences()`; Phase 4 deletes legacy fields |
 | game/strategy/data/race_point_budget.py | Production (MODIFY) | Phase 3 rewrite around registry; Phase 3 adds reproduction cost curve |
 | game/strategy/data/homeworld_presets.py | Production (MODIFY) | Phase 5: new preference shape |
-| game/strategy/formulas/habitability.py | Production (MODIFY) | Phase 2 adds v2; Phase 4 promotes to canonical |
+| game/strategy/formulas/habitability.py | Production (MODIFY) | Phase 2 ✓ added `calculate_habitability_v2(planet, race_config)` (line 288); v1 untouched; Phase 4 promotes v2 to canonical |
+| game/strategy/data/habitability_factors.py | Production (MODIFY) | Phase 2 ✓ tuned `gas.N2` default setpoint 0 → 79000 Pa, tolerance → 20000 Pa so an unconfigured Earth-like default race tolerates Earth's atmosphere |
 | game/strategy/engine/population_engine.py | Production (MODIFY) | Phase 4: read `base_reproduction_rate` |
 | game/strategy/engine/superweapon_order_processor.py | Production (MODIFY) | Phase 4: Dyson Sphere atmosphere seeding |
 | game/ui/widgets/preference_row.py | Production (NEW) | Phase 5: reusable row widget |
@@ -21,7 +22,7 @@
 | tests/unit/strategy/data/test_environmental_preference.py | Test (NEW) | Phase 1 ✓ added: 12 tests, all passing |
 | tests/unit/strategy/data/test_habitability_factors.py | Test (NEW) | Phase 1 ✓ added: 39 tests, all passing |
 | tests/unit/strategy/data/test_race_config.py | Test (MODIFY) | Phase 1 ✓ added 11 new tests (preferences, base_reproduction_rate, base_happiness, validation). Phase 4 drops legacy fields. |
-| tests/unit/strategy/formulas/test_habitability_v2.py | Test (NEW) | Phase 2 |
+| tests/unit/strategy/formulas/test_habitability_v2.py | Test (NEW) | Phase 2 ✓ added: 21 tests, all passing (happy path, registry-iteration, gas-missing edge cases, parity with v1, isolated single-factor checks for pressure/tectonic) |
 | tests/unit/strategy/formulas/test_habitability.py | Test (MODIFY) | Phase 4: update for v1 deletion |
 | tests/unit/strategy/data/test_race_point_budget_v2.py | Test (NEW) | Phase 3 |
 | tests/unit/strategy/data/test_race_point_budget.py | Test (MODIFY) | Phase 3: remove aptitude costs for deleted aptitudes |
