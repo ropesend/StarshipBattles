@@ -4,6 +4,9 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-285 | Habitability-to-Production Economy Hook | Planning | 2026-04-18 | 2026-04-18 |
+| PROJ-284 | Colony Demographics Loop (Organics, Happiness, Population Growth Rework) | Planning | 2026-04-18 | 2026-04-18 |
+| PROJ-283 | Race Setup & Habitability Foundation | Planning | 2026-04-18 | 2026-04-18 |
 | PROJ-282 | FleetBattleSetupScreen MVVM Decomposition | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | Planning | 2026-04-17 | 2026-04-17 |
 
