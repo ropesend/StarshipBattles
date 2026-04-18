@@ -417,8 +417,8 @@ class EnergyConsumptionTest(ResourceScenario):
 ### Pattern 3: A/B Comparison Tests
 
 Compare measured outcomes between a baseline and a variant using `ComparisonScenario`.
-The template runs two separate battles — one internally during `setup()`, one through
-the normal runner loop — then compares their results in `validate()`.
+Both battles run with the same seed for determinism; `validate()` receives an
+`ABBattleOutcome` carrying both pairs of (outcome, telemetry).
 
 ```python
 from combat_lab.scenarios.templates import ComparisonScenario
@@ -436,7 +436,8 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
 
     distance = 400
 
-    def validate(self, outcome, telemetry=None) -> list:
+    def validate(self, ab) -> list:
+        """PROJ-277: receives `ab: ABBattleOutcome` carrying both runs."""
         checks = self._template_preconditions()
         checks.append(check_true(
             "Sensor Increases Damage",
@@ -447,11 +448,31 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
         return checks
 ```
 
-**Key features:**
-- Both battles use the same seed for deterministic comparison
-- `configure_baseline(engine)` / `configure_variant(engine)` hooks for customization
-- Combat Lab shows three buttons: "Visual Run" (variant), "Headless Run" (both), "Visual Baseline" (baseline)
-- Results dict stores both `baseline_*` and `variant_*` metrics
+**Key features (PROJ-277):**
+- `validate(self, ab: ABBattleOutcome)` receives both runs in a single frozen DTO.
+  Subclasses typically read the `self.baseline_*` / `self.variant_*` attrs
+  (populated by `collect_results`) but can also introspect `ab.baseline_outcome`,
+  `ab.variant_outcome`, `ab.baseline_telemetry`, `ab.variant_telemetry` directly
+  (e.g. for per-weapon hit counts via `ab.variant_outcome.teams[0].ships[0].weapons`).
+- `configure_baseline(engine)` / `configure_variant(engine)` hooks for per-run customization.
+- Combat Lab shows three buttons: "Visual Run" (variant), "Headless Run" (both), "Visual Baseline" (baseline).
+- Both battles use the same seed for deterministic comparison.
+
+**Spec builder hooks** (additive, for Phase 4 runner-driven dispatch):
+`build_baseline_spec(self) -> BattleSpec` and `build_variant_spec(self) -> BattleSpec`
+produce the baseline/variant `BattleSpec` independently. Defaults use
+`baseline_*_ship` / `variant_*_ship` class attrs via the existing spec-compiler;
+subclasses can override to express the A/B contrast as a spec transformation
+(e.g. "baseline = variant with a modifier stripped") instead of swapping ship files.
+
+**Visual-baseline mode:** Renders the baseline battle instead of the variant.
+Validation currently skips in visual-baseline mode (only preconditions run) —
+a planned follow-up makes rendering orthogonal to validation via a `render_mode`
+parameter on `ABBattleRunner`.
+
+**Related API:** [combat_lab/services/ab_battle_runner.py](../../combat_lab/services/ab_battle_runner.py)
+exposes `ABBattleRunner.run(baseline_spec, variant_spec) -> ABBattleOutcome` —
+the first-class A/B runner introduced by PROJ-277.
 
 ### Pattern 4: Negative Tests
 
@@ -643,10 +664,17 @@ These engine behaviors affect how tests should be designed:
 - Ship defaults: `total_defense_score = 0.0`, `baseline_to_hit_offense = 0.0` (additive neutral).
 - Resource tracking uses a generic `_prev_max_resources: dict` (not hardcoded per type).
 
-### ComparisonScenario
-- Runs baseline battle internally during `setup()`, variant on runner's engine.
+### ComparisonScenario (PROJ-277 A/B runner)
+- Runs baseline + variant as paired battles; `validate(self, ab: ABBattleOutcome)`
+  receives both in a frozen DTO.
 - Both battles use the same seed (`_effective_seed`).
-- `_visual_baseline = True` flag renders the baseline battle for debugging.
+- Baseline runs via `_run_baseline_battle` today (pending Phase 4 runner
+  dispatch) and stashes `self._baseline_outcome` + `self._baseline_telemetry`
+  so `_run_validation` can package the `ABBattleOutcome`.
+- `build_baseline_spec(self)` / `build_variant_spec(self)` are additive spec
+  hooks; subclasses can override to express A/B as a spec transformation.
+- `_visual_baseline = True` renders the baseline battle; validation currently
+  skips in VB mode (follow-up: `render_mode` on `ABBattleRunner`).
 - Combat Lab shows an amber "Visual Baseline" button for comparison tests.
 - Erratic controller seeds are derived from `_effective_seed` for reproducibility.
 

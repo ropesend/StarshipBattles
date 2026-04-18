@@ -80,6 +80,7 @@ Six layers with strict downward-only dependency flow:
 | `validation.py`       | ValidationResult, IValidationRule |
 | `paths.py`            | Paths constants for file locations |
 | `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition |
+| `roles.py`            | Role frozen dataclass + RoleRegistry (PROJ-278). Shared schema/machinery for both gameplay design_role and Combat Lab scenario_role. Two registry instances live in the running app — one with `allow_runtime_add=True` for design_role (layered base + mods + user overlay, fires invalidation callbacks), one with `allow_runtime_add=False` for Combat Lab (static, file-driven). |
 | `input_actions.py`    | InputAction enum for key bindings |
 | `json_utils.py`       | JSON serialization helpers |
 | `singleton.py`        | SingletonMeta metaclass (deprecated — no production users, kept for reference) |
@@ -174,7 +175,7 @@ Six layers with strict downward-only dependency flow:
 
 Exports defined in each package's `__init__.py` via `__all__`.
 
-### `game.core` (42 exports)
+### `game.core` (45 exports)
 
 - **Exceptions:** GameException, StateException, FrozenStateException, ValidationException, ResourceException, MissingResourceException, PersistenceException, SimulationException, ComponentException, FormulaException
 - **Error Codes:** ErrorCode
@@ -187,6 +188,7 @@ Exports defined in each package's `__init__.py` via `__all__`.
 - **Configuration:** DisplayConfig, AIConfig, PhysicsConfig, BattleTuning
 - **Paths:** Paths
 - **Protocols:** IRegistryProvider, IFleet, IPlanet, ICombatant, is_fleet, is_planet, is_combatant
+- **Roles (PROJ-278):** Role, RoleRegistry, RoleRegistryReadOnlyError
 
 ### `game.engine` (3 exports)
 
