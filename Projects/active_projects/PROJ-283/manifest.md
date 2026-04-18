@@ -7,9 +7,9 @@
 
 | File | Type | Notes |
 |------|------|-------|
-| game/strategy/data/environmental_preference.py | Production (NEW) | Phase 1: `EnvironmentalPreference` dataclass |
-| game/strategy/data/habitability_factors.py | Production (NEW) | Phase 1: `HabitabilityFactor` + `FACTOR_REGISTRY` |
-| game/strategy/data/race_config.py | Production (MODIFY) | Phase 1 adds `preferences` field; Phase 4 deletes legacy fields |
+| game/strategy/data/environmental_preference.py | Production (NEW) | Phase 1 ✓ added: `EnvironmentalPreference` dataclass with validation |
+| game/strategy/data/habitability_factors.py | Production (NEW) | Phase 1 ✓ added: `HabitabilityFactor` + `FACTOR_REGISTRY` (7 scalar + 10 gas) |
+| game/strategy/data/race_config.py | Production (MODIFY) | Phase 1 ✓ added `preferences` field + `base_reproduction_rate` + `base_happiness` + `_validate_preferences()`; Phase 4 deletes legacy fields |
 | game/strategy/data/race_point_budget.py | Production (MODIFY) | Phase 3 rewrite around registry; Phase 3 adds reproduction cost curve |
 | game/strategy/data/homeworld_presets.py | Production (MODIFY) | Phase 5: new preference shape |
 | game/strategy/formulas/habitability.py | Production (MODIFY) | Phase 2 adds v2; Phase 4 promotes to canonical |
@@ -18,9 +18,9 @@
 | game/ui/widgets/preference_row.py | Production (NEW) | Phase 5: reusable row widget |
 | game/ui/panels/race_environment_panel.py | Production (MODIFY) | Phase 5: full rebuild, iterate registry |
 | data/races/*.json | Data (DELETE) | Phase 4: user-confirmed disposable |
-| tests/unit/strategy/data/test_environmental_preference.py | Test (NEW) | Phase 1 |
-| tests/unit/strategy/data/test_habitability_factors.py | Test (NEW) | Phase 1 |
-| tests/unit/strategy/data/test_race_config.py | Test (MODIFY) | Phase 1 adds preferences roundtrip; Phase 4 drops legacy fields |
+| tests/unit/strategy/data/test_environmental_preference.py | Test (NEW) | Phase 1 ✓ added: 12 tests, all passing |
+| tests/unit/strategy/data/test_habitability_factors.py | Test (NEW) | Phase 1 ✓ added: 39 tests, all passing |
+| tests/unit/strategy/data/test_race_config.py | Test (MODIFY) | Phase 1 ✓ added 11 new tests (preferences, base_reproduction_rate, base_happiness, validation). Phase 4 drops legacy fields. |
 | tests/unit/strategy/formulas/test_habitability_v2.py | Test (NEW) | Phase 2 |
 | tests/unit/strategy/formulas/test_habitability.py | Test (MODIFY) | Phase 4: update for v1 deletion |
 | tests/unit/strategy/data/test_race_point_budget_v2.py | Test (NEW) | Phase 3 |

@@ -856,3 +856,142 @@ class TestRaceConfigAptitudeFields:
         assert config.aptitude_happiness == 9
         assert config.aptitude_population_growth == 1
         assert config.aptitude_conflict_tolerance == 10
+
+
+# ---------------------------------------------------------------------------
+# PROJ-283 Phase 1 Task 1.5 — parallel new fields: preferences,
+# base_reproduction_rate, base_happiness.
+# ---------------------------------------------------------------------------
+
+
+class TestRaceConfigPreferencesField:
+    """`preferences: Dict[str, EnvironmentalPreference]` lives alongside the
+    legacy environment fields during Phase 1. Populated from
+    `FACTOR_REGISTRY` defaults when empty."""
+
+    def test_default_preferences_populated_from_registry(self):
+        from game.strategy.data.habitability_factors import FACTOR_REGISTRY
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+
+        config = RaceConfig()
+
+        assert len(config.preferences) == len(FACTOR_REGISTRY)
+        for factor_id in FACTOR_REGISTRY:
+            assert factor_id in config.preferences
+            assert isinstance(config.preferences[factor_id], EnvironmentalPreference)
+
+    def test_default_preferences_match_factor_defaults(self):
+        from game.strategy.data.habitability_factors import FACTOR_REGISTRY
+
+        config = RaceConfig()
+        for factor_id, factor in FACTOR_REGISTRY.items():
+            pref = config.preferences[factor_id]
+            assert pref.setpoint == factor.default_setpoint
+            assert pref.tolerance == factor.default_tolerance
+            assert pref.min_value == factor.min_value
+            assert pref.max_value == factor.max_value
+            assert pref.step == factor.step
+
+    def test_explicit_preferences_are_preserved(self):
+        """Constructor can override defaults; __post_init__ must not clobber
+        user-supplied preferences even when it fills in missing ones."""
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+
+        custom_gravity = EnvironmentalPreference(
+            setpoint=5.0, tolerance=1.0, min_value=0.1, max_value=30.0, step=0.98,
+        )
+        config = RaceConfig(preferences={"gravity": custom_gravity})
+
+        assert config.preferences["gravity"] is custom_gravity
+        # Other factors still filled from registry defaults.
+        assert "gas.O2" in config.preferences
+
+    def test_preferences_round_trip(self):
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+
+        original = RaceConfig()
+        original.preferences["temperature"] = EnvironmentalPreference(
+            setpoint=250.0, tolerance=5.0, min_value=100.0, max_value=500.0, step=10.0,
+        )
+
+        restored = RaceConfig.from_dict(original.to_dict())
+
+        assert restored.preferences["temperature"].setpoint == 250.0
+        assert restored.preferences["temperature"].tolerance == 5.0
+
+    def test_from_dict_accepts_partial_preferences(self):
+        """Loading an old save with only a few preference keys must not
+        crash — missing keys are filled from registry defaults."""
+        from game.strategy.data.habitability_factors import FACTOR_REGISTRY
+
+        data = {
+            "name": "Partial Race",
+            "preferences": {
+                "gravity": {
+                    "setpoint": 12.0,
+                    "tolerance": 1.0,
+                    "min_value": 0.1,
+                    "max_value": 30.0,
+                    "step": 0.98,
+                },
+            },
+        }
+        config = RaceConfig.from_dict(data)
+
+        # Supplied value preserved
+        assert config.preferences["gravity"].setpoint == 12.0
+        # Missing factors backfilled from the registry
+        assert len(config.preferences) == len(FACTOR_REGISTRY)
+        assert "gas.O2" in config.preferences
+
+
+class TestRaceConfigBaseReproductionAndHappiness:
+    """`base_reproduction_rate` and `base_happiness` replace the old
+    `aptitude_population_growth` / `aptitude_happiness` semantically, but
+    the old aptitude fields stay in place during Phase 1."""
+
+    def test_default_base_reproduction_rate(self):
+        assert RaceConfig().base_reproduction_rate == 0.03
+
+    def test_default_base_happiness(self):
+        assert RaceConfig().base_happiness == 0.5
+
+    def test_round_trip_preserves_values(self):
+        original = RaceConfig(base_reproduction_rate=0.05, base_happiness=0.8)
+        restored = RaceConfig.from_dict(original.to_dict())
+        assert restored.base_reproduction_rate == 0.05
+        assert restored.base_happiness == 0.8
+
+    def test_from_dict_backward_compat(self):
+        """Old race JSON without the new keys → defaults."""
+        config = RaceConfig.from_dict({"name": "Old Race"})
+        assert config.base_reproduction_rate == 0.03
+        assert config.base_happiness == 0.5
+
+
+class TestRaceConfigValidateWithPreferences:
+    """`validate()` must delegate to each EnvironmentalPreference so a
+    malformed preference surfaces as a validation error."""
+
+    def test_valid_default_config_validates(self):
+        config = RaceConfig(
+            name="Valid",
+            flag_id="flag_1",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+        )
+        result = config.validate()
+        assert result.is_valid, f"Default config should validate, got: {result.errors}"
+
+    def test_invalid_preference_triggers_construction_error(self):
+        """EnvironmentalPreference rejects invalid data at construction, so
+        a bad preference simply can't be placed into RaceConfig.preferences
+        without raising first. This keeps the invariant simple."""
+        from game.core.exceptions import ValidationException
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+
+        with pytest.raises(ValidationException):
+            EnvironmentalPreference(
+                setpoint=100.0, tolerance=1.0,
+                min_value=0.0, max_value=10.0, step=1.0,
+            )
