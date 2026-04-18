@@ -26,7 +26,7 @@ handoff prompt (§3), and exit. See [Natural Stopping Points](#natural-stopping-
 Run the check script at natural handoff points — **not after every task**:
 
 ```bash
-python Projects/scripts/check_context.py
+python Tools/check_context/check_context.py
 ```
 
 The script finds the current session's JSONL transcript, estimates tokens used,
@@ -51,11 +51,14 @@ Verdict: CONTINUE
 
 ## When to check
 
-Check **only at natural handoff points**, never mid-task:
+Check **at natural checkpoints, not mid-task**:
 
-1. **Phase complete** — best place to stop.
-2. **Task complete with no in-progress work** — acceptable.
-3. **Before starting a large task** (estimated to require many file reads) — decide up front whether to start or hand off.
+1. **Phase complete** — a checkpoint where you decide whether to continue (usually yes) or, if near 80%, wind down.
+2. **Task complete with no in-progress work** — another good checkpoint.
+3. **Before starting a task you estimate will use >100k tokens** — check up front. If starting it would push past 80%, SPLIT the task (don't hand off).
+
+You're **checking** context at these points, not **stopping**. Stop only when
+`check_context.py` returns STOP. Below 80%, keep working.
 
 Do not check every iteration of the work loop. The token count does not change
 mid-tool-call, and checking too often wastes output tokens.
@@ -64,17 +67,49 @@ mid-tool-call, and checking too often wastes output tokens.
 
 ## Natural Stopping Points
 
-Prefer stopping at:
+**The 80% threshold is the only trigger for a handoff.** Below 80%, you
+keep working. The threshold reserves ~200k tokens for writing the
+handoff prompt and updating plan state — roughly the full context
+window the codebase operated in a month ago. That's ample buffer.
+
+**When `check_context.py` returns STOP**, wind down at the nearest
+clean boundary (in this priority order):
 
 1. End of a phase (best)
 2. End of a task (good)
-3. After a subtask with a clear handoff (acceptable)
+3. After a subtask with a clear stopping state (acceptable)
+
+These priorities apply to **finding** a stopping point once you're at 80% —
+NOT to deciding when to stop. Below 80%, "end of phase" is a checkpoint,
+not an exit.
+
+**Don't hand off early.** Ending a session at 27% context (or 50%, or
+even 70%) wastes 300-600k of budget on re-orientation next session. The
+next agent starts cold, re-reads docs, re-loads project files, and
+rebuilds mental state — typically 40-70k of overhead by itself.
+Restarting when you could have continued is measurably expensive.
+
+**If the next phase looks too big to finish under 80%: SPLIT IT.**
+No single phase should consume more than ~200k tokens beyond the session
+baseline. If a phase looks larger than that as-planned, it's too coarse —
+update the phase checklist to break it into sub-phases (same numbering
+scheme, e.g. `phase_6a_checklist.md` / `phase_6b_checklist.md`, or
+extend `phase_6_checklist.md` with clearly-delineated task groups), then
+execute the first sub-phase. **Do not hand off early just because the
+next phase feels dense.** Splitting is cheaper than handing off.
+
+**Genuine blockers are exceptions.** User-approval gates, unresolvable
+test failures, missing information — those are real stops regardless
+of context %. A "phase complete, awaiting user verification" gate IS a
+legitimate stop.
 
 Avoid stopping:
 
 - Mid-implementation with failing tests
 - Without updating `## Current State` in the project plan
 - With uncommitted mental context
+- Because the next phase feels big — split it instead
+- Below 60% unless there's a genuine blocker or the project is complete
 
 ---
 
@@ -145,7 +180,7 @@ Read in this order — the plan depends on all of the above:
 
 ## Protocol
 Follow Projects/protocols/03a_continue_working.md. Check context at natural
-handoff points via `python Projects/scripts/check_context.py`.
+handoff points via `python Tools/check_context/check_context.py`.
 ```
 
 Rules for filling it in:

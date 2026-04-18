@@ -39,8 +39,16 @@ class BattleSetupSide:
     def __init__(self, team_id: int):
         self.team_id = team_id
         self.fleets: List[Fleet] = []
-        self.system_complexes: List[Dict[str, Any]] = []  # Toggled system-scope complex designs
-        self.sector_complexes: List[Dict[str, Any]] = []  # Toggled sector-scope complex designs
+        # Materialized list of toggled-on complexes (spec-compiler input).
+        # Rebuilt from `*_complex_toggles` at battle-launch time.
+        self.system_complexes: List[Dict[str, Any]] = []
+        self.sector_complexes: List[Dict[str, Any]] = []
+        # PROJ-282 Phase 2: per-side source-of-truth for complex toggle UI
+        # state. Replaces the old screen-level `_complex_toggles` dict.
+        # Keyed by design_id; value is the on/off boolean (off entries are
+        # retained so the UI can render the [  ] checkbox state explicitly).
+        self.system_complex_toggles: Dict[str, bool] = {}
+        self.sector_complex_toggles: Dict[str, bool] = {}
 
     def create_fleet(self, name: str = "New Fleet") -> Fleet:
         """Create a new empty fleet and add it to this side.
@@ -96,6 +104,8 @@ class BattleSetupSide:
             ],
             "system_complexes": list(self.system_complexes),
             "sector_complexes": list(self.sector_complexes),
+            "system_complex_toggles": dict(self.system_complex_toggles),
+            "sector_complex_toggles": dict(self.sector_complex_toggles),
         }
 
     @classmethod
@@ -104,7 +114,8 @@ class BattleSetupSide:
         data: Dict[str, Any],
         registries: Optional['GameRegistries'] = None,
     ) -> 'BattleSetupSide':
-        """Deserialize from save/load."""
+        """Deserialize from save/load. Tolerates legacy saves that lack the
+        `*_complex_toggles` fields (pre-PROJ-282 Phase 2) — defaults empty."""
         side = cls(team_id=data.get("team_id", 0))
 
         for fleet_entry in data.get("fleets", []):
@@ -115,6 +126,8 @@ class BattleSetupSide:
 
         side.system_complexes = data.get("system_complexes", [])
         side.sector_complexes = data.get("sector_complexes", [])
+        side.system_complex_toggles = dict(data.get("system_complex_toggles", {}))
+        side.sector_complex_toggles = dict(data.get("sector_complex_toggles", {}))
         return side
 
 

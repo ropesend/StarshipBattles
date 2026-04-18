@@ -91,4 +91,4 @@ Recommended TDD order: rename `calculate_habitability_v2` → `calculate_habitab
 10. **Two new `RaceConfig` fields shipped in Phase 1**: `base_reproduction_rate: float = 0.03` and `base_happiness: float = 0.5`. The UI migration for happiness is "display `rc.base_happiness` instead of `rc.aptitude_happiness`" — same display contract, different source.
 
 ## Protocol
-Follow `Projects/protocols/03a_continue_working.md`. Check context at natural handoff points via `python Projects/scripts/check_context.py`. Run `python Projects/scripts/validate_phase.py PROJ-283 4` before stopping. Phase 4 is large (8 tasks across data model + 2 engines + UI labels + tests); plan to stop at task boundaries if context approaches threshold.
+Follow `Projects/protocols/03a_continue_working.md`. Check context at natural handoff points via `python Tools/check_context/check_context.py`. Run `python Projects/scripts/validate_phase.py PROJ-283 4` before stopping. Phase 4 is large (8 tasks across data model + 2 engines + UI labels + tests); plan to stop at task boundaries if context approaches threshold.

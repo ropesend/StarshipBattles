@@ -1,7 +1,7 @@
 # PROTOCOL 03a: Continue Working (Autonomous)
 **Role:** Project Developer (Autonomous Mode)
 
-**Goal:** Work through multiple tasks autonomously until context limit reached or phase complete.
+**Goal:** Work through multiple tasks autonomously until the 80% context threshold is reached, the project is complete, or a genuine blocker is encountered. Phase completion alone is NOT an exit — it's a checkpoint.
 
 **Prerequisites:**
 - Read `Projects/protocols/02_plan_protocol.md` first
@@ -178,7 +178,7 @@ For each task until an exit condition (§3) is met:
    - After a phase completes, or before starting a task that will consume a
      large amount of context, run:
      ```bash
-     python Projects/scripts/check_context.py
+     python Tools/check_context/check_context.py
      ```
    - Verdict `STOP` (exit 1) → proceed to handoff (§4) and exit
    - Verdict `CONTINUE` (exit 0) → next task
@@ -189,11 +189,23 @@ For each task until an exit condition (§3) is met:
 ### 3. Exit Conditions
 
 Stop the loop when ANY of these occur:
-- `check_context.py` returns STOP at a natural handoff point
-- Current phase complete (natural stopping point) — always a valid stop
-- All tasks complete
-- Blocker encountered that requires user input
+- `check_context.py` returns STOP (at the 80% threshold)
+- All project tasks complete
+- Genuine blocker encountered that requires user input (includes user-approval gates)
 - Tests failing that you cannot resolve
+
+**Not exit conditions** — do not hand off just because:
+- "Current phase complete." Phase completion is a **checkpoint**, not an
+  exit. Start the next phase. Only stop at phase-end if `check_context.py`
+  says STOP or a real blocker is in the way.
+- "The next phase feels dense." If it looks like it will blow past 80%,
+  split it: edit the phase checklist to add sub-phases (same numbering
+  scheme), then start the first sub-phase. No single phase should consume
+  >200k tokens beyond the session baseline. Splitting is cheaper than
+  handing off — a cold restart burns 40-70k just on re-orientation.
+
+See `Projects/protocols/context_config.md` § Natural Stopping Points
+for the full rationale.
 
 ### 4. Comprehensive Handoff
 
@@ -294,7 +306,7 @@ protocol.
 2. **Strict TDD** - Tests before implementation, always
 3. **Update as you go** - Check boxes, add notes
 4. **Comprehensive handoff** - Current State must enable seamless continuation
-5. **Stop cleanly** - Better to stop early than corrupt the plan
+5. **Stop at 80%, not before** - Finishing a phase is a checkpoint, not an exit. Keep working until `check_context.py` says STOP. If the next phase looks too big, split it — don't hand off early.
 6. **No placeholders** - Don't leave TODO comments or incomplete code
 7. **Run validation** - Always run `validate_phase.py` before stopping
 8. **Check off tasks** - Mark subtasks complete AS you finish them, not in batches

@@ -141,7 +141,7 @@ When faced with choices, ALWAYS choose long-term quality:
 
 ### Context Exhaustion
 Threshold and check command are in `Projects/protocols/context_config.md`.
-At natural handoff points, run `python Projects/scripts/check_context.py`.
+At natural handoff points, run `python Tools/check_context/check_context.py`.
 If verdict is STOP:
 1. Finish current subtask if close
 2. Update Agent Context with detailed handoff

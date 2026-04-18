@@ -224,7 +224,7 @@ Your project modifies these files (from manifest.md):
    - Run full test suite: python Tools/test_sharded/test_sharded.py
    - Update Current State to indicate project complete
    - Report SUCCESS
-7. At natural handoff points, run `python Projects/scripts/check_context.py`.
+7. At natural handoff points, run `python Tools/check_context/check_context.py`.
    If verdict is STOP:
    - Stop at a clean point (end of task or phase)
    - Write comprehensive Current State handoff

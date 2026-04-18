@@ -143,4 +143,4 @@ validates the pattern end-to-end before you commit to 37 edits in Task 2.3.
 Follow `Projects/protocols/03a_continue_working.md` (recently updated
 with mid-phase FAIL interpretation + stronger handoff requirements).
 Check context at natural handoff points via
-`python Projects/scripts/check_context.py`.
+`python Tools/check_context/check_context.py`.

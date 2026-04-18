@@ -170,6 +170,34 @@ the new names and import paths directly.
 - **When to extract:** If a file exceeds 500 lines or has clearly separable responsibilities, extract into a subpackage or sibling module.
 - **Subpackage vs flat:** Use a subpackage (directory with `__init__.py`) when there are 3+ closely related files that form a logical unit (e.g., `builder/`, `battle_controller/`). Keep it flat when files are loosely related.
 
+### 2.4 UI Screen Line Budget (PROJ-282)
+
+UI screen classes (anything implementing `IScene`) should stay **under 300 lines**.
+
+Logic for mutation, derived view state, rendering, and event handling should
+live in sibling delegate classes following the **MVVM pattern** established by
+`TestLabScreen` ([game/ui/screens/test_lab/](../game/ui/screens/test_lab/)) and
+`FleetBattleSetupScreen` ([game/ui/screens/battle_setup/](../game/ui/screens/battle_setup/)) post-PROJ-282:
+
+- **Controller** — mutations on the data model, save/load, lifecycle, battle launch
+- **ViewModel** — selection + derived view state (pure data, no pygame imports)
+- **Renderer** — pygame_gui element construction (often split into per-panel builders)
+- **InputHandler** — pygame_gui event dispatch (button/dropdown → controller calls)
+- **Helpers** — domain-specific sub-services (e.g. `FleetHierarchyEditor` for TF/SQ CRUD)
+
+If you find yourself adding a method to a screen class that is over 300 lines,
+stop and identify which delegate it belongs in.
+
+Sibling delegate classes should also aim for ≤300 lines. A Controller over 300
+lines is a review signal — not a blocker — that the mutation surface may
+warrant a sub-service extraction. Concentrated single-responsibility code (e.g.
+a controller with 15+ mutation methods + save/load + battle launch) can legitimately
+exceed 300; the rule exists to make rebloat visible, not to enforce a brittle cap.
+
+**This is a soft limit.** The goal is to give reviewers grounds to push back on
+drift. When a file grows past 300 lines, expect to justify why — not to pass
+a gate.
+
 ---
 
 ## 3. Import Conventions
