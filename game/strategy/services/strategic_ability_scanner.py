@@ -11,7 +11,7 @@ import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.patterns.layer_iterator import iter_keyed_components
-from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.component_inspector import extract_abilities_from_component
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
@@ -234,44 +234,22 @@ def _extract_ability(
 ) -> Optional[Dict[str, Any]]:
     """Extract a specific ability's data from a component entry.
 
-    Supports inline abilities and registry lookup.
+    Delegates to `component_inspector.extract_abilities_from_component`, which
+    is the single source of truth for ability extraction and accepts either a
+    `GameRegistries` (with `.components` attr) or a plain components dict as
+    `registries`. Previously the scanner had its own registry walker that
+    required the `GameRegistries` shape — callers that passed only the
+    components dict silently got no abilities back (see PROJ-277).
 
     Args:
         comp: Component entry from design_data layers (dict or str).
         ability_key: Ability registry key to look for.
-        registries: Optional GameRegistries for component lookup.
+        registries: Optional `GameRegistries` or plain components dict.
 
     Returns:
         Ability data dict, list of dicts, or None.
     """
-    if isinstance(comp, dict):
-        abilities = comp.get('abilities', {})
-        data = abilities.get(ability_key)
-        if isinstance(data, (dict, list)):
-            return data
-        # Check registry
-        comp_id = comp.get('id')
-        if comp_id and registries is not None:
-            return _extract_from_registry(comp_id, ability_key, registries)
-    elif isinstance(comp, str) and registries is not None:
-        return _extract_from_registry(comp, ability_key, registries)
-    return None
-
-
-def _extract_from_registry(
-    comp_id: str,
-    ability_key: str,
-    registries,
-) -> Optional[Dict[str, Any]]:
-    """Look up ability from component registry."""
-    comp_def = registries.components.get(comp_id)
-    if comp_def is None:
-        return None
-    # comp_def may be a Component object or raw dict
-    if hasattr(comp_def, 'data'):
-        abilities = get_component_abilities(comp_def.data)
-    else:
-        abilities = get_component_abilities(comp_def)
+    abilities = extract_abilities_from_component(comp, registries)
     data = abilities.get(ability_key)
     if isinstance(data, (dict, list)):
         return data

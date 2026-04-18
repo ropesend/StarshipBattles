@@ -628,7 +628,7 @@ summary dict `{ability_name: True}`. This means:
 prevents activating the same component twice, but allows different components with
 the same ability name to be activated independently.
 
-**Stabilizer protection requires ACTIVE phase:** `SuperweaponOrderProcessor._is_stabilized()`
+**Stabilizer protection requires ACTIVE phase:** `StabilizerRegistry.find_blocking_stabilizer()`
 passes `require_active=True` to `find_abilities_in_scope()`, which checks
 `facility.get_activation_state(comp_key).is_functionally_active` for each component.
 A stabilizer that is installed but not activated provides **no protection**. Only the
@@ -865,17 +865,41 @@ ACTIVE   --[deactivate order]--> DEACTIVATING --[N ticks]--> INACTIVE
 
 The list of activatable ability keys is maintained in `planet_energy_engine.py:_ACTIVATABLE_ABILITIES`.
 
-**Stabilizer protection pattern:**
+**Stabilizer protection pattern (PROJ-277):**
 
-All three stabilizers (Geologic, Stellar, WarpField) use a unified check in
-`SuperweaponOrderProcessor._is_stabilized(ability_name, scopes, reference_entity, galaxy, empires)`:
+Stabilizers are data-driven via `game/strategy/services/stabilizer_registry.py`.
+Each `StabilizerSpec` declares `ability_name`, `scopes`, and the tuple of
+`OrderType`s it blocks. Adding a new stabilizer or extending an existing
+one to cover a new superweapon is a single edit to the `STABILIZERS` tuple.
 
-1. Superweapon order targets a location (planet/system)
-2. Processor calls the appropriate `_is_system_*_stabilized()` wrapper
-3. Wrapper finds a reference planet at the target location
-4. `_is_stabilized()` delegates to `find_abilities_in_scope()` from `strategic_ability_scanner.py`
-5. Scanner checks all empire colonies in scope for ACTIVE instances of the ability
-6. If any active instance found, superweapon order is cancelled with a protection message
+```
+STABILIZERS = (
+    StabilizerSpec("GeologicStabilizer", ("planet", "sector", "system"), (OrderType.IMPLODE_PLANET,)),
+    StabilizerSpec("StellarStabilizer",  ("sector", "system"), (OrderType.STELLERATE_STAR, OrderType.CREATE_DYSON_SPHERE)),
+    StabilizerSpec("WarpFieldStabilizer",("sector", "system"), (OrderType.OPEN_WARP_POINT, OrderType.CLOSE_WARP_POINT)),
+)
+```
+
+Check flow:
+
+1. Superweapon handler calls `self._check_blocking_stabilizer(order_type, ref_planet, galaxy, empires, component_registry)`.
+2. That delegates to `stabilizer_registry.find_blocking_stabilizer(...)`.
+3. For every spec whose `blocks` tuple contains `order_type`, the registry calls `find_abilities_in_scope(require_active=True)` across each scope, threading `component_registry` (**required** — see below).
+4. First ACTIVE hit returns the `StabilizerSpec`; the handler cancels the order and reports the blocker's `ability_name`.
+
+**`component_registry` MUST be threaded through every superweapon handler.**
+Real facility `design_data` stores bare component IDs
+(`{"id": "stellar_stabilizer", "modifiers": [...]}`) — the ability payload
+lives in the component registry, not inline on the design. The scanner's
+`_extract_ability` delegates to `component_inspector.extract_abilities_from_component`,
+which accepts either a `GameRegistries` or a plain components dict.
+Without a registry, the scanner returns nothing and every stabilizer is
+silently ineffective (this was the PROJ-277 regression — the UI's
+`system_effects_collector` DID thread the registry, which is why the
+"Active" status was displayed correctly while the actual block never
+fired). The integration test
+`tests/integration/strategy/test_stabilizer_blocks_superweapon.py::test_without_component_registry_no_stabilizer_found`
+guards against regression.
 
 **Scope resolution** (`strategic_ability_scanner.py`):
 - `find_abilities_in_scope()` accepts `require_active=True` to filter to ACTIVE phase only
@@ -883,13 +907,34 @@ All three stabilizers (Geologic, Stellar, WarpField) use a unified check in
 - SECTOR scope: all planets in the same hex
 - Returns ability data dicts with scope metadata for aggregation
 
+**System destruction pattern (PROJ-277):**
+
+Superweapons that tear down an entire star system (STELLERATE_STAR)
+route through `game/strategy/services/system_destroyer.py`, which uses a
+**collect-then-mutate** protocol:
+
+1. `collect_system_contents(system, galaxy, empires)` returns an immutable
+   `SystemDestructionPlan` listing every planet, star, and fleet the
+   operation will remove. Fleet membership is determined by hex distance
+   (any fleet within `SYSTEM_RADIUS_HEXES = 50` of the system's
+   `global_location` is included) — this is strictly broader than
+   `GalaxySpatialIndex.get_all_fleets_in_system`, which only saw hexes
+   containing a placed entity (planet/star/warp point).
+2. `destroy_system(plan, galaxy, empires)` executes the removals against
+   the snapshot. Because the plan is local, it doesn't matter what order
+   mutations happen in — the old "remove planets, THEN scan planets for
+   system hexes" ordering bug can't recur.
+
+Adding a new system-destroying superweapon = call `collect_system_contents`
+then `destroy_system`. Do not hand-roll fleet enumeration.
+
 **Adding a new activatable ability:**
 1. Define ability class in `planetary.py` with `energy_drain_rate`, `activation_time`, `deactivation_time`, `scope` parameters
 2. Register in `ABILITY_REGISTRY` (`abilities/__init__.py`)
 3. Add to `_ACTIVATABLE_ABILITIES` list in `planet_energy_engine.py`
 4. Add display name to `TOGGLEABLE_ABILITIES` dict in `planet_abilities_window.py`
 5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`
-6. If it blocks superweapons: add check method in `superweapon_order_processor.py` using `_is_stabilized()`
+6. If it blocks superweapons: add a `StabilizerSpec` entry to the `STABILIZERS` tuple in `game/strategy/services/stabilizer_registry.py`. No code changes in `superweapon_order_processor.py` are needed — existing handlers route through `StabilizerRegistry` automatically.
 7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system or sector scope — system-scoped abilities show in the System panel via `_SYSTEM_SCOPES`, sector-scoped abilities show in the Sector panel via `_SECTOR_SCOPES`
 8. If it affects combat: add to `combat_modifier_collector.py` with `require_active=True`
 9. Add keyboard toggle binding in `strategy_fleet_command_router.py`

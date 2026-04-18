@@ -228,8 +228,16 @@ class WorkshopEventRouter:
             gui.on_selection_changed(None)
             gui.layer_panel.rebuild()
 
-            # Clone component with default modifiers
+            # Clone component with default modifiers.
+            # Attach to the design-in-progress BEFORE recalculate_stats so
+            # `=ship_class_mass` formulas (bridge mass, warp_drive, armor
+            # variants, etc.) resolve via component.ship.max_mass_budget.
+            # See docs/02_PATTERNS.md Pattern 3 and
+            # docs/guides/component_system.md. Mirrors the fix in
+            # game/ui/screens/builder/interaction_controller.py:95-99 for
+            # the shift-drop path.
             gui.controller.dragged_item = c.clone()
+            gui.controller.dragged_item.ship = gui.ship
             gui.controller.dragged_item.recalculate_stats()
 
             # Set as selected so modifiers panel updates

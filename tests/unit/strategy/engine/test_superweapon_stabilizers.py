@@ -1,77 +1,92 @@
 """
-Tests for superweapon stabilizer check deduplication.
+Tests for superweapon stabilizer blocking plumbing.
 
-PROJ-239 Task 3.1: CQ-003 - The three stabilizer check methods should
-be unified into a single parameterized _is_stabilized method.
+PROJ-277: Stabilizer blocking is routed through
+`StabilizerRegistry.find_blocking_stabilizer` (data-driven) called from
+`SuperweaponOrderProcessor._check_blocking_stabilizer`. Each handler
+threads `component_registry` all the way down — without it, real facility
+designs (bare `{"id": "..."}`) can't resolve abilities in the scanner and
+every stabilizer is silently ineffective.
+
+These tests mock `find_blocking_stabilizer` to cover plumbing shape only.
+End-to-end coverage (real scanner + real registry lookup) lives in
+`tests/integration/strategy/test_stabilizer_blocks_superweapon.py`.
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 
-class TestUnifiedStabilizerCheck:
-    """Test that _is_stabilized works for all stabilizer types."""
+from game.strategy.data.order_types import OrderType
+from game.strategy.services.stabilizer_registry import StabilizerSpec
 
-    def _make_processor(self):
-        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-        return SuperweaponOrderProcessor()
 
-    def test_planet_stabilized_by_geologic_stabilizer(self):
-        """GeologicStabilizer at planet scope protects the planet."""
-        proc = self._make_processor()
+@pytest.fixture
+def processor():
+    from game.strategy.engine.superweapon_order_processor import (
+        SuperweaponOrderProcessor,
+    )
+    return SuperweaponOrderProcessor()
+
+
+class TestCheckBlockingStabilizer:
+    """`_check_blocking_stabilizer` delegates to StabilizerRegistry."""
+
+    def test_returns_spec_when_registry_reports_block(self, processor):
+        """If the registry returns a spec, the helper returns it verbatim."""
         planet = MagicMock()
         galaxy = MagicMock()
         empire = MagicMock()
-
-        with patch('game.strategy.services.strategic_ability_scanner.find_abilities_in_scope') as mock_scan:
-            mock_scan.return_value = [{"ability": "GeologicStabilizer"}]
-            result = proc._is_stabilized(
-                "GeologicStabilizer", ["planet", "sector", "system"],
-                planet, galaxy, [empire]
-            )
-        assert result is True
-
-    def test_not_stabilized_when_no_abilities_found(self):
-        """Returns False when no stabilizer abilities found at any scope."""
-        proc = self._make_processor()
-        planet = MagicMock()
-        galaxy = MagicMock()
-        empire = MagicMock()
-
-        with patch('game.strategy.services.strategic_ability_scanner.find_abilities_in_scope') as mock_scan:
-            mock_scan.return_value = []
-            result = proc._is_stabilized(
-                "GeologicStabilizer", ["planet", "sector", "system"],
-                planet, galaxy, [empire]
-            )
-        assert result is False
-
-    def test_stellar_stabilizer_with_ref_planet_lookup(self):
-        """StellarStabilizer uses reference planet for system-scope scanning."""
-        proc = self._make_processor()
-        fleet_location = MagicMock()
-        galaxy = MagicMock()
-        empire = MagicMock()
-        ref_planet = MagicMock()
-
-        with patch.object(proc, '_get_reference_planet', return_value=ref_planet):
-            with patch('game.strategy.services.strategic_ability_scanner.find_abilities_in_scope') as mock_scan:
-                mock_scan.return_value = [{"ability": "StellarStabilizer"}]
-                result = proc._is_system_stellar_stabilized(fleet_location, galaxy, [empire])
-        assert result is True
-
-    def test_warp_stabilizer_returns_false_when_no_ref_planet(self):
-        """Returns False when no reference planet found in system."""
-        proc = self._make_processor()
-        fleet_location = MagicMock()
-        galaxy = MagicMock()
-
-        with patch.object(proc, '_get_reference_planet', return_value=None):
-            result = proc._is_system_warp_stabilized(fleet_location, galaxy, [])
-        assert result is False
-
-    def test_has_unified_is_stabilized_method(self):
-        """SuperweaponOrderProcessor has a unified _is_stabilized method."""
-        proc = self._make_processor()
-        assert hasattr(proc, '_is_stabilized'), (
-            "Expected _is_stabilized unified method on SuperweaponOrderProcessor"
+        registry = {"stellar_stabilizer": {"abilities": {}}}
+        stub_spec = StabilizerSpec(
+            ability_name="StellarStabilizer",
+            scopes=("sector", "system"),
+            blocks=(OrderType.STELLERATE_STAR,),
         )
+
+        with patch(
+            "game.strategy.services.stabilizer_registry.find_blocking_stabilizer",
+            return_value=stub_spec,
+        ) as mock_find:
+            result = processor._check_blocking_stabilizer(
+                OrderType.STELLERATE_STAR, planet, galaxy, [empire], registry
+            )
+
+        assert result is stub_spec
+        mock_find.assert_called_once_with(
+            OrderType.STELLERATE_STAR, planet, galaxy, [empire], registry
+        )
+
+    def test_returns_none_when_registry_reports_no_block(self, processor):
+        """Passthrough of None from the registry."""
+        with patch(
+            "game.strategy.services.stabilizer_registry.find_blocking_stabilizer",
+            return_value=None,
+        ):
+            result = processor._check_blocking_stabilizer(
+                OrderType.IMPLODE_PLANET,
+                reference_planet=MagicMock(),
+                galaxy=MagicMock(),
+                empires=[MagicMock()],
+                component_registry={},
+            )
+        assert result is None
+
+    def test_threads_component_registry_argument(self, processor):
+        """Must forward the component_registry unchanged — forgetting this
+        was the whole PROJ-277 bug."""
+        sentinel = object()
+        with patch(
+            "game.strategy.services.stabilizer_registry.find_blocking_stabilizer",
+            return_value=None,
+        ) as mock_find:
+            processor._check_blocking_stabilizer(
+                OrderType.CLOSE_WARP_POINT,
+                reference_planet=MagicMock(),
+                galaxy=MagicMock(),
+                empires=[],
+                component_registry=sentinel,
+            )
+        _args, kwargs_or_pos = mock_find.call_args
+        # Accept either positional or keyword passing; just assert the sentinel
+        # was forwarded.
+        assert sentinel in mock_find.call_args.args

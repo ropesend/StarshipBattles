@@ -610,11 +610,13 @@ class TestOrderProcessorColonyRemoval:
         empire1 = Mock()
         empire1.id = 1
         empire1.colonies = [planet1]
+        empire1.fleets = [fleet]  # Post-PROJ-277 SystemDestroyer iterates empire.fleets
         empire1.remove_fleet = Mock()
 
         empire2 = Mock()
         empire2.id = 2
         empire2.colonies = [planet2]
+        empire2.fleets = []
         empire2.remove_fleet = Mock()
 
         system = Mock()
