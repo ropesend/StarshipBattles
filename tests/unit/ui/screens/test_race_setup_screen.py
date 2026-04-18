@@ -709,3 +709,66 @@ class TestSaveUpdateDialog:
 
         assert screen._save_update_dialog is None
         mocks['race_library'].save_race.assert_not_called()
+
+
+# --- PROJ-283 Phase 5 / PROJ-285 crash regression ---
+# A slider move on the Environment tab used to crash with:
+#   AttributeError: 'RaceEnvironmentPanel' object has no attribute 'update_labels'
+# The screen's slider-move handler must route to existing panel methods
+# (update_labels + update_config) — these must be called on the environment
+# panel without raising. Pinned as a screen-level contract so future
+# panel-rename drift is caught here, not at runtime.
+
+class TestSliderEventDispatch:
+    """Regression pins for the original crash.
+
+    The default `_make_race_setup_screen` helper installs a
+    *non-spec* `MagicMock()` for `_environment_panel`, which silently
+    auto-provides any attribute and therefore cannot reproduce the
+    AttributeError. We re-bind to `MagicMock(spec=RaceEnvironmentPanel)`
+    so missing methods raise exactly as they would against the real
+    panel — pinning the cross-panel API contract at the test layer.
+    """
+
+    def _slider_event(self):
+        import pygame_gui
+        return pygame.event.Event(
+            pygame_gui.UI_HORIZONTAL_SLIDER_MOVED,
+            {"ui_element": MagicMock(), "value": 1.0},
+        )
+
+    def _spec_bound_screen(self):
+        from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
+        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        from game.ui.panels.race_aptitudes_panel import RaceAptitudesPanel
+        screen, mocks = _make_race_setup_screen()
+        # Bind spec mocks so missing methods raise AttributeError the
+        # same way the real classes do at runtime.
+        screen._environment_panel = MagicMock(spec=RaceEnvironmentPanel)
+        screen._identity_panel = MagicMock(spec=RaceIdentityPanel)
+        screen._aptitudes_panel = MagicMock(spec=RaceAptitudesPanel)
+        return screen, mocks
+
+    def test_slider_event_does_not_raise(self):
+        """Original crash reproduction. Pre-fix: raised
+        `AttributeError: 'RaceEnvironmentPanel' object has no attribute
+        'update_labels'`. Post-fix: runs cleanly."""
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        screen, _ = self._spec_bound_screen()
+        with patch.object(RaceSetupScreen.__mro__[1], "process_event", return_value=False):
+            screen.process_event(self._slider_event())
+
+    def test_slider_event_calls_update_labels_and_update_config_on_env_panel(self):
+        """Contract: slider move must call BOTH `update_labels()`
+        (refreshes row labels + cost + points) AND `update_config()`
+        (writes slider values into `race_config.preferences`). Either
+        omission reintroduces a silent bug — stale labels or stale
+        config."""
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        screen, _ = self._spec_bound_screen()
+
+        with patch.object(RaceSetupScreen.__mro__[1], "process_event", return_value=False):
+            screen.process_event(self._slider_event())
+
+        screen._environment_panel.update_labels.assert_called_once()
+        screen._environment_panel.update_config.assert_called_once()

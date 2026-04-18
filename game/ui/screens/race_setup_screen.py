@@ -529,39 +529,6 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             race_config=self.race_config
         )
 
-    def _update_env_from_sliders(self):
-        """Update race_config from environment slider values.
-
-        PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel.
-        """
-        if self._environment_panel:
-            self._environment_panel.update_config()
-
-    def _update_env_labels(self):
-        """Update environment value display labels.
-
-        PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel.
-        """
-        if self._environment_panel:
-            self._environment_panel.update_labels()
-
-    def _format_radiation(self, value: float) -> str:
-        """Format radiation tolerance value for display.
-
-        PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel.
-        """
-        if self._environment_panel:
-            return self._environment_panel._format_radiation(value)
-        # Fallback if panel not initialized
-        if value < -50:
-            return f"{value:.0f} Sens"
-        elif value > 50:
-            return f"+{value:.0f} Res"
-        elif value >= 0:
-            return f"+{value:.0f}"
-        else:
-            return f"{value:.0f}"
-
     # =========================================================================
     # Aptitudes Panel (NEW - PROJ-66 Phase 6)
     # =========================================================================
@@ -1122,8 +1089,16 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         # Handle slider changes
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-            self._update_env_labels()
-            self._update_env_from_sliders()
+            # PROJ-283 Phase 5 / PROJ-285 crash fix:
+            # `update_labels` refreshes per-row value / tolerance / cost
+            # labels and re-renders the points-remaining header (via
+            # `PreferenceRow.refresh_from_sliders` -> `_on_row_change`);
+            # `update_config` writes the slider values back into
+            # `race_config.preferences` + `base_reproduction_rate` /
+            # `base_happiness`. Both are cheap.
+            if self._environment_panel:
+                self._environment_panel.update_labels()
+                self._environment_panel.update_config()
             # PROJ-66: Update aptitudes panel labels and budget when sliders move
             if self._aptitudes_panel:
                 self._aptitudes_panel.update_config()

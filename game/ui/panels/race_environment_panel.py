@@ -228,6 +228,33 @@ class RaceEnvironmentPanel:
             )
         self._update_points_display()
 
+    def update_labels(self) -> None:
+        """Refresh every factor row + repro/happiness labels from the
+        current slider positions.
+
+        Cross-panel API contract — sibling panels (`RaceIdentityPanel`,
+        `RaceAptitudesPanel`) both expose `update_labels()`; the host
+        screen's slider-move handler calls it on all three.
+
+        Each `PreferenceRow.refresh_from_sliders()` re-reads its sliders,
+        updates the setpoint / tolerance / cost labels, and fires the
+        `on_change` callback — which writes the fresh preference back
+        into `race_config` and re-renders the points-remaining header.
+        The reproduction + happiness labels are refreshed in place
+        since those are bespoke single-slider rows (not `PreferenceRow`
+        instances).
+        """
+        for row in self.preference_rows.values():
+            row.refresh_from_sliders()
+        if self.reproduction_slider is not None and self.reproduction_label is not None:
+            self.reproduction_label.set_text(
+                self._format_reproduction(self.reproduction_slider.get_current_value())
+            )
+        if self.happiness_slider is not None and self.happiness_label is not None:
+            self.happiness_label.set_text(
+                f"{self.happiness_slider.get_current_value():.2f}"
+            )
+
     def set_from_config(self) -> None:
         """Push every preference + repro/happiness back into the UI."""
         for factor_id, row in self.preference_rows.items():

@@ -254,3 +254,107 @@ class TestPointsLabel:
         panel.points_label.set_text.assert_called()
         text = panel.points_label.set_text.call_args.args[0]
         assert "100" in text or "Points" in text
+
+
+# ---------------------------------------------------------------------------
+# update_labels: cross-panel API contract + live slider-move refresh
+# ---------------------------------------------------------------------------
+
+# Regression tests for the crash
+#   AttributeError: 'RaceEnvironmentPanel' object has no attribute 'update_labels'
+# at race_setup_screen.py:546. The refactor in PROJ-283 Phase 5 dropped the
+# method that sibling panels (Identity, Aptitudes) expose. Restoring it must
+# also refresh per-row labels live — PreferenceRow.refresh_from_sliders is
+# the widget-level method that reads sliders and updates labels + cost; the
+# panel's update_labels fans that out to every row plus the bespoke
+# reproduction/happiness single-slider rows.
+
+
+class TestUpdateLabels:
+    def _seed_numeric_sliders(self, panel):
+        """Seed the repro/happiness slider mocks with numeric values so
+        the panel's format-string formatters (`{:.1f}`, `{:.2f}`) don't
+        trip on default `MagicMock` return values."""
+        panel.reproduction_slider.get_current_value.return_value = 0.03
+        panel.happiness_slider.get_current_value.return_value = 0.5
+
+    def test_update_labels_exists_and_callable(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """Bare contract: the method exists and doesn't raise.
+
+        This is the test that would have caught the original crash.
+        Sibling panels (`RaceIdentityPanel`, `RaceAptitudesPanel`) both
+        expose `update_labels()`; the PROJ-283 Phase 5 rewrite dropped
+        it here, breaking the cross-panel API.
+        """
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        self._seed_numeric_sliders(panel)
+        assert hasattr(panel, "update_labels")
+        panel.update_labels()  # must not raise
+
+    def test_update_labels_calls_refresh_from_sliders_on_every_row(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """Each `PreferenceRow.refresh_from_sliders()` must be called
+        exactly once. This is the method that re-renders each row's
+        setpoint / tolerance / cost labels from current slider values
+        AND fires the `on_change` callback, which in turn refreshes
+        the points-remaining header.
+        """
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        self._seed_numeric_sliders(panel)
+        for row in panel.preference_rows.values():
+            row.refresh_from_sliders.reset_mock()
+
+        panel.update_labels()
+
+        for fid, row in panel.preference_rows.items():
+            row.refresh_from_sliders.assert_called_once(), (
+                f"row {fid} was not refreshed"
+            )
+
+    def test_update_labels_refreshes_reproduction_and_happiness_labels(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """The bespoke single-slider rows (reproduction + happiness) are
+        NOT `PreferenceRow` instances and therefore need explicit label
+        refresh from `update_labels()` — otherwise dragging those two
+        sliders leaves their numeric labels stale."""
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        panel.reproduction_slider.get_current_value.return_value = 0.042
+        panel.happiness_slider.get_current_value.return_value = 0.73
+        panel.reproduction_label.set_text.reset_mock()
+        panel.happiness_label.set_text.reset_mock()
+
+        panel.update_labels()
+
+        panel.reproduction_label.set_text.assert_called_once()
+        panel.happiness_label.set_text.assert_called_once()
+        # Happiness label reads `{value:.2f}`; reproduction uses
+        # `_format_reproduction` which renders a percentage — assert
+        # the value substring appears in each label call.
+        happy_text = panel.happiness_label.set_text.call_args.args[0]
+        assert "0.73" in happy_text
+        repro_text = panel.reproduction_label.set_text.call_args.args[0]
+        # 0.042 -> "4.2%" via _format_reproduction (rate * 100).
+        assert "4.2" in repro_text
+
+    def test_update_labels_is_idempotent(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """Calling `update_labels()` repeatedly (as a user dragging a
+        slider triggers many `UI_HORIZONTAL_SLIDER_MOVED` events per
+        second would) must not raise — and each call re-invokes
+        `refresh_from_sliders` on every row."""
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        self._seed_numeric_sliders(panel)
+        for row in panel.preference_rows.values():
+            row.refresh_from_sliders.reset_mock()
+
+        panel.update_labels()
+        panel.update_labels()
+        panel.update_labels()
+
+        for row in panel.preference_rows.values():
+            assert row.refresh_from_sliders.call_count == 3
