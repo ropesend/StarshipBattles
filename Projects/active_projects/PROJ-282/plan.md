@@ -22,11 +22,12 @@
 | 7. Extract FleetHierarchyEditor (kills TF/SQ clone duplication) | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Slim FleetBattleSetupScreen to a thin scene shell | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. Add line-budget convention to docs/03_CONVENTIONS.md | Complete | [phase_9_checklist.md](phase_9_checklist.md) |
-| 10. Manual smoke (2-side, 3-side, 8-side, complex toggles, save/load) | Not Started | [phase_10_checklist.md](phase_10_checklist.md) |
+| 10. Manual smoke (2-side, 3-side, 8-side, complex toggles, save/load) | Not Started (user-led) | [phase_10_checklist.md](phase_10_checklist.md) |
+| 11. N-Side UI (Add/Remove Side buttons; dynamic side dropdown) | Complete | [phase_11_checklist.md](phase_11_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Phase 9 Complete — ready for Phase 10 (manual smoke; user-gated)
+**Active Phase:** Phases 1-9 + 11 Complete (all PROJ-282 code + docs work). Only Phase 10 (user-led manual smoke) remains.
 **Last Action:** Phases 1-9 complete in a single session — **all PROJ-282 code + docs work is DONE.** Only Phase 10 (user-led manual smoke) remains; that's not something I can do. Structure now:
 - `game/ui/screens/battle_setup/view_model.py` — pure dataclass selection/view state
 - `game/ui/screens/battle_setup/renderer.py` — `BattleSetupRenderer.rebuild(screen)` orchestrator + bottom bar
@@ -47,22 +48,20 @@
 
 Tests this session: **79+ new tests** across state (9 toggles + 2 sync + 4 shim-routing), view_model (9), renderer (5), input_handler (30 — 26 original + 4 added in Phase 6), controller (31), fleet_hierarchy_editor (11). 2 duplicate state-level sync tests deleted after Phase 6 moved the method to the controller. **3545 tests green** in PROJ-282 scope (tests/unit/ui/ + tests/integration/ui/). Full repo regression has 4 pre-existing failures/errors outside PROJ-282 scope (test_ai_protocols ImportError, test_quickstart_builder theme assertion) — verified not caused by this project.
 
-**Next Action:** Phase 10 — **user-led manual smoke** [phase_10_checklist.md](phase_10_checklist.md). I cannot click through the UI; the user needs to:
-  1. Launch the game → Battle Setup, verify panels render
-  2. Fleet/TF/SQ CRUD (create, duplicate, delete)
-  3. 3-side setup compile + launch (if the "Add Side" UI exists — see Blocker below)
-  4. 8-side max-cap behavior
-  5. Complex toggles + spec modifier flow
-  6. Save/load roundtrip
-  7. Edge cases (empty side launch guard, large setup, rapid interactions)
+**Next Action:** **Phase 10 — user-led manual smoke** [phase_10_checklist.md](phase_10_checklist.md). All code + docs work (Phases 1-9 + 11) is DONE. User executes the 7-scenario smoke checklist in the running game (launch, CRUD, 3-side, 8-side, complex toggles, save/load, edge cases).
 
-**Blockers:** Phase 10 tasks 10.3 + 10.4 assume "Add Side" / "Remove Side" UI buttons exist. **They don't** — the current left panel only has a hardcoded 2-entry side dropdown. The Phase 1 audit flagged this in [n_team_paths.md](../../../.agent_reports/PROJ-282-audit/n_team_paths.md) as UI work that PROJ-282 *should* add, but the per-phase checklists never scheduled it as a concrete task. State + spec-compiler N-team support is solid (tested in `test_battle_setup_three_sides.py`); the UI surface to drive it into N>2 battles is the gap. User should decide: (a) accept current 2-side UI + rely on `BattleSetupState.add_side()` at state level (e.g. via save-file editing), (b) file a follow-up project for N-team UI (Add/Remove Side buttons in `panels/left_panel.py` + `Controller.add_side/remove_side` methods), or (c) block Phase 10 until the UI ships.
+**Blockers:** None technical. Phase 10 is pure user verification.
 
-**Context for Next Agent / User Verification:**
-- All production code + docs work is DONE. No code-level follow-ups known other than the N-team UI surface.
-- See [manifest.md](manifest.md) for the file-level accounting of every change this session.
-- Phase 6 property shims on the screen (`tick_limit`, `end_all_destroyed`, etc. routing to controller; `active_side`, `selected_tf_index`, etc. routing to view_model; `_get_toggle` routing to controller) are legitimate thin-shell wiring. Dropping them requires updating ~10 read sites in `panels/left_panel.py` + `panels/center_panel.py` to go through `screen.controller.*` / `screen.view_model.*` directly. Small, safe follow-up — not a blocker.
-- `controller.py` at 523 LOC exceeds the newly-added ≤300 convention; the convention explicitly treats this as a review signal, not a blocker. If the user wants to split it: save/load + battle-launch into a `LaunchController` sub-service is the natural cut (~100 LOC saved).
+**Phase 11 summary (just completed):** `BattleSetupController.add_side()` / `remove_side(index)` methods added with MIN/MAX bounds handling + view-model reconciliation (index-shift + clamp). Left panel gained Add-Side / Remove-Side buttons that auto-disable at bounds. Side dropdown now populates dynamically from `len(state.sides)` (drops hardcoded 2-entry + "(Left)"/"(Right)" cosmetic). InputHandler dispatches the new buttons + parses the new dropdown format with malformed-input fallback. 16 new tests (11 controller add/remove_side + 4 input_handler + 1 N-team integration launch). 3561 tests pass in PROJ-282 scope.
+
+**Context for Phase 10 (user verification):**
+- `phase_10_checklist.md` has 7 smoke scenarios. Phase 11 unblocked tasks 10.3 (3-side) + 10.4 (8-side max) by shipping the UI surface.
+- If smoke finds defects: file as follow-up issues unless critical.
+- After smoke passes, PROJ-282 closes. User can archive the project.
+
+**Other Known Follow-Ups (not blocking):**
+- **Controller at 523 LOC** exceeds § 2.4's 300-LOC target. Natural split: save/load + battle-launch into a `LaunchController` sub-service (~100 LOC). Low priority — convention treats this as a review signal, not a blocker.
+- **Screen property shims** (~100 LOC in screen.py). Dropping them requires updating ~10 read sites in `panels/{left,center}_panel.py` to go through `screen.view_model.*` / `screen.controller.*` directly. Would bring `screen.py` under the 150 LOC target. Small, safe, low priority.
 
 ## Overview
 [FleetBattleSetupScreen](../../../game/ui/screens/battle_setup_screen.py) is a 1172-line monolithic UI coordinator that mixes panel construction, event dispatch, fleet/TF/squadron mutation, complex toggles, and battle launch. Decompose using the same MVVM pattern that [TestLabScreen](../../../game/ui/screens/test_lab/screen.py) uses (ViewModel + Renderer + InputHandler + Controller). Move `_complex_toggles` onto `BattleSetupState` so it's part of the data model. Extract a `FleetHierarchyEditor` helper to kill the existing TF/SQ clone duplication. Add anti-rebloat documentation: line-budget convention in [docs/03_CONVENTIONS.md](../../../docs/03_CONVENTIONS.md) so adding new behavior naturally lands in a delegate, not back on the screen.

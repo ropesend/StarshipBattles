@@ -20,10 +20,11 @@ from pygame_gui.elements import UIPanel, UIButton, UILabel, UITextEntryLine, UID
 
 def build(screen, width: int, height: int) -> None:
     """Build the left panel. Mutates `screen` in-place with pygame_gui handles."""
-    from game.ui.screens.battle_setup_screen import (
+    from game.ui.screens.battle_setup.constants import (
         _SYSTEM_SCOPE_COMPLEXES,
         _SECTOR_SCOPE_COMPLEXES,
     )
+    from game.ui.screens.battle_setup_state import MIN_SIDES, MAX_SIDES
 
     panel = UIPanel(
         relative_rect=pygame.Rect(0, 0, width, height),
@@ -35,16 +36,40 @@ def build(screen, width: int, height: int) -> None:
             manager=screen._ui_manager, container=panel)
     y += 35
 
-    # Side selector
+    # Side selector (PROJ-282 Phase 11: dynamically populated from state.sides).
     UILabel(pygame.Rect(10, y, 50, 25), "Side:",
             manager=screen._ui_manager, container=panel)
+    num_sides = len(screen.state.sides)
+    side_options = [f"Side {i}" for i in range(num_sides)]
+    # Clamp active_side into range — defensive against stale view_model state
+    # after a remove_side that didn't reconcile.
+    active_side_display = max(0, min(screen.active_side, num_sides - 1))
     screen._side_dropdown = UIDropDownMenu(
-        ["Side 0 (Left)", "Side 1 (Right)"],
-        f"Side {screen.active_side} ({'Left' if screen.active_side == 0 else 'Right'})",
+        side_options,
+        f"Side {active_side_display}",
         pygame.Rect(60, y, width - 70, 28),
         manager=screen._ui_manager, container=panel
     )
     y += 35
+
+    # Add-Side / Remove-Side buttons (PROJ-282 Phase 11).
+    half_w = (width - 30) // 2
+    add_label = "Add Side" if num_sides < MAX_SIDES else f"Add Side (max {MAX_SIDES})"
+    screen._add_side_btn = UIButton(
+        pygame.Rect(10, y, half_w, 26), add_label,
+        manager=screen._ui_manager, container=panel,
+    )
+    if num_sides >= MAX_SIDES:
+        screen._add_side_btn.disable()
+
+    remove_label = "Remove Side" if num_sides > MIN_SIDES else f"Remove (min {MIN_SIDES})"
+    screen._remove_side_btn = UIButton(
+        pygame.Rect(20 + half_w, y, half_w, 26), remove_label,
+        manager=screen._ui_manager, container=panel,
+    )
+    if num_sides <= MIN_SIDES:
+        screen._remove_side_btn.disable()
+    y += 32
 
     # Fleet list
     UILabel(pygame.Rect(10, y, width - 20, 22), "Fleets:",

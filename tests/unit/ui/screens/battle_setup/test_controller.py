@@ -130,6 +130,113 @@ class TestSideDropdown:
         assert view_model.active_fleet_index == 0
 
 
+class TestAddRemoveSide:
+    """PROJ-282 Phase 11: Controller surfaces the state-layer N-team API
+    (`BattleSetupState.add_side()` / `remove_side(index)`) through
+    `Controller.add_side()` / `remove_side(index)` with bounds handling
+    + view-model reconciliation."""
+
+    def test_add_side_appends_new_side(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        assert len(state.sides) == 2
+
+        controller.add_side()
+
+        assert len(state.sides) == 3
+        assert state.sides[2].team_id == 2
+
+    def test_add_side_switches_active_side_to_new(self):
+        controller, _, view_model = _make_controller(on_change=MagicMock())
+        controller.add_side()
+        assert view_model.active_side == 2
+        assert view_model.active_fleet_index == 0
+
+    def test_add_side_fires_on_change(self):
+        on_change = MagicMock()
+        controller, _, _ = _make_controller(on_change=on_change)
+        controller.add_side()
+        on_change.assert_called_once()
+
+    def test_add_side_at_max_is_noop(self):
+        """MAX_SIDES=8; adding at the cap must not raise and must not grow."""
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        # Grow to 8.
+        while len(state.sides) < 8:
+            state.add_side()
+        assert len(state.sides) == 8
+        view_model.active_side = 4  # pick a non-last side
+
+        controller.add_side()
+
+        assert len(state.sides) == 8  # unchanged
+        assert view_model.active_side == 4  # unchanged
+
+    def test_remove_side_drops_side_at_index(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        state.add_side()  # 3 sides now
+        state.add_side()  # 4 sides
+        assert len(state.sides) == 4
+
+        controller.remove_side(1)
+
+        assert len(state.sides) == 3
+
+    def test_remove_side_renumbers_team_ids(self):
+        controller, state, _ = _make_controller(on_change=MagicMock())
+        state.add_side()
+        state.add_side()  # team_ids 0,1,2,3
+        controller.remove_side(1)
+        assert [s.team_id for s in state.sides] == [0, 1, 2]
+
+    def test_remove_side_at_min_is_noop(self):
+        """MIN_SIDES=2; removing at the floor must not raise."""
+        controller, state, _ = _make_controller(on_change=MagicMock())
+        assert len(state.sides) == 2
+
+        controller.remove_side(0)
+
+        assert len(state.sides) == 2
+
+    def test_remove_side_clamps_active_side_when_active_is_removed(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        state.add_side()  # 3 sides
+        view_model.active_side = 2  # active is the last one
+
+        controller.remove_side(2)
+
+        assert len(state.sides) == 2
+        assert view_model.active_side == 1  # clamped into valid range
+
+    def test_remove_side_clamps_active_side_when_later_side_removed(self):
+        """Removing a side before `active_side` shifts active_side's
+        index down by 1 (the side previously at `active_side` is now at
+        `active_side - 1`)."""
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        state.add_side()
+        state.add_side()  # 4 sides
+        view_model.active_side = 3
+
+        controller.remove_side(1)  # removed at index 1 (before active)
+
+        # Active moved from 3 → 2 to track the same side.
+        assert view_model.active_side == 2
+
+    def test_remove_side_out_of_range_is_noop(self):
+        controller, state, _ = _make_controller(on_change=MagicMock())
+        state.add_side()  # 3 sides
+
+        controller.remove_side(99)  # out of range
+
+        assert len(state.sides) == 3  # unchanged
+
+    def test_remove_side_fires_on_change_only_when_it_changes_state(self):
+        on_change = MagicMock()
+        controller, _, _ = _make_controller(on_change=on_change)
+        # At MIN_SIDES, nothing changes — on_change should NOT fire.
+        controller.remove_side(0)
+        on_change.assert_not_called()
+
+
 class TestEndConditionToggles:
     def test_toggle_end_destroyed(self):
         controller, _, _ = _make_controller(on_change=MagicMock())
@@ -409,3 +516,37 @@ class TestSaveLoadLegacyMigration:
         assert controller._state.sides[1].sector_complex_toggles.get(
             "qs_sector_damage_booster_complex"
         ) is True
+
+
+class TestNTeamBattleLaunch:
+    """PROJ-282 Phase 11 Task 11.4: end-to-end verification that
+    Controller.add_side() + chained state/ship setup + start_battle
+    reaches the spec compiler with N>2 teams and fires the callback."""
+
+    def test_five_team_battle_compiles_and_fires_callback(self):
+        callback = MagicMock()
+        controller, state, view_model = _make_controller(
+            scene_callback=callback, on_change=MagicMock(),
+        )
+        # Grow to 5 sides.
+        controller.add_side()  # 3
+        controller.add_side()  # 4
+        controller.add_side()  # 5
+        assert len(state.sides) == 5
+
+        # Put a default fleet + a ship on each side.
+        for i, side in enumerate(state.sides):
+            if not side.fleets:
+                side.create_fleet(f"Fleet Side {i}")
+            side.fleets[0].add_ship(_make_ship_mock())
+
+        with patch(
+            "game.ui.screens.battle_setup.spec_compiler.build_manual_battle_spec"
+        ) as mock_build:
+            from game.simulation.battle_spec import BattleSpec
+            mock_build.return_value = MagicMock(spec=BattleSpec)
+            controller.start_battle(headless=False)
+
+        mock_build.assert_called_once()
+        callback.assert_called_once()
+        assert callback.call_args[0][0] == "start_battle"

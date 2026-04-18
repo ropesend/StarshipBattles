@@ -55,6 +55,8 @@ def _make_handler_with_mock_screen():
     screen._end_destroyed_btn = object()
     screen._end_derelict_btn = object()
     screen._end_mass_btn = object()
+    screen._add_side_btn = object()
+    screen._remove_side_btn = object()
     screen._side_dropdown = object()
     screen._fleet_role_dropdown = object()
     screen._targeting_dropdown = object()
@@ -234,16 +236,44 @@ class TestNamedButtonDispatch:
         handler.handle_event(_button_event(screen._end_mass_btn))
         screen.controller.toggle_end_mass_ratio.assert_called_once_with()
 
+    def test_add_side_button_calls_controller_add_side(self):
+        """PROJ-282 Phase 11."""
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_button_event(screen._add_side_btn))
+        screen.controller.add_side.assert_called_once_with()
+
+    def test_remove_side_button_calls_controller_remove_active(self):
+        """PROJ-282 Phase 11: remove-side removes the currently-active side."""
+        handler, screen = _make_handler_with_mock_screen()
+        screen.view_model.active_side = 2
+
+        handler.handle_event(_button_event(screen._remove_side_btn))
+
+        screen.controller.remove_side.assert_called_once_with(2)
+
 
 class TestDropdownDispatch:
     def test_side_dropdown_calls_controller_set_active_side_to_1(self):
         handler, screen = _make_handler_with_mock_screen()
-        handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 1 (Right)"))
+        # PROJ-282 Phase 11: dropdown text is "Side N" (dropped Left/Right suffix).
+        handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 1"))
         screen.controller.set_active_side.assert_called_once_with(1)
 
     def test_side_dropdown_back_to_0(self):
         handler, screen = _make_handler_with_mock_screen()
-        handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 0 (Left)"))
+        handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 0"))
+        screen.controller.set_active_side.assert_called_once_with(0)
+
+    def test_side_dropdown_handles_n_gt_2(self):
+        """PROJ-282 Phase 11: parse side indices beyond 1 (N-team support)."""
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 5"))
+        screen.controller.set_active_side.assert_called_once_with(5)
+
+    def test_side_dropdown_fallback_on_malformed_text(self):
+        """Parser falls back to 0 rather than raising on unexpected format."""
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_dropdown_event(screen._side_dropdown, "garbage"))
         screen.controller.set_active_side.assert_called_once_with(0)
 
     def test_fleet_role_dropdown_calls_controller(self):
