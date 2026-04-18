@@ -13,7 +13,7 @@ from pygame_gui.elements import UIPanel, UIButton, UILabel, UIDropDownMenu
 
 def build(screen, x: int, width: int, height: int) -> None:
     """Build the center panel. Mutates `screen` with pygame_gui handles."""
-    from game.ui.screens.battle_setup_screen import (
+    from game.ui.screens.battle_setup.constants import (
         _TARGETING_OPTIONS,
         _MOVEMENT_OPTIONS,
         _BATTLE_ROLE_OPTIONS,
@@ -231,7 +231,7 @@ def build(screen, x: int, width: int, height: int) -> None:
 
 def _build_policy_controls(screen, panel, y: int, width: int, fleet) -> int:
     """Build policy dropdowns for the selected TF, SQ, or ship. Returns new y."""
-    from game.ui.screens.battle_setup_screen import (
+    from game.ui.screens.battle_setup.constants import (
         _TARGETING_OPTIONS,
         _MOVEMENT_OPTIONS,
     )

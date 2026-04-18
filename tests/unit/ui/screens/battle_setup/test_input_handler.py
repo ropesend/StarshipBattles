@@ -29,12 +29,17 @@ def _dropdown_event(ui_element, text: str) -> SimpleNamespace:
 
 
 def _make_handler_with_mock_screen():
-    """Construct an InputHandler with a MagicMock screen + real ViewModel."""
+    """Construct an InputHandler with a MagicMock screen + real ViewModel.
+
+    Screen's `controller` attribute is a MagicMock — PROJ-282 Phase 6
+    retargeted mutation dispatch from `screen._*` to `screen.controller.*`.
+    """
     from game.ui.screens.battle_setup.input_handler import BattleSetupInputHandler
     from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 
     screen = MagicMock()
     screen.view_model = BattleSetupViewModel()
+    screen.controller = MagicMock()
     # Named-button identity markers — each one a distinct sentinel so the
     # handler's `event.ui_element == screen._start_btn` identity checks
     # route correctly.
@@ -56,6 +61,9 @@ def _make_handler_with_mock_screen():
     screen._movement_dropdown = object()
     screen._ship_targeting_dropdown = object()
     screen._ship_movement_dropdown = object()
+    # Tick-limit entry isn't built by the renderer in these tests; the
+    # start-battle branches guard on `hasattr/get_text`, so leave absent.
+    screen._tick_limit_entry = None
 
     handler = BattleSetupInputHandler(screen)
     return handler, screen
@@ -88,7 +96,7 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._add_ship_from_design.assert_called_once_with(7)
+        screen.controller.add_ship_from_design.assert_called_once_with(7)
 
     def test_remove_ship_button_calls_remove_ship(self):
         handler, screen = _make_handler_with_mock_screen()
@@ -96,11 +104,10 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._remove_ship.assert_called_once_with(4)
+        screen.controller.remove_ship.assert_called_once_with(4)
 
-    def test_complex_toggle_button_toggles_via_set_toggle(self):
+    def test_complex_toggle_button_calls_controller_toggle_complex(self):
         handler, screen = _make_handler_with_mock_screen()
-        screen._get_toggle = MagicMock(return_value=False)
         btn = SimpleNamespace(
             _complex_key=(1, "system", "qs_system_shield_booster_complex"),
             _complex_design_id="qs_system_shield_booster_complex",
@@ -108,11 +115,9 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._get_toggle.assert_called_once_with(1, "system", "qs_system_shield_booster_complex")
-        screen._set_toggle.assert_called_once_with(
-            1, "system", "qs_system_shield_booster_complex", True
+        screen.controller.toggle_complex.assert_called_once_with(
+            1, "system", "qs_system_shield_booster_complex"
         )
-        screen._rebuild_ui.assert_called_once()
 
     def test_tf_button_updates_selection(self):
         handler, screen = _make_handler_with_mock_screen()
@@ -141,7 +146,7 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._duplicate_task_force.assert_called_once_with(0)
+        screen.controller.duplicate_task_force.assert_called_once_with(0)
 
     def test_tf_del_button_calls_delete_task_force(self):
         handler, screen = _make_handler_with_mock_screen()
@@ -149,7 +154,7 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._delete_task_force.assert_called_once_with(1)
+        screen.controller.delete_task_force.assert_called_once_with(1)
 
     def test_sq_dup_button_calls_duplicate_squadron(self):
         handler, screen = _make_handler_with_mock_screen()
@@ -157,7 +162,7 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._duplicate_squadron.assert_called_once_with(1, 2)
+        screen.controller.duplicate_squadron.assert_called_once_with(1, 2)
 
     def test_sq_del_button_calls_delete_squadron(self):
         handler, screen = _make_handler_with_mock_screen()
@@ -165,88 +170,96 @@ class TestTagBasedButtonDispatch:
 
         handler.handle_event(_button_event(btn))
 
-        screen._delete_squadron.assert_called_once_with(0, 1)
+        screen.controller.delete_squadron.assert_called_once_with(0, 1)
 
 
 class TestNamedButtonDispatch:
     def test_start_button_launches_visual_battle(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_button_event(screen._start_btn))
-        screen._start_battle.assert_called_once_with(headless=False)
+        screen.controller.start_battle.assert_called_once_with(headless=False)
 
     def test_headless_button_launches_headless_battle(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_button_event(screen._headless_btn))
-        screen._start_battle.assert_called_once_with(headless=True)
+        screen.controller.start_battle.assert_called_once_with(headless=True)
 
-    def test_save_button_triggers_save(self):
+    def test_save_button_triggers_controller_save(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_button_event(screen._save_btn))
-        screen._save_setup.assert_called_once()
+        screen.controller.save_setup.assert_called_once()
 
-    def test_load_button_triggers_load(self):
+    def test_load_button_triggers_controller_load(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_button_event(screen._load_btn))
-        screen._load_setup.assert_called_once()
+        screen.controller.load_setup.assert_called_once()
 
-    def test_return_button_fires_scene_callback(self):
+    def test_return_button_calls_controller_return_to_menu(self):
         handler, screen = _make_handler_with_mock_screen()
-        screen.scene_callback = MagicMock()
         handler.handle_event(_button_event(screen._return_btn))
-        screen.scene_callback.assert_called_once_with("return_to_menu")
+        screen.controller.return_to_menu.assert_called_once_with()
 
-    def test_return_button_without_callback_does_not_crash(self):
+    def test_add_fleet_button_calls_controller_add_fleet(self):
         handler, screen = _make_handler_with_mock_screen()
-        screen.scene_callback = None
-        # Should not raise.
-        handler.handle_event(_button_event(screen._return_btn))
-
-    def test_add_fleet_button_creates_fleet_and_rebuilds(self):
-        handler, screen = _make_handler_with_mock_screen()
-        fake_side = MagicMock()
-        fake_side.fleets = [MagicMock(), MagicMock()]  # len=2
-        screen.state.get_side.return_value = fake_side
-
         handler.handle_event(_button_event(screen._add_fleet_btn))
+        screen.controller.add_fleet.assert_called_once_with()
 
-        fake_side.create_fleet.assert_called_once_with("Fleet 3")
-        screen._rebuild_ui.assert_called_once()
-
-    def test_end_destroyed_button_toggles_flag(self):
+    def test_remove_fleet_button_calls_controller_remove_fleet(self):
         handler, screen = _make_handler_with_mock_screen()
-        screen.end_all_destroyed = True
+        handler.handle_event(_button_event(screen._remove_fleet_btn))
+        screen.controller.remove_fleet.assert_called_once_with()
+
+    def test_add_tf_button_calls_controller_add_task_force(self):
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_button_event(screen._add_tf_btn))
+        screen.controller.add_task_force.assert_called_once_with()
+
+    def test_add_sq_button_calls_controller_add_squadron(self):
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_button_event(screen._add_sq_btn))
+        screen.controller.add_squadron.assert_called_once_with()
+
+    def test_end_destroyed_button_calls_controller_toggle(self):
+        handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_button_event(screen._end_destroyed_btn))
-        assert screen.end_all_destroyed is False
-        screen._rebuild_ui.assert_called_once()
+        screen.controller.toggle_end_destroyed.assert_called_once_with()
+
+    def test_end_derelict_button_calls_controller_toggle(self):
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_button_event(screen._end_derelict_btn))
+        screen.controller.toggle_end_derelict.assert_called_once_with()
+
+    def test_end_mass_button_calls_controller_toggle(self):
+        handler, screen = _make_handler_with_mock_screen()
+        handler.handle_event(_button_event(screen._end_mass_btn))
+        screen.controller.toggle_end_mass_ratio.assert_called_once_with()
 
 
 class TestDropdownDispatch:
-    def test_side_dropdown_switches_active_side(self):
+    def test_side_dropdown_calls_controller_set_active_side_to_1(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 1 (Right)"))
-        assert screen.view_model.active_side == 1
-        assert screen.view_model.active_fleet_index == 0
-        screen._rebuild_ui.assert_called_once()
+        screen.controller.set_active_side.assert_called_once_with(1)
 
     def test_side_dropdown_back_to_0(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_dropdown_event(screen._side_dropdown, "Side 0 (Left)"))
-        assert screen.view_model.active_side == 0
+        screen.controller.set_active_side.assert_called_once_with(0)
 
-    def test_fleet_role_dropdown_calls_set_fleet_battle_role(self):
+    def test_fleet_role_dropdown_calls_controller(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_dropdown_event(screen._fleet_role_dropdown, "Vanguard"))
-        screen._set_fleet_battle_role.assert_called_once_with("Vanguard")
+        screen.controller.set_fleet_battle_role.assert_called_once_with("Vanguard")
 
-    def test_targeting_dropdown_calls_set_selected_policy(self):
+    def test_targeting_dropdown_calls_controller(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_dropdown_event(screen._targeting_dropdown, "Focus Nearest"))
-        screen._set_selected_policy.assert_called_once_with("targeting", "Focus Nearest")
+        screen.controller.set_selected_policy.assert_called_once_with("targeting", "Focus Nearest")
 
-    def test_movement_dropdown_calls_set_selected_policy(self):
+    def test_movement_dropdown_calls_controller(self):
         handler, screen = _make_handler_with_mock_screen()
         handler.handle_event(_dropdown_event(screen._movement_dropdown, "Pursue"))
-        screen._set_selected_policy.assert_called_once_with("movement", "Pursue")
+        screen.controller.set_selected_policy.assert_called_once_with("movement", "Pursue")
 
 
 class TestUnknownEvents:
@@ -262,7 +275,7 @@ class TestUnknownEvents:
         # Unknown button — no tags, not a named button.
         btn = SimpleNamespace()
         handler.handle_event(_button_event(btn))
-        # None of the mutation methods should have been called.
-        screen._add_ship_from_design.assert_not_called()
-        screen._duplicate_task_force.assert_not_called()
-        screen._start_battle.assert_not_called()
+        # None of the controller mutations should have been called.
+        screen.controller.add_ship_from_design.assert_not_called()
+        screen.controller.duplicate_task_force.assert_not_called()
+        screen.controller.start_battle.assert_not_called()

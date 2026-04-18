@@ -36,6 +36,33 @@
 | `game/ui/screens/battle_setup/input_handler.py` | Production (NEW) | 5 | `BattleSetupInputHandler.handle_event(event)` — pygame_gui dispatch. Tag-based button dispatch + named-button dispatch + dropdown dispatch. ~175 LOC |
 | `tests/unit/ui/screens/battle_setup/test_input_handler.py` | Test (NEW) | 5 | 26 tests covering every event family (fleet/ship/design/TF/SQ/complex/named-button/dropdown/unknown-noop) |
 | `game/ui/screens/battle_setup_screen.py` (cont.) | Production | 5 | Added `self.input_handler`; `handle_event` trimmed to 3 lines; deleted `_handle_button` (105 LOC) + `_handle_dropdown` (17 LOC) + `import pygame_gui`. Screen 801 → 680 LOC |
+| `Projects/active_projects/PROJ-282/phase_6_checklist.md` | Project doc | 6 | All Phase 6 tasks checked; status Complete |
+| `game/ui/screens/battle_setup/controller.py` | Production (NEW) | 6 | `BattleSetupController` — 458 LOC. Owns all state mutations, complex toggles, end-condition settings, save/load, battle launch, lifecycle. Pygame-free. |
+| `tests/unit/ui/screens/battle_setup/test_controller.py` | Test (NEW) | 6 | 31 tests covering defaults, lifecycle, CRUD, toggles, end-condition, save/load migration, start_battle guard + callback |
+| `game/ui/screens/battle_setup/input_handler.py` (cont.) | Production | 6 | Retargeted from `screen._*` to `screen.controller.*` for every mutation dispatch. Added `_push_tick_limit_to_controller()` helper. Selection-only view_model writes unchanged. |
+| `tests/unit/ui/screens/battle_setup/test_input_handler.py` (cont.) | Test | 6 | Mock `screen.controller = MagicMock()`; assertions retargeted from `screen._*` to `screen.controller.*`. Added 4 new tests for add_fleet, remove_fleet, add_tf, add_sq, end_derelict, end_mass. 26 → 30 tests. |
+| `game/ui/screens/battle_setup_screen.py` (cont.) | Production | 6 | Instantiated `self.controller`; added 5 property shims (end-condition fields) + `_get_toggle` shim; deleted 15 mutation methods; `start()` is a one-line delegate; deleted `import os`. **Fixed latent Phase 3 bug** (end-condition fields inside `@available_designs.setter`). Screen 680 → 287 LOC. |
+| `tests/unit/ui/screens/test_battle_setup_state.py` (cont.) | Test | 6 | Deleted `TestSyncComplexTogglesToStateIsNTeamSafe` (2 tests) — duplicated by `test_controller.py::TestSyncComplexTogglesIsNTeamSafe` with real controller. |
+| `Projects/active_projects/PROJ-282/phase_7_checklist.md` | Project doc | 7 | All Phase 7 tasks checked; status Complete |
+| `game/ui/screens/battle_setup/fleet_hierarchy_editor.py` | Production (NEW) | 7 | `FleetHierarchyEditor` — stateless static-method helper for Fleet/TF/SQ CRUD + `_clone_ship`. ~180 LOC. Kills the Phase 6 inline clone duplication. |
+| `tests/unit/ui/screens/battle_setup/test_fleet_hierarchy_editor.py` | Test (NEW) | 7 | 11 tests: create_tf/sq, duplicate_tf/sq (policy + battle_role + spatial_behavior preservation), delete_tf/sq, clone_ship, stateless |
+| `game/ui/screens/battle_setup/controller.py` (cont.) | Production | 7 | TF/SQ mutation methods became one-line delegations to `FleetHierarchyEditor.*`. Deleted inline clone logic + `_clone_ship` staticmethod + unused `TaskForce`/`Squadron`/`CombatPolicy` imports. |
+| `Projects/active_projects/PROJ-282/phase_8_checklist.md` | Project doc | 8 | All Phase 8 tasks checked; status Complete |
+| `game/ui/screens/battle_setup/screen.py` | Production (NEW) | 8 | **Terminal PROJ-282 home for the screen.** `FleetBattleSetupScreen` thin shell — 184 LOC (IScene + delegate wiring + property shims). |
+| `game/ui/screens/battle_setup/constants.py` | Production (NEW) | 8 | 5 module-level option tables relocated from the old `battle_setup_screen.py`: `_SYSTEM_SCOPE_COMPLEXES`, `_SECTOR_SCOPE_COMPLEXES`, `_TARGETING_OPTIONS`, `_MOVEMENT_OPTIONS`, `_BATTLE_ROLE_OPTIONS`. 54 LOC. |
+| `game/ui/screens/battle_setup/__init__.py` | Production | 8 | Added full package-structure docstring; re-exports `FleetBattleSetupScreen`. |
+| `game/ui/screens/battle_setup_screen.py` | Production (DELETED) | 8 | **Old screen file DELETED.** All functionality migrated to the `battle_setup/` package. |
+| `game/app.py` | Production | 8 | Import updated: `from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen as BattleSetupScreen`. |
+| `game/ui/screens/battle_setup/panels/{left,center}_panel.py` | Production | 8 | Imports updated from `battle_setup_screen` → `battle_setup.constants`. |
+| `game/ui/screens/battle_setup/input_handler.py` (cont.) | Production | 8 | Imports updated from `battle_setup_screen` → `battle_setup.constants`. |
+| `game/ui/screens/battle_setup/controller.py` (cont.) | Production | 8 | Imports updated from `battle_setup_screen` → `battle_setup.constants`. |
+| `tests/unit/ui/screens/battle_setup/test_controller.py` (cont.) | Test | 8 | Imports updated from `battle_setup_screen` → `battle_setup.constants`. |
+| `tests/unit/ui/screens/battle_setup/test_renderer.py` (cont.) | Test | 8 | Imports updated from `battle_setup_screen` → `battle_setup.screen`. |
+| `tests/unit/ui/screens/test_battle_setup_state.py` (cont.) | Test | 8 | Imports updated from `battle_setup_screen` → `battle_setup.screen`. |
+| `Projects/active_projects/PROJ-282/phase_9_checklist.md` | Project doc | 9 | All Phase 9 tasks checked; status Complete |
+| `docs/03_CONVENTIONS.md` | Doc | 9 | **Added § 2.4 UI Screen Line Budget (PROJ-282)** — documents the ≤300 LOC target as a review signal, not a blocker. Names `TestLabScreen` + `FleetBattleSetupScreen` as exemplars. |
+| `game/ui/screens/battle_setup/screen.py` (cont.) | Production | 9 | Added module-docstring paragraph cross-referencing the convention + naming TestLabScreen as sibling exemplar. Dropped unused `import pygame`. |
+| `game/ui/screens/test_lab/screen.py` | Production | 9 | Added the symmetric module-docstring paragraph naming FleetBattleSetupScreen as sibling exemplar. |
 
 ## Planned for Phases 3-8
 

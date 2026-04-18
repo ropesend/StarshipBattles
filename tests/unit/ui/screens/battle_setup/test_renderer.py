@@ -43,7 +43,7 @@ class TestScreenWiresRenderer:
     delegates to `renderer.rebuild(self)`."""
 
     def test_screen_holds_renderer_instance(self):
-        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
         from game.ui.screens.battle_setup.renderer import BattleSetupRenderer
 
         screen = object.__new__(FleetBattleSetupScreen)
@@ -55,7 +55,7 @@ class TestScreenWiresRenderer:
         """`FleetBattleSetupScreen._rebuild_ui` delegates to
         `self.renderer.rebuild(self)` — no other rebuild path exists."""
         import inspect
-        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
 
         src = inspect.getsource(FleetBattleSetupScreen._rebuild_ui)
         # The method body should be a single delegation line. Checking the

@@ -5,6 +5,11 @@ This module contains the main TestLabScreen class which orchestrates
 the Combat Lab interface for viewing and running test scenarios.
 
 PROJ-172: Refactored to MVVM architecture with ViewModel, Renderer, and InputHandler.
+
+This screen follows the MVVM pattern documented in
+`docs/03_CONVENTIONS.md § 2.4 UI Screen Line Budget`. Target: keep the
+class under 300 lines — delegate logic to ViewModel / Renderer /
+InputHandler / Controller. FleetBattleSetupScreen is the sibling exemplar.
 """
 import pygame
 import pygame_gui

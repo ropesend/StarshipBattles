@@ -267,71 +267,10 @@ class TestBattleSetupSideComplexToggles:
         assert restored.sides[2].system_complex_toggles == {"c": True}
 
 
-class TestSyncComplexTogglesToStateIsNTeamSafe:
-    """PROJ-282 Phase 2 regression: `_sync_complex_toggles_to_state` previously
-    hardcoded `state.side_0` and `state.side_1`, silently dropping toggles
-    for sides 2-7 at battle launch. This test exercises the method on a
-    3-side state and verifies every side's materialized
-    `system_complexes` / `sector_complexes` list is populated from its
-    toggle dict."""
-
-    def test_sync_materializes_all_sides(self):
-        from game.ui.screens.battle_setup_screen import (
-            FleetBattleSetupScreen,
-            _SYSTEM_SCOPE_COMPLEXES,
-            _SECTOR_SCOPE_COMPLEXES,
-        )
-        from game.ui.screens.battle_setup_state import BattleSetupState
-
-        sys_id_0, sys_display_0 = _SYSTEM_SCOPE_COMPLEXES[0]
-        sec_id_0, sec_display_0 = _SECTOR_SCOPE_COMPLEXES[0]
-        sys_id_1, _ = _SYSTEM_SCOPE_COMPLEXES[1]
-
-        # Bypass __init__ to avoid pygame/tkinter setup for this pure
-        # behavior test. The method only reads `self.state`.
-        screen = object.__new__(FleetBattleSetupScreen)
-        screen.state = BattleSetupState(side_count=3)
-        screen.state.sides[0].system_complex_toggles = {sys_id_0: True}
-        screen.state.sides[1].sector_complex_toggles = {sec_id_0: True}
-        screen.state.sides[2].system_complex_toggles = {sys_id_1: True}
-
-        screen._sync_complex_toggles_to_state()
-
-        assert screen.state.sides[0].system_complexes == [
-            {"design_id": sys_id_0, "display_name": sys_display_0}
-        ]
-        assert screen.state.sides[1].sector_complexes == [
-            {"design_id": sec_id_0, "display_name": sec_display_0}
-        ]
-        # Regression: previously the screen's hardcoded-sides projection
-        # dropped side 2 toggles entirely. Should survive now.
-        assert len(screen.state.sides[2].system_complexes) == 1
-        assert screen.state.sides[2].system_complexes[0]["design_id"] == sys_id_1
-
-    def test_sync_skips_off_toggles(self):
-        from game.ui.screens.battle_setup_screen import (
-            FleetBattleSetupScreen,
-            _SYSTEM_SCOPE_COMPLEXES,
-        )
-        from game.ui.screens.battle_setup_state import BattleSetupState
-
-        sys_id_0, _ = _SYSTEM_SCOPE_COMPLEXES[0]
-        sys_id_1, _ = _SYSTEM_SCOPE_COMPLEXES[1]
-
-        screen = object.__new__(FleetBattleSetupScreen)
-        screen.state = BattleSetupState(side_count=2)
-        screen.state.sides[0].system_complex_toggles = {
-            sys_id_0: True,
-            sys_id_1: False,  # explicitly off
-        }
-
-        screen._sync_complex_toggles_to_state()
-
-        # Only the on-toggled complex should be materialized.
-        materialized_ids = [
-            c["design_id"] for c in screen.state.sides[0].system_complexes
-        ]
-        assert materialized_ids == [sys_id_0]
+# PROJ-282 Phase 6: screen-level `_sync_complex_toggles_to_state` tests
+# deleted — the method moved to `BattleSetupController`. Equivalent
+# regression coverage lives in
+# tests/unit/ui/screens/battle_setup/test_controller.py::TestSyncComplexTogglesIsNTeamSafe.
 
 
 class TestScreenDelegatesViewStateToViewModel:
@@ -343,7 +282,7 @@ class TestScreenDelegatesViewStateToViewModel:
     """
 
     def test_screen_owns_a_view_model(self):
-        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
         from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 
         screen = object.__new__(FleetBattleSetupScreen)
@@ -355,7 +294,7 @@ class TestScreenDelegatesViewStateToViewModel:
         assert isinstance(screen.view_model, BattleSetupViewModel)
 
     def test_active_side_shim_routes_to_view_model(self):
-        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
         from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 
         screen = object.__new__(FleetBattleSetupScreen)
@@ -366,7 +305,7 @@ class TestScreenDelegatesViewStateToViewModel:
         assert screen.active_side == 3  # read-through
 
     def test_selection_shims_route_to_view_model(self):
-        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
         from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 
         screen = object.__new__(FleetBattleSetupScreen)
@@ -381,7 +320,7 @@ class TestScreenDelegatesViewStateToViewModel:
         assert screen.view_model.selected_ship_index == 5
 
     def test_available_designs_shim_routes_to_view_model(self):
-        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
         from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 
         screen = object.__new__(FleetBattleSetupScreen)
