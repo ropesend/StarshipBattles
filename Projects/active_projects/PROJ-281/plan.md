@@ -14,9 +14,9 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Build `make_minimal_spec(ships_by_team)` test helper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Audit and migrate 47 callers of `BattleScreen.start(team0, team1)` | Not Started | TBD |
-| 3. Delete the `start()` shim and `_build_fallback_outcome` (~90 lines) | Not Started | TBD |
-| 4. Documentation update | Not Started | TBD |
+| 2. Audit and migrate 47 callers of `BattleScreen.start(team0, team1)` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Delete the `start()` shim and `_build_fallback_outcome` (~90 lines) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Documentation update | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-18
