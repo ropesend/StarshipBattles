@@ -54,7 +54,7 @@ class TestStrategyWidgetsButtonCompleteness:
         # The formatter needs these buttons (used in its property accessors)
         required_by_formatter = [
             'btn_raw_data', 'btn_colonize', 'btn_build_yard',
-            'btn_planet_orders', 'btn_atmosphere', 'btn_abilities',
+            'btn_planet_orders', 'btn_abilities',
             'btn_orders', 'btn_fleet_report', 'btn_build_fleet',
         ]
 
@@ -64,3 +64,25 @@ class TestStrategyWidgetsButtonCompleteness:
                 f"StrategyWidgets must have '{btn}' field "
                 f"(required by StrategyDetailFormatter)"
             )
+
+    def test_no_orphan_atmosphere_button(self):
+        """`btn_atmosphere` must not exist on `StrategyWidgets`.
+
+        The standalone Atmosphere button was removed when atmosphere editing
+        was consolidated under the abilities window (see docs/systems/
+        strategy_layer.md §"Per-Component Activation Architecture"). A stale
+        declaration rendered as a phantom button in the detail panel with no
+        handler, because `visible=0` at construction does not prevent
+        pygame_gui from painting the widget when the container is drawn.
+
+        Guarding the field's absence prevents the button from being silently
+        re-introduced by well-meaning future work.
+        """
+        from game.ui.screens.strategy_panel_manager import StrategyWidgets
+        from dataclasses import fields as dc_fields
+
+        widget_fields = {f.name for f in dc_fields(StrategyWidgets)}
+        assert 'btn_atmosphere' not in widget_fields, (
+            "btn_atmosphere must stay removed from StrategyWidgets; the "
+            "abilities window is the sole entry point for atmosphere editing."
+        )
