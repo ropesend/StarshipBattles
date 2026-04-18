@@ -146,6 +146,8 @@ from tests.fixtures.battle import (
     create_battle_engine_with_ships, # Engine with ships added
     create_mock_battle_engine,      # Mock for unit tests
     create_mock_battle_screen,      # Mock battle screen
+    make_minimal_spec,              # Build a minimal BattleSpec for unit tests
+    start_battle_screen_with_minimal_spec,  # Drop-in for legacy BattleScreen.start()
 )
 
 engine = create_battle_engine(enable_logging=True)
@@ -159,6 +161,57 @@ engine = create_battle_engine_with_ships(team0_count=3, team1_count=2)
 | `battle_engine_with_ships` | function | BattleEngine with two opposing ships |
 | `mock_battle_engine` | function | Mock for unit tests |
 | `mock_battle_screen` | function | Mock battle screen with engine |
+
+**Writing unit tests that need a minimal battle (PROJ-281):**
+
+`BattleScreen` has exactly one production entry: `start_battle(controller)`.
+Tests that just need a minimal battle running on a `BattleScreen` build
+a spec via `make_minimal_spec` and install it on the scene via
+`start_battle_screen_with_minimal_spec` — the canonical replacement
+for the deleted `BattleScreen.start(team0, team1)` shim.
+
+```python
+from tests.fixtures.battle import start_battle_screen_with_minimal_spec
+
+def test_something(fresh_registries):
+    scene = BattleScreen(1000, 1000)
+    ship1 = Ship("A", 0, 0, (255, 0, 0), team_id=0, registries=fresh_registries)
+    ship2 = Ship("B", 500, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
+
+    # Drop-in replacement for scene.start([ship1], [ship2], headless=True).
+    controller = start_battle_screen_with_minimal_spec(
+        scene, {0: [ship1], 1: [ship2]}, headless=True,
+    )
+
+    # scene.ships / scene.ai_controllers / scene.projectiles are delegating
+    # properties that transparently proxy to controller.service.get_engine().
+    assert len(scene.ships) == 2
+```
+
+Helper contract:
+- Ship identity is preserved — the internal `ship_builder` returns the
+  exact ship objects passed in (in iteration order), so post-start
+  assertions like `ship in engine.ships` hold.
+- `end_condition` defaults to `TeamEliminatedCondition()` so tests that
+  kill a team and assert `is_battle_over()` behave identically to the
+  legacy shim. `max_ticks` remains the safety ceiling via
+  `absolute_max_ticks = max_ticks * 2`.
+- Accepts 2+ teams (`{0: [...], 1: [...], 2: [...]}`) — supports the
+  N-team contract introduced by PROJ-275.
+- Empty teams (`{0: [ship], 1: []}`) are accepted.
+
+For headless-only tests (no screen, no controller lifecycle), prefer
+`run_battle(spec, ai_factory=..., ship_builder=...)` directly:
+
+```python
+from game.simulation.battle_runner import run_battle
+from tests.fixtures.battle import make_minimal_spec
+
+spec = make_minimal_spec({0: [s1], 1: [s2]}, max_ticks=10)
+outcome = run_battle(spec, ai_factory=AIControllerFactory(),
+                    ship_builder=lambda ss, tid: [s1, s2][tid])
+assert outcome.teams[0].team_id == 0
+```
 
 ---
 
@@ -383,4 +436,4 @@ For detailed mock patterns and guidelines, see [tests/README.md](../README.md#mo
 
 ---
 
-*Last Updated: January 2026 (PROJ-48 Phase 7)*
+*Last Updated: 2026-04-18 (PROJ-281 Phase 4 — documented `make_minimal_spec` + `start_battle_screen_with_minimal_spec` as canonical test-battle helpers after deleting `BattleScreen.start(team0, team1)` shim)*

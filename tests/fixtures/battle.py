@@ -159,6 +159,12 @@ def start_battle_screen_with_minimal_spec(
             scene, {0: [ship1], 1: [ship2]}, headless=True,
         )
 
+    End-condition defaults to ``TeamEliminatedCondition`` to match the
+    legacy shim's semantics — migrating tests that assert
+    ``is_battle_over()`` after killing one team keep the expected
+    behavior. ``max_ticks`` still applies as the safety ceiling via
+    ``absolute_max_ticks = max_ticks * 2``.
+
     Args:
         screen: A ``BattleScreen`` instance — the target of ``start_battle``.
         ships_by_team: {team_id: [Ship, ...]} — typically
@@ -166,17 +172,22 @@ def start_battle_screen_with_minimal_spec(
         headless: Passed into ``BattleConfig``.
         start_paused: Passed into ``BattleConfig``.
         seed: Deterministic seed for the spec and BattleConfig.
-        max_ticks: Duration for the default ``TickLimitCondition``.
+        max_ticks: Safety ceiling for the absolute_max_ticks guardrail.
 
     Returns:
         The running ``BattleController`` (for tests that need to drive
         ``controller.update()`` or query ``controller.service.get_engine()``).
     """
+    import dataclasses
+
     from game.ai.ai_factory import AIControllerFactory
     from game.simulation.battle_config import BattleConfig
     from game.simulation.battle_controller import BattleController
+    from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
 
     spec = make_minimal_spec(ships_by_team, seed=seed, max_ticks=max_ticks)
+    # Legacy-shim parity: TeamEliminatedCondition matches `BattleScreen.start()`.
+    spec = dataclasses.replace(spec, end_condition=TeamEliminatedCondition())
 
     # Flatten ships in the same iteration order the spec compiler uses.
     ordered_ships: List["Ship"] = []

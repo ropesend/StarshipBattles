@@ -112,10 +112,7 @@ class BattleController:
             spec: Optional BattleSpec for outcome extraction. Production
                 callers (app.py, test_lab/screen.py, test_execution_service.py)
                 pass the spec they compiled so the controller can emit a
-                `BattleOutcome` at battle end via `get_outcome()`. When
-                `spec=None` (legacy `BattleScreen.start(team0, team1)`
-                bypass and pre-spec unit tests), the controller falls
-                back to the synthesized-outcome path in consumers.
+                `BattleOutcome` at battle end via `get_outcome()`.
 
         Returns:
             BattleResult indicating success/failure
@@ -126,10 +123,9 @@ class BattleController:
         self._is_started = False
 
         # PROJ-270 Task 5.4: boundary comes from the spec (origin-centered
-        # `BoundaryRegion` ADT). When no spec is supplied (legacy
-        # `BattleScreen.start(team0, team1)` bypass and pre-spec unit
-        # tests), default to `UnboundedRegion` — no edge retreat, but
-        # warp retreat and the rest of the controller still work.
+        # `BoundaryRegion` ADT). When no spec is supplied, default to
+        # `UnboundedRegion` — no edge retreat, but warp retreat and the
+        # rest of the controller still work.
         from game.simulation.combat.boundary import UnboundedRegion  # noqa: PLC0415
         boundary = spec.boundary if (spec is not None and spec.boundary is not None) else UnboundedRegion()
         self._retreat_manager = RetreatManager(boundary=boundary)
@@ -381,11 +377,17 @@ class BattleController:
         self._spec = spec
 
     def get_outcome(self) -> Optional["BattleOutcome"]:
-        """Return the `BattleOutcome` for this battle, once it has ended.
+        """Return the `BattleOutcome` for this battle.
 
-        Returns `None` while the battle is in progress or if the
-        controller was never handed a spec via `set_spec()`.
+        Lazy extraction (PROJ-281 Phase 3): if the battle's natural
+        end-transition hasn't fired yet but a consumer asks for the
+        outcome (e.g. UI force-end via the "End Battle" button), extract
+        on demand from current engine state. Returns `None` only when
+        the controller was never handed a spec via `set_spec()` or the
+        engine is not yet started.
         """
+        if self._outcome is None and self._spec is not None:
+            self._extract_outcome_on_battle_end()
         return self._outcome
 
     def _extract_outcome_on_battle_end(self) -> None:

@@ -14,6 +14,7 @@ from game.ui.screens.battle_screen import (
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import create_component
 from game.core.constants import LayerType
+from tests.fixtures.battle import start_battle_screen_with_minimal_spec
 
 
 def _build_ship(name, x, y, color, registries):
@@ -62,17 +63,11 @@ class TestBattleScreenSimulationLifecycle:
             self.fresh_registries = fresh_registries
             yield
 
-    def test_start_with_empty_ship_lists(self):
-        """Test start() with empty ship lists still initializes."""
-        self.scene.start([], [], headless=True)
-
-        assert len(self.scene.ships) == 0
-        assert self.scene.sim_tick_counter == 0
-        assert self.scene.sim_paused is False
-
     def test_start_headless_true_sets_headless_mode(self):
         """Test start() with headless=True sets headless_mode."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         assert self.scene.headless_mode is True
 
@@ -80,7 +75,9 @@ class TestBattleScreenSimulationLifecycle:
         """Test start() with headless=False does not set headless mode."""
         self.scene.camera = MagicMock()  # Mock camera for fit_objects
 
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
 
         assert self.scene.headless_mode is False
         assert self.scene.headless_start_time is None
@@ -88,7 +85,9 @@ class TestBattleScreenSimulationLifecycle:
 
     def test_start_assigns_correct_team_ids(self):
         """Test start() assigns team_id 0 to team0 and 1 to team1."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         # Ships are added via battle service which sets team_id
         team0_ships = [s for s in self.scene.ships if s.team_id == 0]
@@ -104,34 +103,20 @@ class TestBattleScreenSimulationLifecycle:
         from game.simulation.services import BattleService
         from game.ui.services.battle_ui_service import BattleUIService
 
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         assert self.scene._battle_service is not None
         assert isinstance(self.scene._battle_service, BattleService)
         assert self.scene._ui_service is not None
         assert isinstance(self.scene._ui_service, BattleUIService)
 
-    def test_start_constructs_controller_inline(self):
-        """start() should construct a BattleController inline (post-PROJ-269)
-        and hand it to start_battle. The legacy
-        `create_started_battle_controller` factory was deleted in Phase 6."""
-        mock_controller = MagicMock()
-        mock_controller.config = MagicMock(headless=False, start_paused=False)
-        mock_controller.service = self.scene._battle_service
-
-        with patch(
-            'game.ui.screens.battle_screen.BattleController',
-            return_value=mock_controller,
-        ) as mock_controller_cls:
-            with patch.object(self.scene, 'start_battle') as mock_start_battle:
-                self.scene.start([self.ship1], [self.ship2], headless=False)
-
-        mock_controller_cls.assert_called_once()
-        mock_start_battle.assert_called_once_with(mock_controller)
-
     def test_pause_unpause_toggle(self):
         """Test pause/unpause via sim_paused toggle."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
 
         assert self.scene.sim_paused is False
 
@@ -143,13 +128,17 @@ class TestBattleScreenSimulationLifecycle:
 
     def test_start_paused_parameter(self):
         """Test start() with start_paused=True starts paused."""
-        self.scene.start([self.ship1], [self.ship2], headless=False, start_paused=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False, start_paused=True,
+        )
 
         assert self.scene.sim_paused is True
 
     def test_speed_multiplier_changes_affect_tick_accumulation(self):
         """Test speed multiplier changes affect tick accumulation."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
 
         # At 2x speed, accumulator should add more time
@@ -186,7 +175,9 @@ class TestBattleScreenWinLossDetection:
 
     def test_get_winner_returns_1_when_team0_all_dead(self):
         """Test get_winner() returns 1 when team 0 ships are all dead."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         # Kill team 0
         self.ship1.is_alive = False
@@ -195,7 +186,9 @@ class TestBattleScreenWinLossDetection:
 
     def test_get_winner_returns_0_when_team1_all_dead(self):
         """Test get_winner() returns 0 when team 1 ships are all dead."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         # Kill team 1
         self.ship2.is_alive = False
@@ -207,7 +200,9 @@ class TestBattleScreenWinLossDetection:
         # Create additional ship from template
         ship3 = copy.deepcopy(ship_templates[2])
 
-        self.scene.start([self.ship1, ship3], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1, ship3], 1: [self.ship2]}, headless=True,
+        )
 
         # Kill one team0 ship but not all
         self.ship1.is_alive = False
@@ -216,7 +211,9 @@ class TestBattleScreenWinLossDetection:
 
     def test_draw_condition_all_ships_dead(self):
         """Test draw condition when all ships dead simultaneously."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         # Kill all ships
         self.ship1.is_alive = False
@@ -246,7 +243,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_keyboard_space_toggles_pause(self):
         """Test handle_event() with SPACE key toggles pause."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
 
         event = MagicMock()
@@ -263,7 +262,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_keyboard_comma_decreases_speed(self):
         """Test handle_event() with COMMA key decreases speed."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_speed_multiplier = 1.0
 
         event = MagicMock()
@@ -276,7 +277,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_keyboard_period_increases_speed(self):
         """Test handle_event() with PERIOD key increases speed."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_speed_multiplier = 1.0
 
         event = MagicMock()
@@ -289,7 +292,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_keyboard_m_resets_speed(self):
         """Test handle_event() with M key resets speed to normal."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_speed_multiplier = 4.0
 
         event = MagicMock()
@@ -302,7 +307,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_keyboard_slash_sets_ui_pause_speed(self):
         """Test handle_event() with SLASH key sets UI pause speed."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_speed_multiplier = 1.0
 
         event = MagicMock()
@@ -315,7 +322,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_forwards_to_battle_ui(self):
         """Test handle_event() forwards mouse clicks to BattleUI."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
 
         event = MagicMock()
         event.type = pygame.MOUSEBUTTONDOWN
@@ -328,7 +337,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_mouse_scroll_forwards_to_camera(self):
         """Test handle_event() forwards mouse scroll to camera for zoom."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
 
         event = MagicMock()
         event.type = pygame.MOUSEWHEEL
@@ -341,7 +352,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_focus_ship_from_ui_click(self):
         """Test handle_event() sets camera target from UI focus_ship result."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.ui.handle_click.return_value = ("focus_ship", self.ship1.id)
 
         event = MagicMock()
@@ -357,7 +370,9 @@ class TestBattleScreenEventHandling:
         """Test handle_event() with 'end_battle' result triggers return."""
         callback = MagicMock()
         self.scene.scene_callback = callback
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.ui.handle_click.return_value = "end_battle"
 
         event = MagicMock()
@@ -372,7 +387,9 @@ class TestBattleScreenEventHandling:
 
     def test_handle_event_left_click_clears_camera_target(self):
         """Test handle_event() left click with no UI hit clears camera target."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.camera.target = self.ship1
         self.scene.ui.handle_click.return_value = False
 
@@ -404,7 +421,9 @@ class TestBattleScreenCameraInput:
 
     def test_visual_update_calls_camera_update_input(self):
         """Camera input (panning, arrow keys) is processed each visual frame."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = True  # Pause to isolate camera update
 
         with patch.object(self.scene.camera, 'update_input') as mock_input:
@@ -425,7 +444,9 @@ class TestBattleScreenCameraInput:
 
     def test_arrow_key_panning_moves_camera(self):
         """Arrow keys pan the camera during visual update."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = True
         self.scene.camera.target = None
 
@@ -440,7 +461,9 @@ class TestBattleScreenCameraInput:
 
     def test_middle_mouse_panning_moves_camera(self):
         """Middle mouse drag pans the camera during visual update."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = True
         self.scene.camera.target = None
         self.scene.camera.position = pygame.math.Vector2(500, 500)
@@ -456,7 +479,9 @@ class TestBattleScreenCameraInput:
 
     def test_middle_mouse_panning_clears_target(self):
         """Middle mouse drag clears camera target follow."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = True
         self.scene.camera.target = self.ship1
 
@@ -469,7 +494,9 @@ class TestBattleScreenCameraInput:
 
     def test_headless_mode_does_not_process_camera_input(self):
         """Headless mode skips camera input processing entirely."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         with patch.object(self.scene.camera, 'update_input') as mock_input, \
              patch.object(self.scene, '_run_single_tick'):
@@ -496,7 +523,9 @@ class TestBattleScreenTickMechanics:
 
     def test_accumulator_capped_to_prevent_spiral_of_death(self):
         """Test accumulator doesn't exceed max cap (prevents spiral-of-death)."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
         self.scene.sim_speed_multiplier = 1.0
         self.scene._accumulator = 0.0
@@ -513,7 +542,9 @@ class TestBattleScreenTickMechanics:
 
     def test_multiple_ticks_per_frame_with_large_dt(self):
         """Test multiple ticks run per frame with large dt value."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
         self.scene.sim_speed_multiplier = 1.0
         self.scene._accumulator = 0.0
@@ -528,7 +559,9 @@ class TestBattleScreenTickMechanics:
 
     def test_turbo_mode_runs_fixed_ticks_per_frame(self):
         """Test turbo mode (>10x speed) runs fixed N ticks per frame."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
         self.scene.sim_speed_multiplier = 100.0  # Turbo mode
         self.scene._accumulator = 0.0
@@ -540,7 +573,9 @@ class TestBattleScreenTickMechanics:
 
     def test_speed_limits_enforced(self):
         """Test speed multiplier is bounded by MIN and MAX."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
 
         # Try to go below minimum
         self.scene.sim_speed_multiplier = MIN_SPEED_MULTIPLIER
@@ -634,7 +669,9 @@ class TestBattleScreenCycleFocus:
 
     def test_cycle_focus_forward(self):
         """Test cycling focus forward through ships."""
-        self.scene.start([self.ship1, self.ship3], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1, self.ship3], 1: [self.ship2]}, headless=False,
+        )
         self.scene.camera.target = None
 
         # Cycle forward
@@ -644,7 +681,9 @@ class TestBattleScreenCycleFocus:
 
     def test_cycle_focus_backward(self):
         """Test cycling focus backward through ships."""
-        self.scene.start([self.ship1, self.ship3], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1, self.ship3], 1: [self.ship2]}, headless=False,
+        )
         self.scene.camera.target = self.ship1
 
         # Cycle backward
@@ -655,7 +694,9 @@ class TestBattleScreenCycleFocus:
 
     def test_cycle_focus_skips_dead_ships(self):
         """Test cycling focus skips dead ships."""
-        self.scene.start([self.ship1, self.ship3], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1, self.ship3], 1: [self.ship2]}, headless=False,
+        )
         self.ship1.is_alive = False
         self.scene.camera.target = self.ship3
 
@@ -667,7 +708,9 @@ class TestBattleScreenCycleFocus:
 
     def test_cycle_focus_no_ships_alive(self):
         """Test cycling focus when no ships are alive does nothing."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.ship1.is_alive = False
         self.ship2.is_alive = False
         self.scene.camera.target = None
@@ -680,7 +723,9 @@ class TestBattleScreenCycleFocus:
 
     def test_keyboard_bracket_keys_cycle_focus(self):
         """Test keyboard bracket keys cycle focus."""
-        self.scene.start([self.ship1, self.ship3], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1, self.ship3], 1: [self.ship2]}, headless=False,
+        )
         self.scene.camera.target = None
 
         event = MagicMock()

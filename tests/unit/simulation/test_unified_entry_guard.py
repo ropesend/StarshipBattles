@@ -561,36 +561,52 @@ class TestBattleSetupCompilerBehavioralStatKeys:
     # covered — no allowlist maintenance required.
 
 
-class TestBattleScreenLegacyBypassDeprecated:
-    """PROJ-272 Phase 5 re-audit: `BattleScreen.start(team0, team1)` + its
-    `_build_fallback_outcome` companion were SLATED for deletion but
-    ~46 test callers still depend on them. Retained as documented
-    test-only shims. This guard enforces: the shim MUST carry a
-    DEPRECATED / legacy marker in its docstring so contributors don't
-    mistake it for a production API."""
+class TestBattleScreenLegacyBypassDeleted:
+    """PROJ-281 Phase 3 (2026-04-18): `BattleScreen.start(team0, team1)`
+    and its `_build_fallback_outcome` companion were DELETED after
+    migrating all ~47 test callers to `start_battle_screen_with_minimal_spec`
+    (tests/fixtures/battle.py). `BattleScreen` now has exactly one
+    production entry: `start_battle(controller)` consuming a running
+    `BattleController`. This guard enforces the deletion — if either name
+    reappears, migration tests have regressed or someone has re-introduced
+    the legacy bypass."""
 
-    def test_battle_screen_start_marked_deprecated(self):
+    def test_battle_screen_start_team_shim_does_not_exist(self):
         path = REPO_ROOT / "game/ui/screens/battle_screen.py"
         text = path.read_text(encoding="utf-8")
-        # Find the `def start(self, team0_ships, ...)` block.
         import re
         sig_match = re.search(
             r"def\s+start\s*\(\s*self\s*,\s*team0_ships",
             text,
         )
-        assert sig_match, (
-            "`BattleScreen.start(team0_ships, ...)` not found. If you're "
-            "deleting it, also delete/migrate test callers in "
-            "test_battle_screen.py, test_battle_screen_simulation.py, "
-            "test_visual_run.py."
+        assert sig_match is None, (
+            "`BattleScreen.start(team0_ships, ...)` was deleted by "
+            "PROJ-281 Phase 3. Tests must use "
+            "`tests.fixtures.battle.start_battle_screen_with_minimal_spec` "
+            "(spec-based path) instead of the deleted shim."
         )
-        # Grab the next ~500 chars starting at the signature — enough to
-        # include the docstring.
-        block = text[sig_match.start():sig_match.start() + 1500]
-        assert any(marker in block for marker in ["DEPRECATED", "Legacy", "legacy"]), (
-            "`BattleScreen.start` docstring must explicitly mark the method "
-            "as DEPRECATED / legacy so production contributors don't use it. "
-            "See PROJ-272 Phase 5 decision."
+
+    def test_build_fallback_outcome_does_not_exist(self):
+        path = REPO_ROOT / "game/ui/screens/battle_screen.py"
+        text = path.read_text(encoding="utf-8")
+        assert "_build_fallback_outcome" not in text, (
+            "`_build_fallback_outcome` was deleted by PROJ-281 Phase 3. "
+            "Every battle now flows through a real `BattleSpec` → "
+            "`BattleController.get_outcome()`, no synthesis path needed."
+        )
+
+    def test_battle_screen_has_only_start_battle_entry(self):
+        """BattleScreen's production entry is `start_battle(controller)`."""
+        from game.ui.screens.battle_screen import BattleScreen
+        assert hasattr(BattleScreen, "start_battle"), (
+            "`BattleScreen.start_battle(controller)` is the canonical "
+            "post-PROJ-281 battle entry point."
+        )
+        assert not hasattr(BattleScreen, "start") or not callable(
+            getattr(BattleScreen, "start", None)
+        ), (
+            "`BattleScreen.start(team0, team1)` shim must not exist — "
+            "PROJ-281 Phase 3 deleted it."
         )
 
 

@@ -362,10 +362,21 @@ hand-rolled `engine.boundary = spec.boundary` / `add_ships` plumbing.
 **PROJ-270 Phase 4.5:** `BattleResultsScreen` (via `extract_battle_results`)
 consumes the `BattleOutcome` from `controller.get_outcome()`, closing
 the "every battle emits a `BattleOutcome` that the UI consumes"
-acceptance criterion. The legacy `BattleScreen.start(team0, team1)`
-test-convenience path is retained for ~44 unit tests that predate the
-spec-in contract; it synthesizes a minimal `BattleOutcome` via
-`_build_fallback_outcome` — a test-only shim with no production callers.
+acceptance criterion.
+
+**PROJ-281 (2026-04-18):** the legacy `BattleScreen.start(team0, team1)`
+test-convenience shim and its `_build_fallback_outcome` outcome
+synthesizer were DELETED. `BattleScreen` now has exactly one entry —
+`start_battle(controller)` consuming a running `BattleController` —
+and every battle produces a real `BattleOutcome` (no synthesis path).
+Tests that need a minimal battle build one via
+[tests/fixtures/battle.py::make_minimal_spec](../../tests/fixtures/battle.py)
++ `BattleController.start_from_spec`, or call the drop-in
+`start_battle_screen_with_minimal_spec(screen, {0: [ship], 1: [ship]})`
+helper. `BattleController.get_outcome()` is lazy — if the natural
+end-transition hasn't fired yet (e.g. user-initiated force-end via
+the "End Battle" button), it extracts on demand from current engine
+state.
 
 **`BattleConfig`** (post-PROJ-270 reshape) is a thin operational-options
 bag for the visual-mode controller — `seed`, `end_condition`,

@@ -11,6 +11,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import create_component, load_components
 from game.core.registry import RegistryManager
+from tests.fixtures.battle import start_battle_screen_with_minimal_spec
 
 
 class TestBattleScreen:
@@ -54,7 +55,9 @@ class TestBattleScreen:
 
     def test_start_initialization(self):
         """Test battle initialization."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         assert len(self.scene.ships) == 2
         assert len(self.scene.ai_controllers) == 2
@@ -64,7 +67,9 @@ class TestBattleScreen:
 
     def test_battle_over_condition(self):
         """Test win/loss detection."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
 
         # Both alive
@@ -80,7 +85,9 @@ class TestBattleScreen:
     def test_update_increment_sim_tick(self):
         """Test simulation tick counter increases."""
         # Use visual mode (not headless) for precise tick control
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
         self.scene.sim_speed_multiplier = 1.0
         # Pre-fill accumulator to run exactly 1 tick
@@ -90,7 +97,9 @@ class TestBattleScreen:
 
     def test_projectile_registration(self):
         """Test that fired projectiles are registered in scene."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
         self.scene._accumulator = 0.017  # Pre-fill for 1 tick
 
@@ -114,7 +123,9 @@ class TestBattleScreen:
 
     def test_projectile_cleanup(self):
         """Test dead projectiles are removed."""
-        self.scene.start([self.ship1], [self.ship2], headless=False)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
+        )
         self.scene.sim_paused = False
         self.scene._accumulator = 0.017  # Pre-fill for 1 tick
 
@@ -134,7 +145,9 @@ class TestBattleScreen:
         from game.ui.services.battle_ui_service import BattleUIService
         from game.ui.interfaces.battle_ui import IBattleUI
 
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         # ui_service should be available
         assert hasattr(self.scene, 'ui_service')
@@ -146,7 +159,9 @@ class TestBattleScreen:
         """Test that ui_service returns ShipDTOs for ships (PROJ-43)."""
         from game.ui.interfaces.battle_ui import ShipDTO
 
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        start_battle_screen_with_minimal_spec(
+            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
+        )
 
         ship_dtos = self.scene.ui_service.get_ships()
         assert len(ship_dtos) == 2

@@ -371,15 +371,24 @@ class TestEndBattleInTestMode:
             # Set up controller with config
             from game.simulation.battle_config import BattleConfig
             from game.core.return_destination import ReturnDestination
+            from game.simulation.battle_outcome import BattleOutcome, EndReason
+            from game.simulation.combat.telemetry import TelemetryLevel
             mock_controller = Mock()
             mock_controller.config = BattleConfig(
                 return_destination=ReturnDestination.TEST_LAB,
                 show_results=True,
             )
-            # PROJ-270 Phase 4.5: controller has no outcome → BattleScreen
-            # falls back to building one from the live engine. Mock
-            # get_outcome explicitly returns None so the fallback fires.
-            mock_controller.get_outcome.return_value = None
+            # PROJ-281 Phase 3: the controller now always emits a real
+            # `BattleOutcome` via `get_outcome()` (lazy extraction if the
+            # natural end-transition hasn't fired yet). Mock it with a
+            # minimal empty-teams outcome — sufficient for routing tests.
+            mock_controller.get_outcome.return_value = BattleOutcome(
+                end_reason=EndReason.TEAM_ELIMINATED,
+                duration_ticks=0,
+                seed=0,
+                teams=(),
+                telemetry_level=TelemetryLevel.MINIMAL,
+            )
             screen._controller = mock_controller
             screen.ui = Mock()
             screen.camera = Mock()

@@ -10,6 +10,7 @@ from game.simulation.components.component import load_components
 from game.core.registry import get_default_registry_provider
 
 from game.ai.policy_manager import get_default_policy_manager
+from tests.fixtures.battle import start_battle_screen_with_minimal_spec
 from tests.fixtures.paths import get_project_root, get_data_dir, get_unit_test_data_dir
 
 
@@ -75,7 +76,7 @@ class TestBattleSetupLogic:
         ship1 = Ship("T1-1", 0, 0, (255,0,0), team_id=0, registries=fresh_registries)
         ship2 = Ship("T2-1", 1000, 1000, (0,0,255), team_id=1, registries=fresh_registries)
 
-        scene.start([ship1], [ship2])
+        start_battle_screen_with_minimal_spec(scene, {0: [ship1], 1: [ship2]})
 
         assert len(scene.ships) == 2
         assert len(scene.ai_controllers) == 2
@@ -97,11 +98,11 @@ class TestBattleSetupLogic:
         """Verify BattleScreen clears state between starts."""
         scene = BattleScreen(1000, 1000)
         ship1 = Ship("S1", 0, 0, (255,255,255), registries=fresh_registries)
-        scene.start([ship1], [])
+        start_battle_screen_with_minimal_spec(scene, {0: [ship1], 1: []})
         assert len(scene.ships) == 1
 
         ship2 = Ship("S2", 0, 0, (255,255,255), registries=fresh_registries)
-        scene.start([ship2], [])
+        start_battle_screen_with_minimal_spec(scene, {0: [ship2], 1: []})
         assert len(scene.ships) == 1
         assert scene.ships[0] == ship2
         assert len(scene.projectiles) == 0

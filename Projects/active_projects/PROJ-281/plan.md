@@ -14,34 +14,26 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Build `make_minimal_spec(ships_by_team)` test helper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Audit and migrate 47 callers of `BattleScreen.start(team0, team1)` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Delete the `start()` shim and `_build_fallback_outcome` (~90 lines) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Documentation update | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 2. Audit and migrate 47 callers of `BattleScreen.start(team0, team1)` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Delete the `start()` shim and `_build_fallback_outcome` (~90 lines) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Documentation update | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Phase 2 — Task 2.1 complete; Tasks 2.2-2.5 (47-caller migration) pending fresh session
-**Last Action:** Phase 2 Task 2.1 complete. Added module-level helper [tests/fixtures/battle.py::start_battle_screen_with_minimal_spec](../../../tests/fixtures/battle.py) that encapsulates the spec-based migration pattern into a single function call. Added 4 smoke tests in `TestStartBattleScreenWithMinimalSpec` — 23 helper tests pass total. With the helper in place, each of the 47 migrations becomes a 1-line replacement instead of 8 lines of boilerplate.
-**Next Action:** Phase 2 Tasks 2.2-2.5 — migrate the 47 callers using the new `start_battle_screen_with_minimal_spec` helper. Start with the smallest file (`test_battle_setup_logic.py`, 3 callers) to validate the pattern end-to-end including the assertion-reshaping issue documented below.
+**Active Phase:** All 4 phases complete — **awaiting user verification / archival**
+**Last Action:** Phases 2–4 completed in a single session. Phase 2 migrated all 47 legacy callers (45 replacements + 2 shim-specific deletions) with one helper refinement (`TeamEliminatedCondition` default in `start_battle_screen_with_minimal_spec` to match legacy shim semantics). Phase 3 deleted `BattleScreen.start(team0, team1)` (~37 LOC shim), `_build_fallback_outcome` (~92 LOC synthesizer), and `_get_or_build_outcome` (~18 LOC wrapper) — `game/ui/screens/battle_screen.py` shrank by 122 LOC; `_on_battle_ended` is now a single-path outcome consumer. Flipped the `TestBattleScreenLegacyBypassDeprecated` guard test to `TestBattleScreenLegacyBypassDeleted` with three enforcement assertions (method-absence regex, fallback-absence string check, reflection-based entry contract). Made `BattleController.get_outcome()` lazy — extracts on demand from current engine state if the natural end-transition hasn't fired — which cleanly handles the user-initiated force-end case without a synthesis path. Phase 4 updated the PROJ-270 Phase 4.5 paragraph in `docs/systems/combat_simulation.md` to announce the deletion, documented both helpers prominently in `tests/fixtures/README.md`, and verified zero stale references remain anywhere in production code or live docs.
+**Next Action:** User verifies, then archives the project (`Projects/scripts/archive_project.py PROJ-281` or equivalent). No further implementation work remains.
 **Blockers:** None.
 
-**Context for Next Agent (Phase 2 migration):**
-- **Use the helper:** `from tests.fixtures.battle import start_battle_screen_with_minimal_spec`
-- **Canonical migration:**
-  ```python
-  # Before:
-  scene.start([ship1], [ship2], headless=True)
+**Final metrics:**
+- `BattleScreen` has exactly one production entry: `start_battle(controller)` (guard-test-enforced)
+- `game/ui/screens/battle_screen.py`: 795 → 673 LOC (−122)
+- All 47 legacy callers migrated; `scene.start([...], [...])` returns zero hits repo-wide
+- Tests: 72 PROJ-281 scope + 8040 affected-scope regression + 162 Combat Lab, all green (2 flaky pygame-font-init races in parallel runs, pass in isolation — pre-existing, unrelated)
+- `BattleController.get_outcome()` is now lazy — small API enhancement that removed the need for the synthesis path
 
-  # After:
-  controller = start_battle_screen_with_minimal_spec(
-      scene, {0: [ship1], 1: [ship2]}, headless=True,
-  )
-  ```
-- **IMPORTANT — assertion reshape:** tests that assert on `scene.ships`, `scene.ai_controllers`, `scene.projectiles` directly (seen in `test_battle_setup_logic.py`) need assertion updates because those attrs now live on the controller's engine. Use `controller.service.get_engine().ships` etc., OR verify if `BattleScreen.start_battle(controller)` proxies these (check during migration).
-- **Shim-specific tests:** `test_battle_scene_clear_state` in `test_battle_setup_logic.py` tests the shim's "calling start() twice clears state" behavior. Under the spec path, each battle creates a new controller — the "clearing" contract doesn't map cleanly. Recommend: delete this test (shim behavior going away) OR rewrite to test controller-level state management. Escalate to user if ambiguous.
-- **Migration order suggestion:** start with `test_battle_setup_logic.py` (3 callers, small file) to validate the pattern + uncover any surprises; then `test_battle_screen.py` (7 callers); then `test_battle_screen_simulation.py` (37 callers, bulk).
-- Phase 2 validation: `pytest tests/unit/ui/test_battle_screen.py tests/unit/ui/test_battle_screen_simulation.py tests/unit/ui/screens/test_battle_setup_logic.py` should pass
-- Phase 3 (delete shim) comes AFTER Phase 2 migration completes — zero callers remain
+**Follow-ups (out of scope):**
+- The pre-existing pygame-font-init parallel race on `tests/fixtures/test_make_minimal_spec.py::TestStartBattleScreenWithMinimalSpec` when run under the 4-worker sharded runner. Not triggered by PROJ-281; surfaced because the test now imports `BattleScreen` which touches fonts eagerly. Worth a dedicated fixture/conftest init pass in a follow-up.
 
 ## Overview
 [BattleScreen.start(team0, team1)](../../../game/ui/screens/battle_screen.py) is a deprecated 2-team test convenience shim retained for ~46 unit tests that predate the spec-in contract. It synthesizes a minimal `BattleOutcome` via `_build_fallback_outcome` (~90 lines of manual ship-outcome assembly). Per the codebase's eradicate-old-systems policy ([CLAUDE.md System Migration Policy](../../../CLAUDE.md)), this should be removed: build a small test helper that constructs a minimal `BattleSpec`, migrate all ~46 tests to the spec-in path, then delete both the shim and the fallback outcome builder.
