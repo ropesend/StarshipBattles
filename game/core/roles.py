@@ -95,6 +95,10 @@ class RoleRegistry:
         self._roles: Dict[str, Role] = {}
         self._allow_runtime_add = allow_runtime_add
         self._invalidation_callbacks: List[Callable[[], None]] = []
+        # Re-entrance guard: prevents stack overflow if a callback
+        # itself calls add_user_role. Closure audit (PROJ-278) flagged
+        # this as a real edge case even though no current users hit it.
+        self._firing_callbacks: bool = False
 
     def __contains__(self, role_id: str) -> bool:
         return role_id in self._roles
@@ -207,16 +211,33 @@ class RoleRegistry:
         )
 
     def _fire_invalidation_callbacks(self) -> None:
-        """Fire every registered callback; log + swallow exceptions."""
-        for cb in self._invalidation_callbacks:
-            try:
-                cb()
-            except Exception:
-                logger.exception(
-                    "RoleRegistry: invalidation callback %r raised; "
-                    "continuing to fire remaining callbacks",
-                    cb,
-                )
+        """Fire every registered callback; log + swallow exceptions.
+
+        Guarded against re-entrance: if a callback itself calls
+        `add_user_role`, the inner mutation still succeeds but does NOT
+        re-fire callbacks (would cause stack overflow). Outer firing loop
+        continues unaffected.
+        """
+        if self._firing_callbacks:
+            logger.warning(
+                "RoleRegistry: re-entrant add_user_role detected during "
+                "invalidation firing; mutation applied but nested "
+                "invalidation suppressed to prevent recursion"
+            )
+            return
+        self._firing_callbacks = True
+        try:
+            for cb in self._invalidation_callbacks:
+                try:
+                    cb()
+                except Exception:
+                    logger.exception(
+                        "RoleRegistry: invalidation callback %r raised; "
+                        "continuing to fire remaining callbacks",
+                        cb,
+                    )
+        finally:
+            self._firing_callbacks = False
 
 
 __all__ = [
