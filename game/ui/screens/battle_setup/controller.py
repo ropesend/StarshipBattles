@@ -131,6 +131,57 @@ class BattleSetupController:
         self._view_model.active_fleet_index = 0
         self._on_change()
 
+    def add_side(self) -> None:
+        """Append a new empty side and switch to it.
+
+        PROJ-282 Phase 11: surfaces `BattleSetupState.add_side()` through
+        the controller. No-op (with a warning) at `MAX_SIDES` so the UI
+        button's bounds handling is safe even if the disabled state
+        misfires.
+        """
+        try:
+            self._state.add_side()
+        except ValueError:
+            logger.warning(
+                "Cannot add side: already at maximum (%d).", len(self._state.sides),
+            )
+            return
+        self._view_model.active_side = len(self._state.sides) - 1
+        self._view_model.active_fleet_index = 0
+        self._view_model.clear_selection()
+        self._on_change()
+
+    def remove_side(self, index: int) -> None:
+        """Remove the side at `index`. No-op at `MIN_SIDES` or out-of-range.
+
+        PROJ-282 Phase 11: surfaces `BattleSetupState.remove_side(index)`.
+        Reconciles `view_model.active_side` when the removal shifts the
+        active side's index or removes the active side outright.
+        """
+        if index < 0 or index >= len(self._state.sides):
+            return
+        try:
+            self._state.remove_side(index)
+        except ValueError:
+            # At MIN_SIDES — no-op.
+            return
+
+        # Reconcile active_side.
+        current_active = self._view_model.active_side
+        if current_active == index:
+            # Removed the active side: clamp to a valid neighbor.
+            self._view_model.active_side = min(
+                current_active, len(self._state.sides) - 1
+            )
+        elif current_active > index:
+            # Removed a side before the active one: active's index shifts
+            # down by 1 to track the same side.
+            self._view_model.active_side = current_active - 1
+
+        self._view_model.active_fleet_index = 0
+        self._view_model.clear_selection()
+        self._on_change()
+
     def add_fleet(self) -> None:
         side = self._state.get_side(self._view_model.active_side)
         side.create_fleet(f"Fleet {len(side.fleets) + 1}")

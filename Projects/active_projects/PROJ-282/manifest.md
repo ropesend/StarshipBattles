@@ -63,6 +63,12 @@
 | `docs/03_CONVENTIONS.md` | Doc | 9 | **Added § 2.4 UI Screen Line Budget (PROJ-282)** — documents the ≤300 LOC target as a review signal, not a blocker. Names `TestLabScreen` + `FleetBattleSetupScreen` as exemplars. |
 | `game/ui/screens/battle_setup/screen.py` (cont.) | Production | 9 | Added module-docstring paragraph cross-referencing the convention + naming TestLabScreen as sibling exemplar. Dropped unused `import pygame`. |
 | `game/ui/screens/test_lab/screen.py` | Production | 9 | Added the symmetric module-docstring paragraph naming FleetBattleSetupScreen as sibling exemplar. |
+| `Projects/active_projects/PROJ-282/phase_11_checklist.md` | Project doc (NEW) | 11 | N-Side UI phase added post-hoc + completed; status Complete |
+| `game/ui/screens/battle_setup/controller.py` (cont.) | Production | 11 | `add_side()` + `remove_side(index)` methods with MIN/MAX bounds handling + view-model reconciliation (clamp on active-side removal, index-shift on before-active removal) + selection clearing |
+| `game/ui/screens/battle_setup/panels/left_panel.py` (cont.) | Production | 11 | Side dropdown populates dynamically from `len(state.sides)` (drops hardcoded 2 entries + "(Left)"/"(Right)" suffixes). Added `_add_side_btn` + `_remove_side_btn` with MIN/MAX auto-disable + informative labels. Also fixed stale `battle_setup_screen` → `battle_setup.constants` import miss from Phase 8. |
+| `game/ui/screens/battle_setup/input_handler.py` (cont.) | Production | 11 | Added 2 named-button branches (`_add_side_btn` → `controller.add_side()`, `_remove_side_btn` → `controller.remove_side(view_model.active_side)`). Updated side-dropdown parser to handle `"Side N"` format with malformed-text fallback. |
+| `tests/unit/ui/screens/battle_setup/test_controller.py` (cont.) | Test | 11 | New `TestAddRemoveSide` class (11 tests) + `TestNTeamBattleLaunch` class (1 N-team integration launch test). |
+| `tests/unit/ui/screens/battle_setup/test_input_handler.py` (cont.) | Test | 11 | Added 4 new tests (add_side button, remove_side button, N>2 dropdown parse, malformed-dropdown fallback). Updated 2 existing side-dropdown tests to the new `"Side N"` format. Added 2 new button sentinels to `_make_handler_with_mock_screen()`. |
 
 ## Planned for Phases 3-8
 

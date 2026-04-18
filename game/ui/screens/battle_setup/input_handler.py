@@ -131,6 +131,11 @@ class BattleSetupInputHandler:
             controller.add_fleet()
         elif element == screen._remove_fleet_btn:
             controller.remove_fleet()
+        elif hasattr(screen, '_add_side_btn') and element == screen._add_side_btn:
+            controller.add_side()
+        elif hasattr(screen, '_remove_side_btn') and element == screen._remove_side_btn:
+            # Remove the currently-active side.
+            controller.remove_side(screen.view_model.active_side)
         elif hasattr(screen, '_add_tf_btn') and element == screen._add_tf_btn:
             controller.add_task_force()
         elif hasattr(screen, '_add_sq_btn') and element == screen._add_sq_btn:
@@ -157,7 +162,14 @@ class BattleSetupInputHandler:
         controller = screen.controller
 
         if event.ui_element == screen._side_dropdown:
-            controller.set_active_side(1 if "1" in event.text else 0)
+            # PROJ-282 Phase 11: parse the "Side N" format (N up to 7).
+            # Fallback to 0 on unexpected formats — keeps the UI safe if
+            # panels drift from the expected string shape.
+            try:
+                side_id = int(event.text.split()[-1])
+            except (ValueError, IndexError):
+                side_id = 0
+            controller.set_active_side(side_id)
         elif hasattr(screen, '_fleet_role_dropdown') and event.ui_element == screen._fleet_role_dropdown:
             controller.set_fleet_battle_role(event.text)
         elif screen._targeting_dropdown and event.ui_element == screen._targeting_dropdown:

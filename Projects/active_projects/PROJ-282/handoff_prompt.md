@@ -1,8 +1,17 @@
 # Handoff: PROJ-282 — Phase 10 (user-led manual smoke)
 
-**Status: Phases 1-9 are DONE.** All code + documentation work is complete.
-The only remaining phase is user-led manual smoke testing (Phase 10),
+**Status: Phases 1-9 + 11 are DONE** — all code + documentation work
+complete. The only remaining phase is Phase 10 (user-led manual smoke)
 which I cannot perform.
+
+**What shipped this session (Phase 11, added post-hoc):** N-Side UI support.
+`BattleSetupController.add_side()` / `remove_side(index)` methods with MIN/MAX
+(2..8) bounds handling + view-model reconciliation; Add-Side / Remove-Side
+buttons on the left panel with auto-disable at bounds; side dropdown populates
+dynamically from `len(state.sides)` (drops hardcoded 2-entry + "(Left)"/"(Right)"
+cosmetic suffixes); InputHandler dispatches the new buttons + parses `"Side N"`
+format with malformed-input fallback. 16 new tests. 3561 tests green in
+PROJ-282 scope.
 
 ## What the previous session accomplished
 
@@ -20,79 +29,44 @@ In a single session, executed Phases 1-9 end-to-end:
 
 Every phase passed `validate_phase.py PROJ-282 <N>`. Final PROJ-282-scope regression: **3545 tests green** (tests/unit/ui/ + tests/integration/ui/).
 
-## What's left for the user / next agent
+## What's left
 
 ### Phase 10 — manual smoke (user-led)
 
 Open `Projects/active_projects/PROJ-282/phase_10_checklist.md` for the
-full scenario list. Tasks in brief:
+full scenario list:
 
-1. **10.1 — Launch + render 2-side baseline** — game starts, panels display, resize works
-2. **10.2 — Fleet/TF/SQ CRUD** — create/duplicate/delete operations flow correctly
-3. **10.3 — 3-side setup** — ⚠️ **BLOCKED on missing UI.** See below.
-4. **10.4 — 8-side max** — ⚠️ **BLOCKED on missing UI.** See below.
-5. **10.5 — Complex toggles** — toggle → spec modifier_stack carries the effect
-6. **10.6 — Save/load roundtrip** — including legacy `_complex_toggles` top-level key migration
-7. **10.7 — Edge cases** — empty-side launch guard, large setup responsiveness
+1. **10.1** — Launch + render 2-side baseline
+2. **10.2** — Fleet/TF/SQ CRUD (create/duplicate/delete)
+3. **10.3** — 3-side setup (click "Add Side" to create 3rd side, add fleets/ships, launch)
+4. **10.4** — 8-side max (click "Add Side" 6 times, verify disable at 8; click Remove)
+5. **10.5** — Complex toggles + spec modifier_stack flow
+6. **10.6** — Save/load roundtrip (including legacy `_complex_toggles` top-level key migration)
+7. **10.7** — Edge cases (empty-side launch guard, large setup responsiveness)
 
-### ⚠️ Phase 10.3 + 10.4 have a gap
+All scenarios are now unblocked (Phase 11 shipped the N-side UI).
 
-The Phase 1 audit [n_team_paths.md](.agent_reports/PROJ-282-audit/n_team_paths.md)
-flagged that the **UI doesn't have Add Side / Remove Side buttons** — the
-left panel's side dropdown is hardcoded to 2 entries. `BattleSetupState`
-fully supports N=2..8 (PROJ-275, tested in `test_battle_setup_three_sides.py`),
-and the spec compiler generates N-team specs correctly — but there's no
-UI surface to drive it. PROJ-282's per-phase checklists never scheduled
-"add Add-Side/Remove-Side buttons" as a task.
+### Other known follow-ups (non-blocking)
 
-**User decision needed:**
-- (a) Accept current 2-side UI for now; N-team setup via `BattleSetupState.add_side()` at the Python/save-file level
-- (b) File a small follow-up project for N-team UI (would add buttons to `panels/left_panel.py` + `Controller.add_side/remove_side()` methods)
-- (c) Block Phase 10 closure until (b) ships
+**`controller.py` at 523 LOC** exceeds § 2.4's 300-LOC target. The
+convention explicitly treats this as a **review signal**, not a blocker.
+Natural split if desired: save/load + battle-launch into a
+`LaunchController` sub-service (~100 LOC removed).
 
-### ⚠️ Small follow-up: 523-LOC controller
+**`screen.py` property shims (~100 LOC)** keep `screen.py` at 184 LOC
+(over the 150 target). Dropping them requires updating ~10 read sites in
+`panels/{left,center}_panel.py` to go through `screen.view_model.*` /
+`screen.controller.*` directly. Small, safe follow-up.
 
-`controller.py` at 523 LOC exceeds the newly-documented 300 LOC convention
-(from Phase 9). The convention explicitly treats this as a **review
-signal**, not a blocker. If the user wants to cut it down: save/load +
-battle-launch could split into a `LaunchController` sub-service (~100 LOC
-removed). Optional polish — not required for Phase 10.
+## If smoke finds defects
 
-### ⚠️ Follow-up: property shim removal
+File as follow-up issues. Unless critical, don't block project closure
+on them — after Phase 10 passes, PROJ-282 archives with the follow-up
+backlog documented in [decisions.md](decisions.md).
 
-The thin-shell `screen.py` (184 LOC) carries ~100 LOC of property shims
-(`screen.active_side` → `view_model.active_side`, `screen.tick_limit` →
-`controller.tick_limit`, etc.). They exist because panel renderers still
-read state via `screen.*` paths. Dropping the shims requires updating
-~10 read sites in `panels/{left,center}_panel.py` to go through
-`screen.view_model.*` / `screen.controller.*` directly. Small, safe
-follow-up — would bring `screen.py` under the 150 LOC target.
-
-## If you're starting a new session to close Phase 10
-
-Most of Phase 10 is manual clicking in the running game. But if the user
-wants to add the Add-Side / Remove-Side UI (option b above), here's the
-orientation:
-
-### Orientation (read BEFORE touching the plan)
-
-**Foundation:**
-- `docs/README.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md` (especially § 2.4 added this project)
-- `CLAUDE.md`
-
-**Package tour (read all — they're each short):**
-- `game/ui/screens/battle_setup/screen.py` (184 LOC — the thin shell)
-- `game/ui/screens/battle_setup/view_model.py` (60 LOC)
-- `game/ui/screens/battle_setup/renderer.py` + `panels/left_panel.py` (where Add/Remove Side buttons would live)
-- `game/ui/screens/battle_setup/input_handler.py` (where button dispatch routes)
-- `game/ui/screens/battle_setup/controller.py` — add `add_side()` / `remove_side()` methods delegating to `state.add_side()` / `state.remove_side(index)` (already exist on BattleSetupState)
-- `game/ui/screens/battle_setup_state.py:177-207` — `add_side` + `remove_side` are there, tested
-- `.agent_reports/PROJ-282-audit/n_team_paths.md` — the audit that flagged this gap + UX recommendations
-
-**Tests to follow when extending:**
-- `tests/unit/ui/screens/battle_setup/test_controller.py` — add `TestAddRemoveSide` class
-- `tests/unit/ui/screens/battle_setup/test_input_handler.py` — add tests for new Add-Side / Remove-Side button dispatches
-- `tests/integration/ui/test_battle_setup_three_sides.py` — existing; don't touch
+**Known acceptable budget variances** (documented in [phase_8_checklist.md](phase_8_checklist.md) § 8.4):
+- `game/ui/screens/battle_setup/controller.py` at 523 LOC exceeds the ≤300 convention — treated as a soft review signal per § 2.4
+- `game/ui/screens/battle_setup/screen.py` at 184 LOC slightly over the 150 target — pure property-shim wiring
 
 ### Project files
 
