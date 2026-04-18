@@ -304,9 +304,80 @@ def resolve_default_for_task_force(ships: Sequence[Any]) -> FormationSpec:
     return FormationSpec(shape=shape, spacing=FormationResolver.DEFAULT_SPACING)
 
 
+# ---------------------------------------------------------------------------
+# N-team entry vector resolution (PROJ-275 Phase 2)
+# ---------------------------------------------------------------------------
+
+
+DEFAULT_ARENA_RADIUS = 500.0
+"""Default radius for `resolve_team_entry_vectors`. Matches the historical
+Battle Setup constant `_SIDE_ENTRY_VECTORS` radius (500 units)."""
+
+
+def resolve_team_entry_vectors(
+    team_count: int,
+    arena_radius: float = DEFAULT_ARENA_RADIUS,
+) -> Dict[int, "EntryVector"]:
+    """Assign `EntryVector` origins + facings for N teams on a ring.
+
+    Convention:
+    - `team_count == 2`: team 0 at `(-arena_radius, 0)` facing east (0°);
+      team 1 at `(+arena_radius, 0)` facing west (180°). Preserves the
+      legacy Battle Setup `_SIDE_ENTRY_VECTORS` layout byte-for-byte.
+    - `team_count >= 3`: team i at angle `(180 + i * (360 / N))°` on a
+      circle of radius `arena_radius`. Equally spaced; all face inward
+      toward the origin.
+
+    The "angle 180° start" is chosen so team 0 always sits at west
+    `(-r, 0)` regardless of N — preserving player expectations from the
+    2-team case.
+
+    Args:
+        team_count: Number of teams. Must be in `[2, 8]`.
+        arena_radius: Ring radius. Positive float.
+
+    Returns:
+        `Dict[int, EntryVector]` keyed by team_id (0..team_count-1).
+
+    Raises:
+        ValueError: if `team_count < 2` or `team_count > 8`.
+    """
+    if team_count < 2 or team_count > 8:
+        raise ValueError(
+            f"resolve_team_entry_vectors: team_count must be in [2, 8], "
+            f"got {team_count}"
+        )
+    # Late import avoids circular dep: EntryVector is in battle_spec which
+    # may import other formation types at load time.
+    from game.simulation.battle_spec import EntryVector
+
+    step_deg = 360.0 / team_count
+    vectors: Dict[int, "EntryVector"] = {}
+    # Snap floating-point noise near zero to exact zero so the 2-team
+    # legacy layout reports `(-500, 0)` / `(+500, 0)` byte-identically
+    # instead of `(-500, 6e-14)`. Threshold is small relative to any
+    # sensible arena radius.
+    _eps = 1e-9 * max(1.0, arena_radius)
+    for i in range(team_count):
+        angle_deg = (180.0 + i * step_deg) % 360.0
+        angle_rad = math.radians(angle_deg)
+        x = arena_radius * math.cos(angle_rad)
+        y = arena_radius * math.sin(angle_rad)
+        if abs(x) < _eps:
+            x = 0.0
+        if abs(y) < _eps:
+            y = 0.0
+        # Face inward toward the origin (angle + 180° mod 360°).
+        facing = (angle_deg + 180.0) % 360.0
+        vectors[i] = EntryVector(origin=Vector2(x, y), facing=facing)
+    return vectors
+
+
 __all__ = [
+    "DEFAULT_ARENA_RADIUS",
     "FormationResolver",
     "FormationShape",
     "FormationSpec",
     "resolve_default_for_task_force",
+    "resolve_team_entry_vectors",
 ]

@@ -118,21 +118,93 @@ class BattleSetupSide:
         return side
 
 
+MIN_SIDES = 2
+MAX_SIDES = 8
+
+
 class BattleSetupState:
     """Complete state for a fleet-based battle setup.
 
-    Holds two sides (team 0 and team 1), each with fleets and complex
-    selections. Provides methods for adding ships, serialization, and
-    conversion to battle-ready Ship objects.
+    PROJ-275 Phase 4+5: migrated from fixed `side_0` / `side_1` attributes
+    to a dynamic `sides: List[BattleSetupSide]` (min 2, max 8). The
+    `side_0` / `side_1` properties remain as backwards-compat shims that
+    read/write `sides[0]` / `sides[1]` — some callers use those names and
+    will be migrated incrementally.
+
+    Holds N sides (team 0..N-1), each with fleets and complex
+    selections. Provides methods for adding ships, add/remove sides,
+    serialization, and conversion to battle-ready Ship objects.
     """
 
-    def __init__(self):
-        self.side_0 = BattleSetupSide(team_id=0)
-        self.side_1 = BattleSetupSide(team_id=1)
+    def __init__(self, side_count: int = 2):
+        if side_count < MIN_SIDES or side_count > MAX_SIDES:
+            raise ValueError(
+                f"BattleSetupState side_count must be in "
+                f"[{MIN_SIDES}, {MAX_SIDES}]; got {side_count}"
+            )
+        self.sides: List[BattleSetupSide] = [
+            BattleSetupSide(team_id=i) for i in range(side_count)
+        ]
+
+    # --- Backcompat shims for side_0 / side_1 --------------------------------
+    # Existing callers (battle_setup_screen.py, some tests) reference
+    # `state.side_0` / `state.side_1` directly. The properties route to
+    # `sides[0]` / `sides[1]`. Writing `state.side_0 = ...` updates the
+    # same slot — preserves legacy behavior for tests that assign.
+
+    @property
+    def side_0(self) -> BattleSetupSide:
+        return self.sides[0]
+
+    @side_0.setter
+    def side_0(self, value: BattleSetupSide) -> None:
+        self.sides[0] = value
+
+    @property
+    def side_1(self) -> BattleSetupSide:
+        return self.sides[1]
+
+    @side_1.setter
+    def side_1(self, value: BattleSetupSide) -> None:
+        self.sides[1] = value
+
+    # --- N-side API ----------------------------------------------------------
 
     def get_side(self, team_id: int) -> BattleSetupSide:
         """Get the side for a team ID."""
-        return self.side_0 if team_id == 0 else self.side_1
+        return self.sides[team_id]
+
+    def add_side(self) -> BattleSetupSide:
+        """Append a new empty side and return it.
+
+        Raises:
+            ValueError: if the state is already at MAX_SIDES.
+        """
+        if len(self.sides) >= MAX_SIDES:
+            raise ValueError(
+                f"BattleSetupState: cannot add more than {MAX_SIDES} sides"
+            )
+        new_side = BattleSetupSide(team_id=len(self.sides))
+        self.sides.append(new_side)
+        return new_side
+
+    def remove_side(self, index: int) -> None:
+        """Remove the side at the given index; subsequent team_ids shift down.
+
+        Raises:
+            ValueError: if removing would drop below MIN_SIDES.
+            IndexError: if `index` is out of range.
+        """
+        if len(self.sides) <= MIN_SIDES:
+            raise ValueError(
+                f"BattleSetupState: cannot remove; already at minimum of {MIN_SIDES} sides"
+            )
+        if index < 0 or index >= len(self.sides):
+            raise IndexError(f"BattleSetupState: side index {index} out of range")
+        del self.sides[index]
+        # Renumber remaining team_ids so they stay contiguous [0..N-1].
+        for new_id, side in enumerate(self.sides):
+            side.team_id = new_id
 
     def add_ship_from_design(
         self,
@@ -162,16 +234,27 @@ class BattleSetupState:
         return ship
 
     def clear(self) -> None:
-        """Reset to empty state."""
-        self.side_0 = BattleSetupSide(team_id=0)
-        self.side_1 = BattleSetupSide(team_id=1)
+        """Reset to empty 2-side state."""
+        self.sides = [
+            BattleSetupSide(team_id=0),
+            BattleSetupSide(team_id=1),
+        ]
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize the full setup for save/load."""
-        return {
-            "side_0": self.side_0.to_dict(),
-            "side_1": self.side_1.to_dict(),
-        }
+        """Serialize the full setup for save/load.
+
+        PROJ-275: new format writes `sides: [side0_dict, side1_dict, ...]`.
+        Legacy `side_0` / `side_1` keys are ALSO emitted for backcompat
+        with any external consumers still reading the old shape.
+        """
+        sides_list = [side.to_dict() for side in self.sides]
+        out: Dict[str, Any] = {"sides": sides_list}
+        # Legacy keys preserved for the 2-side case; omitted when N > 2
+        # since `side_0`/`side_1` alone would silently drop the extra sides.
+        if len(self.sides) == 2:
+            out["side_0"] = sides_list[0]
+            out["side_1"] = sides_list[1]
+        return out
 
     @classmethod
     def from_dict(
@@ -179,10 +262,26 @@ class BattleSetupState:
         data: Dict[str, Any],
         registries: Optional['GameRegistries'] = None,
     ) -> 'BattleSetupState':
-        """Deserialize from save/load."""
-        state = cls()
+        """Deserialize from save/load. Supports both new `sides` list and
+        legacy `side_0`/`side_1` shapes."""
+        # Prefer new N-side format.
+        if "sides" in data and isinstance(data["sides"], list):
+            sides_raw = data["sides"]
+            count = max(MIN_SIDES, min(MAX_SIDES, len(sides_raw)))
+            state = cls(side_count=count)
+            for i, side_data in enumerate(sides_raw[:count]):
+                state.sides[i] = BattleSetupSide.from_dict(
+                    side_data, registries=registries
+                )
+            return state
+        # Legacy 2-side format.
+        state = cls(side_count=2)
         if "side_0" in data:
-            state.side_0 = BattleSetupSide.from_dict(data["side_0"], registries=registries)
+            state.sides[0] = BattleSetupSide.from_dict(
+                data["side_0"], registries=registries
+            )
         if "side_1" in data:
-            state.side_1 = BattleSetupSide.from_dict(data["side_1"], registries=registries)
+            state.sides[1] = BattleSetupSide.from_dict(
+                data["side_1"], registries=registries
+            )
         return state

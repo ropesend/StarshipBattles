@@ -67,7 +67,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
 
         # Both fleets empty → short-circuit; effects ignored but no crash.
-        result = resolver.resolve_battle(fleet1, fleet2, environmental_effects=effects)
+        result = resolver.resolve_battle([fleet1, fleet2], environmental_effects=effects)
         assert result is not None
 
     def test_resolve_battle_emits_storm_modifier_on_spec(self):
@@ -92,7 +92,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
             "game.strategy.adapters.simulation_adapter.run_battle",
             side_effect=_fake_run_battle,
         ):
-            resolver.resolve_battle(fleet1, fleet2, environmental_effects=effects)
+            resolver.resolve_battle([fleet1, fleet2], environmental_effects=effects)
 
         storm_entries = [
             e for e in seen["stack"].global_
@@ -127,7 +127,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
             "game.strategy.adapters.simulation_adapter.run_battle",
             side_effect=_fake_run_battle,
         ):
-            resolver.resolve_battle(fleet1, fleet2, environmental_effects=effects)
+            resolver.resolve_battle([fleet1, fleet2], environmental_effects=effects)
 
         assert not any(
             e.source == "environment:storm_shield_interference"
@@ -152,7 +152,7 @@ class TestSimulationBattleResolverEnvironmentalEffects:
             "game.strategy.adapters.simulation_adapter.run_battle",
             side_effect=_fake_run_battle,
         ):
-            resolver.resolve_battle(fleet1, fleet2, environmental_effects=None)
+            resolver.resolve_battle([fleet1, fleet2], environmental_effects=None)
 
         assert not any(
             e.source.startswith("environment:") for e in seen["stack"].global_
@@ -167,12 +167,18 @@ class TestBattleResolverInterfaceUpdate:
         from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
         class TestResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
-                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                return BattleResult(
+                    winner=0, tick_count=0,
+                    team_survivors={i: [] for i in range(len(fleets))},
+                )
 
         resolver = TestResolver()
         effects = EnvironmentalEffects(shield_capacity_mult=0.5)
-        result = resolver.resolve_battle(MagicMock(), MagicMock(), environmental_effects=effects)
+        result = resolver.resolve_battle(
+            [MagicMock(), MagicMock()], environmental_effects=effects
+        )
         assert result is not None
 
 

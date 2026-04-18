@@ -46,6 +46,7 @@ from game.simulation.combat.formation import (
     FormationResolver,
     FormationSpec,
     resolve_default_for_task_force,
+    resolve_team_entry_vectors,
 )
 from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
@@ -60,6 +61,10 @@ if TYPE_CHECKING:
 
 
 _DEFAULT_ABSOLUTE_MAX_TICKS = 20_000
+
+
+_MIN_TEAMS = 2
+_MAX_TEAMS = 8
 
 
 def build_strategy_battle_spec(
@@ -116,9 +121,22 @@ def build_strategy_battle_spec(
     if empires is None:
         empires = {}
 
+    num_teams = len(fleets)
+    if num_teams < _MIN_TEAMS or num_teams > _MAX_TEAMS:
+        raise ValueError(
+            f"build_strategy_battle_spec: requires {_MIN_TEAMS}..{_MAX_TEAMS} "
+            f"fleets; got {num_teams}"
+        )
+
+    entry_vectors = resolve_team_entry_vectors(team_count=num_teams)
+
     teams: List[TeamSpec] = []
     for team_id, fleet in enumerate(fleets):
-        teams.append(_team_spec_for_fleet(fleet, team_id=team_id))
+        teams.append(
+            _team_spec_for_fleet(
+                fleet, team_id=team_id, entry_vector=entry_vectors[team_id]
+            )
+        )
 
     modifier_stack = _build_modifier_stack(
         team_count=len(teams),
@@ -198,9 +216,14 @@ def _build_strategy_post_battle_hook(
 # ---------------------------------------------------------------------------
 
 
-def _team_spec_for_fleet(fleet: "Fleet", *, team_id: int) -> TeamSpec:
+def _team_spec_for_fleet(
+    fleet: "Fleet", *, team_id: int, entry_vector: EntryVector
+) -> TeamSpec:
     # PROJ-269 Phase 4: invoke FormationResolver to compute per-ship poses.
-    entry_vector = EntryVector(origin=Vector2(0.0, 0.0), facing=0.0)
+    # PROJ-275 Phase 6: entry_vector is now supplied by the caller from the
+    # ring-layout helper (`resolve_team_entry_vectors`) so each team is
+    # placed at its own location around the arena, not all stacked at the
+    # origin.
     formation = _pick_formation_for_fleet(fleet)
     poses = FormationResolver.resolve(
         formation=formation,

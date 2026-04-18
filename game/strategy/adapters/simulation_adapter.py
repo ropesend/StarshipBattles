@@ -1,6 +1,7 @@
 """SimulationBattleResolver - Strategy-to-simulation adapter.
 
 PROJ-11 Phase 4: Interface Contracts.
+PROJ-275 Phase 7: signature widened to accept N fleets.
 
 This adapter bridges the strategy layer's `IBattleResolver` interface
 to the simulation layer's unified `run_battle(spec) -> BattleOutcome`
@@ -10,20 +11,18 @@ compiler, runs the battle, and reports the outcome as a `BattleResult`.
 PROJ-269 Phase 6 Tasks 6.5 + 6.11:
   - The legacy `BattleController` + `BattleConfig` + `run_headless`
     path was replaced with `build_strategy_battle_spec` + `run_battle`.
-  - The `_apply_shield_interference` / `_apply_strategic_modifiers`
-    ship-mutation side channels are gone — environmental and team
-    modifiers now flow through `ModifierStack` entries emitted by the
-    compiler (placeholder effects per Phase 5.5 semantics).
+  - Environmental and team modifiers flow through `ModifierStack` entries
+    emitted by the compiler (placeholder effects per Phase 5.5 semantics).
   - Fleet updates happen via `PostBattleHook` (attached by the compiler)
     during `run_battle` — callers treat `BattleResult` as a read-only
     report. `FleetBattleAdapter.update_from_battle_results` is deleted.
 """
 
-from typing import Optional, List, Any, TYPE_CHECKING
 import logging
+from typing import Any, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING
 
 from game.simulation.battle_runner import run_battle
-from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+from game.strategy.interfaces.battle_resolver import BattleResult, IBattleResolver
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +45,10 @@ class SimulationBattleResolver(IBattleResolver):
 
     PROJ-147: Supports dependency injection of AI factory to maintain
     layer separation (strategy cannot import AI directly).
+
+    PROJ-275 Phase 7: native N-fleet support. A 2-fleet call still
+    works; 3+ fleets share one battle instead of being decomposed into
+    sequential pairs.
     """
 
     def __init__(self, ai_factory: 'IAIControllerFactory'):
@@ -60,19 +63,20 @@ class SimulationBattleResolver(IBattleResolver):
 
     def resolve_battle(
         self,
-        fleet1: 'Fleet',
-        fleet2: 'Fleet',
+        fleets: Sequence['Fleet'],
+        modifiers: Optional[Mapping[int, Any]] = None,
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
         environmental_effects: Optional['EnvironmentalEffects'] = None,
-        team0_modifiers: Optional[Any] = None,
-        team1_modifiers: Optional[Any] = None,
     ) -> BattleResult:
-        """Resolve a battle between two fleets via the unified entry.
+        """Resolve a battle between N fleets via the unified entry.
 
         Args:
-            fleet1: First fleet (assigned to team 0).
-            fleet2: Second fleet (assigned to team 1).
+            fleets: Two or more fleets. Position determines team_id —
+                `fleets[i]` is assigned to team `i`.
+            modifiers: Optional `{team_id: FleetCombatModifiers}` mapping
+                of per-team strategic modifiers. Flows into the
+                BattleSpec's ModifierStack as per-team entries.
             seed: Optional random seed for deterministic battles.
             registries: Optional GameRegistries for DI. If None, the
                 underlying `ShipInstance.to_ship` uses the global
@@ -80,52 +84,63 @@ class SimulationBattleResolver(IBattleResolver):
             environmental_effects: Optional sector/hex environmental
                 effects (storm shield interference). Flows into the
                 BattleSpec's ModifierStack as global entries.
-            team0_modifiers / team1_modifiers: Optional
-                `FleetCombatModifiers` carrying per-team strategic
-                modifiers. Flow into the BattleSpec's ModifierStack as
-                per-team entries.
 
         Returns:
-            BattleResult with winner, tick count, and survivors. Fleet
-            state (ship removal, component HP updates) has already been
-            written back by the compiler's post-battle hook when this
+            BattleResult with winner, tick count, and per-team survivors.
+            Fleet state (ship removal, component HP updates) has already
+            been written back by the compiler's post-battle hook when this
             returns.
         """
-        logger.info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
+        fleet_list = list(fleets)
+        if len(fleet_list) < 2:
+            raise ValueError(
+                f"SimulationBattleResolver.resolve_battle requires at least "
+                f"2 fleets; got {len(fleet_list)}"
+            )
 
-        team0_combat = [s for s in fleet1.ships if s.is_combat_capable()]
-        team1_combat = [s for s in fleet2.ships if s.is_combat_capable()]
+        logger.info(
+            f"Simulating {len(fleet_list)}-team battle: "
+            + " vs ".join(f"Fleet {f.id}" for f in fleet_list)
+        )
 
-        if not team0_combat and not team1_combat:
-            logger.warning("Both fleets have no combat-capable ships")
+        # Per-team combat-capable ship lists, indexed by team_id.
+        combat_capable: Dict[int, List[Any]] = {
+            tid: [s for s in fleet.ships if s.is_combat_capable()]
+            for tid, fleet in enumerate(fleet_list)
+        }
+        teams_with_ships = [tid for tid, ships in combat_capable.items() if ships]
+
+        # Short-circuits when not enough teams can fight.
+        if len(teams_with_ships) == 0:
+            logger.warning("No team has any combat-capable ships")
             return BattleResult(
                 winner=None, tick_count=0,
-                team0_survivors=[], team1_survivors=[],
+                team_survivors={tid: [] for tid in combat_capable},
             )
-        if not team0_combat:
-            logger.warning("Fleet 1 has no combat-capable ships, Fleet 2 wins")
-            return BattleResult(
-                winner=1, tick_count=0,
-                team0_survivors=[],
-                team1_survivors=self._instances_to_ships(team1_combat, 1, registries),
+        if len(teams_with_ships) == 1:
+            sole_winner = teams_with_ships[0]
+            logger.warning(
+                f"Only team {sole_winner} has combat-capable ships; "
+                f"declared winner without simulation"
             )
-        if not team1_combat:
-            logger.warning("Fleet 2 has no combat-capable ships, Fleet 1 wins")
+            survivors = {
+                tid: (
+                    self._instances_to_ships(combat_capable[tid], tid, registries)
+                    if tid == sole_winner else []
+                )
+                for tid in combat_capable
+            }
             return BattleResult(
-                winner=0, tick_count=0,
-                team0_survivors=self._instances_to_ships(team0_combat, 0, registries),
-                team1_survivors=[],
+                winner=sole_winner, tick_count=0, team_survivors=survivors
             )
 
         battle_seed = self._resolve_seed(seed)
-
         spec = self._build_spec(
-            fleet1, fleet2,
+            fleet_list,
             seed=battle_seed,
             registries=registries,
             environmental_effects=environmental_effects,
-            team0_modifiers=team0_modifiers,
-            team1_modifiers=team1_modifiers,
+            modifiers=modifiers,
         )
         # PROJ-274: no ship_builder closure needed. The strategy compiler
         # sets `ShipSpec.instance_ref = ship_instance` on each spec; the
@@ -140,21 +155,21 @@ class SimulationBattleResolver(IBattleResolver):
         )
 
         winner = self._determine_winner(outcome)
-        team0_survivors = self._instances_to_ships(fleet1.ships, 0, registries)
-        team1_survivors = self._instances_to_ships(fleet2.ships, 1, registries)
+        team_survivors: Dict[int, List[Any]] = {
+            tid: self._instances_to_ships(fleet.ships, tid, registries)
+            for tid, fleet in enumerate(fleet_list)
+        }
 
         logger.info(
-            f"Battle complete: winner={winner}, "
-            f"ticks={outcome.duration_ticks}"
+            f"Battle complete: winner={winner}, ticks={outcome.duration_ticks}"
         )
-        logger.info(f"  Team 0 survivors: {len(team0_survivors)}")
-        logger.info(f"  Team 1 survivors: {len(team1_survivors)}")
+        for tid, survivors in team_survivors.items():
+            logger.info(f"  Team {tid} survivors: {len(survivors)}")
 
         return BattleResult(
             winner=winner,
             tick_count=outcome.duration_ticks,
-            team0_survivors=team0_survivors,
-            team1_survivors=team1_survivors,
+            team_survivors=team_survivors,
         )
 
     # ------------------------------------------------------------------
@@ -171,29 +186,27 @@ class SimulationBattleResolver(IBattleResolver):
 
     def _build_spec(
         self,
-        fleet1: 'Fleet',
-        fleet2: 'Fleet',
+        fleets: List['Fleet'],
         *,
         seed: int,
         registries: Optional['GameRegistries'],
         environmental_effects: Optional['EnvironmentalEffects'],
-        team0_modifiers: Optional[Any],
-        team1_modifiers: Optional[Any],
+        modifiers: Optional[Mapping[int, Any]],
     ):
         from game.strategy.combat.spec_compiler import build_strategy_battle_spec
 
-        team_modifiers: dict = {}
-        if team0_modifiers is not None:
-            team_modifiers[0] = team0_modifiers
-        if team1_modifiers is not None:
-            team_modifiers[1] = team1_modifiers
+        team_modifiers: Optional[Dict[int, Any]] = None
+        if modifiers:
+            team_modifiers = {tid: mod for tid, mod in modifiers.items() if mod is not None}
+            if not team_modifiers:
+                team_modifiers = None
 
         return build_strategy_battle_spec(
-            [fleet1, fleet2],
+            fleets,
             registries=registries,
             seed=seed,
             environmental_effects=environmental_effects,
-            team_modifiers=team_modifiers if team_modifiers else None,
+            team_modifiers=team_modifiers,
         )
 
     def _determine_winner(self, outcome) -> Optional[int]:
@@ -201,8 +214,7 @@ class SimulationBattleResolver(IBattleResolver):
 
         A team is considered "still fighting" if it has at least one
         SURVIVED or DERELICT ship. If exactly one team is still
-        fighting, it wins. Otherwise returns None (draw / both sides
-        wiped).
+        fighting, it wins. Otherwise returns None (draw / all wiped).
         """
         from game.simulation.battle_outcome import ShipStatus
 

@@ -5,6 +5,10 @@ handles N teams correctly. Uses a 3-team spec where two of the three
 ships start incapacitated (dead/derelict), so the battle ends on the
 first tick with `TeamEliminatedCondition`.
 """
+from unittest.mock import MagicMock
+
+import pytest
+
 from game.ai.ai_factory import AIControllerFactory
 from game.core.math import Vector2
 from game.simulation.battle_outcome import BattleOutcome, EndReason, ShipStatus
@@ -189,3 +193,68 @@ def test_three_team_team_eliminated_fires_only_when_last_team_standing(
     }, (
         f"Team 0 should be alive (unreachable); got {team0_statuses}"
     )
+
+
+# ---------------------------------------------------------------------------
+# PROJ-275 Phase 8.1 — additional N-team coverage.
+# ---------------------------------------------------------------------------
+
+
+def test_three_team_ring_entry_vectors_are_equally_spaced():
+    """Ring entry vectors for 3 teams are 120° apart, all facing inward."""
+    import math
+    from game.simulation.combat.formation import resolve_team_entry_vectors
+
+    vectors = resolve_team_entry_vectors(team_count=3)
+    assert set(vectors.keys()) == {0, 1, 2}
+    # All origins sit on the same circle.
+    radius = math.hypot(vectors[0].origin.x, vectors[0].origin.y)
+    for tid in (1, 2):
+        r = math.hypot(vectors[tid].origin.x, vectors[tid].origin.y)
+        assert r == pytest.approx(radius), f"Team {tid} off-ring"
+    # Each team's facing points inward — facing + 180° matches origin angle.
+    for tid, ev in vectors.items():
+        origin_angle = math.degrees(math.atan2(ev.origin.y, ev.origin.x)) % 360.0
+        inward_facing = (origin_angle + 180.0) % 360.0
+        assert ev.facing == pytest.approx(inward_facing), f"Team {tid} not facing inward"
+
+
+def test_three_team_end_condition_only_fires_with_one_alive_team():
+    """`TeamEliminatedCondition` must NOT fire while ≥2 teams still have ships."""
+    from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
+
+    cond = TeamEliminatedCondition()
+
+    # 3 teams, all alive.
+    alive_ships = [
+        _make_alive_ship(team_id=0),
+        _make_alive_ship(team_id=1),
+        _make_alive_ship(team_id=2),
+    ]
+    assert cond.is_met(alive_ships, tick=0) is False
+
+    # Only team 2 alive.
+    mixed_ships = [
+        _make_dead_ship(team_id=0),
+        _make_dead_ship(team_id=1),
+        _make_alive_ship(team_id=2),
+    ]
+    assert cond.is_met(mixed_ships, tick=0) is True
+
+
+def _make_alive_ship(team_id: int):
+    ship = MagicMock()
+    ship.is_alive = True
+    ship.is_derelict = False
+    ship.team_id = team_id
+    return ship
+
+
+def _make_dead_ship(team_id: int):
+    ship = MagicMock()
+    ship.is_alive = False
+    ship.is_derelict = False
+    ship.team_id = team_id
+    return ship
+
+

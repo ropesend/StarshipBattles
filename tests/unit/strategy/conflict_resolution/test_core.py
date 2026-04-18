@@ -106,51 +106,42 @@ class TestBattleSeedGeneration:
         assert seed1 == seed2 == 1
 
     def test_same_seed_produces_deterministic_result(self):
-        """Same seed should produce the same battle result.
+        """Battle resolver receives a seed for reproducibility (PROJ-36 Phase 5).
 
-        PROJ-36 Phase 5: Edge case test for battle determinism.
-        The battle resolver receives a seed that should make results reproducible.
+        PROJ-275 Phase 7: now exercised through `_resolve_combat_at_hex`
+        (single-call N-team), since `_resolve_combat`/`_resolve_combat_simulated`
+        were removed with the sequential decomposition.
         """
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
-        # Create a resolver that tracks the seed it receives
         class SeedTrackingResolver(IBattleResolver):
             def __init__(self):
                 self.received_seeds = []
 
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
                 self.received_seeds.append(seed)
-                # Return deterministic result based on seed
                 return BattleResult(
-                    winner=seed % 2 if seed else 0,  # Deterministic based on seed
+                    winner=0,
                     tick_count=seed or 0,
-                    team0_survivors=[],
-                    team1_survivors=[]
+                    team_survivors={i: [] for i in range(len(list(fleets)))},
                 )
 
         resolver = SeedTrackingResolver()
         engine = ConflictResolutionEngine(resolver)
 
+        empire1 = MagicMock(); empire1.id = 0
+        empire2 = MagicMock(); empire2.id = 1
         fleet1 = MagicMock()
-        fleet1.location = HexCoord(0, 0)
-        fleet1.owner_id = 0
-        fleet1.ships = [MagicMock()]
-        fleet1.ships[0].is_combat_capable = MagicMock(return_value=True)
-
+        fleet1.location = HexCoord(0, 0); fleet1.owner_id = 0; fleet1.ships = [MagicMock()]
         fleet2 = MagicMock()
-        fleet2.location = HexCoord(0, 0)
-        fleet2.owner_id = 1
-        fleet2.ships = [MagicMock()]
-        fleet2.ships[0].is_combat_capable = MagicMock(return_value=True)
+        fleet2.location = HexCoord(0, 0); fleet2.owner_id = 1; fleet2.ships = [MagicMock()]
 
-        # Resolve combat
-        result = engine._resolve_combat(fleet1, fleet2)
+        engine._resolve_combat_at_hex([(empire1, fleet1), (empire2, fleet2)])
 
-        # Verify seed was passed to resolver
         assert len(resolver.received_seeds) == 1
-        assert resolver.received_seeds[0] is not None
-        assert resolver.received_seeds[0] == 1  # First seed should be 1
+        assert resolver.received_seeds[0] == 1  # First seed
 
 
 class TestConflictDetection:
@@ -245,116 +236,13 @@ class TestConflictDetection:
             assert len(call_args) == 3
 
 
-class TestCombatResolution:
-    """Tests for _resolve_combat method."""
-
-    def test_resolve_combat_rng_fallback_for_empty_fleet(self):
-        """RNG fallback for empty fleets."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from unittest.mock import PropertyMock
-        import random
-
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
-
-        fleet1 = MagicMock()
-        fleet1.ships = []  # Empty fleet
-
-        fleet2 = MagicMock()
-        fleet2.ships = []  # Empty fleet
-
-        # PROJ-252: Patch the per-instance RNG, not the global module
-        mock_rng = MagicMock()
-        mock_rng.random.return_value = 0.3  # < 0.5 means fleet2 wins
-        engine._rng = mock_rng
-
-        result = engine._resolve_combat(fleet1, fleet2)
-
-        assert result == fleet2
-
-    def test_resolve_combat_rng_favors_fleet1_when_above_threshold(self):
-        """RNG fallback favors fleet1 when random > 0.5."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        import random
-
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
-
-        fleet1 = MagicMock()
-        fleet1.ships = []
-
-        fleet2 = MagicMock()
-        fleet2.ships = []
-
-        # PROJ-252: Patch the per-instance RNG, not the global module
-        mock_rng = MagicMock()
-        mock_rng.random.return_value = 0.7  # > 0.5 means fleet1 wins
-        engine._rng = mock_rng
-
-        result = engine._resolve_combat(fleet1, fleet2)
-
-        assert result == fleet1
-
-    def test_resolve_combat_uses_simulation(self):
-        """Full simulation used when both fleets have ships."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
-
-        fleet1 = MagicMock()
-        fleet1.ships = [MagicMock()]  # Has ships
-
-        fleet2 = MagicMock()
-        fleet2.ships = [MagicMock()]  # Has ships
-
-        with patch.object(engine, '_resolve_combat_simulated') as mock_sim:
-            mock_sim.return_value = fleet1
-
-            result = engine._resolve_combat(fleet1, fleet2)
-
-            mock_sim.assert_called_with(fleet1, fleet2)
-            assert result == fleet1
-
-    def test_empty_fleet_vs_fleet_with_ships(self):
-        """Empty fleet vs fleet with ships uses RNG fallback."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
-
-        fleet1 = MagicMock()
-        fleet1.ships = []  # Empty
-
-        fleet2 = MagicMock()
-        fleet2.ships = [MagicMock()]  # Has ships
-
-        # PROJ-252: Patch the per-instance RNG, not the global module
-        mock_rng = MagicMock()
-        mock_rng.random.return_value = 0.3  # < 0.5 means fleet2 wins
-        engine._rng = mock_rng
-
-        result = engine._resolve_combat(fleet1, fleet2)
-
-        # RNG fallback should be used
-        assert result == fleet2
-
-    def test_fleet_with_ships_vs_empty(self):
-        """Fleet with ships vs empty fleet uses RNG fallback."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
-
-        fleet1 = MagicMock()
-        fleet1.ships = [MagicMock()]  # Has ships
-
-        fleet2 = MagicMock()
-        fleet2.ships = []  # Empty
-
-        # PROJ-252: Patch the per-instance RNG, not the global module
-        mock_rng = MagicMock()
-        mock_rng.random.return_value = 0.7  # > 0.5 means fleet1 wins
-        engine._rng = mock_rng
-
-        result = engine._resolve_combat(fleet1, fleet2)
-
-        assert result == fleet1
+# PROJ-275 Phase 7: deleted `TestCombatResolution`. Its tests exercised
+# the now-removed `_resolve_combat`/`_resolve_combat_simulated` helpers
+# (sequential 2-fleet decomposition with RNG fallback for empty fleets).
+# Empty-fleet handling is now the responsibility of
+# `SimulationBattleResolver.resolve_battle`, which short-circuits when
+# fewer than two teams are combat-capable. The N-team battle path itself
+# is covered by `tests/integration/strategy/test_three_empire_battle.py`.
 
 
 class TestBuildingFleetsCombat:

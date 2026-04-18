@@ -1,10 +1,12 @@
 """
 Tests for IBattleResolver interface and BattleResult DTO.
 
-PROJ-11 Phase 4: Interface Contracts - Tests written BEFORE implementation (TDD).
+PROJ-11 Phase 4: Interface Contracts.
+PROJ-275 Phase 7: signature widened to N fleets; `BattleResult` carries
+`team_survivors: Dict[int, List[IPostBattleShip]]` instead of the
+legacy `team0_survivors`/`team1_survivors` pair.
 """
 import pytest
-from dataclasses import dataclass
 from unittest.mock import MagicMock
 
 
@@ -17,19 +19,17 @@ class TestBattleResult:
     """Test BattleResult data transfer object."""
 
     def test_battle_result_has_winner_field(self):
-        """BattleResult should have winner field (0, 1, or None for draw)."""
         from game.strategy.interfaces.battle_resolver import BattleResult
-        result = BattleResult(winner=0, tick_count=100, team0_survivors=[], team1_survivors=[])
+        result = BattleResult(winner=0, tick_count=100, team_survivors={0: [], 1: []})
         assert result.winner == 0
 
     def test_battle_result_has_tick_count(self):
-        """BattleResult should have tick_count field."""
         from game.strategy.interfaces.battle_resolver import BattleResult
-        result = BattleResult(winner=1, tick_count=250, team0_survivors=[], team1_survivors=[])
+        result = BattleResult(winner=1, tick_count=250, team_survivors={0: [], 1: []})
         assert result.tick_count == 250
 
     def test_battle_result_has_team_survivors(self):
-        """BattleResult should have team0_survivors and team1_survivors lists."""
+        """BattleResult carries a `team_survivors` mapping keyed by team_id."""
         from game.strategy.interfaces.battle_resolver import BattleResult
 
         survivor1 = MagicMock()
@@ -38,19 +38,31 @@ class TestBattleResult:
         result = BattleResult(
             winner=0,
             tick_count=100,
-            team0_survivors=[survivor1],
-            team1_survivors=[survivor2]
+            team_survivors={0: [survivor1], 1: [survivor2]},
         )
 
-        assert len(result.team0_survivors) == 1
-        assert len(result.team1_survivors) == 1
-        assert result.team0_survivors[0] is survivor1
-        assert result.team1_survivors[0] is survivor2
+        assert len(result.team_survivors[0]) == 1
+        assert len(result.team_survivors[1]) == 1
+        assert result.team_survivors[0][0] is survivor1
+        assert result.team_survivors[1][0] is survivor2
+
+    def test_battle_result_supports_three_team_survivors(self):
+        """PROJ-275 Phase 7 — `team_survivors` accepts any number of teams."""
+        from game.strategy.interfaces.battle_resolver import BattleResult
+
+        result = BattleResult(
+            winner=2,
+            tick_count=200,
+            team_survivors={0: [], 1: [], 2: [MagicMock(), MagicMock()]},
+        )
+        assert set(result.team_survivors.keys()) == {0, 1, 2}
+        assert len(result.team_survivors[2]) == 2
 
     def test_battle_result_none_winner_for_draw(self):
-        """BattleResult winner can be None for a draw."""
         from game.strategy.interfaces.battle_resolver import BattleResult
-        result = BattleResult(winner=None, tick_count=1000, team0_survivors=[], team1_survivors=[])
+        result = BattleResult(
+            winner=None, tick_count=1000, team_survivors={0: [], 1: []}
+        )
         assert result.winner is None
 
 
@@ -63,8 +75,7 @@ class TestIBattleResolverInterface:
     """Test IBattleResolver abstract base class interface contract."""
 
     def test_concrete_implementation_must_implement_resolve_battle(self):
-        """Concrete implementation must implement resolve_battle."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+        from game.strategy.interfaces.battle_resolver import IBattleResolver
 
         class IncompleteResolver(IBattleResolver):
             pass
@@ -73,59 +84,57 @@ class TestIBattleResolverInterface:
             IncompleteResolver()
 
     def test_concrete_implementation_works(self):
-        """Concrete implementation with resolve_battle should work."""
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class MockResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
                 return BattleResult(
-                    winner=0,
-                    tick_count=100,
-                    team0_survivors=[],
-                    team1_survivors=[]
+                    winner=0, tick_count=100,
+                    team_survivors={0: [], 1: []},
                 )
 
         resolver = MockResolver()
         assert resolver is not None
 
-    def test_resolve_battle_accepts_two_fleets_and_optional_seed(self):
-        """resolve_battle should accept two fleets and optional seed parameter."""
+    def test_resolve_battle_accepts_fleets_sequence_and_optional_seed(self):
+        """resolve_battle takes a fleets sequence, optional modifiers + seed."""
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class TestResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                self.last_fleet1 = fleet1
-                self.last_fleet2 = fleet2
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                self.last_fleets = list(fleets)
                 self.last_seed = seed
-                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
+                return BattleResult(
+                    winner=0, tick_count=0,
+                    team_survivors={i: [] for i in range(len(self.last_fleets))},
+                )
 
         resolver = TestResolver()
-        mock_fleet1 = MagicMock()
-        mock_fleet2 = MagicMock()
+        f1, f2 = MagicMock(), MagicMock()
 
-        # Test without seed
-        resolver.resolve_battle(mock_fleet1, mock_fleet2)
-        assert resolver.last_fleet1 is mock_fleet1
-        assert resolver.last_fleet2 is mock_fleet2
+        resolver.resolve_battle([f1, f2])
+        assert resolver.last_fleets == [f1, f2]
         assert resolver.last_seed is None
 
-        # Test with seed
-        resolver.resolve_battle(mock_fleet1, mock_fleet2, seed=42)
+        resolver.resolve_battle([f1, f2], seed=42)
         assert resolver.last_seed == 42
 
     def test_resolve_battle_returns_battle_result(self):
-        """resolve_battle should return a BattleResult."""
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class TestResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                return BattleResult(winner=1, tick_count=150, team0_survivors=[], team1_survivors=[])
+            def resolve_battle(self, fleets, modifiers=None, seed=None,
+                               registries=None, environmental_effects=None):
+                return BattleResult(
+                    winner=1, tick_count=150,
+                    team_survivors={0: [], 1: []},
+                )
 
         resolver = TestResolver()
-        result = resolver.resolve_battle(MagicMock(), MagicMock())
+        result = resolver.resolve_battle([MagicMock(), MagicMock()])
 
         assert isinstance(result, BattleResult)
         assert result.winner == 1
         assert result.tick_count == 150
-
-
