@@ -81,6 +81,23 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
             }
         ],
         "OUTER": [
@@ -163,8 +180,8 @@
     },
     "cargo": {},
     "expected_stats": {
-        "max_hp": 2969,
-        "mass": 1779.9605249474364,
+        "max_hp": 3049,
+        "mass": 1829.960525,
         "resource_storage": {
             "fuel": 50000.0,
             "energy": 2000.0
@@ -191,7 +208,7 @@
         "is_obsolete": false,
         "times_built": 0,
         "created_date": "2026-02-10T00:00:00.000000",
-        "last_modified": "2026-02-10T00:00:00.000000"
+        "last_modified": "2026-04-18T07:44:51.318912"
     },
     "design_role": "colony_pod"
 }

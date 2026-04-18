@@ -95,6 +95,23 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
             }
         ],
         "INNER": [
@@ -195,11 +212,11 @@
         "is_obsolete": false,
         "times_built": 0,
         "created_date": "2026-04-10T00:00:00.000000",
-        "last_modified": "2026-04-10T00:00:00.000000"
+        "last_modified": "2026-04-18T07:44:51.318912"
     },
     "expected_stats": {
-        "mass": 2006.071385147455,
-        "max_hp": 5460,
+        "mass": 2056.071385,
+        "max_hp": 5540,
         "mass_valid": true
     }
 }

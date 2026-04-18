@@ -445,6 +445,23 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
             }
         ],
         "OUTER": [
@@ -565,8 +582,8 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 7624,
-        "mass": 4611.42135623731,
+        "max_hp": 7704,
+        "mass": 4661.421356,
         "resource_storage": {
             "fuel": 100000.0,
             "energy": 2000.0
@@ -593,7 +610,7 @@
         "is_obsolete": false,
         "times_built": 0,
         "created_date": "2026-02-10T00:00:00.000000",
-        "last_modified": "2026-02-10T00:00:00.000000"
+        "last_modified": "2026-04-18T07:44:51.318912"
     },
     "design_role": "general_purpose"
 }

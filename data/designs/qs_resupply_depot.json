@@ -68,6 +68,23 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
             }
         ],
         "INNER": [],
@@ -107,8 +124,8 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 890,
-        "mass": 270.0,
+        "max_hp": 970,
+        "mass": 320.0,
         "resource_storage": {
             "fuel": 50000.0
         },
@@ -128,7 +145,7 @@
         "is_obsolete": false,
         "times_built": 0,
         "created_date": "2026-02-08T00:00:00.000000",
-        "last_modified": "2026-02-08T00:00:00.000000"
+        "last_modified": "2026-04-18T07:44:51.318912"
     },
     "design_role": "resupply_depot"
 }
