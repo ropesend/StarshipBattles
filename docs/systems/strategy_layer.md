@@ -273,7 +273,11 @@ Role categories:
 
 **Layered loading** (PROJ-278): `_build_default()` in `design_role_registry.py` loads in priority order — base `data/design_roles.json` (required) → `mods/<mod_name>/design_roles.json` (optional directory) → `output/design_roles_overlay.json` (optional user overlay). Later sources override earlier ones for the same role id.
 
-**Runtime add:** the design_role registry is constructed with `allow_runtime_add=True`, so subsystems can call `registry.add_user_role(role)` to register player-added roles. Subsystems caching role-derived data (formation defaults, AI behavior dispatch) should call `registry.register_invalidation_callback(cb)` to refresh on mutation. (UI for player runtime-add is a future project.)
+**Runtime add:** the design_role registry is constructed with `allow_runtime_add=True`, so subsystems can call `registry.add_user_role(role)` to register player-added roles. (UI for player runtime-add is a future project.)
+
+**Authoring rule for new role-derived caches (PROJ-278 Phase 5):** If you add code that caches data derived from `design_role_registry` (e.g. a precomputed lookup keyed on role id, an archetype mapping table, a filtered-design-list cache), you MUST register an invalidation callback via `registry.register_invalidation_callback(self._invalidate_cache)` so the cache is dropped when a player adds a custom role at runtime. See [tests/unit/strategy/data/test_design_role_registry_invalidation.py](../../tests/unit/strategy/data/test_design_role_registry_invalidation.py) for a worked example.
+
+> Phase 5 audit (2026-04-18) found zero current cachers — `_DESIGN_ROLE_TO_ARCHETYPE` in `formation.py` is a hardcoded module-level dict, not a cache; `game/ai/` doesn't consume design_role; `DesignLibrary.filter_designs` filters in-line. The invalidation API is in place for future use, with the smoke test above as a regression guard.
 
 **RoleRegistry API** (replaces deleted `DesignRoleRegistry` class):
 - `get(role_id) -> Role` — raises `KeyError` on miss (dict-like API)

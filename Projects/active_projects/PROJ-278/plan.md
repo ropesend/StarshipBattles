@@ -17,24 +17,25 @@
 | 2. design_role migration to RoleRegistry (mods + user overlay, runtime add) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Combat Lab scenario_role registry (data + machinery + consistency test) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. ShipSpec.scenario_role field — delete substring parsing | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Cache invalidation hooks for runtime additions | Not Started | TBD |
-| 6. Documentation + tests | Not Started | TBD |
+| 5. Cache invalidation hooks (audit + smoke test + authoring rule) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Project closure (final docs polish + audit pass + close) | Not Started | TBD |
 
 ## Current State
-**Last Updated:** 2026-04-17
-**Active Phase:** Phase 5 (ready to start) — cache invalidation hooks for runtime role additions
-**Last Action:** Phase 4 complete. Typed `ShipSpec.scenario_role: Optional[str]` field added; `materialize_spec_ships` now reads it directly. `_role_from_instance_id` substring parser DELETED from `combat_lab/runner.py`; `scenario_run_helper.py` updated to read field. Combat Lab spec compiler's `_ship_spec` helper validates `scenario_role` against `combat_lab_role_registry` at compile time — typos fail loudly. ComparisonScenario `endswith(":baseline_*")` checks replaced with field comparison. 4 baseline/variant roles added to `scenario_roles.json` (registry now has 14 entries). 8 test assertions migrated from `instance_id.endswith(":role")` to `scenario_role == "role"`. Targeted regression: 7928 passed across `tests/unit/core/ tests/unit/strategy/data/ tests/unit/combat_lab/ tests/unit/simulation/ tests/unit/ui/`. Combat Lab simulation suite: 162 passed / 0 failed / 0 skipped. Docs updated: §"2.5 Scenario Role Labels" rewritten in [docs/guides/simulation_testing.md](../../../docs/guides/simulation_testing.md), new section in [docs/systems/combat_simulation.md](../../../docs/systems/combat_simulation.md).
-**Next Action:** Begin Phase 5 — wire cache invalidation callbacks for the runtime-extensible `design_role_registry`. Audit subsystems that cache role-derived data (formation defaults at `game/simulation/combat/formation.py::resolve_default_for_task_force`; AI policy dispatch at `game/ai/policy_manager.py`; possibly DesignLibrary filtering). Each caching subsystem registers an invalidation callback so a player calling `add_user_role` flushes stale caches.
+**Last Updated:** 2026-04-18
+**Active Phase:** Phase 6 (ready to start) — project closure
+**Last Action:** Phase 5 complete. Audit revealed zero subsystems currently cache `design_role`-derived data — `_DESIGN_ROLE_TO_ARCHETYPE` in `formation.py` is a hardcoded dict (not a cache); `game/ai/` doesn't reference design_role at all; `DesignLibrary.filter_designs` filters in-line; ShipInstance/DesignMetadata/DTOs just pass-through the field. Phase 5 reframed accordingly: shipped end-to-end smoke test [test_design_role_registry_invalidation.py](../../../tests/unit/strategy/data/test_design_role_registry_invalidation.py) (5 tests with worked-example `_FakeRoleArchetypeCache` for future implementers), documented authoring rule in [docs/systems/strategy_layer.md](../../../docs/systems/strategy_layer.md) Design Roles section. Targeted regression: 1330 passed across PROJ-278 test scope.
+**Next Action:** Begin Phase 6 — final project closure. Run full sharded test suite, audit pass, run `validate_close_ready.py`, write closure summary in plan.md, archive the project.
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 5 deliverable: every subsystem that caches `design_role` lookups (e.g. formation default tables, AI policy maps) registers a callback via `design_role_registry.register_invalidation_callback(cb)`. When `add_user_role` succeeds, callbacks fire — caches drop and rebuild on next access.
-- Audit candidates (verify which actually cache):
-  - `game/simulation/combat/formation.py::resolve_default_for_task_force` (formation defaults bucketed by design_role)
-  - `game/ai/policy_manager.py` (AI behavior dispatch by role)
-  - `game/strategy/systems/design_library.py` (design library filtering by role)
-  - Any DTO in `game/strategy/facade/dto/` that includes role-derived fields
-- The `RoleRegistry` machinery already supports registration + firing (Phase 1) — Phase 5 just wires the callbacks
-- Phase 5 will need a UI hook later (out of scope) for player-visible "add role" gesture; the data model is ready
+- All 5 implementation phases are complete and validated; Phase 6 is closure-only (no new code)
+- Phase 5 captured two FUTURE OPPORTUNITIES that should become their own projects after PROJ-278 closes:
+  1. **Data-drive `_DESIGN_ROLE_TO_ARCHETYPE`:** add `formation_archetype: Optional[str]` field to `Role` schema; move the mapping into `data/design_roles.json`; have `resolve_default_for_task_force` consult the registry directly. Player-added roles would then participate in formation defaults instead of falling back to LINE_ABREAST. Would be the first real cache-with-invalidation use case.
+  2. **DesignLibrary role-filter caching:** if UI dropdowns become slow at scale, cache filtered-by-role lists. Same invalidation infrastructure applies.
+- Phase 6 should:
+  - Run full sharded test suite to capture absolute baseline (compare to memory's 14685/14686)
+  - Audit each phase deliverable against acceptance criteria
+  - Update PROJ-278 entry in MEMORY.md with final summary
+  - Move project to archived state if user approves
 - Pre-existing baseline: `test_galaxy_cleanup.py` has 78 unrelated failures. Skip in regression checks
 
 ## Overview
