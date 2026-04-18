@@ -84,6 +84,7 @@ if TYPE_CHECKING:
         IPlanetEnergyEngine,
         IPlanetActionEngine,
         IComponentActivationEngine,
+        IOrganicsConsumptionEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -150,6 +151,7 @@ class TurnEngine:
         planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
         planet_action_engine: Optional['IPlanetActionEngine'] = None,
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
+        organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = None,
         event_bus=None,
     ):
         """Initialize the turn engine.
@@ -191,6 +193,11 @@ class TurnEngine:
         self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine or cfg.planet_energy_engine
         self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine or cfg.planet_action_engine
         self._component_activation_engine: Optional['IComponentActivationEngine'] = component_activation_engine or cfg.component_activation_engine
+        # PROJ-284: per-turn food consumption engine (drains configured
+        # food resource, writes last_food_ratio for happiness + population)
+        self._organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = (
+            organics_consumption_engine or cfg.organics_consumption_engine
+        )
 
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
@@ -404,6 +411,19 @@ class TurnEngine:
             self._component_activation_engine = ComponentActivationEngine()
         return self._component_activation_engine
 
+    @property
+    def organics_consumption_engine(self) -> 'IOrganicsConsumptionEngine':
+        """Return organics consumption engine, lazily creating default if not injected.
+
+        PROJ-284 Phase 2: Drains the configured food resource per turn
+        and writes `last_food_ratio` for downstream happiness / population
+        reads.
+        """
+        if self._organics_consumption_engine is None:
+            from game.strategy.engine.organics_consumption_engine import OrganicsConsumptionEngine
+            self._organics_consumption_engine = OrganicsConsumptionEngine()
+        return self._organics_consumption_engine
+
     def process_turn(self, empires: List['Empire'], galaxy: 'Galaxy', save_path: Optional[str] = None, *, session: Optional['GameSession'] = None) -> None:
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
@@ -462,6 +482,12 @@ class TurnEngine:
 
             # [BUG-109] Log resource state after all ticks
             self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
+
+            # PROJ-284 Phase 2: Food consumption runs BEFORE population
+            # growth so `last_food_ratio` is fresh when the growth
+            # formula reads it (Phase 3 wires HappinessEngine between
+            # consumption and population growth).
+            self.organics_consumption_engine.process_consumption(empires)
 
             # 2. Population Growth Phase (PROJ-68)
             t0 = time.perf_counter()

@@ -21,8 +21,11 @@ class TestTurnEngineConfigDefaults:
             config.movement_engine = MagicMock()
 
     def test_field_count(self):
-        """TurnEngineConfig should have exactly 13 optional engine fields."""
-        assert len(dataclasses.fields(TurnEngineConfig())) == 13
+        """TurnEngineConfig should have exactly 14 optional engine fields.
+
+        PROJ-284 Phase 2 added `organics_consumption_engine` (14th).
+        """
+        assert len(dataclasses.fields(TurnEngineConfig())) == 14
 
 
 class TestTurnEngineConfigCustomValues:

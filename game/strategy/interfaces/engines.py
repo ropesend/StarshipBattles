@@ -40,6 +40,7 @@ __all__ = [
     'IPlanetEnergyEngine',
     'IPlanetActionEngine',
     'IComponentActivationEngine',
+    'IOrganicsConsumptionEngine',
 ]
 
 
@@ -582,6 +583,46 @@ class IPlanetActionEngine(ABC):
 
         Returns:
             List of result records for completed/progressed actions
+        """
+        pass
+
+
+class IOrganicsConsumptionEngine(ABC):
+    """
+    Abstract interface for per-colony per-species food consumption.
+
+    PROJ-284 Phase 2: Drains the configured food resource
+    (`EconomyConfig.population_food_resource`, defaults to "organics")
+    from each colony's stockpile based on population * food_allocation *
+    food_per_pop_per_turn, and writes `last_food_ratio = supplied / needed`
+    back into each `ColonySpeciesConfig` for downstream consumption by
+    `HappinessEngine` and `PopulationEngine`.
+
+    Runs ONCE per turn, AFTER the 100-tick loop, BEFORE population growth.
+
+    Example usage:
+        engine = OrganicsConsumptionEngine()  # uses default economy config
+        engine.process_consumption(empires)
+    """
+
+    @abstractmethod
+    def process_consumption(
+        self,
+        empires: List
+    ) -> None:
+        """
+        Process food consumption for all empires.
+
+        For each colony in each empire, iterates its populations and:
+            1. Looks up / lazy-creates `ColonySpeciesConfig` via
+               `planet.get_species_config(race_id)`.
+            2. Computes needed = count * food_allocation * food_per_pop_per_turn.
+            3. Drains min(needed, available) from the colony stockpile.
+            4. Writes `last_food_ratio = supplied / needed` (or 1.0 when
+               needed == 0).
+
+        Args:
+            empires: List of Empire objects to process
         """
         pass
 
