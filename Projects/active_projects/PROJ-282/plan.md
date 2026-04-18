@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Audit responsibilities of FleetBattleSetupScreen + study TestLab MVVM exemplar | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Move `_complex_toggles` onto BattleSetupState (data model integrity) | Not Started | TBD |
-| 3. Extract BattleSetupViewModel | Not Started | TBD |
-| 4. Extract BattleSetupRenderer (panel construction) | Not Started | TBD |
-| 5. Extract BattleSetupInputHandler | Not Started | TBD |
-| 6. Extract BattleSetupController (mutation + launch) | Not Started | TBD |
-| 7. Extract FleetHierarchyEditor (kills TF/SQ clone duplication) | Not Started | TBD |
-| 8. Slim FleetBattleSetupScreen to a thin scene shell | Not Started | TBD |
-| 9. Add line-budget convention to docs/03_CONVENTIONS.md | Not Started | TBD |
-| 10. Manual smoke (2-side, 3-side, 8-side, complex toggles, save/load) | Not Started | TBD |
+| 2. Move `_complex_toggles` onto BattleSetupState (data model integrity) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Extract BattleSetupViewModel | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Extract BattleSetupRenderer (panel construction) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Extract BattleSetupInputHandler | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Extract BattleSetupController (mutation + launch) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Extract FleetHierarchyEditor (kills TF/SQ clone duplication) | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. Slim FleetBattleSetupScreen to a thin scene shell | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
+| 9. Add line-budget convention to docs/03_CONVENTIONS.md | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
+| 10. Manual smoke (2-side, 3-side, 8-side, complex toggles, save/load) | Not Started | [phase_10_checklist.md](phase_10_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-17
