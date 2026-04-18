@@ -394,7 +394,7 @@ class BuilderRightPanel:
         Returns:
             Tuple of (options_list, current_display_name).
         """
-        from game.strategy.data.design_role import get_default_design_role_registry
+        from game.strategy.data.design_role_registry import get_default_design_role_registry
 
         registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type(vehicle_type)
@@ -402,11 +402,14 @@ class BuilderRightPanel:
         if not roles:
             return ["General Purpose"], "General Purpose"
 
-        role_options = [r["name"] for r in roles]
+        role_options = [r.display_name for r in roles]
 
         # Find display name for ship's current role
         curr_role_id = self.builder.ship.design_role
-        curr_display = registry.get_role_name(curr_role_id)
+        try:
+            curr_display = registry.get(curr_role_id).display_name
+        except KeyError:
+            curr_display = curr_role_id  # fall back to id if role not registered
 
         if curr_display not in role_options:
             curr_display = role_options[0]

@@ -24,20 +24,6 @@ setup_combat_lab_logging()
 logger = get_logger(__name__)
 
 
-def _role_from_instance_id(instance_id: str):
-    """Return the role suffix after the last ':' in a spec instance_id.
-
-    PROJ-269 Task 6.7a: the Combat Lab compiler tags each ShipSpec with
-    a role (`:attacker`, `:target`, `:ship1`, `:ship2`, `:ship`,
-    `:variant_attacker`, `:variant_target`, `:baseline_attacker`,
-    `:baseline_target`). The runner uses this to build the
-    `ships_by_role` dict passed to `scenario.wire_ships(...)`.
-    """
-    if not instance_id or ":" not in instance_id:
-        return None
-    return instance_id.rsplit(":", 1)[1]
-
-
 def _snapshot_ship_state(ship) -> dict:
     """Capture a freshly-loaded Ship's state pre-engine-start.
 

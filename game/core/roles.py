@@ -107,6 +107,20 @@ class RoleRegistry:
         """Return all roles, sorted by id for deterministic iteration."""
         return [self._roles[k] for k in sorted(self._roles.keys())]
 
+    def get_roles_for_vehicle_type(self, vehicle_type: str) -> List[Role]:
+        """Return roles whose `vehicle_type_filter` accepts `vehicle_type`.
+
+        A role with empty `vehicle_type_filter` matches ANY vehicle type
+        (no restriction). Result is sorted by `display_name` for stable
+        UI ordering.
+        """
+        matches = [
+            role for role in self._roles.values()
+            if not role.vehicle_type_filter or vehicle_type in role.vehicle_type_filter
+        ]
+        matches.sort(key=lambda r: r.display_name)
+        return matches
+
     def load_from_file(self, path: Union[str, Path], source_tag: str) -> None:
         """Load roles from a JSON file at `path`.
 
@@ -131,6 +145,25 @@ class RoleRegistry:
                     role.id, source_tag, path,
                 )
             self._roles[role.id] = role
+
+    def load_from_file_optional(self, path: Union[str, Path], source_tag: str) -> None:
+        """Load roles from `path` if it exists; silently no-op if it doesn't.
+
+        Used for the user-overlay layer (e.g. `user_data/design_roles.json`)
+        which won't exist on first run. Malformed JSON still raises — only
+        missingness is tolerated, not corruption.
+
+        Raises:
+            json.JSONDecodeError: if the file exists but is not valid JSON
+        """
+        path = Path(path)
+        if not path.exists():
+            logger.debug(
+                "RoleRegistry: optional file not present (source=%s, path=%s)",
+                source_tag, path,
+            )
+            return
+        self.load_from_file(path, source_tag=source_tag)
 
     def add_user_role(self, role: Role) -> None:
         """Register `role` at runtime; fires invalidation callbacks.

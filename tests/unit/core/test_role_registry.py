@@ -136,6 +136,97 @@ class TestRoleRegistryLoading:
         assert ids == ["a", "m", "z"]
 
 
+class TestRoleRegistryLoadOptional:
+    """`load_from_file_optional` tolerates a missing file (returns silently)
+    but still raises on malformed JSON. Used for the user-overlay path
+    that won't exist on first run."""
+
+    def test_load_from_file_optional_with_missing_file_is_noop(self, tmp_path):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.load_from_file_optional(tmp_path / "missing.json", source_tag="user")
+        assert reg.all() == []
+
+    def test_load_from_file_optional_with_existing_file_loads_roles(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "display_name": "X", "description": "x"},
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.load_from_file_optional(path, source_tag="user")
+        assert reg.get("x").id == "x"
+
+    def test_load_from_file_optional_with_malformed_json_still_raises(self, tmp_path):
+        """Existence-tolerant; corruption-intolerant."""
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not valid json", encoding="utf-8")
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(json.JSONDecodeError):
+            reg.load_from_file_optional(bad, source_tag="user")
+
+    def test_load_from_file_optional_does_not_fire_invalidation(self, tmp_path):
+        """Like `load_from_file`, this is initialization, not mutation."""
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "display_name": "X", "description": "x"},
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        calls: List[int] = []
+        reg.register_invalidation_callback(lambda: calls.append(1))
+
+        reg.load_from_file_optional(path, source_tag="user")
+
+        assert calls == []
+
+
+class TestRoleRegistryQueryByVehicleType:
+    """`get_roles_for_vehicle_type` returns roles whose `vehicle_type_filter`
+    accepts the given vehicle type. Empty filter = matches any."""
+
+    def test_empty_filter_matches_any_vehicle_type(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(id="generic", display_name="Generic", description="g"))
+
+        assert reg.get_roles_for_vehicle_type("Ship") == [reg.get("generic")]
+        assert reg.get_roles_for_vehicle_type("Fighter") == [reg.get("generic")]
+
+    def test_non_empty_filter_matches_only_listed_types(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(
+            id="carrier", display_name="Carrier", description="c",
+            vehicle_type_filter=("Battleship", "Cruiser"),
+        ))
+
+        assert reg.get_roles_for_vehicle_type("Battleship") == [reg.get("carrier")]
+        assert reg.get_roles_for_vehicle_type("Fighter") == []
+
+    def test_result_sorted_by_display_name(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(id="c", display_name="Charlie", description="c"))
+        reg.add_user_role(Role(id="a", display_name="Alpha", description="a"))
+        reg.add_user_role(Role(id="b", display_name="Bravo", description="b"))
+
+        names = [r.display_name for r in reg.get_roles_for_vehicle_type("Ship")]
+        assert names == ["Alpha", "Bravo", "Charlie"]
+
+    def test_returns_empty_list_when_no_roles_match(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(
+            id="x", display_name="X", description="x",
+            vehicle_type_filter=("Battleship",),
+        ))
+
+        assert reg.get_roles_for_vehicle_type("Fighter") == []
+
+    def test_mix_of_filtered_and_unfiltered_roles(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(id="generic", display_name="Generic", description="g"))
+        reg.add_user_role(Role(
+            id="carrier", display_name="Carrier", description="c",
+            vehicle_type_filter=("Battleship",),
+        ))
+
+        result = reg.get_roles_for_vehicle_type("Battleship")
+        assert {r.id for r in result} == {"generic", "carrier"}
+
+
 class TestRoleRegistryRuntimeAdd:
     """Runtime add behavior — gated by allow_runtime_add flag."""
 

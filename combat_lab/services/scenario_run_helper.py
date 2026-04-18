@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Callable, Dict, Optional, Tuple
 
-from combat_lab.runner import _role_from_instance_id, _snapshot_ship_state
+from combat_lab.runner import _snapshot_ship_state
 from combat_lab.telemetry import CombatLabTelemetry
 from game.ai.ai_factory import AIControllerFactory
 from game.simulation.battle_outcome import BattleOutcome
@@ -73,7 +73,8 @@ def run_scenario_via_run_battle(
 
     def ship_builder(ship_spec, team_id):
         ship = _context_builder(ship_spec, team_id)
-        role = _role_from_instance_id(ship_spec.instance_id)
+        # PROJ-278 Phase 4: read scenario_role field instead of parsing instance_id
+        role = ship_spec.scenario_role
         if role is not None:
             ships_by_role[role] = ship
             initial_state_by_role[role] = _snapshot_ship_state(ship)

@@ -31,10 +31,12 @@ combat_lab/
 │   ├── components.json              # Test-only components
 │   ├── vehicleclasses.json          # Test hull classes
 │   ├── modifiers.json               # Test modifiers
+│   ├── scenario_roles.json          # Scenario role labels (PROJ-278) — see §2.5
 │   ├── ships/                       # Test ship JSON files
 │   ├── ship_templates/              # Base templates for ship generation
 │   ├── schemas/                     # JSON schema validation files
 │   └── schema_validator.py          # Runtime schema validation
+├── scenario_role_registry.py        # combat_lab_role_registry accessor (PROJ-278)
 ├── scenarios/                       # TestScenario implementations
 │   ├── base.py                      # TestScenario + TestMetadata base classes
 │   ├── templates.py                 # 5 reusable scenario templates
@@ -123,6 +125,59 @@ The Combat Lab UI supports ability-specific test categories:
 - ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
 - Selecting a test auto-selects the most recent run and shows detailed results
 - Test run history persists across sessions (shared with CLI via `combat_lab/test_history/` shards)
+
+---
+
+## 2.5 Scenario Role Labels (PROJ-278 Phases 3 + 4)
+
+Combat Lab scenarios wire ships into their test scaffold via a string-keyed
+`ships_by_role` dict — e.g. `self.attacker = ships_by_role["attacker"]` in
+`StaticTargetScenario.wire_ships`.
+
+**Producer side (PROJ-278 Phase 4):** every `ShipSpec` carries a typed
+`scenario_role: Optional[str]` field. The Combat Lab spec compiler
+([`combat_lab/spec_compiler.py::_ship_spec`](../../combat_lab/spec_compiler.py))
+sets this on every constructed `ShipSpec` and validates the value against
+`combat_lab_role_registry` at compile time — typos fail loudly with a
+`ValueError` instead of producing a silent KeyError later.
+
+**Consumer side:** `materialize_spec_ships`
+([game/simulation/battle_runner.py](../../game/simulation/battle_runner.py))
+builds the `ships_by_role` dict by reading `ship_spec.scenario_role` directly
+— no string parsing of `instance_id`. The legacy `_role_from_instance_id`
+substring parser was deleted in Phase 4. (`instance_id` retains the `:role`
+suffix as a human-readable identity disambiguator, but readers MUST
+consume the typed field, not parse the string.)
+
+**Canonical role list:** lives in
+[combat_lab/data/scenario_roles.json](../../combat_lab/data/scenario_roles.json)
+and is loaded by
+[combat_lab/scenario_role_registry.py::get_default_combat_lab_role_registry](../../combat_lab/scenario_role_registry.py)
+as a read-only `RoleRegistry` instance (`allow_runtime_add=False` — players
+don't write Combat Lab scenarios).
+
+**Authoring rule:** if you write a new template that references a new role
+label (e.g. `ships_by_role["my_new_role"]`), you MUST add a matching entry
+to `combat_lab/data/scenario_roles.json`. Two layers of protection catch
+violations:
+- **Compile time** (Phase 4): `_ship_spec` validates `scenario_role` against
+  the registry. If a scenario tries to emit `scenario_role="my_new_role"`
+  before the role is registered, the compiler raises `ValueError`.
+- **Test time** (Phase 3): the AST scanner at
+  [tests/unit/combat_lab/test_scenario_roles_consistency.py](../../tests/unit/combat_lab/test_scenario_roles_consistency.py)
+  scans every `.py` under `combat_lab/scenarios/` for literal `ships_by_role[<str>]`
+  references and fails if any label is unregistered.
+
+**AST scanner limitation:** the scanner only catches *literal* string keys.
+If your scenario uses a variable like `ships_by_role[role_attacker]`, the
+scanner won't see it — those rely on author discipline. (One known dynamic
+site exists in `templates.py` around line 1115.)
+
+Combat Lab scenario_role and gameplay design_role share the
+[game.core.roles.RoleRegistry](../../game/core/roles.py) machinery but live
+in separate registry instances loaded from separate files. See
+[docs/systems/strategy_layer.md](../systems/strategy_layer.md) §"Design Roles"
+for the gameplay variant.
 
 ---
 

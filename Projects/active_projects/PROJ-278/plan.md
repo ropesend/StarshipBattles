@@ -14,23 +14,28 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Shared Role schema + RoleRegistry machinery | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. design_role migration to RoleRegistry (mods + user overlay, runtime add) | Not Started | TBD |
-| 3. Combat Lab scenario_role migration (typed, file-driven) | Not Started | TBD |
-| 4. ShipSpec field separation (design_role + scenario_role) | Not Started | TBD |
+| 2. design_role migration to RoleRegistry (mods + user overlay, runtime add) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Combat Lab scenario_role registry (data + machinery + consistency test) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. ShipSpec.scenario_role field — delete substring parsing | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cache invalidation hooks for runtime additions | Not Started | TBD |
 | 6. Documentation + tests | Not Started | TBD |
 
 ## Current State
 **Last Updated:** 2026-04-17
-**Active Phase:** Phase 2 (ready to start) — design_role migration to RoleRegistry
-**Last Action:** Phase 1 complete — `Role` dataclass + `RoleRegistry` class shipped in [game/core/roles.py](../../../game/core/roles.py) with 30 passing tests (10 Role + 20 RoleRegistry covering empty / loading / runtime add / invalidation). Re-exports added to [game/core/__init__.py](../../../game/core/__init__.py); [docs/01_ARCHITECTURE.md](../../../docs/01_ARCHITECTURE.md) updated (export count 42→45, package map row added). Full `tests/unit/core/` suite (990 tests) green. No production callers wired — pure infrastructure delivered.
-**Next Action:** Phase 2 — write Phase 2 checklist, then migrate `data/design_roles.json` from existing `{"roles": {id: {...}}}` shape to new `{"roles": [{...}]}` shape (or update RoleRegistry loader to consume the existing shape — decide in Phase 2 design). Wire `design_role_registry` into `ApplicationContext` with layered loading (`data/design_roles.json` + `mods/*/design_roles.json` + `user_data/design_roles.json`). Replace existing `DesignRoleRegistry` callers with `design_role_registry`.
+**Active Phase:** Phase 5 (ready to start) — cache invalidation hooks for runtime role additions
+**Last Action:** Phase 4 complete. Typed `ShipSpec.scenario_role: Optional[str]` field added; `materialize_spec_ships` now reads it directly. `_role_from_instance_id` substring parser DELETED from `combat_lab/runner.py`; `scenario_run_helper.py` updated to read field. Combat Lab spec compiler's `_ship_spec` helper validates `scenario_role` against `combat_lab_role_registry` at compile time — typos fail loudly. ComparisonScenario `endswith(":baseline_*")` checks replaced with field comparison. 4 baseline/variant roles added to `scenario_roles.json` (registry now has 14 entries). 8 test assertions migrated from `instance_id.endswith(":role")` to `scenario_role == "role"`. Targeted regression: 7928 passed across `tests/unit/core/ tests/unit/strategy/data/ tests/unit/combat_lab/ tests/unit/simulation/ tests/unit/ui/`. Combat Lab simulation suite: 162 passed / 0 failed / 0 skipped. Docs updated: §"2.5 Scenario Role Labels" rewritten in [docs/guides/simulation_testing.md](../../../docs/guides/simulation_testing.md), new section in [docs/systems/combat_simulation.md](../../../docs/systems/combat_simulation.md).
+**Next Action:** Begin Phase 5 — wire cache invalidation callbacks for the runtime-extensible `design_role_registry`. Audit subsystems that cache role-derived data (formation defaults at `game/simulation/combat/formation.py::resolve_default_for_task_force`; AI policy dispatch at `game/ai/policy_manager.py`; possibly DesignLibrary filtering). Each caching subsystem registers an invalidation callback so a player calling `add_user_role` flushes stale caches.
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 1 chose JSON shape `{"roles": [{...}, ...]}` (list of dicts). Existing `data/design_roles.json` uses `{"roles": {id: {...}}}` (dict keyed by id) with field names `name`/`allowed_vehicle_types`. Two options for Phase 2: (a) port the data file to the new shape OR (b) extend `RoleRegistry._role_from_dict` to accept both shapes. Recommend (a) — clean migration, no permanent loader complexity
-- `RoleRegistry.load_from_file` uses `load_json_required` (raises on missing/malformed). For the user-overlay path (`user_data/design_roles.json`) which won't exist on first run, Phase 2 should add a tolerant `load_from_file_optional` variant OR check existence before calling
-- Cache invalidation callbacks are wired to fire on `add_user_role`. Phase 5 will identify the actual subsystems that need to register callbacks (formation defaults, AI policy manager). Phase 2 just needs to ensure `design_role_registry` is the single source consulted everywhere
-- Decision pending: keep legacy `DesignRoleRegistry` class as a thin wrapper around `RoleRegistry` or delete it entirely and migrate all 28 call sites — recommend deletion per the eradicate-old-systems policy
+- Phase 5 deliverable: every subsystem that caches `design_role` lookups (e.g. formation default tables, AI policy maps) registers a callback via `design_role_registry.register_invalidation_callback(cb)`. When `add_user_role` succeeds, callbacks fire — caches drop and rebuild on next access.
+- Audit candidates (verify which actually cache):
+  - `game/simulation/combat/formation.py::resolve_default_for_task_force` (formation defaults bucketed by design_role)
+  - `game/ai/policy_manager.py` (AI behavior dispatch by role)
+  - `game/strategy/systems/design_library.py` (design library filtering by role)
+  - Any DTO in `game/strategy/facade/dto/` that includes role-derived fields
+- The `RoleRegistry` machinery already supports registration + firing (Phase 1) — Phase 5 just wires the callbacks
+- Phase 5 will need a UI hook later (out of scope) for player-visible "add role" gesture; the data model is ready
+- Pre-existing baseline: `test_galaxy_cleanup.py` has 78 unrelated failures. Skip in regression checks
 
 ## Overview
 Replace the two separate "role" concepts in the codebase with one shared `Role` schema and `RoleRegistry` machinery. Two registry instances are loaded from separate files: `data/design_roles.json` (gameplay archetypes — used by AI behavior, formation defaults, design-library filtering) and `combat_lab/data/scenario_roles.json` (Combat Lab scenario wiring labels). Make `design_role` runtime-extensible via a layered file model (base + mods + user overlay) so players can add roles during play and modders can override them. Replace fragile `instance_id` substring parsing for Combat Lab role wiring with a typed `scenario_role` field on `ShipSpec`.

@@ -269,12 +269,17 @@ Before completing any task:
 
 ### Context Exhaustion
 
-**If approaching context limit (80%):**
+Threshold and check command are defined in
+`Projects/protocols/context_config.md`. At natural handoff points, run
+`python Projects/scripts/check_context.py`.
+
+**If verdict is STOP:**
 1. Finish current subtask if close to completion
 2. Update Agent Context with detailed handoff
 3. Mark current task `[/]` (in progress) in checklist
 4. Add specific notes about what's incomplete
-5. Exit cleanly - next agent will continue
+5. Write handoff prompt per `context_config.md` §3
+6. Exit cleanly — next agent will continue
 
 ### Blockers
 

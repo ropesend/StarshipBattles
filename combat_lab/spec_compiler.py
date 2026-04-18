@@ -186,7 +186,30 @@ def _ship_spec(
     velocity: Vector2 = Vector2(0.0, 0.0),
     name_suffix: Optional[str] = None,
 ) -> ShipSpec:
-    """Build a `ShipSpec` with role-tagged instance_id."""
+    """Build a `ShipSpec` populating `scenario_role` (PROJ-278 Phase 4).
+
+    `instance_id` retains the `{test_id}:{role}` format because it must be
+    unique per-ship and the role provides a natural disambiguator. The
+    role suffix in `instance_id` is descriptive only — readers MUST
+    consume `scenario_role` instead of parsing the string.
+
+    `role` is validated against `combat_lab_role_registry` — a typo here
+    fails at compile time instead of producing a silent KeyError later.
+    """
+    # Local import to avoid pulling combat_lab into game.simulation at module
+    # load time (combat_lab/spec_compiler.py is itself in combat_lab/, so
+    # this is just a lazy circular-import-free dependency on a sibling).
+    from combat_lab.scenario_role_registry import (  # noqa: PLC0415
+        get_default_combat_lab_role_registry,
+    )
+    registry = get_default_combat_lab_role_registry()
+    if role not in registry:
+        raise ValueError(
+            f"Combat Lab scenario_role {role!r} is not registered in "
+            f"combat_lab/data/scenario_roles.json. Add it there or fix "
+            f"the typo in scenario {scenario.metadata.test_id!r}."
+        )
+
     test_id = scenario.metadata.test_id
     suffix = name_suffix if name_suffix is not None else role
     return ShipSpec(
@@ -198,6 +221,7 @@ def _ship_spec(
         angle=angle,
         velocity=velocity,
         components=(),
+        scenario_role=role,
     )
 
 

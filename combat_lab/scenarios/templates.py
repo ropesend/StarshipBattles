@@ -851,9 +851,10 @@ class ComparisonScenario(TestScenario):
 
         def ship_builder(ship_spec, team_id):
             ship = _context_builder(ship_spec, team_id)
-            if ship_spec.instance_id.endswith(":baseline_attacker"):
+            # PROJ-278 Phase 4: read scenario_role field instead of parsing instance_id
+            if ship_spec.scenario_role == "baseline_attacker":
                 baseline_ships["attacker"] = ship
-            elif ship_spec.instance_id.endswith(":baseline_target"):
+            elif ship_spec.scenario_role == "baseline_target":
                 baseline_ships["target"] = ship
             return ship
 
@@ -952,6 +953,7 @@ class ComparisonScenario(TestScenario):
             angle=float(self.attacker_angle),
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role="baseline_attacker",
         )
         target = ShipSpec(
             instance_id=f"{self.metadata.test_id}:baseline_target",
@@ -962,6 +964,7 @@ class ComparisonScenario(TestScenario):
             angle=float(self.target_angle),
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role="baseline_target",
         )
         single_custom = FormationSpec(
             shape=FormationShape.CUSTOM,
