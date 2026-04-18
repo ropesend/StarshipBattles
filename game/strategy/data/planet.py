@@ -20,6 +20,8 @@ if _TC:
 # PROJ-210: Import extracted classes for backward compatibility
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.species_population import SpeciesPopulation
+# PROJ-284: per-colony per-species config (food allocation slider, etc.)
+from game.strategy.data.colony_species_config import ColonySpeciesConfig
 
 class PlanetType(Enum):
     """
@@ -131,6 +133,10 @@ class Planet:
     # Order queue (PROJ-238: renamed from planet_orders, unified with Fleet.orders)
     orders: List['Order'] = field(default_factory=list)
 
+    # PROJ-284: Per-colony per-species sliders (food allocation, etc.).
+    # Keyed by race_id. Lazy-created via `get_species_config(race_id)`.
+    species_configs: Dict[str, ColonySpeciesConfig] = field(default_factory=dict)
+
     def __eq__(self, other):
         if not isinstance(other, Planet):
             return False
@@ -207,6 +213,17 @@ class Planet:
     def has_space_shipyard(self) -> bool:
         """Check if planet has operational space shipyard."""
         return any(facility.is_shipyard for facility in self.facilities)
+
+    def get_species_config(self, race_id: str) -> ColonySpeciesConfig:
+        """Return the per-species config for `race_id` on this colony.
+
+        PROJ-284: lazy-creates and stores a default `ColonySpeciesConfig`
+        if one doesn't exist for this race yet — callers can read or mutate
+        the returned object without checking for absence first.
+        """
+        if race_id not in self.species_configs:
+            self.species_configs[race_id] = ColonySpeciesConfig()
+        return self.species_configs[race_id]
 
     @property
     def context_type(self) -> str:
@@ -424,6 +441,12 @@ class Planet:
             'radiation_shielding': self.radiation_shielding,
             'radiation_shielding_target': self.radiation_shielding_target,
             'orders': [o.to_dict() for o in self.orders],
+            # PROJ-284: per-colony per-species sliders. `last_food_ratio` is
+            # transient and not emitted by ColonySpeciesConfig.to_dict().
+            'species_configs': {
+                race_id: cfg.to_dict()
+                for race_id, cfg in self.species_configs.items()
+            },
         }
 
     @classmethod
@@ -535,6 +558,13 @@ class Planet:
             radiation_shielding=data.get('radiation_shielding', 0.0),
             radiation_shielding_target=data.get('radiation_shielding_target'),
             orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
+            # PROJ-284: per-colony per-species sliders. Old saves without
+            # the key load with an empty dict; configs lazy-create on
+            # first read via `get_species_config(race_id)`.
+            species_configs={
+                race_id: ColonySpeciesConfig.from_dict(cfg_data)
+                for race_id, cfg_data in (data.get('species_configs') or {}).items()
+            },
         )
 
 

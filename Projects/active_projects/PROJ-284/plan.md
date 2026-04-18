@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. ColonySpeciesConfig | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. ColonySpeciesConfig | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. EconomyConfig + OrganicsConsumptionEngine | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. HappinessEngine + PopulationEngine rework | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. FoodAllocationEditor UI | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,11 +21,17 @@
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Blocked on PROJ-283 completion
-**Last Action:** Project scaffolded from master plan at `C:\Users\rossr\.claude\plans\i-want-to-effervescent-hennessy.md`
-**Next Action:** Wait for PROJ-283 to complete (provides `base_reproduction_rate`, `base_happiness`, new `RaceConfig.preferences`). Then begin Phase 1.
-**Blockers:** PROJ-283 must complete first. Depends on `base_reproduction_rate: float` and `base_happiness: float` fields, plus the new `preferences`-based habitability formula.
-**Context for Next Agent:** This is the gameplay-visible half of the rework. Once it lands, the player can: set a food-allocation slider per species per colony, see happiness rise and fall with habitability and food supply, watch populations decline from starvation. Organics is the default population-food resource but the resource is read from `data/economy.json` so a modder can swap it with a one-line edit. Happiness is fully derived each turn — the `SpeciesPopulation.happiness` field becomes a write-only cache populated by the new `HappinessEngine`.
+**Active Phase:** Phase 1 Complete; ready for Phase 2 (EconomyConfig + OrganicsConsumptionEngine)
+**Last Action:** Phase 1 complete. Added `ColonySpeciesConfig(food_allocation=1.0, last_food_ratio=1.0)` dataclass at `game/strategy/data/colony_species_config.py` (11 unit tests). `last_food_ratio` is TRANSIENT — `to_dict` excludes it; `from_dict` always resets to 1.0. Attached `Planet.species_configs: Dict[race_id, ColonySpeciesConfig] = field(default_factory=dict)` plus `Planet.get_species_config(race_id)` lazy-create-and-store helper. `Planet.to_dict`/`from_dict` round-trip the dict (9 unit tests in `test_planet_species_configs.py`). Old saves without the `species_configs` key load with empty dict. Full sharded suite 14845/14850 — 5 failures are all pre-existing flakes from PROJ-283 era, none PROJ-284 regressions. Nothing reads `species_configs` yet — Phase 2 wires the consumption engine.
+**Next Action:** Phase 2 Task 2.1 — open `phase_2_checklist.md`. Phase 2 introduces `data/economy.json` + `game/strategy/config/economy_config.py` loader (default `{"population_food_resource": "organics", "food_per_pop_per_turn": 0.001}`). Then `game/strategy/engine/organics_consumption_engine.py` reads each colony's per-species `food_allocation`, computes need vs supply, drains the food resource from `planet.stockpile`, and writes `last_food_ratio = supplied / needed` back into each `ColonySpeciesConfig`.
+**Blockers:** None.
+**Context for Next Agent:**
+- `ColonySpeciesConfig` is the canonical home for per-colony per-species sliders. Phase 2's consumption engine should call `planet.get_species_config(race_id)` for each species in `planet.populations` to read `food_allocation` and write `last_food_ratio`.
+- The `last_food_ratio` cache is intentionally transient. Engines must overwrite it every turn (or it'll lie about state after a reload). Recommended: write 1.0 explicitly when no food is needed (zero-pop edge case) so downstream readers (HappinessEngine, PopulationEngine) don't see stale values.
+- `Planet.populations: List[SpeciesPopulation]` already exists. Each `SpeciesPopulation` has `race_id`, `count`, `happiness`. Phase 3 (HappinessEngine) writes `happiness` from the new formula; for now it's player-set or initial.
+- Food-resource-name lookup: `economy_config.population_food_resource` (string, e.g. `"organics"`). Resolve display label via `ResourceCatalog.get(id).display_name` (PROJ-265). Don't hardcode "Organics" anywhere outside `economy.json` — UI labels must auto-relabel when the JSON is swapped.
+- Suggested `EconomyConfig` shape mirrors the strategy-data-driven config pattern (Pattern 12 in docs/02_PATTERNS.md) — `@lru_cache` getter with graceful fallback to defaults if the JSON is missing.
+- TurnEngine phase order (after Phase 2): harvesting → organics-consumption → ... → population-growth. Don't worry about HappinessEngine wiring yet — Phase 3 inserts it between consumption and population-growth.
 
 ## Overview
 
