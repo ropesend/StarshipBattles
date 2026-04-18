@@ -81,6 +81,23 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
             }
         ],
         "INNER": [],
@@ -107,8 +124,8 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 970,
-        "mass": 560.0,
+        "max_hp": 1050,
+        "mass": 610.0,
         "resource_storage": {},
         "cargo_storage": {},
         "pod_storage_mass": 0.0,
@@ -124,6 +141,7 @@
     },
     "_metadata": {
         "is_obsolete": false,
-        "times_built": 0
+        "times_built": 0,
+        "last_modified": "2026-04-18T07:44:51.318912"
     }
 }

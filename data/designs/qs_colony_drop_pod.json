@@ -207,7 +207,8 @@
     },
     "_metadata": {
         "is_obsolete": false,
-        "times_built": 0
+        "times_built": 0,
+        "last_modified": "2026-04-18T07:44:51.318912"
     },
     "design_role": "colony_pod"
 }

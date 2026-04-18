@@ -250,6 +250,23 @@
                         "value": 1.0
                     }
                 ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
             }
         ],
         "INNER": [
@@ -316,8 +333,8 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 3477,
-        "mass": 1780.7106781186549,
+        "max_hp": 3557,
+        "mass": 1830.710678,
         "resource_storage": {},
         "cargo_storage": {},
         "pod_storage_mass": 0.0,
@@ -335,7 +352,7 @@
         "is_obsolete": false,
         "times_built": 0,
         "created_date": "2026-02-08T00:00:00.000000",
-        "last_modified": "2026-02-08T00:00:00.000000"
+        "last_modified": "2026-04-18T07:44:51.318912"
     },
     "design_role": "resource_harvester"
 }
