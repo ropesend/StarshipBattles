@@ -1418,3 +1418,14 @@ Modders and designers can change which resource populations consume without touc
 The UI auto-relabels: `FoodAllocationEditor`'s title goes from "Organics Allocation — Earth" to "Metals Allocation — Earth", the consumption preview reads "0.100 metals/turn", and the engine drains `metals` from the colony stockpile. The `ResourceCatalog.get(id).name` lookup (with graceful fallback to the raw id) is what makes this a one-line data edit.
 
 Cross-reference: [§7 Race Preferences & Habitability](strategy_layer.md#7-race-preferences--habitability-proj-283) is where the `habitability` factor in the happiness formula comes from.
+
+## 9. Colony Economy Multiplier (PROJ-285)
+
+Habitability also scales colony **harvest** and **production** rates via `planet_habitability_multiplier(planet, race_registry)` at `game/strategy/formulas/colony_output.py`. Population-weighted mean across all species on the colony — the exact same weighting algorithm PROJ-284 uses for per-species food ratios, but aggregated planet-wide instead of per-species.
+
+Integration points:
+- `HarvestingEngine._harvest_resource` multiplies the multiplier into the harvest formula AFTER quality and booster stacking, BEFORE `tick_fraction`.
+- `ProductionEngine._process_queue_tick_dynamic` scales the `production_rate` dict up front so all downstream per-tick math (limiting-resource, tick-capacity, affordability) honors the multiplier without further code changes.
+- `TurnEngine.process_turn` calls `set_current_turn(session.turn_number)` on both engines before the 100-tick loop so the per-planet cache on `Planet.get_cached_habitability_multiplier` invalidates on each turn boundary.
+
+Net effect after PROJ-283 + PROJ-284 + PROJ-285: habitability is the single numeric axis that drives population carrying capacity (via `K_eff = max_population * habitability`), happiness (via `base_happiness * last_food_ratio * habitability`), harvest rate, AND production rate. See [docs/systems/production_system.md § Habitability Multiplier](production_system.md#habitability-multiplier-proj-285) for the full formula, edge cases, and caching contract.

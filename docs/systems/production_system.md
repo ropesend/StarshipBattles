@@ -265,6 +265,72 @@ Accessed from the strategy screen via the "Build Yard" button on owned planets o
 
 ---
 
+## Habitability Multiplier (PROJ-285)
+
+A colony's harvest AND production rates scale with how livable the planet is for its resident species. Hostile worlds produce slowly; ideal worlds produce at full rate.
+
+### Formula
+
+```
+effective_rate = base_rate * booster_mult * habitability_mult
+```
+
+`habitability_mult` comes from `planet_habitability_multiplier(planet, race_registry)` in `game/strategy/formulas/colony_output.py` — a **population-weighted mean** of `score_planet_for_race(planet, race_config)` across every species on the colony:
+
+```
+mult = Σ (pop.count * score_planet_for_race(planet, race_for(pop))) / Σ pop.count
+```
+
+Larger species count proportionally more. If a colony is 70% Species-A (habitability 1.0) and 30% Species-B (habitability 0.2), the multiplier is `0.7 * 1.0 + 0.3 * 0.2 = 0.76`.
+
+### Edge cases
+
+| Situation | Multiplier |
+|-----------|-----------|
+| Uncolonized planet (no populations) | 1.0 (no penalty; automated extractors run at full rate) |
+| Every species has `count == 0` | 1.0 (functionally uncolonized) |
+| Every species' `race_id` missing from registry | 1.0 (save-drift defence; preserves the empire's economy rather than silently collapsing it) |
+| Species with `count == 0` | Excluded from BOTH numerator and denominator |
+| Species whose `race_id` isn't in registry | Excluded from BOTH numerator and denominator (NOT scored as 0) |
+| Fleet-based production queues | 1.0 (no planet context — fleet yards operate in space) |
+
+### Per-turn caching
+
+Populations only change at turn boundaries (population growth runs after the 100-tick loop). Computing the multiplier once per colony per turn — not once per tick per resource per colony — saves O(species × resources × ticks) CPU. The cache lives on `Planet`:
+
+- `Planet._cached_habitability_multiplier: Optional[float]` (default `None`)
+- `Planet._cached_multiplier_turn: int` (default `-1`)
+- `Planet.get_cached_habitability_multiplier(race_registry, turn) -> float`
+
+Both fields are `init=False`, `repr=False`, `compare=False`, and NOT emitted by `to_dict`. Post-load planets start with a cold cache and recompute on their first read.
+
+`TurnEngine.process_turn` calls `set_current_turn(session.turn_number)` on both `HarvestingEngine` and `ProductionEngine` at turn start, invalidating the per-turn key for every colony simultaneously.
+
+### Stacking with boosters
+
+Habitability multiplies **alongside** existing `BuildRateBooster` and `ResourceHarvestBooster` aggregation (`aggregate_multipliers` in `game/strategy/services/strategic_ability_scanner.py`). The three factors multiply:
+
+```
+final = base_rate * booster_mult(stacked) * habitability_mult
+```
+
+No change to the booster aggregation logic itself.
+
+### Backward compatibility
+
+Both engines default `race_registry=None` — legacy callers (and 850+ lines of MagicMock-based pre-PROJ-285 tests) take this path and get multiplier=1.0, preserving the pre-PROJ-285 formula byte-for-byte. Habitability only applies when the engine is explicitly constructed with a race registry and the colony exposes `get_cached_habitability_multiplier`.
+
+### Related files
+
+- `game/strategy/formulas/colony_output.py` — `planet_habitability_multiplier` helper
+- `game/strategy/data/planet.py` — per-turn cache + accessor method
+- `game/strategy/engine/harvesting_engine.py` — harvest hook via `_get_habitability_mult`
+- `game/strategy/engine/production_engine.py` — production hook: scales `production_rate` dict before tick-capacity math
+- `game/strategy/engine/turn_engine.py` — calls `set_current_turn(session.turn_number)` at turn start
+- `game/strategy/formulas/habitability.py` — underlying `score_planet_for_race` (PROJ-283, registry-driven via `FACTOR_REGISTRY`)
+
+---
+
 ## Key Files
 
 | Component | File |

@@ -982,6 +982,25 @@ See [docs/systems/strategy_layer.md §7](systems/strategy_layer.md#7-race-prefer
 
 See [docs/systems/strategy_layer.md §8](systems/strategy_layer.md#8-colony-demographics-loop-proj-284) for the full pipeline, formula derivations, and the "swap the food resource" recipe.
 
+### Colony Economy Multiplier (PROJ-285)
+
+**Locations:**
+- `game/strategy/formulas/colony_output.py` — `planet_habitability_multiplier(planet, race_registry) -> float` pure helper. Population-weighted mean of `score_planet_for_race(planet, race_for(pop))` across `planet.populations`. Uncolonized planets / missing-race-all-species / zero-total-count return 1.0. Species with missing `race_id` in the registry are excluded from BOTH numerator and denominator (not scored as 0) — save-drift defence.
+- `game/strategy/data/planet.py` — `Planet.get_cached_habitability_multiplier(race_registry, turn) -> float` per-turn cache accessor. Fields `_cached_habitability_multiplier` + `_cached_multiplier_turn` are `init=False, compare=False` and NOT emitted by `to_dict` — post-load planets re-warm on first read.
+- `game/strategy/engine/harvesting_engine.py` — `HarvestingEngine.__init__(registries, race_registry=None)`. When `race_registry` is None (legacy pattern), habitability hook short-circuits to 1.0. New kwarg preserves 850+ lines of pre-PROJ-285 MagicMock-based tests without retargeting. `_get_habitability_mult(colony)` + `set_current_turn(turn)` helpers.
+- `game/strategy/engine/production_engine.py` — `ProductionEngine.__init__(registries, race_registry=None, event_bus=None)`. Same short-circuit behavior. The hook in `_process_queue_tick_dynamic` scales the `production_rate` dict BEFORE the tick-capacity while-loop runs — downstream math honors the multiplier automatically. Fleet queues always get 1.0 (no planet context).
+- `game/strategy/engine/turn_engine.py` — `process_turn` calls `set_current_turn(session.turn_number)` on both harvesting + production engines before the 100-tick loop (guarded with `getattr` so mock engines don't break).
+
+**Turn flow:** Habitability is computed ONCE per colony per turn (first read wins), then reused across all 100 tick iterations of harvest + production. The cache invalidates at each turn boundary when `TurnEngine` bumps the engine's `_current_turn`.
+
+**Stacks alongside:**
+- `ResourceHarvestBooster` aggregation (`aggregate_multipliers` in `game/strategy/services/strategic_ability_scanner.py`) — harvest path.
+- `BuildRateBooster` aggregation (same scanner) — production path.
+
+Multiplicative: `effective_rate = base_rate * booster_mult * habitability_mult`.
+
+See [docs/systems/production_system.md § Habitability Multiplier](systems/production_system.md#habitability-multiplier-proj-285) and [docs/systems/strategy_layer.md §9](systems/strategy_layer.md#9-colony-economy-multiplier-proj-285).
+
 ---
 
 ## Design Principles

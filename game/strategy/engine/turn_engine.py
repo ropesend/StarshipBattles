@@ -494,6 +494,17 @@ class TurnEngine:
         self._log_empire_state(empires, "=== TURN START ===")
 
         try:
+            # PROJ-285: Bump the per-turn habitability-cache key so
+            # harvesting/production engines recompute multipliers at
+            # each turn boundary. Safe even when engines are mocks —
+            # `getattr` guards missing setters.
+            turn_number = getattr(session, 'turn_number', 0) if session is not None else 0
+            for _engine in (self._harvesting_engine, self._production_engine):
+                if _engine is not None:
+                    setter = getattr(_engine, 'set_current_turn', None)
+                    if setter is not None:
+                        setter(turn_number)
+
             # 1. Subturn Loop (Movement, Actions & Combat)
             for tick in range(1, TICKS_PER_TURN + 1):
                 self._process_tick(tick, empires, galaxy, save_path)

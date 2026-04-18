@@ -13,18 +13,33 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. `planet_habitability_multiplier` helper | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Wire into HarvestingEngine | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Wire into ProductionEngine | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Docs + cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. `planet_habitability_multiplier` helper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Wire into HarvestingEngine | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Wire into ProductionEngine | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Docs + cleanup | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Blocked on PROJ-283 completion
-**Last Action:** Project scaffolded from master plan at `C:\Users\rossr\.claude\plans\i-want-to-effervescent-hennessy.md`
-**Next Action:** Wait for PROJ-283 (depends on registry-driven habitability formula). Then begin Phase 1.
-**Blockers:** PROJ-283 must complete first (depends on `calculate_habitability(planet, race_config)` using the registry). Can run in parallel with PROJ-284 after PROJ-283 lands.
-**Context for Next Agent:** Tiny project — one helper, two call-site edits, one docs update. The test work is larger than the code work because it must recalibrate existing harvest/production tests that implicitly assumed habitability=1.0. New helper goes in `game/strategy/formulas/colony_output.py`. Population-weighted average because multiple species on a planet means different species see different habitability scores.
+**Active Phase:** ALL 4 PHASES COMPLETE — ready to close. Awaiting user sign-off on `plan.md § Verification` manual scenarios.
+**Last Action:** Phase 4 complete. Added `## Habitability Multiplier (PROJ-285)` section to `docs/systems/production_system.md` (formula, edge-case table, per-turn cache contract, booster stacking, backward-compat clause). Added `## 9. Colony Economy Multiplier (PROJ-285)` to `docs/systems/strategy_layer.md` summarizing the PROJ-283 → PROJ-284 → PROJ-285 unified habitability story. Added `### Colony Economy Multiplier (PROJ-285)` to `docs/04_SERVICES.md` cataloging all 5 touched files. CLAUDE.md no-op per task 4.4. Full sharded suite: 14966 / 14965 passed / 1 failed — persistent theme_id flake. Validator PASS on all 4 phases.
+
+**Shipped across all phases:**
+- Phase 1: `planet_habitability_multiplier(planet, race_registry)` at `game/strategy/formulas/colony_output.py` — population-weighted mean with save-drift defence (missing races excluded, not zeroed). Per-turn cache on `Planet.get_cached_habitability_multiplier(race_registry, turn)` — `init=False, compare=False, repr=False` fields, not serialized. 18 unit tests.
+- Phase 2: `HarvestingEngine.__init__(registries, race_registry=None)` kwarg + `_get_habitability_mult(colony)` helper. Hook in `_harvest_resource` multiplies AFTER quality + booster, BEFORE tick_fraction. `set_current_turn(turn)` API + `TurnEngine.process_turn` wired to call it at turn start. 12 new tests (7 unit + 5 integration) + zero churn on 27 legacy MagicMock-based tests.
+- Phase 3: `ProductionEngine.__init__(registries, race_registry=None)` kwarg + matching `_get_habitability_mult` helper. Hook in `_process_queue_tick_dynamic` scales the `production_rate` dict before the tick-capacity while-loop — downstream math honors the multiplier automatically. Fleet queues always get 1.0. 10 new tests (8 unit + 2 integration extension).
+- Phase 4: Three docs updated (production_system.md, strategy_layer.md, 04_SERVICES.md) + CLAUDE.md no-op. Full sharded suite green apart from the persistent theme_id flake.
+
+**Next Action:** USER SIGN-OFF. Launch the game, colonize an ideal planet + a hostile planet, advance turns, verify the `plan.md § Verification` manual scenarios (95% rate on ideal, 20% on hostile, weighted average on multi-species, no penalty on uncolonized extractor sites). When satisfied, move project folder to `Projects/archived_projects/PROJ-285/`.
+
+**Blockers:** None.
+
+**Context for Next Agent (if reopened):**
+- `planet_habitability_multiplier` is the single source of truth for colony habitability scaling in economic formulas. Adding a new economic side effect (e.g. resupply fuel generation — explicitly deferred in scope) should reuse the helper + per-turn cache via `colony.get_cached_habitability_multiplier(race_registry, turn)`.
+- Both engines default `race_registry=None` → multiplier=1.0. Any engine re-wiring that passes a race_registry will activate the habitability scaling; legacy callers (850+ lines of MagicMock planets in `test_harvesting_engine.py` + `tests/unit/strategy/production_engine/`) remain untouched and green.
+- Per-turn cache lives ONLY on Planet (not the engines). Multiple engines hitting the same colony in the same turn share ONE computation — verified by `test_harvest_and_production_share_planet_cache` in `tests/unit/strategy/production_engine/test_habitability.py`.
+- Missing-race defensive behavior: species with `race_id` absent from the registry are EXCLUDED from both numerator and denominator. A save with a known-race + unknown-race colony scores as 100% known-race for the multiplier. This was a deliberate design choice (documented in `colony_output.py` module docstring) — the simpler alternative of scoring missing-race as 0 would silently collapse empire economies under save drift.
+- Docs cross-reference chain: `04_SERVICES.md` → `production_system.md § Habitability Multiplier` (full formula + edge cases) + `strategy_layer.md §9` (summary + unified PROJ-283/284/285 story).
+- Persistent sharded-runner flake: `test_copy_designs_without_themes_preserves_original` (theme_id pollution). Followed every phase of PROJ-283, PROJ-284, PROJ-285. Passes in isolation. NOT a regression — predates the PROJ-28X work.
 
 ## Overview
 

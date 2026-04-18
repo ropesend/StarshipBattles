@@ -137,6 +137,19 @@ class Planet:
     # Keyed by race_id. Lazy-created via `get_species_config(race_id)`.
     species_configs: Dict[str, ColonySpeciesConfig] = field(default_factory=dict)
 
+    # PROJ-285: Per-turn cache of the population-weighted habitability
+    # multiplier. Populated on first read each turn via
+    # `get_cached_habitability_multiplier` and reused for subsequent
+    # harvest / production lookups within the same turn. NOT serialized
+    # — populations may have shifted by the time a save loads, and the
+    # cache re-warms on the next turn's first read anyway.
+    _cached_habitability_multiplier: Optional[float] = field(
+        default=None, init=False, repr=False, compare=False,
+    )
+    _cached_multiplier_turn: int = field(
+        default=-1, init=False, repr=False, compare=False,
+    )
+
     def __eq__(self, other):
         if not isinstance(other, Planet):
             return False
@@ -213,6 +226,32 @@ class Planet:
     def has_space_shipyard(self) -> bool:
         """Check if planet has operational space shipyard."""
         return any(facility.is_shipyard for facility in self.facilities)
+
+    def get_cached_habitability_multiplier(self, race_registry, turn: int) -> float:
+        """Return the population-weighted habitability multiplier, cached per turn.
+
+        PROJ-285: Populations change only at turn boundaries (population
+        growth runs once per turn after the 100-tick loop), so one
+        computation per turn is enough — all 100 harvest / production
+        ticks within the same turn reuse the cached value.
+
+        Args:
+            race_registry: Object implementing `get_race(race_id) -> Optional[RaceConfig]`.
+            turn: Current strategic turn number. Cache keys on this —
+                a different turn forces a recompute.
+
+        Returns:
+            Float in [0, 1]. Uncolonized / degenerate cases return 1.0.
+        """
+        if self._cached_multiplier_turn != turn:
+            # Late import avoids circular: planet.py ← colony_output.py
+            # ← habitability.py ← (no planet dependency).
+            from game.strategy.formulas.colony_output import planet_habitability_multiplier
+            self._cached_habitability_multiplier = planet_habitability_multiplier(
+                self, race_registry,
+            )
+            self._cached_multiplier_turn = turn
+        return self._cached_habitability_multiplier
 
     def get_species_config(self, race_id: str) -> ColonySpeciesConfig:
         """Return the per-species config for `race_id` on this colony.

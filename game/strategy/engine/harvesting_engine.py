@@ -17,7 +17,7 @@ Responsibilities:
 Called by TurnEngine._process_tick() 100 times per turn.
 """
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
@@ -99,12 +99,22 @@ class HarvestingEngine(IHarvestingEngine):
     - Registry lookup: plain string component ID resolved via registries
     """
 
-    def __init__(self, *, registries: GameRegistries):
+    def __init__(
+        self,
+        *,
+        registries: GameRegistries,
+        race_registry: Optional[Any] = None,
+    ):
         """Initialize the harvesting engine.
 
         Args:
             registries: GameRegistries for resolving component abilities.
                        Required — no fallback.
+            race_registry: PROJ-285 — optional race-config lookup for the
+                population-weighted habitability multiplier on colony harvest.
+                Must expose `get_race(race_id) -> Optional[RaceConfig]`.
+                When None (legacy callers), the multiplier is 1.0 and
+                harvest behaves as it did pre-PROJ-285.
 
         Raises:
             ValidationException: If registries is None.
@@ -118,7 +128,16 @@ class HarvestingEngine(IHarvestingEngine):
                 context={"class": "HarvestingEngine", "parameter": "registries"}
             )
         self._registries = registries
+        self._race_registry = race_registry
+        # PROJ-285: used to key the per-turn habitability cache on Planet.
+        # TurnEngine calls `set_current_turn` before each turn's tick loop.
+        self._current_turn: int = 0
         self._galaxy = None
+
+    def set_current_turn(self, turn: int) -> None:
+        """PROJ-285: TurnEngine calls this at the start of each turn so the
+        per-turn habitability cache invalidates cleanly."""
+        self._current_turn = turn
 
     def _validate_tick_inputs(self, empires: List) -> None:
         """PROJ-251: Validate preconditions before mutating state.
@@ -348,6 +367,22 @@ class HarvestingEngine(IHarvestingEngine):
                     empire=empire
                 )
 
+    def _get_habitability_mult(self, colony) -> float:
+        """PROJ-285: Resolve the colony's per-turn habitability multiplier.
+
+        Returns 1.0 when `race_registry` was not injected (legacy call
+        pattern) OR when the colony doesn't expose
+        `get_cached_habitability_multiplier` (MagicMock spec-shaped
+        objects in older tests) — preserves pre-PROJ-285 formula
+        values exactly in both cases.
+        """
+        if self._race_registry is None:
+            return 1.0
+        get_cached = getattr(colony, "get_cached_habitability_multiplier", None)
+        if get_cached is None:
+            return 1.0
+        return get_cached(self._race_registry, self._current_turn)
+
     def _get_harvest_booster_mult(self, colony, resource_type, empire) -> float:
         """Aggregate ResourceHarvestBooster multipliers affecting this colony.
 
@@ -415,9 +450,18 @@ class HarvestingEngine(IHarvestingEngine):
         if quality <= 0 or quantity <= 0:
             return
 
-        # Calculate harvest amount (scaled by size, boosters, and tick_fraction)
+        # Calculate harvest amount (scaled by size, boosters, habitability,
+        # and tick_fraction).
+        # PROJ-285: habitability multiplier stacks multiplicatively
+        # alongside booster aggregation. Cached per-turn on Planet so
+        # 100 harvest ticks per turn trigger exactly one multiplier
+        # computation per colony.
         booster_mult = self._get_harvest_booster_mult(colony, resource_type, empire)
-        harvest = base_rate * size_multiplier * booster_mult * quality * tick_fraction
+        habitability_mult = self._get_habitability_mult(colony)
+        harvest = (
+            base_rate * size_multiplier * booster_mult * quality
+            * habitability_mult * tick_fraction
+        )
         actual_harvest = min(harvest, quantity)
 
         # Deduct from planet

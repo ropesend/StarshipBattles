@@ -89,12 +89,24 @@ class ProductionEngine(IProductionEngine):
     - ticks_in_current_turn: int - Tick counter within current turn
     """
 
-    def __init__(self, *, registries: 'GameRegistries', event_bus=None):
+    def __init__(
+        self,
+        *,
+        registries: 'GameRegistries',
+        event_bus=None,
+        race_registry: Optional[Any] = None,
+    ):
         """Initialize the production engine.
 
         Args:
             registries: GameRegistries for ship creation. Required.
             event_bus: Optional EventBus for structured event logging.
+            race_registry: PROJ-285 — optional race-config lookup for the
+                population-weighted habitability multiplier on colony
+                production. Must expose `get_race(race_id) -> Optional[RaceConfig]`.
+                When None (legacy callers), the multiplier is 1.0 and
+                production behaves as it did pre-PROJ-285. Fleet queues
+                are always habitability-unscaled (no planet context).
 
         Raises:
             ValidationException: If registries is None.
@@ -110,6 +122,29 @@ class ProductionEngine(IProductionEngine):
         self._registries = registries
         self._event_bus = event_bus
         self._spawner = ProductionSpawner(registries=registries, event_bus=event_bus)
+        self._race_registry = race_registry
+        # PROJ-285: TurnEngine bumps this at each turn start so the
+        # Planet-side habitability cache invalidates cleanly.
+        self._current_turn: int = 0
+
+    def set_current_turn(self, turn: int) -> None:
+        """PROJ-285: key the per-turn habitability cache on Planet."""
+        self._current_turn = turn
+
+    def _get_habitability_mult(self, colony_or_fleet) -> float:
+        """Resolve the habitability multiplier for this queue owner.
+
+        Returns 1.0 for fleets (no planet context), for colonies without
+        `get_cached_habitability_multiplier` (e.g. MagicMock planets in
+        legacy tests), and when `race_registry` wasn't injected (legacy
+        call pattern).
+        """
+        if self._race_registry is None:
+            return 1.0
+        get_cached = getattr(colony_or_fleet, "get_cached_habitability_multiplier", None)
+        if get_cached is None:
+            return 1.0
+        return get_cached(self._race_registry, self._current_turn)
 
     # --- Resource Cost Methods (PROJ-75 Phase 4) ---
 
@@ -248,6 +283,17 @@ class ProductionEngine(IProductionEngine):
             for q_item in queue:
                 if isinstance(q_item, dict):
                     q_item.pop('_shortage_logged', None)
+
+        # PROJ-285: scale production_rate by the colony's habitability
+        # multiplier so hostile-planet colonies produce slower. Applied
+        # OUTSIDE the while loop because the multiplier is per-colony
+        # per-turn, not per-queue-item. Fleet queues get multiplier=1.0.
+        habitability_mult = self._get_habitability_mult(colony_or_fleet)
+        if habitability_mult != 1.0:
+            production_rate = {
+                res: rate * habitability_mult
+                for res, rate in production_rate.items()
+            }
 
         # Capacity in fractional ticks (0.0 to 1.0)
         tick_capacity = 1.0
