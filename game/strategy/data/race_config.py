@@ -4,6 +4,14 @@ Race Configuration - Data model for custom race definitions
 This module provides the RaceConfig dataclass for storing and managing
 race configuration data including visual selections (flags, portraits, themes),
 environmental preferences, and descriptive text.
+
+PROJ-283 Phase 4: deleted the legacy `gravity_ideal/_tolerance`,
+`temperature_ideal/_tolerance`, `water_ideal/_tolerance`,
+`atmosphere_preferences`, `radiation_tolerance`, `aptitude_happiness`,
+`aptitude_population_growth` fields. Environmental preferences are now
+expressed via `preferences: Dict[str, EnvironmentalPreference]` keyed by
+`FACTOR_REGISTRY` ids; reproduction & happiness via `base_reproduction_rate`
+and `base_happiness`.
 """
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
@@ -54,26 +62,17 @@ SOCIETY_TYPES = [
     "Spiritualists", "Survivalists"
 ]
 
-# Aptitude attribute names
+# Aptitude attribute names (the 7 paid aptitudes after PROJ-283 dropped
+# `happiness` and `population_growth`).
 APTITUDE_NAMES = [
     "strength", "intelligence", "constitution", "dexterity",
-    "tolerance_other_species", "cooperation", "happiness",
-    "population_growth", "conflict_tolerance"
+    "tolerance_other_species", "cooperation", "conflict_tolerance"
 ]
 
 
-# Default atmosphere gases with neutral preferences
-DEFAULT_ATMOSPHERE_PREFERENCES = {
-    "Oxygen": 0.0,
-    "Nitrogen": 0.0,
-    "Carbon Dioxide": 0.0,
-    "Methane": 0.0,
-    "Hydrogen": 0.0,
-    "Helium": 0.0,
-}
-
-# Mapping from display names (used in preferences/presets) to chemical formulas
-# (used in planet atmosphere dicts and UI rendering)
+# Mapping kept for the few callers that still translate between display
+# names and chemical formulas (UI labels, race randomizer presets).
+# Phase 5 UI rebuild will likely retire most of these usages.
 GAS_NAME_TO_FORMULA = {
     "Oxygen": "O2",
     "Nitrogen": "N2",
@@ -116,39 +115,20 @@ class RaceConfig:
     # Homeworld type
     homeworld_type: str = ""  # PlanetType name (e.g., "CONTINENTAL")
 
-    # Environmental preferences
-    gravity_ideal: float = 1.0  # Ideal gravity in g (0.1-3.0)
-    gravity_tolerance: float = 0.3  # Tolerance range in g (0.0-1.0)
-    temperature_ideal: float = 293.0  # Ideal temperature in Kelvin (200-400)
-    temperature_tolerance: float = 50.0  # Tolerance in Kelvin (0-100)
-
-    # Water preferences
-    water_ideal: float = 0.5  # Ideal water coverage (0.0-1.0)
-    water_tolerance: float = 0.2  # Tolerance range (0.0-1.0)
-
-    # Atmosphere preferences: gas name -> rating (-100 toxic to +100 beneficial)
-    atmosphere_preferences: Dict[str, float] = field(
-        default_factory=lambda: DEFAULT_ATMOSPHERE_PREFERENCES.copy()
-    )
-
-    # Radiation tolerance: -100 (very sensitive) to +100 (radiation resistant)
-    radiation_tolerance: float = 0.0
-
-    # Aptitude attributes (1-100 scale, 50 is average)
+    # Aptitude attributes (1-100 scale, 50 is average) — 7 paid aptitudes
+    # after PROJ-283 dropped `happiness` and `population_growth` (now
+    # expressed via `base_happiness` and `base_reproduction_rate`).
     aptitude_strength: int = 50
     aptitude_intelligence: int = 50
     aptitude_constitution: int = 50
     aptitude_dexterity: int = 50
     aptitude_tolerance_other_species: int = 50
     aptitude_cooperation: int = 50
-    aptitude_happiness: int = 50
-    aptitude_population_growth: int = 50
     aptitude_conflict_tolerance: int = 50
 
-    # PROJ-283: New registry-driven preferences. Populated from
-    # FACTOR_REGISTRY defaults in __post_init__ when not explicitly supplied.
-    # Runs alongside the legacy environment fields during Phase 1; the
-    # legacy fields are deleted in Phase 4.
+    # PROJ-283: Registry-driven environmental preferences. Populated from
+    # FACTOR_REGISTRY defaults in __post_init__ when not explicitly
+    # supplied. Replaces the legacy field pairs that lived here pre-Phase 4.
     preferences: Dict[str, EnvironmentalPreference] = field(default_factory=dict)
 
     # PROJ-283: Replaces aptitude_population_growth. 0.03 = 3%/turn base
@@ -168,18 +148,7 @@ class RaceConfig:
     modified_date: str = ""  # ISO timestamp
 
     def __post_init__(self):
-        """Ensure atmosphere_preferences and preferences have all required keys."""
-        if self.atmosphere_preferences is None:
-            self.atmosphere_preferences = DEFAULT_ATMOSPHERE_PREFERENCES.copy()
-        else:
-            # Ensure all default gases are present
-            for gas in DEFAULT_ATMOSPHERE_PREFERENCES:
-                if gas not in self.atmosphere_preferences:
-                    self.atmosphere_preferences[gas] = 0.0
-
-        # PROJ-283: Backfill `preferences` from FACTOR_REGISTRY defaults.
-        # Explicit entries provided by the caller (via constructor or
-        # from_dict) are preserved; only missing factor ids are filled.
+        """Backfill missing `preferences` entries from FACTOR_REGISTRY defaults."""
         if self.preferences is None:
             self.preferences = {}
         for factor_id, factor in FACTOR_REGISTRY.items():
@@ -211,27 +180,17 @@ class RaceConfig:
             "flag_id": self.flag_id,
             "portrait_id": self.portrait_id,
             "theme_id": self.theme_id,
-            # Homeworld & Environment
+            # Homeworld
             "homeworld_type": self.homeworld_type,
-            "gravity_ideal": self.gravity_ideal,
-            "gravity_tolerance": self.gravity_tolerance,
-            "temperature_ideal": self.temperature_ideal,
-            "temperature_tolerance": self.temperature_tolerance,
-            "water_ideal": self.water_ideal,
-            "water_tolerance": self.water_tolerance,
-            "atmosphere_preferences": self.atmosphere_preferences,
-            "radiation_tolerance": self.radiation_tolerance,
-            # Aptitudes
+            # Aptitudes (7 paid)
             "aptitude_strength": self.aptitude_strength,
             "aptitude_intelligence": self.aptitude_intelligence,
             "aptitude_constitution": self.aptitude_constitution,
             "aptitude_dexterity": self.aptitude_dexterity,
             "aptitude_tolerance_other_species": self.aptitude_tolerance_other_species,
             "aptitude_cooperation": self.aptitude_cooperation,
-            "aptitude_happiness": self.aptitude_happiness,
-            "aptitude_population_growth": self.aptitude_population_growth,
             "aptitude_conflict_tolerance": self.aptitude_conflict_tolerance,
-            # PROJ-283 new fields
+            # PROJ-283 environment + repro/happiness
             "preferences": {
                 factor_id: pref.to_dict()
                 for factor_id, pref in self.preferences.items()
@@ -248,7 +207,13 @@ class RaceConfig:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'RaceConfig':
-        """Deserialize from dictionary with backward-compatible defaults."""
+        """Deserialize from dictionary.
+
+        PROJ-283 Phase 4: legacy environment/aptitude keys (`gravity_ideal`,
+        `atmosphere_preferences`, `aptitude_happiness`, ...) are silently
+        ignored if present in old save files. Per CLAUDE.md System Migration
+        Policy, save files are disposable — no migration shim is provided.
+        """
         return cls(
             # Identity
             race_id=data.get("race_id", ""),
@@ -266,17 +231,8 @@ class RaceConfig:
             flag_id=data.get("flag_id", ""),
             portrait_id=data.get("portrait_id", ""),
             theme_id=data.get("theme_id", "Federation"),
-            # Homeworld & Environment
+            # Homeworld
             homeworld_type=data.get("homeworld_type", ""),
-            gravity_ideal=data.get("gravity_ideal", 1.0),
-            gravity_tolerance=data.get("gravity_tolerance", 0.3),
-            temperature_ideal=data.get("temperature_ideal", 293.0),
-            temperature_tolerance=data.get("temperature_tolerance", 50.0),
-            water_ideal=data.get("water_ideal", 0.5),
-            water_tolerance=data.get("water_tolerance", 0.2),
-            atmosphere_preferences=data.get("atmosphere_preferences",
-                                            DEFAULT_ATMOSPHERE_PREFERENCES.copy()),
-            radiation_tolerance=data.get("radiation_tolerance", 0.0),
             # Aptitudes
             aptitude_strength=data.get("aptitude_strength", 50),
             aptitude_intelligence=data.get("aptitude_intelligence", 50),
@@ -284,10 +240,8 @@ class RaceConfig:
             aptitude_dexterity=data.get("aptitude_dexterity", 50),
             aptitude_tolerance_other_species=data.get("aptitude_tolerance_other_species", 50),
             aptitude_cooperation=data.get("aptitude_cooperation", 50),
-            aptitude_happiness=data.get("aptitude_happiness", 50),
-            aptitude_population_growth=data.get("aptitude_population_growth", 50),
             aptitude_conflict_tolerance=data.get("aptitude_conflict_tolerance", 50),
-            # PROJ-283 new fields
+            # PROJ-283 fields
             preferences={
                 factor_id: EnvironmentalPreference.from_dict(pref_data)
                 for factor_id, pref_data in (data.get("preferences") or {}).items()
@@ -303,56 +257,31 @@ class RaceConfig:
         )
 
     def save(self, file_path: str) -> bool:
-        """
-        Save race configuration to JSON file.
-
-        Args:
-            file_path: Path to save the JSON file
-
-        Returns:
-            True if save succeeded, False otherwise
-        """
-        # Update modified timestamp
+        """Save race configuration to JSON file."""
         self.modified_date = datetime.now().isoformat()
-
-        # Set created date if not set
         if not self.created_date:
             self.created_date = self.modified_date
-
         return save_json(file_path, self.to_dict(), indent=2)
 
     @classmethod
     def load(cls, file_path: str) -> Optional['RaceConfig']:
-        """
-        Load race configuration from JSON file.
-
-        Args:
-            file_path: Path to the JSON file
-
-        Returns:
-            RaceConfig instance or None if load failed
-        """
+        """Load race configuration from JSON file."""
         data = load_json(file_path)
         if data is None:
             return None
         return cls.from_dict(data)
 
     def validate(self) -> ValidationResult:
-        """
-        Validate the race configuration.
-
-        Returns:
-            ValidationResult with is_valid, errors, and warnings.
-        """
+        """Validate the race configuration."""
         result = ValidationResult.success()
         for check in [
             self._validate_required_fields,
-            self._validate_environment_ranges,
             self._validate_aptitudes,
             self._validate_identity_enums,
-            self._validate_homeworld_and_atmosphere,
+            self._validate_homeworld,
             self._validate_descriptions,
             self._validate_preferences,
+            self._validate_reproduction_and_happiness,
         ]:
             ok, msg = check()
             if not ok:
@@ -361,16 +290,6 @@ class RaceConfig:
         return result
 
     # -- validation helpers (private) --
-
-    _ENVIRONMENT_RANGES = [
-        ("gravity_ideal", 0.1, 3.0, "Gravity ideal must be between 0.1 and 3.0"),
-        ("gravity_tolerance", 0.0, 1.0, "Gravity tolerance must be between 0.0 and 1.0"),
-        ("temperature_ideal", 200, 400, "Temperature ideal must be between 200K and 400K"),
-        ("temperature_tolerance", 0, 100, "Temperature tolerance must be between 0 and 100K"),
-        ("radiation_tolerance", -100, 100, "Radiation tolerance must be between -100 and 100"),
-        ("water_ideal", 0.0, 1.0, "Water ideal must be between 0.0 and 1.0"),
-        ("water_tolerance", 0.0, 1.0, "Water tolerance must be between 0.0 and 1.0"),
-    ]
 
     _IDENTITY_ENUM_CHECKS = [
         ("government_type", GOVERNMENT_TYPES, "government type"),
@@ -391,47 +310,26 @@ class RaceConfig:
             return False, "Ship theme selection is required"
         return True, ""
 
-    def _validate_environment_ranges(self) -> tuple[bool, str]:
-        # Intentional getattr - iterating over attr names from _ENVIRONMENT_RANGES
-        for attr, lo, hi, msg in self._ENVIRONMENT_RANGES:
-            if not (lo <= getattr(self, attr) <= hi):
-                return False, msg
-        return True, ""
-
     def _validate_aptitudes(self) -> tuple[bool, str]:
-        aptitude_fields = [
-            ("strength", self.aptitude_strength),
-            ("intelligence", self.aptitude_intelligence),
-            ("constitution", self.aptitude_constitution),
-            ("dexterity", self.aptitude_dexterity),
-            ("tolerance_other_species", self.aptitude_tolerance_other_species),
-            ("cooperation", self.aptitude_cooperation),
-            ("happiness", self.aptitude_happiness),
-            ("population_growth", self.aptitude_population_growth),
-            ("conflict_tolerance", self.aptitude_conflict_tolerance),
-        ]
-        for apt_name, apt_value in aptitude_fields:
-            if not (1 <= apt_value <= 100):
+        for apt_name in APTITUDE_NAMES:
+            value = getattr(self, f"aptitude_{apt_name}")
+            if not (1 <= value <= 100):
                 return False, f"Aptitude {apt_name} must be between 1 and 100"
         return True, ""
 
     def _validate_identity_enums(self) -> tuple[bool, str]:
-        # Intentional getattr - iterating over attr names from _IDENTITY_ENUM_CHECKS
         for attr, valid_list, label in self._IDENTITY_ENUM_CHECKS:
             value = getattr(self, attr)
             if value and value not in valid_list:
                 return False, f"Invalid {label}: {value}"
         return True, ""
 
-    def _validate_homeworld_and_atmosphere(self) -> tuple[bool, str]:
+    def _validate_homeworld(self) -> tuple[bool, str]:
         if self.homeworld_type:
             from game.strategy.data.planet import PlanetType
             valid_planet_types = [p.name for p in PlanetType]
             if self.homeworld_type not in valid_planet_types:
                 return False, f"Invalid homeworld type: {self.homeworld_type}"
-        for gas, value in self.atmosphere_preferences.items():
-            if not (-100 <= value <= 100):
-                return False, f"Atmosphere preference for {gas} must be between -100 and 100"
         return True, ""
 
     def _validate_descriptions(self) -> tuple[bool, str]:
@@ -451,6 +349,22 @@ class RaceConfig:
                 pref.validate()
             except ValidationException as exc:
                 return False, f"preferences[{factor_id!r}]: {exc}"
+        return True, ""
+
+    def _validate_reproduction_and_happiness(self) -> tuple[bool, str]:
+        """PROJ-283 Phase 4: enforce non-negative reproduction rate and
+        happiness in [0, 1]. The point-budget system enforces tighter
+        bounds (floor 0.5%); this is the bare-minimum data sanity check."""
+        if self.base_reproduction_rate < 0:
+            return False, (
+                f"base_reproduction_rate must be non-negative, "
+                f"got {self.base_reproduction_rate}"
+            )
+        if not (0.0 <= self.base_happiness <= 1.0):
+            return False, (
+                f"base_happiness must be between 0.0 and 1.0, "
+                f"got {self.base_happiness}"
+            )
         return True, ""
 
     def is_complete(self) -> bool:

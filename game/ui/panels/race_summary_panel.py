@@ -320,39 +320,50 @@ class RaceSummaryPanel:
     # Formatting Methods
     # =========================================================================
 
+    # PROJ-283 Phase 4: env summaries now read from `race_config.preferences`
+    # (the legacy gravity_ideal/_tolerance/etc. fields are gone).
+    # These formatters present a compact label until the Phase 5 UI rebuild
+    # replaces this whole panel.
+
     def _format_gravity_summary(self) -> str:
-        """Format gravity summary string."""
-        return f"Gravity: {self.race_config.gravity_ideal:.1f}g +/- {self.race_config.gravity_tolerance:.2f}"
+        """Format gravity summary string (m/s² → g for display)."""
+        pref = self.race_config.preferences.get("gravity")
+        if pref is None:
+            return "Gravity: --"
+        ideal_g = pref.setpoint / 9.81
+        tol_g = pref.tolerance / 9.81
+        return f"Gravity: {ideal_g:.1f}g +/- {tol_g:.2f}"
 
     def _format_temperature_summary(self) -> str:
         """Format temperature summary string."""
-        return f"Temperature: {self.race_config.temperature_ideal:.0f}K +/- {self.race_config.temperature_tolerance:.0f}"
+        pref = self.race_config.preferences.get("temperature")
+        if pref is None:
+            return "Temperature: --"
+        return f"Temperature: {pref.setpoint:.0f}K +/- {pref.tolerance:.0f}"
 
     def _format_radiation_summary(self) -> str:
         """Format radiation summary string."""
-        rad_val = self.race_config.radiation_tolerance
-        if rad_val < -50:
-            rad_desc = "Sensitive"
-        elif rad_val > 50:
-            rad_desc = "Resistant"
-        else:
-            rad_desc = "Neutral"
-        return f"Radiation: {rad_val:+.0f} ({rad_desc})"
+        pref = self.race_config.preferences.get("radiation")
+        if pref is None:
+            return "Radiation: --"
+        return f"Radiation: tol {pref.tolerance:+.0f}"
 
     def _format_atmosphere_summary(self) -> str:
-        """Format atmosphere summary string."""
+        """Format atmosphere summary string. Lists gas factors with
+        non-zero setpoints (i.e., gases the race prefers to breathe)."""
         atmo_parts = []
-        prefs = self.race_config.atmosphere_preferences
-        if prefs:
-            for gas, value in prefs.items():
-                if value != 0:
-                    atmo_parts.append(f"{gas}: {value:+.0f}")
+        for fid, pref in self.race_config.preferences.items():
+            if not fid.startswith("gas.") or pref.setpoint <= 0:
+                continue
+            formula = fid.split(".", 1)[1]
+            kpa = pref.setpoint / 1000.0
+            atmo_parts.append(f"{formula}: {kpa:.1f} kPa")
         if atmo_parts:
-            atmo_text = ", ".join(atmo_parts[:4])  # Limit display
+            atmo_text = ", ".join(atmo_parts[:4])
             if len(atmo_parts) > 4:
                 atmo_text += "..."
         else:
-            atmo_text = "All neutral (0)"
+            atmo_text = "All neutral"
         return atmo_text
 
     def _format_bio_status(self) -> str:
@@ -413,8 +424,11 @@ class RaceSummaryPanel:
         return "Homeworld: Custom"
 
     def _format_water_summary(self) -> str:
-        """Format water preferences."""
-        return f"Water: {self.race_config.water_ideal:.0f}% +/- {self.race_config.water_tolerance:.0f}"
+        """Format water preferences (PROJ-283: read from preferences['water'])."""
+        pref = self.race_config.preferences.get("water")
+        if pref is None:
+            return "Water: --"
+        return f"Water: {pref.setpoint*100:.0f}% +/- {pref.tolerance*100:.0f}"
 
     def _format_budget_summary(self) -> str:
         """Format point budget status."""
@@ -429,7 +443,12 @@ class RaceSummaryPanel:
         rc = self.race_config
         line1 = f"STR:{rc.aptitude_strength} INT:{rc.aptitude_intelligence} CON:{rc.aptitude_constitution}"
         line2 = f"DEX:{rc.aptitude_dexterity} TOL:{rc.aptitude_tolerance_other_species} COO:{rc.aptitude_cooperation}"
-        line3 = f"HAP:{rc.aptitude_happiness} POP:{rc.aptitude_population_growth} CFT:{rc.aptitude_conflict_tolerance}"
+        # PROJ-283 Phase 4: happiness + population_growth aptitudes deleted;
+        # display the new derived/seed fields instead.
+        line3 = (
+            f"HAP:{rc.base_happiness:.2f} REPRO:{rc.base_reproduction_rate*100:.1f}% "
+            f"CFT:{rc.aptitude_conflict_tolerance}"
+        )
         return f"{line1}\n{line2}\n{line3}"
 
     # =========================================================================

@@ -287,6 +287,7 @@ When faced with choices, prefer:
 - **Facade/Delegate** - StrategySessionFacade, Ship→ShipCombatEngine
 - **CQRS-lite** - Command/query separation with frozen DTOs
 - **Two-Phase Ability Aggregation** - Intra-group MAX, inter-group SUM
+- **Habitability Factor Registry** (PROJ-283) - `FACTOR_REGISTRY` in `game/strategy/data/habitability_factors.py` declares every habitability axis (gravity, temperature, gases, ...) as one entry. The habitability formula, race UI, point budget, and homeworld presets all iterate this registry — adding a new axis is a single data edit. See `docs/systems/strategy_layer.md §7`.
 
 ---
 

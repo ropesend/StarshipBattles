@@ -1,210 +1,179 @@
-"""
-Tests for homeworld presets loading and application.
+"""Tests for homeworld presets loading and application (PROJ-283 Phase 5).
 
-These presets define environmental defaults for each PlanetType,
-used to auto-populate race environment settings based on homeworld selection.
+Phase 5 rewrote the preset shape: each preset now declares a partial
+`preferences: Dict[str, {setpoint, tolerance}]` keyed by `FACTOR_REGISTRY`
+factor ids, plus an optional `base_reproduction_rate`. Factors not
+listed in a preset's `preferences` retain whatever value the
+`RaceConfig` already has (typically the registry default backfilled by
+`__post_init__`).
+
+This file replaces the Phase 4 transitional-shim tests entirely. The
+legacy preset shape (display-name gas scores, gravity in g, etc.) is
+gone from `data/homeworld_presets.json`.
 """
+from __future__ import annotations
+
 import pytest
+
+from game.strategy.data.homeworld_presets import (
+    apply_preset_to_config,
+    get_available_homeworld_names,
+    get_preset_for_planet_type,
+    load_homeworld_presets,
+)
 from game.strategy.data.race_config import RaceConfig
 
 
+# ---------------------------------------------------------------------------
+# JSON loading + shape
+# ---------------------------------------------------------------------------
+
+
 class TestLoadHomeworldPresets:
-    """Tests for loading the homeworld presets JSON file."""
-
-    def test_load_homeworld_presets_returns_all_11(self):
-        """Verify all 11 planet types have presets defined."""
-        from game.strategy.data.homeworld_presets import load_homeworld_presets
-
+    def test_returns_all_11_planet_types(self):
         presets = load_homeworld_presets()
-
         assert len(presets) == 11
-        expected_types = [
+        expected_types = {
             "CONTINENTAL", "ARID", "PELAGIC", "MAGMA", "CRYOPLANET",
-            "BARREN", "JOVIAN", "ICE_GIANT", "CHTHONIAN", "ICE_DWARF", "PLANETOID"
-        ]
-        for planet_type in expected_types:
-            assert planet_type in presets, f"Missing preset for {planet_type}"
+            "BARREN", "JOVIAN", "ICE_GIANT", "CHTHONIAN", "ICE_DWARF", "PLANETOID",
+        }
+        assert set(presets.keys()) == expected_types
+
+    def test_every_preset_has_id_name_description_preferences(self):
+        for pid, preset in load_homeworld_presets().items():
+            assert preset["id"] == pid
+            assert isinstance(preset.get("name"), str)
+            assert isinstance(preset.get("description"), str)
+            assert isinstance(preset.get("preferences"), dict)
+
+
+# ---------------------------------------------------------------------------
+# Per-preset content
+# ---------------------------------------------------------------------------
 
 
 class TestGetPresetForPlanetType:
-    """Tests for retrieving individual presets."""
-
-    def test_get_preset_for_continental(self):
-        """CONTINENTAL preset should have Earth-like values."""
-        from game.strategy.data.homeworld_presets import get_preset_for_planet_type
-
+    def test_continental_is_earth_like(self):
         preset = get_preset_for_planet_type("CONTINENTAL")
-
         assert preset is not None
-        assert preset["id"] == "CONTINENTAL"
         assert preset["name"] == "Continental"
-        assert preset["gravity_ideal"] == 1.0
-        assert preset["temperature_ideal"] == 293  # ~20C in Kelvin
-        assert preset["water_ideal"] == 0.60
-        assert preset["radiation_tolerance"] == 0
-        # Earth-like atmosphere
-        assert preset["atmosphere_preferences"]["Oxygen"] == 50
-        assert preset["atmosphere_preferences"]["Nitrogen"] == 30
+        prefs = preset["preferences"]
+        # Earth-like surface conditions
+        assert prefs["gravity"]["setpoint"] == pytest.approx(9.81, abs=0.1)
+        assert prefs["temperature"]["setpoint"] == pytest.approx(293.0, abs=1.0)
+        assert prefs["water"]["setpoint"] == pytest.approx(0.6, abs=0.05)
+        # Earth-like atmosphere (registry stores Pa)
+        assert prefs["gas.O2"]["setpoint"] == pytest.approx(21000.0, abs=1000.0)
+        assert prefs["gas.N2"]["setpoint"] == pytest.approx(79000.0, abs=1000.0)
 
-    def test_get_preset_for_jovian(self):
-        """JOVIAN preset should have gas giant values."""
-        from game.strategy.data.homeworld_presets import get_preset_for_planet_type
-
+    def test_jovian_is_gas_giant(self):
         preset = get_preset_for_planet_type("JOVIAN")
-
         assert preset is not None
-        assert preset["id"] == "JOVIAN"
-        assert preset["name"] == "Jovian"
-        assert preset["gravity_ideal"] == 2.5
-        assert preset["temperature_ideal"] == 200
-        assert preset["water_ideal"] == 0.0
-        assert preset["radiation_tolerance"] == 40
-        # Hydrogen/Helium atmosphere
-        assert preset["atmosphere_preferences"]["Hydrogen"] == 80
-        assert preset["atmosphere_preferences"]["Helium"] == 60
+        prefs = preset["preferences"]
+        assert prefs["gravity"]["setpoint"] > 9.81 * 2  # heavier than Earth
+        # Hydrogen + helium dominated
+        assert prefs["gas.H2"]["setpoint"] > 0
+        assert prefs["gas.He"]["setpoint"] > 0
+        assert prefs["gas.O2"]["setpoint"] == 0  # no oxygen
 
-    def test_get_preset_for_arid(self):
-        """ARID preset should have desert values."""
-        from game.strategy.data.homeworld_presets import get_preset_for_planet_type
-
+    def test_arid_is_hot_dry(self):
         preset = get_preset_for_planet_type("ARID")
-
         assert preset is not None
-        assert preset["id"] == "ARID"
-        assert preset["temperature_ideal"] == 320  # Hot
-        assert preset["water_ideal"] == 0.10  # Low water
+        prefs = preset["preferences"]
+        assert prefs["temperature"]["setpoint"] > 300  # hot
+        assert prefs["water"]["setpoint"] < 0.2  # dry
 
-    def test_get_preset_for_magma(self):
-        """MAGMA preset should have volcanic values."""
-        from game.strategy.data.homeworld_presets import get_preset_for_planet_type
-
+    def test_magma_extremes(self):
         preset = get_preset_for_planet_type("MAGMA")
-
         assert preset is not None
-        assert preset["id"] == "MAGMA"
-        assert preset["temperature_ideal"] == 800  # Very hot
-        assert preset["water_ideal"] == 0.0
-        assert preset["radiation_tolerance"] == 60
+        prefs = preset["preferences"]
+        assert prefs["temperature"]["setpoint"] >= 700  # very hot
+        assert prefs["water"]["setpoint"] == pytest.approx(0.0, abs=0.05)
 
-    def test_get_preset_for_invalid_type_returns_none(self):
-        """Invalid planet type should return None."""
-        from game.strategy.data.homeworld_presets import get_preset_for_planet_type
+    def test_invalid_returns_none(self):
+        assert get_preset_for_planet_type("INVALID_TYPE") is None
 
-        preset = get_preset_for_planet_type("INVALID_TYPE")
 
-        assert preset is None
+# ---------------------------------------------------------------------------
+# apply_preset_to_config
+# ---------------------------------------------------------------------------
 
 
 class TestApplyPresetToConfig:
-    """Tests for applying presets to RaceConfig."""
-
-    def test_apply_preset_to_config_sets_gravity(self):
-        """Preset should set gravity_ideal and gravity_tolerance."""
-        from game.strategy.data.homeworld_presets import (
-            get_preset_for_planet_type, apply_preset_to_config
+    @pytest.fixture
+    def fresh_config(self):
+        return RaceConfig(
+            name="Test Race",
+            flag_id="flag_test",
+            portrait_id="portrait_test",
+            theme_id="Federation",
         )
 
-        config = RaceConfig()
+    def test_applies_gravity_setpoint(self, fresh_config):
         preset = get_preset_for_planet_type("JOVIAN")
+        apply_preset_to_config(preset, fresh_config)
+        assert fresh_config.preferences["gravity"].setpoint > 20  # ~2.5 g
 
-        apply_preset_to_config(preset, config)
-
-        assert config.gravity_ideal == 2.5
-        assert config.gravity_tolerance == preset["gravity_tolerance"]
-
-    def test_apply_preset_to_config_sets_temperature(self):
-        """Preset should set temperature_ideal and temperature_tolerance."""
-        from game.strategy.data.homeworld_presets import (
-            get_preset_for_planet_type, apply_preset_to_config
-        )
-
-        config = RaceConfig()
+    def test_applies_temperature(self, fresh_config):
         preset = get_preset_for_planet_type("CRYOPLANET")
+        apply_preset_to_config(preset, fresh_config)
+        assert fresh_config.preferences["temperature"].setpoint == pytest.approx(200, abs=1)
 
-        apply_preset_to_config(preset, config)
-
-        assert config.temperature_ideal == 200
-        assert config.temperature_tolerance == preset["temperature_tolerance"]
-
-    def test_apply_preset_to_config_sets_water(self):
-        """Preset should set water_ideal and water_tolerance."""
-        from game.strategy.data.homeworld_presets import (
-            get_preset_for_planet_type, apply_preset_to_config
-        )
-
-        config = RaceConfig()
+    def test_applies_water(self, fresh_config):
         preset = get_preset_for_planet_type("PELAGIC")
+        apply_preset_to_config(preset, fresh_config)
+        assert fresh_config.preferences["water"].setpoint == pytest.approx(0.95, abs=0.05)
 
-        apply_preset_to_config(preset, config)
-
-        assert config.water_ideal == 0.95
-        assert config.water_tolerance == preset["water_tolerance"]
-
-    def test_apply_preset_to_config_sets_atmosphere(self):
-        """Preset should set atmosphere_preferences."""
-        from game.strategy.data.homeworld_presets import (
-            get_preset_for_planet_type, apply_preset_to_config
-        )
-
-        config = RaceConfig()
+    def test_applies_atmosphere(self, fresh_config):
         preset = get_preset_for_planet_type("ICE_GIANT")
+        apply_preset_to_config(preset, fresh_config)
+        # Ice giant: hydrogen + helium dominated
+        assert fresh_config.preferences["gas.H2"].setpoint > 0
+        assert fresh_config.preferences["gas.He"].setpoint > 0
 
-        apply_preset_to_config(preset, config)
-
-        # Ice giant atmosphere
-        assert config.atmosphere_preferences["Hydrogen"] == 50
-        assert config.atmosphere_preferences["Helium"] == 40
-        assert config.atmosphere_preferences["Methane"] == 30
-
-    def test_apply_preset_to_config_sets_radiation_tolerance(self):
-        """Preset should set radiation_tolerance."""
-        from game.strategy.data.homeworld_presets import (
-            get_preset_for_planet_type, apply_preset_to_config
-        )
-
-        config = RaceConfig()
-        preset = get_preset_for_planet_type("CHTHONIAN")
-
-        apply_preset_to_config(preset, config)
-
-        assert config.radiation_tolerance == 90  # Very high radiation resistance
-
-    def test_apply_preset_to_config_sets_homeworld_type(self):
-        """Preset should set homeworld_type on config."""
-        from game.strategy.data.homeworld_presets import (
-            get_preset_for_planet_type, apply_preset_to_config
-        )
-
-        config = RaceConfig()
+    def test_sets_homeworld_type(self, fresh_config):
         preset = get_preset_for_planet_type("CONTINENTAL")
+        apply_preset_to_config(preset, fresh_config)
+        assert fresh_config.homeworld_type == "CONTINENTAL"
 
-        apply_preset_to_config(preset, config)
+    def test_preserves_unspecified_factors(self, fresh_config):
+        """A preset that doesn't list a factor leaves it untouched.
 
-        assert config.homeworld_type == "CONTINENTAL"
+        E.g., Continental doesn't say anything about magnetic field —
+        the race's `preferences['magnetic']` keeps its registry default."""
+        from game.strategy.data.habitability_factors import get_factor
+
+        magnetic = get_factor("magnetic")
+        # Sanity: the fresh config has the registry default.
+        assert fresh_config.preferences["magnetic"].setpoint == magnetic.default_setpoint
+
+        preset = get_preset_for_planet_type("CONTINENTAL")
+        apply_preset_to_config(preset, fresh_config)
+
+        assert fresh_config.preferences["magnetic"].setpoint == magnetic.default_setpoint
+
+    def test_none_preset_is_safe(self, fresh_config):
+        """Passing None for the preset (e.g., '(Custom)' selection) must
+        not mutate the config."""
+        original_gravity = fresh_config.preferences["gravity"].setpoint
+        apply_preset_to_config(None, fresh_config)
+        assert fresh_config.preferences["gravity"].setpoint == original_gravity
+
+
+# ---------------------------------------------------------------------------
+# Dropdown helper
+# ---------------------------------------------------------------------------
 
 
 class TestGetAvailableHomeworldNames:
-    """Tests for the dropdown helper function."""
-
-    def test_get_available_homeworld_names_returns_11(self):
-        """Should return names for all 11 planet types."""
-        from game.strategy.data.homeworld_presets import get_available_homeworld_names
-
+    def test_returns_11_names(self):
         names = get_available_homeworld_names()
-
         assert len(names) == 11
-        # Should be human-readable names, not enum values
         assert "Continental" in names
         assert "Jovian" in names
         assert "Ice Giant" in names
 
-    def test_get_available_homeworld_names_are_display_names(self):
-        """Names should be properly formatted for display."""
-        from game.strategy.data.homeworld_presets import get_available_homeworld_names
-
-        names = get_available_homeworld_names()
-
-        # Check formatting
-        for name in names:
-            assert name[0].isupper(), f"Name '{name}' should be capitalized"
-            assert "_" not in name, f"Name '{name}' should not contain underscores"
+    def test_names_are_display_formatted(self):
+        for name in get_available_homeworld_names():
+            assert name[0].isupper()
+            assert "_" not in name

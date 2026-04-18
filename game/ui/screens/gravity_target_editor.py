@@ -198,9 +198,12 @@ class GravityTargetEditor(UIWindow):
         if rc is None:
             return
 
-        ideal_g = getattr(rc, 'gravity_ideal', None)
-        if ideal_g is None:
+        # PROJ-283 Phase 4: read setpoint from registry-driven preferences
+        # (registry stores gravity in m/s², slider is in g).
+        gravity_pref = rc.preferences.get("gravity")
+        if gravity_pref is None:
             return
+        ideal_g = gravity_pref.setpoint / 9.81
 
         clamped = max(MIN_GRAVITY_G, min(MAX_GRAVITY_G, ideal_g))
         self.slider.set_current_value(clamped)

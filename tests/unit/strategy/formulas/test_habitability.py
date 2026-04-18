@@ -1,500 +1,376 @@
-"""
-Tests for habitability scoring system.
+"""Tests for `calculate_habitability` (PROJ-283 Phase 4: registry-driven).
 
-Tests cover individual factor calculations and the overall scoring function
-that determines how suitable a planet is for a given species.
+The formula iterates `FACTOR_REGISTRY` and combines per-factor scores via
+a weighted geometric mean. Originally born as `calculate_habitability_v2`
+in Phase 2 (sibling of the legacy `calculate_habitability`); Phase 4
+deleted the legacy formula and renamed v2 to the canonical name.
+
+Test groupings:
+    * happy path: Earth-perfect race on Earth-like planet ≈ 1.0
+    * registry-iteration semantics (uses default when pref missing)
+    * gas-missing edge cases
+    * one-zero-tanks-all invariant
+    * single-factor isolation via registry patching
+    * pressure / tectonic / atmosphere axis behaviour
 """
+from __future__ import annotations
+
+from typing import Any, Dict
+from unittest.mock import patch
+
 import pytest
-from game.strategy.formulas.habitability import (
-    calculate_gravity_factor,
-    calculate_temperature_factor,
-    calculate_water_factor,
-    calculate_atmosphere_factor,
-    calculate_radiation_factor,
-    calculate_habitability,
-    score_planet_for_race,
-)
-from game.strategy.data.planet import Planet
-from game.core.hex_math import HexCoord
+
+from game.strategy.data.environmental_preference import EnvironmentalPreference
+from game.strategy.data.habitability_factors import FACTOR_REGISTRY
 from game.strategy.data.race_config import RaceConfig
+from game.strategy.formulas.habitability import calculate_habitability
 
 
-# --- Gravity Factor Tests ---
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-class TestGravityFactor:
-    """Tests for gravity habitability factor."""
 
-    def test_perfect_match_returns_1(self):
-        """Planet gravity exactly matching ideal returns 1.0."""
-        # Race wants 1.0g (9.81 m/s²)
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=9.81,
-            ideal_gravity_g=1.0,
-            tolerance_g=0.3
+class _FakePlanet:
+    """Minimal duck-typed stand-in for `Planet`.
+
+    Only carries the attributes the registry's extractors read. Avoids
+    constructing a full `Planet` dataclass (which has many required fields
+    irrelevant to habitability scoring).
+    """
+
+    # Earth-like atmosphere matches the registry's default-race expectations
+    # (O2=21 kPa setpoint, N2=79 kPa setpoint), so isolated-axis tests don't
+    # accidentally flunk gas factors when the test only cares about gravity
+    # or pressure.
+    _EARTH_ATMOSPHERE: Dict[str, float] = {"O2": 21000.0, "N2": 79000.0}
+
+    def __init__(self, **attrs: Any) -> None:
+        self.atmosphere: Dict[str, float] = attrs.pop(
+            "atmosphere", dict(self._EARTH_ATMOSPHERE),
         )
-        assert factor == pytest.approx(1.0, abs=0.01)
-
-    def test_within_tolerance_returns_high(self):
-        """Gravity within tolerance range returns high factor."""
-        # Race wants 1.0g ± 0.3g, planet is 1.2g
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=1.2 * 9.81,
-            ideal_gravity_g=1.0,
-            tolerance_g=0.3
-        )
-        assert factor > 0.5  # Still livable
-        assert factor < 1.0  # Not perfect
-
-    def test_outside_tolerance_reduces_score(self):
-        """Gravity outside tolerance reduces score significantly."""
-        # Race wants 1.0g ± 0.3g, planet is 2.0g (way outside)
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=2.0 * 9.81,
-            ideal_gravity_g=1.0,
-            tolerance_g=0.3
-        )
-        assert factor < 0.3  # Significantly reduced
-
-    def test_extreme_gravity_approaches_zero(self):
-        """Extreme gravity difference approaches zero."""
-        # Race wants 1.0g, planet is 5.0g
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=5.0 * 9.81,
-            ideal_gravity_g=1.0,
-            tolerance_g=0.3
-        )
-        assert factor < 0.1
-
-    def test_low_gravity_species_on_low_g_planet(self):
-        """Low-g species on low-g planet is comfortable."""
-        # Race wants 0.5g ± 0.2g, planet is 0.4g
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=0.4 * 9.81,
-            ideal_gravity_g=0.5,
-            tolerance_g=0.2
-        )
-        assert factor > 0.8
+        # Sensible defaults for every scalar extractor so missing kwargs
+        # don't trip `getattr(planet, attr, None) is None` paths.
+        defaults = {
+            "surface_gravity": 9.81,
+            "surface_temperature": 293.0,
+            "surface_water": 0.5,
+            "surface_pressure": 101325.0,
+            "tectonic_activity": 0.3,
+            "magnetic_field": 1.0,
+            "radiation_shielding": 0.0,
+        }
+        for k, v in defaults.items():
+            setattr(self, k, attrs.pop(k, v))
+        for k, v in attrs.items():
+            setattr(self, k, v)
 
 
-# --- Temperature Factor Tests ---
-
-class TestTemperatureFactor:
-    """Tests for temperature habitability factor."""
-
-    def test_perfect_match_returns_1(self):
-        """Planet temp exactly matching ideal returns 1.0."""
-        factor = calculate_temperature_factor(
-            planet_temp_k=293.0,
-            ideal_temp_k=293.0,
-            tolerance_k=50.0
-        )
-        assert factor == pytest.approx(1.0, abs=0.01)
-
-    def test_within_tolerance_returns_high(self):
-        """Temperature within tolerance range returns high factor."""
-        # Race wants 293K ± 50K, planet is 310K
-        factor = calculate_temperature_factor(
-            planet_temp_k=310.0,
-            ideal_temp_k=293.0,
-            tolerance_k=50.0
-        )
-        assert factor > 0.5
-        assert factor < 1.0
-
-    def test_outside_tolerance_reduces_score(self):
-        """Temperature outside tolerance reduces score."""
-        # Race wants 293K ± 50K, planet is 400K (hot)
-        factor = calculate_temperature_factor(
-            planet_temp_k=400.0,
-            ideal_temp_k=293.0,
-            tolerance_k=50.0
-        )
-        assert factor < 0.3
-
-    def test_ice_planet_for_tropical_species(self):
-        """Ice planet is harsh for tropical species."""
-        # Tropical species (ideal 310K), ice planet (150K)
-        factor = calculate_temperature_factor(
-            planet_temp_k=150.0,
-            ideal_temp_k=310.0,
-            tolerance_k=30.0
-        )
-        assert factor < 0.1
-
-    def test_ice_species_on_ice_planet(self):
-        """Ice-adapted species on ice planet is comfortable."""
-        # Ice species (ideal 200K ± 40K), ice planet (180K)
-        factor = calculate_temperature_factor(
-            planet_temp_k=180.0,
-            ideal_temp_k=200.0,
-            tolerance_k=40.0
-        )
-        assert factor > 0.7
+def _earth_like_planet() -> _FakePlanet:
+    """A planet matching every default factor setpoint."""
+    return _FakePlanet(
+        atmosphere={"O2": 21000.0, "N2": 79000.0},
+    )
 
 
-# --- Water Factor Tests ---
-
-class TestWaterFactor:
-    """Tests for water coverage habitability factor."""
-
-    def test_perfect_match_returns_1(self):
-        """Water coverage exactly matching ideal returns 1.0."""
-        factor = calculate_water_factor(
-            planet_water=0.5,
-            ideal_water=0.5,
-            tolerance=0.2
-        )
-        assert factor == pytest.approx(1.0, abs=0.01)
-
-    def test_within_tolerance_returns_high(self):
-        """Water within tolerance returns high factor."""
-        # Race wants 50% ± 20%, planet has 60%
-        factor = calculate_water_factor(
-            planet_water=0.6,
-            ideal_water=0.5,
-            tolerance=0.2
-        )
-        assert factor > 0.7
-
-    def test_desert_planet_for_aquatic_species(self):
-        """Desert planet is harsh for aquatic species."""
-        # Aquatic species (wants 80% water), desert planet (5%)
-        factor = calculate_water_factor(
-            planet_water=0.05,
-            ideal_water=0.8,
-            tolerance=0.1
-        )
-        assert factor < 0.1
-
-    def test_ocean_planet_for_desert_species(self):
-        """Ocean planet is harsh for desert species."""
-        # Desert species (wants 10% water), ocean planet (95%)
-        factor = calculate_water_factor(
-            planet_water=0.95,
-            ideal_water=0.1,
-            tolerance=0.1
-        )
-        assert factor < 0.1
-
-    def test_outside_tolerance_reduces_score(self):
-        """Water outside tolerance reduces score."""
-        factor = calculate_water_factor(
-            planet_water=0.9,
-            ideal_water=0.5,
-            tolerance=0.2
-        )
-        assert factor < 0.5
+def _earth_like_race() -> RaceConfig:
+    """A race whose preferences are exactly the registry defaults
+    (RaceConfig __post_init__ already does this when no preferences are
+    provided), and whose required-by-validation identity fields are filled
+    in case any test calls `validate()`."""
+    return RaceConfig(
+        name="Earthling",
+        flag_id="flag_test",
+        portrait_id="portrait_test",
+        theme_id="Federation",
+    )
 
 
-# --- Atmosphere Factor Tests ---
-
-class TestAtmosphereFactor:
-    """Tests for atmosphere composition habitability factor."""
-
-    def test_neutral_atmosphere_returns_base(self):
-        """Neutral atmosphere preferences return ~0.5 baseline."""
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={"Oxygen": 21000.0, "Nitrogen": 78000.0},
-            atmosphere_preferences={"Oxygen": 0.0, "Nitrogen": 0.0}
-        )
-        # Neutral should be around 0.5 (neither beneficial nor harmful)
-        assert 0.4 <= factor <= 0.6
-
-    def test_beneficial_atmosphere_boosts_score(self):
-        """Beneficial gas boosts habitability score."""
-        # Species loves oxygen (+80)
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={"Oxygen": 21000.0},  # ~21% at 1 atm
-            atmosphere_preferences={"Oxygen": 80.0}
-        )
-        assert factor > 0.7
-
-    def test_toxic_atmosphere_reduces_score(self):
-        """Toxic gas reduces habitability score."""
-        # Species hates methane (-80)
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={"Methane": 50000.0},  # High methane
-            atmosphere_preferences={"Methane": -80.0, "Oxygen": 0.0}
-        )
-        assert factor < 0.3
-
-    def test_mixed_atmosphere_balanced(self):
-        """Mixed beneficial and toxic gases balance out."""
-        # Equal parts beneficial and toxic at same pressure
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={"Oxygen": 50000.0, "Methane": 50000.0},
-            atmosphere_preferences={"Oxygen": 50.0, "Methane": -50.0}
-        )
-        # Should be middling (close to 0.5 when equal parts)
-        assert 0.4 <= factor <= 0.6
-
-    def test_empty_atmosphere(self):
-        """Empty/vacuum atmosphere."""
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={},
-            atmosphere_preferences={"Oxygen": 80.0}
-        )
-        # No beneficial gas present = lower score
-        assert factor <= 0.5
-
-    def test_formula_keys_match_display_name_preferences(self):
-        """Planet atmosphere with chemical formulas should match display-name preferences (BUG-90)."""
-        # Real scenario: generated planet has "O2", species preferences have "Oxygen"
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={"O2": 21000.0, "N2": 78000.0},
-            atmosphere_preferences={"Oxygen": 80.0, "Nitrogen": 20.0}
-        )
-        # Beneficial: species wants oxygen and nitrogen, planet has both
-        assert factor > 0.7
-
-    def test_formula_keys_toxic_match(self):
-        """Toxic gas with formula key should still reduce score."""
-        factor = calculate_atmosphere_factor(
-            planet_atmosphere={"CH4": 50000.0},
-            atmosphere_preferences={"Methane": -80.0}
-        )
-        assert factor < 0.3
+# ---------------------------------------------------------------------------
+# Task 2.1: basic shape and happy path
+# ---------------------------------------------------------------------------
 
 
-# --- Radiation Factor Tests ---
-
-class TestRadiationFactor:
-    """Tests for radiation/magnetic field habitability factor."""
-
-    def test_strong_field_high_score(self):
-        """Strong magnetic field gives high score for most species."""
-        # Normal sensitivity (0), strong field (1.0 = Earth-like)
-        factor = calculate_radiation_factor(
-            magnetic_field=1.0,
-            radiation_tolerance=0.0
-        )
-        assert factor > 0.8
-
-    def test_low_field_penalizes_sensitive_species(self):
-        """Low magnetic field penalizes radiation-sensitive species."""
-        # Sensitive species (-50), weak field (0.1)
-        factor = calculate_radiation_factor(
-            magnetic_field=0.1,
-            radiation_tolerance=-50.0
-        )
-        assert factor < 0.5
-
-    def test_low_field_ok_for_resistant_species(self):
-        """Low magnetic field is fine for radiation-resistant species."""
-        # Resistant species (+80), weak field (0.1)
-        factor = calculate_radiation_factor(
-            magnetic_field=0.1,
-            radiation_tolerance=80.0
-        )
-        assert factor > 0.7
-
-    def test_zero_field_harsh_for_normal(self):
-        """Zero magnetic field is harsh for normal species."""
-        factor = calculate_radiation_factor(
-            magnetic_field=0.0,
-            radiation_tolerance=0.0
-        )
-        assert factor < 0.5
-
-
-# --- Full Habitability Score Tests ---
-
-class TestCalculateHabitability:
-    """Tests for the full habitability calculation."""
-
-    def test_perfect_match_returns_near_1(self):
-        """Planet conditions matching race ideal returns near 1.0."""
-        score = calculate_habitability(
-            gravity_ms2=9.81,  # 1.0g
-            temperature_k=293.0,
-            water_coverage=0.5,
-            atmosphere={"Oxygen": 21000.0, "Nitrogen": 78000.0},
-            magnetic_field=1.0,
-            gravity_ideal=1.0,
-            gravity_tolerance=0.3,
-            temp_ideal=293.0,
-            temp_tolerance=50.0,
-            water_ideal=0.5,
-            water_tolerance=0.2,
-            atmosphere_preferences={"Oxygen": 50.0, "Nitrogen": 20.0},
-            radiation_tolerance=0.0
-        )
-        assert score > 0.8
-
-    def test_completely_incompatible_returns_near_0(self):
-        """Extreme mismatch returns near 0.0."""
-        # Ice species on magma planet
-        score = calculate_habitability(
-            gravity_ms2=3.0 * 9.81,  # 3.0g (crushing)
-            temperature_k=1500.0,  # Magma temps
-            water_coverage=0.0,  # No water
-            atmosphere={"Sulfur Dioxide": 90000.0},  # Toxic
-            magnetic_field=0.0,  # No protection
-            gravity_ideal=0.5,  # Wants low g
-            gravity_tolerance=0.1,
-            temp_ideal=200.0,  # Wants ice
-            temp_tolerance=30.0,
-            water_ideal=0.8,  # Wants water
-            water_tolerance=0.1,
-            atmosphere_preferences={"Oxygen": 80.0, "Sulfur Dioxide": -100.0},
-            radiation_tolerance=-50.0  # Radiation sensitive
-        )
-        assert score < 0.1
-
-    def test_one_zero_factor_tanks_score(self):
-        """One completely incompatible factor tanks overall score."""
-        # Everything perfect except temperature (magma)
-        score = calculate_habitability(
-            gravity_ms2=9.81,
-            temperature_k=2000.0,  # Magma!
-            water_coverage=0.5,
-            atmosphere={"Oxygen": 21000.0},
-            magnetic_field=1.0,
-            gravity_ideal=1.0,
-            gravity_tolerance=0.3,
-            temp_ideal=293.0,
-            temp_tolerance=50.0,
-            water_ideal=0.5,
-            water_tolerance=0.2,
-            atmosphere_preferences={"Oxygen": 50.0},
-            radiation_tolerance=0.0
-        )
-        # Geometric mean should pull this down significantly
-        assert score < 0.3
-
-
-# --- Convenience Wrapper Tests ---
-
-class TestScorePlanetForRace:
-    """Tests for the convenience wrapper function."""
-
-    @pytest.fixture
-    def earth_like_planet(self):
-        """Create an Earth-like test planet."""
-        return Planet(
-            name="Terra",
-            location=HexCoord(0, 0),
-            orbit_distance=1,
-            mass=5.97e24,
-            radius=6.371e6,
-            surface_area=5.1e14,
-            density=5515.0,
-            surface_gravity=9.81,
-            surface_pressure=101325.0,
-            surface_temperature=288.0,
-            surface_water=0.71,
-            tectonic_activity=0.5,
-            magnetic_field=1.0,
-            atmosphere={"Oxygen": 21000.0, "Nitrogen": 78000.0}
-        )
-
-    @pytest.fixture
-    def human_race_config(self):
-        """Create a human-like race configuration."""
-        return RaceConfig(
-            race_id="humans",
-            name="Humans",
-            gravity_ideal=1.0,
-            gravity_tolerance=0.3,
-            temperature_ideal=288.0,
-            temperature_tolerance=50.0,
-            water_ideal=0.7,
-            water_tolerance=0.3,
-            atmosphere_preferences={"Oxygen": 80.0, "Nitrogen": 20.0, "Carbon Dioxide": -20.0},
-            radiation_tolerance=0.0
-        )
-
-    @pytest.fixture
-    def ice_dweller_config(self):
-        """Create an ice-dwelling species configuration."""
-        return RaceConfig(
-            race_id="cryonians",
-            name="Cryonians",
-            gravity_ideal=0.5,
-            gravity_tolerance=0.2,
-            temperature_ideal=180.0,
-            temperature_tolerance=40.0,
-            water_ideal=0.1,  # Frozen water, not liquid
-            water_tolerance=0.1,
-            atmosphere_preferences={"Nitrogen": 50.0, "Oxygen": -30.0},
-            radiation_tolerance=50.0  # Radiation resistant
-        )
-
-    def test_score_planet_for_race_convenience(self, earth_like_planet, human_race_config):
-        """Integration test with real Planet and RaceConfig objects."""
-        score = score_planet_for_race(earth_like_planet, human_race_config)
-        # Humans on Earth should score very high
-        assert score > 0.7
-        assert score <= 1.0
-
-    def test_ice_species_on_earth(self, earth_like_planet, ice_dweller_config):
-        """Ice species on Earth-like planet should score poorly."""
-        score = score_planet_for_race(earth_like_planet, ice_dweller_config)
-        # Too warm, too much gravity, wrong atmosphere
-        assert score < 0.3
-
-    def test_returns_float_in_range(self, earth_like_planet, human_race_config):
-        """Score is always a float between 0 and 1."""
-        score = score_planet_for_race(earth_like_planet, human_race_config)
+class TestCalculateHabitabilityV2HappyPath:
+    def test_returns_float_in_unit_interval(self):
+        score = calculate_habitability(_earth_like_planet(), _earth_like_race())
         assert isinstance(score, float)
         assert 0.0 <= score <= 1.0
 
-
-class TestEdgeCases:
-    """Edge case tests for habitability scoring."""
-
-    def test_zero_tolerance_exact_match(self):
-        """Zero tolerance with exact match still works."""
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=9.81,
-            ideal_gravity_g=1.0,
-            tolerance_g=0.0  # No tolerance
+    def test_earth_perfect_match_scores_near_one(self):
+        """Race whose every preference matches every factor default, on a
+        planet whose every value sits at the factor default → near-ideal."""
+        score = calculate_habitability(_earth_like_planet(), _earth_like_race())
+        assert score >= 0.95, (
+            f"Earth-perfect setup should score ≥ 0.95, got {score:.4f}"
         )
-        assert factor == pytest.approx(1.0, abs=0.01)
 
-    def test_zero_tolerance_any_deviation(self):
-        """Zero tolerance with any deviation penalizes heavily."""
-        factor = calculate_gravity_factor(
-            planet_gravity_ms2=9.82,  # Tiny difference
-            ideal_gravity_g=1.0,
-            tolerance_g=0.0
+    def test_score_is_zero_when_every_factor_collapses(self):
+        """A planet with every value set far from every default + a race
+        with very tight tolerances → near-zero composite score."""
+        # Construct a race with extremely tight tolerances on every axis.
+        prefs: Dict[str, EnvironmentalPreference] = {}
+        for fid, factor in FACTOR_REGISTRY.items():
+            prefs[fid] = EnvironmentalPreference(
+                setpoint=factor.default_setpoint,
+                tolerance=max(factor.step, 1e-3),
+                min_value=factor.min_value,
+                max_value=factor.max_value,
+                step=factor.step,
+            )
+        race = RaceConfig(
+            name="Picky",
+            flag_id="flag_test",
+            portrait_id="portrait_test",
+            theme_id="Federation",
+            preferences=prefs,
         )
-        # Should still be lower than perfect
-        assert factor < 1.0
+        # Planet far from every default.
+        planet = _FakePlanet(
+            surface_gravity=25.0,
+            surface_temperature=450.0,
+            surface_water=0.0,
+            surface_pressure=400000.0,
+            tectonic_activity=1.0,
+            magnetic_field=0.0,
+            radiation_shielding=-100.0,
+            atmosphere={},  # no gases
+        )
+        score = calculate_habitability(planet, race)
+        assert score < 0.1, f"Hostile setup should score < 0.1, got {score}"
 
-    def test_very_high_tolerance_forgiving(self):
-        """Very high tolerance is very forgiving."""
-        factor = calculate_temperature_factor(
-            planet_temp_k=400.0,
-            ideal_temp_k=293.0,
-            tolerance_k=200.0  # Very tolerant
-        )
-        assert factor > 0.5
 
-    def test_none_race_config_fields_use_defaults(self):
-        """Missing atmosphere preferences handled gracefully."""
-        # RaceConfig with empty atmosphere preferences
-        config = RaceConfig(
-            race_id="test",
-            name="Test",
-            atmosphere_preferences={}
+# ---------------------------------------------------------------------------
+# Task 2.1: registry iteration semantics
+# ---------------------------------------------------------------------------
+
+
+class TestCalculateHabitabilityV2RegistryIteration:
+    def test_iterates_factor_registry_for_every_factor(self):
+        """The implementation must consult every factor in the registry —
+        not a hardcoded subset. Verified by patching the registry with a
+        single-factor dict and checking only that factor influences the
+        result."""
+        # Single-factor registry: just gravity.
+        single_factor_registry = {"gravity": FACTOR_REGISTRY["gravity"]}
+
+        race = _earth_like_race()
+        # Planet with off-ideal gravity (only matters if gravity is iterated).
+        planet = _FakePlanet(surface_gravity=25.0)
+
+        with patch(
+            "game.strategy.data.habitability_factors.FACTOR_REGISTRY",
+            single_factor_registry,
+        ):
+            score = calculate_habitability(planet, race)
+
+        # Gravity is far off-ideal → score should be very low if iterated.
+        assert score < 0.1, (
+            f"Patched registry with single off-ideal factor should yield "
+            f"low score; got {score:.4f}"
         )
-        planet = Planet(
-            name="Test",
-            location=HexCoord(0, 0),
-            orbit_distance=1,
-            mass=5.97e24,
-            radius=6.371e6,
-            surface_area=5.1e14,
-            density=5515.0,
-            surface_gravity=9.81,
-            surface_pressure=101325.0,
-            surface_temperature=288.0,
-            surface_water=0.5,
-            tectonic_activity=0.5,
-            magnetic_field=1.0,
-            atmosphere={"Oxygen": 21000.0}
+
+    def test_uses_registry_default_when_pref_missing(self):
+        """If `race.preferences` is missing a factor entry, the v2 formula
+        must fall back to the registry's default setpoint/tolerance — NOT
+        skip the factor."""
+        # Strip the gravity preference from a race.
+        race = _earth_like_race()
+        race.preferences.pop("gravity")
+
+        # Planet with off-ideal gravity. If we had skipped the factor, the
+        # remaining factors would all score ~1.0 and yield ~1.0 overall.
+        # If we used the registry default (setpoint=9.81, tol=2.0), an
+        # off-ideal gravity should still pull the composite down.
+        planet = _FakePlanet(surface_gravity=20.0)
+        score_with_offideal = calculate_habitability(planet, race)
+
+        race_full = _earth_like_race()
+        score_baseline = calculate_habitability(planet, race_full)
+
+        # Both should agree (default applied automatically), and both
+        # should be noticeably below 1.0.
+        assert score_with_offideal == pytest.approx(score_baseline, abs=1e-6)
+        assert score_with_offideal < 0.95
+
+
+# ---------------------------------------------------------------------------
+# Task 2.2: gas-missing edge cases
+# ---------------------------------------------------------------------------
+
+
+class TestCalculateHabitabilityV2GasMissing:
+    def test_gas_missing_with_setpoint_collapses_to_zero(self):
+        """Race wants O2 (setpoint > 0), planet has none → the O2 per-gas
+        factor collapses toward 0. Per-gas weight is 0.15 of total weight
+        6.8, so the composite drag is bounded (~0.7 of full ideal). We
+        assert the comparative drop, not an absolute threshold — the
+        absolute value is set by the gas-bucket weight allocation, which
+        is tunable design."""
+        race = _earth_like_race()  # O2 setpoint=21000, tol=5000
+
+        planet_with_o2 = _FakePlanet(atmosphere={"O2": 21000.0, "N2": 79000.0})
+        planet_no_o2 = _FakePlanet(atmosphere={"N2": 79000.0})
+
+        score_good = calculate_habitability(planet_with_o2, race)
+        score_bad = calculate_habitability(planet_no_o2, race)
+
+        assert score_good >= 0.95
+        # Missing O2 on a race with the default 5 kPa O2 tolerance puts
+        # the per-gas score at exp(-0.5 * (21000/5000)^2) ≈ 1.5e-4 (well
+        # above the 1e-10 floor, so the bound is set by the σ-distance
+        # not the floor). Per-gas weight 0.15 / total weight 6.8 → drop
+        # of (1 - exp(-8.8 * 0.15 / 6.8)) ≈ 18%. We assert "noticeable
+        # drag and strictly worse than the O2-present case" rather than
+        # an absolute threshold tied to the gas-bucket weight allocation.
+        assert score_bad < 0.9
+        assert score_bad < score_good
+
+    def test_gas_missing_with_zero_setpoint_is_ideal(self):
+        """Race doesn't want CH4 (default setpoint=0); planet has none →
+        the CH4 factor is fully ideal and contributes nothing negative."""
+        race = _earth_like_race()
+        # Sanity: race has setpoint=0 for CH4 by default.
+        assert race.preferences["gas.CH4"].setpoint == 0.0
+
+        planet_no_ch4 = _FakePlanet(atmosphere={"O2": 21000.0, "N2": 79000.0})
+        planet_with_ch4 = _FakePlanet(
+            atmosphere={"O2": 21000.0, "N2": 79000.0, "CH4": 50000.0},
         )
-        # Should not crash
-        score = score_planet_for_race(planet, config)
-        assert 0.0 <= score <= 1.0
+
+        score_clean = calculate_habitability(planet_no_ch4, race)
+        score_methane = calculate_habitability(planet_with_ch4, race)
+
+        # Methane present but race has setpoint=0 with default tolerance
+        # 10000 → 5σ deviation drags this gas factor down even though the
+        # race "doesn't want" it. Confirms the contract:
+        # tolerance defines width, not direction.
+        assert score_clean > score_methane
+
+
+# ---------------------------------------------------------------------------
+# Task 2.3: one-zero-tanks-all + parity
+# ---------------------------------------------------------------------------
+
+
+class TestOneZeroTanksAll:
+    def test_single_factor_at_001_drags_composite_below_01(self):
+        """Weighted geometric mean: a single near-zero factor dominates."""
+        # Earth-like everything except gravity is wildly off-ideal.
+        race = _earth_like_race()
+        # Tighten gravity tolerance so off-ideal really collapses.
+        race.preferences["gravity"] = EnvironmentalPreference(
+            setpoint=9.81, tolerance=0.5,
+            min_value=0.1, max_value=30.0, step=0.98,
+        )
+        planet = _FakePlanet(
+            surface_gravity=25.0,  # ~30σ above setpoint
+            atmosphere={"O2": 21000.0, "N2": 79000.0},
+        )
+        score = calculate_habitability(planet, race)
+        assert score < 0.1
+
+
+class TestSingleFactorIsolation:
+    """Patch the registry to isolate one factor at a time and verify the
+    combiner consumes the per-factor scorer correctly.
+
+    (Phase 2 also had a `test_near_earth_setup_both_score_high` test that
+    compared v1 vs v2 numerical agreement; v1 was deleted in Phase 4 so
+    that test was removed. Ideal-vs-non-ideal coverage now lives entirely
+    in the parametrized test below + the happy-path tests above.)"""
+
+    @pytest.mark.parametrize(
+        "factor_id,planet_attrs,expected_high",
+        [
+            ("gravity", {"surface_gravity": 9.81}, True),
+            ("gravity", {"surface_gravity": 25.0}, False),
+            ("temperature", {"surface_temperature": 293.0}, True),
+            ("temperature", {"surface_temperature": 1000.0}, False),
+            ("water", {"surface_water": 0.5}, True),
+            ("water", {"surface_water": 0.0}, False),
+        ],
+    )
+    def test_single_factor_isolation(
+        self, factor_id, planet_attrs, expected_high,
+    ):
+        """Patch the registry down to one factor; verify ideal → ~1.0 and
+        far-from-ideal → low. Confirms the v2 combiner is consuming the
+        per-factor scorer correctly without interference from other axes."""
+        single = {factor_id: FACTOR_REGISTRY[factor_id]}
+        race = _earth_like_race()
+        planet = _FakePlanet(**planet_attrs)
+
+        with patch(
+            "game.strategy.data.habitability_factors.FACTOR_REGISTRY",
+            single,
+        ):
+            score = calculate_habitability(planet, race)
+
+        if expected_high:
+            assert score >= 0.95
+        else:
+            assert score < 0.3
+
+
+class TestRegistryDrivenAtmosphere:
+    def test_o2_loving_race_on_o2_rich_planet(self):
+        """O2 setpoint 21 kPa, tolerance 3 kPa, planet has 21 kPa O2 →
+        gas.O2 factor ≈ 1.0 → contributes positively to overall score."""
+        race = _earth_like_race()
+        race.preferences["gas.O2"] = EnvironmentalPreference(
+            setpoint=21000.0, tolerance=3000.0,
+            min_value=0.0, max_value=300000.0, step=1000.0,
+        )
+        planet = _FakePlanet(atmosphere={"O2": 21000.0, "N2": 79000.0})
+        score = calculate_habitability(planet, race)
+        assert score >= 0.9
+
+    def test_o2_loving_race_on_no_o2_planet(self):
+        race = _earth_like_race()
+        race.preferences["gas.O2"] = EnvironmentalPreference(
+            setpoint=21000.0, tolerance=3000.0,
+            min_value=0.0, max_value=300000.0, step=1000.0,
+        )
+        planet_with = _FakePlanet(atmosphere={"O2": 21000.0, "N2": 79000.0})
+        planet_without = _FakePlanet(atmosphere={"N2": 79000.0})
+        score_with = calculate_habitability(planet_with, race)
+        score_without = calculate_habitability(planet_without, race)
+        # 7σ deviation on a 0.15-weight factor drags the geometric mean
+        # noticeably; per-gas weight allocation bounds the absolute drop,
+        # so we assert the comparative direction.
+        assert score_without < score_with * 0.75
+
+
+class TestPressureFactor:
+    def test_pressure_at_setpoint_does_not_pull_score_down(self):
+        race = _earth_like_race()
+        # Default: setpoint=101325, tolerance=20000.
+        planet = _FakePlanet(surface_pressure=101325.0)
+        score = calculate_habitability(planet, race)
+        assert score >= 0.95
+
+    def test_double_pressure_reduces_score(self):
+        race = _earth_like_race()
+        planet_ideal = _FakePlanet(surface_pressure=101325.0)
+        planet_high = _FakePlanet(surface_pressure=202650.0)
+        score_ideal = calculate_habitability(planet_ideal, race)
+        score_high = calculate_habitability(planet_high, race)
+        assert score_high < score_ideal
+
+
+class TestTectonicFactor:
+    def test_tectonic_at_setpoint_scores_high(self):
+        race = _earth_like_race()
+        # Default tectonic setpoint = 0.3.
+        planet = _FakePlanet(tectonic_activity=0.3)
+        score = calculate_habitability(planet, race)
+        assert score >= 0.95
+
+    def test_volcanic_planet_scores_lower(self):
+        race = _earth_like_race()
+        planet_calm = _FakePlanet(tectonic_activity=0.3)
+        planet_volcanic = _FakePlanet(tectonic_activity=0.95)
+        score_calm = calculate_habitability(planet_calm, race)
+        score_volcanic = calculate_habitability(planet_volcanic, race)
+        assert score_volcanic < score_calm

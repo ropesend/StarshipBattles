@@ -226,16 +226,31 @@ class TestEmpireRaceConfig:
         assert empire.race_config is None
 
     def test_empire_race_config_serialization_roundtrip(self):
-        """Test Empire.race_config survives to_dict/from_dict roundtrip."""
-        from game.strategy.data.race_config import RaceConfig
+        """Test Empire.race_config survives to_dict/from_dict roundtrip.
 
-        # Create race config with various fields
+        PROJ-283 Phase 4: legacy `water_ideal`/`temperature_ideal` fields
+        deleted; environmental preferences round-trip via
+        `race_config.preferences[<factor_id>]`.
+        """
+        from game.strategy.data.race_config import RaceConfig
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.strategy.data.habitability_factors import get_factor
+
+        # Create race config with non-default preferences on water + temperature.
         race_config = RaceConfig(
             race_id="test_race",
             race_name="Test Race",
-            water_ideal=0.5,
-            water_tolerance=0.2,
-            temperature_ideal=295,
+        )
+        water = get_factor("water")
+        race_config.preferences["water"] = EnvironmentalPreference(
+            setpoint=0.5, tolerance=0.2,
+            min_value=water.min_value, max_value=water.max_value, step=water.step,
+        )
+        temperature = get_factor("temperature")
+        race_config.preferences["temperature"] = EnvironmentalPreference(
+            setpoint=295, tolerance=temperature.default_tolerance,
+            min_value=temperature.min_value, max_value=temperature.max_value,
+            step=temperature.step,
         )
 
         # Create empire with race config
@@ -260,9 +275,9 @@ class TestEmpireRaceConfig:
         assert restored.race_config is not None
         assert restored.race_config.race_id == "test_race"
         assert restored.race_config.race_name == "Test Race"
-        assert restored.race_config.water_ideal == 0.5
-        assert restored.race_config.water_tolerance == 0.2
-        assert restored.race_config.temperature_ideal == 295
+        assert restored.race_config.preferences["water"].setpoint == 0.5
+        assert restored.race_config.preferences["water"].tolerance == 0.2
+        assert restored.race_config.preferences["temperature"].setpoint == 295
 
     def test_empire_race_config_backward_compat(self):
         """Test from_dict handles missing race_config (backward compat)."""

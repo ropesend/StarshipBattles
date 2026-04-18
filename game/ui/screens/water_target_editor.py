@@ -42,7 +42,7 @@ class WaterTargetEditor(UIWindow):
             on_apply_callback: Called with (planet_id, water_target) when Apply clicked.
                 water_target is None when clearing, otherwise a float 0.0-1.0.
             on_close_callback: Called when window is closed.
-            race_config: Optional RaceConfig with water_ideal (0.0 to 1.0).
+            race_config: Optional RaceConfig; reads `preferences["water"].setpoint` (0.0 to 1.0) for the species-ideal default.
         """
         super().__init__(
             rect, manager,
@@ -205,9 +205,11 @@ class WaterTargetEditor(UIWindow):
         if rc is None:
             return
 
-        ideal = getattr(rc, 'water_ideal', None)
-        if ideal is None:
+        # PROJ-283 Phase 4: read setpoint from registry-driven preferences.
+        water_pref = rc.preferences.get("water")
+        if water_pref is None:
             return
+        ideal = water_pref.setpoint
 
         clamped = max(MIN_WATER, min(MAX_WATER, ideal))
         self.slider.set_current_value(clamped)

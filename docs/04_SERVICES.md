@@ -43,6 +43,16 @@ game/strategy/services/
     ship_stats_calculator.py    # DEPRECATED — stat calculation moved to simulation layer
     strategic_ability_scanner.py # Find strategic abilities across spatial scopes
     system_effects_collector.py  # Aggregate system-scope effects for UI display
+
+game/strategy/data/                # Data models (not services, but consumed via service-like helpers)
+    environmental_preference.py # PROJ-283: EnvironmentalPreference dataclass
+    habitability_factors.py     # PROJ-283: HabitabilityFactor + FACTOR_REGISTRY
+    race_config.py              # PROJ-283: RaceConfig.preferences, base_reproduction_rate, base_happiness
+    race_point_budget.py        # PROJ-283: RacePointBudget.calculate_preferences_cost / calculate_reproduction_cost
+    homeworld_presets.py        # PROJ-283: apply_preset_to_config (registry-native partial overrides)
+
+game/strategy/formulas/
+    habitability.py             # PROJ-283: registry-driven calculate_habitability + score_planet_for_race
 ```
 
 ---
@@ -924,6 +934,33 @@ for ability_data in get_ability_list(abilities, 'ResourceConsumption'):
 if has_warp_capability(ship_instance):
     print("Ship can use warp points")
 ```
+
+---
+
+### Race Habitability & Point-Buy (PROJ-283)
+
+**Locations:**
+- `game/strategy/data/environmental_preference.py` — `EnvironmentalPreference(setpoint, tolerance, min_value, max_value, step)` dataclass
+- `game/strategy/data/habitability_factors.py` — `HabitabilityFactor` dataclass + module-level `FACTOR_REGISTRY: Dict[str, HabitabilityFactor]` (7 scalar factors + 10 gas factors); `get_factor(id)`, `iter_scalar_factors()`, `iter_gas_factors()` lookup helpers
+- `game/strategy/data/race_config.py` — `RaceConfig.preferences: Dict[str, EnvironmentalPreference]` (registry-keyed, backfilled from `FACTOR_REGISTRY` defaults via `__post_init__`); `RaceConfig.base_reproduction_rate: float = 0.03`; `RaceConfig.base_happiness: float = 0.5`
+- `game/strategy/data/race_point_budget.py` — `RacePointBudget` instance methods: `calculate_aptitude_cost`, `calculate_preferences_cost`, `calculate_reproduction_cost(rate)`, `calculate_total_cost`, `get_remaining_points`, `is_within_budget`, `get_aptitude_breakdown`, `get_breakdown`
+- `game/strategy/data/homeworld_presets.py` — `apply_preset_to_config(preset, race_config)` overlays a preset's partial `preferences` dict onto a race
+- `game/strategy/formulas/habitability.py` — `calculate_habitability(planet, race_config) -> float` iterates `FACTOR_REGISTRY` and combines per-factor scores via weighted geometric mean; `score_planet_for_race(planet, race_config)` is a thin wrapper
+
+**Pattern (PROJ-283):** "Add an axis with one data edit." Adding a `HabitabilityFactor` registration to `FACTOR_REGISTRY` automatically surfaces the factor in `calculate_habitability`, `RacePointBudget`, the race-setup UI panel, the homeworld preset translation, and the population engine — no code changes elsewhere required. Per-factor weights tune the importance of each axis in the weighted-geometric-mean combiner. The `(setpoint, tolerance)` UX contract is universal: setpoint is free, tolerance deviation from the registry default costs `_exponential_cost(steps) = 2^steps - 1`.
+
+**Cost methods:**
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `calculate_aptitude_cost(rc)` | int | Sum across the 7 paid aptitudes (Phase 3 dropped `happiness` and `population_growth` — both replaced by `base_*` floats on RaceConfig). |
+| `calculate_preferences_cost(rc)` | int | Sum of per-axis tolerance-deviation costs across all 17 factors. |
+| `calculate_reproduction_cost(rate)` | int | Exponential cost above default 3%; linear refund (2 pts per 1% step) below default down to 0.5% floor. Linear-in-rate math (not integer-step) so the floor returns -5 exactly. |
+| `calculate_total_cost(rc)` | int | Sum of the three above. |
+| `get_remaining_points(rc)` | int | `total_budget − total_cost`. |
+| `get_breakdown(rc)` | Dict[str, int] | Flat per-source breakdown: `aptitude:strength`, `pref:gravity`, `reproduction`, etc. Sum equals `calculate_total_cost(rc)`. |
+
+See [docs/systems/strategy_layer.md §7](systems/strategy_layer.md#7-race-preferences--habitability-proj-283) for the full architecture, weight table, adding-a-factor recipe, and the legacy → new field migration table.
 
 ---
 

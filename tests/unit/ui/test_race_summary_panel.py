@@ -13,94 +13,77 @@ from unittest.mock import MagicMock, patch
 # Fixtures
 # =============================================================================
 
+# PROJ-283 Phase 4: switched from MagicMock to real RaceConfig instances —
+# the summary panel formatters now read from `race_config.preferences` (a
+# typed dict of `EnvironmentalPreference`), and MagicMock can't impersonate
+# the dict subscript + attribute access cleanly. Real RaceConfig is light
+# enough to construct in a fixture, and `__post_init__` backfills any
+# preferences not explicitly overridden.
+
+def _override_pref(rc, factor_id, *, setpoint=None, tolerance=None):
+    from game.strategy.data.environmental_preference import EnvironmentalPreference
+    from game.strategy.data.habitability_factors import get_factor
+    f = get_factor(factor_id)
+    rc.preferences[factor_id] = EnvironmentalPreference(
+        setpoint=setpoint if setpoint is not None else f.default_setpoint,
+        tolerance=tolerance if tolerance is not None else f.default_tolerance,
+        min_value=f.min_value, max_value=f.max_value, step=f.step,
+    )
+
+
 @pytest.fixture
 def mock_race_config():
-    """Create a mock RaceConfig with all properties for summary display.
+    """Real RaceConfig populated for summary-display tests.
 
-    PROJ-66 Phase 6: Added identity, water, and aptitude fields.
+    Sets two atmospheric setpoints (O2, N2) so atmosphere-summary tests
+    have something non-zero to render.
     """
-    config = MagicMock()
-    config.name = "Test Race"
-    config.flag_id = "flag_01"
-    config.portrait_id = "portrait_01"
-    config.theme_id = "Atlantians"
-    config.gravity_ideal = 1.0
-    config.gravity_tolerance = 0.3
-    config.temperature_ideal = 293.0
-    config.temperature_tolerance = 50.0
-    config.radiation_tolerance = 0.0
-    config.atmosphere_preferences = {
-        "Oxygen": 20.0,
-        "Nitrogen": -10.0,
-        "Carbon Dioxide": 0.0,
-        "Methane": 0.0,
-        "Hydrogen": 0.0,
-        "Helium": 0.0,
-    }
-    config.bio_description = "Test biological description"
-    config.socio_description = "Test sociological description"
-    # PROJ-66: New identity fields
-    config.faction_name = "Test Empire"
-    config.race_name = "Testarians"
-    config.government_type = "Empire"
-    config.government_organization = "Centralized"
-    config.physical_type = "Humanoid"
-    config.society_type = "Collectivist"
-    config.homeworld_type = "CONTINENTAL"
-    config.water_ideal = 50.0
-    config.water_tolerance = 30.0
-    # Aptitude values
-    config.aptitude_strength = 6
-    config.aptitude_intelligence = 7
-    config.aptitude_constitution = 5
-    config.aptitude_dexterity = 5
-    config.aptitude_tolerance_other_species = 5
-    config.aptitude_cooperation = 5
-    config.aptitude_happiness = 5
-    config.aptitude_population_growth = 5
-    config.aptitude_conflict_tolerance = 5
+    from game.strategy.data.race_config import RaceConfig
+    config = RaceConfig(
+        name="Test Race",
+        flag_id="flag_01",
+        portrait_id="portrait_01",
+        theme_id="Atlantians",
+        faction_name="Test Empire",
+        race_name="Testarians",
+        government_type="Empire",
+        government_organization="Centralized",
+        physical_type="Humanoid",
+        society_type="Collectivist",
+        homeworld_type="CONTINENTAL",
+        bio_description="Test biological description",
+        socio_description="Test sociological description",
+    )
+    _override_pref(config, "gravity", setpoint=9.81, tolerance=0.3 * 9.81)
+    _override_pref(config, "temperature", setpoint=293.0, tolerance=50.0)
+    _override_pref(config, "radiation", setpoint=0.0, tolerance=10.0)
+    _override_pref(config, "water", setpoint=0.5, tolerance=0.3)
+    # Atmosphere setpoints — keep the gases that the legacy fixture exercised
+    _override_pref(config, "gas.O2", setpoint=20000.0)
+    _override_pref(config, "gas.N2", setpoint=10000.0)
     return config
 
 
 @pytest.fixture
 def mock_race_config_empty():
-    """Create a mock RaceConfig with no values set (new race).
-
-    PROJ-66 Phase 6: Added identity, water, and aptitude fields.
-    """
-    config = MagicMock()
-    config.name = None
-    config.flag_id = None
-    config.portrait_id = None
-    config.theme_id = None
-    config.gravity_ideal = 1.0
-    config.gravity_tolerance = 0.3
-    config.temperature_ideal = 293.0
-    config.temperature_tolerance = 50.0
-    config.radiation_tolerance = 0.0
-    config.atmosphere_preferences = {}
-    config.bio_description = ""
-    config.socio_description = ""
-    # PROJ-66: New identity fields
-    config.faction_name = ""
-    config.race_name = ""
-    config.government_type = ""
-    config.government_organization = ""
-    config.physical_type = ""
-    config.society_type = ""
-    config.homeworld_type = ""
-    config.water_ideal = 50.0
-    config.water_tolerance = 30.0
-    # Aptitude defaults
-    config.aptitude_strength = 5
-    config.aptitude_intelligence = 5
-    config.aptitude_constitution = 5
-    config.aptitude_dexterity = 5
-    config.aptitude_tolerance_other_species = 5
-    config.aptitude_cooperation = 5
-    config.aptitude_happiness = 5
-    config.aptitude_population_growth = 5
-    config.aptitude_conflict_tolerance = 5
+    """Real RaceConfig with no atmosphere setpoints — exercises the
+    'all neutral' atmosphere-summary branch."""
+    from game.strategy.data.race_config import RaceConfig
+    config = RaceConfig(
+        name="",
+        # Empty identity fields exercise placeholder rendering. `validate()`
+        # would reject this config, but the summary-panel formatters never
+        # call validate — they just read attributes.
+        flag_id="",
+        portrait_id="",
+        theme_id="",
+    )
+    # Gas setpoints all zero except registry defaults (O2=21k, N2=79k);
+    # explicitly zero them so the atmosphere summary formatter falls
+    # through to "All neutral".
+    for fid in list(config.preferences.keys()):
+        if fid.startswith("gas."):
+            _override_pref(config, fid, setpoint=0.0)
     return config
 
 
@@ -189,47 +172,25 @@ class TestSummaryDataFormatting:
             assert "50" in result
             assert "K" in result
 
-    def test_format_radiation_summary_neutral(self, mock_race_config):
-        """Radiation summary shows neutral for value 0."""
+    # PROJ-283 Phase 4: Sensitive/Resistant labels were derived from the
+    # legacy `radiation_tolerance` (signed -100..+100). The new model
+    # stores `pref.tolerance` (unsigned σ) on a `radiation` factor —
+    # there's no direction to label. The summary now just shows the
+    # numeric tolerance; the sensitive/resistant test surface goes away.
+
+    def test_format_radiation_summary_shows_tolerance(self, mock_race_config):
+        """Radiation summary renders the radiation tolerance value."""
         from game.ui.panels.race_summary_panel import RaceSummaryPanel
 
         with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
             panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
             panel.race_config = mock_race_config
-            mock_race_config.radiation_tolerance = 0.0
-
             result = panel._format_radiation_summary()
-
-            assert "Neutral" in result
-
-    def test_format_radiation_summary_sensitive(self, mock_race_config):
-        """Radiation summary shows Sensitive for values below -50."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.radiation_tolerance = -75.0
-
-            result = panel._format_radiation_summary()
-
-            assert "Sensitive" in result
-
-    def test_format_radiation_summary_resistant(self, mock_race_config):
-        """Radiation summary shows Resistant for values above 50."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.radiation_tolerance = 75.0
-
-            result = panel._format_radiation_summary()
-
-            assert "Resistant" in result
+            assert "Radiation" in result
 
     def test_format_atmosphere_summary_with_preferences(self, mock_race_config):
-        """Atmosphere summary shows non-zero gas preferences."""
+        """Atmosphere summary lists gas factors with non-zero setpoints
+        (formatted by chemical formula + kPa)."""
         from game.ui.panels.race_summary_panel import RaceSummaryPanel
 
         with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
@@ -238,9 +199,10 @@ class TestSummaryDataFormatting:
 
             result = panel._format_atmosphere_summary()
 
-            # Should mention gases with non-zero values
-            assert "Oxygen" in result or "+20" in result
-            assert "Nitrogen" in result or "-10" in result
+            # PROJ-283 Phase 4: chemical-formula labels + kPa.
+            assert "O2" in result
+            assert "N2" in result
+            assert "kPa" in result
 
     def test_format_atmosphere_summary_all_neutral(self, mock_race_config_empty):
         """Atmosphere summary shows neutral when all zero."""

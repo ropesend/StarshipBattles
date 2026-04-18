@@ -1,596 +1,310 @@
-"""
-Race Environment Panel - Environmental preferences configuration for races.
+"""Race Environment Panel — registry-driven UI (PROJ-283 Phase 5).
 
-PROJ-12 Phase 4: Extracted from RaceSetupScreen to decompose the god class.
-PROJ-66 Phase 4: Added homeworld dropdown, water sliders, and preset auto-populate.
+Iterates `FACTOR_REGISTRY` and renders one `PreferenceRow` per factor:
+    * 7 scalar rows (gravity / temperature / water / pressure / tectonic /
+      magnetic / radiation) under a "Surface" section
+    * 10 gas rows under an "Atmosphere" section
 
-Provides UI controls for configuring:
-- Homeworld type selection with presets
-- Gravity preferences (ideal and tolerance)
-- Temperature preferences (ideal and tolerance)
-- Water preferences (ideal and tolerance)
-- Radiation tolerance
-- Atmosphere gas preferences
+Plus:
+    * Live points-remaining label at the top
+    * Homeworld preset dropdown
+    * `base_reproduction_rate` and `base_happiness` single-slider rows
+
+Adding a new habitability axis requires zero changes to this file —
+adding an entry to `FACTOR_REGISTRY` surfaces a row automatically.
 """
+from __future__ import annotations
+
 import logging
+from typing import Dict, Optional, TYPE_CHECKING
+
 import pygame
-
-logger = logging.getLogger(__name__)
 import pygame_gui
-from typing import Dict, List, Optional, TYPE_CHECKING
+from pygame_gui.elements import UIDropDownMenu, UIHorizontalSlider, UILabel
 
+from game.strategy.data.environmental_preference import EnvironmentalPreference
+from game.strategy.data.habitability_factors import (
+    iter_gas_factors,
+    iter_scalar_factors,
+)
 from game.strategy.data.homeworld_presets import (
-    get_available_homeworld_names,
+    apply_preset_to_config,
     get_preset_for_planet_type,
     get_preset_id_from_name,
     load_homeworld_presets,
 )
 from game.ui.utils import create_section_header
+from game.ui.widgets.preference_row import PreferenceRow
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
 
+# Layout constants
+_ROW_HEIGHT = 28
+_ROW_GAP = 4
+_SECTION_GAP = 12
+_PADDING = 10
+
+# Reproduction-rate slider bounds (mirror `RacePointBudget` floor/cap).
+_REPRO_MIN = 0.005   # 0.5% (floor)
+_REPRO_MAX = 0.10    # 10%
+
+# Happiness seed slider bounds.
+_HAPPINESS_MIN = 0.0
+_HAPPINESS_MAX = 1.0
+
+
 class RaceEnvironmentPanel:
-    """
-    Panel for configuring race environmental preferences.
-
-    Creates and manages sliders for gravity, temperature, radiation,
-    and atmosphere preferences.
-    """
-
-    # Default atmosphere gases
-    DEFAULT_GASES = [
-        "Oxygen",
-        "Nitrogen",
-        "Carbon Dioxide",
-        "Methane",
-        "Hydrogen",
-        "Helium",
-    ]
+    """Registry-driven environment panel."""
 
     def __init__(
         self,
         panel: pygame_gui.elements.UIPanel,
         manager: pygame_gui.UIManager,
-        race_config: 'RaceConfig'
-    ):
-        """
-        Create environment configuration panel content.
-
-        Args:
-            panel: Parent UIPanel to add controls to
-            manager: pygame_gui UIManager
-            race_config: RaceConfig to read/write values from/to
-        """
+        race_config: "RaceConfig",
+    ) -> None:
         self.panel = panel
         self.ui_manager = manager
         self.race_config = race_config
 
-        # Slider references
-        self.gravity_ideal_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.gravity_tolerance_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.gravity_ideal_label: Optional[pygame_gui.elements.UILabel] = None
-        self.gravity_tolerance_label: Optional[pygame_gui.elements.UILabel] = None
+        # Widgets populated in `_create_content`
+        self.points_label: Optional[UILabel] = None
+        self.homeworld_dropdown: Optional[UIDropDownMenu] = None
+        self.reproduction_slider: Optional[UIHorizontalSlider] = None
+        self.reproduction_label: Optional[UILabel] = None
+        self.happiness_slider: Optional[UIHorizontalSlider] = None
+        self.happiness_label: Optional[UILabel] = None
 
-        self.temp_ideal_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.temp_tolerance_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.temp_ideal_label: Optional[pygame_gui.elements.UILabel] = None
-        self.temp_tolerance_label: Optional[pygame_gui.elements.UILabel] = None
-
-        self.radiation_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.radiation_label: Optional[pygame_gui.elements.UILabel] = None
-
-        self.water_ideal_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.water_tolerance_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
-        self.water_ideal_label: Optional[pygame_gui.elements.UILabel] = None
-        self.water_tolerance_label: Optional[pygame_gui.elements.UILabel] = None
-
-        self.homeworld_dropdown: Optional[pygame_gui.elements.UIDropDownMenu] = None
-
-        self.atmosphere_sliders: Dict[str, pygame_gui.elements.UIHorizontalSlider] = {}
-        self.atmosphere_labels: Dict[str, pygame_gui.elements.UILabel] = {}
-
-        self.points_label: Optional[pygame_gui.elements.UILabel] = None
+        # `factor_id -> PreferenceRow`. Order preserved by `FACTOR_REGISTRY`.
+        self.preference_rows: Dict[str, PreferenceRow] = {}
 
         self._create_content()
 
-    def _create_content(self):
-        """Create all panel content."""
-        panel_width = self.panel.get_relative_rect().width - 20
-        y = 5
+    # ------------------------------------------------------------------ #
+    # Layout                                                              #
+    # ------------------------------------------------------------------ #
 
-        # Points display (BUG-58)
-        self.points_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, panel_width, 25),
+    def _create_content(self) -> None:
+        panel_rect = self.panel.get_relative_rect()
+        panel_width = panel_rect.width - 2 * _PADDING
+        y = _PADDING
+
+        y = self._create_points_label(y, panel_width)
+        y += _ROW_GAP
+        y = self._create_homeworld_dropdown(y, panel_width)
+        y += _SECTION_GAP
+
+        y = self._create_repro_and_happiness(y, panel_width)
+        y += _SECTION_GAP
+
+        # Surface section
+        create_section_header(
+            "Surface", y, panel_width, self.ui_manager, self.panel,
+            height=_ROW_HEIGHT,
+        )
+        y += _ROW_HEIGHT + _ROW_GAP
+        y = self._create_factor_rows(iter_scalar_factors(), y, panel_width)
+        y += _SECTION_GAP
+
+        # Atmosphere section
+        create_section_header(
+            "Atmosphere", y, panel_width, self.ui_manager, self.panel,
+            height=_ROW_HEIGHT,
+        )
+        y += _ROW_HEIGHT + _ROW_GAP
+        y = self._create_factor_rows(iter_gas_factors(), y, panel_width)
+
+    def _create_points_label(self, y: int, width: int) -> int:
+        self.points_label = UILabel(
+            relative_rect=pygame.Rect(_PADDING, y, width, _ROW_HEIGHT),
             text="",
             manager=self.ui_manager,
             container=self.panel,
-            object_id="#points_display"
+            object_id="#points_display",
         )
         self._update_points_display()
-        y += 30
+        return y + _ROW_HEIGHT
 
-        # Section 0: Homeworld Type (preset selector)
-        y = self._create_homeworld_section(y, panel_width)
-        y += 15
-
-        # Section 1: Gravity
-        y = self._create_gravity_section(y, panel_width)
-        y += 15
-
-        # Section 2: Temperature
-        y = self._create_temperature_section(y, panel_width)
-        y += 15
-
-        # Section 3: Radiation Tolerance
-        y = self._create_radiation_section(y, panel_width)
-        y += 15
-
-        # Section 4: Water Preferences
-        y = self._create_water_section(y, panel_width)
-        y += 15
-
-        # Section 5: Atmosphere Preferences
-        y = self._create_atmosphere_section(y, panel_width)
-
-    def _create_homeworld_section(self, y: int, width: int) -> int:
-        """Create homeworld type dropdown for preset selection."""
-        create_section_header("Homeworld Type:", y, 200, self.ui_manager, self.panel)
-        y += 28
-
-        # Build dropdown options: all planet types + Custom
+    def _create_homeworld_dropdown(self, y: int, width: int) -> int:
         presets = load_homeworld_presets()
         options = [preset["name"] for preset in presets.values()]
         options.append("(Custom)")
-
-        # Determine starting selection
         starting_option = "(Custom)"
         if self.race_config.homeworld_type:
             preset = presets.get(self.race_config.homeworld_type)
             if preset:
                 starting_option = preset["name"]
-
-        self.homeworld_dropdown = pygame_gui.elements.UIDropDownMenu(
+        self.homeworld_dropdown = UIDropDownMenu(
             options_list=options,
             starting_option=starting_option,
-            relative_rect=pygame.Rect(20, y, width - 30, 28),
+            relative_rect=pygame.Rect(_PADDING, y, width, _ROW_HEIGHT),
             manager=self.ui_manager,
-            container=self.panel
+            container=self.panel,
         )
-        y += 32
+        return y + _ROW_HEIGHT
 
+    def _create_repro_and_happiness(self, y: int, width: int) -> int:
+        # Reproduction-rate row
+        UILabel(
+            relative_rect=pygame.Rect(_PADDING, y, 200, _ROW_HEIGHT),
+            text="Base reproduction rate:",
+            manager=self.ui_manager,
+            container=self.panel,
+        )
+        slider_w = max(120, width - 360)
+        self.reproduction_slider = UIHorizontalSlider(
+            relative_rect=pygame.Rect(_PADDING + 210, y, slider_w, _ROW_HEIGHT - 4),
+            start_value=self.race_config.base_reproduction_rate,
+            value_range=(_REPRO_MIN, _REPRO_MAX),
+            manager=self.ui_manager,
+            container=self.panel,
+            click_increment=0.01,
+        )
+        self.reproduction_label = UILabel(
+            relative_rect=pygame.Rect(_PADDING + 210 + slider_w + 5, y, 80, _ROW_HEIGHT),
+            text=self._format_reproduction(self.race_config.base_reproduction_rate),
+            manager=self.ui_manager,
+            container=self.panel,
+        )
+        y += _ROW_HEIGHT + _ROW_GAP
+
+        # Happiness row
+        UILabel(
+            relative_rect=pygame.Rect(_PADDING, y, 200, _ROW_HEIGHT),
+            text="Base happiness (seed):",
+            manager=self.ui_manager,
+            container=self.panel,
+        )
+        self.happiness_slider = UIHorizontalSlider(
+            relative_rect=pygame.Rect(_PADDING + 210, y, slider_w, _ROW_HEIGHT - 4),
+            start_value=self.race_config.base_happiness,
+            value_range=(_HAPPINESS_MIN, _HAPPINESS_MAX),
+            manager=self.ui_manager,
+            container=self.panel,
+            click_increment=0.05,
+        )
+        self.happiness_label = UILabel(
+            relative_rect=pygame.Rect(_PADDING + 210 + slider_w + 5, y, 80, _ROW_HEIGHT),
+            text=f"{self.race_config.base_happiness:.2f}",
+            manager=self.ui_manager,
+            container=self.panel,
+        )
+        y += _ROW_HEIGHT
         return y
 
-    def _create_gravity_section(self, y: int, width: int) -> int:
-        """Create gravity preference controls."""
-        create_section_header("Gravity Preferences:", y, 200, self.ui_manager, self.panel)
-        y += 28
-
-        # Ideal gravity: 0.1 - 3.0 g
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Ideal (g):",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.gravity_ideal_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.gravity_ideal,
-            value_range=(0.1, 3.0),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=0.1
-        )
-        self.gravity_ideal_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"{self.race_config.gravity_ideal:.1f}",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        # Tolerance: 0.0 - 1.0 g
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.gravity_tolerance_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.gravity_tolerance,
-            value_range=(0.0, 1.0),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=0.05
-        )
-        self.gravity_tolerance_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"±{self.race_config.gravity_tolerance:.2f}",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        return y
-
-    def _create_temperature_section(self, y: int, width: int) -> int:
-        """Create temperature preference controls."""
-        create_section_header("Temperature Preferences:", y, 200, self.ui_manager, self.panel)
-        y += 28
-
-        # Ideal temperature: 200 - 400 K
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Ideal (K):",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.temp_ideal_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.temperature_ideal,
-            value_range=(200, 400),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=5
-        )
-        self.temp_ideal_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"{self.race_config.temperature_ideal:.0f}",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        # Tolerance: 0 - 100 K
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.temp_tolerance_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.temperature_tolerance,
-            value_range=(0, 100),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=5
-        )
-        self.temp_tolerance_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"±{self.race_config.temperature_tolerance:.0f}",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        return y
-
-    def _create_radiation_section(self, y: int, width: int) -> int:
-        """Create radiation tolerance control."""
-        create_section_header("Radiation Tolerance:", y, 200, self.ui_manager, self.panel)
-        y += 28
-
-        # Radiation: -100 (sensitive) to +100 (resistant)
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.radiation_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.radiation_tolerance,
-            value_range=(-100, 100),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=5
-        )
-        self.radiation_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=self._format_radiation(self.race_config.radiation_tolerance),
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        return y
-
-    def _create_water_section(self, y: int, width: int) -> int:
-        """Create water preference controls."""
-        create_section_header("Water Preferences:", y, 200, self.ui_manager, self.panel)
-        y += 28
-
-        # Ideal water: 0.0 - 1.0
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Ideal:",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.water_ideal_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.water_ideal,
-            value_range=(0.0, 1.0),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=0.05
-        )
-        self.water_ideal_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=self._format_water(self.race_config.water_ideal),
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        # Tolerance: 0.0 - 1.0
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        self.water_tolerance_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.water_tolerance,
-            value_range=(0.0, 1.0),
-            manager=self.ui_manager,
-            container=self.panel,
-            click_increment=0.05
-        )
-        self.water_tolerance_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=self._format_water_tolerance(self.race_config.water_tolerance),
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 26
-
-        return y
-
-    def _create_atmosphere_section(self, y: int, width: int) -> int:
-        """Create atmosphere preference controls."""
-        create_section_header(
-            "Atmosphere Preferences (-100 toxic to +100 beneficial):",
-            y, width, self.ui_manager, self.panel
-        )
-        y += 28
-
-        # Create two columns of atmosphere sliders
-        gases = list(self.race_config.atmosphere_preferences.keys())
-        col_width = (width - 30) // 2
-
-        for i, gas in enumerate(gases):
-            col = i % 2
-            row = i // 2
-            x_offset = 10 + col * (col_width + 10)
-            y_pos = y + row * 28
-
-            # Gas label
-            pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(x_offset, y_pos, 110, 22),
-                text=f"{gas}:",
-                manager=self.ui_manager,
-                container=self.panel
-            )
-
-            # Slider: -100 to +100
-            slider = pygame_gui.elements.UIHorizontalSlider(
-                relative_rect=pygame.Rect(x_offset + 115, y_pos, col_width - 175, 22),
-                start_value=self.race_config.atmosphere_preferences.get(gas, 0),
-                value_range=(-100, 100),
+    def _create_factor_rows(self, factors_iter, y: int, width: int) -> int:
+        for factor in factors_iter:
+            preference = self.race_config.preferences[factor.id]
+            row = PreferenceRow(
+                factor=factor,
+                preference=preference,
                 manager=self.ui_manager,
                 container=self.panel,
-                click_increment=5
+                rect=pygame.Rect(_PADDING, y, width, _ROW_HEIGHT),
+                on_change=self._on_row_change,
             )
-            self.atmosphere_sliders[gas] = slider
-
-            # Value label
-            value = self.race_config.atmosphere_preferences.get(gas, 0)
-            label = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(x_offset + col_width - 55, y_pos, 50, 22),
-                text=self._format_atmosphere(value),
-                manager=self.ui_manager,
-                container=self.panel
-            )
-            self.atmosphere_labels[gas] = label
-
-        # Calculate final y position
-        rows = (len(gases) + 1) // 2
-        y += rows * 28
-
+            self.preference_rows[factor.id] = row
+            y += _ROW_HEIGHT + _ROW_GAP
         return y
 
-    def _format_radiation(self, value: float) -> str:
-        """Format radiation tolerance value for display."""
-        if value < -50:
-            return f"{value:.0f} Sens"
-        elif value > 50:
-            return f"+{value:.0f} Res"
-        elif value >= 0:
-            return f"+{value:.0f}"
-        else:
-            return f"{value:.0f}"
+    # ------------------------------------------------------------------ #
+    # Slider read / write                                                 #
+    # ------------------------------------------------------------------ #
 
-    def _format_atmosphere(self, value: float) -> str:
-        """Format atmosphere preference value for display."""
-        if value >= 0:
-            return f"+{value:.0f}"
-        else:
-            return f"{value:.0f}"
+    def update_config(self) -> None:
+        """Read every row + repro/happiness slider into `race_config`."""
+        for factor_id, row in self.preference_rows.items():
+            self.race_config.preferences[factor_id] = row.current_preference()
+        if self.reproduction_slider is not None:
+            self.race_config.base_reproduction_rate = (
+                self.reproduction_slider.get_current_value()
+            )
+        if self.happiness_slider is not None:
+            self.race_config.base_happiness = (
+                self.happiness_slider.get_current_value()
+            )
+        self._update_points_display()
 
-    def _format_water(self, value: float) -> str:
-        """Format water value as percentage."""
-        return f"{value * 100:.0f}%"
+    def set_from_config(self) -> None:
+        """Push every preference + repro/happiness back into the UI."""
+        for factor_id, row in self.preference_rows.items():
+            row.set_preference(self.race_config.preferences[factor_id])
+        if self.reproduction_slider is not None:
+            self.reproduction_slider.set_current_value(
+                self.race_config.base_reproduction_rate
+            )
+        if self.reproduction_label is not None:
+            self.reproduction_label.set_text(
+                self._format_reproduction(self.race_config.base_reproduction_rate)
+            )
+        if self.happiness_slider is not None:
+            self.happiness_slider.set_current_value(self.race_config.base_happiness)
+        if self.happiness_label is not None:
+            self.happiness_label.set_text(f"{self.race_config.base_happiness:.2f}")
+        self._update_points_display()
 
-    def _format_water_tolerance(self, value: float) -> str:
-        """Format water tolerance value as ± percentage."""
-        return f"±{value * 100:.0f}%"
+    def _on_row_change(
+        self, factor_id: str, new_pref: EnvironmentalPreference,
+    ) -> None:
+        """Callback fired by `PreferenceRow.refresh_from_sliders`. Writes
+        the row's reported preference back into `race_config` and refreshes
+        the points label."""
+        self.race_config.preferences[factor_id] = new_pref
+        self._update_points_display()
 
-    def _update_points_display(self):
-        """Update the racial points display label (BUG-58)."""
-        if not getattr(self, 'points_label', None):
+    # ------------------------------------------------------------------ #
+    # Homeworld presets                                                   #
+    # ------------------------------------------------------------------ #
+
+    def apply_homeworld_preset(self, planet_type_name: str) -> None:
+        """Apply a preset (or '(Custom)' = no-op) to the race config and
+        refresh the relevant rows."""
+        if planet_type_name == "(Custom)":
+            return
+        preset = get_preset_for_planet_type(planet_type_name)
+        if preset is None:
+            return
+        apply_preset_to_config(preset, self.race_config)
+        self.set_from_config()
+
+    def handle_dropdown_change(self, event) -> bool:
+        """Wire dropdown change events through to `apply_homeworld_preset`.
+        Returns True if this panel handled the event."""
+        if (
+            self.homeworld_dropdown is not None
+            and getattr(event, "ui_element", None) is self.homeworld_dropdown
+        ):
+            selected = self.homeworld_dropdown.selected_option
+            if isinstance(selected, tuple):
+                selected = selected[0]
+            preset_id = get_preset_id_from_name(selected)
+            self.apply_homeworld_preset(preset_id if preset_id else selected)
+            return True
+        return False
+
+    # ------------------------------------------------------------------ #
+    # Helpers                                                             #
+    # ------------------------------------------------------------------ #
+
+    def _update_points_display(self) -> None:
+        if self.points_label is None:
             return
         try:
             from game.strategy.data.race_point_budget import RacePointBudget
             budget = RacePointBudget()
             remaining = budget.get_remaining_points(self.race_config)
             total = budget.total_budget
-            tolerance_cost = budget.calculate_tolerance_cost(self.race_config)
+            env_cost = budget.calculate_preferences_cost(self.race_config)
             self.points_label.set_text(
-                f"Points: {remaining} / {total} remaining  |  Environment cost: {tolerance_cost}"
+                f"Points: {remaining} / {total} remaining  |  Environment cost: {env_cost}"
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning("Failed to update points display: %s", e)
             self.points_label.set_text("")
 
-    def update_config(self):
-        """Update race_config from slider values."""
-        if self.gravity_ideal_slider:
-            self.race_config.gravity_ideal = self.gravity_ideal_slider.get_current_value()
-        if self.gravity_tolerance_slider:
-            self.race_config.gravity_tolerance = self.gravity_tolerance_slider.get_current_value()
-        if self.temp_ideal_slider:
-            self.race_config.temperature_ideal = self.temp_ideal_slider.get_current_value()
-        if self.temp_tolerance_slider:
-            self.race_config.temperature_tolerance = self.temp_tolerance_slider.get_current_value()
-        if self.radiation_slider:
-            self.race_config.radiation_tolerance = self.radiation_slider.get_current_value()
-        if self.water_ideal_slider:
-            self.race_config.water_ideal = self.water_ideal_slider.get_current_value()
-        if self.water_tolerance_slider:
-            self.race_config.water_tolerance = self.water_tolerance_slider.get_current_value()
-
-        for gas, slider in self.atmosphere_sliders.items():
-            self.race_config.atmosphere_preferences[gas] = slider.get_current_value()
-
-    def update_labels(self):
-        """Update display labels from slider values."""
-        if self.gravity_ideal_slider and self.gravity_ideal_label:
-            val = self.gravity_ideal_slider.get_current_value()
-            self.gravity_ideal_label.set_text(f"{val:.1f}")
-
-        if self.gravity_tolerance_slider and self.gravity_tolerance_label:
-            val = self.gravity_tolerance_slider.get_current_value()
-            self.gravity_tolerance_label.set_text(f"±{val:.2f}")
-
-        if self.temp_ideal_slider and self.temp_ideal_label:
-            val = self.temp_ideal_slider.get_current_value()
-            self.temp_ideal_label.set_text(f"{val:.0f}")
-
-        if self.temp_tolerance_slider and self.temp_tolerance_label:
-            val = self.temp_tolerance_slider.get_current_value()
-            self.temp_tolerance_label.set_text(f"±{val:.0f}")
-
-        if self.radiation_slider and self.radiation_label:
-            val = self.radiation_slider.get_current_value()
-            self.radiation_label.set_text(self._format_radiation(val))
-
-        if self.water_ideal_slider and self.water_ideal_label:
-            val = self.water_ideal_slider.get_current_value()
-            self.water_ideal_label.set_text(self._format_water(val))
-
-        if self.water_tolerance_slider and self.water_tolerance_label:
-            val = self.water_tolerance_slider.get_current_value()
-            self.water_tolerance_label.set_text(self._format_water_tolerance(val))
-
-        for gas, slider in self.atmosphere_sliders.items():
-            if gas in self.atmosphere_labels:
-                val = slider.get_current_value()
-                self.atmosphere_labels[gas].set_text(self._format_atmosphere(val))
-
-        self._update_points_display()
-
-    def set_from_config(self):
-        """Set slider values from race_config (for loading saved races)."""
-        if self.gravity_ideal_slider:
-            self.gravity_ideal_slider.set_current_value(self.race_config.gravity_ideal)
-        if self.gravity_tolerance_slider:
-            self.gravity_tolerance_slider.set_current_value(self.race_config.gravity_tolerance)
-        if self.temp_ideal_slider:
-            self.temp_ideal_slider.set_current_value(self.race_config.temperature_ideal)
-        if self.temp_tolerance_slider:
-            self.temp_tolerance_slider.set_current_value(self.race_config.temperature_tolerance)
-        if self.radiation_slider:
-            self.radiation_slider.set_current_value(self.race_config.radiation_tolerance)
-        if self.water_ideal_slider:
-            self.water_ideal_slider.set_current_value(self.race_config.water_ideal)
-        if self.water_tolerance_slider:
-            self.water_tolerance_slider.set_current_value(self.race_config.water_tolerance)
-
-        for gas, slider in self.atmosphere_sliders.items():
-            if gas in self.race_config.atmosphere_preferences:
-                slider.set_current_value(self.race_config.atmosphere_preferences[gas])
-
-        self.update_labels()
-
-    def apply_homeworld_preset(self, planet_type_name: str) -> None:
-        """
-        Apply a homeworld preset to all environment sliders.
-
-        Args:
-            planet_type_name: Planet type ID (e.g., "CONTINENTAL") or "(Custom)"
-        """
-        # Custom means leave everything as-is
-        if planet_type_name == "(Custom)":
-            return
-
-        # Get the preset data
-        preset = get_preset_for_planet_type(planet_type_name)
-        if preset is None:
-            return
-
-        # Update race_config
-        self.race_config.homeworld_type = planet_type_name
-
-        # Set all slider values from preset
-        if self.gravity_ideal_slider:
-            self.gravity_ideal_slider.set_current_value(preset["gravity_ideal"])
-        if self.gravity_tolerance_slider:
-            self.gravity_tolerance_slider.set_current_value(preset["gravity_tolerance"])
-        if self.temp_ideal_slider:
-            self.temp_ideal_slider.set_current_value(preset["temperature_ideal"])
-        if self.temp_tolerance_slider:
-            self.temp_tolerance_slider.set_current_value(preset["temperature_tolerance"])
-        if self.water_ideal_slider:
-            self.water_ideal_slider.set_current_value(preset["water_ideal"])
-        if self.water_tolerance_slider:
-            self.water_tolerance_slider.set_current_value(preset["water_tolerance"])
-        if self.radiation_slider:
-            self.radiation_slider.set_current_value(preset["radiation_tolerance"])
-
-        # Set atmosphere preferences
-        for gas, value in preset["atmosphere_preferences"].items():
-            if gas in self.atmosphere_sliders:
-                self.atmosphere_sliders[gas].set_current_value(value)
-
-        # Update all labels to reflect new values
-        self.update_labels()
-
-    def handle_dropdown_change(self, event) -> bool:
-        """
-        Handle dropdown change events.
-
-        PROJ-66 Phase 6: Added to support centralized event routing.
-
-        Args:
-            event: pygame_gui UI_DROP_DOWN_MENU_CHANGED event
-
-        Returns:
-            True if event was handled
-        """
-        if hasattr(event, 'ui_element') and event.ui_element == self.homeworld_dropdown:
-            # Get selected option (display name, e.g. "Continental")
-            selected = self.homeworld_dropdown.selected_option
-            if isinstance(selected, tuple):
-                selected = selected[0]
-
-            # Convert display name to preset ID (e.g. "CONTINENTAL")
-            preset_id = get_preset_id_from_name(selected)
-            self.apply_homeworld_preset(preset_id if preset_id else selected)
-            self.update_config()
-            return True
-        return False
+    @staticmethod
+    def _format_reproduction(rate: float) -> str:
+        return f"{rate * 100:.1f}%"

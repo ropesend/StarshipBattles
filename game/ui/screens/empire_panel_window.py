@@ -355,8 +355,10 @@ class EmpirePanelWindow(UIWindow):
             ("Dexterity", race_config.aptitude_dexterity),
             ("Species Tolerance", race_config.aptitude_tolerance_other_species),
             ("Cooperation", race_config.aptitude_cooperation),
-            ("Happiness", race_config.aptitude_happiness),
-            ("Pop Growth", race_config.aptitude_population_growth),
+            # PROJ-283 Phase 4: happiness + pop_growth aptitudes deleted; show
+            # the new derived fields (formatted to match the int aptitude column).
+            ("Happiness", f"{race_config.base_happiness:.2f}"),
+            ("Repro Rate", f"{race_config.base_reproduction_rate*100:.1f}%"),
             ("Conflict Tolerance", race_config.aptitude_conflict_tolerance),
         ]
 
@@ -393,20 +395,23 @@ class EmpirePanelWindow(UIWindow):
         create_section_header("Environmental Preferences", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
-        # Environment fields - RaceConfig dataclass has defaults
-        gravity_ideal = race_config.gravity_ideal
-        gravity_tol = race_config.gravity_tolerance
-        temp_ideal = race_config.temperature_ideal
-        temp_tol = race_config.temperature_tolerance
-        water_ideal = race_config.water_ideal
-        water_tol = race_config.water_tolerance
-        radiation = race_config.radiation_tolerance
+        # PROJ-283 Phase 4: env summaries now read from `race_config.preferences`
+        # (the legacy gravity_ideal/_tolerance/etc. fields are gone).
+        prefs = race_config.preferences
+        gravity_pref = prefs.get("gravity")
+        temp_pref = prefs.get("temperature")
+        water_pref = prefs.get("water")
+        rad_pref = prefs.get("radiation")
 
         env_fields = [
-            f"Gravity: {gravity_ideal:.1f}g (+/- {gravity_tol:.1f}g)",
-            f"Temperature: {temp_ideal:.0f}K (+/- {temp_tol:.0f}K)",
-            f"Water: {water_ideal*100:.0f}% (+/- {water_tol*100:.0f}%)",
-            f"Radiation Tolerance: {radiation:.0f}",
+            f"Gravity: {gravity_pref.setpoint/9.81:.1f}g (+/- {gravity_pref.tolerance/9.81:.1f}g)"
+                if gravity_pref else "Gravity: --",
+            f"Temperature: {temp_pref.setpoint:.0f}K (+/- {temp_pref.tolerance:.0f}K)"
+                if temp_pref else "Temperature: --",
+            f"Water: {water_pref.setpoint*100:.0f}% (+/- {water_pref.tolerance*100:.0f}%)"
+                if water_pref else "Water: --",
+            f"Radiation Tolerance: {rad_pref.tolerance:.0f}"
+                if rad_pref else "Radiation Tolerance: --",
         ]
 
         for text in env_fields:

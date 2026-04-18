@@ -64,14 +64,14 @@ class RaceValidator:
         if not race_config.theme_id:
             return ValidationResult.error("Please select a ship theme (Ships tab)")
 
-        # Validate water preferences in range
-        if not (0.0 <= race_config.water_ideal <= 1.0):
-            return ValidationResult.error("Water ideal must be between 0% and 100% (Environment tab)")
+        # PROJ-283 Phase 4: water_ideal/_tolerance fields deleted; water bounds
+        # are enforced by `EnvironmentalPreference.validate()` at construction
+        # time on `race_config.preferences["water"]`. Per-tab range validation
+        # for the new model lives in the Phase 5 UI rebuild.
 
-        if not (0.0 <= race_config.water_tolerance <= 1.0):
-            return ValidationResult.error("Water tolerance must be between 0% and 100% (Environment tab)")
-
-        # Validate aptitudes in range (1-100)
+        # Validate aptitudes in range (1-100). PROJ-283 Phase 4 dropped
+        # `aptitude_happiness` and `aptitude_population_growth` (now expressed
+        # via `base_happiness` and `base_reproduction_rate`).
         aptitude_fields = [
             ("Strength", race_config.aptitude_strength),
             ("Intelligence", race_config.aptitude_intelligence),
@@ -79,8 +79,6 @@ class RaceValidator:
             ("Dexterity", race_config.aptitude_dexterity),
             ("Tolerance of Others", race_config.aptitude_tolerance_other_species),
             ("Cooperation", race_config.aptitude_cooperation),
-            ("Happiness", race_config.aptitude_happiness),
-            ("Population Growth", race_config.aptitude_population_growth),
             ("Conflict Tolerance", race_config.aptitude_conflict_tolerance),
         ]
         for apt_name, apt_value in aptitude_fields:

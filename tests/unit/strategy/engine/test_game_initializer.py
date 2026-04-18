@@ -5,7 +5,7 @@ Tests galaxy initialization and empire scenario setup.
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import patch
 
 from game.core.hex_math import HexCoord
 
@@ -147,25 +147,62 @@ class TestGameInitializer:
         assert empires[0].race_config.race_id == "custom_species"
         assert empires[0].race_config.aptitude_strength == 80
 
+    # PROJ-283 Phase 4: replaced Mock-based race_configs with real
+    # RaceConfig instances built via the test helper. The new
+    # `_adjust_homeworld_to_race` reads `race_config.preferences[<id>].setpoint`
+    # rather than the deleted scalar attributes.
+
+    @staticmethod
+    def _make_race(homeworld_type, gravity_ms2=9.81, temp_k=288.0,
+                   water=0.7, atmosphere_pa=None):
+        from game.strategy.data.race_config import RaceConfig
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.strategy.data.habitability_factors import get_factor
+
+        rc = RaceConfig(
+            name="Test",
+            flag_id="flag_test",
+            portrait_id="portrait_test",
+            theme_id="Federation",
+            homeworld_type=homeworld_type,
+        )
+
+        def _override(factor_id, setpoint):
+            f = get_factor(factor_id)
+            rc.preferences[factor_id] = EnvironmentalPreference(
+                setpoint=setpoint, tolerance=f.default_tolerance,
+                min_value=f.min_value, max_value=f.max_value, step=f.step,
+            )
+
+        _override("gravity", gravity_ms2)
+        _override("temperature", temp_k)
+        _override("water", water)
+        for formula, pa in (atmosphere_pa or {}).items():
+            _override(f"gas.{formula}", pa)
+        return rc
+
+    @staticmethod
+    def _make_test_planet():
+        from game.strategy.data.planet import Planet, PlanetType
+        from game.core.hex_math import HexCoord
+        return Planet(
+            name="Test", location=HexCoord(0, 0), orbit_distance=1,
+            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
+            surface_gravity=9.81, surface_pressure=101325.0,
+            surface_temperature=288.0, surface_water=0.5, tectonic_activity=0.5,
+            magnetic_field=1.0, planet_type=PlanetType.BARREN,
+        )
+
     def test_adjust_homeworld_to_race_sets_planet_type(self):
         """_adjust_homeworld_to_race should set planet type from race config."""
         from game.strategy.engine.game_initializer import GameInitializer
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
+        from game.strategy.data.planet import PlanetType
 
-        planet = Planet(
-            name="Test", location=HexCoord(0, 0), orbit_distance=1,
-            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
-            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
-            surface_water=0.7, tectonic_activity=0.5, magnetic_field=1.0,
-            planet_type=PlanetType.BARREN
+        planet = self._make_test_planet()
+        race_config = self._make_race(
+            homeworld_type="CONTINENTAL",
+            atmosphere_pa={"O2": 21000.0, "N2": 79000.0},
         )
-        race_config = Mock()
-        race_config.homeworld_type = "CONTINENTAL"  # Earth-like
-        race_config.gravity_ideal = 1.0
-        race_config.temperature_ideal = 288.0
-        race_config.water_ideal = 0.7
-        race_config.atmosphere_preferences = {"O2": 1.0, "N2": 0.5}
 
         GameInitializer._adjust_homeworld_to_race(planet, race_config)
 
@@ -174,77 +211,41 @@ class TestGameInitializer:
     def test_adjust_homeworld_to_race_sets_gravity(self):
         """_adjust_homeworld_to_race should set surface gravity."""
         from game.strategy.engine.game_initializer import GameInitializer
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
 
-        planet = Planet(
-            name="Test", location=HexCoord(0, 0), orbit_distance=1,
-            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
-            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
-            surface_water=0.5, tectonic_activity=0.5, magnetic_field=1.0,
-            planet_type=PlanetType.BARREN
-        )
-        race_config = Mock()
-        race_config.homeworld_type = "TERRAN"
-        race_config.gravity_ideal = 1.2  # 1.2g
-        race_config.temperature_ideal = 288.0
-        race_config.water_ideal = 0.5
-        race_config.atmosphere_preferences = {}
+        planet = self._make_test_planet()
+        # 1.2 g = 11.772 m/s²
+        race_config = self._make_race(homeworld_type="CONTINENTAL", gravity_ms2=1.2 * 9.81)
 
         GameInitializer._adjust_homeworld_to_race(planet, race_config)
 
         assert abs(planet.surface_gravity - 1.2 * 9.81) < 0.1
 
     def test_adjust_homeworld_translates_gas_names_to_formulas(self):
-        """_adjust_homeworld_to_race should convert full gas names to chemical formulas (BUG-90)."""
+        """_adjust_homeworld_to_race should populate atmosphere by chemical
+        formula (BUG-90 / PROJ-283: gas factors are keyed by formula in
+        the registry, no display-name translation needed)."""
         from game.strategy.engine.game_initializer import GameInitializer
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
 
-        planet = Planet(
-            name="Test", location=HexCoord(0, 0), orbit_distance=1,
-            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
-            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
-            surface_water=0.7, tectonic_activity=0.5, magnetic_field=1.0,
-            planet_type=PlanetType.BARREN
+        planet = self._make_test_planet()
+        race_config = self._make_race(
+            homeworld_type="CONTINENTAL",
+            atmosphere_pa={"O2": 21000.0, "N2": 79000.0},
         )
-        race_config = Mock()
-        race_config.homeworld_type = "CONTINENTAL"
-        race_config.gravity_ideal = 1.0
-        race_config.temperature_ideal = 288.0
-        race_config.water_ideal = 0.7
-        # Use full gas names as in DEFAULT_ATMOSPHERE_PREFERENCES / homeworld_presets.json
-        race_config.atmosphere_preferences = {"Oxygen": 50.0, "Nitrogen": 30.0}
 
         GameInitializer._adjust_homeworld_to_race(planet, race_config)
 
-        # Atmosphere dict should use chemical formulas, not full names
-        assert "O2" in planet.atmosphere, "Expected 'O2' key, got full name 'Oxygen'"
-        assert "N2" in planet.atmosphere, "Expected 'N2' key, got full name 'Nitrogen'"
-        assert "Oxygen" not in planet.atmosphere, "Full name 'Oxygen' should be translated to 'O2'"
-        assert "Nitrogen" not in planet.atmosphere, "Full name 'Nitrogen' should be translated to 'N2'"
+        assert "O2" in planet.atmosphere
+        assert "N2" in planet.atmosphere
+        assert "Oxygen" not in planet.atmosphere
+        assert "Nitrogen" not in planet.atmosphere
 
     def test_adjust_homeworld_handles_invalid_planet_type(self):
         """_adjust_homeworld_to_race should handle invalid planet type gracefully."""
         from game.strategy.engine.game_initializer import GameInitializer
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
 
-        planet = Planet(
-            name="Test", location=HexCoord(0, 0), orbit_distance=1,
-            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
-            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
-            surface_water=0.5, tectonic_activity=0.5, magnetic_field=1.0,
-            planet_type=PlanetType.BARREN
-        )
+        planet = self._make_test_planet()
         original_type = planet.planet_type
-
-        race_config = Mock()
-        race_config.homeworld_type = "INVALID_TYPE_XYZ"
-        race_config.gravity_ideal = 1.0
-        race_config.temperature_ideal = 288.0
-        race_config.water_ideal = 0.5
-        race_config.atmosphere_preferences = {}
+        race_config = self._make_race(homeworld_type="INVALID_TYPE_XYZ")
 
         # Should not raise, should keep existing type
         GameInitializer._adjust_homeworld_to_race(planet, race_config)
