@@ -19,19 +19,121 @@ Available fixtures:
     - battle_engine_with_ships: BattleEngine with two opposing ships
     - mock_battle_engine: Mock battle engine for unit tests
     - mock_battle_screen: Mock battle screen with engine
+
+PROJ-281 helpers for migrating legacy ``BattleScreen.start(team0, team1)``
+callers to the spec-based path:
+    - make_minimal_spec: build a minimal ``BattleSpec`` from ``{team_id: [Ship, ...]}``
 """
 import os
 import pytest
-from typing import TYPE_CHECKING
+from typing import Dict, List, TYPE_CHECKING
 from unittest.mock import Mock
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.simulation.battle_spec import BattleSpec
+    from game.simulation.entities.ship import Ship
 
 from game.core.paths import Paths
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship
+
+
+# =============================================================================
+# PROJ-281: make_minimal_spec — build a minimal BattleSpec for test callers
+# migrating off the legacy BattleScreen.start(team0, team1) path
+# =============================================================================
+
+def make_minimal_spec(
+    ships_by_team: Dict[int, List["Ship"]],
+    *,
+    seed: int = 0,
+    max_ticks: int = 1000,
+    telemetry_level=None,
+) -> "BattleSpec":
+    """Build a minimal ``BattleSpec`` for unit tests.
+
+    Replaces the legacy ``BattleScreen.start(team0, team1)`` setup shape.
+    Each team gets one TaskForce/Squadron containing all its ships. Ships'
+    current position/angle/velocity are used as-is (the caller is
+    responsible for positioning). No modifiers, no boundary restrictions,
+    no post-battle hook — MINIMAL telemetry by default.
+
+    Args:
+        ships_by_team: {team_id: [Ship, ...]} — typically {0: team0_ships, 1: team1_ships}
+        seed: Random seed (default 0)
+        max_ticks: Duration for the default TickLimitCondition
+        telemetry_level: Optional override. Defaults to ``TelemetryLevel.MINIMAL``
+            — test callers that need per-ship weapon or hit records can
+            pass ``TelemetryLevel.NORMAL`` or ``DETAILED``.
+
+    Returns:
+        A fully-populated ``BattleSpec`` ready for
+        ``BattleController.start_from_spec(spec, ...)`` or
+        ``run_battle(spec, ...)``.
+    """
+    from game.core.math import Vector2
+    from game.simulation.battle_spec import (
+        BattleSpec, EntryVector, ShipSpec,
+        SquadronSpec, TaskForceSpec, TeamSpec, CombatPolicies,
+    )
+    from game.simulation.combat.boundary import UnboundedRegion
+    from game.simulation.combat.formation import FormationShape, FormationSpec
+    from game.simulation.combat.modifier_stack import ModifierStack
+    from game.simulation.combat.telemetry import TelemetryLevel
+    from game.simulation.systems.battle_end_conditions import TickLimitCondition
+
+    if telemetry_level is None:
+        telemetry_level = TelemetryLevel.MINIMAL
+
+    teams = []
+    for team_id in sorted(ships_by_team.keys()):
+        ships = ships_by_team[team_id]
+        ship_specs = tuple(
+            ShipSpec(
+                instance_id=f"test:{team_id}:{i}",
+                design_id=getattr(ship, "design_id", "") or f"test_design_{team_id}_{i}",
+                theme_id=getattr(ship, "theme_id", "") or "Federation",
+                name=getattr(ship, "name", f"TestShip_{team_id}_{i}"),
+                position=Vector2(ship.x, ship.y),
+                angle=ship.angle,
+                velocity=Vector2(ship.velocity) if hasattr(ship.velocity, 'x') else Vector2(0, 0),
+                components=(),
+            )
+            for i, ship in enumerate(ships)
+        )
+        squadron = SquadronSpec(
+            squadron_id=f"test-sq-{team_id}",
+            policies=CombatPolicies(),
+            ships=ship_specs,
+        )
+        task_force = TaskForceSpec(
+            task_force_id=f"test-tf-{team_id}",
+            formation=FormationSpec(
+                shape=FormationShape.LINE_ABREAST,
+                spacing=100.0,
+            ),
+            policies=CombatPolicies(),
+            squadrons=(squadron,),
+        )
+        teams.append(TeamSpec(
+            team_id=team_id,
+            name=f"TestTeam{team_id}",
+            entry_vector=EntryVector(origin=Vector2(0.0, 0.0), facing=0.0),
+            fleet_hierarchy=(task_force,),
+        ))
+
+    return BattleSpec(
+        seed=seed,
+        telemetry_level=telemetry_level,
+        boundary=UnboundedRegion(),
+        end_condition=TickLimitCondition(max_ticks=max_ticks),
+        absolute_max_ticks=max_ticks * 2,
+        teams=tuple(teams),
+        modifier_stack=ModifierStack.empty(),
+        post_battle_hook=None,
+    )
 
 
 # =============================================================================
