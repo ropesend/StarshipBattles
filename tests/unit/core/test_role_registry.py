@@ -317,6 +317,36 @@ class TestRoleRegistryInvalidation:
         reg.add_user_role(Role(id="x", display_name="X", description="x"))
         assert reg.get("x").id == "x"
 
+    def test_reentrant_add_user_role_in_callback_does_not_recurse(self):
+        """Closure audit (PROJ-278): a callback that calls add_user_role
+        should NOT trigger a recursive invalidation firing. The mutation
+        still succeeds; nested invalidation is suppressed."""
+        reg = RoleRegistry(allow_runtime_add=True)
+        outer_calls: List[int] = []
+        inner_calls: List[int] = []
+
+        def outer_callback():
+            outer_calls.append(1)
+            # Recursive add — must succeed but not re-fire callbacks
+            reg.add_user_role(Role(id="inner", display_name="Inner", description="i"))
+
+        def inner_callback():
+            # Would be called twice if recursion guard is broken
+            inner_calls.append(1)
+
+        reg.register_invalidation_callback(outer_callback)
+        reg.register_invalidation_callback(inner_callback)
+
+        reg.add_user_role(Role(id="trigger", display_name="Trigger", description="t"))
+
+        # Outer fires once (top-level add); recursive inner_callback for the
+        # nested add must be suppressed to prevent stack-overflow risk.
+        assert outer_calls == [1]
+        assert inner_calls == [1]
+        # Both roles present — the inner mutation succeeded
+        assert "trigger" in reg
+        assert "inner" in reg
+
     def test_subsequent_callbacks_fire_after_one_raises(self):
         """One bad callback doesn't prevent later callbacks from firing."""
         reg = RoleRegistry(allow_runtime_add=True)
@@ -332,3 +362,50 @@ class TestRoleRegistryInvalidation:
         reg.add_user_role(Role(id="x", display_name="X", description="x"))
 
         assert calls == ["b", "c"]
+
+
+class TestRoleRegistryMalformedJSONLoading:
+    """Closure audit gap (PROJ-278): explicit coverage for malformed
+    role dicts and missing structural keys."""
+
+    def test_missing_id_field_raises_on_load(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"display_name": "X", "description": "x"},  # no id
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(KeyError):
+            reg.load_from_file(path, source_tag="base")
+
+    def test_missing_display_name_field_raises_on_load(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "description": "x"},  # no display_name
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(KeyError):
+            reg.load_from_file(path, source_tag="base")
+
+    def test_missing_description_field_raises_on_load(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "display_name": "X"},  # no description
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(KeyError):
+            reg.load_from_file(path, source_tag="base")
+
+    def test_missing_roles_key_loads_zero_roles_silently(self, tmp_path):
+        """A JSON file without a `roles` key (e.g. comment-only template)
+        loads silently with no roles. This is by-design forward-compat
+        behavior — empty/template files should not error."""
+        path = tmp_path / "no_roles.json"
+        path.write_text('{"_comment": "template — no roles yet"}', encoding="utf-8")
+        reg = RoleRegistry(allow_runtime_add=True)
+
+        reg.load_from_file(path, source_tag="base")  # does not raise
+
+        assert reg.all() == []
+
+    def test_empty_roles_array_loads_zero_roles(self, tmp_path):
+        path = _write_roles_json(tmp_path, [])
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.load_from_file(path, source_tag="base")
+        assert reg.all() == []

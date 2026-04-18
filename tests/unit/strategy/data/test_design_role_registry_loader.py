@@ -4,8 +4,6 @@ accessor + layered loading for the gameplay design_role registry (PROJ-278).
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -149,3 +147,104 @@ class TestLayeredLoading:
         # Should construct cleanly with base roles only
         reg = get_default_design_role_registry()
         assert len(reg.all()) > 0
+
+    def test_mod_overlay_overrides_base(self, tmp_path, monkeypatch):
+        """Closure audit gap (PROJ-278): mod-layer loading was previously
+        untested. Verify a mod's design_roles.json overrides base roles."""
+        # Build a fake mods/ directory with one mod overlay
+        mods_dir = tmp_path / "mods"
+        mod_dir = mods_dir / "test_mod"
+        mod_dir.mkdir(parents=True)
+        mod_file = mod_dir / "design_roles.json"
+        mod_file.write_text(json.dumps({
+            "roles": [
+                {
+                    "id": "general_purpose",
+                    "display_name": "General Purpose (MOD OVERRIDE)",
+                    "description": "Mod-level customization.",
+                    "vehicle_type_filter": ["Ship"],
+                },
+            ],
+        }), encoding="utf-8")
+
+        # Patch MODS_DIR to our temp dir; ensure user overlay is absent
+        monkeypatch.setattr(
+            "game.strategy.data.design_role_registry.Paths.MODS_DIR",
+            str(mods_dir),
+        )
+        monkeypatch.setattr(
+            "game.strategy.data.design_role_registry.Paths.USER_DESIGN_ROLES_FILE",
+            str(tmp_path / "no_user_overlay.json"),
+        )
+
+        reg = get_default_design_role_registry()
+        gp = reg.get("general_purpose")
+        assert gp.display_name == "General Purpose (MOD OVERRIDE)", (
+            "Mod overlay did not override base role"
+        )
+
+    def test_user_overlay_overrides_mod_overlay(self, tmp_path, monkeypatch):
+        """Precedence: base < mod < user. User overlay wins over mod."""
+        mods_dir = tmp_path / "mods"
+        mod_dir = mods_dir / "test_mod"
+        mod_dir.mkdir(parents=True)
+        mod_file = mod_dir / "design_roles.json"
+        mod_file.write_text(json.dumps({
+            "roles": [
+                {
+                    "id": "general_purpose",
+                    "display_name": "From Mod",
+                    "description": "mod",
+                },
+            ],
+        }), encoding="utf-8")
+
+        user_overlay = tmp_path / "user.json"
+        user_overlay.write_text(json.dumps({
+            "roles": [
+                {
+                    "id": "general_purpose",
+                    "display_name": "From User",
+                    "description": "user",
+                },
+            ],
+        }), encoding="utf-8")
+
+        monkeypatch.setattr(
+            "game.strategy.data.design_role_registry.Paths.MODS_DIR",
+            str(mods_dir),
+        )
+        monkeypatch.setattr(
+            "game.strategy.data.design_role_registry.Paths.USER_DESIGN_ROLES_FILE",
+            str(user_overlay),
+        )
+
+        reg = get_default_design_role_registry()
+        assert reg.get("general_purpose").display_name == "From User"
+
+    def test_multiple_mods_load_in_sorted_order(self, tmp_path, monkeypatch):
+        """Multiple mod overlays load alphabetically; later mod wins on conflict."""
+        mods_dir = tmp_path / "mods"
+        for mod_name, override_value in [("a_mod", "From A"), ("z_mod", "From Z")]:
+            mod_dir = mods_dir / mod_name
+            mod_dir.mkdir(parents=True)
+            (mod_dir / "design_roles.json").write_text(json.dumps({
+                "roles": [{
+                    "id": "general_purpose",
+                    "display_name": override_value,
+                    "description": override_value,
+                }],
+            }), encoding="utf-8")
+
+        monkeypatch.setattr(
+            "game.strategy.data.design_role_registry.Paths.MODS_DIR",
+            str(mods_dir),
+        )
+        monkeypatch.setattr(
+            "game.strategy.data.design_role_registry.Paths.USER_DESIGN_ROLES_FILE",
+            str(tmp_path / "no_user.json"),
+        )
+
+        reg = get_default_design_role_registry()
+        # Sorted glob → a_mod loads first, z_mod loads second → z_mod wins
+        assert reg.get("general_purpose").display_name == "From Z"

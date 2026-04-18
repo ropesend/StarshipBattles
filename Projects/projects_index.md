@@ -8,7 +8,6 @@ w# Projects Index
 | PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | Planning | 2026-04-17 | 2026-04-17 |
-| PROJ-278 | Unified Role Registry (design_role + Combat Lab scenario_role) | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-273 | Shared Ability Stat Key Registry | Planning | 2026-04-16 | 2026-04-16 |
 | PROJ-274 | Unified ShipMaterializer Service | Planning | 2026-04-16 | 2026-04-16 |
 | PROJ-275 | N-Team Combat Support | Planning (BLOCKED on PROJ-273, PROJ-274) | 2026-04-16 | 2026-04-16 |
@@ -19,6 +18,7 @@ w# Projects Index
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-278 | Unified Role Registry (design_role + Combat Lab scenario_role) | Archived | 2026-04-17 | 2026-04-18 |
 | PROJ-272 | Strategic Modifier System Cleanup + Round-2 Audit Fixes | Archived | 2026-04-13 | 2026-04-16 |
 | PROJ-269 | Unified Battle Simulator Entry/Exit | Archived | 2026-04-12 | 2026-04-16 |
 | PROJ-271 | Strategic Modifier Battle-Math Track B | Archived | 2026-04-12 | 2026-04-13 |
@@ -38,7 +38,6 @@ w# Projects Index
 | PROJ-255 | Code Quality & Decomposition | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-254 | Identity, Indexing & Correctness | Archived | 2026-04-08 | 2026-04-08 |
 | PROJ-253 | Hot-Loop & Cache Optimization | Archived | 2026-04-08 | 2026-04-08 |
-| PROJ-252 | Determinism & Global State Isolation | Archived | 2026-04-08 | 2026-04-08 |
 
 ---
 

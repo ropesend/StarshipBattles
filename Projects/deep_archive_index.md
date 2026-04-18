@@ -250,3 +250,4 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-249 | PDC Targeting Configuration | 2026-04-08 | PROJ-201-250 |
 | PROJ-250 | Dual-Source Retreat Config Ambiguity | 2026-04-08 | PROJ-201-250 |
 | PROJ-251 | Error Boundary Architecture Refactor | 2026-04-08 | PROJ-251-300 |
+| PROJ-252 | Determinism & Global State Isolation | 2026-04-08 | PROJ-251-300 |
