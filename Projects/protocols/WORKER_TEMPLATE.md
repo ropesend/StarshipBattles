@@ -140,10 +140,14 @@ When faced with choices, ALWAYS choose long-term quality:
 5. If stuck: Update Agent Context, exit
 
 ### Context Exhaustion
+Threshold and check command are in `Projects/protocols/context_config.md`.
+At natural handoff points, run `python Projects/scripts/check_context.py`.
+If verdict is STOP:
 1. Finish current subtask if close
 2. Update Agent Context with detailed handoff
 3. Mark task `[/]` in checklist
-4. Exit cleanly
+4. Write handoff prompt per `context_config.md` §3
+5. Exit cleanly
 
 ### Blockers
 1. Document in Agent Context

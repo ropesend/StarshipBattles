@@ -250,3 +250,10 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-249 | PDC Targeting Configuration | 2026-04-08 | PROJ-201-250 |
 | PROJ-250 | Dual-Source Retreat Config Ambiguity | 2026-04-08 | PROJ-201-250 |
 | PROJ-251 | Error Boundary Architecture Refactor | 2026-04-08 | PROJ-251-300 |
+| PROJ-252 | Determinism & Global State Isolation | 2026-04-08 | PROJ-251-300 |
+| PROJ-253 | Hot-Loop & Cache Optimization | 2026-04-08 | PROJ-251-300 |
+| PROJ-254 | Identity, Indexing & Correctness | 2026-04-08 | PROJ-251-300 |
+| PROJ-255 | Code Quality & Decomposition | 2026-04-08 | PROJ-251-300 |
+| PROJ-256 | Centralize All File Paths via Paths Class | 2026-04-08 | PROJ-251-300 |
+| PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | 2026-04-09 | PROJ-251-300 |
+| PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | 2026-04-09 | PROJ-251-300 |

@@ -1,30 +1,39 @@
 """
-Unit tests for DesignRoleRegistry — data-driven role definitions.
+Unit tests for the design_role registry — production data + registry behavior.
 
-Tests loading from JSON, vehicle type filtering, and name/ID lookup.
+PROJ-278 Phase 2 migration: previously tested `DesignRoleRegistry` (deleted)
++ its custom API. Now tests the unified `RoleRegistry` instance returned by
+`get_default_design_role_registry()` (which loads `data/design_roles.json`).
 """
 
 import pytest
 
+from game.strategy.data.design_role_registry import (
+    get_default_design_role_registry,
+    reset_default_design_role_registry,
+)
+
+
+@pytest.fixture(autouse=True)
+def _reset_registry():
+    """Each test starts with a fresh module-level registry."""
+    reset_default_design_role_registry()
+    yield
+    reset_default_design_role_registry()
+
 
 class TestDesignRoleRegistryLoading:
-    """Tests for loading role definitions from JSON."""
+    """Tests for loading role definitions from the production data file."""
 
     def test_registry_loads_from_data_file(self):
-        """DesignRoleRegistry loads roles from data/design_roles.json."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
-        assert len(registry.get_all_role_ids()) > 0
+        """The default registry loads roles from data/design_roles.json."""
+        registry = get_default_design_role_registry()
+        assert len(registry.all()) > 0
 
     def test_all_expected_roles_present(self):
         """All starter roles are present in the data file."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
+        registry = get_default_design_role_registry()
+        all_ids = {r.id for r in registry.all()}
 
         expected = [
             "general_purpose", "line_combatant", "fleet_escort",
@@ -32,7 +41,6 @@ class TestDesignRoleRegistryLoading:
             "command_ship", "resource_harvester", "defensive_platform",
             "colony_pod",
         ]
-        all_ids = registry.get_all_role_ids()
         for role_id in expected:
             assert role_id in all_ids, f"Missing role: {role_id}"
 
@@ -42,13 +50,9 @@ class TestVehicleTypeFiltering:
 
     def test_ship_gets_combat_roles(self):
         """Ship vehicle type includes combat roles."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
+        registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type("Ship")
-        role_ids = {r["id"] for r in roles}
+        role_ids = {r.id for r in roles}
 
         assert "line_combatant" in role_ids
         assert "fleet_escort" in role_ids
@@ -56,13 +60,9 @@ class TestVehicleTypeFiltering:
 
     def test_planetary_complex_gets_complex_roles(self):
         """Planetary Complex includes complex-specific roles."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
+        registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type("Planetary Complex")
-        role_ids = {r["id"] for r in roles}
+        role_ids = {r.id for r in roles}
 
         assert "resource_harvester" in role_ids
         assert "planetary_modifier" in role_ids
@@ -70,13 +70,9 @@ class TestVehicleTypeFiltering:
 
     def test_planetary_complex_excludes_ship_only_roles(self):
         """Planetary Complex does not include ship-only roles."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
+        registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type("Planetary Complex")
-        role_ids = {r["id"] for r in roles}
+        role_ids = {r.id for r in roles}
 
         assert "interceptor" not in role_ids
         assert "assault_ship" not in role_ids
@@ -84,13 +80,9 @@ class TestVehicleTypeFiltering:
 
     def test_fighter_gets_applicable_roles(self):
         """Fighter vehicle type gets appropriate roles."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
+        registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type("Fighter")
-        role_ids = {r["id"] for r in roles}
+        role_ids = {r.id for r in roles}
 
         assert "interceptor" in role_ids
         assert "fleet_escort" in role_ids
@@ -98,74 +90,61 @@ class TestVehicleTypeFiltering:
 
     def test_drop_pod_gets_pod_roles(self):
         """Drop Pod vehicle type includes pod-specific roles."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
+        registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type("Drop Pod")
-        role_ids = {r["id"] for r in roles}
+        role_ids = {r.id for r in roles}
 
         assert "colony_pod" in role_ids
         assert "general_purpose" in role_ids
 
-    def test_roles_sorted_by_name(self):
-        """Returned roles are sorted alphabetically by name."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
+    def test_roles_sorted_by_display_name(self):
+        """Returned roles are sorted alphabetically by display_name."""
+        registry = get_default_design_role_registry()
         roles = registry.get_roles_for_vehicle_type("Ship")
-        names = [r["name"] for r in roles]
+        names = [r.display_name for r in roles]
 
         assert names == sorted(names)
 
 
 class TestNameIdLookup:
-    """Tests for name/ID conversion."""
+    """Tests for name/ID conversion via the new RoleRegistry API."""
 
-    def test_get_role_name(self):
-        """get_role_name returns display name for a role ID."""
-        from game.strategy.data.design_role import DesignRoleRegistry
+    def test_get_role_display_name(self):
+        """registry.get(id).display_name returns the display name."""
+        registry = get_default_design_role_registry()
 
-        registry = DesignRoleRegistry()
-        registry.load()
+        assert registry.get("line_combatant").display_name == "Line Combatant"
+        assert registry.get("carrier").display_name == "Carrier"
 
-        assert registry.get_role_name("line_combatant") == "Line Combatant"
-        assert registry.get_role_name("carrier") == "Carrier"
+    def test_get_unknown_role_raises(self):
+        """registry.get(missing_id) raises KeyError (dict-like API)."""
+        registry = get_default_design_role_registry()
+        with pytest.raises(KeyError):
+            registry.get("nonexistent")
 
-    def test_get_role_name_unknown(self):
-        """get_role_name returns the ID itself for unknown roles."""
-        from game.strategy.data.design_role import DesignRoleRegistry
+    def test_find_role_id_by_display_name(self):
+        """Reverse lookup pattern: scan registry.all() for matching display_name."""
+        registry = get_default_design_role_registry()
 
-        registry = DesignRoleRegistry()
-        registry.load()
+        line = next((r for r in registry.all() if r.display_name == "Line Combatant"), None)
+        assert line is not None and line.id == "line_combatant"
 
-        assert registry.get_role_name("nonexistent") == "nonexistent"
+        carrier = next((r for r in registry.all() if r.display_name == "Carrier"), None)
+        assert carrier is not None and carrier.id == "carrier"
 
-    def test_get_role_id_by_name(self):
-        """get_role_id_by_name finds ID from display name."""
-        from game.strategy.data.design_role import DesignRoleRegistry
+    def test_find_role_id_by_display_name_not_found(self):
+        """Reverse lookup returns None for unknown display names."""
+        registry = get_default_design_role_registry()
 
-        registry = DesignRoleRegistry()
-        registry.load()
-
-        assert registry.get_role_id_by_name("Line Combatant") == "line_combatant"
-        assert registry.get_role_id_by_name("Carrier") == "carrier"
-
-    def test_get_role_id_by_name_not_found(self):
-        """get_role_id_by_name returns None for unknown names."""
-        from game.strategy.data.design_role import DesignRoleRegistry
-
-        registry = DesignRoleRegistry()
-        registry.load()
-
-        assert registry.get_role_id_by_name("Nonexistent Role") is None
+        result = next(
+            (r.id for r in registry.all() if r.display_name == "Nonexistent Role"),
+            None,
+        )
+        assert result is None
 
 
 class TestShipDesignRoleSerialization:
-    """Tests for design_role field on Ship serialization."""
+    """Tests for design_role field on Ship serialization (UNCHANGED by PROJ-278)."""
 
     def test_ship_has_design_role_field(self, fresh_registries):
         """Ship has a design_role field defaulting to general_purpose."""

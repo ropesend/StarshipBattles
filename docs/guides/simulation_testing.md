@@ -31,10 +31,12 @@ combat_lab/
 │   ├── components.json              # Test-only components
 │   ├── vehicleclasses.json          # Test hull classes
 │   ├── modifiers.json               # Test modifiers
+│   ├── scenario_roles.json          # Scenario role labels (PROJ-278) — see §2.5
 │   ├── ships/                       # Test ship JSON files
 │   ├── ship_templates/              # Base templates for ship generation
 │   ├── schemas/                     # JSON schema validation files
 │   └── schema_validator.py          # Runtime schema validation
+├── scenario_role_registry.py        # combat_lab_role_registry accessor (PROJ-278)
 ├── scenarios/                       # TestScenario implementations
 │   ├── base.py                      # TestScenario + TestMetadata base classes
 │   ├── templates.py                 # 5 reusable scenario templates
@@ -126,6 +128,59 @@ The Combat Lab UI supports ability-specific test categories:
 
 ---
 
+## 2.5 Scenario Role Labels (PROJ-278 Phases 3 + 4)
+
+Combat Lab scenarios wire ships into their test scaffold via a string-keyed
+`ships_by_role` dict — e.g. `self.attacker = ships_by_role["attacker"]` in
+`StaticTargetScenario.wire_ships`.
+
+**Producer side (PROJ-278 Phase 4):** every `ShipSpec` carries a typed
+`scenario_role: Optional[str]` field. The Combat Lab spec compiler
+([`combat_lab/spec_compiler.py::_ship_spec`](../../combat_lab/spec_compiler.py))
+sets this on every constructed `ShipSpec` and validates the value against
+`combat_lab_role_registry` at compile time — typos fail loudly with a
+`ValueError` instead of producing a silent KeyError later.
+
+**Consumer side:** `materialize_spec_ships`
+([game/simulation/battle_runner.py](../../game/simulation/battle_runner.py))
+builds the `ships_by_role` dict by reading `ship_spec.scenario_role` directly
+— no string parsing of `instance_id`. The legacy `_role_from_instance_id`
+substring parser was deleted in Phase 4. (`instance_id` retains the `:role`
+suffix as a human-readable identity disambiguator, but readers MUST
+consume the typed field, not parse the string.)
+
+**Canonical role list:** lives in
+[combat_lab/data/scenario_roles.json](../../combat_lab/data/scenario_roles.json)
+and is loaded by
+[combat_lab/scenario_role_registry.py::get_default_combat_lab_role_registry](../../combat_lab/scenario_role_registry.py)
+as a read-only `RoleRegistry` instance (`allow_runtime_add=False` — players
+don't write Combat Lab scenarios).
+
+**Authoring rule:** if you write a new template that references a new role
+label (e.g. `ships_by_role["my_new_role"]`), you MUST add a matching entry
+to `combat_lab/data/scenario_roles.json`. Two layers of protection catch
+violations:
+- **Compile time** (Phase 4): `_ship_spec` validates `scenario_role` against
+  the registry. If a scenario tries to emit `scenario_role="my_new_role"`
+  before the role is registered, the compiler raises `ValueError`.
+- **Test time** (Phase 3): the AST scanner at
+  [tests/unit/combat_lab/test_scenario_roles_consistency.py](../../tests/unit/combat_lab/test_scenario_roles_consistency.py)
+  scans every `.py` under `combat_lab/scenarios/` for literal `ships_by_role[<str>]`
+  references and fails if any label is unregistered.
+
+**AST scanner limitation:** the scanner only catches *literal* string keys.
+If your scenario uses a variable like `ships_by_role[role_attacker]`, the
+scanner won't see it — those rely on author discipline. (One known dynamic
+site exists in `templates.py` around line 1115.)
+
+Combat Lab scenario_role and gameplay design_role share the
+[game.core.roles.RoleRegistry](../../game/core/roles.py) machinery but live
+in separate registry instances loaded from separate files. See
+[docs/systems/strategy_layer.md](../systems/strategy_layer.md) §"Design Roles"
+for the gameplay variant.
+
+---
+
 ## 3. TestScenario Pattern
 
 ### Architecture
@@ -148,10 +203,25 @@ Both environments use the exact same `BattleEngine` code. The only difference is
 
 ### TestScenario Class
 
-The current `TestScenario` API is spec-driven: scenarios compile to a
-`BattleSpec` via `to_spec()`, `run_battle(spec)` drives the engine, and
-validators consume the resulting `BattleOutcome` + Combat Lab `telemetry`
-bundle. The authoritative base class lives at [combat_lab/scenarios/base.py](../../combat_lab/scenarios/base.py); existing modern scenarios (e.g. `combat_lab/scenarios/tohit_attack_scenarios.py`) serve as worked examples.
+The current `TestScenario` API is spec-driven: scenarios are compiled to a
+`BattleSpec` by `build_test_battle_spec(scenario)` (PROJ-279 — explicit
+composition; the historical `scenario.to_spec()` monkey-patch was deleted),
+`run_battle(spec)` drives the engine, and validators consume the resulting
+`BattleOutcome` + Combat Lab `telemetry` bundle. The authoritative base
+class lives at [combat_lab/scenarios/base.py](../../combat_lab/scenarios/base.py); existing modern scenarios (e.g. `combat_lab/scenarios/tohit_attack_scenarios.py`) serve as worked examples.
+
+> **Authoring rule (PROJ-279):** scenarios describe a setup; spec
+> construction is the runner's responsibility. Do NOT add a `to_spec`
+> method to your scenario class as a convenience — the runner calls
+> [`build_test_battle_spec(scenario)`](../../combat_lab/spec_compiler.py)
+> directly. The only legitimate reason to define `to_spec` on a subclass
+> is the documented escape hatch for custom multi-team / fleet /
+> propulsion-mass-comparison layouts that don't fit the 5 canonical
+> templates (see `combat_lab/scenarios/tohit_attack_fleet_scenarios.py`
+> for an example). `build_test_battle_spec` walks the MRO between
+> `type(scenario)` and `TestScenario`; if any subclass defines its own
+> `to_spec`, that override wins. The base `TestScenario` class itself
+> does NOT define `to_spec`.
 
 ```python
 from combat_lab.scenarios import TestScenario, TestMetadata
@@ -174,10 +244,11 @@ class MyTest(TestScenario):
         tags=["accuracy", "close_range"],
     )
 
-    # `to_spec(registries=None)` is inherited from TestScenario. The base
-    # class generates a 2-team spec from `attacker_ship` / `target_ship`
-    # class attrs + `distance`; most scenarios just set those and don't
-    # need to override `to_spec`.
+    # PROJ-279: scenarios are compiled by `build_test_battle_spec(scenario)`
+    # — no `to_spec` method needed. The compiler dispatches on the canonical
+    # template type (here StaticTargetScenario) and reads `attacker_ship` /
+    # `target_ship` / `distance` to build a 2-team spec. Most scenarios just
+    # set these class attrs and never touch the compiler.
     attacker_ship = "Test_Attacker_Beam.json"
     target_ship = "Test_Target_Stationary.json"
     distance = 50

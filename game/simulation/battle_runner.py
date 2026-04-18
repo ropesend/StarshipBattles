@@ -113,9 +113,10 @@ def materialize_spec_ships(
         `(teams_by_id, ships_by_role)`:
         - `teams_by_id`: `{team_id: [Ship, ...]}` — bucketed the way
           `BattleEngine.start_teams` expects.
-        - `ships_by_role`: role-suffix (text after the last ':' in
-          `ShipSpec.instance_id`) → materialized Ship. Callers that
-          don't use role tagging can ignore the second value.
+        - `ships_by_role`: `ShipSpec.scenario_role` → materialized Ship,
+          for ship specs that have a non-None `scenario_role` (PROJ-278
+          Phase 4). Callers that don't use role tagging (Battle Setup,
+          Strategy) can ignore the second value.
     """
     teams_by_id: Dict[int, List["Ship"]] = {}
     ships_by_role: Dict[str, "Ship"] = {}
@@ -132,9 +133,8 @@ def materialize_spec_ships(
                     ship.instance_id = ship_spec.instance_id
                     _apply_spec_components_to_ship(ship_spec, ship)
                     team_ships.append(ship)
-                    if ship_spec.instance_id and ":" in ship_spec.instance_id:
-                        role = ship_spec.instance_id.rsplit(":", 1)[1]
-                        ships_by_role[role] = ship
+                    if ship_spec.scenario_role:
+                        ships_by_role[ship_spec.scenario_role] = ship
         teams_by_id[team_spec.team_id] = team_ships
     return teams_by_id, ships_by_role
 

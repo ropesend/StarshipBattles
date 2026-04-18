@@ -5,6 +5,7 @@
 
 **Prerequisites:**
 - Read `Projects/protocols/02_plan_protocol.md` first
+- Read `Projects/protocols/context_config.md` (threshold + handoff template)
 - Have the project plan document loaded
 
 ---
@@ -35,16 +36,23 @@ Only update Current State if validation PASSES. If it FAILS, fix the issues firs
 ## Autonomous Loop
 
 ```
-WHILE (context < 80% used) AND (unchecked tasks remain):
+WHILE (unchecked tasks remain):
     1. Select next task
     2. Execute task (TDD cycle below)
     3. Update plan document
-    4. Check context usage
+    4. At natural handoff points: run check_context.py
+       - Verdict STOP  → write handoff prompt, exit
+       - Verdict CONTINUE → next task
+       - Verdict UNKNOWN → self-estimate cautiously; prefer stopping if unsure
 
 ON EXIT:
     Update Current State with comprehensive handoff
+    Write handoff prompt per context_config.md template
     Report summary of work completed
 ```
+
+Threshold, check command, and handoff template live in
+`Projects/protocols/context_config.md`. Do not hardcode numbers here.
 
 ---
 
@@ -59,7 +67,7 @@ ON EXIT:
 
 ### 2. Work Loop
 
-For each task until context limit:
+For each task until an exit condition (§3) is met:
 
 1. **Select Task**
    - Pick first unchecked task in current phase
@@ -132,15 +140,23 @@ For each task until context limit:
    - Check off completed subtasks
    - Update phase status if needed
 
-4. **Check Context**
-   - If approaching 80% context: prepare to exit
-   - If more capacity: continue to next task
+4. **Check Context (at natural handoff points only)**
+   - After a phase completes, or before starting a task that will consume a
+     large amount of context, run:
+     ```bash
+     python Projects/scripts/check_context.py
+     ```
+   - Verdict `STOP` (exit 1) → proceed to handoff (§4) and exit
+   - Verdict `CONTINUE` (exit 0) → next task
+   - Verdict `UNKNOWN` (exit 2) → transcript not locatable; self-estimate
+     cautiously and prefer stopping at the next phase boundary
+   - Do **not** run the check every task — token count doesn't change mid-call
 
 ### 3. Exit Conditions
 
 Stop the loop when ANY of these occur:
-- Context usage >= 80%
-- Current phase complete (natural stopping point)
+- `check_context.py` returns STOP at a natural handoff point
+- Current phase complete (natural stopping point) — always a valid stop
 - All tasks complete
 - Blocker encountered that requires user input
 - Tests failing that you cannot resolve
@@ -187,30 +203,32 @@ Output a summary when stopping:
 - repository.py (modified)
 - startup.py (modified)
 
-**Exit Reason:** Context limit approaching (80%)
+**Exit Reason:** `check_context.py` returned STOP at phase boundary
 
 **Next Agent Should:** Complete Task 2.4 cache invalidation, then begin Phase 3.
+See `handoff_prompt.md` for the copy-paste prompt.
 ```
+
+### 6. Write the Handoff Prompt
+
+When exiting due to context threshold, write
+`Projects/active_projects/PROJ-XX/handoff_prompt.md` using the template in
+`Projects/protocols/context_config.md` §3. Print the prompt to chat so the user
+can copy-paste it into a new session.
+
+Do **not** duplicate the `## Current State` content in the handoff prompt —
+point at `plan.md` and let that be the source of truth.
 
 ---
 
 ## Context Management
 
-### Estimating Context Usage
-- Monitor how much you've read/written
-- Large codebases consume context faster
-- Stop early rather than mid-task
+Everything about when/how to check context lives in
+`Projects/protocols/context_config.md` (threshold, script, natural stopping
+points, handoff template). Read that file once at session start.
 
-### Natural Stopping Points
-Prefer stopping at:
-1. End of a phase (best)
-2. End of a task (good)
-3. After a subtask with clear handoff (acceptable)
-
-Avoid stopping:
-- Mid-implementation with failing tests
-- Without updating Current State
-- With uncommitted mental context
+Do not re-implement or restate the rules here. Tune numbers there, not in this
+protocol.
 
 ---
 

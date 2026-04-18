@@ -285,9 +285,12 @@ class DesignSelectorWindow(UIWindow):
         role_filter = None
         if role_option != "All Roles":
             # Map display name back to role ID
-            from game.strategy.data.design_role import get_default_design_role_registry
+            from game.strategy.data.design_role_registry import get_default_design_role_registry
             registry = get_default_design_role_registry()
-            role_filter = registry.get_role_id_by_name(role_option)
+            role_filter = next(
+                (r.id for r in registry.all() if r.display_name == role_option),
+                None,
+            )
 
         logger.info(f"DesignSelector: Refreshing design list (mode={self.mode})")
         logger.debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
@@ -321,14 +324,15 @@ class DesignSelectorWindow(UIWindow):
 
     def _get_role_filter_options(self):
         """Get role display names for the filter dropdown."""
-        from game.strategy.data.design_role import get_default_design_role_registry
+        from game.strategy.data.design_role_registry import get_default_design_role_registry
 
         registry = get_default_design_role_registry()
-        all_role_ids = registry.get_all_role_ids()
 
         options = ["All Roles"]
-        for role_id in sorted(all_role_ids):
-            options.append(registry.get_role_name(role_id))
+        # registry.all() is already sorted by id; sort by display_name for UI
+        roles = sorted(registry.all(), key=lambda r: r.display_name)
+        for role in roles:
+            options.append(role.display_name)
         return options
 
     def _rebuild_design_list(self):

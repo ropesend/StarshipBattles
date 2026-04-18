@@ -22,7 +22,22 @@ from tests.fixtures.test_scenarios import (
     create_mock_test_runner,
     create_mock_test_history,
     create_scenario_info,
+    patch_spec_compiler_to_delegate_to_mock_scenario,
 )
+
+
+# =============================================================================
+# PROJ-279: ensure mock scenarios still work after spec_compiler migration
+# =============================================================================
+
+@pytest.fixture(autouse=True)
+def _proj279_patch_spec_compiler():
+    """PROJ-279: production code now calls `build_test_battle_spec(scenario)`
+    directly instead of `scenario.to_spec()`. Patch the spec compiler so
+    mocked scenarios that set `to_spec.return_value` still flow through
+    correctly without rewriting every test."""
+    with patch_spec_compiler_to_delegate_to_mock_scenario():
+        yield
 
 
 # =============================================================================

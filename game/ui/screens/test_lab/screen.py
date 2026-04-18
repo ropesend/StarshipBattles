@@ -412,12 +412,13 @@ class TestLabScreen:
         """
         from combat_lab.runner import _snapshot_ship_state
         from game.ai.ai_factory import AIControllerFactory
+        from combat_lab.spec_compiler import build_test_battle_spec
         from game.simulation.battle_config import BattleConfig
         from game.core.return_destination import ReturnDestination
         from game.simulation.battle_controller import BattleController
 
-        # 1. Compile + pre-run hook.
-        spec = scenario.to_spec(registries=None)
+        # 1. Compile + pre-run hook. PROJ-279: explicit composition.
+        spec = build_test_battle_spec(scenario, registries=None)
         scenario.before_run_battle(spec)
 
         # 2. Operational config (spec-driven fields auto-filled by

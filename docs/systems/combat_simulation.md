@@ -218,6 +218,27 @@ equally hostile. No target preference between teams.
 `engine.get_winner()` returns the sole surviving team_id when exactly
 one team is alive; -1 otherwise.
 
+### Combat Lab Scenario Role Tagging (PROJ-278 Phase 4)
+
+`ShipSpec.scenario_role: Optional[str]` is the typed wiring label used by
+Combat Lab scenarios to route materialized ships into the `ships_by_role`
+dict consumed by `scenario.wire_ships(...)`. Battle Setup and Strategy
+specs leave this `None` — the field is only populated by
+[combat_lab/spec_compiler.py](../../combat_lab/spec_compiler.py).
+
+`materialize_spec_ships` ([game/simulation/battle_runner.py](../../game/simulation/battle_runner.py))
+reads the field directly when building `ships_by_role`. The legacy
+`_role_from_instance_id` substring parser was deleted in Phase 4.
+`instance_id` retains a `:role` suffix as a human-readable identity
+disambiguator, but is no longer parsed for role information.
+
+Valid values must match an entry in `combat_lab_role_registry`
+(loaded from [combat_lab/data/scenario_roles.json](../../combat_lab/data/scenario_roles.json)).
+The Combat Lab spec compiler's `_ship_spec` helper validates `scenario_role`
+against the registry at compile time and raises `ValueError` for unregistered
+labels. See [docs/guides/simulation_testing.md](../guides/simulation_testing.md)
+§"2.5 Scenario Role Labels" for the authoring rules.
+
 ### Component HP Persistence (Phase 2)
 
 Per-component HP persists across strategy battles via the

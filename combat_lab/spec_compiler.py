@@ -64,13 +64,32 @@ def build_test_battle_spec(
 ) -> BattleSpec:
     """Compile a `TestScenario` into a `BattleSpec`.
 
-    Dispatches on the scenario's template type. Unsupported subclasses
-    (pure `TestScenario` with no template) raise `NotImplementedError` —
-    a scenario must inherit from one of the five known templates to be
-    compilable into a spec.
+    Dispatch order (PROJ-279):
+      1. **Subclass override:** if any class in the scenario's MRO between
+         `type(scenario)` and `TestScenario` defines its own `to_spec`
+         method, delegate to it. This is the documented escape hatch for
+         custom multi-team / fleet / propulsion-mass-comparison scenarios
+         that don't fit the 5 canonical templates.
+      2. **Canonical template dispatch:** `StaticTargetScenario` /
+         `DuelScenario` / `PropulsionScenario` / `ResourceScenario` /
+         `ComparisonScenario`.
+      3. Otherwise raise `NotImplementedError`.
+
+    The base `TestScenario` itself does NOT define `to_spec` — PROJ-279
+    deleted the historical monkey-patch. Subclasses opt-in by defining
+    their own method explicitly.
     """
     _ = registries  # Unused: materialization happens in the runner.
 
+    # 1. Subclass override (PROJ-279 escape hatch).
+    cls = type(scenario)
+    for kls in cls.__mro__:
+        if kls is TestScenario:
+            break
+        if "to_spec" in kls.__dict__:
+            return kls.__dict__["to_spec"](scenario, registries=registries)
+
+    # 2. Canonical template dispatch.
     if isinstance(scenario, StaticTargetScenario):
         return _compile_static_target(scenario)
     if isinstance(scenario, DuelScenario):
@@ -86,7 +105,8 @@ def build_test_battle_spec(
         f"Combat Lab spec compiler does not support "
         f"{type(scenario).__name__}. Subclass one of "
         "StaticTargetScenario / DuelScenario / PropulsionScenario / "
-        "ResourceScenario / ComparisonScenario."
+        "ResourceScenario / ComparisonScenario, or override `to_spec` "
+        "on your scenario class."
     )
 
 
@@ -186,7 +206,30 @@ def _ship_spec(
     velocity: Vector2 = Vector2(0.0, 0.0),
     name_suffix: Optional[str] = None,
 ) -> ShipSpec:
-    """Build a `ShipSpec` with role-tagged instance_id."""
+    """Build a `ShipSpec` populating `scenario_role` (PROJ-278 Phase 4).
+
+    `instance_id` retains the `{test_id}:{role}` format because it must be
+    unique per-ship and the role provides a natural disambiguator. The
+    role suffix in `instance_id` is descriptive only — readers MUST
+    consume `scenario_role` instead of parsing the string.
+
+    `role` is validated against `combat_lab_role_registry` — a typo here
+    fails at compile time instead of producing a silent KeyError later.
+    """
+    # Local import to avoid pulling combat_lab into game.simulation at module
+    # load time (combat_lab/spec_compiler.py is itself in combat_lab/, so
+    # this is just a lazy circular-import-free dependency on a sibling).
+    from combat_lab.scenario_role_registry import (  # noqa: PLC0415
+        get_default_combat_lab_role_registry,
+    )
+    registry = get_default_combat_lab_role_registry()
+    if role not in registry:
+        raise ValueError(
+            f"Combat Lab scenario_role {role!r} is not registered in "
+            f"combat_lab/data/scenario_roles.json. Add it there or fix "
+            f"the typo in scenario {scenario.metadata.test_id!r}."
+        )
+
     test_id = scenario.metadata.test_id
     suffix = name_suffix if name_suffix is not None else role
     return ShipSpec(
@@ -198,6 +241,7 @@ def _ship_spec(
         angle=angle,
         velocity=velocity,
         components=(),
+        scenario_role=role,
     )
 
 
@@ -457,21 +501,6 @@ def _to_core_vector(v) -> Vector2:
         return v
     # pygame.math.Vector2 exposes .x / .y.
     return Vector2(float(getattr(v, "x", 0.0)), float(getattr(v, "y", 0.0)))
-
-
-# ---------------------------------------------------------------------------
-# Monkey-patch TestScenario.to_spec to delegate to the compiler.
-# ---------------------------------------------------------------------------
-#
-# Keeping the base-class method ergonomic — any scenario can call
-# `scenario.to_spec(registries)` without the caller importing
-# `build_test_battle_spec`. Subclasses that need a custom translation
-# override `to_spec()` directly.
-def _to_spec(self: TestScenario, registries=None) -> BattleSpec:
-    return build_test_battle_spec(self, registries)
-
-
-TestScenario.to_spec = _to_spec  # type: ignore[attr-defined]
 
 
 __all__ = [

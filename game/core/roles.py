@@ -95,6 +95,10 @@ class RoleRegistry:
         self._roles: Dict[str, Role] = {}
         self._allow_runtime_add = allow_runtime_add
         self._invalidation_callbacks: List[Callable[[], None]] = []
+        # Re-entrance guard: prevents stack overflow if a callback
+        # itself calls add_user_role. Closure audit (PROJ-278) flagged
+        # this as a real edge case even though no current users hit it.
+        self._firing_callbacks: bool = False
 
     def __contains__(self, role_id: str) -> bool:
         return role_id in self._roles
@@ -106,6 +110,20 @@ class RoleRegistry:
     def all(self) -> List[Role]:
         """Return all roles, sorted by id for deterministic iteration."""
         return [self._roles[k] for k in sorted(self._roles.keys())]
+
+    def get_roles_for_vehicle_type(self, vehicle_type: str) -> List[Role]:
+        """Return roles whose `vehicle_type_filter` accepts `vehicle_type`.
+
+        A role with empty `vehicle_type_filter` matches ANY vehicle type
+        (no restriction). Result is sorted by `display_name` for stable
+        UI ordering.
+        """
+        matches = [
+            role for role in self._roles.values()
+            if not role.vehicle_type_filter or vehicle_type in role.vehicle_type_filter
+        ]
+        matches.sort(key=lambda r: r.display_name)
+        return matches
 
     def load_from_file(self, path: Union[str, Path], source_tag: str) -> None:
         """Load roles from a JSON file at `path`.
@@ -131,6 +149,25 @@ class RoleRegistry:
                     role.id, source_tag, path,
                 )
             self._roles[role.id] = role
+
+    def load_from_file_optional(self, path: Union[str, Path], source_tag: str) -> None:
+        """Load roles from `path` if it exists; silently no-op if it doesn't.
+
+        Used for the user-overlay layer (e.g. `user_data/design_roles.json`)
+        which won't exist on first run. Malformed JSON still raises — only
+        missingness is tolerated, not corruption.
+
+        Raises:
+            json.JSONDecodeError: if the file exists but is not valid JSON
+        """
+        path = Path(path)
+        if not path.exists():
+            logger.debug(
+                "RoleRegistry: optional file not present (source=%s, path=%s)",
+                source_tag, path,
+            )
+            return
+        self.load_from_file(path, source_tag=source_tag)
 
     def add_user_role(self, role: Role) -> None:
         """Register `role` at runtime; fires invalidation callbacks.
@@ -174,16 +211,33 @@ class RoleRegistry:
         )
 
     def _fire_invalidation_callbacks(self) -> None:
-        """Fire every registered callback; log + swallow exceptions."""
-        for cb in self._invalidation_callbacks:
-            try:
-                cb()
-            except Exception:
-                logger.exception(
-                    "RoleRegistry: invalidation callback %r raised; "
-                    "continuing to fire remaining callbacks",
-                    cb,
-                )
+        """Fire every registered callback; log + swallow exceptions.
+
+        Guarded against re-entrance: if a callback itself calls
+        `add_user_role`, the inner mutation still succeeds but does NOT
+        re-fire callbacks (would cause stack overflow). Outer firing loop
+        continues unaffected.
+        """
+        if self._firing_callbacks:
+            logger.warning(
+                "RoleRegistry: re-entrant add_user_role detected during "
+                "invalidation firing; mutation applied but nested "
+                "invalidation suppressed to prevent recursion"
+            )
+            return
+        self._firing_callbacks = True
+        try:
+            for cb in self._invalidation_callbacks:
+                try:
+                    cb()
+                except Exception:
+                    logger.exception(
+                        "RoleRegistry: invalidation callback %r raised; "
+                        "continuing to fire remaining callbacks",
+                        cb,
+                    )
+        finally:
+            self._firing_callbacks = False
 
 
 __all__ = [

@@ -114,6 +114,14 @@ class ShipSpec:
     `docs/01_ARCHITECTURE.md`). `InstanceBackedMaterializer` uses duck
     typing to invoke `instance.to_ship(...)`. Design-only callers
     (Combat Lab) leave this `None` and use `DesignOnlyMaterializer`.
+
+    `scenario_role` (PROJ-278 Phase 4): optional positional wiring label
+    used by Combat Lab scenarios to route ships into the
+    `ships_by_role` dict consumed by `scenario.wire_ships(...)`. Replaces
+    the deleted `_role_from_instance_id` substring parser. Battle Setup
+    and Strategy callers leave this `None`. Values must match an entry
+    in `combat_lab_role_registry` — see
+    `combat_lab/data/scenario_roles.json`.
     """
 
     instance_id: str
@@ -125,6 +133,7 @@ class ShipSpec:
     velocity: Vector2
     components: Tuple[ComponentStateSpec, ...]
     instance_ref: Optional[Any] = None
+    scenario_role: Optional[str] = None
 
 
 @dataclass(frozen=True)

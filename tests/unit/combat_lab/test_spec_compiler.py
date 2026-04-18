@@ -160,22 +160,6 @@ def test_compiler_assigns_unique_instance_ids():
 
 
 # ---------------------------------------------------------------------------
-# TestScenario.to_spec base method
-# ---------------------------------------------------------------------------
-
-
-def test_test_scenario_to_spec_delegates_to_compiler():
-    scenario = _MinimalStaticScenario()
-    spec_via_method = scenario.to_spec(registries=None)
-    spec_direct = build_test_battle_spec(scenario, registries=None)
-    # Both paths should produce equivalent specs (same seed, same ship
-    # counts, same end condition).
-    assert spec_via_method.seed == spec_direct.seed
-    assert len(spec_via_method.teams) == len(spec_direct.teams)
-    assert isinstance(spec_via_method.end_condition, TickLimitCondition)
-
-
-# ---------------------------------------------------------------------------
 # Unsupported scenario types raise a clear error
 # ---------------------------------------------------------------------------
 
@@ -310,12 +294,15 @@ def test_compiler_duel_positions_ships_at_plus_minus_half_distance():
     assert ship2.angle == 180.0
 
 
-def test_compiler_duel_instance_ids_carry_roles():
+def test_compiler_duel_ships_carry_scenario_role():
+    """PROJ-278 Phase 4: scenario_role field is the typed role tag.
+    `instance_id` retains the `:role` suffix as identity disambiguator
+    but readers consume the field, never parse the string."""
     spec = build_test_battle_spec(_MinimalDuelScenario(), registries=None)
     ship1 = spec.teams[0].fleet_hierarchy[0].squadrons[0].ships[0]
     ship2 = spec.teams[1].fleet_hierarchy[0].squadrons[0].ships[0]
-    assert ship1.instance_id.endswith(":ship1")
-    assert ship2.instance_id.endswith(":ship2")
+    assert ship1.scenario_role == "ship1"
+    assert ship2.scenario_role == "ship2"
 
 
 def test_compiler_duel_design_ids_from_ship_files():
@@ -373,10 +360,10 @@ def test_compiler_propulsion_applies_initial_pose():
     assert ship.velocity.y == 2.0
 
 
-def test_compiler_propulsion_instance_id_carries_role():
+def test_compiler_propulsion_ship_carries_scenario_role():
     spec = build_test_battle_spec(_MinimalPropulsionScenario(), registries=None)
     ship = spec.teams[0].fleet_hierarchy[0].squadrons[0].ships[0]
-    assert ship.instance_id.endswith(":ship")
+    assert ship.scenario_role == "ship"
 
 
 # ===========================================================================
@@ -458,8 +445,8 @@ def test_compiler_resource_scenario_target_at_target_distance():
     target = spec.teams[1].fleet_hierarchy[0].squadrons[0].ships[0]
     assert ship.position.x == 0.0
     assert target.position.x == 250.0
-    assert ship.instance_id.endswith(":ship")
-    assert target.instance_id.endswith(":target")
+    assert ship.scenario_role == "ship"
+    assert target.scenario_role == "target"
 
 
 # ===========================================================================
@@ -501,8 +488,8 @@ def test_compiler_comparison_normal_mode_emits_variant_spec():
     # Normal mode emits VARIANT ships.
     assert attacker.design_id == "Test_Attacker_Beam360_High.json"
     assert target.design_id == "Test_Target_ECM.json"
-    assert attacker.instance_id.endswith(":variant_attacker")
-    assert target.instance_id.endswith(":variant_target")
+    assert attacker.scenario_role == "variant_attacker"
+    assert target.scenario_role == "variant_target"
 
 
 def test_compiler_comparison_visual_baseline_mode_emits_baseline_spec():
@@ -515,8 +502,8 @@ def test_compiler_comparison_visual_baseline_mode_emits_baseline_spec():
     # Visual-baseline mode emits BASELINE ships.
     assert attacker.design_id == "Test_Attacker_Beam360_High.json"
     assert target.design_id == "Test_Target_Stationary.json"
-    assert attacker.instance_id.endswith(":baseline_attacker")
-    assert target.instance_id.endswith(":baseline_target")
+    assert attacker.scenario_role == "baseline_attacker"
+    assert target.scenario_role == "baseline_target"
 
 
 def test_compiler_comparison_positions_target_at_distance():

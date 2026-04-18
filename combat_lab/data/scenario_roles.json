@@ -1,0 +1,76 @@
+{
+    "_comment": "Combat Lab scenario role labels (PROJ-278). Used for wiring ships into scenario test scaffolds via the ships_by_role dict. Static — players don't write Combat Lab scenarios so this registry is read-only at runtime. Adding a new template that references a new role label requires adding it here AND will trigger the consistency test.",
+
+    "roles": [
+        {
+            "id": "attacker",
+            "display_name": "Attacker",
+            "description": "Ship that fires at the target in static-target / beam / projectile / seeker scenarios."
+        },
+        {
+            "id": "target",
+            "display_name": "Target",
+            "description": "Ship being fired upon. Often stationary or extreme-HP for measurement-grade tests."
+        },
+        {
+            "id": "ship1",
+            "display_name": "Ship 1",
+            "description": "First combatant in a duel scenario."
+        },
+        {
+            "id": "ship2",
+            "display_name": "Ship 2",
+            "description": "Second combatant in a duel scenario."
+        },
+        {
+            "id": "ship",
+            "display_name": "Ship",
+            "description": "Single ship in propulsion / resource / single-ship test scenarios."
+        },
+        {
+            "id": "low",
+            "display_name": "Low Mass Ship",
+            "description": "Light-mass variant in propulsion mass-comparison scenarios."
+        },
+        {
+            "id": "med",
+            "display_name": "Medium Mass Ship",
+            "description": "Medium-mass variant in propulsion mass-comparison scenarios."
+        },
+        {
+            "id": "high",
+            "display_name": "High Mass Ship",
+            "description": "Heavy-mass variant in propulsion mass-comparison scenarios."
+        },
+        {
+            "id": "provider_a",
+            "display_name": "Aura Provider A",
+            "description": "First aura provider in fleet to-hit-modifier multi-source scenarios."
+        },
+        {
+            "id": "provider_b",
+            "display_name": "Aura Provider B",
+            "description": "Second aura provider in fleet to-hit-modifier multi-source scenarios."
+        },
+        {
+            "id": "baseline_attacker",
+            "display_name": "Baseline Attacker",
+            "description": "Attacker ship in the baseline run of an A/B ComparisonScenario."
+        },
+        {
+            "id": "baseline_target",
+            "display_name": "Baseline Target",
+            "description": "Target ship in the baseline run of an A/B ComparisonScenario."
+        },
+        {
+            "id": "variant_attacker",
+            "display_name": "Variant Attacker",
+            "description": "Attacker ship in the variant run of an A/B ComparisonScenario."
+        },
+        {
+            "id": "variant_target",
+            "display_name": "Variant Target",
+            "description": "Target ship in the variant run of an A/B ComparisonScenario."
+        }
+    ]
+}

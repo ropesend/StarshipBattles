@@ -424,6 +424,7 @@ class PropThrustMassRatioScenario(TestScenario):
                 angle=0.0,
                 velocity=Vector2(0.0, 0.0),
                 components=(),
+                scenario_role=role,
             )
             for role, filename, (x, y) in self._SHIP_FILES
         )
@@ -855,6 +856,7 @@ class PropMassAffectsTurnRateScenario(TestScenario):
             angle=0.0,
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role="low",
         )
         high = ShipSpec(
             instance_id=f"{self.metadata.test_id}:high",
@@ -865,6 +867,7 @@ class PropMassAffectsTurnRateScenario(TestScenario):
             angle=0.0,
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role="high",
         )
         formation = FormationSpec(
             shape=FormationShape.CUSTOM,

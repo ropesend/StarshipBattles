@@ -851,9 +851,10 @@ class ComparisonScenario(TestScenario):
 
         def ship_builder(ship_spec, team_id):
             ship = _context_builder(ship_spec, team_id)
-            if ship_spec.instance_id.endswith(":baseline_attacker"):
+            # PROJ-278 Phase 4: read scenario_role field instead of parsing instance_id
+            if ship_spec.scenario_role == "baseline_attacker":
                 baseline_ships["attacker"] = ship
-            elif ship_spec.instance_id.endswith(":baseline_target"):
+            elif ship_spec.scenario_role == "baseline_target":
                 baseline_ships["target"] = ship
             return ship
 
@@ -952,6 +953,7 @@ class ComparisonScenario(TestScenario):
             angle=float(self.attacker_angle),
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role="baseline_attacker",
         )
         target = ShipSpec(
             instance_id=f"{self.metadata.test_id}:baseline_target",
@@ -962,6 +964,7 @@ class ComparisonScenario(TestScenario):
             angle=float(self.target_angle),
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role="baseline_target",
         )
         single_custom = FormationSpec(
             shape=FormationShape.CUSTOM,
@@ -1054,16 +1057,21 @@ class ComparisonScenario(TestScenario):
     def build_variant_spec(self):
         """Produce the variant-side `BattleSpec` for this comparison.
 
-        Default implementation calls `to_spec()` with
-        `_visual_baseline=False` so the spec-compiler's variant branch
-        is selected regardless of the scenario's current rendering
-        mode. Subclasses can override to apply ability swaps,
-        modifier additions, etc. on top of a common template.
+        Default implementation invokes the spec compiler with
+        `_visual_baseline=False` so the variant branch is selected
+        regardless of the scenario's current rendering mode. Subclasses
+        can override to apply ability swaps, modifier additions, etc.
+        on top of a common template.
+
+        PROJ-279: explicit composition — spec construction is the
+        runner's responsibility, not a scenario method.
         """
+        from combat_lab.spec_compiler import build_test_battle_spec
+
         prior_mode = getattr(self, "_visual_baseline", False)
         object.__setattr__(self, "_visual_baseline", False)
         try:
-            return self.to_spec(registries=None)
+            return build_test_battle_spec(self, registries=None)
         finally:
             object.__setattr__(self, "_visual_baseline", prior_mode)
 

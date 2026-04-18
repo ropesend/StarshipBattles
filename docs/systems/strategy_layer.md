@@ -248,36 +248,48 @@ FleetHierarchyNode), `game/strategy/data/task_force.py`, and
 
 ### Design Roles
 
-**Data file:** `data/design_roles.json`
-**Registry:** `game/strategy/data/design_role.py` — `DesignRoleRegistry`
-**Enum (legacy):** `game/strategy/data/design_role.py` — `DesignRole`
+**Data file:** `data/design_roles.json` (PROJ-278 Phase 2: ported to `{"roles": [{...}, ...]}` shape with field names `display_name` / `vehicle_type_filter`)
+**Registry accessor:** `game/strategy/data/design_role_registry.py` — `get_default_design_role_registry() -> RoleRegistry`
+**Schema + machinery:** `game/core/roles.py` — `Role`, `RoleRegistry`, `RoleRegistryReadOnlyError` (PROJ-278)
+**Enum + classifier:** `game/strategy/data/design_role.py` — `DesignRole`, `classify_design_role`, `classify_from_design_data`
 
 Design roles are classification labels assigned to vehicle designs. They
 drive auto-suggestion for fleet organization and UI grouping but have no
 direct combat behavior effect. The player assigns a role in the Design
 Workshop via a dropdown.
 
-**28 roles** defined in `data/design_roles.json`, each with:
-- `id` �� string identifier (e.g., `"line_combatant"`)
-- `name` — display name (e.g., `"Line Combatant"`)
+**27 roles** defined in `data/design_roles.json`, each with:
+- `id` — string identifier (e.g., `"line_combatant"`)
+- `display_name` — display name (e.g., `"Line Combatant"`)
 - `description` — tooltip text
-- `allowed_vehicle_types` — which vehicle types can use this role (e.g., `["Ship", "Satellite"]`)
+- `vehicle_type_filter` — which vehicle types can use this role (e.g., `["Ship", "Satellite"]`); empty tuple = no restriction
 
 Role categories:
 - **Ship combat** (6): line_combatant, fleet_escort, interceptor, assault_ship, missile_platform, raider
 - **Ship support** (4): carrier, support_ship, scout, command_ship
 - **Universal** (4): general_purpose, shield_projector, sensor_platform, stellar_protector
 - **Planetary complex** (5): resource_harvester, production_facility, defensive_platform, planetary_modifier, research_facility
-- **Specialized** (7): transport, superweapon_platform, megastructure_builder, enrichment_facility, resupply_depot, construction_accelerator, colony_pod, assault_pod
+- **Specialized** (8): transport, superweapon_platform, megastructure_builder, enrichment_facility, resupply_depot, construction_accelerator, colony_pod, assault_pod
 
-**DesignRoleRegistry** (loaded from JSON):
-- `get_roles_for_vehicle_type(type)` — roles allowed for a vehicle type (for dropdown filtering)
-- `get_role_name(role_id)` — display name from ID
-- `get_role_id_by_name(display_name)` — ID from display name
-- `get_all_role_ids()` — all role IDs
-- Module-level accessor: `get_default_design_role_registry()`
+**Layered loading** (PROJ-278): `_build_default()` in `design_role_registry.py` loads in priority order — base `data/design_roles.json` (required) → `mods/<mod_name>/design_roles.json` (optional directory) → `output/design_roles_overlay.json` (optional user overlay). Later sources override earlier ones for the same role id.
 
-**Auto-classification** (legacy, still available):
+**Runtime add:** the design_role registry is constructed with `allow_runtime_add=True`, so subsystems can call `registry.add_user_role(role)` to register player-added roles. (UI for player runtime-add is a future project.)
+
+**Authoring rule for new role-derived caches (PROJ-278 Phase 5):** If you add code that caches data derived from `design_role_registry` (e.g. a precomputed lookup keyed on role id, an archetype mapping table, a filtered-design-list cache), you MUST register an invalidation callback via `registry.register_invalidation_callback(self._invalidate_cache)` so the cache is dropped when a player adds a custom role at runtime. See [tests/unit/strategy/data/test_design_role_registry_invalidation.py](../../tests/unit/strategy/data/test_design_role_registry_invalidation.py) for a worked example.
+
+> Phase 5 audit (2026-04-18) found zero current cachers — `_DESIGN_ROLE_TO_ARCHETYPE` in `formation.py` is a hardcoded module-level dict, not a cache; `game/ai/` doesn't consume design_role; `DesignLibrary.filter_designs` filters in-line. The invalidation API is in place for future use, with the smoke test above as a regression guard.
+
+**RoleRegistry API** (replaces deleted `DesignRoleRegistry` class):
+- `get(role_id) -> Role` — raises `KeyError` on miss (dict-like API)
+- `all() -> List[Role]` — sorted by id for deterministic iteration
+- `get_roles_for_vehicle_type(vehicle_type) -> List[Role]` — sorted by `display_name`; roles with empty filter match any type
+- `add_user_role(role)` — runtime mutation; fires invalidation callbacks
+- `load_from_file(path, source_tag)` / `load_from_file_optional(path, source_tag)`
+- `register_invalidation_callback(cb)`
+
+**Reverse lookup pattern** (was `get_role_id_by_name(display_name)`): `next((r.id for r in registry.all() if r.display_name == name), None)`
+
+**Auto-classification** (unchanged by PROJ-278):
 - `classify_design_role(abilities, mass)` — classify from ability set + mass
 - `classify_from_design_data(design_data, component_registry)` — classify from full design
 

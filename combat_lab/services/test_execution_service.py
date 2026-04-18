@@ -63,13 +63,15 @@ class TestExecutionService:
             # path. `controller.start()` is called normally — no more
             # `_is_started=True` hack.
             from combat_lab.runner import _snapshot_ship_state
+            from combat_lab.spec_compiler import build_test_battle_spec
             from game.ai.ai_factory import AIControllerFactory
             from game.simulation.battle_config import BattleConfig
             from game.core.return_destination import ReturnDestination
             from game.simulation.battle_controller import BattleController
             from game.simulation.battle_runner import materialize_spec_ships
 
-            spec = scenario.to_spec(registries=None)
+            # PROJ-279: explicit composition — call the compiler directly.
+            spec = build_test_battle_spec(scenario, registries=None)
             scenario.before_run_battle(spec)
 
             config = BattleConfig(

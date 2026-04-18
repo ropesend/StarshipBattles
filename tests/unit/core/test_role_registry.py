@@ -136,6 +136,97 @@ class TestRoleRegistryLoading:
         assert ids == ["a", "m", "z"]
 
 
+class TestRoleRegistryLoadOptional:
+    """`load_from_file_optional` tolerates a missing file (returns silently)
+    but still raises on malformed JSON. Used for the user-overlay path
+    that won't exist on first run."""
+
+    def test_load_from_file_optional_with_missing_file_is_noop(self, tmp_path):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.load_from_file_optional(tmp_path / "missing.json", source_tag="user")
+        assert reg.all() == []
+
+    def test_load_from_file_optional_with_existing_file_loads_roles(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "display_name": "X", "description": "x"},
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.load_from_file_optional(path, source_tag="user")
+        assert reg.get("x").id == "x"
+
+    def test_load_from_file_optional_with_malformed_json_still_raises(self, tmp_path):
+        """Existence-tolerant; corruption-intolerant."""
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not valid json", encoding="utf-8")
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(json.JSONDecodeError):
+            reg.load_from_file_optional(bad, source_tag="user")
+
+    def test_load_from_file_optional_does_not_fire_invalidation(self, tmp_path):
+        """Like `load_from_file`, this is initialization, not mutation."""
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "display_name": "X", "description": "x"},
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        calls: List[int] = []
+        reg.register_invalidation_callback(lambda: calls.append(1))
+
+        reg.load_from_file_optional(path, source_tag="user")
+
+        assert calls == []
+
+
+class TestRoleRegistryQueryByVehicleType:
+    """`get_roles_for_vehicle_type` returns roles whose `vehicle_type_filter`
+    accepts the given vehicle type. Empty filter = matches any."""
+
+    def test_empty_filter_matches_any_vehicle_type(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(id="generic", display_name="Generic", description="g"))
+
+        assert reg.get_roles_for_vehicle_type("Ship") == [reg.get("generic")]
+        assert reg.get_roles_for_vehicle_type("Fighter") == [reg.get("generic")]
+
+    def test_non_empty_filter_matches_only_listed_types(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(
+            id="carrier", display_name="Carrier", description="c",
+            vehicle_type_filter=("Battleship", "Cruiser"),
+        ))
+
+        assert reg.get_roles_for_vehicle_type("Battleship") == [reg.get("carrier")]
+        assert reg.get_roles_for_vehicle_type("Fighter") == []
+
+    def test_result_sorted_by_display_name(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(id="c", display_name="Charlie", description="c"))
+        reg.add_user_role(Role(id="a", display_name="Alpha", description="a"))
+        reg.add_user_role(Role(id="b", display_name="Bravo", description="b"))
+
+        names = [r.display_name for r in reg.get_roles_for_vehicle_type("Ship")]
+        assert names == ["Alpha", "Bravo", "Charlie"]
+
+    def test_returns_empty_list_when_no_roles_match(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(
+            id="x", display_name="X", description="x",
+            vehicle_type_filter=("Battleship",),
+        ))
+
+        assert reg.get_roles_for_vehicle_type("Fighter") == []
+
+    def test_mix_of_filtered_and_unfiltered_roles(self):
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.add_user_role(Role(id="generic", display_name="Generic", description="g"))
+        reg.add_user_role(Role(
+            id="carrier", display_name="Carrier", description="c",
+            vehicle_type_filter=("Battleship",),
+        ))
+
+        result = reg.get_roles_for_vehicle_type("Battleship")
+        assert {r.id for r in result} == {"generic", "carrier"}
+
+
 class TestRoleRegistryRuntimeAdd:
     """Runtime add behavior — gated by allow_runtime_add flag."""
 
@@ -226,6 +317,36 @@ class TestRoleRegistryInvalidation:
         reg.add_user_role(Role(id="x", display_name="X", description="x"))
         assert reg.get("x").id == "x"
 
+    def test_reentrant_add_user_role_in_callback_does_not_recurse(self):
+        """Closure audit (PROJ-278): a callback that calls add_user_role
+        should NOT trigger a recursive invalidation firing. The mutation
+        still succeeds; nested invalidation is suppressed."""
+        reg = RoleRegistry(allow_runtime_add=True)
+        outer_calls: List[int] = []
+        inner_calls: List[int] = []
+
+        def outer_callback():
+            outer_calls.append(1)
+            # Recursive add — must succeed but not re-fire callbacks
+            reg.add_user_role(Role(id="inner", display_name="Inner", description="i"))
+
+        def inner_callback():
+            # Would be called twice if recursion guard is broken
+            inner_calls.append(1)
+
+        reg.register_invalidation_callback(outer_callback)
+        reg.register_invalidation_callback(inner_callback)
+
+        reg.add_user_role(Role(id="trigger", display_name="Trigger", description="t"))
+
+        # Outer fires once (top-level add); recursive inner_callback for the
+        # nested add must be suppressed to prevent stack-overflow risk.
+        assert outer_calls == [1]
+        assert inner_calls == [1]
+        # Both roles present — the inner mutation succeeded
+        assert "trigger" in reg
+        assert "inner" in reg
+
     def test_subsequent_callbacks_fire_after_one_raises(self):
         """One bad callback doesn't prevent later callbacks from firing."""
         reg = RoleRegistry(allow_runtime_add=True)
@@ -241,3 +362,50 @@ class TestRoleRegistryInvalidation:
         reg.add_user_role(Role(id="x", display_name="X", description="x"))
 
         assert calls == ["b", "c"]
+
+
+class TestRoleRegistryMalformedJSONLoading:
+    """Closure audit gap (PROJ-278): explicit coverage for malformed
+    role dicts and missing structural keys."""
+
+    def test_missing_id_field_raises_on_load(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"display_name": "X", "description": "x"},  # no id
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(KeyError):
+            reg.load_from_file(path, source_tag="base")
+
+    def test_missing_display_name_field_raises_on_load(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "description": "x"},  # no display_name
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(KeyError):
+            reg.load_from_file(path, source_tag="base")
+
+    def test_missing_description_field_raises_on_load(self, tmp_path):
+        path = _write_roles_json(tmp_path, [
+            {"id": "x", "display_name": "X"},  # no description
+        ])
+        reg = RoleRegistry(allow_runtime_add=True)
+        with pytest.raises(KeyError):
+            reg.load_from_file(path, source_tag="base")
+
+    def test_missing_roles_key_loads_zero_roles_silently(self, tmp_path):
+        """A JSON file without a `roles` key (e.g. comment-only template)
+        loads silently with no roles. This is by-design forward-compat
+        behavior — empty/template files should not error."""
+        path = tmp_path / "no_roles.json"
+        path.write_text('{"_comment": "template — no roles yet"}', encoding="utf-8")
+        reg = RoleRegistry(allow_runtime_add=True)
+
+        reg.load_from_file(path, source_tag="base")  # does not raise
+
+        assert reg.all() == []
+
+    def test_empty_roles_array_loads_zero_roles(self, tmp_path):
+        path = _write_roles_json(tmp_path, [])
+        reg = RoleRegistry(allow_runtime_add=True)
+        reg.load_from_file(path, source_tag="base")
+        assert reg.all() == []

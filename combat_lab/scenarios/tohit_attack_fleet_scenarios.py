@@ -44,6 +44,7 @@ def _build_two_team_spec(scenario, *, team0_ships, team1_ships):
             angle=0.0,
             velocity=Vector2(0.0, 0.0),
             components=(),
+            scenario_role=role,
         )
 
     def _team(team_id, name, entries):

@@ -514,11 +514,14 @@ class WorkshopEventRouter:
     def _handle_role_dropdown(self, event) -> bool:
         """Handle design role dropdown change."""
         gui = self.gui
-        from game.strategy.data.design_role import get_default_design_role_registry
+        from game.strategy.data.design_role_registry import get_default_design_role_registry
 
         selected_name = event.text
         registry = get_default_design_role_registry()
-        role_id = registry.get_role_id_by_name(selected_name)
+        role_id = next(
+            (r.id for r in registry.all() if r.display_name == selected_name),
+            None,
+        )
 
         if role_id:
             gui.viewmodel.set_ship_design_role(role_id)

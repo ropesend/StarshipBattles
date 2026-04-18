@@ -143,7 +143,9 @@ When a project worker completes:
       - `git reset --hard HEAD~1`
       - Report failures to user. Mark `failed`.
 
-3. **If worker hit context limit (PARTIAL):**
+3. **If worker hit context threshold (PARTIAL):**
+   Threshold is defined in `Projects/protocols/context_config.md`; workers
+   detect it via `check_context.py`.
    a. Merge partial branch (completed phases only).
    b. Run tests.
    c. If tests pass: mark `overflow`, project stays in queue for relaunch.
@@ -222,9 +224,11 @@ Your project modifies these files (from manifest.md):
    - Run full test suite: python Tools/test_sharded/test_sharded.py
    - Update Current State to indicate project complete
    - Report SUCCESS
-7. If you approach context limit (~80%):
+7. At natural handoff points, run `python Projects/scripts/check_context.py`.
+   If verdict is STOP:
    - Stop at a clean point (end of task or phase)
    - Write comprehensive Current State handoff
+   - Write handoff prompt per `Projects/protocols/context_config.md` §3
    - Report PARTIAL with details of what's done and what remains
 8. If you encounter a blocker:
    - Document in Current State

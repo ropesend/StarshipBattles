@@ -343,7 +343,7 @@ Key rules:
 | `data/targeting_policies.json` | Targeting rule sets for per-ship AI (standard, sniper, brawler, anti_fighter, self_defense) |
 | `data/movement_policies.json` | Movement behavior presets for per-ship AI (kite_max, brawl_close, strafe_run, etc.) |
 | `data/group_policies.json` | Group-level combat policy presets (targeting, movement, retreat — 21 presets for fleet hierarchy) |
-| `data/design_roles.json` | Design role definitions (28 roles) with vehicle type restrictions — loaded by `DesignRoleRegistry` |
+| `data/design_roles.json` | Design role definitions (27 roles) with vehicle type restrictions — loaded by `RoleRegistry` via `game/strategy/data/design_role_registry.py::get_default_design_role_registry` (PROJ-278). Layered: base + `mods/*/design_roles.json` + `output/design_roles_overlay.json` |
 
 ### 5.3 Starter Designs and Races
 

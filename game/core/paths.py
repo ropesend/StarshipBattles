@@ -119,6 +119,12 @@ class Paths:
     GROUP_POLICIES_FILE: str = os.path.join(DATA_DIR, "group_policies.json")
     DESIGN_ROLES_FILE: str = os.path.join(DATA_DIR, "design_roles.json")
 
+    # === Mod & User Overlay Directories (PROJ-278) ===
+    # Mods are loose JSON files in mods/<mod_name>/ that override base data.
+    # User overlays live in output/ and persist player runtime additions.
+    MODS_DIR: str = os.path.join(ROOT_DIR, "mods")
+    USER_DESIGN_ROLES_FILE: str = os.path.join(OUTPUT_DIR, "design_roles_overlay.json")
+
     # === Settings Files ===
     DEFAULT_KEYBINDINGS_FILE: str = os.path.join(DATA_DIR, "default_keybindings.json")
     USER_KEYBINDINGS_FILE: str = os.path.join(SETTINGS_DIR, "keybindings.json")
