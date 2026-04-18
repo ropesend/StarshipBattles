@@ -7,17 +7,17 @@ w# Projects Index
 | PROJ-282 | FleetBattleSetupScreen MVVM Decomposition | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | Planning | 2026-04-17 | 2026-04-17 |
 | PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | Planning | 2026-04-17 | 2026-04-17 |
-| PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | Planning | 2026-04-17 | 2026-04-17 |
-| PROJ-273 | Shared Ability Stat Key Registry | Planning | 2026-04-16 | 2026-04-16 |
-| PROJ-274 | Unified ShipMaterializer Service | Planning | 2026-04-16 | 2026-04-16 |
-| PROJ-275 | N-Team Combat Support | Planning (BLOCKED on PROJ-273, PROJ-274) | 2026-04-16 | 2026-04-16 |
-| PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | Planning | 2026-04-16 | 2026-04-16 |
-| PROJ-277 | First-Class A/B Comparison Runner | Planning | 2026-04-16 | 2026-04-16 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | Archived | 2026-04-17 | 2026-04-18 |
+| PROJ-277 | First-Class A/B Comparison Runner | Archived | 2026-04-16 | 2026-04-18 |
+| PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | Archived | 2026-04-16 | 2026-04-18 |
+| PROJ-275 | N-Team Combat Support | Archived | 2026-04-16 | 2026-04-18 |
+| PROJ-274 | Unified ShipMaterializer Service | Archived | 2026-04-16 | 2026-04-18 |
+| PROJ-273 | Shared Ability Stat Key Registry | Archived | 2026-04-16 | 2026-04-18 |
 | PROJ-278 | Unified Role Registry (design_role + Combat Lab scenario_role) | Archived | 2026-04-17 | 2026-04-18 |
 | PROJ-272 | Strategic Modifier System Cleanup + Round-2 Audit Fixes | Archived | 2026-04-13 | 2026-04-16 |
 | PROJ-269 | Unified Battle Simulator Entry/Exit | Archived | 2026-04-12 | 2026-04-16 |
@@ -32,12 +32,6 @@ w# Projects Index
 | PROJ-261 | Fix Test Suite Production Bugs | Archived | 2026-04-09 | 2026-04-10 |
 | PROJ-260 | Ship Further Decomposition - LayerManager and ResourceManager Extraction | Archived | 2026-04-08 | 2026-04-09 |
 | PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | Archived | 2026-04-08 | 2026-04-09 |
-| PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | Archived | 2026-04-08 | 2026-04-09 |
-| PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | Archived | 2026-04-08 | 2026-04-09 |
-| PROJ-256 | Centralize All File Paths via Paths Class | Archived | 2026-04-08 | 2026-04-08 |
-| PROJ-255 | Code Quality & Decomposition | Archived | 2026-04-08 | 2026-04-08 |
-| PROJ-254 | Identity, Indexing & Correctness | Archived | 2026-04-08 | 2026-04-08 |
-| PROJ-253 | Hot-Loop & Cache Optimization | Archived | 2026-04-08 | 2026-04-08 |
 
 ---
 

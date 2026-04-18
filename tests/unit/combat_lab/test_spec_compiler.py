@@ -160,22 +160,6 @@ def test_compiler_assigns_unique_instance_ids():
 
 
 # ---------------------------------------------------------------------------
-# TestScenario.to_spec base method
-# ---------------------------------------------------------------------------
-
-
-def test_test_scenario_to_spec_delegates_to_compiler():
-    scenario = _MinimalStaticScenario()
-    spec_via_method = scenario.to_spec(registries=None)
-    spec_direct = build_test_battle_spec(scenario, registries=None)
-    # Both paths should produce equivalent specs (same seed, same ship
-    # counts, same end condition).
-    assert spec_via_method.seed == spec_direct.seed
-    assert len(spec_via_method.teams) == len(spec_direct.teams)
-    assert isinstance(spec_via_method.end_condition, TickLimitCondition)
-
-
-# ---------------------------------------------------------------------------
 # Unsupported scenario types raise a clear error
 # ---------------------------------------------------------------------------
 

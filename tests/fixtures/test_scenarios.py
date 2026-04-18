@@ -343,6 +343,41 @@ def create_sample_component_data(
 
 
 # =============================================================================
+# Spec compiler mock helper (PROJ-279)
+# =============================================================================
+
+def patch_spec_compiler_to_delegate_to_mock_scenario():
+    """Return a `mock.patch` context manager that patches
+    `combat_lab.spec_compiler.build_test_battle_spec` so it delegates to
+    the scenario's `to_spec` mock.
+
+    PROJ-279 deleted the `scenario.to_spec()` monkey-patch that production
+    code used to consult; production now calls
+    `build_test_battle_spec(scenario)` directly. Existing tests that
+    configure `mock_scenario.to_spec.return_value = empty_spec` would
+    silently lose effect after the migration. This helper bridges the gap
+    by making the production call route through the mock's `to_spec`,
+    preserving every existing assertion like
+    `mock_scenario.to_spec.assert_called_once()`.
+
+    Usage (in a test file):
+        @pytest.fixture(autouse=True)
+        def _patch_spec_compiler():
+            with patch_spec_compiler_to_delegate_to_mock_scenario():
+                yield
+    """
+    from unittest.mock import patch
+
+    def _delegate(scenario, registries=None):
+        return scenario.to_spec(registries=registries)
+
+    return patch(
+        'combat_lab.spec_compiler.build_test_battle_spec',
+        side_effect=_delegate,
+    )
+
+
+# =============================================================================
 # Pytest Fixtures
 # =============================================================================
 

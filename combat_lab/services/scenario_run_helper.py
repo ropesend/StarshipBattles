@@ -21,6 +21,7 @@ from dataclasses import replace
 from typing import Any, Callable, Dict, Optional, Tuple
 
 from combat_lab.runner import _snapshot_ship_state
+from combat_lab.spec_compiler import build_test_battle_spec
 from combat_lab.telemetry import CombatLabTelemetry
 from game.ai.ai_factory import AIControllerFactory
 from game.simulation.battle_outcome import BattleOutcome
@@ -55,7 +56,9 @@ def run_scenario_via_run_battle(
         the engine was torn down. No engine reference is exposed —
         validators must consume outcome + telemetry only.
     """
-    spec = scenario.to_spec(registries=None)
+    # PROJ-279: explicit composition — spec construction is the runner's
+    # responsibility, not a method on the scenario object.
+    spec = build_test_battle_spec(scenario, registries=None)
     if seed_override is not None and seed_override != spec.seed:
         spec = replace(spec, seed=seed_override)
 

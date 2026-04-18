@@ -64,13 +64,32 @@ def build_test_battle_spec(
 ) -> BattleSpec:
     """Compile a `TestScenario` into a `BattleSpec`.
 
-    Dispatches on the scenario's template type. Unsupported subclasses
-    (pure `TestScenario` with no template) raise `NotImplementedError` —
-    a scenario must inherit from one of the five known templates to be
-    compilable into a spec.
+    Dispatch order (PROJ-279):
+      1. **Subclass override:** if any class in the scenario's MRO between
+         `type(scenario)` and `TestScenario` defines its own `to_spec`
+         method, delegate to it. This is the documented escape hatch for
+         custom multi-team / fleet / propulsion-mass-comparison scenarios
+         that don't fit the 5 canonical templates.
+      2. **Canonical template dispatch:** `StaticTargetScenario` /
+         `DuelScenario` / `PropulsionScenario` / `ResourceScenario` /
+         `ComparisonScenario`.
+      3. Otherwise raise `NotImplementedError`.
+
+    The base `TestScenario` itself does NOT define `to_spec` — PROJ-279
+    deleted the historical monkey-patch. Subclasses opt-in by defining
+    their own method explicitly.
     """
     _ = registries  # Unused: materialization happens in the runner.
 
+    # 1. Subclass override (PROJ-279 escape hatch).
+    cls = type(scenario)
+    for kls in cls.__mro__:
+        if kls is TestScenario:
+            break
+        if "to_spec" in kls.__dict__:
+            return kls.__dict__["to_spec"](scenario, registries=registries)
+
+    # 2. Canonical template dispatch.
     if isinstance(scenario, StaticTargetScenario):
         return _compile_static_target(scenario)
     if isinstance(scenario, DuelScenario):
@@ -86,7 +105,8 @@ def build_test_battle_spec(
         f"Combat Lab spec compiler does not support "
         f"{type(scenario).__name__}. Subclass one of "
         "StaticTargetScenario / DuelScenario / PropulsionScenario / "
-        "ResourceScenario / ComparisonScenario."
+        "ResourceScenario / ComparisonScenario, or override `to_spec` "
+        "on your scenario class."
     )
 
 
@@ -481,21 +501,6 @@ def _to_core_vector(v) -> Vector2:
         return v
     # pygame.math.Vector2 exposes .x / .y.
     return Vector2(float(getattr(v, "x", 0.0)), float(getattr(v, "y", 0.0)))
-
-
-# ---------------------------------------------------------------------------
-# Monkey-patch TestScenario.to_spec to delegate to the compiler.
-# ---------------------------------------------------------------------------
-#
-# Keeping the base-class method ergonomic — any scenario can call
-# `scenario.to_spec(registries)` without the caller importing
-# `build_test_battle_spec`. Subclasses that need a custom translation
-# override `to_spec()` directly.
-def _to_spec(self: TestScenario, registries=None) -> BattleSpec:
-    return build_test_battle_spec(self, registries)
-
-
-TestScenario.to_spec = _to_spec  # type: ignore[attr-defined]
 
 
 __all__ = [

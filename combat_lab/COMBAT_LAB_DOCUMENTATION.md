@@ -280,9 +280,18 @@ class TestScenario:
     results: Dict[str, Any]         # Test results (populated during execution)
     passed: bool                    # Test outcome
 
-    def to_spec(self, registries=None) -> BattleSpec:
-        """Compile the scenario into a BattleSpec. MUST be implemented."""
-        raise NotImplementedError
+    # PROJ-279: spec construction is the runner's responsibility, not a
+    # scenario method. Scenarios are compiled by:
+    #   from combat_lab.spec_compiler import build_test_battle_spec
+    #   spec = build_test_battle_spec(scenario, registries=None)
+    # The compiler dispatches on the canonical template type
+    # (StaticTargetScenario / DuelScenario / PropulsionScenario /
+    # ResourceScenario / ComparisonScenario) — each template reads
+    # subclass-defined class attributes (attacker_ship, distance, etc.) to
+    # build the spec. Custom layouts that don't fit the 5 templates can
+    # opt-in by defining `to_spec(self, registries)` on their subclass —
+    # `build_test_battle_spec` walks the MRO and delegates to subclass
+    # overrides before falling through to canonical dispatch.
 
     def wire_ships(self, ships_by_role, engine, initial_state):
         """Bind `self.attacker`/`self.target` + other scenario ships from
@@ -303,9 +312,15 @@ class TestScenario:
 ```
 
 *PROJ-270 Phase 11: the legacy `setup(battle_engine)` + `validate(engine)`
-pattern has been replaced by the `to_spec` / `wire_ships` / `validate(outcome,
+pattern has been replaced by the `wire_ships` / `validate(outcome,
 telemetry)` trio. See `combat_lab/scenarios/base.py` for the authoritative
 base class.*
+
+*PROJ-279: deleted the historical `scenario.to_spec()` monkey-patch on
+`TestScenario`. Production code now calls `build_test_battle_spec(scenario)`
+explicitly. Subclasses that need custom spec layouts (fleet aura tests,
+multi-mass propulsion comparisons) opt-in by defining their own `to_spec`
+method — those overrides take precedence over canonical template dispatch.*
 
 ### TestMetadata
 

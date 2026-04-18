@@ -1057,16 +1057,21 @@ class ComparisonScenario(TestScenario):
     def build_variant_spec(self):
         """Produce the variant-side `BattleSpec` for this comparison.
 
-        Default implementation calls `to_spec()` with
-        `_visual_baseline=False` so the spec-compiler's variant branch
-        is selected regardless of the scenario's current rendering
-        mode. Subclasses can override to apply ability swaps,
-        modifier additions, etc. on top of a common template.
+        Default implementation invokes the spec compiler with
+        `_visual_baseline=False` so the variant branch is selected
+        regardless of the scenario's current rendering mode. Subclasses
+        can override to apply ability swaps, modifier additions, etc.
+        on top of a common template.
+
+        PROJ-279: explicit composition — spec construction is the
+        runner's responsibility, not a scenario method.
         """
+        from combat_lab.spec_compiler import build_test_battle_spec
+
         prior_mode = getattr(self, "_visual_baseline", False)
         object.__setattr__(self, "_visual_baseline", False)
         try:
-            return self.to_spec(registries=None)
+            return build_test_battle_spec(self, registries=None)
         finally:
             object.__setattr__(self, "_visual_baseline", prior_mode)
 

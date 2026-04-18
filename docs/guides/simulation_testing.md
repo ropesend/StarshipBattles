@@ -203,10 +203,25 @@ Both environments use the exact same `BattleEngine` code. The only difference is
 
 ### TestScenario Class
 
-The current `TestScenario` API is spec-driven: scenarios compile to a
-`BattleSpec` via `to_spec()`, `run_battle(spec)` drives the engine, and
-validators consume the resulting `BattleOutcome` + Combat Lab `telemetry`
-bundle. The authoritative base class lives at [combat_lab/scenarios/base.py](../../combat_lab/scenarios/base.py); existing modern scenarios (e.g. `combat_lab/scenarios/tohit_attack_scenarios.py`) serve as worked examples.
+The current `TestScenario` API is spec-driven: scenarios are compiled to a
+`BattleSpec` by `build_test_battle_spec(scenario)` (PROJ-279 — explicit
+composition; the historical `scenario.to_spec()` monkey-patch was deleted),
+`run_battle(spec)` drives the engine, and validators consume the resulting
+`BattleOutcome` + Combat Lab `telemetry` bundle. The authoritative base
+class lives at [combat_lab/scenarios/base.py](../../combat_lab/scenarios/base.py); existing modern scenarios (e.g. `combat_lab/scenarios/tohit_attack_scenarios.py`) serve as worked examples.
+
+> **Authoring rule (PROJ-279):** scenarios describe a setup; spec
+> construction is the runner's responsibility. Do NOT add a `to_spec`
+> method to your scenario class as a convenience — the runner calls
+> [`build_test_battle_spec(scenario)`](../../combat_lab/spec_compiler.py)
+> directly. The only legitimate reason to define `to_spec` on a subclass
+> is the documented escape hatch for custom multi-team / fleet /
+> propulsion-mass-comparison layouts that don't fit the 5 canonical
+> templates (see `combat_lab/scenarios/tohit_attack_fleet_scenarios.py`
+> for an example). `build_test_battle_spec` walks the MRO between
+> `type(scenario)` and `TestScenario`; if any subclass defines its own
+> `to_spec`, that override wins. The base `TestScenario` class itself
+> does NOT define `to_spec`.
 
 ```python
 from combat_lab.scenarios import TestScenario, TestMetadata
@@ -229,10 +244,11 @@ class MyTest(TestScenario):
         tags=["accuracy", "close_range"],
     )
 
-    # `to_spec(registries=None)` is inherited from TestScenario. The base
-    # class generates a 2-team spec from `attacker_ship` / `target_ship`
-    # class attrs + `distance`; most scenarios just set those and don't
-    # need to override `to_spec`.
+    # PROJ-279: scenarios are compiled by `build_test_battle_spec(scenario)`
+    # — no `to_spec` method needed. The compiler dispatches on the canonical
+    # template type (here StaticTargetScenario) and reads `attacker_ship` /
+    # `target_ship` / `distance` to build a 2-team spec. Most scenarios just
+    # set these class attrs and never touch the compiler.
     attacker_ship = "Test_Attacker_Beam.json"
     target_ship = "Test_Target_Stationary.json"
     distance = 50
