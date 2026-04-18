@@ -15,12 +15,13 @@ import logging
 import os
 
 import pygame
-import pygame_gui
-from pygame_gui.elements import UIPanel, UIButton, UILabel, UIDropDownMenu, UITextEntryLine
 
 from game.core.paths import Paths
 from game.core.json_utils import load_json, save_json
 from game.ui.screens.battle_setup_state import BattleSetupState
+from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
+from game.ui.screens.battle_setup.renderer import BattleSetupRenderer
+from game.ui.screens.battle_setup.input_handler import BattleSetupInputHandler
 from game.strategy.data.fleet_hierarchy import CombatPolicy, BattleRole
 from game.strategy.data.task_force import TaskForce
 from game.strategy.data.squadron import Squadron
@@ -97,15 +98,75 @@ class FleetBattleSetupScreen:
         self.scene_callback = scene_callback
 
         self.state = BattleSetupState()
-        self.active_side = 0
-        self.active_fleet_index = 0
-        self.selected_tf_index = None  # Selected task force index (None = unassigned)
-        self.selected_sq_index = None  # Selected squadron index within selected TF
-        self.selected_ship_index = None  # Selected ship index for strategy editing
-        self.available_designs = []
+        # PROJ-282 Phase 3: view state (selection indices, scanned designs)
+        # lives on `BattleSetupViewModel`. Screen exposes property shims
+        # so the existing ~60 `self.active_side` / `self.selected_tf_index`
+        # reads/writes continue to work during the transition. Phase 8
+        # drops the shims when the screen is rewritten as a thin shell.
+        self.view_model = BattleSetupViewModel()
+
+        # PROJ-282 Phase 4: panel construction moved to
+        # `game.ui.screens.battle_setup.renderer.BattleSetupRenderer` +
+        # `panels/{left,center,right}_panel.py`. `_rebuild_ui` delegates
+        # to `self.renderer.rebuild(self)`.
+        self.renderer = BattleSetupRenderer()
+
+        # PROJ-282 Phase 5: pygame_gui event dispatch moved to
+        # `BattleSetupInputHandler`. `handle_event` routes to it.
+        self.input_handler = BattleSetupInputHandler(self)
 
         self._ui_manager = None
         self._panels_built = False
+
+    # === View-model property shims (PROJ-282 Phase 3) ===
+
+    @property
+    def active_side(self) -> int:
+        return self.view_model.active_side
+
+    @active_side.setter
+    def active_side(self, value: int) -> None:
+        self.view_model.active_side = value
+
+    @property
+    def active_fleet_index(self) -> int:
+        return self.view_model.active_fleet_index
+
+    @active_fleet_index.setter
+    def active_fleet_index(self, value: int) -> None:
+        self.view_model.active_fleet_index = value
+
+    @property
+    def selected_tf_index(self):
+        return self.view_model.selected_tf_index
+
+    @selected_tf_index.setter
+    def selected_tf_index(self, value) -> None:
+        self.view_model.selected_tf_index = value
+
+    @property
+    def selected_sq_index(self):
+        return self.view_model.selected_sq_index
+
+    @selected_sq_index.setter
+    def selected_sq_index(self, value) -> None:
+        self.view_model.selected_sq_index = value
+
+    @property
+    def selected_ship_index(self):
+        return self.view_model.selected_ship_index
+
+    @selected_ship_index.setter
+    def selected_ship_index(self, value) -> None:
+        self.view_model.selected_ship_index = value
+
+    @property
+    def available_designs(self) -> list:
+        return self.view_model.available_designs
+
+    @available_designs.setter
+    def available_designs(self, value: list) -> None:
+        self.view_model.available_designs = value
 
         # End condition settings
         self.tick_limit = 100000
@@ -114,18 +175,18 @@ class FleetBattleSetupScreen:
         self.end_mass_ratio = False
         self.mass_ratio_threshold = 0.10
 
-        # Track complex toggle state per side: {(side, scope, design_id): bool}
-        self._complex_toggles = {}
+        # PROJ-282 Phase 2: complex toggle state lives on `BattleSetupSide`
+        # (system_complex_toggles / sector_complex_toggles dicts). No
+        # screen-level dict. Toggle reads go through `_get_toggle(...)`;
+        # writes through `_set_toggle(...)`.
 
     # === IScene Protocol ===
 
     def handle_event(self, event):
         if self._ui_manager:
             self._ui_manager.process_events(event)
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            self._handle_button(event)
-        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
-            self._handle_dropdown(event)
+        # PROJ-282 Phase 5: dispatch delegated to BattleSetupInputHandler.
+        self.input_handler.handle_event(event)
 
     def update(self, dt: float):
         if self._ui_manager:
@@ -152,10 +213,27 @@ class FleetBattleSetupScreen:
             self.state.side_1.create_fleet("Fleet Beta")
             self.active_side = 0
             self.active_fleet_index = 0
-            self._complex_toggles = {}
+            # PROJ-282 Phase 2: toggles live on state; `clear()` resets them.
 
         self._scan_designs()
         self._rebuild_ui()
+
+    # === Complex toggle accessors (PROJ-282 Phase 2) ===
+
+    def _toggle_dict_for(self, side_id: int, scope: str) -> dict:
+        """Return the per-side, per-scope toggle dict on state."""
+        side = self.state.sides[side_id]
+        if scope == "system":
+            return side.system_complex_toggles
+        if scope == "sector":
+            return side.sector_complex_toggles
+        raise ValueError(f"unknown complex scope: {scope!r}")
+
+    def _get_toggle(self, side_id: int, scope: str, design_id: str) -> bool:
+        return self._toggle_dict_for(side_id, scope).get(design_id, False)
+
+    def _set_toggle(self, side_id: int, scope: str, design_id: str, enabled: bool) -> None:
+        self._toggle_dict_for(side_id, scope)[design_id] = enabled
 
     def _scan_designs(self):
         self.available_designs = []
@@ -178,599 +256,18 @@ class FleetBattleSetupScreen:
     # === UI Construction ===
 
     def _rebuild_ui(self):
-        if self._ui_manager:
-            self._ui_manager.clear_and_reset()
+        """Delegate panel construction to `BattleSetupRenderer` (PROJ-282 Phase 4)."""
+        self.renderer.rebuild(self)
 
-        self._ui_manager = pygame_gui.UIManager(
-            (self.screen_width, self.screen_height)
-        )
+    # _build_left_panel moved to game/ui/screens/battle_setup/panels/left_panel.py (PROJ-282 Phase 4)
 
-        w = self.screen_width
-        h = self.screen_height
-        left_w = 250
-        right_w = 280
-        center_w = w - left_w - right_w
-        bottom_h = 60
-
-        self._build_left_panel(left_w, h - bottom_h)
-        self._build_center_panel(left_w, center_w, h - bottom_h)
-        self._build_right_panel(left_w + center_w, right_w, h - bottom_h)
-        self._build_bottom_bar(w, h, bottom_h)
-        self._panels_built = True
-
-    def _build_left_panel(self, width, height):
-        panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, width, height),
-            manager=self._ui_manager, object_id='#left_panel'
-        )
-        y = 10
-
-        UILabel(pygame.Rect(10, y, width - 20, 30), "Battle Setup",
-                manager=self._ui_manager, container=panel)
-        y += 35
-
-        # Side selector
-        UILabel(pygame.Rect(10, y, 50, 25), "Side:",
-                manager=self._ui_manager, container=panel)
-        self._side_dropdown = UIDropDownMenu(
-            ["Side 0 (Left)", "Side 1 (Right)"],
-            f"Side {self.active_side} ({'Left' if self.active_side == 0 else 'Right'})",
-            pygame.Rect(60, y, width - 70, 28),
-            manager=self._ui_manager, container=panel
-        )
-        y += 35
-
-        # Fleet list
-        UILabel(pygame.Rect(10, y, width - 20, 22), "Fleets:",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        side = self.state.get_side(self.active_side)
-        self._fleet_buttons = []
-        for i, fleet in enumerate(side.fleets):
-            name = getattr(fleet, '_battle_setup_name', f"Fleet {fleet.id}")
-            ship_count = len(fleet.ships)
-            btn = UIButton(
-                pygame.Rect(10, y, width - 20, 28),
-                f"{'> ' if i == self.active_fleet_index else '  '}{name} ({ship_count} ships)",
-                manager=self._ui_manager, container=panel
-            )
-            btn._fleet_index = i
-            self._fleet_buttons.append(btn)
-            y += 30
-
-        # Fleet management buttons
-        y += 5
-        half_w = (width - 30) // 2
-        self._add_fleet_btn = UIButton(
-            pygame.Rect(10, y, half_w, 28), "Add Fleet",
-            manager=self._ui_manager, container=panel
-        )
-        self._remove_fleet_btn = UIButton(
-            pygame.Rect(20 + half_w, y, half_w, 28), "Remove Fleet",
-            manager=self._ui_manager, container=panel
-        )
-        y += 35
-
-        # System complexes section
-        UILabel(pygame.Rect(10, y, width - 20, 22), "System Complexes:",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        self._system_complex_btns = []
-        for design_id, display_name in _SYSTEM_SCOPE_COMPLEXES:
-            key = (self.active_side, "system", design_id)
-            is_on = self._complex_toggles.get(key, False)
-            icon = "[X]" if is_on else "[  ]"
-            btn = UIButton(
-                pygame.Rect(10, y, width - 20, 24),
-                f"{icon} {display_name}",
-                manager=self._ui_manager, container=panel
-            )
-            btn._complex_key = key
-            btn._complex_design_id = design_id
-            self._system_complex_btns.append(btn)
-            y += 26
-
-        y += 5
-        # Sector complexes section
-        UILabel(pygame.Rect(10, y, width - 20, 22), "Sector Complexes:",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        self._sector_complex_btns = []
-        for design_id, display_name in _SECTOR_SCOPE_COMPLEXES:
-            key = (self.active_side, "sector", design_id)
-            is_on = self._complex_toggles.get(key, False)
-            icon = "[X]" if is_on else "[  ]"
-            btn = UIButton(
-                pygame.Rect(10, y, width - 20, 24),
-                f"{icon} {display_name}",
-                manager=self._ui_manager, container=panel
-            )
-            btn._complex_key = key
-            btn._complex_design_id = design_id
-            self._sector_complex_btns.append(btn)
-            y += 26
-
-        # End conditions section
-        y += 5
-        UILabel(pygame.Rect(10, y, width - 20, 22), "End Conditions:",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        # Tick limit
-        UILabel(pygame.Rect(10, y, 60, 22), "Ticks:",
-                manager=self._ui_manager, container=panel)
-        self._tick_limit_entry = UITextEntryLine(
-            pygame.Rect(70, y, width - 80, 24),
-            manager=self._ui_manager, container=panel
-        )
-        self._tick_limit_entry.set_text(str(self.tick_limit))
-        y += 28
-
-        # End mode toggles
-        self._end_destroyed_btn = UIButton(
-            pygame.Rect(10, y, width - 20, 24),
-            f"{'[X]' if self.end_all_destroyed else '[  ]'} All Destroyed",
-            manager=self._ui_manager, container=panel
-        )
-        y += 26
-
-        self._end_derelict_btn = UIButton(
-            pygame.Rect(10, y, width - 20, 24),
-            f"{'[X]' if self.end_all_derelict else '[  ]'} All Derelict/Destroyed",
-            manager=self._ui_manager, container=panel
-        )
-        y += 26
-
-        self._end_mass_btn = UIButton(
-            pygame.Rect(10, y, width - 20, 24),
-            f"{'[X]' if self.end_mass_ratio else '[  ]'} Mass Ratio < {self.mass_ratio_threshold:.0%}",
-            manager=self._ui_manager, container=panel
-        )
-        y += 26
-
-    def _build_center_panel(self, x, width, height):
-        panel = UIPanel(
-            relative_rect=pygame.Rect(x, 0, width, height),
-            manager=self._ui_manager, object_id='#center_panel'
-        )
-        y = 10
-
-        side = self.state.get_side(self.active_side)
-        fleet = side.fleets[self.active_fleet_index] if self.active_fleet_index < len(side.fleets) else None
-
-        fleet_name = getattr(fleet, '_battle_setup_name', "No Fleet") if fleet else "No Fleet"
-        UILabel(pygame.Rect(10, y, width - 20, 28), f"Fleet: {fleet_name}",
-                manager=self._ui_manager, container=panel)
-        y += 32
-
-        if not fleet:
-            return
-
-        # Fleet battle role
-        UILabel(pygame.Rect(10, y, 80, 22), "Deploy:",
-                manager=self._ui_manager, container=panel)
-        role_names = [name for _, name in _BATTLE_ROLE_OPTIONS]
-        current_role = fleet.task_forces[0].battle_role if fleet.task_forces else None
-        if current_role is None:
-            current_role_name = "Main Body"
-        else:
-            current_role_name = next((n for r, n in _BATTLE_ROLE_OPTIONS if r == current_role), "Main Body")
-        self._fleet_role_dropdown = UIDropDownMenu(
-            role_names, current_role_name,
-            pygame.Rect(90, y, 160, 26),
-            manager=self._ui_manager, container=panel
-        )
-        y += 32
-
-        # Target indicator — where new ships will go
-        target_desc = "Unassigned (fleet level)"
-        if self.selected_tf_index is not None and self.selected_tf_index < len(fleet.task_forces):
-            tf = fleet.task_forces[self.selected_tf_index]
-            if self.selected_sq_index is not None and self.selected_sq_index < len(tf.squadrons):
-                sq = tf.squadrons[self.selected_sq_index]
-                target_desc = f"SQ: {sq.name} in TF: {tf.name}"
-            else:
-                target_desc = f"TF: {tf.name} (lone ship)"
-
-        UILabel(pygame.Rect(10, y, width - 20, 22),
-                f"Add ships to: {target_desc}",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        # Task forces section
-        UILabel(pygame.Rect(10, y, width - 20, 22), "Task Forces (click to select target):",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        self._tf_buttons = []
-        self._tf_dup_buttons = []
-        for ti, tf in enumerate(fleet.task_forces):
-            # Task force header — highlight if selected
-            is_tf_selected = (self.selected_tf_index == ti and self.selected_sq_index is None)
-            marker = ">> " if is_tf_selected else "   "
-            tf_label = f"{marker}TF: {tf.name} ({len(tf.all_ships)} ships)"
-            btn = UIButton(
-                pygame.Rect(10, y, width - 90, 26), tf_label,
-                manager=self._ui_manager, container=panel
-            )
-            btn._tf_index = ti
-
-            dup_btn = UIButton(
-                pygame.Rect(width - 78, y, 35, 26), "Dup",
-                manager=self._ui_manager, container=panel
-            )
-            dup_btn._dup_tf_index = ti
-
-            del_btn = UIButton(
-                pygame.Rect(width - 40, y, 30, 26), "X",
-                manager=self._ui_manager, container=panel
-            )
-            del_btn._del_tf_index = ti
-
-            self._tf_buttons.append(btn)
-            self._tf_dup_buttons.append((dup_btn, del_btn))
-            y += 28
-
-            # Show squadrons within TF
-            for si, sq in enumerate(tf.squadrons):
-                is_sq_selected = (self.selected_tf_index == ti and self.selected_sq_index == si)
-                sq_marker = ">>" if is_sq_selected else "  "
-                sq_label = f"{sq_marker} SQ: {sq.name} ({len(sq.all_ships)} ships)"
-                sq_btn = UIButton(
-                    pygame.Rect(20, y, width - 110, 24), sq_label,
-                    manager=self._ui_manager, container=panel
-                )
-                sq_btn._sq_tf_index = ti
-                sq_btn._sq_index = si
-
-                sq_dup = UIButton(
-                    pygame.Rect(width - 78, y, 35, 24), "Dup",
-                    manager=self._ui_manager, container=panel
-                )
-                sq_dup._dup_sq_tf_index = ti
-                sq_dup._dup_sq_index = si
-
-                sq_del = UIButton(
-                    pygame.Rect(width - 40, y, 30, 24), "X",
-                    manager=self._ui_manager, container=panel
-                )
-                sq_del._del_sq_tf_index = ti
-                sq_del._del_sq_index = si
-
-                y += 26
-
-            # Show lone ships in TF
-            for ship in tf.lone_ships:
-                UILabel(pygame.Rect(30, y, width - 40, 20),
-                        f"  {ship.name}",
-                        manager=self._ui_manager, container=panel)
-                y += 22
-
-        # Add task force button
-        y += 5
-        self._add_tf_btn = UIButton(
-            pygame.Rect(10, y, 130, 26), "Add Task Force",
-            manager=self._ui_manager, container=panel
-        )
-        self._add_sq_btn = UIButton(
-            pygame.Rect(150, y, 130, 26), "Add Squadron",
-            manager=self._ui_manager, container=panel
-        )
-        y += 32
-
-        # === Selected item policy controls ===
-        y = self._build_policy_controls(panel, y, width, fleet)
-
-        # Unassigned ships (in fleet but not in any task force)
-        unassigned = fleet.get_unassigned_ships()
-        UILabel(pygame.Rect(10, y, width - 20, 22),
-                f"Ships ({len(fleet.ships)} total, {len(unassigned)} unassigned):",
-                manager=self._ui_manager, container=panel)
-        y += 25
-
-        self._ship_buttons = []
-        for i, ship in enumerate(fleet.ships):
-            hull = ship.design_data.get('ship_class', '?')
-            is_selected = (self.selected_ship_index == i)
-            marker = "> " if is_selected else "  "
-            btn = UIButton(
-                pygame.Rect(10, y, width - 80, 26),
-                f"{marker}{ship.name} ({hull})",
-                manager=self._ui_manager, container=panel
-            )
-            btn._ship_index = i
-
-            remove_btn = UIButton(
-                pygame.Rect(width - 65, y, 55, 26), "Remove",
-                manager=self._ui_manager, container=panel
-            )
-            remove_btn._remove_ship_index = i
-
-            self._ship_buttons.append((btn, remove_btn))
-            y += 28
-
-            # Show policy dropdowns for selected ship
-            if is_selected:
-                # Targeting policy for this ship
-                UILabel(pygame.Rect(20, y, 60, 22), "Target:",
-                        manager=self._ui_manager, container=panel)
-                tgt_names = ["(default)"] + [name for _, name in _TARGETING_OPTIONS]
-                current_tgt = ship.design_data.get('_targeting_policy')
-                current_tgt_display = "(default)"
-                if current_tgt:
-                    current_tgt_display = next(
-                        (n for tid, n in _TARGETING_OPTIONS if tid == current_tgt),
-                        "(default)"
-                    )
-                self._ship_targeting_dropdown = UIDropDownMenu(
-                    tgt_names, current_tgt_display,
-                    pygame.Rect(80, y, width - 90, 24),
-                    manager=self._ui_manager, container=panel
-                )
-                self._ship_targeting_dropdown._targeting_ship_index = i
-                y += 28
-
-                # Movement policy for this ship
-                UILabel(pygame.Rect(20, y, 60, 22), "Move:",
-                        manager=self._ui_manager, container=panel)
-                mov_names = ["(default)"] + [name for _, name in _MOVEMENT_OPTIONS]
-                current_mov = ship.design_data.get('_movement_policy')
-                current_mov_display = "(default)"
-                if current_mov:
-                    current_mov_display = next(
-                        (n for mid, n in _MOVEMENT_OPTIONS if mid == current_mov),
-                        "(default)"
-                    )
-                self._ship_movement_dropdown = UIDropDownMenu(
-                    mov_names, current_mov_display,
-                    pygame.Rect(80, y, width - 90, 24),
-                    manager=self._ui_manager, container=panel
-                )
-                self._ship_movement_dropdown._movement_ship_index = i
-                y += 28
-
-    def _build_policy_controls(self, panel, y, width, fleet):
-        """Build policy dropdowns for the selected TF, SQ, or ship."""
-        self._targeting_dropdown = None
-        self._movement_dropdown = None
-        self._ship_targeting_dropdown = None
-        self._ship_movement_dropdown = None
-
-        selected_node = None
-        label = ""
-
-        if self.selected_tf_index is not None and self.selected_tf_index < len(fleet.task_forces):
-            tf = fleet.task_forces[self.selected_tf_index]
-            if self.selected_sq_index is not None and self.selected_sq_index < len(tf.squadrons):
-                selected_node = tf.squadrons[self.selected_sq_index]
-                label = f"Squadron: {selected_node.name}"
-            else:
-                selected_node = tf
-                label = f"Task Force: {tf.name}"
-
-        if selected_node is not None:
-            UILabel(pygame.Rect(10, y, width - 20, 22), f"Policies for {label}:",
-                    manager=self._ui_manager, container=panel)
-            y += 25
-
-            # Targeting policy
-            UILabel(pygame.Rect(10, y, 70, 22), "Target:",
-                    manager=self._ui_manager, container=panel)
-            tgt_names = ["(inherit)"] + [name for _, name in _TARGETING_OPTIONS]
-            current_tgt = "(inherit)"
-            if selected_node.policy.targeting:
-                current_tgt = next(
-                    (n for tid, n in _TARGETING_OPTIONS if tid == selected_node.policy.targeting),
-                    "(inherit)"
-                )
-            self._targeting_dropdown = UIDropDownMenu(
-                tgt_names, current_tgt,
-                pygame.Rect(80, y, width - 90, 24),
-                manager=self._ui_manager, container=panel
-            )
-            y += 28
-
-            # Movement policy
-            UILabel(pygame.Rect(10, y, 70, 22), "Move:",
-                    manager=self._ui_manager, container=panel)
-            mov_names = ["(inherit)"] + [name for _, name in _MOVEMENT_OPTIONS]
-            current_mov = "(inherit)"
-            if selected_node.policy.movement:
-                current_mov = next(
-                    (n for mid, n in _MOVEMENT_OPTIONS if mid == selected_node.policy.movement),
-                    "(inherit)"
-                )
-            self._movement_dropdown = UIDropDownMenu(
-                mov_names, current_mov,
-                pygame.Rect(80, y, width - 90, 24),
-                manager=self._ui_manager, container=panel
-            )
-            y += 28
-
-        # Per-ship AI strategy for selected ship
-        # (shown for unassigned ships when clicked in the ship list)
-
-        y += 5
-        return y
-
-    def _build_right_panel(self, x, width, height):
-        panel = UIPanel(
-            relative_rect=pygame.Rect(x, 0, width, height),
-            manager=self._ui_manager, object_id='#right_panel'
-        )
-        y = 10
-
-        UILabel(pygame.Rect(10, y, width - 20, 28), "Available Designs",
-                manager=self._ui_manager, container=panel)
-        y += 35
-
-        self._design_buttons = []
-        for i, design in enumerate(self.available_designs):
-            name = design.get('name', '?')
-            ship_class = design.get('ship_class', '')
-            btn = UIButton(
-                pygame.Rect(10, y, width - 20, 28),
-                f"{name} ({ship_class})",
-                manager=self._ui_manager, container=panel
-            )
-            btn._design_index = i
-            self._design_buttons.append(btn)
-            y += 30
-
-    def _build_bottom_bar(self, width, height, bar_height):
-        panel = UIPanel(
-            relative_rect=pygame.Rect(0, height - bar_height, width, bar_height),
-            manager=self._ui_manager, object_id='#bottom_bar'
-        )
-
-        btn_w = 140
-        spacing = 15
-        buttons = [
-            ("Start Battle", "_start_btn"),
-            ("Start Headless", "_headless_btn"),
-            ("Save Setup", "_save_btn"),
-            ("Load Setup", "_load_btn"),
-            ("Return", "_return_btn"),
-        ]
-        total = len(buttons) * btn_w + (len(buttons) - 1) * spacing
-        x = (width - total) // 2
-
-        for text, attr in buttons:
-            btn = UIButton(
-                pygame.Rect(x, 10, btn_w, 40), text,
-                manager=self._ui_manager, container=panel
-            )
-            setattr(self, attr, btn)
-            x += btn_w + spacing
+    # _build_center_panel + _build_policy_controls + _build_right_panel + _build_bottom_bar
+    # all moved to game/ui/screens/battle_setup/{renderer.py,panels/*_panel.py} (PROJ-282 Phase 4)
 
     # === Event Handlers ===
 
-    def _handle_button(self, event):
-        element = event.ui_element
-
-        # Fleet selection
-        if hasattr(element, '_fleet_index'):
-            self.active_fleet_index = element._fleet_index
-            self.selected_tf_index = None
-            self.selected_sq_index = None
-            self._rebuild_ui()
-            return
-
-        # Ship selection (click to show strategy dropdown)
-        if hasattr(element, '_ship_index') and not hasattr(element, '_remove_ship_index'):
-            self.selected_ship_index = element._ship_index
-            self._rebuild_ui()
-            return
-
-        # Design buttons — add ship
-        if hasattr(element, '_design_index'):
-            self._add_ship_from_design(element._design_index)
-            return
-
-        # Remove ship
-        if hasattr(element, '_remove_ship_index'):
-            self._remove_ship(element._remove_ship_index)
-            return
-
-        # Complex toggles
-        if hasattr(element, '_complex_key'):
-            key = element._complex_key
-            self._complex_toggles[key] = not self._complex_toggles.get(key, False)
-            self._rebuild_ui()
-            return
-
-        # Task force selection (click TF to set as target for new ships)
-        if hasattr(element, '_tf_index'):
-            self.selected_tf_index = element._tf_index
-            self.selected_sq_index = None  # Select TF level (lone ships)
-            self._rebuild_ui()
-            return
-
-        # Squadron selection (click SQ to set as target for new ships)
-        if hasattr(element, '_sq_tf_index') and hasattr(element, '_sq_index'):
-            # Only handle if it's NOT a dup or del button
-            if not hasattr(element, '_dup_sq_tf_index') and not hasattr(element, '_del_sq_tf_index'):
-                self.selected_tf_index = element._sq_tf_index
-                self.selected_sq_index = element._sq_index
-                self._rebuild_ui()
-                return
-
-        # Task force duplication
-        if hasattr(element, '_dup_tf_index'):
-            self._duplicate_task_force(element._dup_tf_index)
-            return
-
-        # Task force deletion
-        if hasattr(element, '_del_tf_index'):
-            self._delete_task_force(element._del_tf_index)
-            return
-
-        # Squadron duplication
-        if hasattr(element, '_dup_sq_tf_index'):
-            self._duplicate_squadron(element._dup_sq_tf_index, element._dup_sq_index)
-            return
-
-        # Squadron deletion
-        if hasattr(element, '_del_sq_tf_index'):
-            self._delete_squadron(element._del_sq_tf_index, element._del_sq_index)
-            return
-
-        # Action buttons
-        if element == self._start_btn:
-            self._start_battle(headless=False)
-        elif element == self._headless_btn:
-            self._start_battle(headless=True)
-        elif element == self._save_btn:
-            self._save_setup()
-        elif element == self._load_btn:
-            self._load_setup()
-        elif element == self._return_btn:
-            if self.scene_callback:
-                self.scene_callback("return_to_menu")
-        elif element == self._add_fleet_btn:
-            side = self.state.get_side(self.active_side)
-            side.create_fleet(f"Fleet {len(side.fleets) + 1}")
-            self._rebuild_ui()
-        elif element == self._remove_fleet_btn:
-            side = self.state.get_side(self.active_side)
-            if len(side.fleets) > 1 and self.active_fleet_index < len(side.fleets):
-                side.fleets.pop(self.active_fleet_index)
-                self.active_fleet_index = min(self.active_fleet_index, len(side.fleets) - 1)
-                self._rebuild_ui()
-        elif hasattr(self, '_add_tf_btn') and element == self._add_tf_btn:
-            self._add_task_force()
-        elif hasattr(self, '_add_sq_btn') and element == self._add_sq_btn:
-            self._add_squadron()
-        elif hasattr(self, '_end_destroyed_btn') and element == self._end_destroyed_btn:
-            self.end_all_destroyed = not self.end_all_destroyed
-            self._rebuild_ui()
-        elif hasattr(self, '_end_derelict_btn') and element == self._end_derelict_btn:
-            self.end_all_derelict = not self.end_all_derelict
-            self._rebuild_ui()
-        elif hasattr(self, '_end_mass_btn') and element == self._end_mass_btn:
-            self.end_mass_ratio = not self.end_mass_ratio
-            self._rebuild_ui()
-
-    def _handle_dropdown(self, event):
-        if event.ui_element == self._side_dropdown:
-            self.active_side = 1 if "1" in event.text else 0
-            self.active_fleet_index = 0
-            self._rebuild_ui()
-        elif hasattr(self, '_fleet_role_dropdown') and event.ui_element == self._fleet_role_dropdown:
-            self._set_fleet_battle_role(event.text)
-        elif self._targeting_dropdown and event.ui_element == self._targeting_dropdown:
-            self._set_selected_policy("targeting", event.text)
-        elif self._movement_dropdown and event.ui_element == self._movement_dropdown:
-            self._set_selected_policy("movement", event.text)
-        elif (self._ship_targeting_dropdown and
-              event.ui_element == self._ship_targeting_dropdown):
-            self._set_ship_policy("_targeting_policy", event.text, _TARGETING_OPTIONS)
-        elif (self._ship_movement_dropdown and
-              event.ui_element == self._ship_movement_dropdown):
-            self._set_ship_policy("_movement_policy", event.text, _MOVEMENT_OPTIONS)
+    # _handle_button + _handle_dropdown moved to
+    # game/ui/screens/battle_setup/input_handler.py (PROJ-282 Phase 5)
 
     def _set_ship_policy(self, key: str, display_name: str, options_list):
         """Set a targeting or movement policy on the selected ship's design_data."""
@@ -1084,35 +581,34 @@ class FleetBattleSetupScreen:
         return AnyCondition(conditions)
 
     def _sync_complex_toggles_to_state(self) -> None:
-        """Project `_complex_toggles` dict onto `BattleSetupSide.*_complexes`.
+        """Project each side's `*_complex_toggles` dict onto `*_complexes` list.
 
-        PROJ-269 Phase 6 Task 6.4: the Battle Setup spec compiler
-        (`build_manual_battle_spec`) reads `side.system_complexes` /
-        `side.sector_complexes` (lists of `{design_id, display_name}` dicts)
-        and emits one `ModifierEntry` per toggled complex. We flatten the
-        UI's `{(side_id, scope, design_id): bool}` dict into those lists
-        each time a battle starts, so the compiler sees the latest
-        selection.
+        PROJ-282 Phase 2: source of truth is now `BattleSetupSide.system_complex_toggles`
+        / `sector_complex_toggles` (per-side dicts, not a screen-level dict).
+        The spec compiler still reads `side.system_complexes: List[Dict]`, so
+        we rebuild those materialized lists from the toggle dicts at launch
+        time. Iterates ALL sides (PROJ-275 N-team) — the old hardcoded
+        `side_0` / `side_1` projection silently dropped toggles for sides 2-7.
         """
-        complexes_by_scope = {
-            "system": _SYSTEM_SCOPE_COMPLEXES,
-            "sector": _SECTOR_SCOPE_COMPLEXES,
+        display_name_by_design_id: dict = {
+            "system": {d: n for d, n in _SYSTEM_SCOPE_COMPLEXES},
+            "sector": {d: n for d, n in _SECTOR_SCOPE_COMPLEXES},
         }
 
-        def _collect(side_id: int, scope: str) -> list:
-            out = []
-            for design_id, display_name in complexes_by_scope[scope]:
-                if self._complex_toggles.get((side_id, scope, design_id), False):
-                    out.append({
-                        "design_id": design_id,
-                        "display_name": display_name,
-                    })
-            return out
+        def _materialize(toggles: dict, scope: str) -> list:
+            lookup = display_name_by_design_id[scope]
+            return [
+                {
+                    "design_id": design_id,
+                    "display_name": lookup.get(design_id, design_id),
+                }
+                for design_id, enabled in toggles.items()
+                if enabled
+            ]
 
-        self.state.side_0.system_complexes = _collect(0, "system")
-        self.state.side_0.sector_complexes = _collect(0, "sector")
-        self.state.side_1.system_complexes = _collect(1, "system")
-        self.state.side_1.sector_complexes = _collect(1, "sector")
+        for side in self.state.sides:
+            side.system_complexes = _materialize(side.system_complex_toggles, "system")
+            side.sector_complexes = _materialize(side.sector_complex_toggles, "sector")
 
     # === Save/Load ===
 
@@ -1131,11 +627,10 @@ class FleetBattleSetupScreen:
         root.destroy()
 
         if filepath:
+            # PROJ-282 Phase 2: state.to_dict() now carries the per-side
+            # `system_complex_toggles` / `sector_complex_toggles`; no need
+            # for a top-level `_complex_toggles` mirror.
             data = self.state.to_dict()
-            data['_complex_toggles'] = {
-                f"{k[0]}_{k[1]}_{k[2]}": v
-                for k, v in self._complex_toggles.items()
-            }
             save_json(filepath, data)
             logger.info(f"Saved battle setup to {filepath}")
 
@@ -1157,15 +652,28 @@ class FleetBattleSetupScreen:
             if data:
                 registries = _get_registries()
                 self.state = BattleSetupState.from_dict(data, registries=registries)
-                # Restore complex toggles
-                self._complex_toggles = {}
-                for key_str, val in data.get('_complex_toggles', {}).items():
+                # PROJ-282 Phase 2: legacy-save migration — if an old save
+                # carries a top-level `_complex_toggles` dict with flat
+                # string keys `f"{side_id}_{scope}_{design_id}"`, project
+                # onto the per-side toggle dicts so users don't lose state
+                # across the upgrade. New saves don't emit this key.
+                legacy = data.get('_complex_toggles', {})
+                for key_str, val in legacy.items():
                     parts = key_str.split('_', 2)
-                    if len(parts) == 3:
-                        try:
-                            self._complex_toggles[(int(parts[0]), parts[1], parts[2])] = val
-                        except (ValueError, IndexError):
-                            pass
+                    if len(parts) != 3:
+                        continue
+                    try:
+                        side_id = int(parts[0])
+                        scope = parts[1]
+                        design_id = parts[2]
+                    except ValueError:
+                        continue
+                    if side_id < 0 or side_id >= len(self.state.sides):
+                        continue
+                    if scope == "system":
+                        self.state.sides[side_id].system_complex_toggles[design_id] = bool(val)
+                    elif scope == "sector":
+                        self.state.sides[side_id].sector_complex_toggles[design_id] = bool(val)
                 self.active_side = 0
                 self.active_fleet_index = 0
                 self._rebuild_ui()

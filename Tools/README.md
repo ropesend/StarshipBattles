@@ -12,6 +12,7 @@
 |------|---------|------|
 | [analyze_dependency_graph](analyze_dependency_graph/) | Import dependency graph from entry points | Analysis |
 | [background_eraser](background_eraser/) | Remove image backgrounds via FastAPI server | Asset Processing |
+| [check_context](check_context/) | Report Claude Code session context usage (ground-truth via transcript `usage` data) | Diagnostics |
 | [check_orphans](check_orphans/) | Find orphaned modules in game/ | Analysis |
 | [component_visuals_manager](component_visuals_manager/) | Web UI for managing component visual assets | GUI Editor |
 | [diagnose_blueprints](diagnose_blueprints/) | Verify star system blueprints produce expected results | Diagnostics |

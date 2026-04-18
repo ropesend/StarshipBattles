@@ -271,7 +271,7 @@ Before completing any task:
 
 Threshold and check command are defined in
 `Projects/protocols/context_config.md`. At natural handoff points, run
-`python Projects/scripts/check_context.py`.
+`python Tools/check_context/check_context.py`.
 
 **If verdict is STOP:**
 1. Finish current subtask if close to completion

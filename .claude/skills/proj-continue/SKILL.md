@@ -83,8 +83,13 @@ python Projects/scripts/current_task.py PROJ-$0
 - Add implementation notes to each task
 - **Update `manifest.md` DURING the task** if you touch a file not yet listed
 - **Update `docs/` DURING the task** if you change architecture/patterns/conventions
-- Continue until `check_context.py` returns STOP at a natural handoff point,
-  OR phase complete, OR blocker encountered
+- **Continue until `check_context.py` returns STOP (at the 80% threshold),
+  all project tasks are complete, or a genuine blocker is hit.**
+  **Phase completion is a checkpoint, not an exit condition.** If the next
+  phase looks too big to fit under 80%, split it (add sub-phases in the
+  checklist file), don't hand off early. A cold restart burns 40-70k on
+  re-orientation — splitting is cheaper. See
+  `Projects/protocols/context_config.md` § Natural Stopping Points.
 
 ### 5. BEFORE STOPPING
 

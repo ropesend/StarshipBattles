@@ -61,4 +61,4 @@ Follow Strict TDD: create the test file first (`tests/unit/strategy/formulas/tes
 5. **Gas-missing = 0 Pa semantics**: gas extractors return `0.0` (not `None`) for absent gases. Scorer also coerces `None` to `0.0`. This means a race with `setpoint=0 tolerance=wide` scores near 1.0 on any planet — that's the "don't care" default. A race with `setpoint > 0` (e.g., the default O2 setpoint of 21 kPa) scores low on a planet without that gas. Keep this in mind when writing parity tests — v1's atmosphere scorer computed contributions per gas present, so v1 would rate a pure-CO2 planet identically for an O2-lover and a CO2-lover (both get some "recognized gas weight"), while v2 correctly penalizes the O2-lover more harshly.
 
 ## Protocol
-Follow `Projects/protocols/03a_continue_working.md`. Check context at natural handoff points via `python Projects/scripts/check_context.py`. Run `python Projects/scripts/validate_phase.py PROJ-283 2` before stopping.
+Follow `Projects/protocols/03a_continue_working.md`. Check context at natural handoff points via `python Tools/check_context/check_context.py`. Run `python Projects/scripts/validate_phase.py PROJ-283 2` before stopping.

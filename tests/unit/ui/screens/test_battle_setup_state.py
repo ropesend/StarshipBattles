@@ -153,3 +153,240 @@ class TestBattleSetupState:
         state.clear()
         assert len(state.side_0.fleets) == 0
         assert len(state.side_1.fleets) == 0
+
+
+class TestBattleSetupSideComplexToggles:
+    """PROJ-282 Phase 2: `*_complex_toggles` fields on BattleSetupSide.
+
+    Complex toggles used to live on `FleetBattleSetupScreen._complex_toggles`
+    (a screen-private dict keyed by `(side_id, scope, design_id)`). Phase 2
+    moves them onto the data model so save/load persists them naturally and
+    N-team support is per-side by construction (the old screen-level sync
+    hardcoded sides 0 and 1, losing toggles for sides 2-7).
+    """
+
+    def test_new_side_has_empty_toggle_dicts(self):
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        side = BattleSetupSide(team_id=0)
+        assert side.system_complex_toggles == {}
+        assert side.sector_complex_toggles == {}
+
+    def test_toggle_dicts_accept_design_id_keys(self):
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        side = BattleSetupSide(team_id=0)
+        side.system_complex_toggles["qs_system_shield_booster_complex"] = True
+        side.sector_complex_toggles["qs_sector_damage_booster_complex"] = False
+
+        assert side.system_complex_toggles == {
+            "qs_system_shield_booster_complex": True
+        }
+        assert side.sector_complex_toggles == {
+            "qs_sector_damage_booster_complex": False
+        }
+
+    def test_to_dict_includes_toggle_fields(self):
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        side = BattleSetupSide(team_id=2)
+        side.system_complex_toggles = {"qs_system_shield_booster_complex": True}
+        side.sector_complex_toggles = {"qs_sector_damage_booster_complex": True}
+
+        data = side.to_dict()
+        assert data["system_complex_toggles"] == {
+            "qs_system_shield_booster_complex": True
+        }
+        assert data["sector_complex_toggles"] == {
+            "qs_sector_damage_booster_complex": True
+        }
+
+    def test_from_dict_restores_toggle_fields(self):
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        data = {
+            "team_id": 3,
+            "fleets": [],
+            "system_complexes": [],
+            "sector_complexes": [],
+            "system_complex_toggles": {"qs_system_shield_booster_complex": True},
+            "sector_complex_toggles": {"qs_sector_shield_suppressor_complex": True},
+        }
+        side = BattleSetupSide.from_dict(data)
+        assert side.system_complex_toggles == {
+            "qs_system_shield_booster_complex": True
+        }
+        assert side.sector_complex_toggles == {
+            "qs_sector_shield_suppressor_complex": True
+        }
+
+    def test_from_dict_defaults_missing_toggle_fields_to_empty(self):
+        """Legacy saves (pre-Phase-2) won't have the new keys. Don't crash."""
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        legacy_data = {
+            "team_id": 0,
+            "fleets": [],
+            "system_complexes": [],
+            "sector_complexes": [],
+            # No system_complex_toggles / sector_complex_toggles
+        }
+        side = BattleSetupSide.from_dict(legacy_data)
+        assert side.system_complex_toggles == {}
+        assert side.sector_complex_toggles == {}
+
+    def test_toggle_roundtrip_through_to_dict_from_dict(self):
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        original = BattleSetupSide(team_id=1)
+        original.system_complex_toggles = {
+            "qs_system_shield_booster_complex": True,
+            "qs_system_damage_suppressor_complex": False,
+        }
+        original.sector_complex_toggles = {
+            "qs_sector_shield_projector_complex": True,
+        }
+
+        restored = BattleSetupSide.from_dict(original.to_dict())
+        assert restored.system_complex_toggles == original.system_complex_toggles
+        assert restored.sector_complex_toggles == original.sector_complex_toggles
+
+    def test_multi_side_state_preserves_toggles_on_each_side(self):
+        """Regression guard for the bug where `_sync_complex_toggles_to_state`
+        hardcoded sides 0/1 and silently dropped toggles for sides 2-7."""
+        from game.ui.screens.battle_setup_state import BattleSetupState
+
+        state = BattleSetupState(side_count=3)
+        state.sides[0].system_complex_toggles = {"a": True}
+        state.sides[1].system_complex_toggles = {"b": True}
+        state.sides[2].system_complex_toggles = {"c": True}
+
+        restored = BattleSetupState.from_dict(state.to_dict())
+        assert restored.sides[0].system_complex_toggles == {"a": True}
+        assert restored.sides[1].system_complex_toggles == {"b": True}
+        assert restored.sides[2].system_complex_toggles == {"c": True}
+
+
+class TestSyncComplexTogglesToStateIsNTeamSafe:
+    """PROJ-282 Phase 2 regression: `_sync_complex_toggles_to_state` previously
+    hardcoded `state.side_0` and `state.side_1`, silently dropping toggles
+    for sides 2-7 at battle launch. This test exercises the method on a
+    3-side state and verifies every side's materialized
+    `system_complexes` / `sector_complexes` list is populated from its
+    toggle dict."""
+
+    def test_sync_materializes_all_sides(self):
+        from game.ui.screens.battle_setup_screen import (
+            FleetBattleSetupScreen,
+            _SYSTEM_SCOPE_COMPLEXES,
+            _SECTOR_SCOPE_COMPLEXES,
+        )
+        from game.ui.screens.battle_setup_state import BattleSetupState
+
+        sys_id_0, sys_display_0 = _SYSTEM_SCOPE_COMPLEXES[0]
+        sec_id_0, sec_display_0 = _SECTOR_SCOPE_COMPLEXES[0]
+        sys_id_1, _ = _SYSTEM_SCOPE_COMPLEXES[1]
+
+        # Bypass __init__ to avoid pygame/tkinter setup for this pure
+        # behavior test. The method only reads `self.state`.
+        screen = object.__new__(FleetBattleSetupScreen)
+        screen.state = BattleSetupState(side_count=3)
+        screen.state.sides[0].system_complex_toggles = {sys_id_0: True}
+        screen.state.sides[1].sector_complex_toggles = {sec_id_0: True}
+        screen.state.sides[2].system_complex_toggles = {sys_id_1: True}
+
+        screen._sync_complex_toggles_to_state()
+
+        assert screen.state.sides[0].system_complexes == [
+            {"design_id": sys_id_0, "display_name": sys_display_0}
+        ]
+        assert screen.state.sides[1].sector_complexes == [
+            {"design_id": sec_id_0, "display_name": sec_display_0}
+        ]
+        # Regression: previously the screen's hardcoded-sides projection
+        # dropped side 2 toggles entirely. Should survive now.
+        assert len(screen.state.sides[2].system_complexes) == 1
+        assert screen.state.sides[2].system_complexes[0]["design_id"] == sys_id_1
+
+    def test_sync_skips_off_toggles(self):
+        from game.ui.screens.battle_setup_screen import (
+            FleetBattleSetupScreen,
+            _SYSTEM_SCOPE_COMPLEXES,
+        )
+        from game.ui.screens.battle_setup_state import BattleSetupState
+
+        sys_id_0, _ = _SYSTEM_SCOPE_COMPLEXES[0]
+        sys_id_1, _ = _SYSTEM_SCOPE_COMPLEXES[1]
+
+        screen = object.__new__(FleetBattleSetupScreen)
+        screen.state = BattleSetupState(side_count=2)
+        screen.state.sides[0].system_complex_toggles = {
+            sys_id_0: True,
+            sys_id_1: False,  # explicitly off
+        }
+
+        screen._sync_complex_toggles_to_state()
+
+        # Only the on-toggled complex should be materialized.
+        materialized_ids = [
+            c["design_id"] for c in screen.state.sides[0].system_complexes
+        ]
+        assert materialized_ids == [sys_id_0]
+
+
+class TestScreenDelegatesViewStateToViewModel:
+    """PROJ-282 Phase 3: screen's selection attributes back onto ViewModel.
+
+    Guard that property shims route to `self.view_model.*` — if the shim
+    is accidentally removed, these tests catch the silent divergence
+    between `screen.active_side` and `screen.view_model.active_side`.
+    """
+
+    def test_screen_owns_a_view_model(self):
+        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
+
+        screen = object.__new__(FleetBattleSetupScreen)
+        # Minimally reproduce __init__ for the attrs we care about.
+        from game.ui.screens.battle_setup_state import BattleSetupState
+        screen.state = BattleSetupState()
+        screen.view_model = BattleSetupViewModel()
+
+        assert isinstance(screen.view_model, BattleSetupViewModel)
+
+    def test_active_side_shim_routes_to_view_model(self):
+        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
+
+        screen = object.__new__(FleetBattleSetupScreen)
+        screen.view_model = BattleSetupViewModel()
+
+        screen.active_side = 3
+        assert screen.view_model.active_side == 3
+        assert screen.active_side == 3  # read-through
+
+    def test_selection_shims_route_to_view_model(self):
+        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
+
+        screen = object.__new__(FleetBattleSetupScreen)
+        screen.view_model = BattleSetupViewModel()
+
+        screen.selected_tf_index = 2
+        screen.selected_sq_index = 1
+        screen.selected_ship_index = 5
+
+        assert screen.view_model.selected_tf_index == 2
+        assert screen.view_model.selected_sq_index == 1
+        assert screen.view_model.selected_ship_index == 5
+
+    def test_available_designs_shim_routes_to_view_model(self):
+        from game.ui.screens.battle_setup_screen import FleetBattleSetupScreen
+        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
+
+        screen = object.__new__(FleetBattleSetupScreen)
+        screen.view_model = BattleSetupViewModel()
+
+        designs = [{"name": "Fighter"}]
+        screen.available_designs = designs
+        assert screen.view_model.available_designs is designs
