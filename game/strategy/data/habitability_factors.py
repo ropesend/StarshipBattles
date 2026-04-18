@@ -279,11 +279,21 @@ _GAS_MAX = 300000.0  # ~3 ATM, accommodates high-pressure atmospheres
 def _build_gas_factors() -> tuple[HabitabilityFactor, ...]:
     factors: list[HabitabilityFactor] = []
     for formula in _GAS_FORMULAS:
-        # Only O2 is "special" at the default level (Earth-like race wants O2).
-        # Other gases default to setpoint=0 tolerance=wide — "don't care".
+        # Defaults encode "Earth-derived life":
+        #   O2 setpoint = 21 kPa  (~Earth partial pressure, narrow tolerance)
+        #   N2 setpoint = 79 kPa  (~Earth's inert-gas baseline; biological
+        #                          life needs an inert dilutent — pure O2
+        #                          atmospheres are toxic long-term)
+        #   all other gases default to setpoint=0 tolerance=wide — neutral
+        # PROJ-283 Phase 2: N2 default added so an unconfigured "Earth-
+        # like default race" does not silently flunk every Earth-like
+        # planet because of N2 mismatch. (See decisions.md 2026-04-18.)
         if formula == "O2":
             default_setpoint = 21000.0
             default_tolerance = 5000.0
+        elif formula == "N2":
+            default_setpoint = 79000.0
+            default_tolerance = 20000.0
         else:
             default_setpoint = 0.0
             default_tolerance = 10000.0

@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. EnvironmentalPreference + Factor Registry | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. New habitability pipeline (parallel to old) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. New habitability pipeline (parallel to old) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Unified point budget | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Switch callers + delete legacy fields | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Race Environment UI rebuild | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,18 +22,16 @@
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Phase 1 Complete; ready to start Phase 2
-**Last Action:** Phase 1 complete. All 6 tasks done, all 62 new tests passing (12 `EnvironmentalPreference` + 39 `HabitabilityFactor` + 11 new `RaceConfig` preference/repro/happiness tests). Full sharded suite 14776/14777 (sole failure is pre-existing flaky quickstart test). `validate_phase.py PROJ-283 1` → PASSED.
-**Next Action:** Phase 2 Task 2.1 — add `calculate_habitability_v2(planet, race_config)` to `game/strategy/formulas/habitability.py` iterating `FACTOR_REGISTRY`. Keep v1 intact until Phase 4.
+**Active Phase:** Phase 2 Complete; ready to start Phase 3
+**Last Action:** Phase 2 complete. Implemented `calculate_habitability_v2(planet, race_config)` at `game/strategy/formulas/habitability.py:288` (lazy-imports `FACTOR_REGISTRY` to avoid circular import). v1 untouched. Tightened combiner epsilon to 1e-10 (matches v1) so high-weight factors retain "tank-all" behaviour. Tuned N2 default setpoint 0 → 79000 Pa, tolerance → 20000 Pa so an unconfigured "Earth-like default race" tolerates Earth's atmosphere (decisions.md 2026-04-18). Added 21 new tests in `tests/unit/strategy/formulas/test_habitability_v2.py`; all pass. Full sharded suite 14797/14798 (sole failure is the same pre-existing flaky quickstart test flagged in Phase 1 — unrelated). All Phase 1 tests still green.
+**Next Action:** Phase 3 Task 3.1 — open `phase_3_checklist.md` and start the unified point budget rewrite. The cost helper `_exponential_cost(steps)` already lives in `race_point_budget.py` and is reusable.
 **Blockers:** None. PROJ-284 and PROJ-285 both still depend on PROJ-283 Phase 4+ completing.
 **Context for Next Agent:**
-- New modules to build on: `game/strategy/data/environmental_preference.py` and `game/strategy/data/habitability_factors.py`. Import `_gaussian_factor` from `habitability.py` — no circular dep because habitability.py only references `RaceConfig` under `TYPE_CHECKING`.
-- Each `HabitabilityFactor` carries `weight`, `extractor(planet)->Optional[float]`, and `scorer(value, pref)->[0,1]`. Default scorer is `_default_gaussian_scorer` which coerces `None` to `0.0` before calling `_gaussian_factor`.
-- Every `RaceConfig` now carries `preferences: Dict[str, EnvironmentalPreference]` (17 entries: 7 scalar + 10 gas) backfilled from `FACTOR_REGISTRY` defaults via `__post_init__`. Explicit constructor entries are preserved.
-- New `base_reproduction_rate: float = 0.03` and `base_happiness: float = 0.5` replace `aptitude_population_growth`/`aptitude_happiness` (still parallel; both live side-by-side during Phase 1–3, deleted in Phase 4).
-- Factor weights (tunable, set in Phase 1): gravity=1.0, temperature=1.0, water=0.8, pressure=0.9, tectonic=0.4, magnetic=0.6, radiation=0.6, each gas=0.15 (gas bucket totals 1.5). Phase 2 parity tests may retune.
-- Radiation extractor reads `planet.radiation_shielding` — Planet has no intrinsic "incident radiation" field. Default setpoint 0 / tolerance 50 documents "race doesn't care by default." Phase 2 parity tests should flag if this feels off.
-- Pre-existing bug: `TestRaceConfigValidation` in `tests/unit/strategy/data/test_race_config.py` has 16 tests that unpack `config.validate()` as a tuple but it returns `ValidationResult`. These failures have been hidden in sharded runs because collection-errors in a sibling file abort the `tests/unit/strategy/` collection before this file is reached. Not in PROJ-283 scope; flagged for later cleanup.
+- v2 formula iterates `FACTOR_REGISTRY` and combines per-factor scores via weighted geometric mean: `exp(Σ w·log(max(s, 1e-10)) / Σ w)`. Missing prefs fall back to registry defaults (do NOT skip). Use lazy import for `FACTOR_REGISTRY` and `EnvironmentalPreference` inside any new function in `habitability.py` to keep the import boundary clean.
+- Total weight is 6.8 (1.0 + 1.0 + 0.8 + 0.9 + 0.4 + 0.6 + 0.6 + 1.5). Per-gas weight is 0.15. With this allocation, a single missing gas drags composite by ≤25%. A single weight-1.0 scalar at 0 drags composite to ~0.034. The "one zero tanks all" property is therefore strong for scalar axes (gravity/temperature/pressure) and weak for individual gases — by design. If a future requirement is "missing critical gas → uninhabitable", the path forward is either to promote O2 to a scalar weight≥1.0 OR change the combiner to use `min()` for axes flagged "critical". See decisions.md.
+- Registry default tweaked in Phase 2: `gas.N2` setpoint 0 → 79000 Pa, tolerance → 20000 Pa. Earth-derived life needs an inert dilutent. Other gases (CO2/CH4/NH3/SO2) keep setpoint=0 (toxic).
+- Pre-existing test debt still NOT addressed (out of PROJ-283 scope): (a) `TestRaceConfigValidation` 16-failure cluster in `test_race_config.py` from `validate()` tuple-unpacking; hidden in sharded runs by the `test_build_order_command_handler.py` collection error. (b) Flaky `test_copy_designs_without_themes_preserves_original` (Klingons vs Federation theme leak).
+- Phase 3 reference: `_exponential_cost(steps)` in `race_point_budget.py:125`. Each `HabitabilityFactor` now carries the `step` field (Phase 1) so `cost = _exponential_cost(abs(tolerance - default_tolerance) / step)` is the canonical formula. Reproduction-rate cost reuses `_exponential_cost` above 3% with linear refund to 0.5% floor (decisions.md 2026-04-18).
 
 ## Overview
 

@@ -285,6 +285,61 @@ def calculate_habitability(
     return max(0.0, min(1.0, score))
 
 
+def calculate_habitability_v2(planet: 'Planet', race_config: 'RaceConfig') -> float:
+    """Registry-driven habitability score (PROJ-283 Phase 2).
+
+    Iterates `FACTOR_REGISTRY` and combines per-factor scores via a
+    weighted geometric mean (the same combiner v1 uses, just generalized
+    over an arbitrary set of factors). For each factor:
+
+    * value = factor.extractor(planet) — may be None for missing data
+    * pref  = race_config.preferences.get(factor.id, registry default)
+    * score = factor.scorer(value, pref) — float in [0, 1]
+
+    Sibling to v1 `calculate_habitability`. Both live in parallel during
+    Phases 2-3; v1 is deleted in Phase 4 once all callers switch.
+
+    `FACTOR_REGISTRY` is imported lazily to avoid a circular import:
+    `habitability_factors.py` already imports `_gaussian_factor` from
+    this module.
+
+    Numerical floor: per-factor scores are clipped to >= 1e-10 before
+    `log()` (matching v1's epsilon). With v2's total weight 6.8, this
+    gives a single weight-1.0 factor at 0 the ability to pull composite
+    down to ~0.034.
+    """
+    # Lazy import: see docstring.
+    from game.strategy.data.habitability_factors import FACTOR_REGISTRY
+    from game.strategy.data.environmental_preference import EnvironmentalPreference
+
+    log_sum = 0.0
+    weight_sum = 0.0
+
+    for factor_id, factor in FACTOR_REGISTRY.items():
+        pref = race_config.preferences.get(factor_id)
+        if pref is None:
+            # Caller didn't provide a preference for this factor — fall
+            # back to the registry default (treat the race as Earth-
+            # standard for that axis). Do NOT skip the factor.
+            pref = EnvironmentalPreference(
+                setpoint=factor.default_setpoint,
+                tolerance=factor.default_tolerance,
+                min_value=factor.min_value,
+                max_value=factor.max_value,
+                step=factor.step,
+            )
+        value = factor.extractor(planet)
+        score = factor.scorer(value, pref)
+        log_sum += factor.weight * math.log(max(score, 1e-10))
+        weight_sum += factor.weight
+
+    if weight_sum <= 0:
+        return 0.0
+
+    composite = math.exp(log_sum / weight_sum)
+    return max(0.0, min(1.0, composite))
+
+
 def score_planet_for_race(planet: 'Planet', race_config: 'RaceConfig') -> float:
     """
     Convenience function to score a planet for a species.
