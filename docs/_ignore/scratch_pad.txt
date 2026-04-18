@@ -4,41 +4,16 @@ Personal notes and concept ideas. Not documentation.
 Add new ideas below.
 
 ---------------------------------------------------------------------------------------------------------------------
-Here are are a few new abilities, components and complexes that I want added to the game, none of the complexes start out constructed.
-
-Expand Shied ShieldProjection to have fleet, Sector Player, Sector Allied, System Palyer, System Allied possible scopes
-Create two componenets and starter complexes: 
-Sector Shield Projector - projects 100 shield points to all playuer and allied vessels in the sector
-Ssytem Shield Projector - projects 50 shield points to all player and allied vessels in the sector
-
-Add Shield Modifyer Ability - simple value from 0 to infinity, all shields within the scope are multiplied by the value, so a 1.50 would change a ship with a normal 100pts shielding to 150pts
-Scopes should be: Self, Fleet, Sector (allied or player or enemy), system (allied or player or enemy)
-Create these components:
-System Shield Supressor: 0.75 value, system enemy scope - used to reduce the effectivness of enemy shield in system
-System Shield Booster: 1.25 value system allies scope - used to boost player and allied vessels shields in system
-Sector versions of both above - 0.50, and 1.50
-Fleet Versions of both - 0.95, and 1.05
-Create starter complexes for the system and sector versions (4 total complexes) - they do not start out constructed.
-
-Add Damage Modifyer Ability - similar to shield modifyer - 0 to infinitty, same scopes as Shiled modifyer
-Create 6 components similar to the Shield mopdifyers, same values and scopes
-Create 4 starter complexes  similar to above
-
-Add Planet Modifyer abililities: - All require an interface to set the levels, Gavity and Radiation are not permanent, Water is permanent - similar to atmosphere modifyer.  Water takes time similar to atmosphere to change system, Gravity and Radiation are near instant I want a timer system like there is for the system sterllar stabilizer and warp field stabilizer.
-Gavity Modifyer - provides a different level of gavity for the planet, can be set for the species on the planet, facility does not permanently change the gravity, if it is destroyed/removed then the gravity reverts to the original gravity
-Water Modifyer - provides a different level of water for the planet, this is similar to the atmospheric modifyer but for water, it permanentlky alters the amount of water on the planet.
-Radiation Shiled - provides protection from radiation and reduces its effects on the planet, this is similar to the gavity modifyer in that it is not permanent and can be reversed.
-I want a component for each of the planet modifyer abilities, and a starter complex for each of them - 3 starter complexes.
-
-Please ask questions and make suggestions.  I want to try and have uniform ways of managing the various planete and system wide effects, try to use existing systems when possible, Or consider modifying the exisitng systems to integrate or expand them to allow the new abilities.  New standalone systems should only be considered it it seems like the best approach even if it was a clean sheet design.
-
----------------------------------------------------------------------------------------------------------------------
 
 WE need 
  - scrap option for complexes + Ships + Pods + fighters - defaults to 0% of value, should be a command that is given, can only be executed in a location that the player has an appropriate build yard, so complexes or cargo on a planet can be scraped on the planet with a planetary build yard or a space build yard, Ships or fighters or cargo in space can only be scraped in space with a space build yard.
  - Add: Resouce recovery ability with the following scopes: Fleet, Player Sector, Player System, Planet, Empire
  - When not in the same stacking group, the resource recovery ability are sort of cumulative, if there is a system ability of 50% and a fleet ability of 50% then the total resource recovery is 75% (1 - (1 - 0.5) * (1 - 0.5))
  - Note that there must be local storage in the sector for the resources to go to, if there is no local storage then the resources are lost.
+
+- I want to change the atmsphere preferences for the races, it should be a set pressure, and a tolerance slider, so the race does best with a specific pressure for each gas, and the tolerence slider, indicatres how well they do outside of that set point.  We will need to modify the race setup, do not worry about the existing races, they can be deleted.  Do not worry about save games.  The setpoint should cost nothing to set it anywhere, but the tolerance should cost something to change, and the cost should be based on how far away from the setpoint it is it should be somewhat exponential, so that it costs a lot to change it a lot.
+
+- I also want to make sure that in race setup I can set a baseline reproductive rate.  It should default to 3% and cost something to increase.  It also should be increasingly expensive to increase further.
 
 - Habitability calculator based on all conditions on the planets and the preferences/tolerence of the species on the planet.
  - This should factor in the following conditions: 
