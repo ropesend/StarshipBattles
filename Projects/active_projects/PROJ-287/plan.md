@@ -13,18 +13,22 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. `IRaceRegistry` protocol + `CachedRaceRegistry` impl | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Facade exposure: `StrategySessionFacade.get_race_registry()` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. `Empire.resident_species()` derived helper | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Docs + cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. `IRaceRegistry` protocol + `CachedRaceRegistry` impl | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Facade exposure: `StrategySessionFacade.get_race_registry()` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. `Empire.resident_species()` derived helper | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Docs + cleanup | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Planning complete; ready to begin Phase 1
-**Last Action:** Project scaffolded. Scope and decisions captured from user design session 2026-04-18.
-**Next Action:** Phase 1 Task 1.1 — design and implement `IRaceRegistry` protocol with `CachedRaceRegistry` in-memory implementation. This is the infrastructure primitive PROJ-288, 289, 290 all depend on for resolving `race_id → RaceConfig`.
-**Blockers:** None. Independent of PROJ-286.
-**Context for Next Agent:** Today `RaceLibrary` at `game/strategy/systems/race_library.py` is file-backed and loads from `output/races/*.json` on every `get_race(race_id)` call. The new UI work (PROJ-289, 290) hits this on every frame for every species on every colony — unacceptable. We need a cached `IRaceRegistry` protocol with `get_race(race_id) -> Optional[RaceConfig]` + invalidation hook, exposed through the `StrategySessionFacade` so panels can pull it once per session. The `Empire.resident_species()` helper returns `Set[str]` of race_ids with `count >= 1` anywhere in the empire's colonies — defined by user decision 2026-04-18 as the canonical "species in this empire" set for UI iteration.
+**Active Phase:** ALL 4 PHASES COMPLETE — awaiting user sign-off
+**Last Action:** Phase 4 done. Added a `### Race Registry (PROJ-287)` subsection to `docs/04_SERVICES.md` after the PROJ-285 Colony Economy Multiplier section covering: the `IRaceRegistry` protocol + its single method, `CachedRaceRegistry` implementation (hit + None caching, no locks, manual invalidation), the `StrategySessionFacade.get_race_registry()` lazy-init accessor, the race-editor invalidation discipline via `RaceSetupScreen`'s optional `race_registry` kwarg, and `Empire.resident_species()` as the companion API. Task 4.3 (patterns doc) skipped per its own "optional" flag — Pattern 6 CQRS-lite description already covers the facade read pattern. Task 4.1 was completed back in Phase 1 (IRaceRegistry in `docs/01_ARCHITECTURE.md § Key Protocols`; export count 45 → 46). Ran the full sharded suite: 14984/14985 passed in 137.4s across 12 shards. Single failure is the known pre-existing flake `test_copy_designs_without_themes_preserves_original` (theme bleed between fixtures) flagged in the handoff as not a PROJ-287 regression. Net new across all four phases: 19 tests.
+**Next Action:** None — hand back to user for sign-off and to close PROJ-287 out in `projects_index.md`. Consumers PROJ-288, PROJ-289, PROJ-290 are unblocked and can begin.
+**Blockers:** None.
+**Context for Next Agent:** The three deliverables are complete and wired:
+  1. `IRaceRegistry` protocol (`game/core/protocols.py`) + `CachedRaceRegistry` impl (`game/strategy/systems/race_library.py`) — cache hits AND None results; manual `invalidate(race_id=None)`.
+  2. `StrategySessionFacade.get_race_registry() -> IRaceRegistry` — lazy-init, session-scoped; used by consumers pulling race configs once per session. `RaceSetupScreen.__init__` accepts an optional `race_registry` kwarg; `_do_save()` invalidates on successful save when supplied. Current pre-game callers (`app.py`, `new_game_setup_screen.py`) pass no registry — no behaviour change.
+  3. `Empire.resident_species() -> Set[str]` (`game/strategy/data/empire.py`) — returns `race_id`s with `count >= 1` on ANY colony. Not cached.
+  Engines (`PopulationEngine`, `HappinessEngine`) keep their own `_get_race_config` helpers — explicitly out of scope per decisions.md 2026-04-18. No save-format changes. Suite green (excluding pre-existing flake). Docs updated: `01_ARCHITECTURE.md` (Phase 1), `04_SERVICES.md` (Phase 4). `02_PATTERNS.md` intentionally not touched (noise). Final validator: `python Projects/scripts/validate_phase.py PROJ-287 4`.
 
 ## Overview
 

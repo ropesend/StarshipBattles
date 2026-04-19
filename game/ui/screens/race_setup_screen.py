@@ -15,7 +15,7 @@ Cross-layer imports (acceptable for UI):
 """
 import pygame
 import pygame_gui
-from typing import Callable, Optional, List, Tuple
+from typing import Callable, Optional, List, Tuple, TYPE_CHECKING
 
 import logging
 
@@ -24,6 +24,9 @@ from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
 from game.strategy.systems.race_randomizer import RaceRandomizer
+
+if TYPE_CHECKING:
+    from game.core.protocols import IRaceRegistry
 from game.ui.assets import get_default_ship_theme_manager
 
 # PROJ-12 Phase 4: Import extracted components
@@ -71,7 +74,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
                  on_complete_callback: Callable[[RaceConfig], None],
                  on_cancel_callback: Callable[[], None],
-                 race_to_edit: Optional[RaceConfig] = None):
+                 race_to_edit: Optional[RaceConfig] = None,
+                 race_registry: Optional['IRaceRegistry'] = None):
         """
         Create race setup wizard window.
 
@@ -81,6 +85,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             on_complete_callback: Callback(RaceConfig) when user saves race
             on_cancel_callback: Callback() when user cancels
             race_to_edit: Optional existing race to edit
+            race_registry: Optional session-scoped IRaceRegistry (PROJ-287).
+                When supplied, a successful save invalidates the cached
+                entry for the saved race so the next ``get_race`` call
+                re-reads from disk. Pre-game launches pass None.
         """
         super().__init__(
             rect,
@@ -112,6 +120,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         # Race library for save/load
         self.race_library = RaceLibrary()
+
+        # PROJ-287: Optional session-scoped race registry.
+        # If set, _do_save() invalidates the cached entry after a successful
+        # save so subsequent get_race calls re-read from disk.
+        self.race_registry = race_registry
 
         # PROJ-12 Phase 4: Use extracted asset loader
         self._asset_loader = RaceAssetLoader()
@@ -924,6 +937,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         success, message = self.race_library.save_race(self.race_config)
         if success:
             logger.info(f"Race saved: {self.race_config.name}")
+            if self.race_registry is not None:
+                self.race_registry.invalidate(self.race_config.race_id)
             self.on_complete_callback(self.race_config)
             self.kill()
         else:

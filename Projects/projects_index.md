@@ -7,7 +7,7 @@ w# Projects Index
 | PROJ-290 | Empire Treasury + Uncolonized Habitability UI | Planning | 2026-04-18 | 2026-04-18 |
 | PROJ-289 | Planet Report Panel Per-Species + Per-Resource UI | Planning | 2026-04-18 | 2026-04-18 |
 | PROJ-288 | Colony Output Projection Helpers | Planning | 2026-04-18 | 2026-04-18 |
-| PROJ-287 | Race Registry Facade + Empire.resident_species | Planning | 2026-04-18 | 2026-04-18 |
+| PROJ-287 | Race Registry Facade + Empire.resident_species | Awaiting Verification | 2026-04-18 | 2026-04-18 |
 | PROJ-286 | Multi-Resource Population Consumption | Planning | 2026-04-18 | 2026-04-18 |
 | PROJ-285 | Habitability-to-Production Economy Hook | Planning | 2026-04-18 | 2026-04-18 |
 | PROJ-284 | Colony Demographics Loop (Organics, Happiness, Population Growth Rework) | Planning | 2026-04-18 | 2026-04-18 |

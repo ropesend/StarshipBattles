@@ -42,7 +42,7 @@ Paths (game.core.paths):
     Paths
 
 Protocols (game.core.protocols):
-    IRegistryProvider, IFleet, IPlanet, ICombatant,
+    IRegistryProvider, IFleet, IPlanet, ICombatant, IRaceRegistry,
     is_fleet, is_planet, is_combatant
 
 Roles (game.core.roles, PROJ-278):
@@ -116,6 +116,7 @@ from game.core.protocols import (
     IFleet,
     IPlanet,
     ICombatant,
+    IRaceRegistry,
     is_fleet,
     is_planet,
     is_combatant,
@@ -154,7 +155,7 @@ __all__ = [
     # Paths
     'Paths',
     # Protocols
-    'IRegistryProvider', 'IFleet', 'IPlanet', 'ICombatant',
+    'IRegistryProvider', 'IFleet', 'IPlanet', 'ICombatant', 'IRaceRegistry',
     'is_fleet', 'is_planet', 'is_combatant',
     # Roles (PROJ-278)
     'Role', 'RoleRegistry', 'RoleRegistryReadOnlyError',

@@ -762,3 +762,33 @@ class TestStormQueries:
             result = facade.get_storm_names_at_hex(HexCoord(0, 0))
 
             assert result == []
+
+
+class TestRaceRegistryAccessor:
+    """PROJ-287 Phase 2: facade.get_race_registry() lazy-init accessor."""
+
+    def test_returns_iraceregistry(self):
+        """Returns an object conforming to the IRaceRegistry protocol."""
+        from game.core.protocols import IRaceRegistry
+
+        facade = StrategySessionFacade(Mock())
+
+        registry = facade.get_race_registry()
+
+        assert isinstance(registry, IRaceRegistry)
+
+    def test_two_calls_return_same_instance(self):
+        """Subsequent calls return the cached registry (session-scoped)."""
+        facade = StrategySessionFacade(Mock())
+
+        first = facade.get_race_registry()
+        second = facade.get_race_registry()
+
+        assert first is second
+
+    def test_two_facades_return_different_instances(self):
+        """Each facade/session owns its own registry."""
+        facade_a = StrategySessionFacade(Mock())
+        facade_b = StrategySessionFacade(Mock())
+
+        assert facade_a.get_race_registry() is not facade_b.get_race_registry()

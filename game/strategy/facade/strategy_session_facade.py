@@ -22,6 +22,7 @@ from game.strategy.facade.dto import (
 )
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRaceRegistry
     from game.strategy.engine.game_session import GameSession
     from game.strategy.engine.commands import Command
 
@@ -54,6 +55,8 @@ class StrategySessionFacade:
         self._all_stars_cache_turn: int = -1
         self._fleets_by_hex_cache: Optional[dict] = None  # HexCoord -> [Fleet]
         self._fleets_by_hex_turn: int = -1
+        # PROJ-287: Lazy-init session-scoped race registry
+        self._race_registry: Optional['IRaceRegistry'] = None
 
     # =========================================================================
     # COMMANDS (Write Path)
@@ -638,6 +641,28 @@ class StrategySessionFacade:
             The current turn number (1-indexed)
         """
         return self._session.turn_number
+
+    # --- Race Registry (PROJ-287) ---
+
+    def get_race_registry(self) -> 'IRaceRegistry':
+        """Get the session-scoped race registry (PROJ-287).
+
+        Returns a cached ``CachedRaceRegistry`` wrapping a ``RaceLibrary``.
+        The registry is lazily constructed on first access and reused for
+        the remainder of the session, so UI panels and formulas can resolve
+        ``race_id -> RaceConfig`` without per-call filesystem reads.
+
+        Callers that mutate races (e.g. the race editor on save) must call
+        ``registry.invalidate(race_id)`` after a successful save to keep
+        subsequent reads coherent.
+        """
+        if self._race_registry is None:
+            from game.strategy.systems.race_library import (
+                CachedRaceRegistry,
+                RaceLibrary,
+            )
+            self._race_registry = CachedRaceRegistry(RaceLibrary())
+        return self._race_registry
 
     # --- Event Log Queries (PROJ-77) ---
 

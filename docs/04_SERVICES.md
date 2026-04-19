@@ -1001,6 +1001,37 @@ Multiplicative: `effective_rate = base_rate * booster_mult * habitability_mult`.
 
 See [docs/systems/production_system.md § Habitability Multiplier](systems/production_system.md#habitability-multiplier-proj-285) and [docs/systems/strategy_layer.md §9](systems/strategy_layer.md#9-colony-economy-multiplier-proj-285).
 
+### Race Registry (PROJ-287)
+
+Session-scoped in-memory lookup of `race_id -> RaceConfig`, so UI panels and formulas can resolve species data without hitting the filesystem per call.
+
+**Protocol** — `IRaceRegistry` in `game/core/protocols.py`:
+- `get_race(race_id: str) -> Optional[RaceConfig]` — one method, narrow on purpose. Iteration/list-all can be added when a concrete consumer needs them.
+
+**Implementation** — `CachedRaceRegistry` in `game/strategy/systems/race_library.py`:
+- Wraps a backing `RaceLibrary` (the existing file-backed loader, unchanged).
+- Caches BOTH hits and `None` results. A repeated lookup of an unknown `race_id` (extinct species, save drift, typo) never re-stats the filesystem.
+- Cache is a plain `Dict[str, Optional[RaceConfig]]` — no TTL, no locks (pygame is single-threaded).
+- `invalidate(race_id=None)` — pass a `race_id` to clear one entry, or call with no args to clear the whole cache.
+
+**Facade accessor** — `StrategySessionFacade.get_race_registry() -> IRaceRegistry`:
+- Lazy-init: constructs `CachedRaceRegistry(RaceLibrary())` on first call and memoizes on `self._race_registry`. One instance per session.
+- Inline imports `RaceLibrary` + `CachedRaceRegistry` inside the accessor to keep the facade's top-level import surface narrow (same convention as the command-dispatch helpers).
+
+**Invalidation discipline** — the cache does NOT auto-detect file changes. The only supported mid-game mutation path is the race editor on save:
+- `RaceSetupScreen.__init__` accepts an optional `race_registry: Optional[IRaceRegistry] = None`.
+- After a successful `race_library.save_race(...)` in `_do_save()`, the screen calls `self.race_registry.invalidate(self.race_config.race_id)` if the registry was supplied.
+- Current callers (pre-game race setup from `game/app.py` and `new_game_setup_screen.py`) pass no registry — invalidation is a no-op because the session doesn't exist yet. Any future mid-game invocation threads `facade.get_race_registry()` through.
+- External file edits during a running session require a game restart. Documented, not enforced.
+
+**Companion API** — `Empire.resident_species() -> Set[str]` in `game/strategy/data/empire.py`:
+- Returns the set of `race_id`s with `count >= 1` on ANY colony in `self.colonies`.
+- Excludes extinct species (count=0 everywhere). A species with count=0 on colony A + count>=1 on colony B is INCLUDED.
+- Not cached — empires have O(10-100) colonies × O(1-5) species, so recomputing is cheap compared to the invalidation complexity caching would require (growth, extinction, colonization).
+- Canonical "species living in this empire" query for per-species UI iteration (consumed by PROJ-289 + PROJ-290).
+
+See [docs/01_ARCHITECTURE.md § Key Protocols](01_ARCHITECTURE.md#key-protocols) for the cross-layer protocol table entry.
+
 ---
 
 ## Design Principles

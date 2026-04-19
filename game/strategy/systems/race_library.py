@@ -3,13 +3,20 @@ Race Library - Manages race configuration files
 
 This module provides the RaceLibrary class for saving, loading, listing,
 and deleting race configuration files stored in the races/ folder.
+
+PROJ-287: CachedRaceRegistry wraps RaceLibrary with a session-scoped
+in-memory cache. It implements the IRaceRegistry protocol so consumers
+(UI panels, formulas) can resolve race_id -> RaceConfig without hitting
+the filesystem on every call. Both hits and misses (None results) are
+cached. Invalidation is manual via invalidate(race_id=None) and is the
+race editor's responsibility on save.
 """
 import json
 import logging
 import os
 import glob
 import uuid
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from game.core.paths import Paths
 from game.core.string_utils import slugify
@@ -253,3 +260,35 @@ class RaceLibrary:
 
         pattern = os.path.join(self.races_folder, "*.json")
         return len(glob.glob(pattern))
+
+
+class CachedRaceRegistry:
+    """Session-scoped in-memory cache over RaceLibrary (PROJ-287).
+
+    Implements the IRaceRegistry protocol. The first get_race(race_id)
+    call delegates to the backing library; subsequent calls return the
+    cached result without hitting disk. None results are cached too, so
+    repeated lookups of an unknown race_id (extinct species, save drift,
+    typos) don't re-stat the filesystem.
+
+    Invalidation is manual: callers must invoke invalidate(race_id) after
+    a race is saved (the only mid-game mutation path). External file edits
+    require a game restart — by design.
+    """
+
+    def __init__(self, backing: RaceLibrary):
+        self._backing = backing
+        self._cache: Dict[str, Optional[RaceConfig]] = {}
+
+    def get_race(self, race_id: str) -> Optional[RaceConfig]:
+        """Resolve race_id -> RaceConfig, caching both hits and misses."""
+        if race_id not in self._cache:
+            self._cache[race_id] = self._backing.get_race(race_id)
+        return self._cache[race_id]
+
+    def invalidate(self, race_id: Optional[str] = None) -> None:
+        """Clear cached entries. None clears all; otherwise clears one id."""
+        if race_id is None:
+            self._cache.clear()
+        else:
+            self._cache.pop(race_id, None)

@@ -5,10 +5,12 @@ import pytest
 import tempfile
 import os
 import shutil
+from unittest.mock import MagicMock
 
 from game.strategy.data.race_config import RaceConfig
 from game.core.string_utils import slugify
-from game.strategy.systems.race_library import RaceLibrary
+from game.core.protocols import IRaceRegistry
+from game.strategy.systems.race_library import RaceLibrary, CachedRaceRegistry
 
 
 class TestSlugify:
@@ -345,3 +347,109 @@ class TestRaceLibraryIDGeneration:
         race_id = lib._generate_race_id("")
 
         assert race_id.startswith("race_")
+
+
+class TestCachedRaceRegistry:
+    """PROJ-287: Session-scoped in-memory cache over RaceLibrary.
+
+    Verifies the IRaceRegistry contract: hits and misses are cached, and
+    invalidate() clears entries so freshly-saved races are picked up.
+    """
+
+    def _make_race(self, race_id):
+        return RaceConfig(
+            race_id=race_id,
+            name=race_id.title(),
+            flag_id="flag",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+        )
+
+    def test_first_call_delegates_to_backing_library(self):
+        """First get_race call must hit the backing library."""
+        backing = MagicMock(spec=RaceLibrary)
+        race = self._make_race("foo")
+        backing.get_race.return_value = race
+
+        registry = CachedRaceRegistry(backing)
+        result = registry.get_race("foo")
+
+        assert result is race
+        backing.get_race.assert_called_once_with("foo")
+
+    def test_second_call_uses_cache(self):
+        """Second get_race call for the same id must NOT hit the backing library."""
+        backing = MagicMock(spec=RaceLibrary)
+        race = self._make_race("foo")
+        backing.get_race.return_value = race
+
+        registry = CachedRaceRegistry(backing)
+        registry.get_race("foo")
+        registry.get_race("foo")
+
+        assert backing.get_race.call_count == 1
+
+    def test_missing_race_returns_none_and_caches_none(self):
+        """Missing races return None AND the None is cached (no re-query)."""
+        backing = MagicMock(spec=RaceLibrary)
+        backing.get_race.return_value = None
+
+        registry = CachedRaceRegistry(backing)
+        first = registry.get_race("missing")
+        second = registry.get_race("missing")
+
+        assert first is None
+        assert second is None
+        assert backing.get_race.call_count == 1
+
+    def test_invalidate_specific_id_clears_one_entry(self):
+        """invalidate(race_id) clears that entry; next get_race re-queries."""
+        backing = MagicMock(spec=RaceLibrary)
+        race_a = self._make_race("a")
+        race_b = self._make_race("b")
+        backing.get_race.side_effect = lambda rid: {"a": race_a, "b": race_b}.get(rid)
+
+        registry = CachedRaceRegistry(backing)
+        registry.get_race("a")
+        registry.get_race("b")
+        backing.get_race.reset_mock()
+
+        registry.invalidate("a")
+
+        registry.get_race("a")  # Should re-query
+        registry.get_race("b")  # Should still be cached
+
+        backing.get_race.assert_called_once_with("a")
+
+    def test_invalidate_no_args_clears_all_entries(self):
+        """invalidate() with no args clears the entire cache."""
+        backing = MagicMock(spec=RaceLibrary)
+        race_a = self._make_race("a")
+        race_b = self._make_race("b")
+        backing.get_race.side_effect = lambda rid: {"a": race_a, "b": race_b}.get(rid)
+
+        registry = CachedRaceRegistry(backing)
+        registry.get_race("a")
+        registry.get_race("b")
+        backing.get_race.reset_mock()
+
+        registry.invalidate()
+
+        registry.get_race("a")
+        registry.get_race("b")
+
+        assert backing.get_race.call_count == 2
+
+    def test_invalidate_unknown_id_is_noop(self):
+        """invalidate(race_id) for an uncached id must not raise."""
+        backing = MagicMock(spec=RaceLibrary)
+        registry = CachedRaceRegistry(backing)
+
+        registry.invalidate("never_cached")  # Must not raise
+
+    def test_conforms_to_iraceregistry_protocol(self):
+        """CachedRaceRegistry must satisfy the IRaceRegistry runtime_checkable Protocol."""
+        backing = MagicMock(spec=RaceLibrary)
+        registry = CachedRaceRegistry(backing)
+
+        assert isinstance(registry, IRaceRegistry)

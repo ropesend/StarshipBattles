@@ -68,6 +68,9 @@ def _make_race_setup_screen():
     # Race library
     screen.race_library = MagicMock()
 
+    # PROJ-287: Session-scoped race registry (None when editor runs pre-game).
+    screen.race_registry = None
+
     # Asset loader
     screen._asset_loader = MagicMock()
 
@@ -772,3 +775,52 @@ class TestSliderEventDispatch:
 
         screen._environment_panel.update_labels.assert_called_once()
         screen._environment_panel.update_config.assert_called_once()
+
+
+# ===========================================================================
+# PROJ-287 Phase 2: Race registry cache invalidation on save
+# ===========================================================================
+
+class TestRaceRegistryInvalidationOnSave:
+    """After a successful save, the screen must invalidate the session's
+    race registry so subsequent reads see the freshly-saved race.
+
+    When the editor runs pre-game (no session), `race_registry` is None
+    and _do_save must still succeed without attempting invalidation.
+    """
+
+    def test_successful_save_invalidates_registry_entry(self):
+        """Successful save calls registry.invalidate(race_id)."""
+        screen, mocks = _make_race_setup_screen()
+        screen.race_config.race_id = "edited_race_123"
+        screen.race_registry = MagicMock()
+        mocks['race_library'].save_race.return_value = (True, "Saved")
+        screen.kill = MagicMock()
+
+        screen._do_save()
+
+        screen.race_registry.invalidate.assert_called_once_with("edited_race_123")
+
+    def test_failed_save_does_not_invalidate(self):
+        """Failed save must NOT invalidate (cache stays coherent with disk)."""
+        screen, mocks = _make_race_setup_screen()
+        screen.race_config.race_id = "edited_race_123"
+        screen.race_registry = MagicMock()
+        mocks['race_library'].save_race.return_value = (False, "Disk full")
+        screen.kill = MagicMock()
+
+        screen._do_save()
+
+        screen.race_registry.invalidate.assert_not_called()
+
+    def test_save_without_registry_still_works(self):
+        """Pre-game save (race_registry=None) completes without error."""
+        screen, mocks = _make_race_setup_screen()
+        screen.race_config.race_id = "new_race_456"
+        screen.race_registry = None
+        mocks['race_library'].save_race.return_value = (True, "Saved")
+        screen.kill = MagicMock()
+
+        screen._do_save()  # Must not raise
+
+        mocks['race_library'].save_race.assert_called_once()

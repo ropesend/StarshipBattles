@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, Optional, TYPE_CHECKING
+from typing import Dict, Any, Optional, Set, TYPE_CHECKING
 
 from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
@@ -246,6 +246,29 @@ class Empire:
         Returns 0.0 if the resource type is not in the pool.
         """
         return self.resource_pool.get(resource_type, 0.0)
+
+    # --- Population Queries (PROJ-287) ---
+
+    def resident_species(self) -> Set[str]:
+        """Return the set of race_ids with count >= 1 anywhere in this
+        empire's colonies (PROJ-287).
+
+        Canonical "species living in this empire" set — consumed by UI
+        that iterates per-species (e.g. PROJ-290's uncolonized-habitability
+        display). A species is included if ANY colony has at least one
+        population unit; species with count=0 on every colony are excluded
+        as extinct.
+
+        Not cached — empires have O(10-100) colonies × O(1-5) species, so
+        the iteration is cheap compared to the invalidation complexity a
+        cache would require (population growth, extinction, colonization).
+        """
+        species: Set[str] = set()
+        for colony in self.colonies:
+            for pop in colony.populations:
+                if pop.count >= 1:
+                    species.add(pop.race_id)
+        return species
 
     def to_dict(self) -> Dict[str, Any]:
         """

@@ -35,6 +35,7 @@ from game.core.constants import LayerType
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
+    from game.strategy.data.race_config import RaceConfig
     # Note: LayerData not imported - protocols use Any for cross-layer types
 
 
@@ -563,6 +564,21 @@ class IFacility(Protocol):
     @property
     def consumable_levels(self) -> Dict[str, float]:
         """Consumable levels stored in this facility."""
+        ...
+
+
+@runtime_checkable
+class IRaceRegistry(Protocol):
+    """Read-only registry for resolving race_id -> RaceConfig (PROJ-287).
+
+    Decouples consumers (UI panels, formulas, engines) from the file-backed
+    RaceLibrary. Implementations are free to cache, lazy-load, or proxy.
+    Returns None when the race_id is unknown — callers must handle missing
+    races gracefully (extinct species, save drift, typos).
+    """
+
+    def get_race(self, race_id: str) -> Optional['RaceConfig']:
+        """Resolve a race_id to its RaceConfig, or None if unknown."""
         ...
 
 

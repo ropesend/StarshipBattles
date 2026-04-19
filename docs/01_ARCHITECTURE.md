@@ -175,7 +175,7 @@ Six layers with strict downward-only dependency flow:
 
 Exports defined in each package's `__init__.py` via `__all__`.
 
-### `game.core` (45 exports)
+### `game.core` (46 exports)
 
 - **Exceptions:** GameException, StateException, FrozenStateException, ValidationException, ResourceException, MissingResourceException, PersistenceException, SimulationException, ComponentException, FormulaException
 - **Error Codes:** ErrorCode
@@ -187,7 +187,7 @@ Exports defined in each package's `__init__.py` via `__all__`.
 - **Validation:** ValidationResult, IValidationRule
 - **Configuration:** DisplayConfig, AIConfig, PhysicsConfig, BattleTuning
 - **Paths:** Paths
-- **Protocols:** IRegistryProvider, IFleet, IPlanet, ICombatant, is_fleet, is_planet, is_combatant
+- **Protocols:** IRegistryProvider, IFleet, IPlanet, ICombatant, IRaceRegistry, is_fleet, is_planet, is_combatant
 - **Roles (PROJ-278):** Role, RoleRegistry, RoleRegistryReadOnlyError
 
 ### `game.engine` (3 exports)
@@ -247,6 +247,11 @@ All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol clas
 - `get_modifiers() -> Dict`
 - `get_vehicle_classes() -> Dict`
 - `get_resources() -> Dict`
+
+**IRaceRegistry** (PROJ-287) -- Read-only registry resolving race_id to RaceConfig:
+- `get_race(race_id: str) -> Optional[RaceConfig]` -- returns the race config or None if unknown.
+
+Implementations: `CachedRaceRegistry` (`game/strategy/systems/race_library.py`) wraps the file-backed `RaceLibrary` with a session-scoped in-memory cache. Caches both hits and misses. Invalidation is manual via `invalidate(race_id=None)` and is the race editor's responsibility on save.
 
 **ICamera** -- Camera abstraction for research layer visualization:
 - `width`, `height`, `zoom`, `position`
