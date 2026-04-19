@@ -921,3 +921,135 @@ class TestPopulationUpkeepAggregation:
         snapshot = calculator.calculate(empire)
 
         assert snapshot.total_population_upkeep == {}
+
+
+# ---------------------------------------------------------------------------
+# PROJ-291 Phase 1 (C1): Treasury Total must include population upkeep.
+# Audit found the upkeep term was computed correctly into
+# `total_population_upkeep` but silently dropped from the `total_expenses`
+# summation, so the Treasury panel's "Total" row showed an inconsistent
+# number relative to its visible "Population Upkeep" row.
+# ---------------------------------------------------------------------------
+
+class TestTreasuryTotalIncludesUpkeep:
+    """`EmpireEconomySnapshot.total_expenses[r]` must be the sum of every
+    expense category INCLUDING `total_population_upkeep[r]`. Pins the C1
+    contract at the unit level; `tests/integration/strategy/test_treasury_panel_e2e.py`
+    pins it at the render level."""
+
+    @pytest.fixture
+    def two_resource_economy(self):
+        from game.strategy.config.economy_config import EconomyConfig
+        return EconomyConfig(population_consumption={
+            "organics": 0.001,
+            "metals": 0.0001,
+        })
+
+    @pytest.fixture
+    def _mock_race_registry(self):
+        stub = Mock()
+        stub.get_race.return_value = None
+        return stub
+
+    def _colony_with_populations(self, populations):
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.planet import Planet, PlanetType
+        return Planet(
+            name="TestColony",
+            location=HexCoord(0, 0),
+            orbit_distance=3,
+            mass=5.97e24, radius=6.371e6, surface_area=5.1e14, density=5515.0,
+            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
+            surface_water=0.71, tectonic_activity=0.3, magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL, populations=populations, stockpile={},
+            owner_id=1,
+        )
+
+    def test_total_expenses_includes_population_upkeep_per_resource(
+        self, minimal_registries, two_resource_economy, _mock_race_registry,
+    ):
+        """Two colonies x two species (humans + voidari, 1000 each) with
+        non-zero `population_consumption` produce non-zero upkeep. The
+        per-resource `total_expenses[r]` must equal the sum of every
+        expense category — tributes + ships + complexes + upkeep — for
+        EVERY planetary resource. Fails on the pre-fix code because the
+        upkeep term is absent from the summation at lines 147-150 of
+        `empire_economy_calculator.py`."""
+        from game.strategy.data.species_population import SpeciesPopulation
+        from game.strategy.engine.empire_economy_calculator import _PLANETARY_IDS
+
+        populations = [
+            SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
+            SpeciesPopulation(race_id="voidari", count=1000, happiness=0.5),
+        ]
+        colony_a = self._colony_with_populations(populations=populations)
+        colony_b = self._colony_with_populations(populations=populations)
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony_a, colony_b]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=two_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        # Sanity: the upkeep dict actually has non-zero values, otherwise
+        # the test below would pass even with the bug present.
+        assert snapshot.total_population_upkeep.get("organics", 0.0) > 0.0
+        assert snapshot.total_population_upkeep.get("metals", 0.0) > 0.0
+
+        for r in _PLANETARY_IDS:
+            expected = (
+                snapshot.tribute_expenses.get(r, 0.0)
+                + snapshot.construction_expenses_ships.get(r, 0.0)
+                + snapshot.construction_expenses_complexes.get(r, 0.0)
+                + snapshot.total_population_upkeep.get(r, 0.0)
+            )
+            assert snapshot.total_expenses[r] == pytest.approx(expected), (
+                f"total_expenses[{r}] should include population upkeep: "
+                f"{snapshot.total_expenses[r]} != {expected}"
+            )
+
+    def test_net_resources_reflects_upkeep_in_total(
+        self, minimal_registries, two_resource_economy, _mock_race_registry,
+    ):
+        """`net_resources[r] == total_production[r] - total_expenses[r]` is
+        the existing contract; combined with Test 1 this means net is
+        also lower by the upkeep amount. With the bug present, net is
+        overstated by exactly the per-resource upkeep value."""
+        from game.strategy.data.species_population import SpeciesPopulation
+        from game.strategy.engine.empire_economy_calculator import _PLANETARY_IDS
+
+        colony = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
+        ])
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=two_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        for r in _PLANETARY_IDS:
+            expected_net = snapshot.total_production.get(r, 0.0) - (
+                snapshot.tribute_expenses.get(r, 0.0)
+                + snapshot.construction_expenses_ships.get(r, 0.0)
+                + snapshot.construction_expenses_complexes.get(r, 0.0)
+                + snapshot.total_population_upkeep.get(r, 0.0)
+            )
+            assert snapshot.net_resources[r] == pytest.approx(expected_net), (
+                f"net_resources[{r}] should reflect upkeep drain: "
+                f"{snapshot.net_resources[r]} != {expected_net}"
+            )

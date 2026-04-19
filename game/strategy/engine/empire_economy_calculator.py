@@ -148,6 +148,7 @@ class EmpireEconomyCalculator:
                 snapshot.tribute_expenses.get(r, 0.0)
                 + snapshot.construction_expenses_ships.get(r, 0.0)
                 + snapshot.construction_expenses_complexes.get(r, 0.0)
+                + snapshot.total_population_upkeep.get(r, 0.0)   # PROJ-291 C1: include upkeep
             )
 
         # Net resources per turn
