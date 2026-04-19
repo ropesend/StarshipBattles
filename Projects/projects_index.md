@@ -4,6 +4,8 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | Planning | 2026-04-18 | 2026-04-18 |
+| PROJ-291 | Audit Critical Fixes (PROJ-283..290 Sign-off Blocker) | Planning | 2026-04-18 | 2026-04-18 |
 | PROJ-290 | Empire Treasury + Uncolonized Habitability UI | Awaiting Verification | 2026-04-18 | 2026-04-18 |
 | PROJ-289 | Planet Report Panel Per-Species + Per-Resource UI | Awaiting Verification | 2026-04-18 | 2026-04-18 |
 | PROJ-288 | Colony Output Projection Helpers | Awaiting Verification | 2026-04-18 | 2026-04-18 |
