@@ -127,7 +127,7 @@ Six layers with strict downward-only dependency flow:
 | `events/`       | EventLog, EventTypes for strategy-layer event tracking |
 | `formulas/`     | Habitability formulas |
 | `validation/`   | ColonizeValidator, SuperweaponValidator, TransferValidator, PlanetOrderValidator |
-| `systems/`      | DesignLibrary (design filtering including `design_role`), RaceLibrary, RaceRandomizer, SaveGameService |
+| `systems/`      | DesignLibrary (design filtering including `design_role`), RaceLibrary, CachedRaceRegistry (PROJ-287 — session-scoped cache implementing `IRaceRegistry`), RaceRandomizer, SaveGameService |
 
 ### `game/ai/` -- Combat AI
 

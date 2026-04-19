@@ -52,6 +52,7 @@ Each DTO has a `from_<domain_object>()` class method for conversion.
 | Events | `get_turn_events()`, `get_all_events()`, `get_events_by_category()` |
 | Validation | `can_colonize()`, `can_move_to()`, `get_fleet_remaining_pods()` |
 | Environment | `get_storm_names_at_hex()` |
+| Race Registry (PROJ-287) | `get_race_registry()` -- returns the session-scoped `IRaceRegistry` (a `CachedRaceRegistry` over `RaceLibrary`) for resolving `race_id -> RaceConfig` without per-call filesystem reads. Lazy-init; one instance per facade. See [04_SERVICES.md § Race Registry](../04_SERVICES.md#race-registry-proj-287). |
 
 ---
 
