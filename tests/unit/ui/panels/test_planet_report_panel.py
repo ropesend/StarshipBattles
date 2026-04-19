@@ -325,3 +325,164 @@ class TestGetHarvesterInfo:
         result = _get_harvester_info(comp, registries)
 
         assert result is None
+
+
+# ===========================================================================
+# PROJ-289 Phase 2: Per-resource projection grid (4-column)
+# ===========================================================================
+#
+# When `view: ColonyDemographicView` is supplied, the resource panel renders a
+# Resource / Harvest / Upkeep / Yard / Net table driven by
+# `view.resource_projections`. The pure helper `_projection_grid_rows`
+# returns the rows so cell text is testable without pygame.
+#
+# Sign convention in the displayed cells (per design.md):
+#   harvest column  =  proj.harvest        (income — positive)
+#   upkeep column   = -proj.upkeep         (display as a drain)
+#   yard column     = -proj.yard           (display as a drain)
+#   net column      =  proj.net            (already harvest - upkeep - yard)
+
+
+def _make_projection(rid, *, harvest=0.0, upkeep=0.0, yard=0.0):
+    from game.strategy.services.planet_economy_projector import (
+        ResourceProjection,
+    )
+    return ResourceProjection(
+        resource_id=rid,
+        harvest=harvest,
+        upkeep=upkeep,
+        yard=yard,
+        net=harvest - upkeep - yard,
+    )
+
+
+def _make_view_with_projections(projections):
+    from game.strategy.facade.dto.colony_demographic_view import (
+        ColonyDemographicView,
+    )
+    return ColonyDemographicView(
+        planet_id=1,
+        planet_name="Test",
+        species=(),
+        resource_projections=tuple(projections),
+        total_upkeep={},
+    )
+
+
+class TestProjectionGridRows:
+    """Pure data-shape tests for the 4-column grid rows."""
+
+    def test_view_none_returns_only_header(self):
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+
+        rows = _projection_grid_rows(None)
+
+        assert len(rows) == 1  # header only
+        assert rows[0] == ("Resource", "Harvest", "Upkeep", "Yard", "Net")
+
+    def test_header_row_then_data_rows(self):
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("organics", harvest=12.4, upkeep=10.0, yard=1.5),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        assert len(rows) == 2  # header + 1 data row
+        assert rows[0] == ("Resource", "Harvest", "Upkeep", "Yard", "Net")
+        assert rows[1][0] == "organics"
+
+    def test_harvest_cell_uses_signed_format(self):
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("metals", harvest=8.0),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        # Cell index 1 is harvest. format_signed_float(8.0, 1) → "+8.0".
+        assert rows[1][1] == "+8.0"
+
+    def test_upkeep_cell_displayed_as_drain(self):
+        """upkeep is a drain — the cell shows it as a negative number so
+        the sign matches the user's intuition (gains green, drains red)."""
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("organics", upkeep=10.0),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        # upkeep = 10.0 → displayed as "-10.0"
+        assert rows[1][2] == "-10.0"
+
+    def test_yard_cell_displayed_as_drain(self):
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("metals", yard=4.2),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        # yard = 4.2 → displayed as "-4.2"
+        assert rows[1][3] == "-4.2"
+
+    def test_net_cell_uses_signed_format_directly(self):
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("organics", harvest=12.4, upkeep=10.0, yard=1.5),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        # net = 12.4 - 10.0 - 1.5 = 0.9 → "+0.9"
+        assert rows[1][4] == "+0.9"
+
+    def test_zero_upkeep_shows_signed_zero(self):
+        """Non-food resources show 0.0 in the upkeep column rather than
+        blank — keeps grid alignment consistent."""
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("vapors", harvest=5.1),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        # upkeep = 0 → "+0.0" (format_signed_float floors -0.0 to "+0.0")
+        assert rows[1][2] == "+0.0"
+        # yard = 0 → "+0.0" likewise.
+        assert rows[1][3] == "+0.0"
+
+    def test_multiple_resources_yield_multiple_rows(self):
+        from game.ui.panels.planet_report_panel import _projection_grid_rows
+        view = _make_view_with_projections([
+            _make_projection("organics", harvest=12.4, upkeep=10.0),
+            _make_projection("metals", harvest=8.0, yard=4.2),
+            _make_projection("radioactives", harvest=2.3, upkeep=0.1),
+        ])
+
+        rows = _projection_grid_rows(view)
+
+        assert len(rows) == 4  # header + 3 resources
+        assert rows[1][0] == "organics"
+        assert rows[2][0] == "metals"
+        assert rows[3][0] == "radioactives"
+
+
+class TestNetCellColor:
+    """Net column colour: green positive, red negative, default zero."""
+
+    def test_positive_net_is_green(self):
+        from game.ui.panels.planet_report_panel import _net_cell_color
+        from game.ui.colors import HP_HEALTHY
+        assert _net_cell_color(1.0) == HP_HEALTHY
+
+    def test_negative_net_is_red(self):
+        from game.ui.panels.planet_report_panel import _net_cell_color
+        from game.ui.colors import HP_CRITICAL
+        assert _net_cell_color(-1.0) == HP_CRITICAL
+
+    def test_zero_net_is_default(self):
+        from game.ui.panels.planet_report_panel import _net_cell_color
+        from game.ui.colors import TEXT_LIGHT
+        assert _net_cell_color(0.0) == TEXT_LIGHT

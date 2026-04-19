@@ -14,7 +14,7 @@ from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContaine
 from game.core.paths import Paths
 from game.ui.screens.strategy_detail_fmt import format_planet_info
 from game.ui.fonts import get_font
-from game.ui.utils.formatters import format_compact_number
+from game.ui.utils.formatters import format_compact_number, format_signed_float
 
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
@@ -22,9 +22,55 @@ from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOUR
 ALL_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics", "fuel", "energy", "ammo"]
 from game.ui.colors import (
     PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
-    TEXT_DIM, WHITE, TEXT_LIGHT
+    TEXT_DIM, WHITE, TEXT_LIGHT, HP_HEALTHY, HP_CRITICAL,
 )
 from collections import Counter
+
+
+# PROJ-289 Phase 2: 4-column projection-grid header. Module-level so the
+# pure helper below can return a stable header tuple for tests.
+_PROJECTION_GRID_HEADER = ("Resource", "Harvest", "Upkeep", "Yard", "Net")
+
+
+def _projection_grid_rows(view) -> List[tuple]:
+    """Return the header + per-resource cell-text rows for the 4-column
+    projection grid (PROJ-289 Phase 2).
+
+    Pure data-shape function — no UI side effects, testable without pygame.
+    Display sign convention:
+
+      * harvest cell = ``proj.harvest`` (income, signed)
+      * upkeep cell  = ``-proj.upkeep`` (drain, displayed negative)
+      * yard cell    = ``-proj.yard``   (drain, displayed negative)
+      * net cell     = ``proj.net``     (already harvest - upkeep - yard)
+
+    When ``view`` is ``None`` (legacy call site without a facade), only
+    the header row is returned — the panel uses the header as a stub and
+    falls back to its legacy stockpile grid.
+    """
+    rows: List[tuple] = [_PROJECTION_GRID_HEADER]
+    if view is None:
+        return rows
+    for proj in view.resource_projections:
+        rows.append((
+            proj.resource_id,
+            format_signed_float(proj.harvest, decimals=1),
+            format_signed_float(-proj.upkeep, decimals=1),
+            format_signed_float(-proj.yard, decimals=1),
+            format_signed_float(proj.net, decimals=1),
+        ))
+    return rows
+
+
+def _net_cell_color(net: float):
+    """Colour for a Net cell — green positive, red negative, default zero.
+    Reuses the existing HP colour constants (`HP_HEALTHY` / `HP_CRITICAL`)
+    so the palette stays consistent with other "good vs bad" indicators."""
+    if net > 0:
+        return HP_HEALTHY
+    if net < 0:
+        return HP_CRITICAL
+    return TEXT_LIGHT
 
 
 # Height reserved for resource grid at bottom of panel
@@ -50,7 +96,8 @@ class PlanetReportPanel:
         container=None,
         portrait_surface=None,
         show_complexes=True,
-        production_rates: Optional[Dict[str, float]] = None
+        production_rates: Optional[Dict[str, float]] = None,
+        view=None,
     ):
         """
         Initialize planet report panel.
@@ -66,6 +113,11 @@ class PlanetReportPanel:
                 Defaults to True. Set to False for contexts like Strategy UI.
             production_rates (Dict[str, float], optional): Per-resource production rates.
                 Used for the resource grid. Defaults to empty dict.
+            view: Optional ``ColonyDemographicView`` (PROJ-289). Threaded through
+                to ``format_planet_info`` so the per-species text is rendered
+                as the indented sub-block (habitability / happiness / growth /
+                food ratio / allocation). ``None`` keeps the legacy single-line
+                fallback for callers without facade access.
         """
         self.manager = manager
         self.rect = rect
@@ -73,6 +125,7 @@ class PlanetReportPanel:
         self.container = container
         self._init_portrait_surface = portrait_surface
         self.production_rates = production_rates or {}
+        self.view = view
         self._resource_icons: Dict[str, pygame.Surface] = {}
         self._resource_grid_items: List = []
 
@@ -106,7 +159,7 @@ class PlanetReportPanel:
             text_w = rect.width - 180  # Only leave room for portrait and graph
         text_h = rect.height - 20 - RESOURCE_PANEL_HEIGHT
         self.detail_text = UITextBox(
-            html_text=format_planet_info(planet),
+            html_text=format_planet_info(planet, view=view),
             relative_rect=pygame.Rect(170, 10, text_w, text_h),
             manager=manager,
             container=self.panel
@@ -175,7 +228,8 @@ class PlanetReportPanel:
         self,
         planet,
         portrait_surface=None,
-        production_rates: Optional[Dict[str, float]] = None
+        production_rates: Optional[Dict[str, float]] = None,
+        view=None,
     ):
         """
         Update display for a new planet.
@@ -184,12 +238,20 @@ class PlanetReportPanel:
             planet: Planet object to display
             portrait_surface: Optional pygame Surface for planet portrait
             production_rates: Optional per-resource production rates for the grid
+            view: Optional ``ColonyDemographicView`` (PROJ-289). When supplied,
+                the planet info panel renders the per-species sub-block with
+                habitability / happiness / growth / food ratio / allocation
+                instead of the legacy single-line fallback. Resolved upstream
+                via ``facade.get_colony_demographic_view(planet.id)`` —
+                ``None`` for uncolonized planets or when the caller doesn't
+                have facade access.
         """
         self.planet = planet
         self.production_rates = production_rates or {}
+        self.view = view
 
         # Update info text
-        self.detail_text.html_text = format_planet_info(planet)
+        self.detail_text.html_text = format_planet_info(planet, view=view)
         self.detail_text.rebuild()
 
         # Update portrait, graph, complexes list, and resource grid
@@ -307,17 +369,108 @@ class PlanetReportPanel:
 
             y_offset += 30  # Gap between items
 
+    def _build_projection_grid(self) -> None:
+        """PROJ-289 Phase 2: render the 4-column projection grid into
+        ``self.resource_panel`` from ``self.view.resource_projections``.
+
+        Layout: header row at top, one data row per resource, plus a
+        compact stockpile summary line at the bottom so per-turn current/max
+        signal isn't lost (design.md decision 2026-04-18). Net cells are
+        coloured via ``_net_cell_color``.
+
+        Cell text comes from the pure helper ``_projection_grid_rows``
+        which is exercised directly by the unit tests; this method only
+        wires those tuples into ``UILabel`` widgets.
+        """
+        rows = _projection_grid_rows(self.view)
+
+        grid_width = self.resource_panel.relative_rect.width
+        # Resource label column wider; 4 numeric columns share the rest.
+        label_col_w = 80
+        num_cols = grid_width - label_col_w - 10
+        col_w = max(40, num_cols // 4)
+        row_h = 22
+
+        for row_idx, cells in enumerate(rows):
+            y = 4 + row_idx * row_h
+            # Resource label (left column).
+            label = UILabel(
+                relative_rect=pygame.Rect(5, y, label_col_w, row_h - 2),
+                text=cells[0],
+                manager=self.manager,
+                container=self.resource_panel,
+            )
+            self._resource_grid_items.append(label)
+
+            # 4 numeric columns: Harvest, Upkeep, Yard, Net.
+            for col_idx in range(1, 5):
+                x = label_col_w + 5 + (col_idx - 1) * col_w
+                cell = UILabel(
+                    relative_rect=pygame.Rect(x, y, col_w, row_h - 2),
+                    text=cells[col_idx],
+                    manager=self.manager,
+                    container=self.resource_panel,
+                )
+                # Net column gets sign-coloured tinting on data rows.
+                if row_idx > 0 and col_idx == 4:
+                    proj = self.view.resource_projections[row_idx - 1]
+                    color = _net_cell_color(proj.net)
+                    try:
+                        cell.text_colour = color
+                        cell.rebuild()
+                    except (AttributeError, Exception):
+                        # pygame_gui versions vary on colour-setter support;
+                        # the colour is non-essential to correctness, so a
+                        # silent fallback to default is acceptable.
+                        pass
+                self._resource_grid_items.append(cell)
+
+        # Compact stockpile summary line below the grid (design.md keeps
+        # current/max visible without doubling the grid's vertical real
+        # estate). Skipped if the planet exposes no stockpile data.
+        stockpile = getattr(self.planet, "stockpile", {}) or {}
+        max_stockpile = getattr(self.planet, "max_stockpile", {}) or {}
+        if stockpile or max_stockpile:
+            parts = []
+            for res in stockpile:
+                cur = stockpile.get(res, 0.0)
+                cap = max_stockpile.get(res, 0.0)
+                parts.append(
+                    f"{res} {format_compact_number(cur)}/{format_compact_number(cap)}"
+                )
+            if parts:
+                summary_y = 4 + (len(rows) + 1) * row_h
+                summary = UILabel(
+                    relative_rect=pygame.Rect(
+                        5, summary_y, grid_width - 10, row_h - 2,
+                    ),
+                    text="Stockpile: " + "  ".join(parts),
+                    manager=self.manager,
+                    container=self.resource_panel,
+                )
+                self._resource_grid_items.append(summary)
+
     def _build_resource_grid(self) -> None:
         """
-        Build the resource grid panel with icons and rows for all 8 resource types.
+        Build the resource grid panel.
 
-        Rows: Qty (deposit quantity), Qual (deposit quality), Prod (harvest rate),
-              Stored (current stockpile), Cap (max stockpile capacity).
+        PROJ-289 Phase 2: when ``self.view`` is supplied (modern callers
+        with facade access), renders the 4-column projection grid
+        (Resource / Harvest / Upkeep / Yard / Net) driven by
+        ``view.resource_projections``. Net cells are tinted green/red.
+
+        Otherwise (legacy callers), renders the existing stockpile grid:
+        Qty (deposit quantity), Qual (deposit quality), Prod (harvest
+        rate), Stored (current stockpile), Cap (max stockpile capacity).
         """
         # Clear any existing grid items
         for item in self._resource_grid_items:
             item.kill()
         self._resource_grid_items = []
+
+        if getattr(self, "view", None) is not None:
+            self._build_projection_grid()
+            return
 
         num_resources = len(ALL_RESOURCE_NAMES)
         grid_width = self.resource_panel.relative_rect.width

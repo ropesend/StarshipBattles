@@ -1033,3 +1033,258 @@ class TestFormatStarInfo:
         assert "5778 K" in result
         assert "Radius:" in result
         assert "2 Hex" in result
+
+
+# ===========================================================================
+# PROJ-289 Phase 1: _happiness_category helper
+# ===========================================================================
+
+class TestHappinessCategory:
+    """Thresholds: happiness >= 1.5 → Content; >= 0.5 → Settled; else Unhappy.
+
+    Boundary test pinned at the inclusive >= cutoff. PROJ-283 base_happiness
+    default = 0.5 → "Settled" at baseline. Tunable.
+    """
+
+    def test_content_at_threshold(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(1.5) == "Content"
+
+    def test_content_above(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(2.5) == "Content"
+
+    def test_settled_at_baseline(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(0.5) == "Settled"
+
+    def test_settled_just_below_content(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(1.49) == "Settled"
+
+    def test_unhappy_just_below_settled(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(0.49) == "Unhappy"
+
+    def test_unhappy_zero(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(0.0) == "Unhappy"
+
+    def test_unhappy_negative(self):
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(-0.5) == "Unhappy"
+
+    def test_extreme_high(self):
+        """HappinessEngine produces [0, 3] so 3.0 must be Content."""
+        from game.ui.screens.strategy_detail_fmt import _happiness_category
+        assert _happiness_category(3.0) == "Content"
+
+
+# ===========================================================================
+# PROJ-289 Phase 1: per-species sub-block in format_planet_info
+# ===========================================================================
+#
+# When `view: ColonyDemographicView` is passed, `format_planet_info`
+# replaces the single-line per-species line with an indented sub-block:
+#
+#   <b>Humans</b>: 10k [Content]
+#       Habitability: 0.94  Happiness: 1.47
+#       Growth: +1.2% / turn  Food ratio: 1.00
+#       Allocation: 1.00×
+#
+# When `view is None`, the legacy single-line layout is preserved
+# (uncolonized planets, snapshot tests, callers without a facade).
+
+def _make_basic_planet():
+    """Minimal mock IPlanet for format_planet_info — only the fields it
+    actually reads. Owner_id non-None so we hit the colony branch."""
+    p = MagicMock()
+    p.name = "Earth"
+    p.planet_type = MagicMock()
+    p.planet_type.name = "CONTINENTAL"
+    p.orbit_distance = 3
+    p.mass = 5.97e24
+    p.radius = 6.371e6
+    p.surface_gravity = 9.81
+    p.surface_temperature = 288.0
+    p.surface_water = 0.71
+    p.total_pressure_atm = 1.0
+    p.owner_id = 1
+    p.populations = []
+    p.max_population = 51_000_000
+    p.facilities = []
+    p.atmosphere = {}
+    p.energy_capacity = 0
+    return p
+
+
+def _make_species_view(race_id, race_name, count, *, habitability=0.9,
+                       happiness=1.0, growth_rate=0.02,
+                       food_ratio=1.0, food_allocation=1.0):
+    from game.strategy.facade.dto.colony_demographic_view import (
+        SpeciesDemographicView,
+    )
+    return SpeciesDemographicView(
+        race_id=race_id, race_name=race_name, count=count,
+        habitability=habitability, happiness=happiness,
+        growth_rate=growth_rate, food_ratio=food_ratio,
+        food_allocation=food_allocation,
+    )
+
+
+def _make_view(species_views, *, planet_id=42, planet_name="Earth"):
+    from game.strategy.facade.dto.colony_demographic_view import (
+        ColonyDemographicView,
+    )
+    return ColonyDemographicView(
+        planet_id=planet_id,
+        planet_name=planet_name,
+        species=tuple(species_views),
+        resource_projections=(),
+        total_upkeep={},
+    )
+
+
+class TestPerSpeciesSubBlock:
+
+    def test_view_none_preserves_legacy_single_line(self):
+        """`view=None` (default) keeps the existing single-line per-species
+        rendering — backward compat for legacy call sites and tests."""
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        pop = MagicMock()
+        pop.race_id = "human"
+        pop.count = 1000
+        pop.happiness = 0.5
+        planet.populations = [pop]
+
+        out = format_planet_info(planet)
+
+        # Legacy line uses ` - {race_id}: {count} [...]` pattern.
+        assert " - human:" in out
+        # Sub-block markers from the new layout must NOT appear.
+        assert "Habitability:" not in out
+        assert "Growth:" not in out
+
+    def test_view_single_species_renders_sub_block(self):
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        pop = MagicMock()
+        pop.race_id = "human"; pop.count = 10000; pop.happiness = 1.47
+        planet.populations = [pop]
+        view = _make_view([_make_species_view(
+            "human", "Humans", 10000,
+            habitability=0.94, happiness=1.47,
+            growth_rate=0.012, food_ratio=1.0, food_allocation=1.0,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        # Header line: name, count, category
+        assert "Humans" in out
+        # happiness 1.47 is below the 1.5 "Content" threshold → "Settled".
+        assert "[Settled]" in out
+
+    def test_view_single_species_metric_lines(self):
+        """Metrics shown to 2 decimals; growth as signed percentage with
+        `% / turn` suffix; allocation with `×` suffix."""
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        pop = MagicMock()
+        pop.race_id = "human"; pop.count = 10000; pop.happiness = 1.47
+        planet.populations = [pop]
+        view = _make_view([_make_species_view(
+            "human", "Humans", 10000,
+            habitability=0.94, happiness=1.47,
+            growth_rate=0.012, food_ratio=1.00, food_allocation=1.00,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "Habitability: 0.94" in out
+        assert "Happiness: 1.47" in out
+        assert "Growth: +1.2% / turn" in out
+        assert "Food ratio: 1.00" in out
+        assert "Allocation: 1.00×" in out
+
+    def test_view_negative_growth_rendered_with_minus(self):
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        pop = MagicMock()
+        pop.race_id = "voidari"; pop.count = 3000; pop.happiness = 0.21
+        planet.populations = [pop]
+        view = _make_view([_make_species_view(
+            "voidari", "Voidari", 3000,
+            growth_rate=-0.008, happiness=0.21,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "Growth: -0.8% / turn" in out
+
+    def test_view_multi_species_each_has_sub_block(self):
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        # populations on the planet are not used when view is provided —
+        # the view's species tuple is the source of truth.
+        view = _make_view([
+            _make_species_view("human", "Humans", 10000),
+            _make_species_view("voidari", "Voidari", 3000),
+        ])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "Humans" in out
+        assert "Voidari" in out
+        # Habitability appears once per species in the sub-block.
+        assert out.count("Habitability:") == 2
+
+    def test_view_preserves_ordering_from_species_tuple(self):
+        """The DTO is already largest-first per PROJ-288. The renderer
+        must NOT re-sort — it iterates `view.species` in tuple order."""
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        view = _make_view([
+            _make_species_view("big", "BigOnes", 10000),
+            _make_species_view("small", "SmallOnes", 50),
+        ])
+
+        out = format_planet_info(planet, view=view)
+
+        big_pos = out.index("BigOnes")
+        small_pos = out.index("SmallOnes")
+        assert big_pos < small_pos
+
+    def test_view_category_label_settled_at_baseline(self):
+        """happiness=0.5 → "Settled" per PROJ-283 baseline."""
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        view = _make_view([_make_species_view(
+            "human", "Humans", 1000, happiness=0.5,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "[Settled]" in out
+
+    def test_view_category_label_unhappy_when_low(self):
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        view = _make_view([_make_species_view(
+            "voidari", "Voidari", 1000, happiness=0.2,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "[Unhappy]" in out
+
+    def test_view_category_label_content_when_high(self):
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        view = _make_view([_make_species_view(
+            "human", "Humans", 1000, happiness=2.0,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "[Content]" in out
