@@ -19,6 +19,8 @@ from game.strategy.facade.dto import (
     ColonySummary,
     FleetSummary,
     BuildQueueSourceDTO,
+    ColonyDemographicView,
+    SpeciesDemographicView,
 )
 
 if TYPE_CHECKING:
@@ -641,6 +643,110 @@ class StrategySessionFacade:
             The current turn number (1-indexed)
         """
         return self._session.turn_number
+
+    # --- Colony Demographics (PROJ-288) ---
+
+    def get_colony_demographic_view(
+        self, planet_id: int
+    ) -> Optional[ColonyDemographicView]:
+        """One-shot snapshot of a colony's per-species + per-resource state.
+
+        Bundles everything a demographics-style UI panel needs (per-species
+        habitability + happiness + projected growth + food slider state +
+        per-resource harvest/upkeep/yard/net + total upkeep across the
+        colony) into a single immutable DTO so consumers don't re-derive
+        the math each frame.
+
+        Returns ``None`` for unowned planets, missing planet ids, or
+        species whose ``race_id`` cannot be resolved by the session
+        ``IRaceRegistry`` (those species are silently dropped — UI can
+        warn separately if it cares).
+
+        See `docs/04_SERVICES.md` § PlanetEconomyProjector and PROJ-288
+        design.md § 3 for the underlying contracts.
+        """
+        # Inline imports keep the facade's top-level import surface narrow,
+        # mirroring the pattern used by the command-dispatch helpers and by
+        # `get_race_registry` (PROJ-287).
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        from game.strategy.formulas.habitability import score_planet_for_race
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+
+        planet = self._get_planet_by_id(planet_id)
+        if planet is None or planet.owner_id is None:
+            return None
+
+        race_registry = self.get_race_registry()
+        economy = self._resolve_economy_config()
+        registries = getattr(self._session, "registries", None)
+
+        projector = PlanetEconomyProjector(
+            registries=registries,
+            economy_config=economy,
+            race_registry=race_registry,
+        )
+        projections = projector.project(planet)
+
+        species_views: list = []
+        for pop in planet.populations:
+            race_config = race_registry.get_race(pop.race_id)
+            if race_config is None:
+                # Save drift / typo: skip rather than crash. The projector's
+                # habitability multiplier already excludes these species too.
+                continue
+            cfg = planet.get_species_config(pop.race_id)
+            display_name = (
+                getattr(race_config, "race_name", "")
+                or getattr(race_config, "name", "")
+                or pop.race_id
+            )
+            species_views.append(SpeciesDemographicView(
+                race_id=pop.race_id,
+                race_name=display_name,
+                count=pop.count,
+                habitability=score_planet_for_race(planet, race_config),
+                happiness=pop.happiness,
+                growth_rate=projected_growth_rate(planet, pop, race_config, cfg),
+                food_ratio=cfg.last_food_ratio,
+                food_allocation=cfg.food_allocation,
+            ))
+
+        species_views.sort(key=lambda s: s.count, reverse=True)
+
+        # Sum per-resource upkeep across species into the empire-aggregation
+        # summary. Mirrors `OrganicsConsumptionEngine._process_colony` math.
+        total_upkeep: dict = {}
+        for pop in planet.populations:
+            count = getattr(pop, "count", 0)
+            if count <= 0:
+                continue
+            cfg = planet.get_species_config(pop.race_id)
+            for resource_id, per_pop_rate in economy.population_consumption.items():
+                total_upkeep[resource_id] = (
+                    total_upkeep.get(resource_id, 0.0)
+                    + count * cfg.food_allocation * per_pop_rate
+                )
+
+        return ColonyDemographicView(
+            planet_id=planet.id,
+            planet_name=planet.name,
+            species=tuple(species_views),
+            resource_projections=tuple(projections.values()),
+            total_upkeep=total_upkeep,
+        )
+
+    def _resolve_economy_config(self):
+        """Pull the active EconomyConfig from the session, falling back to
+        the module default. The session attribute is optional — older
+        sessions may not carry it, in which case `get_default_economy_config`
+        lazy-loads `data/economy.json`."""
+        economy = getattr(self._session, "economy_config", None)
+        if economy is not None:
+            return economy
+        from game.strategy.config.economy_config import get_default_economy_config
+        return get_default_economy_config()
 
     # --- Race Registry (PROJ-287) ---
 

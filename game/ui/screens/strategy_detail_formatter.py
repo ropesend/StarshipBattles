@@ -17,7 +17,8 @@ from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm
 )
-from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
+from game.ui.panels.planet_report_panel import PlanetReportPanel
+from game.strategy.services.planet_economy_projector import compute_planet_production
 from game.ui.screens.strategy_detail_fmt import (
     format_spectrum_html, format_atmosphere_raw, get_label_for_object,
     format_fleet_info

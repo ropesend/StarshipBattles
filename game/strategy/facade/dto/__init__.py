@@ -9,6 +9,10 @@ from game.strategy.facade.dto.system_dto import StarInfo, WarpPointInfo, SystemI
 from game.strategy.facade.dto.planet_dto import PlanetInfo
 from game.strategy.facade.dto.empire_dto import ColonySummary, FleetSummary, EmpireInfo
 from game.strategy.facade.dto.build_queue_dto import BuildQueueSourceDTO
+from game.strategy.facade.dto.colony_demographic_view import (
+    SpeciesDemographicView,
+    ColonyDemographicView,
+)
 __all__ = [
     "FleetOrderInfo",
     "ShipInfo",
@@ -21,4 +25,6 @@ __all__ = [
     "FleetSummary",
     "EmpireInfo",
     "BuildQueueSourceDTO",
+    "SpeciesDemographicView",
+    "ColonyDemographicView",
 ]

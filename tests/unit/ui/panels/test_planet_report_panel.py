@@ -254,7 +254,7 @@ class TestComputePlanetProduction:
 
     def test_unowned_planet_returns_empty(self, mock_registries):
         """Unowned planet returns empty dict."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         planet = _make_mock_planet()
         planet.owner_id = None
@@ -265,13 +265,13 @@ class TestComputePlanetProduction:
 
     def test_function_exists(self):
         """compute_planet_production function exists."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         assert callable(compute_planet_production)
 
     def test_function_accepts_planet(self, mock_registries):
         """compute_planet_production accepts planet argument."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         planet = _make_mock_planet()
         planet.owner_id = None
@@ -289,7 +289,7 @@ class TestGetHarvesterInfo:
 
     def test_inline_harvester_returned(self):
         """Inline ResourceHarvester ability is returned."""
-        from game.ui.panels.planet_report_panel import _get_harvester_info
+        from game.strategy.services.planet_economy_projector import _get_harvester_info
 
         comp = {
             'id': 'mining_facility',
@@ -308,7 +308,7 @@ class TestGetHarvesterInfo:
 
     def test_non_dict_returns_none(self):
         """Non-dict component returns None."""
-        from game.ui.panels.planet_report_panel import _get_harvester_info
+        from game.strategy.services.planet_economy_projector import _get_harvester_info
 
         result = _get_harvester_info("not_a_dict", None)
 
@@ -316,7 +316,7 @@ class TestGetHarvesterInfo:
 
     def test_no_abilities_returns_none(self):
         """Component without abilities key returns None (falls to registry lookup)."""
-        from game.ui.panels.planet_report_panel import _get_harvester_info
+        from game.strategy.services.planet_economy_projector import _get_harvester_info
 
         comp = {'id': 'basic_component'}
         registries = MagicMock()

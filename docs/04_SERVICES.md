@@ -1032,6 +1032,42 @@ Session-scoped in-memory lookup of `race_id -> RaceConfig`, so UI panels and for
 
 See [docs/01_ARCHITECTURE.md § Key Protocols](01_ARCHITECTURE.md#key-protocols) for the cross-layer protocol table entry.
 
+### Planet Economy Projector (PROJ-288)
+
+Read-only per-planet flux projector — feeds UI panels (PROJ-289 / PROJ-290) so they don't re-derive harvest / upkeep / yard math from the engines each frame.
+
+**Service** — `PlanetEconomyProjector` in `game/strategy/services/planet_economy_projector.py`:
+- Constructor: `PlanetEconomyProjector(*, registries: GameRegistries, economy_config: EconomyConfig, race_registry: IRaceRegistry)` — strict DI, all three required.
+- `project(planet) -> Dict[str, ResourceProjection]` returns one entry per resource that appears in any of the three sub-projections. Empty queues + no harvesters + no upkeep → empty dict.
+- Three sub-projections:
+  - `_project_harvest(planet, habitability)` — delegates to `compute_planet_production(planet, registries)` then scales by habitability (PROJ-285).
+  - `_project_upkeep(planet)` — iterates `planet.populations × economy.population_consumption.items()`, summing `pop.count * cfg.food_allocation * per_pop_rate`. Mirrors `OrganicsConsumptionEngine._process_colony` exactly. Upkeep is NOT habitability-scaled (demand is independent of planet conditions).
+  - `_project_yard_drain(planet, habitability)` — calls `_collect_planet_sources` (`game/strategy/data/build_queue_source.py`) to enumerate the planet's base + shipyard queues, sums `build_rate * habitability` for each non-empty queue. Build-rate boosters (system-wide / sector-wide) are NOT factored in — `project(planet)` doesn't carry galaxy/empire context, and v1 takes the planet-in-isolation view.
+
+**DTO** — `ResourceProjection` (frozen dataclass, same module):
+- Fields: `resource_id: str`, `harvest: float`, `upkeep: float`, `yard: float`, `net: float`.
+- Invariant: `net == harvest - upkeep - yard`.
+
+**Pure helper** — `projected_growth_rate(planet, pop, race_config, cfg) -> float` in `game/strategy/formulas/colony_output.py`:
+- Per-capita next-turn growth rate for one species. Multiply by `pop.count` for absolute Δpop.
+- Replicates the math in `PopulationEngine._grow_species` (PROJ-284 Phase 3) WITHOUT mutating state.
+- Sign convention: positive = growth, negative = decline. Floored happiness via `max(0, pop.happiness)` defensively.
+- Equivalence with the engine pinned by `tests/integration/strategy/test_growth_rate_equivalence.py` (12-cell matrix). Drift in either side fails CI.
+
+**Facade DTO + accessor** — `StrategySessionFacade.get_colony_demographic_view(planet_id) -> Optional[ColonyDemographicView]`:
+- Returns `None` for unowned/missing planets. Otherwise bundles per-species + per-resource state for one colony in one immutable read.
+- `ColonyDemographicView` (frozen, `game/strategy/facade/dto/colony_demographic_view.py`):
+  - `planet_id: int`, `planet_name: str`
+  - `species: Tuple[SpeciesDemographicView, ...]` — ordered largest count first; species whose `race_id` cannot be resolved by the registry are silently dropped (save-drift defence).
+  - `resource_projections: Tuple[ResourceProjection, ...]` — directly from the projector.
+  - `total_upkeep: Mapping[str, float]` — sum of per-species upkeep across the colony, used by Treasury / empire-aggregation panels (PROJ-290).
+- `SpeciesDemographicView` (frozen):
+  - `race_id`, `race_name`, `count`, `habitability`, `happiness`, `growth_rate`, `food_ratio`, `food_allocation`.
+
+**Migration note** — `compute_planet_production` previously lived at `game/ui/panels/planet_report_panel.py:498`, a layer violation (UI hosting strategy math). PROJ-288 moved it to `game/strategy/services/planet_economy_projector.py` and updated all callers (`build_queue_panel_factory.py`, `planet_list_window.py`, `strategy_detail_formatter.py`). No backward-compat re-export — call sites import directly from the new location.
+
+See [docs/systems/strategy_layer.md §1 StrategySessionFacade](systems/strategy_layer.md#1-strategysessionfacade) for the facade Query Categories table.
+
 ---
 
 ## Design Principles

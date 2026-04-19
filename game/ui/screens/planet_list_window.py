@@ -26,7 +26,8 @@ from game.ui.screens.planet_list_filter_manager import PlanetListFilterManager
 from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
 from game.ui.screens.planet_data_source import PlanetDataSource
-from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
+from game.ui.panels.planet_report_panel import PlanetReportPanel
+from game.strategy.services.planet_economy_projector import compute_planet_production
 from game.ui.panels.planet_report_panel import format_compact_number
 
 

@@ -279,3 +279,180 @@ class TestResilience:
         # Should NOT raise.
         mult = planet_habitability_multiplier(planet, ExplodingRegistry())
         assert mult == 1.0  # Species skipped -> no populations counted -> default.
+
+
+# ===========================================================================
+# PROJ-288 Phase 1: projected_growth_rate
+# ===========================================================================
+#
+# Pure per-capita growth-rate helper. Replicates the math in
+# `PopulationEngine._grow_species` (PROJ-284 Phase 3) but returns the rate
+# (per-capita fraction) instead of mutating `pop.count`. Sign convention:
+# positive = growth, negative = decline.
+#
+#   effective_r       = race.base_reproduction_rate * cfg.last_food_ratio
+#   K_eff             = max(1.0, planet.max_population * habitability)
+#   logistic_factor   = 1.0 - (pop.count / K_eff)
+#   logistic_term/cap = effective_r * logistic_factor * max(0, pop.happiness)
+#   decline_term/cap  = -DECLINE_RATE * (1 - last_food_ratio)   when ratio < 1
+#                     = 0                                       otherwise
+#   rate              = logistic_term/cap + decline_term/cap
+
+def _config(food_ratio: float):
+    """Build a `ColonySpeciesConfig` whose `last_food_ratio` resolves to
+    the given value. Uses a single resource entry so MIN == that value."""
+    from game.strategy.data.colony_species_config import ColonySpeciesConfig
+    cfg = ColonySpeciesConfig()
+    if food_ratio is not None:
+        cfg.last_consumption_ratios = {"organics": food_ratio}
+    return cfg
+
+
+def _planet_with_max_pop(max_pop: int, populations) -> Planet:
+    """Earth-like planet whose `surface_area` is computed to yield the
+    requested `max_population`. `Planet.max_population` is a property
+    derived as `surface_area / 1e7`, so we work backwards from the
+    desired value rather than mutating a read-only property."""
+    surface_area = max_pop * 1e7  # inverse of Planet.max_population formula
+    return Planet(
+        name="Earth",
+        location=HexCoord(0, 0),
+        orbit_distance=3,
+        mass=5.97e24,
+        radius=6.371e6,
+        surface_area=surface_area,
+        density=5515.0,
+        surface_gravity=9.81,
+        surface_pressure=101325.0,
+        surface_temperature=288.0,
+        surface_water=0.71,
+        tectonic_activity=0.3,
+        magnetic_field=1.0,
+        atmosphere={"N2": 78000, "O2": 21000},
+        planet_type=PlanetType.CONTINENTAL,
+        populations=populations,
+    )
+
+
+class TestProjectedGrowthRate:
+    """PROJ-288 Phase 1: per-capita growth-rate helper.
+
+    All assertions encode the formula directly — formula drift in either
+    `_grow_species` or `projected_growth_rate` is caught here AND in the
+    equivalence integration test in `tests/integration/strategy/`."""
+
+    def test_zero_count_pop_returns_zero(self):
+        """A pop with count == 0 has nothing to grow or decline."""
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        pop = SpeciesPopulation(race_id="human", count=0, happiness=1.0)
+        planet = _planet_with_max_pop(10_000, populations=[pop])
+        race = _race("human")
+        cfg = _config(food_ratio=1.0)
+
+        assert projected_growth_rate(planet, pop, race, cfg) == 0.0
+
+    def test_ideal_conditions_yields_effective_reproduction_rate(self):
+        """food_ratio=1, happiness=1, P << K_eff → logistic_factor ≈ 1,
+        decline=0, so rate ≈ race.base_reproduction_rate (NOT scaled by
+        habitability — habitability only enters via K_eff which is divided
+        out when P << K_eff)."""
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        # P=10 with K_eff = 1_000_000 * habitability — logistic_factor ≈ 1.
+        pop = SpeciesPopulation(race_id="human", count=10, happiness=1.0)
+        planet = _planet_with_max_pop(1_000_000, populations=[pop])
+        race = _race("human")  # base_reproduction_rate=0.03 default
+        cfg = _config(food_ratio=1.0)
+
+        rate = projected_growth_rate(planet, pop, race, cfg)
+
+        # logistic_factor is at least 0.999 — close to but below 0.03.
+        assert rate == pytest.approx(race.base_reproduction_rate, rel=0.01)
+
+    def test_starvation_yields_pure_decline(self):
+        """food_ratio=0 → effective_r=0 → logistic_term=0; decline_term =
+        -DECLINE_RATE * (1-0) = -DECLINE_RATE. Net rate = -DECLINE_RATE."""
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        from game.strategy.engine.population_engine import DECLINE_RATE
+        pop = SpeciesPopulation(race_id="human", count=500, happiness=1.0)
+        planet = _planet_with_max_pop(10_000, populations=[pop])
+        race = _race("human")
+        cfg = _config(food_ratio=0.0)
+
+        rate = projected_growth_rate(planet, pop, race, cfg)
+
+        assert rate == pytest.approx(-DECLINE_RATE)
+
+    def test_partial_food_and_low_happiness_matches_hand_computation(self):
+        """food_ratio=0.5, happiness=0.3, P=200, max_pop=10_000.
+
+        habitability ~ 0.94 for default-prefs human on Earth-like, so
+        K_eff ≈ 9_400. logistic_factor = 1 - 200/9_400 ≈ 0.9787.
+        effective_r = 0.03 * 0.5 = 0.015.
+        logistic = 0.015 * 0.9787 * 0.3 ≈ 0.004404.
+        decline  = -0.02 * (1-0.5) = -0.01.
+        net      ≈ -0.005596.
+        """
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        from game.strategy.formulas.habitability import score_planet_for_race
+        from game.strategy.engine.population_engine import DECLINE_RATE
+        pop = SpeciesPopulation(race_id="human", count=200, happiness=0.3)
+        planet = _planet_with_max_pop(10_000, populations=[pop])
+        race = _race("human")
+        cfg = _config(food_ratio=0.5)
+
+        habitability = score_planet_for_race(planet, race)
+        K_eff = max(1.0, 10_000 * habitability)
+        expected_logistic = (race.base_reproduction_rate * 0.5) * (1.0 - 200 / K_eff) * 0.3
+        expected_decline = -DECLINE_RATE * (1.0 - 0.5)
+        expected = expected_logistic + expected_decline
+
+        rate = projected_growth_rate(planet, pop, race, cfg)
+
+        assert rate == pytest.approx(expected, rel=1e-9)
+
+    def test_overpopulation_drives_logistic_negative(self):
+        """P > K_eff → logistic_factor < 0 → rate goes negative even with
+        ideal food + happiness."""
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        # max_pop=100, habitability~0.94 → K_eff ≈ 94. Pop=500 → P/K_eff ≈ 5.3.
+        pop = SpeciesPopulation(race_id="human", count=500, happiness=1.0)
+        planet = _planet_with_max_pop(100, populations=[pop])
+        race = _race("human")
+        cfg = _config(food_ratio=1.0)
+
+        rate = projected_growth_rate(planet, pop, race, cfg)
+
+        # logistic_factor ≈ 1 - 5.3 = -4.3; effective_r * happiness = 0.03;
+        # rate ≈ -0.13 (no decline term — food_ratio is 1.0 so it's zero).
+        assert rate < 0.0
+
+    def test_high_happiness_scales_logistic_term(self):
+        """`happiness > 1` is allowed (HappinessEngine produces [0, 3]).
+        Helper applies `max(0, happiness)` defensive floor but no upper
+        clamp — the rate scales linearly with happiness."""
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        pop_normal = SpeciesPopulation(race_id="human", count=10, happiness=1.0)
+        pop_giddy  = SpeciesPopulation(race_id="human", count=10, happiness=2.0)
+        planet = _planet_with_max_pop(1_000_000, populations=[pop_normal])
+        race = _race("human")
+        cfg = _config(food_ratio=1.0)
+
+        rate_normal = projected_growth_rate(planet, pop_normal, race, cfg)
+        rate_giddy  = projected_growth_rate(planet, pop_giddy, race, cfg)
+
+        # 2.0 / 1.0 = 2.0x scaling on the (only) logistic term.
+        assert rate_giddy == pytest.approx(rate_normal * 2.0, rel=1e-9)
+
+    def test_negative_happiness_clamped_to_zero(self):
+        """Defensive floor: a pre-turn pathological happiness < 0 must not
+        flip the logistic term positive. With happiness floored to 0 and
+        food_ratio=1, the rate is exactly 0."""
+        from game.strategy.formulas.colony_output import projected_growth_rate
+        pop = SpeciesPopulation(race_id="human", count=10, happiness=-1.5)
+        planet = _planet_with_max_pop(1_000_000, populations=[pop])
+        race = _race("human")
+        cfg = _config(food_ratio=1.0)
+
+        rate = projected_growth_rate(planet, pop, race, cfg)
+
+        assert rate == 0.0

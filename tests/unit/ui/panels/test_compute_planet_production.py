@@ -13,7 +13,7 @@ class TestComputePlanetProduction:
 
     def test_unowned_planet_returns_empty(self, mock_registries):
         """Unowned planets (owner_id=None) return empty dict."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         planet = Mock()
         planet.owner_id = None
@@ -23,7 +23,7 @@ class TestComputePlanetProduction:
 
     def test_planet_with_inline_harvester(self, mock_registries):
         """Planet with facility having inline ResourceHarvester abilities."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         facility = Mock()
         facility.is_operational = True
@@ -53,7 +53,7 @@ class TestComputePlanetProduction:
 
     def test_planet_with_registry_lookup(self, mock_registries):
         """Planet with facility using component IDs resolved via registry (BUG-86)."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         # Facility with component ID but NO inline abilities (real design format)
         facility = Mock()
@@ -90,7 +90,7 @@ class TestComputePlanetProduction:
 
     def test_planet_no_facilities_returns_empty(self, mock_registries):
         """Planet with no facilities returns empty rates."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         planet = Mock()
         planet.owner_id = 1
@@ -101,7 +101,7 @@ class TestComputePlanetProduction:
 
     def test_non_operational_facility_skipped(self, mock_registries):
         """Non-operational facilities are not counted."""
-        from game.ui.panels.planet_report_panel import compute_planet_production
+        from game.strategy.services.planet_economy_projector import compute_planet_production
 
         facility = Mock()
         facility.is_operational = False

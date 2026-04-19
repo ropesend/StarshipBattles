@@ -14,7 +14,8 @@ import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 
-from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
+from game.ui.panels.planet_report_panel import PlanetReportPanel
+from game.strategy.services.planet_economy_projector import compute_planet_production
 from game.ui.panels.design_report_panel import DesignReportPanel
 from game.ui.screens.build_queue_selector import BuildQueueSelector
 from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect

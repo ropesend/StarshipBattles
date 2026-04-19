@@ -53,6 +53,7 @@ Each DTO has a `from_<domain_object>()` class method for conversion.
 | Validation | `can_colonize()`, `can_move_to()`, `get_fleet_remaining_pods()` |
 | Environment | `get_storm_names_at_hex()` |
 | Race Registry (PROJ-287) | `get_race_registry()` -- returns the session-scoped `IRaceRegistry` (a `CachedRaceRegistry` over `RaceLibrary`) for resolving `race_id -> RaceConfig` without per-call filesystem reads. Lazy-init; one instance per facade. See [04_SERVICES.md § Race Registry](../04_SERVICES.md#race-registry-proj-287). |
+| Colony Demographics (PROJ-288) | `get_colony_demographic_view(planet_id) -> Optional[ColonyDemographicView]` -- one-shot snapshot of per-species (race_id, count, habitability, happiness, projected growth rate, food ratio, food allocation) + per-resource (`ResourceProjection` from `PlanetEconomyProjector`) + summed `total_upkeep` for one colony. Species ordered largest count first; unresolvable race_ids dropped. Returns `None` for unowned/missing planets. See [04_SERVICES.md § Planet Economy Projector](../04_SERVICES.md#planet-economy-projector-proj-288). |
 
 ---
 
@@ -1442,3 +1443,15 @@ Integration points:
 - `TurnEngine.process_turn` calls `set_current_turn(session.turn_number)` on both engines before the 100-tick loop so the per-planet cache on `Planet.get_cached_habitability_multiplier` invalidates on each turn boundary.
 
 Net effect after PROJ-283 + PROJ-284 + PROJ-285: habitability is the single numeric axis that drives population carrying capacity (via `K_eff = max_population * habitability`), happiness (via `base_happiness * last_food_ratio * habitability`), harvest rate, AND production rate. See [docs/systems/production_system.md § Habitability Multiplier](production_system.md#habitability-multiplier-proj-285) for the full formula, edge cases, and caching contract.
+
+### Projection helpers (PROJ-288)
+
+Engine methods like `PopulationEngine._grow_species` and `OrganicsConsumptionEngine._process_colony` MUTATE state — they're built for the per-turn engine loop, not for UI panels that need to display "what would happen next turn?". PROJ-288 extracts pure projection helpers that read the same inputs and return the same numbers WITHOUT mutating:
+
+- **`projected_growth_rate(planet, pop, race_config, cfg) -> float`** at `game/strategy/formulas/colony_output.py` — per-capita next-turn rate. Multiply by `pop.count` for the absolute Δpop the engine would apply.
+- **`PlanetEconomyProjector.project(planet) -> Dict[resource_id, ResourceProjection]`** at `game/strategy/services/planet_economy_projector.py` — per-resource harvest / upkeep / yard / net for one planet.
+- **`StrategySessionFacade.get_colony_demographic_view(planet_id)`** — facade-level DTO bundling per-species + per-resource state for one colony in one read; consumed by PROJ-289 / PROJ-290 UI panels.
+
+**Equivalence contract**: the projection math tracks the engine math. `tests/integration/strategy/test_growth_rate_equivalence.py` runs a 12-cell matrix asserting `projected_growth_rate(...) * pop.count` equals `PopulationEngine._grow_species`'s observed Δpop (within int-cast tolerance + the engine's `max(0, ...)` floor) for every combination of food_ratio × happiness × P/K_eff. If either side drifts, CI fails — the fix is to update BOTH together, not to silence the test.
+
+See [docs/04_SERVICES.md § Planet Economy Projector](../04_SERVICES.md#planet-economy-projector-proj-288) for the full service catalog entries.

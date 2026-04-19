@@ -6,7 +6,7 @@ showing planet portrait, comprehensive stats, and atmosphere composition graph.
 """
 
 import os
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional
 
 import pygame
 import pygame_gui
@@ -16,10 +16,6 @@ from game.ui.screens.strategy_detail_fmt import format_planet_info
 from game.ui.fonts import get_font
 from game.ui.utils.formatters import format_compact_number
 
-if TYPE_CHECKING:
-    from game.core.protocols import IPlanet, IFacility
-    from game.core.registry import GameRegistries
-from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
 # All resource types displayed in the planet report panel
@@ -495,63 +491,7 @@ class PlanetReportPanel:
             self.panel.kill()
 
 
-def compute_planet_production(
-    planet: 'IPlanet',
-    registries: 'GameRegistries'
-) -> Dict[str, float]:
-    """Compute per-resource production rates for a colony planet.
-
-    Scans the planet's facilities for ResourceHarvester abilities and calculates
-    production = base_harvest_rate * planet_resource_quality.
-
-    This is a shared utility used by the strategy detail panel, build queue,
-    and planets list to display consistent production data.
-
-    Args:
-        planet: Planet object with facilities and resources.
-        registries: GameRegistries for component lookups (required).
-
-    Returns:
-        Dict mapping resource name to production rate per turn.
-    """
-    if planet.owner_id is None:
-        return {}
-
-    rates: Dict[str, float] = {}
-    facility: 'IFacility'
-    for facility in planet.facilities:
-        if not facility.is_operational:
-            continue
-        design_data = facility.design_data
-        for layer_data in design_data.get('layers', {}).values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                harvester = _get_harvester_info(comp, registries)
-                if harvester:
-                    res_type = harvester.get('resource_type', '')
-                    base_rate = harvester.get('base_harvest_rate', 0.0)
-                    if res_type and base_rate > 0:
-                        quality = planet.deposits.get(res_type, {}).get('quality', 0.0)
-                        rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
-    return rates
-
-
-def _get_harvester_info(comp, registries) -> Optional[dict]:
-    """Extract ResourceHarvester info from a component entry.
-
-    Checks inline abilities first, then falls back to registry lookup.
-    """
-    if isinstance(comp, dict):
-        harvester = comp.get('abilities', {}).get('ResourceHarvester')
-        if isinstance(harvester, dict):
-            return harvester
-        comp_id = comp.get('id')
-        if comp_id and registries is not None:
-            comp_def = registries.components.get(comp_id)
-            if comp_def is not None:
-                abilities = get_component_abilities(comp_def)
-                harvester = abilities.get('ResourceHarvester')
-                if isinstance(harvester, dict):
-                    return harvester
-    return None
+# PROJ-288 Task 2.3: `compute_planet_production` (and its `_get_harvester_info`
+# helper) moved to `game/strategy/services/planet_economy_projector.py` to fix
+# the previous strategy-math-living-in-UI layer violation. Importers updated
+# to pull directly from the new location.

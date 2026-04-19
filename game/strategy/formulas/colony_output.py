@@ -28,10 +28,13 @@ from game.strategy.formulas.habitability import score_planet_for_race
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
+    from game.strategy.data.species_population import SpeciesPopulation
+    from game.strategy.data.race_config import RaceConfig
+    from game.strategy.data.colony_species_config import ColonySpeciesConfig
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["planet_habitability_multiplier"]
+__all__ = ["planet_habitability_multiplier", "projected_growth_rate"]
 
 
 def planet_habitability_multiplier(
@@ -97,3 +100,65 @@ def planet_habitability_multiplier(
         return 1.0
 
     return weighted_sum / total_weight
+
+
+def projected_growth_rate(
+    planet: "Planet",
+    pop: "SpeciesPopulation",
+    race_config: "RaceConfig",
+    cfg: "ColonySpeciesConfig",
+) -> float:
+    """Per-capita growth rate this species would experience next turn.
+
+    Pure function. Replicates the math in
+    `PopulationEngine._grow_species` (PROJ-284 Phase 3) WITHOUT mutating
+    state — used by UI projections and aggregation helpers that need the
+    rate in isolation.
+
+    Per-capita semantics: returned value is a fraction. Multiply by
+    `pop.count` to recover the absolute Δpop the engine would apply
+    in the same turn (rounding aside — the engine truncates via
+    `int(growth)` whereas this helper does not).
+
+    Formula::
+
+        effective_r       = race.base_reproduction_rate * cfg.last_food_ratio
+        K_eff             = max(1.0, planet.max_population * habitability)
+        logistic_factor   = 1.0 - (pop.count / K_eff)
+        logistic_term/cap = effective_r * logistic_factor * max(0, pop.happiness)
+        decline_term/cap  = -DECLINE_RATE * (1 - last_food_ratio)  when ratio < 1
+                          = 0                                       otherwise
+        rate              = logistic_term/cap + decline_term/cap
+
+    Sign convention: positive = growth, negative = decline. May be
+    deeply negative under starvation (decline dominates) or strongly
+    positive when happiness > 1 over-supplies the logistic term.
+
+    Edge cases:
+      - `pop.count <= 0` → returns 0.0 (nothing to grow or decline).
+      - `pop.happiness < 0` → floored to 0 (defensive; mirrors engine).
+      - habitability=0 → K_eff floored to 1.0; logistic dominates as
+        decline term is unaffected.
+    """
+    # PROJ-288: import DECLINE_RATE from the engine to track the canonical
+    # constant — module-level import is safe (engine doesn't import this
+    # module's helpers; only the equivalence test bridges the two).
+    from game.strategy.engine.population_engine import DECLINE_RATE
+
+    if pop.count <= 0:
+        return 0.0
+
+    last_food_ratio = cfg.last_food_ratio
+    habitability = score_planet_for_race(planet, race_config)
+    K_eff = max(1.0, planet.max_population * habitability)
+
+    effective_r = race_config.base_reproduction_rate * last_food_ratio
+    logistic_factor = 1.0 - (pop.count / K_eff)
+    happiness = max(0.0, pop.happiness)
+    logistic_term = effective_r * logistic_factor * happiness  # per-capita
+
+    decline_term = 0.0
+    if last_food_ratio < 1.0:
+        decline_term = -DECLINE_RATE * (1.0 - last_food_ratio)  # per-capita
+
+    return logistic_term + decline_term
