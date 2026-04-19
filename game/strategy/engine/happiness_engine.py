@@ -27,6 +27,7 @@ from game.strategy.formulas.habitability import score_planet_for_race
 from game.strategy.interfaces.engines import IHappinessEngine
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRaceRegistry
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
     from game.strategy.data.race_config import RaceConfig
@@ -41,6 +42,23 @@ HAPPINESS_MAX: float = 3.0
 
 class HappinessEngine(IHappinessEngine):
     """Derives `SpeciesPopulation.happiness` each turn."""
+
+    def __init__(self, race_registry: Optional['IRaceRegistry'] = None) -> None:
+        """Initialize the happiness engine.
+
+        Args:
+            race_registry: PROJ-291 C3 — optional `IRaceRegistry` for
+                multi-species `RaceConfig` resolution. When supplied,
+                every `pop.race_id` is resolved via `registry.get_race`
+                so multi-species colonies compute each species' happiness
+                from its OWN `base_happiness`. When None (legacy callers
+                + pre-PROJ-291 tests), the resolver falls back to
+                `empire.race_config`, returning None for species whose
+                `race_id` doesn't match the empire's primary race so
+                the pop is gracefully skipped (PROJ-287 line-16 deferral
+                reversed).
+        """
+        self._race_registry = race_registry
 
     def _validate_tick_inputs(self, empires: List['Empire']) -> None:
         """PROJ-251: precondition validation — reject None colonies loudly."""
@@ -81,15 +99,26 @@ class HappinessEngine(IHappinessEngine):
     ) -> Optional['RaceConfig']:
         """Resolve the `RaceConfig` for a given species on this empire.
 
-        Mirrors `PopulationEngine._get_race_config` — same fallback
-        semantics (empire.race_config if no match, else None). Both
-        engines use the same resolver so tests that monkeypatch
-        `engine._get_race_config` still work per-engine (the existing
-        `PopulationEngine` tests rely on this).
+        PROJ-291 C3 resolution order:
+          1. If a race registry is wired, consult it first. When it
+             returns a `RaceConfig`, use that — this is the multi-species
+             path.
+          2. Otherwise (or when the registry doesn't know the race_id),
+             fall back to `empire.race_config` ONLY when the race_id
+             matches the empire's primary race. Return None for any
+             mismatch so non-primary species are gracefully skipped
+             instead of silently computed against the wrong base value
+             (the pre-PROJ-291 bug).
         """
+        # PROJ-291 C3: registry resolves multi-species correctly when wired.
+        if self._race_registry is not None:
+            race_config = self._race_registry.get_race(race_id)
+            if race_config is not None:
+                return race_config
+        # Legacy single-race fallback (preserves pre-PROJ-291 tests).
         race_config = empire.race_config
         if race_config is None:
             return None
         if race_config.race_id == race_id:
             return race_config
-        return race_config  # Phase 4 wires multi-species registry
+        return None  # PROJ-291 C3: stop returning the wrong race silently

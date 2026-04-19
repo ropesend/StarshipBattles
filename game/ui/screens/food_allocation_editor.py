@@ -8,10 +8,10 @@ escape hatch for over-allocation > 5.0). Apply writes to
 
 The label is data-driven: title reads
 `{resource.name} Allocation — {planet.name}` where `resource` comes from
-`ResourceCatalog.get(economy_config.population_food_resource)`. Swap
-`data/economy.json` to `"metals"` and the title auto-relabels to
-"Metals Allocation — Earth" — the whole point of PROJ-284's data-driven
-food resource.
+`ResourceCatalog.get(economy_config.primary_resource)`. Swap
+`data/economy.json`'s first `population_consumption` entry to `"metals"`
+and the title auto-relabels to "Metals Allocation — Earth" — the whole
+point of PROJ-284's data-driven food resource.
 
 Design parallels `gravity_target_editor.py` (single-slider + ideal/
 match/clear/apply) adapted for multi-row layout. UI-construction helpers
@@ -101,7 +101,7 @@ def resolve_food_resource_name(
     not in their installed resources.json — UI should still show
     something rather than crash).
     """
-    resource_id = economy_config.population_food_resource
+    resource_id = economy_config.primary_resource
     if resource_catalog is None:
         return resource_id
     try:
@@ -116,14 +116,24 @@ def resolve_food_resource_name(
 def compute_consumption_preview(
     population: int,
     allocation: float,
-    food_per_pop_per_turn: float,
-) -> float:
-    """Return the expected per-turn food drain for one species.
+    population_consumption: Dict[str, float],
+) -> Dict[str, float]:
+    """Return the expected per-turn drain for one species, keyed by resource.
 
-    Used for the live "Preview: 0.150 organics/turn" label so the
-    player can see consequences of slider movement before committing.
+    PROJ-291 C2: post-PROJ-286 `EconomyConfig` declares multiple
+    resources in `population_consumption`; the editor preview must show
+    every resource the player's colony will drain. Mirrors
+    `OrganicsConsumptionEngine._process_colony`:
+        needed = pop.count * allocation * per_pop_rate.
+
+    Negative allocation is clamped to 0.0 per-resource so a typo in the
+    text entry doesn't flip the sign on the preview.
     """
-    return max(0.0, population * allocation * food_per_pop_per_turn)
+    safe_allocation = max(0.0, allocation)
+    return {
+        resource: population * safe_allocation * rate
+        for resource, rate in population_consumption.items()
+    }
 
 
 def apply_allocations(
@@ -255,8 +265,20 @@ class FoodAllocationEditor(UIWindow):
         self._row_widgets[row.race_id] = (slider, entry, preview)
 
     def _preview_text(self, pop: int, allocation: float) -> str:
-        consumption = compute_consumption_preview(pop, allocation, self._economy.food_per_pop_per_turn)
-        return f"Preview: {consumption:.3f} {self._resource_display_name.lower()}/turn"
+        """PROJ-291 C2: render one preview segment per resource in
+        `economy.population_consumption`. Single-resource economies look
+        identical to the pre-migration UI; multi-resource economies
+        surface every drain the engine will apply."""
+        consumption = compute_consumption_preview(
+            pop, allocation, self._economy.population_consumption,
+        )
+        if not consumption:
+            return "Preview: (no resources declared)/turn"
+        segments = [
+            f"{amount:.3f} {resource.lower()}"
+            for resource, amount in consumption.items()
+        ]
+        return "Preview: " + ", ".join(segments) + "/turn"
 
     def collect_allocations(self) -> Dict[str, float]:
         """Harvest one float per row. Prefers the typed entry when

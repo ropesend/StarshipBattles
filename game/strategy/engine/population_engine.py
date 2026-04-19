@@ -24,6 +24,7 @@ from game.strategy.interfaces.engines import IPopulationEngine
 from game.strategy.formulas.habitability import score_planet_for_race
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRaceRegistry
     from game.strategy.data.planet import Planet, SpeciesPopulation
     from game.strategy.data.race_config import RaceConfig
     from game.strategy.data.empire import Empire
@@ -41,6 +42,23 @@ class PopulationEngine(IPopulationEngine):
 
     See module docstring for the reworked PROJ-284 formula.
     """
+
+    def __init__(self, race_registry: Optional['IRaceRegistry'] = None) -> None:
+        """Initialize the population engine.
+
+        Args:
+            race_registry: PROJ-291 C3 — optional `IRaceRegistry` for
+                multi-species `RaceConfig` resolution. When supplied,
+                every `pop.race_id` is resolved via `registry.get_race`
+                so multi-species colonies grow each species at its OWN
+                `base_reproduction_rate`. When None (legacy callers +
+                pre-PROJ-291 tests), the resolver falls back to
+                `empire.race_config`, returning None for species whose
+                `race_id` doesn't match the empire's primary race so
+                the pop is gracefully skipped (PROJ-287 line-16 deferral
+                reversed).
+        """
+        self._race_registry = race_registry
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -148,29 +166,29 @@ class PopulationEngine(IPopulationEngine):
         race_id: str,
         empire: 'Empire'
     ) -> Optional['RaceConfig']:
+        """Resolve the `RaceConfig` for a given species on this empire.
+
+        PROJ-291 C3 resolution order:
+          1. If a race registry is wired, consult it first. When it
+             returns a `RaceConfig`, use that — this is the multi-species
+             path.
+          2. Otherwise (or when the registry doesn't know the race_id),
+             fall back to `empire.race_config` ONLY when the race_id
+             matches the empire's primary race. Return None for any
+             mismatch so non-primary species are gracefully skipped
+             instead of silently growing against the wrong base
+             reproduction rate (the pre-PROJ-291 bug).
         """
-        Look up race configuration for a species.
-
-        Currently returns empire's own race_config if race_id matches,
-        or the empire's race_config as fallback.
-        Future: Multi-species registry lookup.
-
-        Args:
-            race_id: Species identifier
-            empire: Empire to look up from
-
-        Returns:
-            RaceConfig or None if not found
-        """
+        # PROJ-291 C3: registry resolves multi-species correctly when wired.
+        if self._race_registry is not None:
+            race_config = self._race_registry.get_race(race_id)
+            if race_config is not None:
+                return race_config
+        # Legacy single-race fallback (preserves pre-PROJ-291 tests).
         race_config = empire.race_config
         if race_config is None:
             return None
-
-        # If race_id matches empire's race, return it
         if race_config.race_id == race_id:
             return race_config
-
-        # Fallback: return empire's race_config for now
-        # Future: look up in multi-species registry
-        return race_config
+        return None  # PROJ-291 C3: stop returning the wrong race silently
 

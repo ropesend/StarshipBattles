@@ -65,15 +65,13 @@ class EconomyConfig:
         that name the primary food resource (e.g. FoodAllocationEditor).
         Dict insertion order is preserved (Python 3.7+); data-file
         authors control ordering. Returns `"organics"` as a safe fallback
-        when the dict is empty."""
-        return next(iter(self.population_consumption), "organics")
+        when the dict is empty.
 
-    @property
-    def population_food_resource(self) -> str:
-        """Legacy shim — returns `primary_resource`. Preserved until
-        PROJ-289 migrates the FoodAllocationEditor title to the new
-        `primary_resource` API. Do not add new consumers."""
-        return self.primary_resource
+        PROJ-291 C2: the `population_food_resource` legacy shim was
+        retired — the FoodAllocationEditor now reads this property
+        directly.
+        """
+        return next(iter(self.population_consumption), "organics")
 
 
 def load_economy_config(path: Optional[str] = None) -> EconomyConfig:

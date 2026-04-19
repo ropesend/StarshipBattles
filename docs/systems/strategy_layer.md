@@ -1393,7 +1393,7 @@ Per-turn pipeline that converts a colony's multi-resource upkeep stockpile + per
 }
 ```
 
-`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this dict via the CLAUDE.md `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to a hardcoded `{"organics": 0.001}` default (PROJ-284-equivalent) on missing JSON, malformed JSON, or `population_consumption` present but not a dict. The `primary_resource` convenience property returns the first key in insertion order (Python 3.7+), used by UI titles that want a single "main food" label. A legacy `population_food_resource` read-only shim property delegates to `primary_resource` — preserved until PROJ-289 migrates UI callers.
+`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this dict via the CLAUDE.md `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to a hardcoded `{"organics": 0.001}` default (PROJ-284-equivalent) on missing JSON, malformed JSON, or `population_consumption` present but not a dict. The `primary_resource` convenience property returns the first key in insertion order (Python 3.7+), used by UI titles that want a single "main food" label. PROJ-291 C2 retired the legacy `population_food_resource` shim — the `FoodAllocationEditor` now reads `primary_resource` directly.
 
 ### Formulas
 
@@ -1401,13 +1401,21 @@ Per-turn pipeline that converts a colony's multi-resource upkeep stockpile + per
 - **Happiness** (`HappinessEngine`): `happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. `last_food_ratio` is the MIN across declared resources — if any upkeep resource is at 0%, happiness collapses to 0 regardless of the others. Unbounded above 1.0 on purpose — over-supply + ideal habitability can push happiness past neutral. Clamp at 3 prevents runaway values.
 - **Population growth** (`PopulationEngine`): `growth = (race.base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, planet.max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` in `population_engine.py`. The defensive `min(1.0, happiness)` clamp from the pre-PROJ-284 formula was removed so the new [0, 3] happiness range is honored — `happiness=3` triples the logistic term. Via the MIN aggregation, a colony starving on even one declared resource sees full decline_term.
 
+### Multi-species engine resolution (PROJ-291 Phase 2)
+
+`HappinessEngine` and `PopulationEngine` each accept an optional `race_registry: Optional[IRaceRegistry] = None` kwarg (mirroring the PROJ-285 pattern already established for `HarvestingEngine` / `ProductionEngine`). When supplied, `_get_race_config(race_id, empire)` resolves `pop.race_id → RaceConfig` via `registry.get_race(race_id)`, so multi-species colonies compute each species' happiness + growth using its OWN `base_happiness` / `base_reproduction_rate`. When the kwarg is None (legacy callers + MagicMock-empire test fixtures), the resolver falls back to `empire.race_config`, returning that config ONLY when the requested `race_id` matches the empire's primary race — non-matching species are gracefully skipped (the species' count/happiness stays unchanged).
+
+PROJ-291 closed a silent dual-return bug where the legacy fallback returned the empire's primary `RaceConfig` regardless of whether `race_id` matched, so any non-primary species on a multi-species colony silently used the wrong `base_happiness` / `base_reproduction_rate`. The bug predated PROJ-287 (which built the registry) but was only reachable post-PROJ-284/286/289 once multi-species colonies became real gameplay state.
+
+Wiring: `GameSession.race_registry` is a lazy property that constructs a session-scoped `CachedRaceRegistry(RaceLibrary())`. Session passes it to `TurnEngine(race_registry=...)` on construction. `TurnEngine` threads it through to `HappinessEngine` + `PopulationEngine` during their lazy-init properties.
+
 ### UI surface
 
-`FoodAllocationEditor` (`game/ui/screens/food_allocation_editor.py`) is a pygame_gui window with one row per species on a colony. Each row: slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title auto-derives from `ResourceCatalog.get(economy.primary_resource).name` (via the `population_food_resource` legacy shim until PROJ-289 migrates the call site) — default label reads "Organics Allocation — {planet.name}". Apply writes to `planet.get_species_config(race_id).food_allocation`.
+`FoodAllocationEditor` (`game/ui/screens/food_allocation_editor.py`) is a pygame_gui window with one row per species on a colony. Each row: slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live multi-resource consumption preview. Title auto-derives from `ResourceCatalog.get(economy.primary_resource).name` — default label reads "Organics Allocation — {planet.name}". Apply writes to `planet.get_species_config(race_id).food_allocation`.
 
 The button appears on `PlanetAbilitiesWindow` when the colony has at least one population (unlike the facility-gated environment editors). Routed via `StrategyEventRouter._open_food_allocation_editor` → direct mutation on `ColonySpeciesConfig` (no command dispatch — food allocation is a player-facing dial, not a strategy-layer command with replay semantics).
 
-The editor currently shows only the primary resource's consumption preview — the multi-resource per-species upkeep UI is scheduled for PROJ-289.
+PROJ-291 C2 rewired the editor's preview. `compute_consumption_preview(pop, allocation, population_consumption: Dict[str, float]) -> Dict[str, float]` returns one entry per resource declared in `EconomyConfig.population_consumption`; `_preview_text` joins them into a single "Preview: 0.100 organics, 0.010 metals/turn" label. Single-resource economies render identically to the pre-migration UI.
 
 ### Swapping the population-consumption dict
 

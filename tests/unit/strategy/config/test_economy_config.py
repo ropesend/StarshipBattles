@@ -80,22 +80,9 @@ class TestPrimaryResourceProperty:
         assert cfg.primary_resource == "metals"
 
 
-class TestPopulationFoodResourceShim:
-    """PROJ-286 keeps `population_food_resource` as a read-only property
-    delegating to `primary_resource` so the FoodAllocationEditor title
-    keeps working until PROJ-289 migrates UI callers."""
-
-    def test_shim_delegates_to_primary_resource(self):
-        from game.strategy.config.economy_config import EconomyConfig
-        cfg = EconomyConfig(population_consumption={"metals": 0.002})
-        assert cfg.population_food_resource == "metals"
-
-    def test_shim_matches_primary_resource_on_multi_resource_config(self):
-        from game.strategy.config.economy_config import EconomyConfig
-        cfg = EconomyConfig(
-            population_consumption={"organics": 0.001, "metals": 0.0001}
-        )
-        assert cfg.population_food_resource == cfg.primary_resource == "organics"
+# PROJ-291 C2: `TestPopulationFoodResourceShim` was deleted along with
+# the `population_food_resource` shim property. The FoodAllocationEditor
+# now reads `EconomyConfig.primary_resource` directly.
 
 
 class TestLoadEconomyConfigFromDefault:

@@ -122,7 +122,7 @@ class TestResolveFoodResourceName:
         definition = MagicMock()
         definition.name = "Organics"
         catalog.get.return_value = definition
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
         assert resolve_food_resource_name(economy, catalog) == "Organics"
 
     def test_unknown_resource_falls_back_to_id(self):
@@ -130,32 +130,93 @@ class TestResolveFoodResourceName:
         from game.ui.screens.food_allocation_editor import resolve_food_resource_name
         catalog = MagicMock()
         catalog.get.return_value = None
-        economy = EconomyConfig(population_food_resource="ectoplasm", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"ectoplasm": 0.001})
         assert resolve_food_resource_name(economy, catalog) == "ectoplasm"
 
     def test_none_catalog_falls_back_to_id(self):
         from game.ui.screens.food_allocation_editor import resolve_food_resource_name
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
         assert resolve_food_resource_name(economy, None) == "organics"
 
     def test_catalog_raising_falls_back_to_id(self):
         from game.ui.screens.food_allocation_editor import resolve_food_resource_name
         catalog = MagicMock()
         catalog.get.side_effect = KeyError("boom")
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
         assert resolve_food_resource_name(economy, catalog) == "organics"
 
 
 class TestConsumptionPreview:
+    """PROJ-291 C2: `compute_consumption_preview` returns a per-resource
+    dict so the editor can render one preview row per resource in
+    `EconomyConfig.population_consumption`."""
+
+    def test_returns_per_resource_dict_single_resource(self):
+        from game.ui.screens.food_allocation_editor import compute_consumption_preview
+        result = compute_consumption_preview(100, 1.0, {"organics": 0.001})
+        assert result == pytest.approx({"organics": 0.1})
+
     def test_linear_scaling_with_allocation(self):
         from game.ui.screens.food_allocation_editor import compute_consumption_preview
-        assert compute_consumption_preview(100, 1.0, 0.001) == pytest.approx(0.1)
-        assert compute_consumption_preview(100, 2.0, 0.001) == pytest.approx(0.2)
-        assert compute_consumption_preview(100, 0.0, 0.001) == pytest.approx(0.0)
+        assert compute_consumption_preview(100, 1.0, {"organics": 0.001}) == pytest.approx({"organics": 0.1})
+        assert compute_consumption_preview(100, 2.0, {"organics": 0.001}) == pytest.approx({"organics": 0.2})
+        assert compute_consumption_preview(100, 0.0, {"organics": 0.001}) == pytest.approx({"organics": 0.0})
 
-    def test_negative_allocation_clamped_to_zero(self):
+    def test_negative_allocation_clamped_to_zero_per_resource(self):
         from game.ui.screens.food_allocation_editor import compute_consumption_preview
-        assert compute_consumption_preview(100, -1.0, 0.001) == 0.0
+        result = compute_consumption_preview(100, -1.0, {"organics": 0.001})
+        assert result == pytest.approx({"organics": 0.0})
+
+
+class TestMultiResourcePreview:
+    """PROJ-291 Phase 3 (C2): post-PROJ-286 `EconomyConfig` declares many
+    resources in `population_consumption`. The preview function must
+    return per-resource values so the UI can render one row per resource."""
+
+    def test_returns_per_resource_dict_multi_resource(self):
+        from game.ui.screens.food_allocation_editor import compute_consumption_preview
+        result = compute_consumption_preview(1000, 2.0, {"organics": 0.001, "metals": 0.0001})
+        assert result == pytest.approx({"organics": 2.0, "metals": 0.2})
+
+    def test_zero_allocation_yields_zero_per_resource(self):
+        from game.ui.screens.food_allocation_editor import compute_consumption_preview
+        result = compute_consumption_preview(1000, 0.0, {"organics": 0.001, "metals": 0.0001})
+        assert result == pytest.approx({"organics": 0.0, "metals": 0.0})
+
+    def test_zero_population_yields_zero_per_resource(self):
+        from game.ui.screens.food_allocation_editor import compute_consumption_preview
+        result = compute_consumption_preview(0, 2.0, {"organics": 0.001, "metals": 0.0001})
+        assert result == pytest.approx({"organics": 0.0, "metals": 0.0})
+
+    def test_empty_consumption_dict_yields_empty_dict(self):
+        """Modders shipping an economy.json without `population_consumption`
+        fall back to the default single-organics dict, but pinning the
+        explicit empty case makes the function's contract unambiguous."""
+        from game.ui.screens.food_allocation_editor import compute_consumption_preview
+        result = compute_consumption_preview(1000, 1.0, {})
+        assert result == {}
+
+    def test_editor_preview_text_lists_every_resource(self, mock_editor_internals):
+        """With a 2-resource economy, `_preview_text` must mention both
+        resources so a player tuning allocation sees the full drain."""
+        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
+        planet = _planet_with([SpeciesPopulation(race_id="human", count=1000, happiness=0.5)])
+        economy = EconomyConfig(population_consumption={"organics": 0.001, "metals": 0.0001})
+
+        editor = FoodAllocationEditor(
+            rect=pygame.Rect(0, 0, 600, 400),
+            manager=MagicMock(),
+            planet=planet,
+            economy_config=economy,
+        )
+
+        preview = editor._preview_text(1000, 1.0)
+        # Preview must mention BOTH resources by display name. Case is
+        # driven by `_resource_display_name.lower()` for the primary
+        # resource; secondary resources should also surface in the
+        # preview string.
+        assert "organics" in preview.lower()
+        assert "metals" in preview.lower()
 
 
 class TestApplyAllocations:
@@ -210,7 +271,7 @@ class TestFoodAllocationEditorConstruction:
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
         planet = _planet_with([pop])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         editor = FoodAllocationEditor(
             rect=pygame.Rect(0, 0, 600, 400),
@@ -227,7 +288,7 @@ class TestFoodAllocationEditorConstruction:
             SpeciesPopulation(race_id="human", count=100, happiness=0.5),
             SpeciesPopulation(race_id="alien", count=50, happiness=0.5),
         ])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         editor = FoodAllocationEditor(
             rect=pygame.Rect(0, 0, 600, 400),
@@ -241,7 +302,7 @@ class TestFoodAllocationEditorConstruction:
         """Title = '{ResourceName} Allocation — {planet.name}'."""
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
         catalog = MagicMock()
         definition = MagicMock()
         definition.name = "Organics"
@@ -261,7 +322,7 @@ class TestFoodAllocationEditorConstruction:
         point of PROJ-284's data-driven food-resource config."""
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
-        economy = EconomyConfig(population_food_resource="metals", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"metals": 0.001})
         catalog = MagicMock()
         definition = MagicMock()
         definition.name = "Metals"
@@ -282,7 +343,7 @@ class TestFoodAllocationEditorCollectAndApply:
         """Typed input wins when parseable; slider is the fallback."""
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         editor = FoodAllocationEditor(
             rect=pygame.Rect(0, 0, 600, 400),
@@ -303,7 +364,7 @@ class TestFoodAllocationEditorCollectAndApply:
         """Typed input can exceed the slider's 5.0 cap."""
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         editor = FoodAllocationEditor(
             rect=pygame.Rect(0, 0, 600, 400),
@@ -321,7 +382,7 @@ class TestFoodAllocationEditorCollectAndApply:
         """Non-numeric text -> use slider value."""
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         editor = FoodAllocationEditor(
             rect=pygame.Rect(0, 0, 600, 400),
@@ -342,7 +403,7 @@ class TestFoodAllocationEditorCollectAndApply:
             SpeciesPopulation(race_id="human", count=100, happiness=0.5),
             SpeciesPopulation(race_id="alien", count=50, happiness=0.5),
         ])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         on_apply = MagicMock()
         editor = FoodAllocationEditor(
@@ -370,7 +431,7 @@ class TestFoodAllocationEditorCollectAndApply:
     def test_cancel_does_not_fire_apply_callback(self, mock_editor_internals):
         from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
-        economy = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         on_apply = MagicMock()
         editor = FoodAllocationEditor(

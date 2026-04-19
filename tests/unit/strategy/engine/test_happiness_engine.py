@@ -375,3 +375,120 @@ class TestMultiResourceVsSingleResourceParity:
         engine.process_happiness([empire_single, empire_multi], galaxy=None)
 
         assert pop_single.happiness == pytest.approx(pop_multi.happiness)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-291 Phase 2 (C3): HappinessEngine consumes IRaceRegistry when wired.
+# Pre-fix: `_get_race_config` returns `empire.race_config` regardless of the
+# requested `race_id`, so any non-primary species on a multi-species colony
+# silently computes happiness with the WRONG `base_happiness`. Reverses the
+# PROJ-287 line-16 deferral.
+# ---------------------------------------------------------------------------
+
+class _StubRaceRegistry:
+    """Minimal IRaceRegistry stub for tests. Duck-typed — no Protocol
+    inheritance needed because HappinessEngine only calls `.get_race(id)`."""
+
+    def __init__(self, mapping: dict):
+        self._mapping = mapping
+
+    def get_race(self, race_id: str):
+        return self._mapping.get(race_id)
+
+
+class TestMultiSpeciesViaRegistry:
+    """`HappinessEngine(race_registry=...)` resolves every species'
+    `RaceConfig` via the registry so multi-species colonies compute
+    per-species happiness with the correct `base_happiness`. Replaces
+    the pre-PROJ-291 silent wrong-race fallback."""
+
+    def test_two_species_use_their_own_base_happiness(self):
+        """Humans + Voidari on the same colony. Registry returns each
+        species' own RaceConfig. Each pop's happiness must reflect its
+        OWN base_happiness, not the empire's primary race."""
+        from game.strategy.engine.happiness_engine import HappinessEngine
+
+        pop_human = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        pop_voidari = SpeciesPopulation(race_id="voidari", count=500, happiness=0.0)
+        planet = _earth_like(populations=[pop_human, pop_voidari])
+
+        race_human = _race(race_id="human", base_happiness=0.5)
+        race_voidari = _race(race_id="voidari", base_happiness=0.8)
+        empire = _empire(1, [planet], race_human)
+
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("voidari").last_consumption_ratios = {"organics": 1.0}
+
+        registry = _StubRaceRegistry({"human": race_human, "voidari": race_voidari})
+        engine = HappinessEngine(race_registry=registry)
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab_human = score_planet_for_race(planet, race_human)
+        hab_voidari = score_planet_for_race(planet, race_voidari)
+        assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab_human)
+        assert pop_voidari.happiness == pytest.approx(0.8 * 1.0 * hab_voidari)
+        # Sanity: the two values MUST differ — proves the registry
+        # resolved each species independently rather than reusing
+        # empire.race_config for both.
+        assert pop_human.happiness != pop_voidari.happiness
+
+    def test_unknown_race_id_skipped_gracefully(self):
+        """When the registry returns None for a race_id, the species is
+        skipped (happiness unchanged from pre-call value) — no exception
+        raised, no silent fallback to the wrong race."""
+        from game.strategy.engine.happiness_engine import HappinessEngine
+
+        pop_human = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        pop_ghost = SpeciesPopulation(race_id="ghost", count=500, happiness=0.42)
+        planet = _earth_like(populations=[pop_human, pop_ghost])
+
+        race_human = _race(race_id="human", base_happiness=0.5)
+        empire = _empire(1, [planet], race_human)
+
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("ghost").last_consumption_ratios = {"organics": 1.0}
+
+        # Registry knows humans but not ghosts.
+        registry = _StubRaceRegistry({"human": race_human})
+        engine = HappinessEngine(race_registry=registry)
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race_human)
+        assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab)
+        # Unknown race pre-call happiness is preserved.
+        assert pop_ghost.happiness == pytest.approx(0.42)
+
+    def test_legacy_path_returns_none_for_non_primary_species(self):
+        """When no registry is wired (legacy callers) AND the requested
+        race_id doesn't match the empire's primary race, the resolver
+        returns None and the species is gracefully skipped — instead of
+        the pre-PROJ-291 silent-wrong-race fallback.
+
+        Primary race (humans) updates; secondary race (voidari) stays at
+        its pre-call value because the legacy fallback no longer returns
+        the empire's race_config when the race_id doesn't match."""
+        from game.strategy.engine.happiness_engine import HappinessEngine
+
+        pop_human = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        pop_voidari = SpeciesPopulation(race_id="voidari", count=500, happiness=0.77)
+        planet = _earth_like(populations=[pop_human, pop_voidari])
+
+        race_human = _race(race_id="human", base_happiness=0.5)
+        empire = _empire(1, [planet], race_human)
+
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("voidari").last_consumption_ratios = {"organics": 1.0}
+
+        # No race_registry kwarg — legacy path.
+        engine = HappinessEngine()
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race_human)
+        assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab)
+        # Voidari is NOT updated — the tightened legacy fallback returns
+        # None for non-primary species instead of returning the empire's
+        # primary race_config (the pre-PROJ-291 bug).
+        assert pop_voidari.happiness == pytest.approx(0.77)

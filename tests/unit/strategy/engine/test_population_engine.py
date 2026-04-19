@@ -143,14 +143,15 @@ class TestHappinessAndHabitability:
         """Low happiness reduces growth rate."""
         engine = PopulationEngine()
 
-        # High happiness population
-        pop_happy = SpeciesPopulation(race_id="human", count=10000, happiness=1.0)
+        # High happiness population — pop.race_id matches empire.race_config.race_id
+        # so the legacy resolver picks up the right RaceConfig (PROJ-291 C3).
+        pop_happy = SpeciesPopulation(race_id="human_happy", count=10000, happiness=1.0)
         planet_happy = make_earth_like_planet(name="Happy", populations=[pop_happy])
         race_happy = make_human_race_config(race_id="human_happy")
         empire_happy = make_empire(1, [planet_happy], race_happy)
 
         # Low happiness population
-        pop_sad = SpeciesPopulation(race_id="human", count=10000, happiness=0.2)
+        pop_sad = SpeciesPopulation(race_id="human_sad", count=10000, happiness=0.2)
         planet_sad = make_earth_like_planet(name="Sad", populations=[pop_sad])
         race_sad = make_human_race_config(race_id="human_sad")
         empire_sad = make_empire(2, [planet_sad], race_sad)
@@ -167,13 +168,13 @@ class TestHappinessAndHabitability:
         engine = PopulationEngine()
 
         # Good habitability planet (Earth-like)
-        pop_good = SpeciesPopulation(race_id="human", count=10000, happiness=1.0)
+        pop_good = SpeciesPopulation(race_id="human_good", count=10000, happiness=1.0)
         planet_good = make_earth_like_planet(name="Good", populations=[pop_good])
         race_good = make_human_race_config(race_id="human_good")
         empire_good = make_empire(1, [planet_good], race_good)
 
         # Bad habitability planet (wrong temperature - use extreme value)
-        pop_bad = SpeciesPopulation(race_id="human", count=10000, happiness=1.0)
+        pop_bad = SpeciesPopulation(race_id="human_bad", count=10000, happiness=1.0)
         planet_bad = make_earth_like_planet(name="Bad", populations=[pop_bad])
         planet_bad.surface_temperature = 500.0  # Extremely hot (212°C)
         planet_bad.magnetic_field = 0.0  # No radiation protection
@@ -297,6 +298,123 @@ class TestAptitudeEffects:
 # read directly from `RaceConfig.base_reproduction_rate`. The
 # point-budget cost curve for that field is exercised by
 # `tests/unit/strategy/data/test_race_point_budget_v2.py::TestCalculateReproductionCost`.
+
+
+# ---------------------------------------------------------------------------
+# PROJ-291 Phase 2 (C3): PopulationEngine consumes IRaceRegistry when wired.
+# Pre-fix: `_get_race_config` returns `empire.race_config` regardless of the
+# requested `race_id`, so any non-primary species on a multi-species colony
+# silently grows using the WRONG `base_reproduction_rate`. Reverses the
+# PROJ-287 line-16 deferral.
+# ---------------------------------------------------------------------------
+
+class _StubRaceRegistry:
+    """Minimal IRaceRegistry stub for tests. Duck-typed — PopulationEngine
+    only calls `.get_race(id)`."""
+
+    def __init__(self, mapping: dict):
+        self._mapping = mapping
+
+    def get_race(self, race_id: str):
+        return self._mapping.get(race_id)
+
+
+class TestMultiSpeciesViaRegistry:
+    """`PopulationEngine(race_registry=...)` resolves every species'
+    `RaceConfig` via the registry so multi-species colonies grow with
+    per-species `base_reproduction_rate`. Replaces the pre-PROJ-291
+    silent wrong-race fallback."""
+
+    def test_each_species_grows_at_its_own_reproduction_rate(self):
+        """Humans (rate 0.03) and Voidari (rate 0.05) on the same colony.
+        Registry returns each species' own RaceConfig. The two species
+        must grow by VISIBLY different amounts — proves each species
+        used its OWN reproduction rate rather than the empire's primary
+        race rate for both."""
+        # Start below capacity so the logistic term is positive.
+        pop_human = SpeciesPopulation(race_id="human", count=5000, happiness=1.0)
+        pop_voidari = SpeciesPopulation(race_id="voidari", count=5000, happiness=1.0)
+        planet = make_earth_like_planet(populations=[pop_human, pop_voidari])
+
+        race_human = make_human_race_config(race_id="human", base_reproduction_rate=0.03)
+        race_voidari = make_human_race_config(race_id="voidari", base_reproduction_rate=0.05)
+        empire = make_empire(1, [planet], race_human)
+
+        # Seed ratios as OrganicsConsumptionEngine would — both well-fed.
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("voidari").last_consumption_ratios = {"organics": 1.0}
+
+        registry = _StubRaceRegistry({"human": race_human, "voidari": race_voidari})
+        engine = PopulationEngine(race_registry=registry)
+
+        initial_human = pop_human.count
+        initial_voidari = pop_voidari.count
+        engine.process_population_growth([empire])
+
+        growth_human = pop_human.count - initial_human
+        growth_voidari = pop_voidari.count - initial_voidari
+
+        # Both species grow (positive growth) — seed conditions are
+        # identical except for reproduction_rate.
+        assert growth_human > 0
+        assert growth_voidari > 0
+        # Voidari's rate is ~1.67x humans' — growth should differ
+        # visibly. If the bug were present, both species would grow
+        # using humans' rate (because `_get_race_config` returned
+        # empire.race_config for both) and the deltas would be equal.
+        assert growth_voidari > growth_human, (
+            f"Voidari ({growth_voidari}) should out-grow humans "
+            f"({growth_human}) given the 0.05 vs 0.03 rate difference"
+        )
+
+    def test_unknown_race_id_skipped_gracefully(self):
+        """Registry returns None for an unknown race_id — species count
+        stays unchanged (no logistic term applied), no exception."""
+        pop_human = SpeciesPopulation(race_id="human", count=5000, happiness=1.0)
+        pop_ghost = SpeciesPopulation(race_id="ghost", count=2000, happiness=1.0)
+        planet = make_earth_like_planet(populations=[pop_human, pop_ghost])
+
+        race_human = make_human_race_config(race_id="human")
+        empire = make_empire(1, [planet], race_human)
+
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("ghost").last_consumption_ratios = {"organics": 1.0}
+
+        registry = _StubRaceRegistry({"human": race_human})
+        engine = PopulationEngine(race_registry=registry)
+
+        initial_ghost = pop_ghost.count
+        engine.process_population_growth([empire])
+
+        # Human grows; ghost unchanged (None race_config → early-return).
+        assert pop_human.count > 5000
+        assert pop_ghost.count == initial_ghost
+
+    def test_legacy_path_skips_non_primary_species(self):
+        """When no registry is wired, the resolver returns None for
+        non-primary species (instead of the pre-PROJ-291 wrong-race
+        fallback). The non-primary species' count must not change."""
+        pop_human = SpeciesPopulation(race_id="human", count=5000, happiness=1.0)
+        pop_voidari = SpeciesPopulation(race_id="voidari", count=5000, happiness=1.0)
+        planet = make_earth_like_planet(populations=[pop_human, pop_voidari])
+
+        race_human = make_human_race_config(race_id="human")
+        empire = make_empire(1, [planet], race_human)
+
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("voidari").last_consumption_ratios = {"organics": 1.0}
+
+        # No race_registry kwarg — legacy path.
+        engine = PopulationEngine()
+
+        initial_voidari = pop_voidari.count
+        engine.process_population_growth([empire])
+
+        # Human grows (primary race matches); voidari is skipped because
+        # the tightened legacy fallback returns None for non-primary
+        # species rather than returning empire.race_config.
+        assert pop_human.count > 5000
+        assert pop_voidari.count == initial_voidari
 
 
 class TestTurnEngineIntegration:

@@ -68,6 +68,7 @@ logger = logging.getLogger(__name__)
 TICKS_PER_TURN = 100
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRaceRegistry
     from game.strategy.engine.turn_engine_config import TurnEngineConfig
     from game.strategy.interfaces.battle_resolver import IBattleResolver
     from game.strategy.interfaces.engines import (
@@ -154,6 +155,7 @@ class TurnEngine:
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
         organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = None,
         happiness_engine: Optional['IHappinessEngine'] = None,
+        race_registry: Optional['IRaceRegistry'] = None,
         event_bus=None,
     ):
         """Initialize the turn engine.
@@ -180,6 +182,12 @@ class TurnEngine:
         self._ai_factory = ai_factory
         self._registries = registries
         self._event_bus = event_bus
+        # PROJ-291 C3: optional race registry threaded into Happiness +
+        # Population engines so multi-species colonies resolve each
+        # species' RaceConfig correctly. None-fallback preserves the
+        # legacy single-race resolver path for test callers that don't
+        # supply a registry.
+        self._race_registry: Optional['IRaceRegistry'] = race_registry
 
         # Engine fields: individual kwargs take precedence over config
         self._movement_engine: Optional['IMovementEngine'] = movement_engine or cfg.movement_engine
@@ -349,7 +357,9 @@ class TurnEngine:
         """Return population engine, lazily creating default if not injected."""
         if self._population_engine is None:
             from game.strategy.engine.population_engine import PopulationEngine
-            self._population_engine = PopulationEngine()
+            # PROJ-291 C3: thread the race registry so multi-species
+            # colonies grow each species at its own reproduction rate.
+            self._population_engine = PopulationEngine(race_registry=self._race_registry)
         return self._population_engine
 
     @property
@@ -439,7 +449,10 @@ class TurnEngine:
         """
         if self._happiness_engine is None:
             from game.strategy.engine.happiness_engine import HappinessEngine
-            self._happiness_engine = HappinessEngine()
+            # PROJ-291 C3: thread the race registry so multi-species
+            # colonies compute happiness from each species' own
+            # base_happiness.
+            self._happiness_engine = HappinessEngine(race_registry=self._race_registry)
         return self._happiness_engine
 
     def process_turn(self, empires: List['Empire'], galaxy: 'Galaxy', save_path: Optional[str] = None, *, session: Optional['GameSession'] = None) -> None:

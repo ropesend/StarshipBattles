@@ -1030,6 +1030,15 @@ Session-scoped in-memory lookup of `race_id -> RaceConfig`, so UI panels and for
 - Not cached — empires have O(10-100) colonies × O(1-5) species, so recomputing is cheap compared to the invalidation complexity caching would require (growth, extinction, colonization).
 - Canonical "species living in this empire" query for per-species UI iteration (consumed by PROJ-289 + PROJ-290).
 
+**Consumers** of `IRaceRegistry`:
+- `PlanetEconomyProjector` — habitability multiplier resolution (PROJ-285 / PROJ-288).
+- `EmpireEconomyCalculator` — delegates to `PlanetEconomyProjector` for population upkeep aggregation (PROJ-290).
+- `PlanetReportPanel` + `PlanetListWindow` — uncolonized-planet habitability display (PROJ-290).
+- `HappinessEngine` — multi-species happiness resolution (PROJ-291 C3). Optional `race_registry=None` preserves legacy single-race behavior.
+- `PopulationEngine` — multi-species reproduction rate resolution (PROJ-291 C3). Optional `race_registry=None` preserves legacy single-race behavior.
+- `TurnEngine` — accepts `race_registry: Optional[IRaceRegistry] = None` kwarg and threads it into `HappinessEngine` + `PopulationEngine` lazy-init (PROJ-291 C3).
+- `GameSession.race_registry` — lazy property constructing the session-scoped `CachedRaceRegistry`; passed to `TurnEngine` at construction time (PROJ-291 C3).
+
 See [docs/01_ARCHITECTURE.md § Key Protocols](01_ARCHITECTURE.md#key-protocols) for the cross-layer protocol table entry.
 
 ### Planet Economy Projector (PROJ-288)

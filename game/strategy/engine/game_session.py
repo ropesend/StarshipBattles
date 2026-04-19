@@ -47,6 +47,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
+    from game.core.protocols import IRaceRegistry
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.empire import Empire
 
@@ -85,10 +86,22 @@ class GameSession:
         # PROJ-211: Resolve registries at init time, pass to TurnEngine
         self._registries = self._resolve_registries()
 
+        # PROJ-291 C3: race registry is session-scoped so the engines
+        # (HappinessEngine, PopulationEngine) share one cached
+        # RaceLibrary wrapper for the life of the session. Lazy-init via
+        # the `race_registry` property below; eager construction here
+        # keeps all engines reading the same instance.
+        self._race_registry: Optional['IRaceRegistry'] = None
+
         # Engine
         # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
         # Callers in the UI/app layer provide it; tests inject mocks.
-        self.turn_engine = TurnEngine(registries=self._registries, ai_factory=ai_factory, event_bus=self._event_bus)
+        self.turn_engine = TurnEngine(
+            registries=self._registries,
+            ai_factory=ai_factory,
+            event_bus=self._event_bus,
+            race_registry=self.race_registry,
+        )
         self._command_registry = create_default_registry()
 
         # Initialization via GameInitializer (PROJ-87 Phase 6)
@@ -131,6 +144,28 @@ class GameSession:
     def registries(self) -> GameRegistries:
         """The session's game registries for DI to sub-systems."""
         return self._registries
+
+    @property
+    def race_registry(self) -> 'IRaceRegistry':
+        """Session-scoped race registry (PROJ-291 C3).
+
+        Lazy-creates a `CachedRaceRegistry` wrapping a `RaceLibrary` on
+        first access and reuses it for the lifetime of the session.
+        TurnEngine threads this into HappinessEngine + PopulationEngine
+        so multi-species colonies resolve each species' `RaceConfig`
+        correctly.
+
+        Callers that mutate races (e.g. the race editor on save) must
+        call `registry.invalidate(race_id)` to keep subsequent reads
+        coherent.
+        """
+        if self._race_registry is None:
+            from game.strategy.systems.race_library import (
+                CachedRaceRegistry,
+                RaceLibrary,
+            )
+            self._race_registry = CachedRaceRegistry(RaceLibrary())
+        return self._race_registry
 
     def _create_event_handler(self):
         """Create a callback for the global log_event() system.
@@ -324,7 +359,16 @@ class GameSession:
         session._event_log = EventLog.from_dict(data.get('event_log', {'events': []}))
         session._event_bus = EventBus(session._create_event_handler())
 
-        session.turn_engine = TurnEngine(registries=session._registries, ai_factory=ai_factory, event_bus=session._event_bus)
+        # PROJ-291 C3: propagate the session-scoped race registry into
+        # TurnEngine so restored saves also resolve multi-species
+        # RaceConfig correctly during process_turn.
+        session._race_registry = None
+        session.turn_engine = TurnEngine(
+            registries=session._registries,
+            ai_factory=ai_factory,
+            event_bus=session._event_bus,
+            race_registry=session.race_registry,
+        )
         session._command_registry = create_default_registry()
 
         # Step 1: Load Galaxy (creates all planets with IDs)
