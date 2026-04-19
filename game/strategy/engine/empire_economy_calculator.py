@@ -8,7 +8,7 @@ This is a read-only calculation - it doesn't modify any game state.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from game.core.resources import ResourceCatalog
 from game.core.patterns.layer_iterator import iter_components
@@ -16,6 +16,8 @@ from game.core.patterns.layer_iterator import iter_components
 _PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRaceRegistry
+    from game.strategy.config.economy_config import EconomyConfig
     from game.strategy.data.empire import Empire
 from game.core.registry import GameRegistries
 from game.strategy.engine.harvesting_engine import get_harvester_info
@@ -45,6 +47,13 @@ class EmpireEconomySnapshot:
     construction_expenses_complexes: Dict[str, float] = field(default_factory=dict)
     total_expenses: Dict[str, float] = field(default_factory=dict)
 
+    # PROJ-290 Phase 1: empire-wide multi-resource population upkeep.
+    # Sparse dict — keys are only resources declared in
+    # `EconomyConfig.population_consumption` that have non-zero demand
+    # somewhere in the empire. Empty `{}` when the empire has no
+    # populations yet, which signals the treasury row to hide.
+    total_population_upkeep: Dict[str, float] = field(default_factory=dict)
+
     # Treasury state
     net_resources: Dict[str, float] = field(default_factory=dict)
     current_storage: Dict[str, float] = field(default_factory=dict)
@@ -66,16 +75,36 @@ class EmpireEconomyCalculator:
     - HarvestingEngine: base_harvest_rate * planet_quality
     """
 
-    def __init__(self, *, registries: GameRegistries) -> None:
+    def __init__(
+        self,
+        *,
+        registries: GameRegistries,
+        economy_config: Optional["EconomyConfig"] = None,
+        race_registry: Optional["IRaceRegistry"] = None,
+    ) -> None:
         """Initialize the calculator.
 
-        PROJ-211: registries is now required (no global fallback).
+        PROJ-211: registries is required (no global fallback).
+        PROJ-290: `economy_config` + `race_registry` enable empire-wide
+        multi-resource population upkeep aggregation via the shared
+        `PlanetEconomyProjector`. When either is omitted the calculator
+        still produces a valid snapshot but leaves
+        `EmpireEconomySnapshot.total_population_upkeep = {}` — callers
+        that want the upkeep row must pass both.
 
         Args:
             registries: GameRegistries for resolving component
-                       abilities from plain component IDs in design_data (required).
+                        abilities from plain component IDs in design_data (required).
+            economy_config: Active `EconomyConfig` driving per-resource
+                            population upkeep rates. When None, upkeep
+                            aggregation is skipped.
+            race_registry: Session-scoped `IRaceRegistry` used by the
+                           projector's habitability multiplier. When None,
+                           upkeep aggregation is skipped.
         """
         self._registries: GameRegistries = registries
+        self._economy = economy_config
+        self._race_registry = race_registry
 
     def calculate(self, empire: 'Empire') -> EmpireEconomySnapshot:
         """Calculate complete economic snapshot for an empire.
@@ -109,6 +138,9 @@ class EmpireEconomyCalculator:
         # Placeholder expense categories (future implementation)
         snapshot.tribute_expenses = zero_resources.copy()
 
+        # PROJ-290: empire-wide multi-resource population upkeep.
+        snapshot.total_population_upkeep = self._aggregate_population_upkeep(empire)
+
         # Total expenses = sum of all expense categories
         snapshot.total_expenses = {}
         for r in _PLANETARY_IDS:
@@ -130,6 +162,40 @@ class EmpireEconomyCalculator:
         snapshot.max_storage = empire.max_storage.copy()
 
         return snapshot
+
+    def _aggregate_population_upkeep(self, empire: 'Empire') -> Dict[str, float]:
+        """Sum per-resource population upkeep across every empire colony.
+
+        Delegates to `PlanetEconomyProjector._project_upkeep` via the
+        shared `project()` entry point so upkeep math stays in one place
+        (see PROJ-288 design.md § 3).
+
+        Returns `{}` when either `economy_config` or `race_registry` was
+        not injected at construction time — the treasury panel hides its
+        row in that state, preserving backward compat for legacy callers
+        that only pass `registries=`.
+        """
+        if self._economy is None or self._race_registry is None:
+            return {}
+
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+
+        projector = PlanetEconomyProjector(
+            registries=self._registries,
+            economy_config=self._economy,
+            race_registry=self._race_registry,
+        )
+
+        totals: Dict[str, float] = {}
+        for colony in empire.colonies:
+            projections = projector.project(colony)
+            for res_id, projection in projections.items():
+                if projection.upkeep <= 0:
+                    continue
+                totals[res_id] = totals.get(res_id, 0.0) + projection.upkeep
+        return totals
 
     def _aggregate_colony_production(self, empire: 'Empire') -> Dict[str, float]:
         """Calculate total production from all colony facilities.

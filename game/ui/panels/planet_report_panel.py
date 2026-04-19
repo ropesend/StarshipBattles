@@ -50,7 +50,9 @@ class PlanetReportPanel:
         container=None,
         portrait_surface=None,
         show_complexes=True,
-        production_rates: Optional[Dict[str, float]] = None
+        production_rates: Optional[Dict[str, float]] = None,
+        empire=None,
+        race_registry=None,
     ):
         """
         Initialize planet report panel.
@@ -66,6 +68,12 @@ class PlanetReportPanel:
                 Defaults to True. Set to False for contexts like Strategy UI.
             production_rates (Dict[str, float], optional): Per-resource production rates.
                 Used for the resource grid. Defaults to empty dict.
+            empire: PROJ-290 — optional viewing empire used to render the
+                uncolonized-planet habitability section. Combined with
+                `race_registry` below; either missing → section omitted.
+            race_registry: PROJ-290 — optional `IRaceRegistry`. Required
+                alongside `empire` to render the uncolonized habitability
+                section. None preserves the pre-PROJ-290 rendering.
         """
         self.manager = manager
         self.rect = rect
@@ -75,6 +83,10 @@ class PlanetReportPanel:
         self.production_rates = production_rates or {}
         self._resource_icons: Dict[str, pygame.Surface] = {}
         self._resource_grid_items: List = []
+        # PROJ-290 — stored so `update_planet` can default to the
+        # construction-time values when it's called without new deps.
+        self._empire = empire
+        self._race_registry = race_registry
 
         # Load resource icons
         self._load_resource_icons(icon_size=20)
@@ -106,7 +118,9 @@ class PlanetReportPanel:
             text_w = rect.width - 180  # Only leave room for portrait and graph
         text_h = rect.height - 20 - RESOURCE_PANEL_HEIGHT
         self.detail_text = UITextBox(
-            html_text=format_planet_info(planet),
+            html_text=format_planet_info(
+                planet, empire=empire, race_registry=race_registry,
+            ),
             relative_rect=pygame.Rect(170, 10, text_w, text_h),
             manager=manager,
             container=self.panel
@@ -175,7 +189,9 @@ class PlanetReportPanel:
         self,
         planet,
         portrait_surface=None,
-        production_rates: Optional[Dict[str, float]] = None
+        production_rates: Optional[Dict[str, float]] = None,
+        empire=None,
+        race_registry=None,
     ):
         """
         Update display for a new planet.
@@ -184,12 +200,25 @@ class PlanetReportPanel:
             planet: Planet object to display
             portrait_surface: Optional pygame Surface for planet portrait
             production_rates: Optional per-resource production rates for the grid
+            empire: PROJ-290 — override the construction-time empire.
+                When None, the panel reuses whatever was passed to
+                `__init__` (both default to None → no habitability section).
+            race_registry: PROJ-290 — override the construction-time
+                `IRaceRegistry`. Same fallback contract as `empire`.
         """
         self.planet = planet
         self.production_rates = production_rates or {}
+        if empire is not None:
+            self._empire = empire
+        if race_registry is not None:
+            self._race_registry = race_registry
 
         # Update info text
-        self.detail_text.html_text = format_planet_info(planet)
+        self.detail_text.html_text = format_planet_info(
+            planet,
+            empire=self._empire,
+            race_registry=self._race_registry,
+        )
         self.detail_text.rebuild()
 
         # Update portrait, graph, complexes list, and resource grid

@@ -124,6 +124,14 @@ class StrategyWindowManager:
         empire = self.scene.current_empire
         galaxy = self.scene.galaxy
 
+        # PROJ-290: thread the session race_registry so the planet detail
+        # panel can render uncolonized-planet habitability for the
+        # viewing empire's species.
+        race_registry = None
+        facade = getattr(self.scene, "facade", None)
+        if facade is not None and hasattr(facade, "get_race_registry"):
+            race_registry = facade.get_race_registry()
+
         self.planet_list_window = PlanetListWindow(
             rect,
             self.manager,
@@ -134,6 +142,7 @@ class StrategyWindowManager:
             empires=self.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
             registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
             on_navigate_callback=self._on_planet_navigate,
+            race_registry=race_registry,  # PROJ-290
         )
 
     def _on_planet_list_closed(self) -> None:
@@ -339,12 +348,20 @@ class StrategyWindowManager:
         w, h = int(self.width * 0.9), int(self.height * 0.9)
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        # PROJ-290: pass the session-scoped race_registry so the Treasury
+        # tab's Population Upkeep row has its habitability-multiplier dep.
+        race_registry = None
+        facade = getattr(self.scene, "facade", None)
+        if facade is not None and hasattr(facade, "get_race_registry"):
+            race_registry = facade.get_race_registry()
+
         self.empire_panel_window = EmpirePanelWindow(
             rect,
             self.manager,
             empire,
             on_close_callback=self._on_empire_panel_closed,
             registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
+            race_registry=race_registry,
         )
 
     def _on_empire_panel_closed(self) -> None:

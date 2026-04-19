@@ -4,7 +4,7 @@ EmpirePanelWindow - Multi-tab empire information panel.
 PROJ-99 Phase 3: Main window with Treasury, Population, and placeholder tabs.
 Provides empire-wide overview of economy, species data, and future features.
 """
-from typing import Callable, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
@@ -53,7 +53,8 @@ class EmpirePanelWindow(UIWindow):
         manager: pygame_gui.UIManager,
         empire: 'IEmpire',
         on_close_callback: Optional[Callable[[], None]] = None,
-        registries: 'GameRegistries' = None
+        registries: 'GameRegistries' = None,
+        race_registry: Optional[Any] = None,
     ):
         """
         Create empire panel window.
@@ -64,6 +65,10 @@ class EmpirePanelWindow(UIWindow):
             empire: Empire object with race_config, resource_pool, etc.
             on_close_callback: Optional callback when window closes
             registries: GameRegistries for DI (required)
+            race_registry: PROJ-290 — optional `IRaceRegistry` threaded
+                through to `EmpireEconomyCalculator` so the Treasury tab
+                renders the multi-resource Population Upkeep row. When
+                None, the row stays hidden.
         """
         super().__init__(
             rect,
@@ -75,6 +80,7 @@ class EmpirePanelWindow(UIWindow):
         self.empire: 'IEmpire' = empire
         self.on_close_callback = on_close_callback
         self._registries = registries  # PROJ-211: Injected registries
+        self._race_registry = race_registry  # PROJ-290
 
         # Tab state
         self.tab_buttons: List[UIButton] = []
@@ -183,8 +189,23 @@ class EmpirePanelWindow(UIWindow):
                 btn.unselect()
 
     def _build_treasury_tab(self, panel: UIPanel):
-        """Build Treasury tab content using EmpireTreasuryPanel."""
-        calculator = EmpireEconomyCalculator(registries=self._registries)
+        """Build Treasury tab content using EmpireTreasuryPanel.
+
+        PROJ-290: threads `economy_config` + `race_registry` into the
+        calculator so the empire-wide population-upkeep row (Section 3)
+        has its source data. Deps are sourced from module-level default
+        / optional facade attribute — None for either short-circuits
+        the calculator's upkeep aggregation to `{}` (row auto-hides).
+        """
+        from game.strategy.config.economy_config import get_default_economy_config
+
+        economy = get_default_economy_config()
+        race_registry = getattr(self, "_race_registry", None)
+        calculator = EmpireEconomyCalculator(
+            registries=self._registries,
+            economy_config=economy,
+            race_registry=race_registry,
+        )
         snapshot = calculator.calculate(self.empire)
         self._treasury_panel = EmpireTreasuryPanel(
             panel,

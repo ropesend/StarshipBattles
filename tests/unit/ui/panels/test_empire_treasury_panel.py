@@ -246,6 +246,118 @@ class TestRowData:
 
 
 # =============================================================================
+# PROJ-290 Phase 1: Population Upkeep row
+# =============================================================================
+
+class TestPopulationUpkeepRow:
+    """Tests for the PROJ-290 "Population Upkeep" expense row.
+
+    Inserted before the "Total" row when
+    `snapshot.total_population_upkeep` has any non-zero entries. Hidden
+    (row not emitted) when the dict is empty or all-zero — avoids
+    visual noise in a fresh game with no populations yet.
+
+    Cell values are rendered as NEGATIVE floats (drain). Only resources
+    with upkeep entries produce cells; resources absent from the dict
+    render as 0 via the existing per-column default.
+    """
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_row_hidden_when_total_population_upkeep_empty(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Fresh-game snapshot with `total_population_upkeep == {}` →
+        expense section stays at the legacy 4 rows (no "Population Upkeep")."""
+        assert sample_snapshot.total_population_upkeep == {}
+        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
+        rows = panel._get_expense_rows()
+        labels = [r[0] for r in rows]
+        assert "Population Upkeep" not in labels
+        assert len(rows) == 4
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_row_hidden_when_all_values_zero(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Dict populated but every value is 0 → still hidden."""
+        sample_snapshot.total_population_upkeep = {
+            "organics": 0.0, "metals": 0.0, "radioactives": 0.0,
+        }
+        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
+        rows = panel._get_expense_rows()
+        labels = [r[0] for r in rows]
+        assert "Population Upkeep" not in labels
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_row_visible_with_single_resource_upkeep(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """`{"organics": 5.0}` → row shown, organics cell is -5.0 drain."""
+        sample_snapshot.total_population_upkeep = {"organics": 5.0}
+        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
+        rows = panel._get_expense_rows()
+
+        labels = [r[0] for r in rows]
+        assert "Population Upkeep" in labels
+        upkeep_row = next(r for r in rows if r[0] == "Population Upkeep")
+        label, values, is_total = upkeep_row
+        assert is_total is False
+        # Drain = NEGATIVE
+        assert values["organics"] == pytest.approx(-5.0)
+        # Unused resources default to 0 (sparse dict).
+        assert values.get("metals", 0.0) == 0.0
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_row_visible_with_multi_resource_upkeep(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Multi-resource upkeep: every key becomes a negative cell."""
+        sample_snapshot.total_population_upkeep = {
+            "organics": 1.5, "metals": 0.15, "radioactives": 0.015,
+        }
+        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
+        rows = panel._get_expense_rows()
+
+        upkeep_row = next(r for r in rows if r[0] == "Population Upkeep")
+        values = upkeep_row[1]
+        assert values["organics"] == pytest.approx(-1.5)
+        assert values["metals"] == pytest.approx(-0.15)
+        assert values["radioactives"] == pytest.approx(-0.015)
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_upkeep_row_inserted_before_total(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Population Upkeep must appear BEFORE the Total row so the
+        running-total visually aggregates below it."""
+        sample_snapshot.total_population_upkeep = {"organics": 1.0}
+        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
+        rows = panel._get_expense_rows()
+        labels = [r[0] for r in rows]
+        assert labels.index("Population Upkeep") < labels.index("Total")
+
+
+# =============================================================================
 # Panel Construction Tests
 # =============================================================================
 

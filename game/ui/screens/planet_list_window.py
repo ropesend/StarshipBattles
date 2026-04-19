@@ -40,7 +40,7 @@ def _format_population(planet) -> str:
     return format_compact_number(total) if total > 0 else "—"
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None, race_registry=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
@@ -49,6 +49,7 @@ class PlanetListWindow(UIWindow):
         self.btn_navigate = None
         self.last_preset_selection = None  # PROJ-199: Lazy init elimination
         self._registries = registries  # PROJ-211: Injected registries for DI
+        self._race_registry = race_registry  # PROJ-290: forwarded to PlanetReportPanel for uncolonized habitability
 
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
 
@@ -514,7 +515,9 @@ class PlanetListWindow(UIWindow):
             container=self,  # Window is the container
             portrait_surface=portrait_surface,
             show_complexes=False,  # Match strategy UI - no separate complexes column
-            production_rates=compute_planet_production(planet, self._registries)
+            production_rates=compute_planet_production(planet, self._registries),
+            empire=self.empire,  # PROJ-290
+            race_registry=self._race_registry,  # PROJ-290
         )
 
         # Add Build Queue button if player owns planet

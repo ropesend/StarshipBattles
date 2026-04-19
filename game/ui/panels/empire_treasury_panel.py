@@ -260,13 +260,29 @@ class EmpireTreasuryPanel:
         ]
 
     def _get_expense_rows(self) -> List[Tuple[str, Dict[str, float], bool]]:
-        """Get expense section row data."""
-        return [
+        """Get expense section row data.
+
+        PROJ-290: inserts a "Population Upkeep" row (signed-negative
+        cells) before the Total row when
+        `snapshot.total_population_upkeep` contains at least one
+        non-zero value. Hidden in fresh-game / no-pop state.
+        """
+        rows: List[Tuple[str, Dict[str, float], bool]] = [
             ("Tributes", self.snapshot.tribute_expenses, False),
             ("Construction Queues (Ships)", self.snapshot.construction_expenses_ships, False),
             ("Construction Queues (Complexes)", self.snapshot.construction_expenses_complexes, False),
-            ("Total", self.snapshot.total_expenses, True),
         ]
+
+        upkeep = self.snapshot.total_population_upkeep
+        if upkeep and any(v > 0 for v in upkeep.values()):
+            # Render as drain — cells are signed-negative floats so the
+            # visual language matches the other "Construction Queues"
+            # drain rows.
+            negated = {res: -value for res, value in upkeep.items() if value > 0}
+            rows.append(("Population Upkeep", negated, False))
+
+        rows.append(("Total", self.snapshot.total_expenses, True))
+        return rows
 
     def _get_treasury_rows(self) -> List[Tuple[str, Dict[str, float], bool]]:
         """Get treasury section row data."""

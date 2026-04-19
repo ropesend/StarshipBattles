@@ -269,6 +269,8 @@ Accessed from the strategy screen via the "Build Yard" button on owned planets o
 
 A colony's harvest AND production rates scale with how livable the planet is for its resident species. Hostile worlds produce slowly; ideal worlds produce at full rate.
 
+> **PROJ-290 UI hooks:** the Empire Treasury shows aggregated populace upkeep as a dedicated "Population Upkeep" expense row (hidden on fresh game); the planet detail panel shows a 0-100 habitability score per resident species when the selected planet is uncolonized. Both surfaces share PROJ-286's `EconomyConfig.population_consumption` + PROJ-288's `PlanetEconomyProjector` as their source data. See [strategy_layer.md § Treasury & Planet Detail UI Integration (PROJ-290)](strategy_layer.md#treasury--planet-detail-ui-integration-proj-290).
+
 ### Formula
 
 ```

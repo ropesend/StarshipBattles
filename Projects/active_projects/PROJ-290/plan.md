@@ -13,20 +13,30 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Empire-wide populace upkeep aggregator + treasury line | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Uncolonized-planet per-species habitability list (0-100) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Docs + cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Empire-wide populace upkeep aggregator + treasury line | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Uncolonized-planet per-species habitability list (0-100) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Docs + cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-18
-**Active Phase:** Planning complete; ready to begin Phase 1 (BLOCKED on PROJ-286, 287, 288)
-**Last Action:** Project scaffolded.
-**Next Action:** After PROJ-286, 287, 288 complete, Phase 1 Task 1.1 — add an empire-wide populace upkeep aggregator that sums `ColonyDemographicView.total_upkeep` across every empire colony, per resource.
-**Blockers:**
-- **PROJ-286** — multi-resource upkeep is the source value.
-- **PROJ-287** — `Empire.resident_species()` drives the uncolonized-habitability iteration order (and registry resolves race_configs).
-- **PROJ-288** — `ColonyDemographicView` + `PlanetEconomyProjector` provide the aggregatable data.
-**Context for Next Agent:** Two independent UI additions sharing the same underlying data sources. Section 3 (treasury populace line) aggregates multi-resource upkeep across all empire colonies into a single expense row. Section 4 (uncolonized habitability) iterates `empire.resident_species()`, scores each against the viewed planet via `score_planet_for_race`, and renders a 0-100 list sorted best-to-worst. User wants a "calculated value from 0 to 100 where 0 means totally uninhabitable, and 100 should mean everything matches the species preferences" — so the UI multiplies `score_planet_for_race(planet, race) * 100` and rounds.
+**Active Phase:** ALL 3 PHASES COMPLETE — ready to close. Awaiting user sign-off.
+**Last Action:** All three phases landed. Phase 1: `EmpireEconomySnapshot.total_population_upkeep` field + aggregation via shared `PlanetEconomyProjector`; new "Population Upkeep" expense row in `EmpireTreasuryPanel` hidden when all-zero. Phase 2: `format_uncolonized_habitability_for_empire` helper + extended `format_planet_info` signature with `empire` + `race_registry` keyword-only args; `PlanetReportPanel.__init__/update_planet` threaded to forward the deps; `PlanetListWindow` + `strategy_window_manager` wired to pass `facade.get_race_registry()`. Phase 3: docs updated (`strategy_layer.md §9` new subsection + `production_system.md § Habitability Multiplier` one-liner callout); full sharded suite 15063 tests / 15045 passed / 18 failed (ALL pre-existing — 13 food_allocation_editor PROJ-289-pending + 1 theme flake + 2 tick_mechanics shard flakes + 4 make_minimal_spec pygame-font flakes; 0 PROJ-290 regressions).
+**Next Action:** User end-to-end smoke: (a) open Treasury — Population Upkeep row visible with populations, hidden on fresh game; (b) click an uncolonized planet from the Planet List — habitability section lists each resident species at 0-100 sorted desc; (c) click a colonized planet — habitability section NOT shown.
+**Blockers:** None. All three dependencies (PROJ-286, 287, 288) at `Awaiting Verification`. PROJ-289 runs in parallel and is still Planning per projects_index.md.
+**Deliverables Summary:**
+- `EmpireEconomySnapshot.total_population_upkeep: Dict[str, float]` (sparse, empty `{}` for fresh-game / no-populations).
+- `EmpireEconomyCalculator(__init__)` now accepts optional `economy_config` + `race_registry`; when both present, aggregates upkeep via `PlanetEconomyProjector.project(colony).upkeep`.
+- `EmpireTreasuryPanel._get_expense_rows` conditionally inserts a "Population Upkeep" row BEFORE "Total" when non-zero; values passed pre-negated.
+- `game/ui/screens/strategy_detail_fmt.py::format_uncolonized_habitability_for_empire` — new module-level helper.
+- `format_planet_info` gains keyword-only `empire` + `race_registry` kwargs; emits habitability section only when `planet.owner_id is None` AND both deps present.
+- `PlanetReportPanel` (`__init__` + `update_planet`) both accept and forward `empire` + `race_registry`.
+- `PlanetListWindow` takes a new `race_registry=None` kwarg; `strategy_window_manager._open_planet_list_window` + `._open_empire_panel_window` both pull `facade.get_race_registry()` and thread it through.
+- Production code paths preserve backward compat — legacy callers that only pass `registries=` keep working; the new features auto-hide.
+- Docs: `docs/systems/strategy_layer.md §9 Treasury & Planet Detail UI Integration (PROJ-290)` + callout in `docs/systems/production_system.md § Habitability Multiplier`.
+
+**Known limitations (scope-capped, not PROJ-290's job):**
+- `planet_selection_window.py` + `build_queue_panel_factory.py` construction sites for `PlanetReportPanel` were NOT wired with `race_registry`. They default to None → uncolonized habitability section auto-hides in those contexts. Wiring them is a pure pass-through extension if ever needed.
+- PROJ-289 keyword-stackability contract: `format_planet_info` signature uses `*, empire=None, race_registry=None`; any PROJ-289 kwargs must also be keyword-only to avoid positional-arg collisions.
 
 ## Overview
 

@@ -70,6 +70,7 @@ class TestEmpireEconomySnapshot:
         assert snapshot.net_resources == {}
         assert snapshot.current_storage == {}
         assert snapshot.max_storage == {}
+        assert snapshot.total_population_upkeep == {}
 
 
 class TestEmpireEconomyCalculator:
@@ -676,3 +677,247 @@ class TestConstructionExpenses:
         # Both fighter and satellite count as ships
         assert snapshot.construction_expenses_ships["metals"] == pytest.approx(125.0)
         assert snapshot.construction_expenses_complexes["metals"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# PROJ-290 Phase 1: empire-wide multi-resource population upkeep aggregation
+# ---------------------------------------------------------------------------
+
+class TestPopulationUpkeepAggregation:
+    """`EmpireEconomySnapshot.total_population_upkeep` sums every declared
+    `EconomyConfig.population_consumption` resource across every empire
+    colony's populations. Mirrors `PlanetEconomyProjector._project_upkeep`
+    per-colony, then adds across colonies.
+
+    Per-turn upkeep formula (matches `OrganicsConsumptionEngine`):
+        `pop.count * cfg.food_allocation * per_pop_rate`
+
+    Empty dict when the empire has no populations at all — the treasury
+    panel hides the row in that case.
+    """
+
+    @pytest.fixture
+    def three_resource_economy(self):
+        """Shipped `data/economy.json` baseline: organics 0.001, metals
+        0.0001, radioactives 0.00001 per pop per turn."""
+        from game.strategy.config.economy_config import EconomyConfig
+        return EconomyConfig(population_consumption={
+            "organics": 0.001,
+            "metals": 0.0001,
+            "radioactives": 0.00001,
+        })
+
+    @pytest.fixture
+    def _mock_race_registry(self):
+        """Stub with `.get_race(*) -> None` so the projector's harvest +
+        yard paths (which consult habitability via `race_registry.get_race`)
+        short-circuit cleanly to 1.0. Upkeep projection does NOT consult
+        race_registry at all — this fixture exists only because the
+        projector constructor requires one."""
+        stub = Mock()
+        stub.get_race.return_value = None
+        return stub
+
+    def _colony_with_populations(self, populations):
+        """Build a real Planet so `get_species_config` lazy-creates
+        `ColonySpeciesConfig` entries with the default `food_allocation=1.0`."""
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.planet import Planet, PlanetType
+        return Planet(
+            name="TestColony",
+            location=HexCoord(0, 0),
+            orbit_distance=3,
+            mass=5.97e24, radius=6.371e6, surface_area=5.1e14, density=5515.0,
+            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
+            surface_water=0.71, tectonic_activity=0.3, magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL, populations=populations, stockpile={},
+            owner_id=1,
+        )
+
+    def test_empire_with_no_colonies_has_empty_upkeep(
+        self, minimal_registries, three_resource_economy, _mock_race_registry,
+    ):
+        empire = Mock(spec=Empire)
+        empire.colonies = []
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=three_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        assert snapshot.total_population_upkeep == {}
+
+    def test_empire_colonies_with_no_populations_has_empty_upkeep(
+        self, minimal_registries, three_resource_economy, _mock_race_registry,
+    ):
+        """No populations → projector loops zero times → `total_population_upkeep`
+        stays `{}`. Treasury row hides itself in this state."""
+        colony = self._colony_with_populations(populations=[])
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=three_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        assert snapshot.total_population_upkeep == {}
+
+    def test_single_colony_single_species_uses_economy_rates(
+        self, minimal_registries, three_resource_economy, _mock_race_registry,
+    ):
+        """1000 humans on one colony, allocation=1.0 (default):
+            organics:      1000 * 1.0 * 0.001   = 1.0
+            metals:        1000 * 1.0 * 0.0001  = 0.1
+            radioactives:  1000 * 1.0 * 0.00001 = 0.01
+        """
+        from game.strategy.data.species_population import SpeciesPopulation
+
+        colony = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
+        ])
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=three_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        assert snapshot.total_population_upkeep["organics"] == pytest.approx(1.0)
+        assert snapshot.total_population_upkeep["metals"] == pytest.approx(0.1)
+        assert snapshot.total_population_upkeep["radioactives"] == pytest.approx(0.01)
+
+    def test_multi_colony_upkeep_sums_per_resource(
+        self, minimal_registries, three_resource_economy, _mock_race_registry,
+    ):
+        """Two colonies with 500 humans each should produce the same
+        total as one colony with 1000 humans."""
+        from game.strategy.data.species_population import SpeciesPopulation
+
+        colony_a = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=500, happiness=0.5),
+        ])
+        colony_b = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=500, happiness=0.5),
+        ])
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony_a, colony_b]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=three_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        assert snapshot.total_population_upkeep["organics"] == pytest.approx(1.0)
+        assert snapshot.total_population_upkeep["metals"] == pytest.approx(0.1)
+        assert snapshot.total_population_upkeep["radioactives"] == pytest.approx(0.01)
+
+    def test_multi_species_colony_upkeep_aggregates_per_resource(
+        self, minimal_registries, three_resource_economy, _mock_race_registry,
+    ):
+        """Humans + Voidari on the same colony: upkeep per resource sums
+        both species' contributions."""
+        from game.strategy.data.species_population import SpeciesPopulation
+
+        colony = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
+            SpeciesPopulation(race_id="voidari", count=500, happiness=0.5),
+        ])
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=three_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        # Humans: 1000 * 1.0 * rate; Voidari: 500 * 1.0 * rate.
+        # Sum: 1500 * rate.
+        assert snapshot.total_population_upkeep["organics"] == pytest.approx(1.5)
+        assert snapshot.total_population_upkeep["metals"] == pytest.approx(0.15)
+        assert snapshot.total_population_upkeep["radioactives"] == pytest.approx(0.015)
+
+    def test_food_allocation_scales_upkeep_linearly(
+        self, minimal_registries, three_resource_economy, _mock_race_registry,
+    ):
+        """Doubling `food_allocation` doubles every declared resource's
+        upkeep for that species — scaling is per-species, not per-colony."""
+        from game.strategy.data.species_population import SpeciesPopulation
+
+        colony = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
+        ])
+        # Double the humans' allocation.
+        colony.get_species_config("human").food_allocation = 2.0
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(
+            registries=minimal_registries,
+            economy_config=three_resource_economy,
+            race_registry=_mock_race_registry,
+        )
+        snapshot = calculator.calculate(empire)
+
+        # Each entry doubles relative to `test_single_colony_single_species_uses_economy_rates`.
+        assert snapshot.total_population_upkeep["organics"] == pytest.approx(2.0)
+        assert snapshot.total_population_upkeep["metals"] == pytest.approx(0.2)
+        assert snapshot.total_population_upkeep["radioactives"] == pytest.approx(0.02)
+
+    def test_calculator_without_economy_deps_produces_empty_upkeep(
+        self, minimal_registries,
+    ):
+        """Backward compat: existing callers that only pass `registries=`
+        still work; the new `total_population_upkeep` field is populated
+        as an empty dict (the treasury row hides in that state)."""
+        from game.strategy.data.species_population import SpeciesPopulation
+
+        colony = self._colony_with_populations(populations=[
+            SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
+        ])
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        # No economy_config / race_registry — legacy construction.
+        calculator = EmpireEconomyCalculator(registries=minimal_registries)
+        snapshot = calculator.calculate(empire)
+
+        assert snapshot.total_population_upkeep == {}

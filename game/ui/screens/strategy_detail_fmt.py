@@ -11,12 +11,13 @@ Cross-layer imports (acceptable for UI):
 from __future__ import annotations
 
 from collections import Counter
-from typing import TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
 from game.core.constants import EARTH_MASS
 from game.core.string_utils import display_name
 from game.ui.utils.formatters import format_compact_number
 from game.strategy.data.order_types import OrderType
+from game.strategy.formulas.habitability import score_planet_for_race
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm
@@ -66,15 +67,86 @@ def format_atmosphere_raw(planet) -> str:
     return html
 
 
-def format_planet_info(planet: IPlanet) -> str:
+def format_uncolonized_habitability_for_empire(
+    planet: "IPlanet",
+    empire: Any,
+    race_registry: Any,
+) -> str:
+    """Return an HTML snippet showing 0-100 habitability scores for every
+    species resident in the viewing empire on this uncolonized planet
+    (PROJ-290 Phase 2).
+
+    Score = `int(round(score_planet_for_race(planet, race_config) * 100))`.
+    List is sorted DESCENDING (best-fit first). Each entry reads as
+    ` - {display_name}: {score}/100`. Empty resident-species set returns
+    `""` so the caller can unconditionally concatenate.
+
+    Display-name resolution matches the PROJ-287 + PROJ-284 convention:
+    `race_config.race_name` → `race_config.name` → `race_id`.
+
+    Save-drift defense: any `race_id` whose `registry.get_race` returns
+    `None` is silently skipped (same policy as `planet_habitability_multiplier`).
+
+    Args:
+        planet: Uncolonized planet object (`IPlanet`).
+        empire: The viewing empire — must expose `resident_species() -> Set[str]`.
+        race_registry: `IRaceRegistry`-shaped; must expose
+            `get_race(race_id) -> Optional[RaceConfig]`.
+
+    Returns:
+        HTML snippet (prefixed with `<br>`) or `""` when there's nothing
+        to show.
+    """
+    species_ids = sorted(empire.resident_species())
+    scored: list = []
+    for race_id in species_ids:
+        race_config = race_registry.get_race(race_id)
+        if race_config is None:
+            continue
+        score = int(round(score_planet_for_race(planet, race_config) * 100))
+        name = (
+            getattr(race_config, "race_name", None)
+            or getattr(race_config, "name", None)
+            or race_id
+        )
+        scored.append((score, name))
+
+    if not scored:
+        return ""
+
+    # Best fit first — Python's sort is stable so ties retain alphabetical
+    # name order from the initial `sorted(species_ids)`.
+    scored.sort(key=lambda entry: entry[0], reverse=True)
+    lines = "<br>".join(f" - {name}: {score}/100" for score, name in scored)
+    return f"<br><b>Habitability for your species:</b><br>{lines}<br>"
+
+
+def format_planet_info(
+    planet: "IPlanet",
+    *,
+    empire: Optional[Any] = None,
+    race_registry: Optional[Any] = None,
+) -> str:
     """
     Format comprehensive planet information as HTML.
 
+    PROJ-290 Phase 2: when `planet.owner_id is None` AND both `empire`
+    and `race_registry` are provided, appends an "uncolonized
+    habitability for your species" section listing every
+    `empire.resident_species()` entry with a 0-100 integer score
+    sorted best-fit first. Legacy callers that omit the kwargs get the
+    pre-PROJ-290 rendering unchanged.
+
     Args:
-        planet: Planet object (IPlanet protocol)
+        planet: Planet object (IPlanet protocol).
+        empire: Optional — the viewing empire. When provided together
+            with `race_registry` AND the planet is unowned, triggers
+            the uncolonized habitability section.
+        race_registry: Optional `IRaceRegistry`. Required alongside
+            `empire` to render the uncolonized habitability section.
 
     Returns:
-        HTML string with planet details
+        HTML string with planet details.
     """
     text = f"<b>Planet:</b> {planet.name}<br>"
     text += f"<b>Type:</b> {planet.planet_type.name}<br>"
@@ -160,6 +232,17 @@ def format_planet_info(planet: IPlanet) -> str:
                 text += f"<br><b>{display_name}:</b> {status}"
 
     # Resources are displayed in the dedicated resource grid panel (PROJ-82)
+
+    # PROJ-290: uncolonized habitability for the viewing empire's species.
+    if (
+        planet.owner_id is None
+        and empire is not None
+        and race_registry is not None
+    ):
+        text += format_uncolonized_habitability_for_empire(
+            planet, empire, race_registry,
+        )
+
     return text
 
 

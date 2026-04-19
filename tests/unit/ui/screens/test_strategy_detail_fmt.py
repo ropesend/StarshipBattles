@@ -15,6 +15,7 @@ from game.ui.screens.strategy_detail_fmt import (
     format_star_system_info,
     format_star_info,
     format_fleet_info,
+    format_uncolonized_habitability_for_empire,
     get_label_for_object,
     _format_ship_groups,
     _format_cargo_summary,
@@ -1033,3 +1034,193 @@ class TestFormatStarInfo:
         assert "5778 K" in result
         assert "Radius:" in result
         assert "2 Hex" in result
+
+
+# ---------------------------------------------------------------------------
+# PROJ-290 Phase 2: format_uncolonized_habitability_for_empire
+# ---------------------------------------------------------------------------
+
+class TestUncolonizedHabitabilityForEmpire:
+    """Tests for the uncolonized-planet-habitability helper + its
+    integration into `format_planet_info`.
+
+    Section contract:
+    - Shown only when the planet is unowned AND an empire + registry are
+      provided.
+    - One line per `empire.resident_species()` entry: ` - {name}: {score}/100`.
+    - Sorted DESCENDING by score (best-fit first).
+    - Score = `int(round(score_planet_for_race(planet, race_config) * 100))`.
+    - race_id with `registry.get_race(id) == None` is silently skipped.
+    - Empty resident_species set → returns `""` (section omitted).
+    """
+
+    def _mock_race(self, race_name: str):
+        """Race config stub with `.race_name` as the primary display field
+        (matches `strategy_session_facade` display-name resolution)."""
+        race = Mock()
+        race.race_name = race_name
+        race.name = race_name  # legacy fallback on some race configs
+        return race
+
+    def _mock_empire(self, resident_species_set):
+        empire = Mock()
+        empire.resident_species.return_value = set(resident_species_set)
+        return empire
+
+    def test_empty_resident_species_returns_empty_string(self, mock_planet):
+        from unittest.mock import patch
+        empire = self._mock_empire(set())
+        registry = Mock()
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.5,
+        ):
+            result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
+        assert result == ""
+
+    def test_single_resident_species_renders_one_line(self, mock_planet):
+        from unittest.mock import patch
+        empire = self._mock_empire({"human"})
+        registry = Mock()
+        registry.get_race.return_value = self._mock_race("Humans")
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.94,
+        ):
+            result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
+        assert "Habitability for your species" in result
+        assert "Humans: 94/100" in result
+
+    def test_three_species_sorted_descending(self, mock_planet):
+        from unittest.mock import patch
+        empire = self._mock_empire({"human", "voidari", "ghost"})
+        registry = Mock()
+
+        races = {
+            "human": self._mock_race("Humans"),
+            "voidari": self._mock_race("Voidari"),
+            "ghost": self._mock_race("Ghosts"),
+        }
+        registry.get_race.side_effect = lambda rid: races.get(rid)
+
+        scores = {"human": 0.80, "voidari": 0.30, "ghost": 0.55}
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            side_effect=lambda planet, race: scores[
+                next(rid for rid, r in races.items() if r is race)
+            ],
+        ):
+            result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
+
+        # Extract the order of appearance.
+        humans_idx = result.index("Humans:")
+        ghosts_idx = result.index("Ghosts:")
+        voidari_idx = result.index("Voidari:")
+        assert humans_idx < ghosts_idx < voidari_idx  # 80 > 55 > 30
+
+    def test_missing_race_config_silently_skipped(self, mock_planet):
+        from unittest.mock import patch
+        empire = self._mock_empire({"human", "extinct_race"})
+        registry = Mock()
+
+        def _resolve(race_id):
+            if race_id == "human":
+                return self._mock_race("Humans")
+            return None  # save drift — race file no longer exists
+
+        registry.get_race.side_effect = _resolve
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.5,
+        ):
+            result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
+
+        assert "Humans: 50/100" in result
+        assert "extinct_race" not in result
+        assert "None" not in result  # never emit the raw None
+
+    def test_score_rounded_to_int(self, mock_planet):
+        """0.945 → 94 (banker's round may land 94 or 95 depending on
+        exact float; use a clearly-rounded value)."""
+        from unittest.mock import patch
+        empire = self._mock_empire({"human"})
+        registry = Mock()
+        registry.get_race.return_value = self._mock_race("Humans")
+
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.047,  # rounds to 5
+        ):
+            result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
+        assert "Humans: 5/100" in result
+
+    def test_zero_score_for_uninhabitable_planet(self, mock_planet):
+        from unittest.mock import patch
+        empire = self._mock_empire({"human"})
+        registry = Mock()
+        registry.get_race.return_value = self._mock_race("Humans")
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.0,
+        ):
+            result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
+        assert "Humans: 0/100" in result
+
+
+class TestFormatPlanetInfoUncolonizedHabitabilitySection:
+    """Tests for how `format_planet_info` integrates the uncolonized
+    habitability section. Pin the conditional: only rendered when
+    unowned AND empire + registry provided."""
+
+    def test_legacy_call_without_empire_has_no_habitability_section(self, mock_planet):
+        mock_planet.owner_id = None
+        result = format_planet_info(mock_planet)
+        assert "Habitability for your species" not in result
+
+    def test_uncolonized_with_empire_and_registry_appends_section(self, mock_planet):
+        from unittest.mock import patch
+        mock_planet.owner_id = None
+        empire = Mock()
+        empire.resident_species.return_value = {"human"}
+        race = Mock()
+        race.race_name = "Humans"
+        race.name = "Humans"
+        registry = Mock()
+        registry.get_race.return_value = race
+
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.73,
+        ):
+            result = format_planet_info(mock_planet, empire=empire, race_registry=registry)
+        assert "Habitability for your species" in result
+        assert "Humans: 73/100" in result
+
+    def test_colonized_planet_does_not_render_uncolonized_section(self, mock_planet):
+        from unittest.mock import patch
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+        empire = Mock()
+        empire.resident_species.return_value = {"human"}
+        race = Mock()
+        race.race_name = "Humans"
+        race.name = "Humans"
+        registry = Mock()
+        registry.get_race.return_value = race
+
+        with patch(
+            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            return_value=0.73,
+        ):
+            result = format_planet_info(mock_planet, empire=empire, race_registry=registry)
+        assert "Habitability for your species" not in result
+
+    def test_uncolonized_with_empire_but_no_registry_skips_section(self, mock_planet):
+        """Partial deps — missing `race_registry` kwarg → safe no-op, not crash."""
+        mock_planet.owner_id = None
+        empire = Mock()
+        empire.resident_species.return_value = {"human"}
+        result = format_planet_info(mock_planet, empire=empire, race_registry=None)
+        assert "Habitability for your species" not in result
