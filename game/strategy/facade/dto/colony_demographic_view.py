@@ -12,6 +12,7 @@ in that order without needing to re-sort.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Mapping, Tuple
 
 from game.strategy.services.planet_economy_projector import ResourceProjection
@@ -64,3 +65,21 @@ class ColonyDemographicView:
     species: Tuple[SpeciesDemographicView, ...]
     resource_projections: Tuple[ResourceProjection, ...]
     total_upkeep: Mapping[str, float]
+
+    def __post_init__(self):
+        # PROJ-292 m4: enforce read-only contract on `total_upkeep`. The
+        # frozen dataclass prevents field reassignment but does NOT stop
+        # callers from mutating the underlying mapping (e.g. `view.total_upkeep["x"] = 1`).
+        # Wrapping in MappingProxyType makes that TypeError so the
+        # CQRS-lite "facade hands UI a read-only snapshot" contract holds.
+        object.__setattr__(
+            self, "total_upkeep", MappingProxyType(dict(self.total_upkeep)),
+        )
+        # PROJ-292 m5: enforce largest-count-first ordering invariant in
+        # the DTO itself. Previously the facade sorted before construction;
+        # if a future caller skips that pre-sort, the DTO's docstring
+        # contract still holds.
+        object.__setattr__(
+            self, "species",
+            tuple(sorted(self.species, key=lambda s: s.count, reverse=True)),
+        )

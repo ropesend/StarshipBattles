@@ -486,3 +486,206 @@ class TestNetCellColor:
         from game.ui.panels.planet_report_panel import _net_cell_color
         from game.ui.colors import TEXT_LIGHT
         assert _net_cell_color(0.0) == TEXT_LIGHT
+
+
+# ---------------------------------------------------------------------------
+# PROJ-292 Phase 4 (H3): `_build_projection_grid` net-cell colour code
+# wraps `cell.text_colour = color` in a try/except to tolerate pygame_gui
+# versions that don't expose a setter. Pre-fix: the catch was
+# `except (AttributeError, Exception)` — a catch-all that swallows real
+# bugs (RuntimeError, TypeError, etc.). Post-fix: narrow to
+# `except AttributeError` only.
+# ---------------------------------------------------------------------------
+
+
+class _RaisingCell:
+    """Stand-in for a `UILabel` whose `text_colour` setter raises the
+    given exception. Used to assert the try/except's catch scope."""
+
+    def __init__(self, exc: Exception):
+        self._exc = exc
+
+    @property
+    def text_colour(self):
+        return None
+
+    @text_colour.setter
+    def text_colour(self, _value):
+        raise self._exc
+
+    def rebuild(self):
+        pass
+
+
+def _make_panel_for_projection_grid(view):
+    """Bypass-init a `PlanetReportPanel` with the minimum attributes
+    `_build_projection_grid` reads. Callers patch `UILabel` to control
+    the cell the method constructs."""
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+
+    panel = PlanetReportPanel.__new__(PlanetReportPanel)
+    panel.manager = MagicMock()
+    panel.view = view
+    panel.resource_panel = MagicMock()
+    panel.resource_panel.relative_rect = MagicMock()
+    panel.resource_panel.relative_rect.width = 600
+    panel._resource_grid_items = []
+    # `_build_projection_grid` also touches `self.planet` when rendering
+    # the stockpile summary line below the grid — stub with empty dicts
+    # so that fallthrough path doesn't raise.
+    panel.planet = MagicMock(stockpile={}, max_stockpile={})
+    return panel
+
+
+def _make_view_with_one_drained_resource():
+    """Single-row projection view so `_build_projection_grid` hits
+    exactly one net-cell colour-setting code path."""
+    from game.strategy.services.planet_economy_projector import ResourceProjection
+
+    # Use a stub object because `ColonyDemographicView` may have other
+    # required fields; we only need `resource_projections` for this path.
+    view = MagicMock()
+    view.resource_projections = [
+        ResourceProjection(
+            resource_id="metals",
+            harvest=10.0, upkeep=1.0, yard=2.0, net=7.0,
+        ),
+    ]
+    return view
+
+
+class TestNetCellColorExceptionHandling:
+    """PROJ-292 H3: narrow the catch in `_build_projection_grid` so only
+    `AttributeError` from pygame_gui's text_colour-setter variance is
+    swallowed. Other exceptions must propagate so real bugs surface."""
+
+    def test_attribute_error_silently_swallowed(self):
+        """Pre-existing + post-fix behaviour: an `AttributeError` raised
+        by `cell.text_colour = ...` is swallowed — pygame_gui version
+        variance on the setter is expected and non-essential."""
+        view = _make_view_with_one_drained_resource()
+        panel = _make_panel_for_projection_grid(view)
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel",
+            side_effect=lambda *a, **kw: _RaisingCell(AttributeError("no setter")),
+        ):
+            # No exception should propagate.
+            panel._build_projection_grid()
+
+    def test_runtime_error_propagates(self):
+        """Post-fix: a non-AttributeError exception (e.g. programming
+        bug in the colour pipeline) must propagate instead of being
+        silently swallowed."""
+        view = _make_view_with_one_drained_resource()
+        panel = _make_panel_for_projection_grid(view)
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel",
+            side_effect=lambda *a, **kw: _RaisingCell(RuntimeError("real bug")),
+        ):
+            with pytest.raises(RuntimeError, match="real bug"):
+                panel._build_projection_grid()
+
+
+# ---------------------------------------------------------------------------
+# PROJ-292 m9 (Phase 5 Task 5.8): UI assembly test for _build_projection_grid.
+# The grid code constructs N×5 labels + an optional stockpile summary
+# line per call — this test pins the label count and rect non-overlap so
+# a refactor that adds/removes labels or mangles rect math is caught.
+# ---------------------------------------------------------------------------
+
+
+def _rect(*args, **kwargs):
+    """Tiny `pygame.Rect`-like helper carrying `x`, `y`, `w`, `h`.
+    Used only so the rect-assertion doesn't depend on pygame's C-level
+    Rect — it lets us capture construction args from the mock."""
+    return args, kwargs
+
+
+class TestProjectionGridAssembly:
+    """PROJ-292 m9: pin the label count and rect non-overlap for
+    `_build_projection_grid` so future refactors can't silently drop
+    rows, duplicate cells, or alias rects."""
+
+    def _make_view_with_n_resources(self, n: int):
+        from game.strategy.services.planet_economy_projector import ResourceProjection
+
+        view = MagicMock()
+        view.resource_projections = tuple(
+            ResourceProjection(
+                resource_id=f"res{i}",
+                harvest=10.0 * (i + 1), upkeep=1.0, yard=0.5, net=8.0,
+            )
+            for i in range(n)
+        )
+        return view
+
+    def test_label_count_scales_with_resource_count(self):
+        """Header row + (data row × N) × 5 columns = 5 + 6N labels.
+        (Actually: the `_projection_grid_rows` helper returns 1 header
+        row + N data rows, and each row produces 1 label + 4 cells, so
+        total = (1+N) × 5 = 5 + 5N. Pin the exact count so a refactor
+        that drops the header or doubles cells is caught.)"""
+        view = self._make_view_with_n_resources(3)
+        panel = _make_panel_for_projection_grid(view)
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel", return_value=MagicMock(),
+        ) as mock_label:
+            panel._build_projection_grid()
+
+        # 1 header row + 3 data rows = 4 rows. Each row: 1 label + 4 cells = 5 labels.
+        # So 4 × 5 = 20 labels from the grid itself.
+        expected_grid_labels = (1 + 3) * 5
+        # Stockpile summary line adds 1 extra UILabel when the planet
+        # exposes data — our stub is `stockpile={}, max_stockpile={}`,
+        # which means the summary is skipped. Assert the grid-only count.
+        assert mock_label.call_count == expected_grid_labels, (
+            f"Expected {expected_grid_labels} UILabel constructions for "
+            f"a 3-resource grid; got {mock_label.call_count}"
+        )
+
+    def test_label_count_zero_resources_still_has_header(self):
+        """Zero-resource view still renders the header row (5 labels)."""
+        view = self._make_view_with_n_resources(0)
+        panel = _make_panel_for_projection_grid(view)
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel", return_value=MagicMock(),
+        ) as mock_label:
+            panel._build_projection_grid()
+
+        # 1 header row × 5 labels = 5.
+        assert mock_label.call_count == 5
+
+    def test_grid_cells_do_not_overlap(self):
+        """No two UILabel rects produced by `_build_projection_grid`
+        share the same (x, y) anchor point. Proves the per-row + per-col
+        positioning math doesn't alias cells on top of each other."""
+        view = self._make_view_with_n_resources(3)
+        panel = _make_panel_for_projection_grid(view)
+
+        captured_rects = []
+
+        def _capture(*args, relative_rect=None, **kwargs):
+            if relative_rect is not None:
+                # Each pygame.Rect has x, y, width, height.
+                captured_rects.append((
+                    relative_rect.x, relative_rect.y,
+                    relative_rect.width, relative_rect.height,
+                ))
+            return MagicMock()
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel", side_effect=_capture,
+        ):
+            panel._build_projection_grid()
+
+        # Uniqueness of (x, y) anchors is the strongest non-overlap
+        # signal without intersect math: two distinct labels can't share
+        # the same top-left.
+        anchors = [(x, y) for (x, y, w, h) in captured_rects]
+        assert len(anchors) == len(set(anchors)), (
+            f"UILabel anchors collide — label rects overlap: {captured_rects}"
+        )

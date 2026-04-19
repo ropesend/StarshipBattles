@@ -143,6 +143,7 @@ class StrategyWindowManager:
             registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
             on_navigate_callback=self._on_planet_navigate,
             race_registry=race_registry,  # PROJ-290
+            facade=facade,  # PROJ-292 H1: enables per-species sub-block on colonized planets
         )
 
     def _on_planet_list_closed(self) -> None:

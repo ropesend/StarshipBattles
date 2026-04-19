@@ -115,6 +115,7 @@ class BuildQueueScreen:
             portrait_loader=self.portrait_loader,
             on_queue_selection_changed=self._on_queue_selection_changed,
             portrait_surface=self.portrait_surface,
+            facade=facade,  # PROJ-292 H1: enables per-species sub-block
         )
         self.panels = factory.create_all_panels(format_empire_resources)
         self._queue_selector = self.panels.queue_selector

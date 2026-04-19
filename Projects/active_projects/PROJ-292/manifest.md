@@ -26,8 +26,11 @@
 | tests/unit/strategy/systems/test_race_library.py | Test (MODIFY) | M2 — add `TestCachedRaceRegistryStaleness` class — pins the cache invalidation contract |
 | tests/unit/strategy/services/test_empire_economy_service.py | Test (NEW) | M1 — tests the new facade's `get_snapshot` returns the same snapshot the engine-layer calculator would |
 | tests/unit/ui/panels/test_planet_report_panel.py | Test (MODIFY) | H3 — test that mocking `cell.text_colour =` to raise `RuntimeError` propagates (not swallowed). m9 — UI assembly test asserting label count + no overlapping rects |
-| tests/unit/ui/screens/test_planet_list_window.py | Test (MODIFY/NEW) | H1 — test that constructing PlanetListWindow + selecting a colonized planet causes `view = facade.get_colony_demographic_view(planet.id)` to be threaded into `PlanetReportPanel` |
-| tests/unit/ui/screens/test_build_queue_panel_factory.py | Test (MODIFY/NEW) | H1 — same pattern |
+| tests/unit/ui/screens/test_planet_list_window.py | Test (NEW) | H1 — test that constructing PlanetListWindow + selecting a colonized planet causes `view = facade.get_colony_demographic_view(planet.id)` to be threaded into `PlanetReportPanel` |
+| tests/unit/ui/screens/test_build_queue_panel_factory.py | Test (NEW) | H1 — same pattern |
+| game/ui/screens/strategy_window_manager.py | Production (MODIFY) | H1 — pass `facade=facade` when constructing PlanetListWindow |
+| game/ui/screens/build_queue_screen.py | Production (MODIFY) | H1 — pass `facade=facade` when constructing BuildQueuePanelFactory |
+| Projects/active_projects/PROJ-292/MANUAL_SMOKE_CHECKLIST.md | Documentation (NEW) | m10 — consolidated hand-off doc aggregating deferred manual smokes from PROJ-283..292 |
 
 ## Cross-project file overlap with PROJ-291
 

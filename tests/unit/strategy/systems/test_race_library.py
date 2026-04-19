@@ -453,3 +453,122 @@ class TestCachedRaceRegistry:
         registry = CachedRaceRegistry(backing)
 
         assert isinstance(registry, IRaceRegistry)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-292 Phase 3 Task 3.4 (M2): pin the cache invalidation contract.
+# PROJ-287 shipped without coverage for the invalidation path. Per
+# decisions.md, PROJ-292 does NOT add an mtime-fallback (taking the
+# documented "explicit invalidate only" default). These tests pin the
+# manual-invalidate behaviour so future refactors can't silently break it.
+# ---------------------------------------------------------------------------
+
+
+def _minimal_race(race_id: str, name: str) -> RaceConfig:
+    return RaceConfig(
+        race_id=race_id,
+        name=name,
+        flag_id="flag_test",
+        portrait_id="portrait_test",
+        theme_id="Federation",
+    )
+
+
+class TestCachedRaceRegistryStaleness:
+    """`CachedRaceRegistry.invalidate(race_id)` is the one and only
+    supported path for refreshing cached entries. PROJ-287 documented
+    this ("external file edits require restart"); these tests pin the
+    behaviour so a future refactor can't silently break it."""
+
+    def test_invalidate_causes_reread(self):
+        """Cached then invalidated: next `get_race` must delegate to the
+        backing library again and return the new value."""
+        config_a = _minimal_race("foo", "Foo-A")
+        config_b = _minimal_race("foo", "Foo-B")
+        backing = MagicMock(spec=RaceLibrary)
+        backing.get_race.side_effect = [config_a, config_b]
+
+        registry = CachedRaceRegistry(backing)
+
+        # First call populates cache from backing.
+        assert registry.get_race("foo") is config_a
+        # Second call hits the cache — side_effect NOT advanced.
+        assert registry.get_race("foo") is config_a
+        assert backing.get_race.call_count == 1
+
+        # Invalidate + refetch triggers a second backing call.
+        registry.invalidate("foo")
+        assert registry.get_race("foo") is config_b
+        assert backing.get_race.call_count == 2
+
+    def test_invalidate_other_race_does_not_affect_cached(self):
+        """Targeted `invalidate(X)` must only clear X. Other cached
+        entries continue to serve from cache."""
+        config_foo = _minimal_race("foo", "Foo")
+        config_bar = _minimal_race("bar", "Bar")
+        backing = MagicMock(spec=RaceLibrary)
+        backing.get_race.side_effect = lambda race_id: {
+            "foo": config_foo,
+            "bar": config_bar,
+        }.get(race_id)
+
+        registry = CachedRaceRegistry(backing)
+        # Prime both entries.
+        registry.get_race("foo")
+        registry.get_race("bar")
+        assert backing.get_race.call_count == 2
+
+        registry.invalidate("foo")
+        # "bar" still cached — no backing call.
+        registry.get_race("bar")
+        assert backing.get_race.call_count == 2
+
+        # "foo" re-reads on next access.
+        registry.get_race("foo")
+        assert backing.get_race.call_count == 3
+
+    def test_invalidate_all_clears_every_entry(self):
+        """`invalidate()` with no arg must clear the whole cache so
+        every subsequent `get_race` re-reads from the backing library."""
+        configs = {
+            "a": _minimal_race("a", "A"),
+            "b": _minimal_race("b", "B"),
+            "c": _minimal_race("c", "C"),
+        }
+        backing = MagicMock(spec=RaceLibrary)
+        backing.get_race.side_effect = lambda race_id: configs.get(race_id)
+
+        registry = CachedRaceRegistry(backing)
+        registry.get_race("a")
+        registry.get_race("b")
+        registry.get_race("c")
+        assert backing.get_race.call_count == 3
+
+        registry.invalidate()  # no arg → clear everything
+
+        registry.get_race("a")
+        registry.get_race("b")
+        registry.get_race("c")
+        assert backing.get_race.call_count == 6
+
+    def test_none_result_is_cached_and_invalidated_the_same_way(self):
+        """A `None` lookup result (unknown race_id) must cache + invalidate
+        identically to a hit so save-drift species don't spam the
+        backing library across repeated UI renders."""
+        backing = MagicMock(spec=RaceLibrary)
+        backing.get_race.side_effect = [None, _minimal_race("ghost", "Found")]
+
+        registry = CachedRaceRegistry(backing)
+
+        # First lookup: None is cached.
+        assert registry.get_race("ghost") is None
+        # Second lookup: cached None served without re-reading.
+        assert registry.get_race("ghost") is None
+        assert backing.get_race.call_count == 1
+
+        # Invalidate: next lookup re-reads and now returns a real config.
+        registry.invalidate("ghost")
+        result = registry.get_race("ghost")
+        assert result is not None
+        assert result.race_id == "ghost"
+        assert backing.get_race.call_count == 2

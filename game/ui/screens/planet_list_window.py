@@ -40,7 +40,7 @@ def _format_population(planet) -> str:
     return format_compact_number(total) if total > 0 else "—"
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None, race_registry=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None, race_registry=None, facade=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
@@ -50,6 +50,10 @@ class PlanetListWindow(UIWindow):
         self.last_preset_selection = None  # PROJ-199: Lazy init elimination
         self._registries = registries  # PROJ-211: Injected registries for DI
         self._race_registry = race_registry  # PROJ-290: forwarded to PlanetReportPanel for uncolonized habitability
+        # PROJ-292 H1: facade enables per-species sub-block rendering on
+        # colonized planets by providing `get_colony_demographic_view(planet.id)`.
+        # Mirrors the pattern established in `strategy_detail_formatter._show_planet_report`.
+        self._facade = facade
 
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
 
@@ -507,6 +511,15 @@ class PlanetListWindow(UIWindow):
         # Calculate panel position and dynamic height (right side of window)
         panel_x, panel_y, panel_height = self._detail_panel_geometry()
 
+        # PROJ-292 H1: resolve the per-species demographic view for
+        # colonized planets so `PlanetReportPanel` renders PROJ-289's
+        # sub-block (habitability / happiness / growth / food ratio /
+        # allocation). Uncolonized planets and legacy callers without a
+        # facade fall through to the pre-PROJ-289 rendering.
+        view = None
+        if planet.owner_id is not None and self._facade is not None:
+            view = self._facade.get_colony_demographic_view(planet.id)
+
         # Create planet report panel
         self.planet_detail_panel = PlanetReportPanel(
             manager=self.ui_manager,
@@ -518,6 +531,7 @@ class PlanetListWindow(UIWindow):
             production_rates=compute_planet_production(planet, self._registries),
             empire=self.empire,  # PROJ-290
             race_registry=self._race_registry,  # PROJ-290
+            view=view,  # PROJ-292 H1
         )
 
         # Add Build Queue button if player owns planet

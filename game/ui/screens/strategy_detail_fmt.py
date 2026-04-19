@@ -102,6 +102,14 @@ def format_uncolonized_habitability_for_empire(
     Save-drift defense: any `race_id` whose `registry.get_race` returns
     `None` is silently skipped (same policy as `planet_habitability_multiplier`).
 
+    PROJ-292 m7 — tie-break convention: equal habitability scores are
+    kept in alphabetical `race_id` order (the input is `sorted(species_ids)`
+    and Python's sort is stable, so ties retain that ordering). If
+    insertion-order is preferred (matches colonization order), remove
+    the `sorted()` wrap on `species_ids` — the downstream code doesn't
+    depend on the alphabetical pre-sort for correctness, only for the
+    tie-break convention.
+
     Args:
         planet: Uncolonized planet object (`IPlanet`).
         empire: The viewing empire — must expose `resident_species() -> Set[str]`.

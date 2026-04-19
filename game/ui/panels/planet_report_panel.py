@@ -267,6 +267,16 @@ class PlanetReportPanel:
                 `__init__` (both default to None → no habitability section).
             race_registry: PROJ-290 — override the construction-time
                 `IRaceRegistry`. Same fallback contract as `empire`.
+
+        PROJ-292 m1 — kwarg-fallback asymmetry:
+            `view` is overwritten unconditionally on every call (PROJ-289
+            policy). `empire` and `race_registry` use None-sentinel fallback
+            (PROJ-290 policy) — passing None preserves the previous values
+            from construction time. The asymmetry is intentional: `view`
+            is per-planet (changes every selection), while empire +
+            registry are per-session (constant across planet switches).
+            Callers switching planets without changing session pass only
+            `view`; callers rebinding session context pass both.
         """
         self.planet = planet
         self.production_rates = production_rates or {}
@@ -453,10 +463,15 @@ class PlanetReportPanel:
                     try:
                         cell.text_colour = color
                         cell.rebuild()
-                    except (AttributeError, Exception):
-                        # pygame_gui versions vary on colour-setter support;
-                        # the colour is non-essential to correctness, so a
-                        # silent fallback to default is acceptable.
+                    except AttributeError:
+                        # PROJ-292 H3: pygame_gui versions vary on
+                        # `text_colour` setter support; the colour is
+                        # non-essential to correctness, so a silent
+                        # fallback for this specific missing-setter
+                        # failure is acceptable. Other exceptions
+                        # (RuntimeError, TypeError, programming errors)
+                        # propagate so real bugs surface instead of
+                        # being silently swallowed by a catch-all.
                         pass
                 self._resource_grid_items.append(cell)
 

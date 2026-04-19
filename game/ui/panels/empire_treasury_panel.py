@@ -16,7 +16,7 @@ from game.core.resources import ResourceCatalog
 from game.core.paths import Paths
 
 _PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
-from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
+from game.strategy.services.empire_economy_service import EmpireEconomySnapshot  # PROJ-292 M1
 from game.ui.utils import create_section_header
 
 

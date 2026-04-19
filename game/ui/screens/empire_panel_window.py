@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from game.core.protocols import IEmpire
     from game.core.registry import GameRegistries
 from game.core.paths import Paths
-from game.strategy.engine.empire_economy_calculator import EmpireEconomyCalculator
+from game.strategy.services.empire_economy_service import EmpireEconomyService  # PROJ-292 M1
 from game.ui.panels.empire_treasury_panel import EmpireTreasuryPanel, load_resource_icons
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 from game.ui.utils import create_section_header
@@ -201,12 +201,14 @@ class EmpirePanelWindow(UIWindow):
 
         economy = get_default_economy_config()
         race_registry = getattr(self, "_race_registry", None)
-        calculator = EmpireEconomyCalculator(
+        # PROJ-292 M1: UI consumes the service facade, not the engine-layer
+        # calculator directly.
+        service = EmpireEconomyService(
             registries=self._registries,
             economy_config=economy,
             race_registry=race_registry,
         )
-        snapshot = calculator.calculate(self.empire)
+        snapshot = service.get_snapshot(self.empire)
         self._treasury_panel = EmpireTreasuryPanel(
             panel,
             self.ui_manager,

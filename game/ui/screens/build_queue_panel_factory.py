@@ -81,6 +81,7 @@ class BuildQueuePanelFactory:
         portrait_loader: 'BuildQueuePortraitLoader',
         on_queue_selection_changed,
         portrait_surface: Optional[pygame.Surface] = None,
+        facade=None,
     ):
         """Initialize the panel factory.
 
@@ -92,12 +93,18 @@ class BuildQueuePanelFactory:
             portrait_loader: BuildQueuePortraitLoader for resource icons.
             on_queue_selection_changed: Callback for queue selector changes.
             portrait_surface: Planet portrait image surface.
+            facade: PROJ-292 H1 — optional `StrategySessionFacade` for
+                resolving the per-species `ColonyDemographicView` so
+                `PlanetReportPanel` renders PROJ-289's sub-block. When
+                None (legacy callers), the panel falls back to the
+                pre-PROJ-289 single-line rendering.
         """
         self.manager = manager
         self.build_context = build_context
         self.session = session
         self.queue_sources = queue_sources
         self.portrait_loader = portrait_loader
+        self._facade = facade
         self.on_queue_selection_changed = on_queue_selection_changed
         self.portrait_surface = portrait_surface
 
@@ -178,6 +185,13 @@ class BuildQueuePanelFactory:
             report_height = 350
 
         if self.build_context.context_type == "planet":
+            # PROJ-292 H1: BuildQueueScreen always opens on colonized
+            # planets (you can't queue construction on an uncolonized
+            # world), so the facade lookup should essentially always
+            # return a view. `_facade is None` preserves legacy callers.
+            view = None
+            if self.build_context.owner_id is not None and self._facade is not None:
+                view = self._facade.get_colony_demographic_view(self.build_context.id)
             planet_report = PlanetReportPanel(
                 manager=self.manager,
                 rect=pygame.Rect(10, 10, report_width, report_height),
@@ -187,7 +201,8 @@ class BuildQueuePanelFactory:
                 show_complexes=False,
                 production_rates=compute_planet_production(
                     self.build_context, self.session.registries
-                )
+                ),
+                view=view,  # PROJ-292 H1
             )
             return planet_report, planet_report
         else:

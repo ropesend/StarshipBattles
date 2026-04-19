@@ -745,6 +745,14 @@ class StrategySessionFacade:
         economy = getattr(self._session, "economy_config", None)
         if economy is not None:
             return economy
+        # PROJ-292 m6: surface the silent fallback so a session that's
+        # supposed to carry an explicit config but lost it (e.g. a
+        # deserialization regression) generates a warning instead of
+        # quietly swapping in defaults.
+        logger.warning(
+            "facade._resolve_economy_config: session has no economy_config; "
+            "falling back to get_default_economy_config()",
+        )
         from game.strategy.config.economy_config import get_default_economy_config
         return get_default_economy_config()
 

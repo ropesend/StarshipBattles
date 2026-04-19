@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Stop the catch-all exception handler in `_build_projection_grid`'s net-cell colour code from swallowing programming errors. Narrow to `except AttributeError` only — the original intent (handle pygame_gui version variance on `text_colour` setter) survives; real bugs propagate.
 
 ---
@@ -16,7 +16,7 @@
 **File:** [game/ui/panels/planet_report_panel.py](game/ui/panels/planet_report_panel.py)
 **Tests:** None (read-only)
 
-- [ ] Open the file. Search for `text_colour`. Find the try/except block in `_build_projection_grid` (likely around line 450-460):
+- [x] Open the file. Search for `text_colour`. Find the try/except block in `_build_projection_grid` (likely around line 450-460):
   ```python
   try:
       cell.text_colour = color
@@ -24,7 +24,7 @@
   except (AttributeError, Exception):
       pass
   ```
-- [ ] Document the file:line in your task notes.
+- [x] Document the file:line in your task notes.
 
 **Notes:**
 
@@ -32,10 +32,10 @@
 **File:** [tests/unit/ui/panels/test_planet_report_panel.py](tests/unit/ui/panels/test_planet_report_panel.py)
 **Tests:** `pytest tests/unit/ui/panels/test_planet_report_panel.py::TestNetCellColorExceptionHandling -v`
 
-- [ ] Add a new test class `TestNetCellColorExceptionHandling`.
-- [ ] Test 1: `test_attribute_error_silently_swallowed`. Use the bypass-init pattern. Mock a `cell` whose `text_colour` setter raises `AttributeError`. Call `_build_projection_grid` with a single-row view. Assert NO exception propagates (current behaviour preserved).
-- [ ] Test 2: `test_runtime_error_propagates`. Mock a `cell` whose `text_colour` setter raises `RuntimeError`. Call `_build_projection_grid`. Assert `RuntimeError` propagates (this is the bug being fixed; today's catch-all swallows it).
-- [ ] Run the tests. Test 1 should pass; Test 2 FAILS (the catch-all swallows the RuntimeError).
+- [x] Add a new test class `TestNetCellColorExceptionHandling`.
+- [x] Test 1: `test_attribute_error_silently_swallowed`. Use the bypass-init pattern. Mock a `cell` whose `text_colour` setter raises `AttributeError`. Call `_build_projection_grid` with a single-row view. Assert NO exception propagates (current behaviour preserved).
+- [x] Test 2: `test_runtime_error_propagates`. Mock a `cell` whose `text_colour` setter raises `RuntimeError`. Call `_build_projection_grid`. Assert `RuntimeError` propagates (this is the bug being fixed; today's catch-all swallows it).
+- [x] Run the tests. Test 1 should pass; Test 2 FAILS (the catch-all swallows the RuntimeError).
 
 **Notes:**
 
@@ -43,7 +43,7 @@
 **File:** [game/ui/panels/planet_report_panel.py](game/ui/panels/planet_report_panel.py)
 **Tests:** `pytest tests/unit/ui/panels/test_planet_report_panel.py -v`
 
-- [ ] Change the catch:
+- [x] Change the catch:
   ```python
   # Before:
   except (AttributeError, Exception):
@@ -55,15 +55,15 @@
       # propagate so real bugs surface.
       pass
   ```
-- [ ] Run Task 4.2's tests. Test 2 now passes (RuntimeError propagates).
-- [ ] Run the full file — existing tests still pass.
+- [x] Run Task 4.2's tests. Test 2 now passes (RuntimeError propagates).
+- [x] Run the full file — existing tests still pass.
 
 **Notes:**
 
 ### Task 4.4: Targeted regression suite [Simple]
 **Tests:** `pytest tests/unit/ui/panels/ -q`
 
-- [ ] Panel suite green.
+- [x] Panel suite green.
 
 **Notes:**
 
@@ -71,7 +71,7 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 5

@@ -1077,6 +1077,22 @@ Read-only per-planet flux projector — feeds UI panels (PROJ-289 / PROJ-290) so
 
 See [docs/systems/strategy_layer.md §1 StrategySessionFacade](systems/strategy_layer.md#1-strategysessionfacade) for the facade Query Categories table.
 
+### Empire Economy Service (PROJ-292 M1)
+
+Service-layer facade over `EmpireEconomyCalculator` so UI panels don't import from `game.strategy.engine.*` directly.
+
+**Service** — `EmpireEconomyService` in [game/strategy/services/empire_economy_service.py](../game/strategy/services/empire_economy_service.py):
+- Constructor kwargs mirror the engine-layer calculator: `registries` (required), `economy_config` (optional), `race_registry` (optional).
+- One public method: `get_snapshot(empire) -> EmpireEconomySnapshot`. Internally delegates to `self._calculator.calculate(empire)`.
+- Re-exports `EmpireEconomySnapshot` so UI type annotations don't reach into the engine module.
+- `__all__` explicitly excludes `EmpireEconomyCalculator` — the engine class is an implementation detail; callers that need it must import from `game.strategy.engine.empire_economy_calculator` directly and justify why.
+
+**Consumers:**
+- [game/ui/panels/empire_treasury_panel.py](../game/ui/panels/empire_treasury_panel.py) — imports `EmpireEconomySnapshot` for type annotations.
+- [game/ui/screens/empire_panel_window.py](../game/ui/screens/empire_panel_window.py) — constructs `EmpireEconomyService(...)` and calls `get_snapshot(empire)` when building the Treasury tab. Pre-PROJ-292 this file imported and constructed `EmpireEconomyCalculator` directly — a layer violation flagged by the PROJ-283..290 audit.
+
+**Policy:** future UI code that needs empire-economy data MUST import from `game.strategy.services.empire_economy_service`, never `game.strategy.engine.empire_economy_calculator`. A follow-up project can enforce this via a lint rule or CI grep check.
+
 ---
 
 ## Design Principles

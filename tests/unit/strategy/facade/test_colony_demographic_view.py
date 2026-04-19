@@ -292,3 +292,111 @@ class TestFrozenness:
 
         with pytest.raises((AttributeError, Exception)):  # FrozenInstanceError
             view.species[0].count = 999  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# PROJ-292 m4 + m5: DTO invariants enforced in __post_init__
+# ---------------------------------------------------------------------------
+
+class TestTotalUpkeepReadOnly:
+    """PROJ-292 m4: `total_upkeep` must be a read-only Mapping. Even
+    though the DTO is frozen, callers could previously mutate the
+    underlying dict — wrap in MappingProxyType in __post_init__."""
+
+    def test_total_upkeep_rejects_item_assignment(self):
+        from game.strategy.facade.dto.colony_demographic_view import (
+            ColonyDemographicView,
+        )
+        view = ColonyDemographicView(
+            planet_id=1,
+            planet_name="Earth",
+            species=(),
+            resource_projections=(),
+            total_upkeep={"organics": 5.0, "metals": 0.5},
+        )
+        with pytest.raises(TypeError):
+            view.total_upkeep["organics"] = 999.0  # type: ignore[index]
+
+    def test_total_upkeep_preserves_values(self):
+        """Wrapping must preserve the original entries for consumers
+        (read-only doesn't mean empty)."""
+        from game.strategy.facade.dto.colony_demographic_view import (
+            ColonyDemographicView,
+        )
+        view = ColonyDemographicView(
+            planet_id=1,
+            planet_name="Earth",
+            species=(),
+            resource_projections=(),
+            total_upkeep={"organics": 5.0, "metals": 0.5},
+        )
+        assert view.total_upkeep["organics"] == 5.0
+        assert view.total_upkeep["metals"] == 0.5
+
+
+class TestSpeciesSortedInDTOConstructor:
+    """PROJ-292 m5: the DTO must enforce largest-count-first ordering
+    regardless of the caller's input order. Previously relied on facade
+    pre-sort — now the DTO's __post_init__ guarantees it."""
+
+    def test_species_sorted_largest_first_when_constructed_ascending(self):
+        from game.strategy.facade.dto.colony_demographic_view import (
+            ColonyDemographicView,
+            SpeciesDemographicView,
+        )
+
+        def _sv(race_id: str, count: int) -> SpeciesDemographicView:
+            return SpeciesDemographicView(
+                race_id=race_id,
+                race_name=race_id.title(),
+                count=count,
+                habitability=1.0,
+                happiness=0.5,
+                growth_rate=0.01,
+                food_ratio=1.0,
+                food_allocation=1.0,
+            )
+
+        # Caller passes in ASCENDING order; DTO must re-sort.
+        species_ascending = (
+            _sv("small", 100),
+            _sv("medium", 500),
+            _sv("big", 10_000),
+        )
+        view = ColonyDemographicView(
+            planet_id=1,
+            planet_name="Earth",
+            species=species_ascending,
+            resource_projections=(),
+            total_upkeep={},
+        )
+        assert [s.race_id for s in view.species] == ["big", "medium", "small"]
+
+    def test_species_sort_is_stable_on_equal_counts(self):
+        from game.strategy.facade.dto.colony_demographic_view import (
+            ColonyDemographicView,
+            SpeciesDemographicView,
+        )
+
+        def _sv(race_id: str, count: int) -> SpeciesDemographicView:
+            return SpeciesDemographicView(
+                race_id=race_id,
+                race_name=race_id.title(),
+                count=count,
+                habitability=1.0,
+                happiness=0.5,
+                growth_rate=0.01,
+                food_ratio=1.0,
+                food_allocation=1.0,
+            )
+
+        # Two species with equal counts; their relative order should be
+        # preserved by Python's stable sort.
+        view = ColonyDemographicView(
+            planet_id=1,
+            planet_name="Earth",
+            species=(_sv("alpha", 500), _sv("beta", 500), _sv("big", 1000)),
+            resource_projections=(),
+            total_upkeep={},
+        )
+        assert [s.race_id for s in view.species] == ["big", "alpha", "beta"]
