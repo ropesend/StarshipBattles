@@ -346,7 +346,7 @@ class TestFoodRatioAndDecline:
         engine = PopulationEngine()
         pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
         planet = make_earth_like_planet(populations=[pop])
-        planet.get_species_config("human").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
         race = make_human_race_config()
         empire = make_empire(1, [planet], race)
 
@@ -368,12 +368,12 @@ class TestFoodRatioAndDecline:
         # Green-state baseline
         green_pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
         green_planet = make_earth_like_planet(name="Green", populations=[green_pop])
-        green_planet.get_species_config("human").last_food_ratio = 1.0
+        green_planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
         green_empire = make_empire(1, [green_planet], make_human_race_config(race_id="human"))
 
         amber_pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
         amber_planet = make_earth_like_planet(name="Amber", populations=[amber_pop])
-        amber_planet.get_species_config("human").last_food_ratio = 0.5
+        amber_planet.get_species_config("human").last_consumption_ratios = {"organics": 0.5}
         amber_empire = make_empire(2, [amber_planet], make_human_race_config(race_id="human"))
 
         engine.process_population_growth([green_empire, amber_empire])
@@ -389,7 +389,7 @@ class TestFoodRatioAndDecline:
         engine = PopulationEngine()
         pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
         planet = make_earth_like_planet(populations=[pop])
-        planet.get_species_config("human").last_food_ratio = 0.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 0.0}
         race = make_human_race_config()
         empire = make_empire(1, [planet], race)
 
@@ -404,7 +404,7 @@ class TestFoodRatioAndDecline:
         engine = PopulationEngine()
         pop = SpeciesPopulation(race_id="human", count=0, happiness=0.5)
         planet = make_earth_like_planet(populations=[pop])
-        planet.get_species_config("human").last_food_ratio = 0.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 0.0}
         race = make_human_race_config()
         empire = make_empire(1, [planet], race)
 
@@ -418,7 +418,7 @@ class TestFoodRatioAndDecline:
         # Small planet so K_eff ~ 1000; pop at 5000 > K.
         pop = SpeciesPopulation(race_id="human", count=5000, happiness=0.5)
         planet = make_earth_like_planet(populations=[pop], surface_area=1e10)
-        planet.get_species_config("human").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
         race = make_human_race_config()
         empire = make_empire(1, [planet], race)
 
@@ -433,12 +433,12 @@ class TestFoodRatioAndDecline:
         engine = PopulationEngine()
         pop_one = SpeciesPopulation(race_id="human", count=1000, happiness=1.0)
         planet_one = make_earth_like_planet(name="Baseline", populations=[pop_one])
-        planet_one.get_species_config("human").last_food_ratio = 1.0
+        planet_one.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
         empire_one = make_empire(1, [planet_one], make_human_race_config(race_id="human"))
 
         pop_three = SpeciesPopulation(race_id="human", count=1000, happiness=3.0)
         planet_three = make_earth_like_planet(name="OverSupplied", populations=[pop_three])
-        planet_three.get_species_config("human").last_food_ratio = 1.0
+        planet_three.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
         empire_three = make_empire(2, [planet_three], make_human_race_config(race_id="human"))
 
         engine.process_population_growth([empire_one, empire_three])
@@ -493,3 +493,83 @@ class TestEdgeCases:
             engine.process_population_growth([empire])
 
         assert pop.count >= 0, "Population should never go negative"
+
+
+# ---------------------------------------------------------------------------
+# PROJ-286 Phase 4: multi-resource behavior via the MIN-aggregation property
+# ---------------------------------------------------------------------------
+
+class TestMultiResourceStarvation:
+    """PROJ-286: `cfg.last_food_ratio` is now MIN across declared
+    resources. PopulationEngine source file was NOT touched — these
+    tests pin the decline term + effective_r behavior through the
+    computed property."""
+
+    def test_one_starved_resource_collapses_growth_to_full_decline(self):
+        """`{organics: 1.0, metals: 0.0}` → min=0 → effective_r=0 and
+        decline_term = -decline_rate * pop * (1-0) = -20 for pop=1000."""
+        engine = PopulationEngine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        planet = make_earth_like_planet(populations=[pop])
+        planet.get_species_config("human").last_consumption_ratios = {
+            "organics": 1.0, "metals": 0.0,
+        }
+        race = make_human_race_config()
+        empire = make_empire(1, [planet], race)
+
+        engine.process_population_growth([empire])
+
+        # Matches `test_red_state_zero_food_declines_population` numerics
+        # because MIN(1.0, 0.0) == 0.0 — the decline term doesn't care
+        # WHICH resource is starved, just that at least one is.
+        assert pop.count == pytest.approx(980, abs=2)
+
+    def test_mixed_ratios_decline_term_uses_minimum(self):
+        """`{organics: 0.5, metals: 1.0}` → min=0.5 → decline_term =
+        -0.02 * P * (1 - 0.5) = -10 for P=1000. Must yield LESS growth
+        than full-feed, MORE than full-starvation."""
+        engine = PopulationEngine()
+
+        # Single-resource 0.5 baseline (no second resource at all).
+        baseline_pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        baseline_planet = make_earth_like_planet(name="Baseline", populations=[baseline_pop])
+        baseline_planet.get_species_config("human").last_consumption_ratios = {"organics": 0.5}
+        baseline_empire = make_empire(1, [baseline_planet], make_human_race_config(race_id="human"))
+
+        # Multi-resource with MIN 0.5.
+        mixed_pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        mixed_planet = make_earth_like_planet(name="Mixed", populations=[mixed_pop])
+        mixed_planet.get_species_config("human").last_consumption_ratios = {
+            "organics": 0.5, "metals": 1.0,
+        }
+        mixed_empire = make_empire(2, [mixed_planet], make_human_race_config(race_id="human"))
+
+        engine.process_population_growth([baseline_empire, mixed_empire])
+
+        # Identical starting pop, identical MIN ratio → identical decline term
+        # + identical effective_r → identical final count.
+        assert mixed_pop.count == baseline_pop.count
+
+
+class TestMultiResourceVsSingleResourceParity:
+    """PROJ-286 parity contract: single-resource 0.X and multi-resource
+    dict with MIN 0.X must produce identical `_grow_species` output."""
+
+    def test_single_resource_matches_multi_resource_with_same_minimum(self):
+        engine = PopulationEngine()
+
+        pop_single = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        planet_single = make_earth_like_planet(name="Single", populations=[pop_single])
+        planet_single.get_species_config("human").last_consumption_ratios = {"organics": 0.3}
+        empire_single = make_empire(1, [planet_single], make_human_race_config(race_id="human"))
+
+        pop_multi = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        planet_multi = make_earth_like_planet(name="Multi", populations=[pop_multi])
+        planet_multi.get_species_config("human").last_consumption_ratios = {
+            "organics": 0.9, "metals": 0.3, "radioactives": 0.8,
+        }
+        empire_multi = make_empire(2, [planet_multi], make_human_race_config(race_id="human"))
+
+        engine.process_population_growth([empire_single, empire_multi])
+
+        assert pop_single.count == pop_multi.count

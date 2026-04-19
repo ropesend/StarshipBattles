@@ -1,4 +1,7 @@
 {
-    "population_food_resource": "organics",
-    "food_per_pop_per_turn": 0.001
+    "population_consumption": {
+        "organics": 0.001,
+        "metals": 0.0001,
+        "radioactives": 0.00001
+    }
 }
