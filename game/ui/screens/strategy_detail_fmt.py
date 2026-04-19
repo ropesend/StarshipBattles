@@ -15,7 +15,7 @@ from typing import Any, Optional, TYPE_CHECKING
 
 from game.core.constants import EARTH_MASS
 from game.core.string_utils import display_name
-from game.ui.utils.formatters import format_compact_number
+from game.ui.utils.formatters import format_compact_number, format_signed_float
 from game.strategy.data.order_types import OrderType
 from game.strategy.formulas.habitability import score_planet_for_race
 from game.core.protocols import (
@@ -25,6 +25,21 @@ from game.core.protocols import (
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet, IFleet, IFacility, IShipInstance
+    from game.strategy.facade.dto.colony_demographic_view import ColonyDemographicView
+
+
+def _happiness_category(happiness: float) -> str:
+    """PROJ-289: Bucket a species' happiness value into a display label.
+
+    Thresholds chosen against PROJ-283 baselines (`base_happiness` default
+    = 0.5, so the no-modifier case is "Settled"; "Content" requires food
+    + habitability > 1.0 multipliers; "Unhappy" flags struggling colonies).
+    """
+    if happiness >= 1.5:
+        return "Content"
+    if happiness >= 0.5:
+        return "Settled"
+    return "Unhappy"
 
 
 def format_spectrum_html(star) -> str:
@@ -123,6 +138,7 @@ def format_uncolonized_habitability_for_empire(
 
 def format_planet_info(
     planet: "IPlanet",
+    view: Optional['ColonyDemographicView'] = None,
     *,
     empire: Optional[Any] = None,
     race_registry: Optional[Any] = None,
@@ -130,20 +146,32 @@ def format_planet_info(
     """
     Format comprehensive planet information as HTML.
 
-    PROJ-290 Phase 2: when `planet.owner_id is None` AND both `empire`
-    and `race_registry` are provided, appends an "uncolonized
-    habitability for your species" section listing every
-    `empire.resident_species()` entry with a 0-100 integer score
-    sorted best-fit first. Legacy callers that omit the kwargs get the
-    pre-PROJ-290 rendering unchanged.
+    PROJ-289: when `view` is supplied, the per-species line is replaced
+    with an indented sub-block (habitability / happiness / growth rate /
+    food ratio / food allocation) per species. Legacy single-line layout
+    preserved when `view is None`.
+
+    PROJ-290: when `planet.owner_id is None` AND both `empire` and
+    `race_registry` are provided, appends an "uncolonized habitability
+    for your species" section listing every `empire.resident_species()`
+    entry with a 0-100 integer score sorted best-fit first. Legacy
+    callers that omit the kwargs get the pre-PROJ-290 rendering unchanged.
 
     Args:
         planet: Planet object (IPlanet protocol).
-        empire: Optional — the viewing empire. When provided together
-            with `race_registry` AND the planet is unowned, triggers
-            the uncolonized habitability section.
-        race_registry: Optional `IRaceRegistry`. Required alongside
-            `empire` to render the uncolonized habitability section.
+        view: Optional ``ColonyDemographicView`` (PROJ-288/289). When
+            supplied, the per-species line is replaced with an indented
+            sub-block showing habitability / happiness / growth rate /
+            food ratio / food allocation per species. When ``None``, the
+            legacy single-line per-species rendering is preserved for
+            backward compatibility (uncolonized planets, snapshot tests,
+            callers without a facade).
+        empire: PROJ-290 — optional viewing empire. When provided
+            together with `race_registry` AND the planet is unowned,
+            triggers the uncolonized habitability section.
+        race_registry: PROJ-290 — optional `IRaceRegistry`. Required
+            alongside `empire` to render the uncolonized habitability
+            section.
 
     Returns:
         HTML string with planet details.
@@ -186,7 +214,27 @@ def format_planet_info(
             text += f"<br><b>Population:</b> {pop_str} / {max_str}<br>"
 
             # Per-species breakdown
-            if len(populations) > 0:
+            if view is not None:
+                # PROJ-289: Indented sub-block per species using pre-computed
+                # demographic data from the facade (`ColonyDemographicView`).
+                # Iteration order honors `view.species` (PROJ-288 already
+                # sorts largest-count first).
+                for s in view.species:
+                    cnt_str = format_compact_number(s.count)
+                    category = _happiness_category(s.happiness)
+                    growth_pct = format_signed_float(s.growth_rate * 100, decimals=1)
+                    text += (
+                        f"<br><b>{s.race_name}</b>: {cnt_str} [{category}]<br>"
+                        f"&nbsp;&nbsp;&nbsp;Habitability: {s.habitability:.2f}"
+                        f"&nbsp;&nbsp;Happiness: {s.happiness:.2f}<br>"
+                        f"&nbsp;&nbsp;&nbsp;Growth: {growth_pct}% / turn"
+                        f"&nbsp;&nbsp;Food ratio: {s.food_ratio:.2f}<br>"
+                        f"&nbsp;&nbsp;&nbsp;Allocation: {s.food_allocation:.2f}\u00d7<br>"
+                    )
+            elif len(populations) > 0:
+                # Legacy single-line layout — preserved for callers that
+                # do not pass a `ColonyDemographicView` (uncolonized snapshots,
+                # legacy tests, pre-PROJ-289 panels).
                 for pop in populations:
                     # Happiness indicator
                     if pop.happiness >= 0.8:

@@ -249,8 +249,18 @@ class StrategyDetailFormatter:
         button_relative_y = self.btn_build_yard.relative_rect.y
         panel_max_height = min(detail_panel_height - 60, button_relative_y - 20)
 
-        # Create planet report panel (NO complexes for strategy UI)
+        # Create planet report panel (NO complexes for strategy UI).
+        # PROJ-289: Pull the per-colony demographic view via the facade
+        # so the panel renders the per-species sub-block (habitability,
+        # happiness, growth, food ratio, allocation) instead of the legacy
+        # single-line fallback. Uncolonized planets get None and the panel
+        # falls back to the legacy rendering.
         production_rates = self.compute_planet_production(obj)
+        view = None
+        if obj.owner_id is not None:
+            facade = getattr(self.scene, "facade", None)
+            if facade is not None:
+                view = facade.get_colony_demographic_view(obj.id)
         self.planet_report_panel = PlanetReportPanel(
             manager=self.manager,
             rect=pygame.Rect(10, 10, 580, panel_max_height),
@@ -258,7 +268,8 @@ class StrategyDetailFormatter:
             container=self.detail_panel,
             portrait_surface=portrait_surface,
             show_complexes=False,
-            production_rates=production_rates
+            production_rates=production_rates,
+            view=view,
         )
 
         # Show Build Yard button only if planet has PlanetaryYard or SpaceShipyard

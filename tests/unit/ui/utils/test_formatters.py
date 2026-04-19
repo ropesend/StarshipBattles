@@ -114,3 +114,46 @@ class TestGetDamageColor:
         from game.ui.utils.formatters import get_damage_color
         from game.ui.colors import HP_DESTROYED
         assert get_damage_color(0.1, is_active=False) == HP_DESTROYED
+
+
+class TestFormatSignedFloat:
+    """PROJ-289 Phase 1 Task 1.1: signed-prefix float formatting for the
+    planet report panel's per-species sub-block + per-resource grid."""
+
+    def test_positive_gets_plus_prefix(self):
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(1.2) == "+1.2"
+
+    def test_negative_keeps_native_minus(self):
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(-0.8) == "-0.8"
+
+    def test_zero_renders_as_signed_zero(self):
+        """Zero gets the `+` prefix (no native sign on 0). Keeps grid
+        alignment consistent across positive / zero / negative cells."""
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(0.0) == "+0.0"
+
+    def test_decimals_kwarg_controls_precision(self):
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(1.234, decimals=2) == "+1.23"
+        assert format_signed_float(-1.234, decimals=2) == "-1.23"
+        assert format_signed_float(1.0, decimals=0) == "+1"
+
+    def test_default_decimals_is_one(self):
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(1.0) == "+1.0"
+
+    def test_large_positive(self):
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(1234.5) == "+1234.5"
+
+    def test_very_small_positive(self):
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(0.001, decimals=3) == "+0.001"
+
+    def test_negative_zero_input_renders_as_signed_zero(self):
+        """`-0.0` is mathematically zero — the helper must NOT emit `-0.0`
+        because that would break the "negative = red" rule downstream."""
+        from game.ui.utils.formatters import format_signed_float
+        assert format_signed_float(-0.0) == "+0.0"

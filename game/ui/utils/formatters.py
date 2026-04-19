@@ -39,6 +39,28 @@ def format_compact_number(value: float) -> str:
         return str(int(value))
 
 
+def format_signed_float(value: float, decimals: int = 1) -> str:
+    """Format a float with an explicit `+` prefix on non-negative values.
+
+    Used by the planet report panel (PROJ-289) for the per-resource
+    Harvest / Upkeep / Yard / Net columns and for the per-species growth
+    rate, where consistent +/- prefixes make gains vs losses scannable.
+
+    Args:
+        value: The numeric value to format.
+        decimals: Number of decimal places (default 1).
+
+    Returns:
+        ``"+X.X"`` for positives + zero, ``"-X.X"`` for negatives.
+        Negative-zero input (``-0.0``) renders as ``"+0.0"`` so the
+        downstream "negative = red" colour rule isn't fooled by
+        floating-point sign quirks.
+    """
+    if value > 0 or value == 0:
+        return f"+{abs(value):.{decimals}f}"
+    return f"{value:.{decimals}f}"
+
+
 def get_damage_color(hp_pct: float, is_active: bool = True) -> Tuple[int, int, int]:
     """Get color representing damage/health level.
 
