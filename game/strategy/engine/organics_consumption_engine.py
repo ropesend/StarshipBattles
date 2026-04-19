@@ -1,20 +1,29 @@
-"""Per-colony per-species food consumption engine (PROJ-284 Phase 2).
+"""Per-colony per-species multi-resource upkeep engine (PROJ-284 + PROJ-286).
 
 Runs ONCE per turn, AFTER the 100-tick loop, BEFORE
-`PopulationEngine.process_population_growth` (and eventually sandwiched
-between `HappinessEngine` too, once Phase 3 lands). Drains the
-configured food resource (`EconomyConfig.population_food_resource` —
-"organics" by default) from each colony's stockpile and writes
-`last_food_ratio` into each `ColonySpeciesConfig` for downstream
-readers (`HappinessEngine`, `PopulationEngine`).
+`PopulationEngine.process_population_growth`. For each colony and each
+species on it, iterates the per-resource upkeep rates in
+`EconomyConfig.population_consumption`, drains each resource from the
+colony's stockpile, and writes the per-resource supply ratio into
+`ColonySpeciesConfig.last_consumption_ratios`. Downstream
+HappinessEngine + PopulationEngine read the aggregated
+`cfg.last_food_ratio` (MIN across declared resources — Liebig's Law).
 
-The food-ratio cache is intentionally transient (see
-`ColonySpeciesConfig` module docstring). This engine must overwrite
-`last_food_ratio` on EVERY species on EVERY colony EVERY turn — including
-the zero-population / zero-allocation edge cases where `needed == 0`.
-Writing 1.0 there prevents downstream readers from seeing a stale
-"starvation" ratio carried over from a previous turn or from the
-dataclass default.
+The ratio cache is intentionally transient (see `ColonySpeciesConfig`
+module docstring). This engine must CLEAR and REWRITE
+`last_consumption_ratios` on EVERY species on EVERY colony EVERY turn
+— including the zero-population / zero-allocation edge cases where
+`needed == 0`. Writing 1.0 there prevents downstream readers from
+seeing a stale "starvation" ratio carried over from a previous turn
+or from a previous economy-config shape.
+
+Misnomer note: the class is still named `OrganicsConsumptionEngine`
+for backward-compat on `IOrganicsConsumptionEngine` + the
+`TurnEngineConfig.organics_consumption_engine` field. After PROJ-286
+it handles arbitrary resources declared in `economy.json`, not just
+organics. The rename was deliberately deferred so the behavioural
+multi-resource change lands isolated in git history — see PROJ-286
+decisions.md for rationale.
 """
 from __future__ import annotations
 
@@ -35,13 +44,18 @@ logger = logging.getLogger(__name__)
 
 
 class OrganicsConsumptionEngine(IOrganicsConsumptionEngine):
-    """Drains the configured food resource per turn and writes
-    `last_food_ratio` per colony per species.
+    """Drains every resource declared in
+    `EconomyConfig.population_consumption` per turn and writes the
+    per-resource `supplied / needed` ratio into
+    `ColonySpeciesConfig.last_consumption_ratios`.
 
     Dependency injection: pass `economy_config` explicitly to override
     the module singleton (tests, runtime mod swaps). Default constructor
     pulls from `get_default_economy_config()` which lazy-loads
     `data/economy.json`.
+
+    Misnomer: despite the name, this engine no longer consumes only
+    organics. See module docstring for the rename-deferral rationale.
     """
 
     def __init__(self, economy_config: Optional[EconomyConfig] = None) -> None:
@@ -62,30 +76,33 @@ class OrganicsConsumptionEngine(IOrganicsConsumptionEngine):
         """Main entry point — see `IOrganicsConsumptionEngine.process_consumption`."""
         self._validate_tick_inputs(empires)
 
-        resource_id = self._economy.population_food_resource
-        per_pop = self._economy.food_per_pop_per_turn
+        consumption = self._economy.population_consumption
 
         for empire in empires:
             for colony in empire.colonies:
-                self._process_colony(colony, resource_id, per_pop)
+                self._process_colony(colony, consumption)
 
     def _process_colony(
         self,
         colony: 'Planet',
-        resource_id: str,
-        per_pop: float,
+        consumption: dict,
     ) -> None:
-        """Drain the food resource for every species on this colony and
-        cache each species' supply ratio."""
+        """Drain every declared resource for every species on this
+        colony and cache each species' per-resource supply ratio."""
         for pop in colony.populations:
             cfg = colony.get_species_config(pop.race_id)
-            needed = pop.count * cfg.food_allocation * per_pop
+            # Clear every turn so stale entries from a previous
+            # economy-config shape don't hang around in the dict.
+            cfg.last_consumption_ratios.clear()
 
-            if needed <= 0:
-                cfg.last_food_ratio = 1.0
-                continue
+            for resource_id, per_pop_rate in consumption.items():
+                needed = pop.count * cfg.food_allocation * per_pop_rate
 
-            available = colony.stockpile.get(resource_id, 0.0)
-            supplied = min(available, needed)
-            colony.stockpile[resource_id] = available - supplied
-            cfg.last_food_ratio = supplied / needed
+                if needed <= 0:
+                    cfg.last_consumption_ratios[resource_id] = 1.0
+                    continue
+
+                available = colony.stockpile.get(resource_id, 0.0)
+                supplied = min(available, needed)
+                colony.stockpile[resource_id] = available - supplied
+                cfg.last_consumption_ratios[resource_id] = supplied / needed

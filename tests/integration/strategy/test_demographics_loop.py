@@ -93,10 +93,7 @@ def _empire_with(colony: Planet, race: RaceConfig, empire_id: int = 1) -> Empire
 def engines():
     """Three-engine bundle with a fixed (non-default) economy config so
     tests stay hermetic from whatever is in `data/economy.json`."""
-    economy = EconomyConfig(
-        population_food_resource="organics",
-        food_per_pop_per_turn=0.001,
-    )
+    economy = EconomyConfig(population_consumption={"organics": 0.001})
     return {
         "organics": OrganicsConsumptionEngine(economy_config=economy),
         "happiness": HappinessEngine(),

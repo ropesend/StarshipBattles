@@ -1,21 +1,25 @@
-"""Unit tests for `EconomyConfig` loader (PROJ-284 Phase 2).
+"""Unit tests for `EconomyConfig` loader (PROJ-284 Phase 2 + PROJ-286 Phase 1).
 
-Covers the data-driven food-resource config living at
+Covers the data-driven population-consumption config living at
 `game/strategy/config/economy_config.py`. The loader follows the
 `get_default_* / set_default_*` module-accessor pattern documented in
 CLAUDE.md — a module-level `_default` singleton, lazy-loaded on first
 read from `data/economy.json`, swappable via `set_default_economy_config`
 for tests and mod-runtime overrides.
 
-Default shape (per the PROJ-284 plan):
+Default shape (per PROJ-286 Phase 1):
     {
-        "population_food_resource": "organics",
-        "food_per_pop_per_turn": 0.001
+        "population_consumption": {
+            "organics": 0.001,
+            "metals": 0.0001,
+            "radioactives": 0.00001
+        }
     }
 
-`EconomyConfig` itself is a frozen dataclass — equality / round-trip are
-dataclass defaults, no custom `to_dict`/`from_dict` since this is a
-read-only loaded config (not persisted state).
+`EconomyConfig` is a frozen dataclass. Equality / round-trip are
+dataclass defaults. `primary_resource` + `population_food_resource` are
+computed properties; the latter is a read-only shim preserved until
+PROJ-289 migrates UI call sites.
 """
 from __future__ import annotations
 
@@ -38,62 +42,131 @@ def _reset_default_economy_config():
 class TestEconomyConfigDataclass:
     def test_is_frozen_dataclass(self):
         from game.strategy.config.economy_config import EconomyConfig
-        cfg = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
+        cfg = EconomyConfig(population_consumption={"organics": 0.001})
         with pytest.raises((AttributeError, Exception)):
-            cfg.food_per_pop_per_turn = 0.5  # type: ignore[misc]
+            cfg.population_consumption = {"metals": 0.5}  # type: ignore[misc]
 
     def test_equality_by_field_values(self):
         from game.strategy.config.economy_config import EconomyConfig
-        a = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
-        b = EconomyConfig(population_food_resource="organics", food_per_pop_per_turn=0.001)
-        c = EconomyConfig(population_food_resource="metals", food_per_pop_per_turn=0.001)
+        a = EconomyConfig(population_consumption={"organics": 0.001})
+        b = EconomyConfig(population_consumption={"organics": 0.001})
+        c = EconomyConfig(population_consumption={"metals": 0.001})
         assert a == b
         assert a != c
 
 
+class TestPrimaryResourceProperty:
+    def test_primary_resource_returns_first_key(self):
+        """`primary_resource` returns the first key in insertion order
+        (Python 3.7+ dict ordering)."""
+        from game.strategy.config.economy_config import EconomyConfig
+        cfg = EconomyConfig(
+            population_consumption={"organics": 0.001, "metals": 0.0001}
+        )
+        assert cfg.primary_resource == "organics"
+
+    def test_primary_resource_empty_dict_fallback(self):
+        """Empty `population_consumption` returns the hardcoded `"organics"`
+        fallback so UI titles don't blow up on misconfigured data files."""
+        from game.strategy.config.economy_config import EconomyConfig
+        cfg = EconomyConfig(population_consumption={})
+        assert cfg.primary_resource == "organics"
+
+    def test_primary_resource_honours_insertion_order(self):
+        """A modder that puts `metals` first gets `metals` back as the
+        primary — data-file authors control ordering."""
+        from game.strategy.config.economy_config import EconomyConfig
+        cfg = EconomyConfig(population_consumption={"metals": 0.002, "organics": 0.001})
+        assert cfg.primary_resource == "metals"
+
+
+class TestPopulationFoodResourceShim:
+    """PROJ-286 keeps `population_food_resource` as a read-only property
+    delegating to `primary_resource` so the FoodAllocationEditor title
+    keeps working until PROJ-289 migrates UI callers."""
+
+    def test_shim_delegates_to_primary_resource(self):
+        from game.strategy.config.economy_config import EconomyConfig
+        cfg = EconomyConfig(population_consumption={"metals": 0.002})
+        assert cfg.population_food_resource == "metals"
+
+    def test_shim_matches_primary_resource_on_multi_resource_config(self):
+        from game.strategy.config.economy_config import EconomyConfig
+        cfg = EconomyConfig(
+            population_consumption={"organics": 0.001, "metals": 0.0001}
+        )
+        assert cfg.population_food_resource == cfg.primary_resource == "organics"
+
+
 class TestLoadEconomyConfigFromDefault:
     def test_loads_default_from_data_path(self):
-        """The shipped `data/economy.json` must exist and produce the
-        documented defaults (organics, 0.001)."""
+        """The shipped `data/economy.json` must produce the documented
+        three-resource defaults (organics 0.001, metals 0.0001,
+        radioactives 0.00001)."""
         from game.strategy.config.economy_config import load_economy_config
         cfg = load_economy_config()
-        assert cfg.population_food_resource == "organics"
-        assert cfg.food_per_pop_per_turn == pytest.approx(0.001)
+        assert cfg.population_consumption == {
+            "organics": pytest.approx(0.001),
+            "metals": pytest.approx(0.0001),
+            "radioactives": pytest.approx(0.00001),
+        }
 
     def test_missing_file_falls_back_to_defaults(self, tmp_path):
         """Per CLAUDE.md's system-migration policy (save files are
         disposable), a missing `data/economy.json` must return hardcoded
-        defaults rather than crashing."""
+        defaults rather than crashing. The default is a single-resource
+        organics dict matching PROJ-284 behavior so a missing JSON
+        doesn't change gameplay."""
         from game.strategy.config.economy_config import load_economy_config
         missing = tmp_path / "does_not_exist.json"
         cfg = load_economy_config(path=str(missing))
-        assert cfg.population_food_resource == "organics"
-        assert cfg.food_per_pop_per_turn == pytest.approx(0.001)
+        assert cfg.population_consumption == {"organics": pytest.approx(0.001)}
 
 
 class TestLoadEconomyConfigFromCustomPath:
     def test_loads_custom_values(self, tmp_path):
-        """Modders swap the food resource by editing the JSON; the loader
+        """Modders swap the upkeep dict by editing the JSON; the loader
         must honor the override end-to-end."""
         from game.strategy.config.economy_config import load_economy_config
         custom = tmp_path / "economy.json"
         custom.write_text(json.dumps({
-            "population_food_resource": "metals",
-            "food_per_pop_per_turn": 0.005,
+            "population_consumption": {"metals": 0.005, "organics": 0.002},
         }))
         cfg = load_economy_config(path=str(custom))
-        assert cfg.population_food_resource == "metals"
-        assert cfg.food_per_pop_per_turn == pytest.approx(0.005)
+        assert cfg.population_consumption == {
+            "metals": pytest.approx(0.005),
+            "organics": pytest.approx(0.002),
+        }
+        # Insertion order preserved → primary is metals.
+        assert cfg.primary_resource == "metals"
 
-    def test_partial_json_falls_back_to_default_per_field(self, tmp_path):
-        """If the JSON omits a key, the loader fills from the hardcoded
-        defaults so a partial mod edit doesn't crash the game."""
+    def test_missing_key_falls_back_to_default_dict(self, tmp_path):
+        """If the JSON omits `population_consumption`, the loader falls
+        back to the hardcoded single-organics default so a partial mod
+        edit doesn't crash the game."""
         from game.strategy.config.economy_config import load_economy_config
         partial = tmp_path / "economy.json"
-        partial.write_text(json.dumps({"food_per_pop_per_turn": 0.01}))
+        partial.write_text(json.dumps({"unrelated_key": 42}))
         cfg = load_economy_config(path=str(partial))
-        assert cfg.population_food_resource == "organics"  # default
-        assert cfg.food_per_pop_per_turn == pytest.approx(0.01)  # override
+        assert cfg.population_consumption == {"organics": pytest.approx(0.001)}
+
+    def test_malformed_json_falls_back_to_defaults(self, tmp_path):
+        """Broken JSON → default dict, not a crash."""
+        from game.strategy.config.economy_config import load_economy_config
+        broken = tmp_path / "economy.json"
+        broken.write_text("{ this is not json")
+        cfg = load_economy_config(path=str(broken))
+        assert cfg.population_consumption == {"organics": pytest.approx(0.001)}
+
+    def test_non_dict_consumption_value_falls_back(self, tmp_path):
+        """If `population_consumption` is present but not a dict (e.g. a
+        list or number from a botched edit), fall back to defaults rather
+        than crashing on attribute access downstream."""
+        from game.strategy.config.economy_config import load_economy_config
+        bad = tmp_path / "economy.json"
+        bad.write_text(json.dumps({"population_consumption": [1, 2, 3]}))
+        cfg = load_economy_config(path=str(bad))
+        assert cfg.population_consumption == {"organics": pytest.approx(0.001)}
 
 
 class TestDefaultSingletonAccessor:
@@ -114,10 +187,7 @@ class TestDefaultSingletonAccessor:
             get_default_economy_config,
             set_default_economy_config,
         )
-        injected = EconomyConfig(
-            population_food_resource="metals",
-            food_per_pop_per_turn=0.5,
-        )
+        injected = EconomyConfig(population_consumption={"metals": 0.5})
         set_default_economy_config(injected)
         assert get_default_economy_config() is injected
 
@@ -126,7 +196,6 @@ class TestDefaultSingletonAccessor:
         from disk again. Tests rely on this for isolation (see the
         autouse `_reset_default_economy_config` fixture)."""
         from game.strategy.config.economy_config import (
-            EconomyConfig,
             get_default_economy_config,
             set_default_economy_config,
         )

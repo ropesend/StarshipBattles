@@ -77,24 +77,38 @@ class TestGetSpeciesConfig:
         assert list(planet.species_configs.keys()) == ["rossarian"]
 
 
+def _cfg_with_ratios(food_allocation: float, ratios: dict) -> ColonySpeciesConfig:
+    """Build a ColonySpeciesConfig + seed its transient ratio dict.
+
+    PROJ-286: `last_consumption_ratios` is a post-construction-writable
+    field; `last_food_ratio` is a read-only computed property. Tests
+    that want to exercise the transient-field round-trip path seed the
+    dict after construction."""
+    cfg = ColonySpeciesConfig(food_allocation=food_allocation)
+    cfg.last_consumption_ratios = dict(ratios)
+    return cfg
+
+
 class TestSpeciesConfigsRoundTrip:
     def test_round_trip_preserves_food_allocation(self):
         planet = _minimal_planet()
         planet.species_configs = {
-            "rossarian": ColonySpeciesConfig(food_allocation=2.5, last_food_ratio=0.3),
-            "voidari": ColonySpeciesConfig(food_allocation=0.5, last_food_ratio=0.9),
+            "rossarian": _cfg_with_ratios(2.5, {"organics": 0.3}),
+            "voidari": _cfg_with_ratios(0.5, {"organics": 0.9}),
         }
         restored = Planet.from_dict(planet.to_dict())
         assert restored.species_configs["rossarian"].food_allocation == 2.5
         assert restored.species_configs["voidari"].food_allocation == 0.5
 
-    def test_round_trip_resets_last_food_ratio(self):
-        """`last_food_ratio` is transient — round-trip resets to default 1.0."""
+    def test_round_trip_resets_last_consumption_ratios(self):
+        """`last_consumption_ratios` is transient — round-trip resets to
+        empty dict, which makes `last_food_ratio` revert to 1.0."""
         planet = _minimal_planet()
         planet.species_configs = {
-            "rossarian": ColonySpeciesConfig(food_allocation=1.0, last_food_ratio=0.2),
+            "rossarian": _cfg_with_ratios(1.0, {"organics": 0.2, "metals": 0.5}),
         }
         restored = Planet.from_dict(planet.to_dict())
+        assert restored.species_configs["rossarian"].last_consumption_ratios == {}
         assert restored.species_configs["rossarian"].last_food_ratio == 1.0
 
     def test_old_save_without_species_configs_loads(self):
@@ -110,13 +124,14 @@ class TestSpeciesConfigsRoundTrip:
         cfg = restored.get_species_config("new_race")
         assert cfg.food_allocation == 1.0
 
-    def test_to_dict_does_not_emit_last_food_ratio(self):
-        """Sanity: the transient field doesn't leak into Planet.to_dict()
+    def test_to_dict_does_not_emit_transient_ratio_fields(self):
+        """Sanity: the transient dict doesn't leak into Planet.to_dict()
         either, via ColonySpeciesConfig.to_dict()'s own filter."""
         planet = _minimal_planet()
         planet.species_configs = {
-            "rossarian": ColonySpeciesConfig(food_allocation=2.0, last_food_ratio=0.5),
+            "rossarian": _cfg_with_ratios(2.0, {"organics": 0.5}),
         }
         emitted = planet.to_dict()["species_configs"]["rossarian"]
         assert emitted == {"food_allocation": 2.0}
+        assert "last_consumption_ratios" not in emitted
         assert "last_food_ratio" not in emitted

@@ -1355,9 +1355,9 @@ The legacy `gravity_ideal`, `gravity_tolerance`, `temperature_ideal`, `temperatu
 
 The four planet-modifier editor windows (`gravity_target_editor.py`, `water_target_editor.py`, `radiation_shield_editor.py`, `atmosphere_target_editor.py`) read `race_config.preferences[<id>].setpoint` for their "Species Ideal" / "Auto" buttons.
 
-## 8. Colony Demographics Loop (PROJ-284)
+## 8. Colony Demographics Loop (PROJ-284 + PROJ-286)
 
-Per-turn pipeline that converts a colony's food stockpile + per-species sliders into population growth. Runs AFTER the 100-tick loop in `TurnEngine.process_turn`, BEFORE `QualityEngine`:
+Per-turn pipeline that converts a colony's multi-resource upkeep stockpile + per-species sliders into population growth. Runs AFTER the 100-tick loop in `TurnEngine.process_turn`, BEFORE `QualityEngine`:
 
 ```
 [100-tick loop]
@@ -1371,51 +1371,63 @@ Per-turn pipeline that converts a colony's food stockpile + per-species sliders 
 
 `ColonySpeciesConfig` (`game/strategy/data/colony_species_config.py`) is a per-colony per-species dataclass attached to `Planet.species_configs: Dict[race_id, ColonySpeciesConfig]`. Fields:
 
-- `food_allocation: float = 1.0` — player-set linear scalar. Default 1.0 ("normal rations"). Range 0 to ∞ (UI slider capped at 5.0 with typed-input override). Scales BOTH organics consumption AND the derived happiness/reproduction chain.
-- `last_food_ratio: float = 1.0` — **TRANSIENT** cache written by `OrganicsConsumptionEngine` each turn (`supplied / needed`). Read by `HappinessEngine` and `PopulationEngine`. NOT serialized — `ColonySpeciesConfig.to_dict` excludes it and `from_dict` always resets to 1.0. Downstream readers rely on the engine overwriting it every turn; the engine explicitly writes 1.0 for zero-population / zero-allocation edge cases to prevent stale values.
+- `food_allocation: float = 1.0` — player-set linear scalar. Default 1.0 ("normal rations"). Range 0 to ∞ (UI slider capped at 5.0 with typed-input override). Scales BOTH upkeep consumption (across EVERY declared resource) AND the derived happiness/reproduction chain.
+- `last_consumption_ratios: Dict[str, float]` — **TRANSIENT** per-resource supply-ratio dict written by `OrganicsConsumptionEngine` each turn. Keys are resource ids declared in `EconomyConfig.population_consumption`; values are `supplied / needed` per resource. NOT serialized — `ColonySpeciesConfig.to_dict` excludes it and `from_dict` always resets to `{}`. Downstream readers rely on the engine overwriting every entry every turn; the engine writes 1.0 per declared resource for zero-population / zero-allocation edge cases to prevent stale values.
+- `last_food_ratio: float` — **computed `@property`** returning `min(last_consumption_ratios.values())` with a 1.0 fallback when the dict is empty. Read by `HappinessEngine` and `PopulationEngine` unchanged — their source files don't change when upgrading from single-resource (PROJ-284) to multi-resource (PROJ-286) consumption. Models Liebig's Law of the Minimum: the colony is "as well-fed as its worst-supplied resource". A 100%-organics / 0%-metals colony has aggregate ratio 0 and is treated as starving. No setter — callers must write to `last_consumption_ratios` directly.
 
 `Planet.get_species_config(race_id)` is a lazy-create-and-store helper — callers can read or mutate the returned config without checking for absence first.
 
-### Data-driven food resource
+### Data-driven population-consumption dict
 
-`data/economy.json` declares which resource population consumes and at what base rate:
+`data/economy.json` declares every resource population consumes and the per-pop-per-turn rate for each:
 
 ```json
 {
-    "population_food_resource": "organics",
-    "food_per_pop_per_turn": 0.001
+    "population_consumption": {
+        "organics": 0.001,
+        "metals": 0.0001,
+        "radioactives": 0.00001
+    }
 }
 ```
 
-`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this via the CLAUDE.md `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to hardcoded defaults on missing/malformed JSON. Modders swap `"organics"` for any other resource id (e.g. `"metals"`) and the UI auto-relabels via `ResourceCatalog.get(id).name` — never hardcode "Organics" outside `economy.json`.
+`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this dict via the CLAUDE.md `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to a hardcoded `{"organics": 0.001}` default (PROJ-284-equivalent) on missing JSON, malformed JSON, or `population_consumption` present but not a dict. The `primary_resource` convenience property returns the first key in insertion order (Python 3.7+), used by UI titles that want a single "main food" label. A legacy `population_food_resource` read-only shim property delegates to `primary_resource` — preserved until PROJ-289 migrates UI callers.
 
 ### Formulas
 
-- **Consumption** (`OrganicsConsumptionEngine`): per species per colony, `needed = pop.count * cfg.food_allocation * economy.food_per_pop_per_turn`. Drains `min(needed, available)` from `planet.stockpile[food_resource]`. Writes `cfg.last_food_ratio = supplied / needed`.
-- **Happiness** (`HappinessEngine`): `happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. Unbounded above 1.0 on purpose — over-supply + ideal habitability can push happiness past neutral. Clamp at 3 prevents runaway values.
-- **Population growth** (`PopulationEngine`): `growth = (race.base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, planet.max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` in `population_engine.py`. The defensive `min(1.0, happiness)` clamp from the pre-PROJ-284 formula was removed so the new [0, 3] happiness range is honored — `happiness=3` triples the logistic term.
+- **Consumption** (`OrganicsConsumptionEngine`): per species per colony, the engine `clear()`s `cfg.last_consumption_ratios` then iterates `economy.population_consumption.items()`. For each `(resource_id, per_pop_rate)`: `needed = pop.count * cfg.food_allocation * per_pop_rate`; drains `min(needed, available)` from `planet.stockpile[resource_id]`; writes `cfg.last_consumption_ratios[resource_id] = supplied / needed` (or 1.0 when `needed == 0`).
+- **Happiness** (`HappinessEngine`): `happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. `last_food_ratio` is the MIN across declared resources — if any upkeep resource is at 0%, happiness collapses to 0 regardless of the others. Unbounded above 1.0 on purpose — over-supply + ideal habitability can push happiness past neutral. Clamp at 3 prevents runaway values.
+- **Population growth** (`PopulationEngine`): `growth = (race.base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, planet.max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` in `population_engine.py`. The defensive `min(1.0, happiness)` clamp from the pre-PROJ-284 formula was removed so the new [0, 3] happiness range is honored — `happiness=3` triples the logistic term. Via the MIN aggregation, a colony starving on even one declared resource sees full decline_term.
 
 ### UI surface
 
-`FoodAllocationEditor` (`game/ui/screens/food_allocation_editor.py`) is a pygame_gui window with one row per species on a colony. Each row: slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title auto-derives from `ResourceCatalog.get(economy.population_food_resource).name` — default label reads "Organics Allocation — {planet.name}". Apply writes to `planet.get_species_config(race_id).food_allocation`.
+`FoodAllocationEditor` (`game/ui/screens/food_allocation_editor.py`) is a pygame_gui window with one row per species on a colony. Each row: slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title auto-derives from `ResourceCatalog.get(economy.primary_resource).name` (via the `population_food_resource` legacy shim until PROJ-289 migrates the call site) — default label reads "Organics Allocation — {planet.name}". Apply writes to `planet.get_species_config(race_id).food_allocation`.
 
 The button appears on `PlanetAbilitiesWindow` when the colony has at least one population (unlike the facility-gated environment editors). Routed via `StrategyEventRouter._open_food_allocation_editor` → direct mutation on `ColonySpeciesConfig` (no command dispatch — food allocation is a player-facing dial, not a strategy-layer command with replay semantics).
 
-### Swapping the population food resource
+The editor currently shows only the primary resource's consumption preview — the multi-resource per-species upkeep UI is scheduled for PROJ-289.
 
-Modders and designers can change which resource populations consume without touching code. Recipe:
+### Swapping the population-consumption dict
 
-1. **Edit `data/economy.json`** — set `population_food_resource` to any `resources.json` id. Example:
+Modders and designers can change which resources populations consume without touching code. Recipe:
+
+1. **Edit `data/economy.json`** — add, remove, or retune any entry in `population_consumption`. Example adding ammonia and halving the default rates:
    ```json
    {
-       "population_food_resource": "metals",
-       "food_per_pop_per_turn": 0.001
+       "population_consumption": {
+           "organics": 0.0005,
+           "metals": 0.00005,
+           "radioactives": 0.000005,
+           "ammonia": 0.0002
+       }
    }
    ```
-2. **Ensure the target resource exists in `data/resources.json`** and is harvestable somewhere in the game (some existing ResourceHarvester ability must target it, or the colony stockpile will never fill). Quality-bearing (`has_quality: true`) is preferred but not required.
+2. **Ensure every referenced resource exists in `data/resources.json`** and is harvestable somewhere in the game (some existing ResourceHarvester ability must target it, or the colony stockpile will never fill that slot → MIN aggregation collapses to 0 → species starves). Quality-bearing (`has_quality: true`) is preferred but not required.
 3. **Restart the game** so `get_default_economy_config()` re-reads the JSON. In tests and at runtime, `set_default_economy_config(new_config)` swaps the cached singleton without restart.
 
-The UI auto-relabels: `FoodAllocationEditor`'s title goes from "Organics Allocation — Earth" to "Metals Allocation — Earth", the consumption preview reads "0.100 metals/turn", and the engine drains `metals` from the colony stockpile. The `ResourceCatalog.get(id).name` lookup (with graceful fallback to the raw id) is what makes this a one-line data edit.
+Aggregation behavior: the species' `last_food_ratio` becomes the MIN across all declared resources. A colony without any ammonia stockpile at all → `last_consumption_ratios["ammonia"] = 0.0` → aggregate = 0 → happiness = 0 → full decline term applies. This is the correct Liebig's-Law gameplay: add new required resources cautiously and make sure new empires can realistically produce them.
+
+Dict insertion order controls which resource is "primary" for UI labels — put the flagship food resource first.
 
 Cross-reference: [§7 Race Preferences & Habitability](strategy_layer.md#7-race-preferences--habitability-proj-283) is where the `habitability` factor in the happiness formula comes from.
 

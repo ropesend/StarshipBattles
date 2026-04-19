@@ -590,16 +590,21 @@ class IPlanetActionEngine(ABC):
 
 class IOrganicsConsumptionEngine(ABC):
     """
-    Abstract interface for per-colony per-species food consumption.
+    Abstract interface for per-colony per-species multi-resource upkeep.
 
-    PROJ-284 Phase 2: Drains the configured food resource
-    (`EconomyConfig.population_food_resource`, defaults to "organics")
-    from each colony's stockpile based on population * food_allocation *
-    food_per_pop_per_turn, and writes `last_food_ratio = supplied / needed`
-    back into each `ColonySpeciesConfig` for downstream consumption by
-    `HappinessEngine` and `PopulationEngine`.
+    PROJ-284 Phase 2 + PROJ-286: Drains every resource declared in
+    `EconomyConfig.population_consumption` (a `Dict[resource_id, per_pop_rate]`)
+    from each colony's stockpile based on `population * food_allocation *
+    per_pop_rate` per resource, and writes per-resource `supplied / needed`
+    ratios into `ColonySpeciesConfig.last_consumption_ratios`. The
+    aggregated `cfg.last_food_ratio` (MIN across resources) feeds
+    `HappinessEngine` + `PopulationEngine` unchanged.
 
     Runs ONCE per turn, AFTER the 100-tick loop, BEFORE population growth.
+
+    Misnomer: the interface name references "organics" but post-PROJ-286
+    it drains arbitrary resources declared in `economy.json`. Rename was
+    deliberately deferred — see PROJ-286 decisions.md.
 
     Example usage:
         engine = OrganicsConsumptionEngine()  # uses default economy config
@@ -612,15 +617,17 @@ class IOrganicsConsumptionEngine(ABC):
         empires: List
     ) -> None:
         """
-        Process food consumption for all empires.
+        Process multi-resource population upkeep for all empires.
 
         For each colony in each empire, iterates its populations and:
             1. Looks up / lazy-creates `ColonySpeciesConfig` via
                `planet.get_species_config(race_id)`.
-            2. Computes needed = count * food_allocation * food_per_pop_per_turn.
-            3. Drains min(needed, available) from the colony stockpile.
-            4. Writes `last_food_ratio = supplied / needed` (or 1.0 when
-               needed == 0).
+            2. Clears `cfg.last_consumption_ratios` (overwrite every turn).
+            3. For each declared `(resource_id, per_pop_rate)`:
+               - Computes needed = count * food_allocation * per_pop_rate.
+               - Drains min(needed, available) from the colony stockpile.
+               - Writes `cfg.last_consumption_ratios[resource_id] =
+                 supplied / needed` (or 1.0 when needed == 0).
 
         Args:
             empires: List of Empire objects to process

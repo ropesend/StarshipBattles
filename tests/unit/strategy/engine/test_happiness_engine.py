@@ -136,7 +136,7 @@ class TestHappinessIdealPlanet:
         empire = _empire(1, [planet], race)
 
         # Seed the ratio as OrganicsConsumptionEngine would.
-        planet.get_species_config("human").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -149,7 +149,7 @@ class TestHappinessIdealPlanet:
         planet = _earth_like(populations=[pop])
         race = _race(base_happiness=0.5)
         empire = _empire(1, [planet], race)
-        planet.get_species_config("human").last_food_ratio = 2.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 2.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -165,7 +165,7 @@ class TestHappinessHostilePlanet:
         planet = _hostile(populations=[pop])
         race = _race(base_happiness=0.5)
         empire = _empire(1, [planet], race)
-        planet.get_species_config("human").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -182,7 +182,7 @@ class TestHappinessStarvation:
         planet = _earth_like(populations=[pop])
         race = _race(base_happiness=0.5)
         empire = _empire(1, [planet], race)
-        planet.get_species_config("human").last_food_ratio = 0.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 0.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -198,7 +198,7 @@ class TestHappinessClamping:
         planet = _earth_like(populations=[pop])
         race = _race(base_happiness=0.6)
         empire = _empire(1, [planet], race)
-        planet.get_species_config("human").last_food_ratio = 20.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 20.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -212,7 +212,7 @@ class TestHappinessClamping:
         race = _race(base_happiness=0.5)
         empire = _empire(1, [planet], race)
         # Violate the invariant for the test.
-        planet.get_species_config("human").last_food_ratio = -1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": -1.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -227,8 +227,8 @@ class TestHappinessMissingRaceConfig:
         planet = _earth_like(populations=[pop_human, pop_unknown])
         race = _race(race_id="human", base_happiness=0.5)
         empire = _empire(1, [planet], race)
-        planet.get_species_config("human").last_food_ratio = 1.0
-        planet.get_species_config("ghost").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("ghost").last_consumption_ratios = {"organics": 1.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -248,7 +248,7 @@ class TestHappinessMissingRaceConfig:
         empire = Empire(empire_id=1, name="NoRace", color=(0, 0, 0))
         empire.colonies = [planet]
         empire.race_config = None
-        planet.get_species_config("human").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
 
         engine.process_happiness([empire], galaxy=None)
 
@@ -265,8 +265,8 @@ class TestHappinessMultiSpecies:
         race_human = _race(race_id="human", base_happiness=0.5)
         race_alien = _race(race_id="alien", base_happiness=0.8)
         empire = _empire(1, [planet], race_human)
-        planet.get_species_config("human").last_food_ratio = 1.0
-        planet.get_species_config("alien").last_food_ratio = 0.25
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
+        planet.get_species_config("alien").last_consumption_ratios = {"organics": 0.25}
 
         def mock_resolver(race_id, empire_arg):
             return {"human": race_human, "alien": race_alien}.get(race_id)
@@ -298,10 +298,80 @@ class TestHappinessEngineEdgeCases:
         planet = _earth_like(populations=[pop])
         race = _race(base_happiness=0.5)
         empire = _empire(1, [planet], race)
-        planet.get_species_config("human").last_food_ratio = 1.0
+        planet.get_species_config("human").last_consumption_ratios = {"organics": 1.0}
 
         engine.process_happiness([empire], galaxy=None)
 
         hab = score_planet_for_race(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
         assert pop.happiness != 0.99  # overwritten
+
+
+# ---------------------------------------------------------------------------
+# PROJ-286 Phase 4: multi-resource behavior via the MIN-aggregation property
+# ---------------------------------------------------------------------------
+
+class TestMultiResourceStarvation:
+    """PROJ-286: `cfg.last_food_ratio` is now MIN across declared
+    resources. HappinessEngine + PopulationEngine source files were NOT
+    touched — these tests pin that behavior through the computed property."""
+
+    def test_one_starved_resource_collapses_happiness_to_zero(self, engine):
+        """Full organics but no metals → aggregate ratio = 0 → happiness
+        formula multiplies by 0 → happiness = 0 regardless of
+        habitability or base_happiness."""
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.9)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        planet.get_species_config("human").last_consumption_ratios = {
+            "organics": 1.0, "metals": 0.0,
+        }
+
+        engine.process_happiness([empire], galaxy=None)
+
+        assert pop.happiness == pytest.approx(0.0)
+
+    def test_mixed_ratios_happiness_uses_minimum(self, engine):
+        """`{organics: 0.5, metals: 0.8, radioactives: 1.0}` → min=0.5 →
+        happiness = base * 0.5 * hab. Proves the property feeds the same
+        formula HappinessEngine has always used — no engine rewrite."""
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        planet.get_species_config("human").last_consumption_ratios = {
+            "organics": 0.5, "metals": 0.8, "radioactives": 1.0,
+        }
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        assert pop.happiness == pytest.approx(0.5 * 0.5 * hab)
+
+
+class TestMultiResourceVsSingleResourceParity:
+    """PROJ-286 parity contract: a single-resource ratio X and a
+    multi-resource dict whose MIN is X must produce identical happiness.
+    Pins the aggregation semantic so a future refactor (e.g. swapping
+    MIN for WEIGHTED) doesn't silently break downstream formulas."""
+
+    def test_single_resource_matches_multi_resource_with_same_minimum(self, engine):
+        """`{organics: 0.4}` and `{organics: 0.9, metals: 0.4}` have the
+        same MIN (0.4) so happiness must match bit-for-bit."""
+        pop_single = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet_single = _earth_like(name="Single", populations=[pop_single])
+        race = _race(base_happiness=0.5)
+        empire_single = _empire(1, [planet_single], race)
+        planet_single.get_species_config("human").last_consumption_ratios = {"organics": 0.4}
+
+        pop_multi = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet_multi = _earth_like(name="Multi", populations=[pop_multi])
+        empire_multi = _empire(2, [planet_multi], race)
+        planet_multi.get_species_config("human").last_consumption_ratios = {
+            "organics": 0.9, "metals": 0.4,
+        }
+
+        engine.process_happiness([empire_single, empire_multi], galaxy=None)
+
+        assert pop_single.happiness == pytest.approx(pop_multi.happiness)
