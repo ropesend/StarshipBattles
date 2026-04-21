@@ -1,7 +1,7 @@
 {
     "population_consumption": {
-        "organics": 0.001,
-        "metals": 0.0001,
-        "radioactives": 0.00001
+        "organics": 0.0001,
+        "metals": 0.00001,
+        "radioactives": 0.000001
     }
 }
