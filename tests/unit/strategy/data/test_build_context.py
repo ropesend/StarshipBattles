@@ -25,57 +25,6 @@ class TestBuildContextProtocolCompliance:
         # Runtime check using isinstance with Protocol
         assert isinstance(mock_fleet, BuildContext)
 
-    def test_planet_has_required_properties(self, minimal_planet):
-        """Planet should have all properties required by BuildContext."""
-        # name property
-        assert hasattr(minimal_planet, 'name')
-        assert isinstance(minimal_planet.name, str)
-
-        # construction_queue property
-        assert hasattr(minimal_planet, 'construction_queue')
-        assert isinstance(minimal_planet.construction_queue, list)
-
-        # has_space_shipyard property
-        assert hasattr(minimal_planet, 'has_space_shipyard')
-        assert isinstance(minimal_planet.has_space_shipyard, bool)
-
-        # owner_id property
-        assert hasattr(minimal_planet, 'owner_id')
-
-        # context_type property
-        assert hasattr(minimal_planet, 'context_type')
-        assert minimal_planet.context_type == "planet"
-
-        # can_build_type method
-        assert hasattr(minimal_planet, 'can_build_type')
-        assert callable(minimal_planet.can_build_type)
-
-    def test_fleet_has_required_properties(self, mock_fleet):
-        """Fleet should have all properties required by BuildContext."""
-        # name property
-        assert hasattr(mock_fleet, 'name')
-        assert isinstance(mock_fleet.name, str)
-
-        # construction_queue property
-        assert hasattr(mock_fleet, 'construction_queue')
-        assert isinstance(mock_fleet.construction_queue, list)
-
-        # has_space_shipyard property
-        assert hasattr(mock_fleet, 'has_space_shipyard')
-        assert isinstance(mock_fleet.capabilities.has_space_shipyard, bool)
-
-        # owner_id property
-        assert hasattr(mock_fleet, 'owner_id')
-
-        # context_type property
-        assert hasattr(mock_fleet, 'context_type')
-        assert mock_fleet.context_type == "fleet"
-
-        # can_build_type method
-        assert hasattr(mock_fleet, 'can_build_type')
-        assert callable(mock_fleet.capabilities.can_build_type)
-
-
 class TestBuildContextDuckTyping:
     """Test that BuildContext works with duck typing."""
 

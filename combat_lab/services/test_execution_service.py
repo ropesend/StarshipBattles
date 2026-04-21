@@ -19,14 +19,8 @@ class TestExecutionService:
     """Service for executing test scenarios."""
 
     def __init__(self):
-        """Initialize test execution service.
-
-        PROJ-274: constructing `TestRunner` installs the Combat Lab
-        `DesignOnlyMaterializer` as the default context materializer, so
-        both headless (CLI) and visual (UI) paths share the same
-        ship-materialization pipeline with no `ship_builder` closures.
-        """
-        self.runner = TestRunner()
+        """Initialize test execution service."""
+        pass
 
     def run_visual(
         self,
@@ -47,6 +41,7 @@ class TestExecutionService:
         """
         metadata = scenario_info['metadata']
 
+        runner = TestRunner()
         try:
             # Instantiate scenario
             logger.debug(f" Instantiating scenario class")
@@ -56,7 +51,7 @@ class TestExecutionService:
 
             # Load test data
             logger.debug(f" Loading test data for scenario")
-            self.runner.load_data_for_scenario(scenario)
+            runner.load_data_for_scenario(scenario)
             logger.debug(f" Test data loaded successfully")
 
             # PROJ-269 Phase 6 Tasks 6.9/6.10: spec-compiled visual-mode
@@ -87,7 +82,7 @@ class TestExecutionService:
             # start_from_spec re-materializes internally — ship_builder is
             # deterministic per design_id. PROJ-274: both calls rely on
             # the context materializer (DesignOnlyMaterializer installed
-            # in __init__); no explicit ship_builder kwarg required.
+            # by TestRunner); no explicit ship_builder kwarg required.
             from game.simulation.battle_runner import (
                 _default_ship_builder_from_context,
             )
@@ -130,6 +125,8 @@ class TestExecutionService:
             import traceback
             traceback.print_exc()
             return False
+        finally:
+            runner.cleanup()
 
     def run_headless(
         self,
@@ -159,6 +156,7 @@ class TestExecutionService:
         """
         from combat_lab.services.scenario_run_helper import run_scenario_via_run_battle
 
+        runner = TestRunner()
         try:
             logger.debug(" Instantiating scenario class for headless run")
             scenario_cls = scenario_info['class']
@@ -166,7 +164,7 @@ class TestExecutionService:
             logger.debug(f" Scenario instantiated: {scenario.name}")
 
             logger.debug(" Loading test data for scenario")
-            self.runner.load_data_for_scenario(scenario)
+            runner.load_data_for_scenario(scenario)
             logger.debug(" Test data loaded successfully")
 
             max_ticks = getattr(scenario, 'max_ticks', 0) or 0
@@ -204,7 +202,7 @@ class TestExecutionService:
             scenario.results['duration_real'] = elapsed_time
             scenario.results['ticks'] = tick_count  # Alias for consistency with runner.
 
-            self.runner.log_test_execution(scenario, headless=True)
+            runner.log_test_execution(scenario, headless=True)
 
             return {
                 'passed': scenario.passed,
@@ -226,3 +224,5 @@ class TestExecutionService:
                 'duration_real': 0,
                 'error': str(e),
             }
+        finally:
+            runner.cleanup()

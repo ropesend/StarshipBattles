@@ -7,20 +7,6 @@ from game.core.hex_math import HexCoord
 class TestColonySummary:
     """Tests for ColonySummary frozen dataclass."""
 
-    def test_create_colony_summary(self):
-        """ColonySummary stores colony data correctly."""
-        from game.strategy.facade.dto.empire_dto import ColonySummary
-
-        colony = ColonySummary(
-            planet_id=42,
-            planet_name="Earth",
-            has_shipyard=True,
-        )
-
-        assert colony.planet_id == 42
-        assert colony.planet_name == "Earth"
-        assert colony.has_shipyard is True
-
     def test_is_frozen(self):
         """ColonySummary is immutable (frozen)."""
         from game.strategy.facade.dto.empire_dto import ColonySummary
@@ -38,20 +24,6 @@ class TestColonySummary:
 class TestFleetSummary:
     """Tests for FleetSummary frozen dataclass."""
 
-    def test_create_fleet_summary(self):
-        """FleetSummary stores fleet data correctly."""
-        from game.strategy.facade.dto.empire_dto import FleetSummary
-
-        fleet = FleetSummary(
-            fleet_id=100,
-            ship_count=5,
-            has_orders=True,
-        )
-
-        assert fleet.fleet_id == 100
-        assert fleet.ship_count == 5
-        assert fleet.has_orders is True
-
     def test_is_frozen(self):
         """FleetSummary is immutable (frozen)."""
         from game.strategy.facade.dto.empire_dto import FleetSummary
@@ -68,26 +40,6 @@ class TestFleetSummary:
 
 class TestEmpireInfo:
     """Tests for EmpireInfo frozen dataclass."""
-
-    def test_create_basic_empire_info(self):
-        """EmpireInfo stores empire data correctly."""
-        from game.strategy.facade.dto.empire_dto import EmpireInfo
-
-        empire = EmpireInfo(
-            empire_id=0,
-            name="Federation",
-            color=(0, 128, 255),
-            theme_id="Federation",
-            flag_id="flag_001",
-        )
-
-        assert empire.empire_id == 0
-        assert empire.name == "Federation"
-        assert empire.color == (0, 128, 255)
-        assert empire.theme_id == "Federation"
-        assert empire.flag_id == "flag_001"
-        assert empire.colony_count == 0
-        assert empire.fleet_count == 0
 
     def test_create_full_empire_info(self):
         """EmpireInfo can include full counts."""

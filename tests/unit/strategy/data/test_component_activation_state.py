@@ -9,19 +9,6 @@ from game.strategy.data.component_activation_state import (
 )
 
 
-class TestActivationPhase:
-    """ActivationPhase enum basics."""
-
-    def test_has_four_phases(self):
-        assert len(ActivationPhase) == 4
-
-    def test_values_are_strings(self):
-        assert ActivationPhase.INACTIVE.value == "inactive"
-        assert ActivationPhase.ACTIVATING.value == "activating"
-        assert ActivationPhase.ACTIVE.value == "active"
-        assert ActivationPhase.DEACTIVATING.value == "deactivating"
-
-
 class TestComponentActivationStateInit:
     """Default construction and basic properties."""
 

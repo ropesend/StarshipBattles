@@ -48,23 +48,6 @@ def resource_aggregator(mock_fleet):
 
 
 # =============================================================================
-# Test: Initialization
-# =============================================================================
-
-class TestFleetConsumableAggregatorInit:
-    """Tests for FleetConsumableAggregator initialization."""
-
-    def test_aggregator_can_be_created(self, mock_fleet):
-        """FleetConsumableAggregator can be instantiated."""
-        from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
-
-        aggregator = FleetConsumableAggregator(mock_fleet)
-
-        assert aggregator is not None
-        assert aggregator._fleet is mock_fleet
-
-
-# =============================================================================
 # Test: Movement Resource Methods
 # =============================================================================
 

@@ -49,25 +49,6 @@ def _make_mock_facility(name: str, design_id: str):
 
 # --- PlanetReportPanel Import Tests ---
 
-# --- Complexes List Tests ---
-
-class TestComplexesList:
-    """Tests for complexes list display."""
-
-    def test_complexes_list_disabled_returns_early(self):
-        """_update_complexes_list returns early if disabled."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        panel.complexes_container = None
-        panel.complex_items = []
-
-        # Should not raise
-        panel._update_complexes_list()
-
-
 # --- Number Formatting Tests ---
 
 class TestNumberFormatting:

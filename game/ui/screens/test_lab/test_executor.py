@@ -120,6 +120,8 @@ class TestLabExecutor:
         except (OSError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error running visual test: {e}", exc_info=True)
             self.output_log.append(f"ERROR: {e}")
+        finally:
+            runner.cleanup()
 
     def run_visual_baseline(self, test_id):
         """
@@ -164,6 +166,8 @@ class TestLabExecutor:
         except (OSError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error running visual baseline: {e}", exc_info=True)
             self.output_log.append(f"ERROR: {e}")
+        finally:
+            runner.cleanup()
 
     def run_headless(self, test_id):
         """
@@ -226,6 +230,8 @@ class TestLabExecutor:
         except (OSError, ValueError, KeyError, TypeError) as e:
             self.output_log.append(f"ERROR: {e}")
             return False
+        finally:
+            runner.cleanup()
 
     def _run_scenario_via_run_battle(
         self, *, test_id, scenario, seed, runner, progress_label,
@@ -370,6 +376,8 @@ class TestLabExecutor:
 
         except (OSError, ValueError, KeyError, TypeError) as e:
             self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: ERROR - {e}")
+        finally:
+            runner.cleanup()
 
         # Move to next test
         self.batch_current_index += 1

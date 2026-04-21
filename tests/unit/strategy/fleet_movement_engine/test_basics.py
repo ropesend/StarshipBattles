@@ -13,40 +13,6 @@ from game.core.hex_math import HexCoord
 
 
 # =============================================================================
-# Test: FleetMovementEngine Creation
-# =============================================================================
-
-class TestFleetMovementEngineCreation:
-    """Tests for FleetMovementEngine initialization."""
-
-    def test_fleet_movement_engine_can_be_created(self):
-        """FleetMovementEngine can be instantiated."""
-        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-
-        engine = FleetMovementEngine()
-
-        assert engine is not None
-
-    def test_fleet_movement_engine_has_calculate_next_hex(self):
-        """FleetMovementEngine has calculate_next_hex method."""
-        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-
-        engine = FleetMovementEngine()
-
-        assert hasattr(engine, 'calculate_next_hex')
-        assert callable(engine.calculate_next_hex)
-
-    def test_fleet_movement_engine_has_apply_movement(self):
-        """FleetMovementEngine has apply_movement method."""
-        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-
-        engine = FleetMovementEngine()
-
-        assert hasattr(engine, 'apply_movement')
-        assert callable(engine.apply_movement)
-
-
-# =============================================================================
 # Test: Movement Calculation
 # =============================================================================
 

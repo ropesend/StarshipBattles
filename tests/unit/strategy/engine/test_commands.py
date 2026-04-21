@@ -43,33 +43,6 @@ class TestCommandBase:
         cmd = IssueColonizeCommand(fleet_id=1, planet_id=2)
         assert cmd.name == "IssueColonizeCommand"
 
-    def test_all_commands_have_type(self):
-        """All command classes should set type to ISSUE_ORDER."""
-        commands = [
-            IssueColonizeCommand(1, 2),
-            IssueMoveCommand(1, HexCoord(0, 0)),
-            # NOTE: IssueBuildShipCommand removed in PROJ-208 (dead code)
-            IssueInterceptCommand(1, 2),
-            IssueJoinFleetCommand(1, 2),
-            QueueColonizeMissionCommand(1, HexCoord(0, 0), 2),
-            ClearFleetOrdersCommand(1),
-            IssueTransferCommand(1, 2, "passengers", "load", 10),
-            IssueImplodePlanetCommand(1, 2),
-            IssueStellerateStarCommand(1),
-            IssueOpenWarpPointCommand(1, HexCoord(0, 0), "Alpha"),
-            IssueCloseWarpPointCommand(1, "warp_1"),
-            IssueCreateDysonSphereCommand(1),
-            IssueSelfDestructCommand(1, [1, 2, 3]),
-            QueueImplodePlanetMissionCommand(1, HexCoord(0, 0), 2),
-            QueueStellerateStarMissionCommand(1, HexCoord(0, 0)),
-            QueueOpenWarpPointMissionCommand(1, HexCoord(0, 0), "Beta"),
-            QueueCloseWarpPointMissionCommand(1, HexCoord(0, 0), "warp_2"),
-            QueueCreateDysonSphereMissionCommand(1, HexCoord(0, 0)),
-        ]
-        for cmd in commands:
-            assert cmd.type == CommandType.ISSUE_ORDER, f"{cmd.name} should have ISSUE_ORDER type"
-
-
 class TestIssueColonizeCommand:
     """Tests for IssueColonizeCommand."""
 

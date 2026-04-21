@@ -199,10 +199,3 @@ class TestStructuralIntegrity:
         assert rows[0]['label'] == 'Structural Integrity'
         assert rows[0]['value'] == 'Yes'
 
-    def test_structural_integrity_primary_value(self, mock_component):
-        """get_primary_value returns 1.0 (marker abilities return 1.0)."""
-        ability = StructuralIntegrity(mock_component, {})
-        # This ability doesn't define get_primary_value, so it inherits from Ability base
-        # But the test assumes it should work like other markers
-        # If it doesn't, we'd need to adjust
-        pass  # StructuralIntegrity doesn't override get_primary_value

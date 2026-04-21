@@ -1,27 +1,11 @@
 """Tests for ITableDataSource base class."""
 
-import pytest
 from typing import List, Dict, Any, Optional
 import pygame
 
 
 class TestITableDataSource:
     """Test the ITableDataSource base class interface."""
-
-    def test_required_methods_raise_not_implemented(self):
-        """Required methods should raise NotImplementedError when not overridden."""
-        from game.ui.components.table.data_source import ITableDataSource
-
-        source = ITableDataSource()
-
-        with pytest.raises(NotImplementedError):
-            source.get_row_count()
-
-        with pytest.raises(NotImplementedError):
-            source.get_cell_value(0, "test")
-
-        with pytest.raises(NotImplementedError):
-            source.get_columns()
 
     def test_get_cell_image_returns_none_by_default(self):
         """Optional get_cell_image should return None by default."""

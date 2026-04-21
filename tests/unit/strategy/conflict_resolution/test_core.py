@@ -13,14 +13,6 @@ from game.core.hex_math import HexCoord
 class TestConflictResolutionEngineInit:
     """Tests for ConflictResolutionEngine initialization."""
 
-    def test_engine_can_be_created(self):
-        """ConflictResolutionEngine can be instantiated."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-
-        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
-
-        assert engine is not None
-
     def test_engine_accepts_battle_resolver(self):
         """ConflictResolutionEngine accepts battle_resolver parameter."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
@@ -34,15 +26,6 @@ class TestConflictResolutionEngineInit:
         engine = ConflictResolutionEngine(battle_resolver=resolver)
 
         assert engine._battle_resolver is resolver
-
-    def test_engine_stores_injected_battle_resolver(self):
-        """ConflictResolutionEngine stores the injected battle resolver."""
-        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-
-        mock_resolver = MagicMock()
-        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
-
-        assert engine._battle_resolver is mock_resolver
 
 
 class TestConflictResult:

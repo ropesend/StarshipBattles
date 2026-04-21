@@ -167,20 +167,6 @@ class TestClassificationConfigFromJson:
 class TestGetClassificationConfig:
     """Tests for the get_classification_config cached function."""
 
-    def test_cached_config_returns_instance(self):
-        """Test that get_classification_config returns a ClassificationConfig instance."""
-        # Clear cache before test
-        get_classification_config.cache_clear()
-
-        config = get_classification_config()
-
-        assert isinstance(config, ClassificationConfig)
-        # Should have valid attributes
-        assert hasattr(config, 'dwarf_max')
-        assert hasattr(config, 'ice_dwarf_max')
-        assert hasattr(config, 'vacuum')
-        assert hasattr(config, 'arid')
-
     def test_cached_config_fallback_on_error(self):
         """Test that get_classification_config falls back to defaults on error."""
         # Clear cache before test

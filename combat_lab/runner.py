@@ -75,7 +75,27 @@ class TestRunner:
         set_default_ship_materializer(
             DesignOnlyMaterializer(design_loader=load_combat_lab_design)
         )
-        
+
+    def cleanup(self):
+        """Restore the production default ship materializer.
+
+        Undoes the ``DesignOnlyMaterializer`` override installed in
+        ``__init__``.  Passing ``None`` triggers lazy re-init to
+        ``InstanceBackedMaterializer`` on the next
+        ``get_default_ship_materializer()`` call (see
+        ``ship_materializer.py`` docstring).
+
+        In-game callers (``TestLabExecutor``, ``TestExecutionService``)
+        must call this after test execution completes so the override
+        does not leak into non-Combat-Lab flows (e.g. Battle Setup).
+        CLI entry points (``run_tests.py``) run in their own process
+        and do not need cleanup.
+        """
+        from game.simulation.services.ship_materializer import (
+            set_default_ship_materializer,
+        )
+        set_default_ship_materializer(None)
+
     def load_data_for_scenario(self, scenario):
         """
         Reload global game data based on scenario requirements.

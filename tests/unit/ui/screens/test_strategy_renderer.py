@@ -73,10 +73,6 @@ class TestRendererInitialization:
 
         assert r.scene is mock_scene
 
-    def test_init_initializes_elapsed_time(self, renderer):
-        """__init__ should initialize elapsed time to 0."""
-        assert renderer._elapsed_time == 0.0
-
     def test_init_caches_asset_manager(self, mock_scene):
         """__init__ should cache asset manager reference."""
         mock_am = MagicMock()

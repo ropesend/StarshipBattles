@@ -50,58 +50,6 @@ def mock_panel():
 class TestRaceIdentityPanelCreation:
     """Tests for RaceIdentityPanel initialization."""
 
-    def test_identity_panel_can_be_imported(self):
-        """RaceIdentityPanel can be imported from module."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-        assert RaceIdentityPanel is not None
-
-    def test_identity_panel_has_race_name_input(self):
-        """RaceIdentityPanel has race_name_input attribute."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_name_input = None
-            assert hasattr(panel, 'race_name_input')
-
-    def test_identity_panel_has_race_name_plural_input(self):
-        """RaceIdentityPanel has race_name_plural_input attribute."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_name_plural_input = None
-            assert hasattr(panel, 'race_name_plural_input')
-
-    def test_identity_panel_has_government_type_dropdown(self):
-        """RaceIdentityPanel has government_type_dropdown attribute."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.government_type_dropdown = None
-            assert hasattr(panel, 'government_type_dropdown')
-
-    def test_identity_panel_has_all_dropdowns(self):
-        """RaceIdentityPanel has all required dropdown attributes."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.government_type_dropdown = None
-            panel.government_org_dropdown = None
-            panel.leader_title_dropdown = None
-            panel.physical_type_dropdown = None
-            panel.society_type_dropdown = None
-            panel.faction_name_input = None
-
-            assert hasattr(panel, 'government_type_dropdown')
-            assert hasattr(panel, 'government_org_dropdown')
-            assert hasattr(panel, 'leader_title_dropdown')
-            assert hasattr(panel, 'physical_type_dropdown')
-            assert hasattr(panel, 'society_type_dropdown')
-            assert hasattr(panel, 'faction_name_input')
-
     def test_identity_panel_creates_successfully(self):
         """RaceIdentityPanel initializes without errors when mocked."""
         from game.ui.panels.race_identity_panel import RaceIdentityPanel

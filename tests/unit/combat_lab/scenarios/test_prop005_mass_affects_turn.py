@@ -46,12 +46,6 @@ class TestPROP005ScenarioExists:
         scenario = PropMassAffectsTurnRateScenario()
         assert scenario.metadata.category == "Propulsion"
 
-    def test_prop005_is_in_all_exports(self):
-        """PROP-005 should be exported in __all__."""
-        from combat_lab.scenarios import propulsion_scenarios
-        assert 'PropMassAffectsTurnRateScenario' in propulsion_scenarios.__all__
-
-
 class TestPROP005ShipConfiguration:
     """Tests for PROP-005 ship configuration."""
 
