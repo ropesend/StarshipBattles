@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add display fields to HabitabilityFactor | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Refactor format_value to data-driven | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Resize labels & verify zero warnings | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Add display fields to HabitabilityFactor | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Refactor format_value to data-driven | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Resize labels & verify zero warnings | Awaiting User Verification | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26 06:30
-**Active Phase:** Planning Complete — awaiting user approval
-**Last Action:** Plan drafted; research findings written to findings/research.md
-**Next Action:** User reviews plan; on approval, implement Phase 1
-**Blockers:** None
-**Context for Next Agent:** This is a 3-phase refactor that closes a gap in the FACTOR_REGISTRY pattern (PROJ-283). Each factor will declare its own display unit + precision instead of UI code branching on `unit` strings. Test coverage is good in [tests/unit/ui/widgets/test_preference_row.py](../../../tests/unit/ui/widgets/test_preference_row.py); extend it to lock in the new contract.
+**Last Updated:** 2026-04-26 07:30
+**Active Phase:** Phase 3 — Awaiting User Manual Smoke (Task 3.2)
+**Last Action:** Phase 3 agent-side complete. Task 3.1 bumped `_SETPOINT_LABEL_WIDTH`/`_TOLERANCE_LABEL_WIDTH` 60→90px. Task 3.3 created memory topic file `proj_293_display_contract.md` and added one-line index entry to MEMORY.md. Task 3.4 confirmed final sharded suite green (15112/15112) and reviewed `git diff --stat` (4 files, 161 ins/23 del, no scope creep). All agent-doable Phase 3 work is done.
+**Next Action:** **USER ACTION REQUIRED** — Task 3.2 is a manual smoke that cannot be performed by an agent. User runs `python launcher.py`, opens race editor, scrolls habitability rows, confirms zero `Label Rect is too small` warnings in stderr (the 7 from the QA log). Confirms tectonic shows `0.30` (not `"0.30 fraction"`); radiation shows `0` (not `"0.00 shielding"`); other factors render identically to before.
+**Blockers:** User-approval gate (Task 3.2 manual smoke).
+**Context for Next Agent:** Project is code-complete. After user smoke passes, mark Task 3.2 + Phase Completion Checklist items 4-5 in phase_3_checklist.md complete, then archive the project: `python Projects/scripts/archive_project.py PROJ-293`. If user smoke surfaces a warning that wasn't in the original list (e.g. for a newly-overflowing factor), the registry entry's `display_unit`/`display_precision` is the lever — no UI code change needed.
 
 ## Overview
 

@@ -5,8 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Awaiting User Verification
 **Objective:** Bump label widths so even the longest formatted strings have margin. Manual smoke verifies the 7 `Label Rect is too small` warnings are gone.
+
+**Code work is complete.** Tasks 3.1, 3.3, 3.4 done by the agent. Task 3.2 is a user-only manual smoke gate (cannot be performed by an agent — requires opening the game's race editor). The 5-item Phase Completion Checklist below is also gated on the user smoke (items 4-5).
 
 ---
 
@@ -16,12 +18,12 @@
 **File:** [game/ui/widgets/preference_row.py:45-46](../../../game/ui/widgets/preference_row.py#L45-L46)
 **Tests:** `pytest tests/unit/ui/widgets/test_preference_row.py -v`
 
-- [ ] Read [game/ui/widgets/preference_row.py:42-50](../../../game/ui/widgets/preference_row.py#L42-L50) (layout constants)
-- [ ] Change `_SETPOINT_LABEL_WIDTH = 60` → `_SETPOINT_LABEL_WIDTH = 90`
-- [ ] Change `_TOLERANCE_LABEL_WIDTH = 60` → `_TOLERANCE_LABEL_WIDTH = 90`
-- [ ] Run preference_row tests — confirm no test breakage (the tests don't pin label widths, just construction success)
+- [x] Read [game/ui/widgets/preference_row.py:42-50](../../../game/ui/widgets/preference_row.py#L42-L50) (layout constants)
+- [x] Change `_SETPOINT_LABEL_WIDTH = 60` → `_SETPOINT_LABEL_WIDTH = 90`
+- [x] Change `_TOLERANCE_LABEL_WIDTH = 60` → `_TOLERANCE_LABEL_WIDTH = 90`
+- [x] Run preference_row tests — confirm no test breakage (the tests don't pin label widths, just construction success)
 
-**Notes:** If `TestPreferenceRowConstruction` breaks with a width-related assertion, the rect size is being checked somewhere; the constant bump is the right fix anyway, but adjust the test if it was pinning the old 60.
+**Notes:** Both constants bumped 60→90. Added a comment explaining the rationale. All 18 preference_row tests still pass.
 
 ---
 
@@ -52,11 +54,11 @@
 **File:** `C:\Users\rossr\.claude\projects\c--Dev-Starship-Battles\memory\PROJ-283.md` (or whichever file holds the PROJ-283 entry)
 **Tests:** N/A — memory update
 
-- [ ] Find the existing PROJ-283 memory entry. The MEMORY.md index references it.
-- [ ] Append a short note: "PROJ-293 extended the FACTOR_REGISTRY contract with `display_unit: str` and `display_precision: int` fields, making display formatting data-driven (no UI-side branching on `unit` strings). See PROJ-293 plan."
-- [ ] Save
+- [x] Find the existing PROJ-283 memory entry. The MEMORY.md index references it.
+- [x] Append a short note: "PROJ-293 extended the FACTOR_REGISTRY contract with `display_unit: str` and `display_precision: int` fields, making display formatting data-driven (no UI-side branching on `unit` strings). See PROJ-293 plan."
+- [x] Save
 
-**Notes:** This is hygiene; a future agent reading MEMORY.md to understand the registry pattern will see the extension.
+**Notes:** Created topic file `proj_293_display_contract.md` with the full schema-extension detail (per-factor display table, format_value before/after, why-it-matters note). Added a one-line index entry to MEMORY.md pointing to the topic file. MEMORY.md was already at the size budget (warning surfaced earlier in the session); the topic-file split keeps the index slim.
 
 ---
 
@@ -64,14 +66,14 @@
 **File:** N/A
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Full suite green
-- [ ] `git diff` review:
+- [x] Full suite green
+- [x] `git diff` review:
   - 2 files changed: `habitability_factors.py`, `preference_row.py`
   - 2 test files changed: `test_habitability_factors.py`, `test_preference_row.py`
   - No unrelated changes
-- [ ] Confirm the changes match the plan (no scope creep, no incidental edits)
+- [x] Confirm the changes match the plan (no scope creep, no incidental edits)
 
-**Notes:**
+**Notes:** 15112/15112 sharded suite passing (baseline 15109 + 7 new tests; 0 regressions). `git diff --stat` shows exactly the 4 expected files: 161 insertions, 23 deletions. No unrelated edits.
 
 ---
 

@@ -49,7 +49,11 @@ class HabitabilityFactor:
         id:                Canonical factor id (stable identifier — used as a
                            dict key in `RaceConfig.preferences`).
         display_name:      Human-readable label for UI.
-        unit:              Storage unit (e.g. "g", "K", "Pa", "fraction").
+        unit:              Storage unit (e.g. "m/s^2", "K", "Pa", "fraction").
+                           This is the canonical *storage* label and may be
+                           referenced by extractors, scorers, or scientific
+                           code beyond display formatting. To change UI
+                           rendering, set `display_unit` instead.
         display_scale:     Multiplier used by the UI when displaying raw
                            values (Pa → kPa = 0.001; most axes = 1.0).
         weight:            Weight in the habitability weighted-geometric-mean.
@@ -62,6 +66,15 @@ class HabitabilityFactor:
                            axis value. May return None if the planet doesn't
                            carry this data; scorers handle that case.
         scorer:            Pure function taking (value, pref) → float in [0,1].
+        display_unit:      PROJ-293: UI suffix appended to the scaled value
+                           ("kPa", "g", "K", "%", "EE", or "" for a bare
+                           number). Distinct from `unit`, which is the
+                           canonical storage label. `"%"` is glued to the
+                           number ("50%"); all other non-empty units get a
+                           separating space ("1.0 g"). Empty string =
+                           bare number, no suffix.
+        display_precision: PROJ-293: number of decimal places to show in
+                           the UI. 0 = integer, 1 = "12.3", 2 = "12.34".
     """
     id: str
     display_name: str
@@ -75,6 +88,9 @@ class HabitabilityFactor:
     step: float
     extractor: Callable[["Planet"], Optional[float]]
     scorer: Callable[[Optional[float], EnvironmentalPreference], float]
+    # PROJ-293: declarative display contract.
+    display_unit: str = ""
+    display_precision: int = 2
 
 
 # -----------------------------------------------------------------------------
@@ -154,6 +170,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         step=0.98,  # ~0.1 g per cost step
         extractor=_make_scalar_extractor("surface_gravity"),
         scorer=_default_gaussian_scorer,
+        display_unit="g",
+        display_precision=1,
     ),
     HabitabilityFactor(
         id="temperature",
@@ -170,6 +188,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         step=10.0,
         extractor=_make_scalar_extractor("surface_temperature"),
         scorer=_default_gaussian_scorer,
+        display_unit="K",
+        display_precision=0,
     ),
     HabitabilityFactor(
         id="water",
@@ -184,6 +204,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         step=0.1,
         extractor=_make_scalar_extractor("surface_water"),
         scorer=_default_gaussian_scorer,
+        display_unit="%",
+        display_precision=0,
     ),
     HabitabilityFactor(
         id="pressure",
@@ -198,6 +220,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         step=5000.0,
         extractor=_make_scalar_extractor("surface_pressure"),
         scorer=_default_gaussian_scorer,
+        display_unit="kPa",
+        display_precision=1,
     ),
     HabitabilityFactor(
         id="tectonic",
@@ -212,6 +236,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         step=0.1,
         extractor=_make_scalar_extractor("tectonic_activity"),
         scorer=_default_gaussian_scorer,
+        display_unit="",  # bare number — abstract 0-1 scale, no unit suffix
+        display_precision=2,
     ),
     HabitabilityFactor(
         id="magnetic",
@@ -226,6 +252,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         step=0.1,
         extractor=_make_scalar_extractor("magnetic_field"),
         scorer=_default_gaussian_scorer,
+        display_unit="EE",
+        display_precision=2,
     ),
     HabitabilityFactor(
         id="radiation",
@@ -244,6 +272,8 @@ _SCALAR_FACTORS: tuple[HabitabilityFactor, ...] = (
         # tune if the feel is wrong in Phase 2 parity tests.
         extractor=_make_scalar_extractor("radiation_shielding"),
         scorer=_default_gaussian_scorer,
+        display_unit="",  # bare number — abstract signed shielding score
+        display_precision=0,
     ),
 )
 
@@ -313,6 +343,8 @@ def _build_gas_factors() -> tuple[HabitabilityFactor, ...]:
             step=_GAS_STEP,
             extractor=_make_gas_extractor(formula),
             scorer=_default_gaussian_scorer,
+            display_unit="kPa",
+            display_precision=1,
         ))
     return tuple(factors)
 

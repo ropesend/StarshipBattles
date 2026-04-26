@@ -221,6 +221,43 @@ class TestDisplayScaling:
         assert "293" in formatted
         assert "K" in formatted
 
+    def test_tectonic_format_no_unit_suffix(self):
+        """PROJ-293: tectonic activity is a 0-1 fraction; the verbose
+        'fraction' suffix was removed. Output is a bare 2-decimal number."""
+        from game.ui.widgets.preference_row import PreferenceRow
+
+        factor = get_factor("tectonic")
+        assert PreferenceRow.format_value(factor, 0.30) == "0.30"
+        assert PreferenceRow.format_value(factor, 0.20) == "0.20"
+
+    def test_radiation_format_no_unit_suffix(self):
+        """PROJ-293: radiation shielding is an abstract score; the verbose
+        'shielding' suffix was removed. Output is a bare integer."""
+        from game.ui.widgets.preference_row import PreferenceRow
+
+        factor = get_factor("radiation")
+        assert PreferenceRow.format_value(factor, 0.0) == "0"
+        assert PreferenceRow.format_value(factor, 50.0) == "50"
+        assert PreferenceRow.format_value(factor, -25.0) == "-25"
+
+    def test_format_uses_factor_display_fields(self):
+        """The formatter reads display_unit and display_precision from the
+        factor itself, not a hardcoded if-tree. Synthesize a fake factor
+        and check the output picks up its declared format."""
+        from game.strategy.data.habitability_factors import HabitabilityFactor
+        from game.ui.widgets.preference_row import PreferenceRow
+
+        fake = HabitabilityFactor(
+            id="test", display_name="Test", unit="raw",
+            display_scale=1.0, weight=1.0,
+            default_setpoint=0.0, default_tolerance=1.0,
+            min_value=0.0, max_value=10.0, step=1.0,
+            extractor=lambda p: 0.0,
+            scorer=lambda v, pref: 1.0,
+            display_unit="zorps", display_precision=3,
+        )
+        assert PreferenceRow.format_value(fake, 1.234567) == "1.235 zorps"
+
 
 # ---------------------------------------------------------------------------
 # on_change callback
