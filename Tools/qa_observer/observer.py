@@ -7,6 +7,21 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# PROJ-294: Make the project root importable so the post-session log-copy step
+# (line ~232: `from game.core.paths import Paths`) works regardless of the
+# launcher's cwd. qa_launcher.py:32 spawns this script with `cwd=observer_dir`
+# so that observer's local `.env` loads correctly — but that means the project
+# root isn't on `sys.path` and `game.*` imports would crash. Mirrors the pattern
+# used by other Tools/ scripts that import from game.* (e.g.
+# Tools/visual_test_galaxy/visual_test_galaxy.py:17,
+# Tools/analyze_dependency_graph/analyze_dependency_graph.py:26).
+# `parents[2]` assumes the file lives at `<root>/Tools/qa_observer/observer.py`;
+# update if the script ever moves.
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from dotenv import load_dotenv
 import sounddevice as sd  # PROJ-295: replaced pyaudio for Python 3.13 wheel availability.
 from watchdog.observers import Observer

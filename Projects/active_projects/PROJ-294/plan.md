@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Bootstrap sys.path in observer.py | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Bootstrap sys.path in observer.py | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26 06:30
-**Active Phase:** Planning Complete — awaiting user approval
-**Last Action:** Plan drafted; research findings written to findings/research.md
-**Next Action:** User reviews plan; on approval, implement Phase 1
-**Blockers:** None — straightforward ~4-line fix
-**Context for Next Agent:** See [findings/research.md](findings/research.md). The fix follows an established pattern already used by 13 other Tools/ scripts.
+**Last Updated:** 2026-04-26 09:30
+**Active Phase:** Complete — awaiting user verification + archive
+**Last Action:** Phase 1 done. Added 7-line `_PROJECT_ROOT = Path(__file__).resolve().parents[2]` + `sys.path.insert` block at top of observer.py. End-to-end smoke confirmed: `echo "QUIT" | observer.py --child` now copies 4 log files (battle.log, battle_log.txt, crash_log.txt, combat_lab.log) into the session directory and exits cleanly with `Observer child process ended cleanly.` — no `ModuleNotFoundError` traceback.
+**Next Action:** User confirms behavior matches expectations. On approval, run `python Projects/scripts/archive_project.py PROJ-294`.
+**Blockers:** None.
+**Context for Next Agent:** Project is fully verified. The fix is consistent with the canonical Tools/ pattern (matches visual_test_galaxy.py:17 and analyze_dependency_graph.py:26). Bootstrap touches only `sys.path`, leaves cwd alone — `.env` resolution still works. Observed 4 log files were copied successfully, proving `from game.core.paths import Paths` (line ~232) now resolves.
 
 ## Overview
 

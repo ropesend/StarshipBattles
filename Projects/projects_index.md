@@ -5,7 +5,7 @@
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
 | PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Awaiting Verification | 2026-04-26 | 2026-04-26 |
 | PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Planning | 2026-04-26 | 2026-04-26 |
 
 ## Archived Projects
