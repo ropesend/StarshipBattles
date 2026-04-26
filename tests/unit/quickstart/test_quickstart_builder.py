@@ -212,19 +212,28 @@ class TestQuickstartBuilderDesignCopying:
                 )
 
     def test_copy_designs_without_themes_preserves_original(self, temp_save_folder):
-        """Backward compat: without empire_themes, designs keep original theme_id."""
+        """Backward compat: without empire_themes, designs keep original theme_id.
+
+        Templates ship with mixed themes (most "Federation", at least one
+        "Klingons") — the pass-through copy must preserve whatever the
+        source file declares, not coerce to a single theme.
+        """
         import json
 
         result = QuickstartBuilder.copy_quickstart_designs(temp_save_folder, [0])
         assert result is True
 
+        source_dir = get_quickstart_designs_dir()
         empire_folder = Path(temp_save_folder) / "designs" / "empire_0"
         for design_file in empire_folder.glob("*.json"):
             with open(design_file) as f:
-                data = json.load(f)
-            # Original template theme should be preserved (Federation)
-            if "theme_id" in data:
-                assert data["theme_id"] == "Federation"
+                copied = json.load(f)
+            with open(source_dir / design_file.name) as f:
+                original = json.load(f)
+            if "theme_id" in original:
+                assert copied["theme_id"] == original["theme_id"], (
+                    f"{design_file.name}: theme_id changed during pass-through copy"
+                )
 
 
 class TestInitialComplexesConstant:

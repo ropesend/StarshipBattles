@@ -88,14 +88,14 @@ class TestPrimaryResourceProperty:
 class TestLoadEconomyConfigFromDefault:
     def test_loads_default_from_data_path(self):
         """The shipped `data/economy.json` must produce the documented
-        three-resource defaults (organics 0.001, metals 0.0001,
-        radioactives 0.00001)."""
+        three-resource defaults (organics 0.0001, metals 0.00001,
+        radioactives 0.000001)."""
         from game.strategy.config.economy_config import load_economy_config
         cfg = load_economy_config()
         assert cfg.population_consumption == {
-            "organics": pytest.approx(0.001),
-            "metals": pytest.approx(0.0001),
-            "radioactives": pytest.approx(0.00001),
+            "organics": pytest.approx(0.0001),
+            "metals": pytest.approx(0.00001),
+            "radioactives": pytest.approx(0.000001),
         }
 
     def test_missing_file_falls_back_to_defaults(self, tmp_path):
