@@ -17,15 +17,24 @@
 
 ---
 
-## Phase 0 Decision Questions (FOR USER)
+## Phase 0 Decision Questions (RESOLVED 2026-04-26)
 
-The following questions must be answered before Phase 1 begins. Update this table as the user answers.
+| # | Question | User's answer |
+|---|----------|---------------|
+| 1 | Target Python version: 3.11, 3.12, or 3.13? | **3.13** (verified via PyPI lookup that all C-ext deps have 3.13-compatible wheels: numpy, scipy, Pillow, opencv-python via abi3, dearpygui, watchdog, pygame-ce, pygame_gui, google-cloud-speech). Only blocker was pyaudio; resolved by migrating to sounddevice. |
+| 2 | Drop 3.10 support entirely? | **Yes** — drop, no multi-version compat. |
+| 3 | Target completion date? | **Today (2026-04-26).** |
+| 4 | pyaudio? | **Migrate to `sounddevice`** rather than drop. Same PortAudio backend (identical audio behavior), `py3-none-win_amd64` wheel covers 3.13 trivially. Folded into PROJ-295 as Phase 1. ~30-40 line refactor across observer.py + audio_monitor.py. |
+| 5 | `.venv` at repo root + `pyproject.toml`? | **Yes to both, minimal scope.** `pyproject.toml` carries one declaration: `requires-python = ">=3.13"`. |
+| 6 | Contributors? | Solo. |
 
-| # | Question | Recommendation | User's answer |
-|---|----------|----------------|---------------|
-| 1 | Target Python version: 3.11, 3.12, or 3.13? | 3.12 (best runway / risk balance) | _Pending_ |
-| 2 | Drop 3.10 support entirely, or maintain multi-version compatibility? | Drop entirely | _Pending_ |
-| 3 | Target completion date? | Before 2026-09-01 (1 month buffer before EOL) | _Pending_ |
-| 4 | Is `pyaudio` dropping acceptable as a fallback if wheels are missing? It's only used by `Tools/qa_observer/` (not core game). | Yes, fallback acceptable; don't block the upgrade on QA tooling | _Pending_ |
-| 5 | Should we introduce `.venv` at repo root and `pyproject.toml` (with just `requires-python` declared) as part of this upgrade? | Yes — minimal, modern, prevents accidental 3.10 installs | _Pending_ |
-| 6 | Are there contributors other than the user who'd be affected? | Solo project per project context | _Pending_ |
+## Resulting plan revision
+
+Phase 0 closes here. Phase 1 (originally "wheel dry-run") split into:
+- **Phase 1: pyaudio→sounddevice migration** — the 3.13 unblocker
+- **Phase 2: wheel dry-run on 3.13** — quick sanity check
+- **Phase 3: live install + full regression** — venv, install, tests
+- **Phase 4: documentation**
+- **Phase 5: closeout monitor**
+
+Decision captured: prefer migration over dropping pyaudio because the QA voice-recording loop is a real capability worth preserving, and the migration cost (half a day) is small compared to the long-term benefit of removing the wheel-availability headache.

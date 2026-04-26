@@ -13,19 +13,20 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. User decision gate | **Blocking — needs user input** | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Wheel availability validation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Local migration & full regression | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Documentation updates | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Closeout & monitor | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 0. User decision gate | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. pyaudio → sounddevice migration | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Wheel dry-run on Python 3.13 | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Live install + full regression | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Documentation updates | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Closeout & monitor | Awaiting User Approval | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26 06:30
-**Active Phase:** Phase 0 — awaiting user decisions on target version + scope
-**Last Action:** Plan drafted; research findings written to findings/research.md
-**Next Action:** User answers Phase 0 decision questions; on answers, Phase 0 closes and Phase 1 begins.
-**Blockers:** Need user decisions: target version (3.11/3.12/3.13), drop-3.10 strategy, timing window
-**Context for Next Agent:** Low-risk upgrade per research — zero breaking changes detected, 147 files already use `from __future__ import annotations`. Risk surface is dependency wheel availability (numpy, opencv-python, pyaudio, dearpygui — all C-extension packages). Deadline is 2026-10-04 (Python 3.10 EOL).
+**Last Updated:** 2026-04-26 09:00
+**Active Phase:** Phase 5 — Awaiting User Approval to archive
+**Last Action:** All 5 phases code-complete. Python 3.13.13 installed via winget; `.venv` created; all 60+ dependencies installed cleanly; pyproject.toml and .python-version added; CLAUDE.md + combat_lab/README.md updated. Three sharded suite runs on 3.13: 15112/15111/15112 (run 2 was a pre-existing order-dependent flake — passes in isolation). Wall time 76s → 52s (31% speedup from 3.13). MEMORY.md topic file written.
+**Next Action:** **USER ACTION** — review the changes (`git status` shows the file diff) and authorize archival via `python Projects/scripts/archive_project.py PROJ-295`. Or request specific changes before close.
+**Blockers:** Project archival is a destructive operation; awaiting explicit user approval per CLAUDE.md.
+**Context for Next Agent:** Project is fully verified end-to-end. Phase 5 stability characterization documented in `findings/watchlist.md`. The known order-dependent flake (`test_warp_distance_scaling`) is pre-existing and was also seen on 3.10 in different forms — not a regression. The audioop-lts dependency could be removed in a future cleanup by reimplementing 3-line numpy RMS in the QA observer; not urgent.
 
 ## Overview
 

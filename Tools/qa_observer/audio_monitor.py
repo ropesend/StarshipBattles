@@ -9,7 +9,7 @@ import sys
 import struct
 import threading
 import tkinter as tk
-import pyaudio
+import sounddevice as sd  # PROJ-295: replaced pyaudio for Python 3.13 wheel availability.
 import audioop
 from collections import deque
 from dotenv import load_dotenv
@@ -20,7 +20,8 @@ load_dotenv('.env')
 
 # Match observer.py audio config
 CHUNK = 1024
-FORMAT = pyaudio.paInt16
+SAMPLE_WIDTH = 2  # bytes per sample for int16
+DTYPE = 'int16'
 CHANNELS = 1
 RATE = 16000
 VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '450'))
@@ -45,16 +46,15 @@ class AudioMonitor:
         self.is_recording = False  # tracks if RMS > threshold
         self.mic_error = None
 
-        # Initialize audio
-        self.pa = pyaudio.PyAudio()
+        # Initialize audio (PROJ-295: sounddevice; same PortAudio backend, py3 wheel)
         try:
-            self.stream = self.pa.open(
-                format=FORMAT,
+            self.stream = sd.RawInputStream(
+                samplerate=RATE,
                 channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                frames_per_buffer=CHUNK
+                dtype=DTYPE,
+                blocksize=CHUNK,
             )
+            self.stream.start()
         except Exception as e:
             self.mic_error = str(e)
             self.stream = None
@@ -138,10 +138,11 @@ class AudioMonitor:
 
     def _read_audio(self):
         """Continuously read audio data in a background thread."""
-        sample_width = self.pa.get_sample_size(FORMAT)
+        sample_width = SAMPLE_WIDTH
         while self.running and self.stream:
             try:
-                data = self.stream.read(CHUNK, exception_on_overflow=False)
+                raw, _overflow = self.stream.read(CHUNK)
+                data = bytes(raw)
                 rms = audioop.rms(data, sample_width)
                 self.current_rms = rms
                 self.rms_history.append(rms)
@@ -288,9 +289,8 @@ class AudioMonitor:
         self.running = False
         try:
             if self.stream:
-                self.stream.stop_stream()
+                self.stream.stop()
                 self.stream.close()
-            self.pa.terminate()
         except Exception:
             pass
         try:
