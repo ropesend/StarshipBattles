@@ -14,10 +14,6 @@ class TestDetailPanelRendering:
     # Cleanup now happens per-test in teardown_method to prevent pygame display state pollution
 
     def setup_method(self):
-        # NOTE: pygame is initialized by the root conftest's session-scope fixture.
-        # Do NOT call pygame.init() or set_mode() here as it interferes with
-        # parallel test execution.
-
         # Clear module from cache to ensure patches take effect
         import importlib
         module_name = 'game.ui.screens.builder.detail_panel'
@@ -77,10 +73,6 @@ class TestDetailPanelRendering:
     def teardown_method(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-
-        # Note: pygame and registry cleanup is handled by conftest fixtures
-        # (pygame_display_reset and reset_game_state)
-        # DO NOT call pygame.quit() or RegistryManager.clear() here as it conflicts with fixtures
 
     def test_html_stats_generation_basic(self):
         """Verify basic component stats (Name, Type, Mass, HP) are generated."""

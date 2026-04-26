@@ -317,13 +317,6 @@ class TestPlanetDataSourceCellValueOutOfBounds:
 class TestPlanetDataSourceCellImage:
     """Test PlanetDataSource get_cell_image for icon column."""
 
-    @pytest.fixture(autouse=True)
-    def setup_pygame(self):
-        """Initialize pygame for surface tests."""
-        pygame.init()
-        yield
-        pygame.quit()
-
     def test_get_cell_image_icon_column(self):
         """get_cell_image returns cached surface for icon column."""
         from game.ui.screens.planet_data_source import PlanetDataSource
@@ -524,13 +517,6 @@ class TestPlanetDataSourceGetPlanetAtIndex:
 
 class TestPlanetDataSourceIntegration:
     """Integration tests for PlanetDataSource with real column configs."""
-
-    @pytest.fixture(autouse=True)
-    def setup_pygame(self):
-        """Initialize pygame for surface tests."""
-        pygame.init()
-        yield
-        pygame.quit()
 
     def test_full_column_extraction(self):
         """Test extraction across multiple column types."""

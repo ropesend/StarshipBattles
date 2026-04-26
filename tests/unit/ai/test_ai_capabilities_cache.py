@@ -15,14 +15,6 @@ from game.ai.target_evaluator import TargetEvaluator
 from game.engine.spatial import SpatialGrid
 
 
-@pytest.fixture(autouse=True)
-def pygame_init():
-    """Initialize pygame for Vector2 usage."""
-    pygame.init()
-    yield
-    pygame.quit()
-
-
 @pytest.fixture
 def mock_ship():
     """Create a mock ship for the AI controller."""

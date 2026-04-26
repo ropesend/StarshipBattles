@@ -15,7 +15,6 @@ from game.ui.screens.builder.left_panel import BuilderLeftPanel
 class TestBug09Reproduction:
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
-        pygame.init()
         self.window_surface = pygame.display.set_mode((800, 600))
         self.ui_manager = pygame_gui.UIManager((800, 600))
 
@@ -36,8 +35,6 @@ class TestBug09Reproduction:
         self.left_panel = BuilderLeftPanel(self.mock_builder, self.ui_manager, self.panel_rect)
 
         yield
-
-        pygame.quit()
 
     def test_hull_visibility_in_component_palette(self):
         """BUG-09: Hull components should NOT be visible in the Component Palette (Left Panel)."""

@@ -5,7 +5,6 @@ Tests weapon, strategic movement, cargo, and superweapon getters
 using real Ship objects with real components.
 """
 import pytest
-import pygame
 
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries, get_default_registry_provider
@@ -13,8 +12,7 @@ from game.core.registry import GameRegistries, get_default_registry_provider
 
 @pytest.fixture(scope="module")
 def getter_module_setup():
-    """Module-level setup: initialize pygame and load game data."""
-    pygame.init()
+    """Module-level setup: load game data."""
     from game.simulation.entities.ship_loader import initialize_ship_data
     from game.simulation.components.component import load_components, load_modifiers
     from tests.fixtures.paths import get_project_root, get_data_dir
@@ -26,7 +24,6 @@ def getter_module_setup():
     load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
 
     yield
-    pygame.quit()
 
 
 @pytest.fixture

@@ -3,22 +3,12 @@
 PROJ-38: Migrated to use fresh_registries fixture for cleaner test setup.
 PROJ-50: Updated to pass registries directly to design functions.
 """
-import pytest
-import pygame
-
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.designs import create_brick, create_interceptor
 
 
 class TestDesignFactories:
     """Test programmatic ship creation functions."""
-
-    @pytest.fixture(autouse=True)
-    def setup_pygame(self):
-        """Set up pygame for tests."""
-        pygame.init()
-        yield
-        pygame.quit()
 
     def test_create_brick_returns_ship(self, fresh_registries):
         """create_brick should return a valid Ship object."""

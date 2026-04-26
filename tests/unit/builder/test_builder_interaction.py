@@ -28,14 +28,7 @@ class MockDropTarget(DropTarget):
 
 
 @pytest.fixture
-def pygame_init():
-    pygame.init()
-    yield
-    pygame.quit()
-
-
-@pytest.fixture
-def interaction_setup(pygame_init):
+def interaction_setup():
     builder = MagicMock()
     builder.detail_panel.rect = pygame.Rect(0, 0, 0, 0)  # Mock rect
     builder.left_panel.get_add_count.return_value = 1

@@ -8,14 +8,6 @@ from unittest.mock import MagicMock
 from game.simulation.entities.projectile import Projectile
 
 
-@pytest.fixture(scope="module", autouse=True)
-def init_pygame():
-    """Initialize pygame for vector operations."""
-    pygame.init()
-    yield
-    pygame.quit()
-
-
 @pytest.fixture
 def mock_owner():
     """Create a minimal owner mock with required protocol attributes."""

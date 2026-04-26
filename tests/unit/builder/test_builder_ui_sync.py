@@ -39,10 +39,6 @@ class TestBuilderUISync:
 
         # PolicyManager already loaded above — no additional cleanup needed
 
-        # Re-initialize pygame - required because other tests may have called pygame.quit()
-        # which destroys the session-scoped pygame state from root conftest.
-        # pygame.init() is idempotent, so safe to call even if already initialized.
-        pygame.init()
         pygame.display.set_mode((800, 600))  # Dummy mode
         manager = pygame_gui.UIManager((800, 600))
 
@@ -86,10 +82,6 @@ class TestBuilderUISync:
         # and without cleanup, subsequent tests on the same worker may fail to load fonts.
         if hasattr(self, 'manager') and self.manager:
             self.manager.clear_and_reset()
-
-        # NOTE: Do NOT call pygame.quit() here - it destroys the session-scoped
-        # pygame initialization from root conftest's enforce_headless fixture.
-        # The root conftest handles pygame lifecycle and registry cleanup.
 
     def _get_option_value(self, option):
         """Helper to handle pygame_gui returning (id, text) tuples or raw values."""

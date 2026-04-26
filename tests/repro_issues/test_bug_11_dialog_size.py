@@ -9,14 +9,12 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 class TestBug11DialogSize:
     @pytest.fixture(autouse=True)
     def setup_pygame(self):
-        pygame.init()
         self.window_size = (1600, 900)
         pygame.display.set_mode(self.window_size)
         # Load theme
         theme_path = "builder_theme.json"
         self.ui_manager = pygame_gui.UIManager(self.window_size, theme_path if os.path.exists(theme_path) else None)
         yield
-        # pygame.quit() removed for xdist session isolation
 
     def test_confirmation_dialog_scrolling(self):
         """

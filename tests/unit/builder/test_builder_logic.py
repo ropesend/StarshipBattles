@@ -1,6 +1,5 @@
 
 import pytest
-import pygame
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
@@ -14,14 +13,12 @@ class TestBuilderLogic:
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self, fresh_registries):
-        pygame.init()
         initialize_ship_data(str(get_project_root()))
         provider = get_default_registry_provider()
         load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
         self.registries = fresh_registries
         self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort", registries=fresh_registries)
         yield
-        pygame.quit()
 
     def test_mass_limit_validation(self):
         """Verify mass_limits_ok is false if mass exceeds budget or layer limits."""

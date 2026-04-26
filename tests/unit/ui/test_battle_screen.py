@@ -49,10 +49,6 @@ class TestBattleScreen:
 
             yield
 
-        # Note: pygame and registry cleanup is handled by conftest fixtures
-        # (pygame_display_reset and reset_game_state)
-        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
-
     def test_start_initialization(self):
         """Test battle initialization."""
         start_battle_screen_with_minimal_spec(

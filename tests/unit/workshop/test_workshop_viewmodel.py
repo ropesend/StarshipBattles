@@ -9,8 +9,6 @@ PROJ-40: Updated to use DI pattern with WorkshopContext instead of global fallba
 import pytest
 from unittest.mock import MagicMock, patch, call
 
-import pygame
-
 from game.core.registry import GameRegistries, get_default_registry_provider
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from tests.fixtures.paths import get_project_root, get_data_dir
@@ -39,7 +37,6 @@ class MockEventBus:
 @pytest.fixture(scope="class")
 def workshop_class_setup():
     """Class-level setup for WorkshopViewModel tests."""
-    pygame.init()
     # Load data for Ship creation
     from game.simulation.entities.ship_loader import initialize_ship_data
     from game.simulation.components.component import load_components, load_modifiers
@@ -51,8 +48,6 @@ def workshop_class_setup():
     load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
 
     yield
-
-    pygame.quit()
 
 
 @pytest.fixture

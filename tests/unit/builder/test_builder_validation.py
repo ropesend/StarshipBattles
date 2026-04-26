@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock
-import pygame
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
@@ -12,10 +11,6 @@ class TestBuilderValidation:
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self, fresh_registries):
-        # Initialize pygame for Vector2
-        if not pygame.get_init():
-            pygame.init()
-
         # Ensure data is loaded
         from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(str(get_project_root()))
@@ -40,8 +35,6 @@ class TestBuilderValidation:
         }
 
         yield
-
-        pygame.quit()
 
     def create_component(self, **kwargs):
         data = self.base_component_data.copy()
@@ -242,8 +235,6 @@ class TestComplexRules:
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self, fresh_registries):
-        if not pygame.get_init():
-            pygame.init()
         # Initialize ship logic
         from game.simulation.entities.ship import Ship
         from game.simulation.entities.ship_loader import initialize_ship_data

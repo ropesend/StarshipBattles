@@ -16,7 +16,6 @@ from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 @pytest.fixture
 def movement_ai_setup(fresh_registries):
-    pygame.init()
     # Initialize vehicle class definitions FIRST (required for layer configs)
     initialize_ship_data()
 
@@ -50,7 +49,6 @@ def movement_ai_setup(fresh_registries):
         'registries': fresh_registries
     }
 
-    pygame.quit()
     get_default_policy_manager().clear()
 
 

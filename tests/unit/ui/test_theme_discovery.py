@@ -17,8 +17,6 @@ class TestNewThemes:
     def setup(self):
         # Initialize manager with base path (cwd)
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        pygame.font.init()
 
         # Ensure display is initialized for convert_alpha
         if not pygame.display.get_surface():
@@ -57,10 +55,6 @@ class TestNewThemes:
         # Clean up singleton
         set_default_ship_theme_manager(ShipThemeManager())
 
-        # NOTE: Do not call pygame.quit() or pygame.display.quit() here - the root
-        # conftest manages pygame lifecycle at session scope. Calling quit() here
-        # would break subsequent tests with "No video mode set" errors.
-
     def test_theme_discovery(self):
         """Verify themes are discovered."""
         themes = self.manager.get_available_themes()
@@ -91,7 +85,6 @@ class TestShipThemeManagerSingletonLifecycle:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
@@ -143,7 +136,6 @@ class TestShipThemeManagerErrorPaths:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
@@ -257,7 +249,6 @@ class TestShipThemeManagerCaching:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
@@ -318,7 +309,6 @@ class TestShipThemeManagerMetrics:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
@@ -380,7 +370,6 @@ class TestShipThemeManagerThreadSafety:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
@@ -471,7 +460,6 @@ class TestShipThemeManagerManualScale:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield

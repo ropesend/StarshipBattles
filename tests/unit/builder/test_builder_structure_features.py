@@ -14,16 +14,13 @@ from game.simulation.entities.layer_data import LayerData
 
 @pytest.fixture
 def pygame_manager():
-    pygame.init()
     pygame.display.set_mode((800, 600))
     manager = pygame_gui.UIManager((800, 600))
     yield manager
-    pygame.quit()
 
 
 @pytest.fixture
 def builder_setup(fresh_registries):
-    pygame.init()
     pygame.display.set_mode((800, 600))
     manager = pygame_gui.UIManager((800, 600))
 
@@ -118,8 +115,6 @@ def builder_setup(fresh_registries):
     patcher_create_ui.stop()
     p1.stop()
     p2.stop()
-
-    pygame.quit()
 
 
 class TestBuilderStructureFeatures:

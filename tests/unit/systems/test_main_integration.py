@@ -10,12 +10,10 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 @pytest.fixture
 def cleanup():
-    """Clean up pygame and registry after test."""
+    """Clean up mocks after test."""
     yield
     # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
     patch.stopall()
-
-    pygame.quit()
 
 
 class TestMainIntegration:

@@ -11,7 +11,6 @@ class TestShipThemeLogic:
     def setup(self):
         # Set dummy driver for headless execution
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1))
 
         # Ensure singleton is reset before each test
@@ -22,9 +21,6 @@ class TestShipThemeLogic:
 
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        # NOTE: Do not call pygame.quit() here - the root conftest manages
-        # pygame lifecycle at session scope. Calling quit() here would break
-        # subsequent tests with "No video mode set" errors.
 
         # Clean up singleton
         set_default_ship_theme_manager(ShipThemeManager())
@@ -195,7 +191,6 @@ class TestShipClassToPortraitName:
     @pytest.fixture(autouse=True)
     def setup(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1))
         set_default_ship_theme_manager(ShipThemeManager())
         self.manager = get_default_ship_theme_manager()
@@ -238,7 +233,6 @@ class TestGetPortraitImage:
     @pytest.fixture(autouse=True)
     def setup(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         pygame.display.set_mode((1, 1))
         set_default_ship_theme_manager(ShipThemeManager())
         self.manager = get_default_ship_theme_manager()

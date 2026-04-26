@@ -112,49 +112,24 @@ def pytest_configure_node(node):
 @pytest.fixture(autouse=True)
 def pygame_display_reset():
     """
-    Ensure pygame is initialized and display is reset for each UI test.
+    Reset display surface to standard size around each UI test.
 
-    This fixture:
-    1. Initializes pygame if not already initialized (handles cases where
-       earlier tests called pygame.quit())
-    2. Sets up a headless display for tests that need surfaces
-    3. Resets display state after each test
-
-    IMPORTANT: Do NOT call pygame.quit() here - that would break subsequent tests.
+    Pygame init/font.init recovery is handled by the root conftest's
+    `reset_game_state` autouse fixture. This fixture only normalizes the
+    display surface so UI tests see a consistent (1440x900) headless display,
+    even if a previous test resized it.
     """
-    import os
     import pygame
 
-    # Ensure headless mode for CI/testing
-    os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
-
-    # Initialize pygame if not already initialized
-    # This is critical for sequential test runs where earlier tests may have quit pygame
-    if not pygame.get_init():
-        pygame.init()
-
-    # Ensure display is initialized with a valid size
-    if not pygame.display.get_init():
-        pygame.display.init()
-
-    # Set up a display surface (required for pygame_gui and Surface creation)
     try:
         pygame.display.set_mode((1440, 900), pygame.NOFRAME)
     except Exception:
         pass  # Display may not be available in some environments
 
-    # Ensure pygame font subsystem is initialized for this test
-    # This fixes "font not initialized" errors in parallel execution
-    if not pygame.font.get_init():
-        pygame.font.init()
-
     yield  # Test runs here
 
-    # Reset display to session state (1440x900 dummy display)
-    # This handles tests that create their own display surfaces
     try:
         if pygame.display.get_init():
-            # Restore the standard session display size
             pygame.display.set_mode((1440, 900), pygame.NOFRAME)
     except Exception:
-        pass  # Display may not be available
+        pass

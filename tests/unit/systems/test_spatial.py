@@ -1,5 +1,4 @@
 """Tests for SpatialGrid class behavior."""
-import pytest
 import pygame
 
 from game.engine.spatial import SpatialGrid
@@ -15,29 +14,21 @@ class MockObject:
         return f"MockObject({self.name} at {self.position})"
 
 
-@pytest.fixture
-def pygame_init():
-    """Initialize and cleanup pygame for tests."""
-    pygame.init()
-    yield
-    pygame.quit()
-
-
 class TestSpatialGridBasics:
     """Test basic SpatialGrid initialization and operations."""
 
-    def test_grid_initialization(self, pygame_init):
+    def test_grid_initialization(self):
         """SpatialGrid should initialize with correct cell size."""
         grid = SpatialGrid(cell_size=1000)
         assert grid.cell_size == 1000
         assert grid.buckets == {}
 
-    def test_default_cell_size(self, pygame_init):
+    def test_default_cell_size(self):
         """SpatialGrid should use default cell size of 2000."""
         grid = SpatialGrid()
         assert grid.cell_size == 2000
 
-    def test_insert_single_object(self, pygame_init):
+    def test_insert_single_object(self):
         """Inserting an object should add it to the correct bucket."""
         grid = SpatialGrid(cell_size=100)
         obj = MockObject(50, 50, "A")
@@ -48,7 +39,7 @@ class TestSpatialGridBasics:
         assert (0, 0) in grid.buckets
         assert obj in grid.buckets[(0, 0)]
 
-    def test_insert_multiple_objects_same_cell(self, pygame_init):
+    def test_insert_multiple_objects_same_cell(self):
         """Multiple objects in same cell should share a bucket."""
         grid = SpatialGrid(cell_size=100)
         obj1 = MockObject(10, 10, "A")
@@ -59,7 +50,7 @@ class TestSpatialGridBasics:
 
         assert len(grid.buckets[(0, 0)]) == 2
 
-    def test_insert_objects_different_cells(self, pygame_init):
+    def test_insert_objects_different_cells(self):
         """Objects in different cells should be in separate buckets."""
         grid = SpatialGrid(cell_size=100)
         obj1 = MockObject(50, 50, "A")    # Cell (0, 0)
@@ -73,7 +64,7 @@ class TestSpatialGridBasics:
         assert obj1 in grid.buckets[(0, 0)]
         assert obj2 in grid.buckets[(1, 0)]
 
-    def test_clear_empties_grid(self, pygame_init):
+    def test_clear_empties_grid(self):
         """Clear should remove all objects from the grid."""
         grid = SpatialGrid(cell_size=100)
         grid.insert(MockObject(50, 50))
@@ -89,7 +80,7 @@ class TestSpatialGridBasics:
 class TestSpatialGridQueries:
     """Test SpatialGrid query_radius functionality."""
 
-    def test_query_finds_object_in_range(self, pygame_init):
+    def test_query_finds_object_in_range(self):
         """Query should return objects within specified radius."""
         grid = SpatialGrid(cell_size=100)
         obj = MockObject(50, 50, "A")
@@ -100,7 +91,7 @@ class TestSpatialGridQueries:
 
         assert obj in results
 
-    def test_query_returns_empty_for_far_objects(self, pygame_init):
+    def test_query_returns_empty_for_far_objects(self):
         """Query should not return objects outside the cell range."""
         grid = SpatialGrid(cell_size=100)
         obj = MockObject(5000, 5000, "Far")
@@ -111,7 +102,7 @@ class TestSpatialGridQueries:
 
         assert obj not in results
 
-    def test_query_crosses_cell_boundaries(self, pygame_init):
+    def test_query_crosses_cell_boundaries(self):
         """Query should check neighboring cells when radius spans boundaries."""
         grid = SpatialGrid(cell_size=100)
         # Object just past the cell boundary
@@ -123,7 +114,7 @@ class TestSpatialGridQueries:
 
         assert obj in results
 
-    def test_query_returns_candidates_not_exact_distance(self, pygame_init):
+    def test_query_returns_candidates_not_exact_distance(self):
         """Query returns all objects in overlapping cells, not just those in exact radius."""
         grid = SpatialGrid(cell_size=100)
         # Object at corner of cell (0, 0), close to boundary
@@ -140,7 +131,7 @@ class TestSpatialGridQueries:
         # Note: obj1 is also in cell (0,0), so it's returned even if geometrically further
         assert obj1 in results
 
-    def test_query_with_negative_coordinates(self, pygame_init):
+    def test_query_with_negative_coordinates(self):
         """Query should work correctly with negative coordinates."""
         grid = SpatialGrid(cell_size=100)
         obj = MockObject(-50, -50, "Negative")
@@ -155,7 +146,7 @@ class TestSpatialGridQueries:
 class TestSpatialGridExtendedCases:
     """Additional edge cases for SpatialGrid (migrated from test_spatial_extended.py)."""
 
-    def test_query_radius_empty_grid(self, pygame_init):
+    def test_query_radius_empty_grid(self):
         """Empty grid should return empty list."""
         grid = SpatialGrid(cell_size=1000)
 
@@ -163,7 +154,7 @@ class TestSpatialGridExtendedCases:
 
         assert result == []
 
-    def test_query_spans_multiple_cells(self, pygame_init):
+    def test_query_spans_multiple_cells(self):
         """Large radius should query multiple cells."""
         grid = SpatialGrid(cell_size=1000)
 

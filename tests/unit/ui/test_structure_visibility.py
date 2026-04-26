@@ -70,10 +70,6 @@ class TestStructureVisibility:
 
             yield
 
-        # Note: pygame and registry cleanup is handled by conftest fixtures
-        # (pygame_display_reset and reset_game_state)
-        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
-
     def test_hull_is_hidden_from_structure_list_by_default(self):
         """Verify that hull components are not rendered when show_hull_layer=False (default)."""
         # Ensure default state

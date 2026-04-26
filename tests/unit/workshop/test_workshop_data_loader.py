@@ -9,8 +9,6 @@ import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
 
-import pygame
-
 from game.core.json_utils import save_json
 
 
@@ -36,17 +34,11 @@ def temp_data_dirs():
 
 @pytest.fixture
 def data_loader_setup(temp_data_dirs, fresh_registries):
-    """Set up pygame and registry for each test."""
-    pygame.init()
-
+    """Set up registry for each test."""
     temp_dir, custom_dir, default_dir = temp_data_dirs
 
     # PROJ-195: Yield registries for DI instead of using singleton
     yield custom_dir, default_dir, fresh_registries
-
-    # NOTE: Do not call pygame.quit() here - the root conftest manages
-    # pygame lifecycle at session scope. Calling quit() here would break
-    # subsequent tests with "No video mode set" errors.
 
 
 class TestWorkshopDataLoader:
@@ -146,7 +138,6 @@ class TestWorkshopDataLoader:
 @pytest.fixture
 def integration_setup(fresh_registries):
     """Set up for integration tests using real data files."""
-    pygame.init()
     # Get the data directory using path fixture
     from tests.fixtures.paths import get_data_dir
     data_dir = str(get_data_dir())
@@ -154,9 +145,6 @@ def integration_setup(fresh_registries):
     # PROJ-195: Yield registries for DI instead of using singleton
     yield data_dir, fresh_registries
 
-    # NOTE: Do not call pygame.quit() here - the root conftest manages
-    # pygame lifecycle at session scope. Calling quit() here would break
-    # subsequent tests with "No video mode set" errors.
     patch.stopall()
 
 

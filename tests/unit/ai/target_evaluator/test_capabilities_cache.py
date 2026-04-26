@@ -13,14 +13,6 @@ from unittest.mock import MagicMock, call
 from game.ai.target_evaluator import TargetEvaluator
 
 
-@pytest.fixture(autouse=True)
-def pygame_init():
-    """Initialize pygame for Vector2 usage."""
-    pygame.init()
-    yield
-    pygame.quit()
-
-
 @pytest.fixture
 def ship():
     """Create a mock ship for testing."""

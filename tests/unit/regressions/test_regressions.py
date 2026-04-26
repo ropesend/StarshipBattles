@@ -11,18 +11,13 @@ from game.ui.assets import get_default_ship_theme_manager
 
 @pytest.fixture
 def pygame_setup():
-    """Set up and tear down pygame environment."""
+    """Tear down mocks after test."""
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
-    pygame.init()
-    # Ensure we have a display for image operations if needed (though mostly headless works for surfaces)
-    # ship.py might depend on initialized pygame
 
     yield
 
     # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
     patch.stopall()
-
-    pygame.quit()
 
 
 class TestRegressions:

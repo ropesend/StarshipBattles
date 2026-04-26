@@ -11,7 +11,6 @@ Layer resolution rules:
 4. HULL is never a valid quick-add target (managed by ship class)
 """
 import pytest
-import pygame
 
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries, get_default_registry_provider
@@ -39,8 +38,7 @@ class MockEventBus:
 
 @pytest.fixture(scope="class")
 def quick_add_class_setup():
-    """Class-level setup: initialize pygame and load game data."""
-    pygame.init()
+    """Class-level setup: load game data."""
     from game.simulation.entities.ship_loader import initialize_ship_data
     from game.simulation.components.component import load_components, load_modifiers
     from tests.fixtures.paths import get_project_root, get_data_dir
@@ -52,7 +50,6 @@ def quick_add_class_setup():
     load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
 
     yield
-    pygame.quit()
 
 
 @pytest.fixture

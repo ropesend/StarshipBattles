@@ -3,7 +3,6 @@
 PROJ-188 Phase 2: FleetDataSource value extraction tests.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
 import pygame
@@ -586,13 +585,6 @@ class TestFleetDataSourceCellValueImageColumns:
 
 class TestFleetDataSourceGetCellImage:
     """Test FleetDataSource get_cell_image for image columns."""
-
-    @pytest.fixture(autouse=True)
-    def setup_pygame(self):
-        """Initialize pygame for surface tests."""
-        pygame.init()
-        yield
-        pygame.quit()
 
     def test_get_cell_image_portrait(self):
         """get_cell_image returns surface for portrait column."""

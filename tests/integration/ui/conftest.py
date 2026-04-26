@@ -3,7 +3,8 @@ Shared fixtures for UI integration tests.
 
 Provides a cached pygame_gui.UIManager to avoid the expensive per-test
 initialization (theme parsing, font loading). The manager is rebuilt
-only when pygame state is invalidated by external pygame.quit() calls.
+only when the underlying display surface changes (root conftest handles
+pygame init/font.init for every test).
 """
 
 import pytest
@@ -19,14 +20,10 @@ _cached_display_id = None
 def _get_or_create_manager():
     """Return a valid UIManager, creating one if needed.
 
-    Rebuilds if pygame was reinitialized (display surface changed)
-    since the last call. This handles external pygame.quit() calls
-    from tests outside integration/ui/ in the same shard process.
+    Rebuilds if the display surface changed since the last call.
     """
     global _cached_manager, _cached_display_id
 
-    if not pygame.get_init():
-        pygame.init()
     if not pygame.display.get_surface():
         pygame.display.set_mode((1920, 1080))
 
@@ -40,9 +37,7 @@ def _get_or_create_manager():
 
 @pytest.fixture(autouse=True)
 def _ensure_pygame():
-    """Ensure pygame and a display surface exist before each UI test."""
-    if not pygame.get_init():
-        pygame.init()
+    """Ensure a display surface exists before each UI test."""
     if not pygame.display.get_surface():
         pygame.display.set_mode((1920, 1080))
 

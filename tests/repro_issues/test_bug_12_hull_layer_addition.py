@@ -4,7 +4,6 @@ Reproduction test for BUG-12: Component Addition to Hull Layer.
 PROJ-50: Updated to use fresh_registries for DI.
 """
 import pytest
-import pygame
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
@@ -22,11 +21,9 @@ class TestBug12HullAddition:
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
         """Setup test with DI registries. PROJ-50."""
-        pygame.init()
         self.registries = fresh_registries
         ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         yield ship
-        pygame.quit()
 
     def test_prevent_non_hull_addition_to_hull_layer(self, setup):
         """Verify that non-hull components cannot be added to the HULL layer. PROJ-50: Uses DI."""

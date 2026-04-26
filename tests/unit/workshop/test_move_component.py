@@ -19,7 +19,6 @@ Note: On Escort, layers are HULL/CORE/OUTER/ARMOR.
   - standard_engine is only valid in OUTER (used for edge-case tests)
 """
 import pytest
-import pygame
 
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries, get_default_registry_provider
@@ -47,8 +46,7 @@ class MockEventBus:
 
 @pytest.fixture(scope="class")
 def move_class_setup():
-    """Class-level setup: initialize pygame and load game data."""
-    pygame.init()
+    """Class-level setup: load game data."""
     from game.simulation.entities.ship_loader import initialize_ship_data
     from game.simulation.components.component import load_components, load_modifiers
     from tests.fixtures.paths import get_project_root, get_data_dir
@@ -60,7 +58,6 @@ def move_class_setup():
     load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
 
     yield
-    pygame.quit()
 
 
 @pytest.fixture

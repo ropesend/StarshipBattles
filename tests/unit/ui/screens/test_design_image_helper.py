@@ -3,7 +3,6 @@ Tests for design_image_helper module.
 
 Tests the extracted image loading utilities for design thumbnails.
 """
-import pytest
 import pygame
 from unittest.mock import Mock, patch, MagicMock
 
@@ -12,15 +11,10 @@ class TestLoadPortraitThumbnail:
     """Tests for load_portrait_thumbnail function."""
 
     def setup_method(self):
-        """Initialize pygame display and clear thumbnail cache for tests."""
-        pygame.init()
+        """Set up display and clear thumbnail cache for tests."""
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         from game.ui.screens.design_image_helper import clear_thumbnail_cache
         clear_thumbnail_cache()
-
-    def teardown_method(self):
-        """Clean up pygame."""
-        pygame.quit()
 
     def test_returns_surface_when_no_files_exist(self):
         """Returns a pygame.Surface placeholder when no files exist."""
@@ -134,15 +128,10 @@ class TestLoadTopdownThumbnail:
     """Tests for load_topdown_thumbnail function."""
 
     def setup_method(self):
-        """Initialize pygame display and clear thumbnail cache for tests."""
-        pygame.init()
+        """Set up display and clear thumbnail cache for tests."""
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         from game.ui.screens.design_image_helper import clear_thumbnail_cache
         clear_thumbnail_cache()
-
-    def teardown_method(self):
-        """Clean up pygame."""
-        pygame.quit()
 
     def test_returns_none_when_no_skin_file_found(self):
         """Returns None when no skin file found."""

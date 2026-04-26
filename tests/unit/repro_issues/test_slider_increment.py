@@ -29,8 +29,7 @@ def mock_component_service():
 
 @pytest.fixture
 def pygame_setup():
-    """Initialize pygame and pygame_gui for testing."""
-    pygame.init()
+    """Initialize pygame_gui for testing."""
     pygame.display.set_mode((800, 600))
     manager = pygame_gui.UIManager((800, 600))
     container = pygame_gui.elements.UIPanel(
@@ -38,7 +37,6 @@ def pygame_setup():
         manager=manager
     )
     yield manager, container
-    pygame.quit()
 
 
 class TestSliderIncrement:

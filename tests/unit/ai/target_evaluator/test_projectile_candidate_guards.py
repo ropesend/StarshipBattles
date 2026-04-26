@@ -16,16 +16,8 @@ instead of crashing.
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 import pygame
-import pytest
 
 from game.ai.target_evaluator import TargetEvaluator
-
-
-@pytest.fixture(autouse=True)
-def pygame_init():
-    pygame.init()
-    yield
-    pygame.quit()
 
 
 def _ship():

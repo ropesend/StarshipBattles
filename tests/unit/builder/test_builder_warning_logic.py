@@ -1,5 +1,4 @@
 import pytest
-import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
 import os
@@ -14,8 +13,6 @@ from game.simulation.entities.layer_data import LayerData
 
 @pytest.fixture
 def builder_warning_setup():
-    pygame.init()
-
     # IMPORTANT: Patch DesignWorkshopScreen._create_ui since that's the real implementation
     patcher = patch('game.ui.screens.workshop_screen.DesignWorkshopScreen._create_ui')
     mock_create_ui = patcher.start()
@@ -67,8 +64,6 @@ def builder_warning_setup():
     p2.stop()
     p3.stop()
     p4.stop()
-
-    pygame.quit()
 
 
 class TestBuilderWarningLogic:

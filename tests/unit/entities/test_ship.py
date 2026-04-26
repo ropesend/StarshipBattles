@@ -4,7 +4,6 @@ Tests for Ship entity behavior.
 PROJ-38: Migrated key fixtures to use fresh_registries for cleaner test setup.
 """
 import pytest
-import pygame
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
@@ -21,10 +20,6 @@ class TestShip:
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
         yield
-
-        # Note: reset_singletons fixture in conftest.py handles cleanup
-        if pygame.get_init():
-            pygame.quit()
 
     def test_add_component_constraints(self, fresh_registries):
         ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
@@ -139,16 +134,9 @@ class TestShipClassMutation:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
-        if not pygame.get_init():
-            pygame.init()
-
         self.registries = fresh_registries
         self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate", registries=fresh_registries)
         yield
-
-        # Note: reset_singletons fixture in conftest.py handles cleanup
-        if pygame.get_init():
-            pygame.quit()
 
     def test_change_class_migration(self):
         """Verify components migrate or are removed during class change."""
@@ -333,14 +321,7 @@ class TestChangeClassInvalidInput:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
-        if not pygame.get_init():
-            pygame.init()
-
         yield
-
-        # Note: reset_singletons fixture in conftest.py handles cleanup
-        if pygame.get_init():
-            pygame.quit()
 
     def test_change_class_invalid_class_name_does_not_raise(self, fresh_registries):
         """Verify change_class() with invalid class name handles error gracefully.
@@ -367,8 +348,6 @@ class TestTotalDefenseScoreInitialization:
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
         yield
-        if pygame.get_init():
-            pygame.quit()
 
     def test_total_defense_score_initial_value_is_zero(self, fresh_registries):
         """Verify total_defense_score is initialized to 0.0 (additive neutral).

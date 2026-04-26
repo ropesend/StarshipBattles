@@ -20,7 +20,6 @@ class TestBug13Fix:
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
         self.surface = pygame.display.set_mode((800, 600))
         self.manager = pygame_gui.UIManager((800, 600))
 
@@ -40,8 +39,6 @@ class TestBug13Fix:
 
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-
-        pygame.quit()
         # fresh_registries fixture handles registry isolation - no manual clear needed
 
     def test_unified_drawing_structure(self):

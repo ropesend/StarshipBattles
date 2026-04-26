@@ -14,11 +14,9 @@ class TestSystemSelectionWindow:
 
     @pytest.fixture
     def pygame_setup(self):
-        """Initialize pygame for tests."""
-        pygame.init()
+        """Set up display for tests."""
         pygame.display.set_mode((800, 600))
         yield
-        pygame.quit()
 
     @pytest.fixture
     def ui_manager(self, pygame_setup):

@@ -36,6 +36,20 @@ def reset_game_state(monkeypatch, request):
 
     # Reset module-level caches to prevent stale data from previous tests
     reset_component_caches()
+
+    # Pygame state recovery: ~45 legacy test files still call pygame.quit() in
+    # teardown, which leaves the next test in the shard with an uninitialized
+    # pygame and font subsystem. Any later test that constructs a UI screen
+    # (e.g. BattleScreen) crashes with "font not initialized". The session-scoped
+    # enforce_headless fixture only runs once, so it can't recover. Re-init here
+    # so every test starts with a healthy pygame regardless of what ran before.
+    # Mirrors the pattern in tests/unit/ui/conftest.py::pygame_display_reset,
+    # promoted to root scope so non-UI tests (e.g. tests/fixtures/) benefit too.
+    import pygame
+    if not pygame.get_init():
+        pygame.init()
+    if not pygame.font.get_init():
+        pygame.font.init()
     
     try:
         # 1. Skip production hydration if test uses custom data

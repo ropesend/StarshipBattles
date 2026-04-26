@@ -44,7 +44,6 @@ class TestBug27OrderTypeImport:
 
     def test_show_detailed_report_fleet_with_orders(self, fresh_registries):
         """Test that showing fleet with orders doesn't raise NameError."""
-        pygame.init()
         pygame.display.set_mode((800, 600))
 
         from game.ui.screens.strategy_ui import StrategyUI
@@ -76,11 +75,8 @@ class TestBug27OrderTypeImport:
         assert "Fleet" in ui.detail_text.html_text
         assert "MOVE" in ui.detail_text.html_text
 
-        pygame.quit()
-
     def test_show_detailed_report_fleet_with_colonize_order(self, fresh_registries):
         """Test fleet with COLONIZE order doesn't raise NameError."""
-        pygame.init()
         pygame.display.set_mode((800, 600))
 
         from game.ui.screens.strategy_ui import StrategyUI
@@ -114,5 +110,3 @@ class TestBug27OrderTypeImport:
 
         assert "Fleet" in ui.detail_text.html_text
         assert "COLONIZE" in ui.detail_text.html_text
-
-        pygame.quit()

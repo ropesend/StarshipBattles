@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, patch
-import pygame
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component
@@ -8,9 +7,7 @@ from game.simulation.components.component import Component
 
 @pytest.fixture
 def ship_with_registry(fresh_registries):
-    """Set up pygame, registry, and ship for testing."""
-    if not pygame.get_init():
-        pygame.init()
+    """Set up registry and ship for testing."""
     # Ensure 'Cruiser' exists in fresh_registries (DI pattern)
     if "Cruiser" not in fresh_registries.vehicle_classes:
         fresh_registries.vehicle_classes["Cruiser"] = {"max_mass": 16000, "default_hull_id": "hull_cruiser"}
@@ -18,8 +15,6 @@ def ship_with_registry(fresh_registries):
     ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
 
     yield ship, fresh_registries
-
-    pygame.quit()
 
 
 @pytest.fixture

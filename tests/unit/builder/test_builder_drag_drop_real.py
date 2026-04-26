@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, patch
-import pygame
 
 # We need to mock pygame_gui before importing builder_gui because it initializes UI
 # Actually builder_screen imports pygame_gui.
@@ -21,9 +20,6 @@ class TestBuilderDragDropReal:
     def setup_builder(self, fresh_registries):
         """Set up the builder with mocked dependencies."""
         self._registries = fresh_registries
-        if not pygame.get_init():
-            pygame.init()
-            pygame.display.set_mode((1, 1))  # Mock display for UIManager
 
         # Mock dependencies that DesignWorkshopScreen init calls
         # IMPORTANT: Patch at workshop_screen level since that's the real implementation
@@ -132,7 +128,6 @@ class TestBuilderDragDropReal:
 
         for p in patchers:
             p.stop()
-        pygame.quit()
 
     def test_drag_start(self):
         """Verify starting a drag sets dragged_item."""

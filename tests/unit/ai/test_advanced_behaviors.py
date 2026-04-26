@@ -7,9 +7,6 @@ from game.ai.behaviors import KiteBehavior, AttackRunBehavior, OrbitBehavior
 
 @pytest.fixture
 def advanced_setup():
-    if not pygame.get_init():
-        pygame.init()
-
     mock_controller = MagicMock()
     ship = mock_controller.ship
     ship.position = pygame.math.Vector2(0, 0)
@@ -29,8 +26,6 @@ def advanced_setup():
         'mock_controller': mock_controller,
         'target': target
     }
-
-    pygame.quit()
 
 
 class TestAdvancedBehaviors:

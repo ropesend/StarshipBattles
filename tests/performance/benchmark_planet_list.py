@@ -86,12 +86,10 @@ def benchmark_planet_list_performance():
     
     avg_update = ((t_update_end - t_update_start) / 60) * 1000
     print(f"Avg Frame Update Time: {avg_update:.2f} ms")
-    
+
     # Check if virtualized?
-    # We can inspect internal state if we know what to look for, 
+    # We can inspect internal state if we know what to look for,
     # but for now raw timing is the metric.
-    
-    pygame.quit()
 
 if __name__ == "__main__":
     benchmark_planet_list_performance()
