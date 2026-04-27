@@ -12,7 +12,10 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from game.core.registry import get_default_registry_manager
+from game.core.registry import (
+    get_default_registry_manager,
+    get_default_registry_provider,
+)
 from game.core.exceptions import FrozenStateException
 from game.simulation.services.registry_loader import reload_registries_from_directory
 
@@ -37,6 +40,17 @@ def fresh_registry():
     return reg
 
 
+@pytest.fixture
+def default_provider():
+    """The production registry provider — legal in test code (test layer
+    is outside `game/simulation/`, so PROJ-252's prohibition doesn't apply).
+
+    PROJ-306: required by `reload_registries_from_directory` since the
+    fallback at line 91 was deleted.
+    """
+    return get_default_registry_provider()
+
+
 class TestReloadAllFromDirectory:
     """Tests for reload_registries_from_directory() function."""
 
@@ -50,7 +64,7 @@ class TestReloadAllFromDirectory:
         # Use test data directory which has known content
         test_dir = Path(os.getcwd()) / "tests" / "unit" / "data"
 
-        result = reload_registries_from_directory(fresh_registry, test_dir)
+        result = reload_registries_from_directory(fresh_registry, test_dir, registry_provider=get_default_registry_provider())
 
         assert result is True
         # Old data should be gone
@@ -62,7 +76,7 @@ class TestReloadAllFromDirectory:
         """reload_registries_from_directory() should load components from directory."""
         test_dir = Path(os.getcwd()) / "tests" / "unit" / "data"
 
-        result = reload_registries_from_directory(fresh_registry, test_dir)
+        result = reload_registries_from_directory(fresh_registry, test_dir, registry_provider=get_default_registry_provider())
 
         assert result is True
         # Should have loaded some components (test data has known components)
@@ -73,7 +87,7 @@ class TestReloadAllFromDirectory:
         # Use standard data directory which has modifiers
         data_dir = Path(os.getcwd()) / "data"
 
-        result = reload_registries_from_directory(fresh_registry, data_dir)
+        result = reload_registries_from_directory(fresh_registry, data_dir, registry_provider=get_default_registry_provider())
 
         assert result is True
         # Should have loaded some modifiers
@@ -90,7 +104,7 @@ class TestReloadAllFromDirectory:
         # Use standard data directory which has full vehicle classes
         data_dir = Path(os.getcwd()) / "data"
 
-        result = reload_registries_from_directory(fresh_registry, data_dir)
+        result = reload_registries_from_directory(fresh_registry, data_dir, registry_provider=get_default_registry_provider())
 
         assert result is True
         # Should have loaded some vehicle classes
@@ -100,7 +114,7 @@ class TestReloadAllFromDirectory:
         """reload_registries_from_directory() should return False for nonexistent directory."""
         invalid_dir = Path("/nonexistent/directory/path")
 
-        result = reload_registries_from_directory(fresh_registry, invalid_dir)
+        result = reload_registries_from_directory(fresh_registry, invalid_dir, registry_provider=get_default_registry_provider())
 
         assert result is False
 
@@ -111,7 +125,7 @@ class TestReloadAllFromDirectory:
 
         try:
             with pytest.raises(FrozenStateException, match="frozen"):
-                reload_registries_from_directory(fresh_registry, test_dir)
+                reload_registries_from_directory(fresh_registry, test_dir, registry_provider=get_default_registry_provider())
         finally:
             # Clean up: unfreeze by resetting (registry fixture will restore)
             fresh_registry.unfreeze()
@@ -120,7 +134,7 @@ class TestReloadAllFromDirectory:
         """reload_registries_from_directory() should accept string path as well as Path."""
         test_dir = os.path.join(os.getcwd(), "tests", "unit", "data")
 
-        result = reload_registries_from_directory(fresh_registry, test_dir)
+        result = reload_registries_from_directory(fresh_registry, test_dir, registry_provider=get_default_registry_provider())
 
         assert result is True
         assert len(fresh_registry.components) > 0
@@ -132,7 +146,7 @@ class TestReloadAllFromDirectory:
         vehicle_classes_id = id(fresh_registry.vehicle_classes)
 
         test_dir = Path(os.getcwd()) / "tests" / "unit" / "data"
-        reload_registries_from_directory(fresh_registry, test_dir)
+        reload_registries_from_directory(fresh_registry, test_dir, registry_provider=get_default_registry_provider())
 
         # Same dict objects, just with new content
         assert id(fresh_registry.components) == components_id
@@ -146,7 +160,7 @@ class TestReloadAllFromDirectory:
         empty_dir.mkdir()
 
         # Should not raise, just log warnings
-        result = reload_registries_from_directory(fresh_registry, empty_dir)
+        result = reload_registries_from_directory(fresh_registry, empty_dir, registry_provider=get_default_registry_provider())
 
         # Returns True (directory exists) but registries may be empty
         assert result is True
@@ -157,7 +171,7 @@ class TestReloadAllFromDirectory:
         """reload_registries_from_directory() should prefer test_ prefixed files in test directories."""
         test_dir = Path(os.getcwd()) / "tests" / "unit" / "data"
 
-        result = reload_registries_from_directory(fresh_registry, test_dir)
+        result = reload_registries_from_directory(fresh_registry, test_dir, registry_provider=get_default_registry_provider())
 
         assert result is True
         # Test data should have been loaded (test_components.json, etc.)
@@ -171,7 +185,7 @@ class TestReloadWithCustomFilenames:
         """reload should find components.json file."""
         data_dir = Path(os.getcwd()) / "data"
 
-        result = reload_registries_from_directory(fresh_registry, data_dir)
+        result = reload_registries_from_directory(fresh_registry, data_dir, registry_provider=get_default_registry_provider())
         assert result is True
         # Standard data directory should have components
         assert len(fresh_registry.components) > 0
@@ -185,7 +199,7 @@ class TestReloadWithCustomFilenames:
         """
         data_dir = Path(os.getcwd()) / "data"
 
-        result = reload_registries_from_directory(fresh_registry, data_dir)
+        result = reload_registries_from_directory(fresh_registry, data_dir, registry_provider=get_default_registry_provider())
         assert result is True
         # Standard data directory should have vehicle classes
         assert len(fresh_registry.vehicle_classes) > 0
