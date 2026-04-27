@@ -237,7 +237,7 @@ PROJ-269 BattleSpec DTOs: BattleSpec, CombatPolicies, ComponentStateSpec, EntryV
 
 PROJ-269 BattleOutcome DTOs: BattleOutcome, EndReason, HitRecord, ModifierApplication, ShipOutcome, ShipStats, ShipStatus, TeamOutcome, WeaponSummary.
 
-PROJ-269 entry: `game.simulation.battle_runner.run_battle(spec, ai_factory, ship_builder, ...) -> BattleOutcome`.
+PROJ-269 entry: `game.simulation.battle_runner.run_battle(spec, ai_factory, ship_builder=None, registry_provider=None, ...) -> BattleOutcome`. PROJ-306: when `ship_builder is None`, callers MUST pass `registry_provider`. Simulation-layer code never resolves the provider via global lookup (PROJ-252); the `build_context_ship_builder(registry_provider=...)` helper documents the contract.
 
 ### `game.strategy` (16 exports)
 
@@ -387,7 +387,7 @@ caller (Combat Lab / Battle Setup / Strategy IBattleResolver)
 context-specific spec compiler (build_*_battle_spec)
        │  emits a BattleSpec frozen DTO
        ▼
-run_battle(spec, ai_factory, ship_builder, ...)   (game/simulation/battle_runner.py)
+run_battle(spec, ai_factory, ship_builder=None, registry_provider=None, ...)   (game/simulation/battle_runner.py)
        │  - constructs BattleEngine directly (no BattleController)
        │  - threads spec.boundary + spec.modifier_stack onto the engine
        │  - calls engine.start_teams(teams_by_id, seed, end_condition)
@@ -414,11 +414,16 @@ controller is now spec-in only.
 
 **PROJ-270 Phase 10:** visual-mode construction goes through the
 single unified entry `controller.start_from_spec(spec, ai_factory=...,
-ship_builder=...)` which internally calls `start_engine_from_spec`
-(the same code path `run_battle` uses) — eliminating the previously-
-duplicated `engine.boundary = spec.boundary; engine.modifier_stack =
-spec.modifier_stack; materialize_spec_ships; controller.add_ships +
-controller.start` block that used to live in each visual call site.
+ship_builder=None, registry_provider=...)` which internally calls
+`start_engine_from_spec` (the same code path `run_battle` uses) —
+eliminating the previously-duplicated `engine.boundary = spec.boundary;
+engine.modifier_stack = spec.modifier_stack; materialize_spec_ships;
+controller.add_ships + controller.start` block that used to live in
+each visual call site. **PROJ-306:** when `ship_builder is None`,
+callers MUST pass `registry_provider`. Simulation-layer code never
+resolves the provider via global lookup (PROJ-252); non-Simulation
+callers (Strategy adapter, app.py, Combat Lab services) supply it via
+`get_default_registry_provider()`.
 
 At battle end, `BattleController` calls `extract_outcome(engine, spec)`
 to produce a `BattleOutcome` via `controller.get_outcome()`. Visual-mode
