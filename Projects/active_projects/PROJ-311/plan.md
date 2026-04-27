@@ -13,8 +13,8 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Establish convention in CLAUDE.md | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. mypy/pyright baseline | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Establish convention in CLAUDE.md | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. mypy/pyright baseline | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Backfill annotations (per layer) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CI enforcement | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
