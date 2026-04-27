@@ -11,6 +11,7 @@ import pygame_gui
 
 from game.core.config import DisplayConfig
 from game.core.paths import Paths
+from game.assets.component_derivatives import ensure_component_derivatives
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +186,9 @@ class Game:
         # Initialize input mapper (PROJ-71: centralized keybindings)
         self.input_mapper = InputMapper()
         self.input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
+
+        # Generated component resolutions are derived from tracked 1024px masters.
+        ensure_component_derivatives()
 
         # Load sprites
         sprite_mgr = get_default_sprite_manager()

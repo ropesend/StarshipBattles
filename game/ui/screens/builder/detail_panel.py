@@ -245,7 +245,7 @@ class ComponentDetailPanel:
                  surf = self.portrait_cache[full_path]
              else:
                  try:
-                    loaded = pygame.image.load(full_path).convert()
+                    loaded = pygame.image.load(full_path).convert_alpha()
                     surf = pygame.transform.scale(loaded, (self.image_rect.width, self.image_rect.height))
                     self.portrait_cache[full_path] = surf
                  except (FileNotFoundError, OSError, pygame.error) as e:
