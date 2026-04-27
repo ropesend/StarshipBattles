@@ -147,6 +147,11 @@ class Star:
     # Visual representation (assigned during generation, persisted in saves)
     image_id: str = ""  # Filename from star assets (e.g., "StarBlueVariant_3.png")
 
+    # PROJ-302: star intrinsic abilities (system-scope by default — a pulsar
+    # affects every hex of the system, not just the star's hex). Populated at
+    # galaxy generation via roll_intrinsic_abilities against data/star_types.json.
+    intrinsic_abilities: Dict[str, Any] = field(default_factory=dict)
+
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
         """Return all hexes occupied by this star (PROJ-139 IZoneOccupant).
@@ -175,6 +180,8 @@ class Star:
             'age': self.age,
             'location': hex_to_dict(self.location),
             'image_id': self.image_id,
+            # PROJ-302: star intrinsic abilities (rolled at gen).
+            'intrinsic_abilities': dict(self.intrinsic_abilities),
         }
 
     @classmethod
@@ -239,6 +246,8 @@ class Star:
             age=data['age'],
             location=location,
             image_id=data.get('image_id', ''),
+            # PROJ-302: backward compat — old saves load with empty dict.
+            intrinsic_abilities=dict(data.get('intrinsic_abilities') or {}),
         )
 
 class StarGenerator:

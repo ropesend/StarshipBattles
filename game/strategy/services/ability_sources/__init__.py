@@ -22,6 +22,7 @@ from inside an adapter — see PROJ-300 design.md task 4.5.
 from .facility import FacilityAbilitySource
 from .storm import StormAbilitySource
 from .planet_intrinsic import PlanetIntrinsicAbilitySource  # PROJ-301
+from .star import StarAbilitySource  # PROJ-302
 from .intrinsic_roll import roll_intrinsic_abilities
 from .labels import format_intrinsic_source_label
 
@@ -29,6 +30,7 @@ __all__ = [
     'FacilityAbilitySource',
     'StormAbilitySource',
     'PlanetIntrinsicAbilitySource',
+    'StarAbilitySource',
     'roll_intrinsic_abilities',
     'format_intrinsic_source_label',
 ]

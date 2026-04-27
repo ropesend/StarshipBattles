@@ -66,6 +66,8 @@ class GalaxySystemGenerator:
 
         # PROJ-301: roll planet-intrinsic abilities from data/planet_types.json.
         _apply_planet_intrinsic_abilities(system.planets)
+        # PROJ-302: roll star-intrinsic abilities from data/star_types.json.
+        _apply_star_intrinsic_abilities(system.stars)
 
         # Register all planets with the galaxy
         for planet in system.planets:
@@ -237,3 +239,43 @@ def _apply_planet_intrinsic_abilities(planets: List['Planet']) -> None:
         if not template:
             continue
         planet.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
+
+
+# PROJ-302 — module-level star intrinsics helper.
+_STAR_TYPES_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
+
+
+def _load_star_types() -> Dict[str, Dict[str, Any]]:
+    global _STAR_TYPES_CACHE
+    if _STAR_TYPES_CACHE is None:
+        from pathlib import Path
+        import json
+        from game.core.paths import Paths
+
+        path = Path(Paths.STAR_TYPES_FILE)
+        if path.exists():
+            with path.open('r', encoding='utf-8') as f:
+                data = json.load(f)
+            _STAR_TYPES_CACHE = data.get('star_types', {})
+        else:
+            _STAR_TYPES_CACHE = {}
+    return _STAR_TYPES_CACHE
+
+
+def _apply_star_intrinsic_abilities(stars: List[Any]) -> None:
+    """PROJ-302: roll intrinsic abilities for each star from data/star_types.json."""
+    from game.strategy.services.ability_sources import roll_intrinsic_abilities
+
+    types_data = _load_star_types()
+    if not types_data:
+        return
+
+    rng = random.Random()
+    for star in stars:
+        if star.intrinsic_abilities:
+            continue
+        type_key = star.star_type.name
+        template = types_data.get(type_key, {}).get('abilities', {})
+        if not template:
+            continue
+        star.intrinsic_abilities = roll_intrinsic_abilities(template, rng)

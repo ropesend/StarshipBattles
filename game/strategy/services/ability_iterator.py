@@ -16,6 +16,7 @@ from game.strategy.services.ability_sources import (
     FacilityAbilitySource,
     StormAbilitySource,
     PlanetIntrinsicAbilitySource,  # PROJ-301
+    StarAbilitySource,  # PROJ-302
 )
 
 
@@ -171,6 +172,41 @@ def _planet_global_hex(planet: Any, system: Any) -> Optional[Any]:
         return None
 
 
+def _star_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """PROJ-302: yield StarAbilitySource for stars with intrinsic abilities.
+
+    For hex queries (hex_coord != None), yields a star source if EITHER the
+    star is at the queried hex (sector-scope abilities can fire) OR the star
+    declares system-scope abilities that apply at every hex of the system.
+    The collector's scope filter narrows from there.
+    """
+    if system is None:
+        return
+    stars = getattr(system, 'stars', None) or []
+    for star in stars:
+        abilities = getattr(star, 'intrinsic_abilities', None)
+        if not abilities:
+            continue
+        adapter = StarAbilitySource(star=star, system=system)
+        if hex_coord is None:
+            yield adapter
+            continue
+        # Sector-scope: star must be at the queried hex.
+        if adapter.affects_hex(hex_coord):
+            yield adapter
+            continue
+        # System-scope abilities: yield even when star isn't at this hex —
+        # `_SECTOR_SCOPES` filtering at the collector still hides them from
+        # sector queries, but `_SYSTEM_SCOPES` queries (or hex queries with
+        # `include_system_sources=True`) need access to the source.
+        for entry in abilities.values():
+            entries = entry if isinstance(entry, list) else [entry]
+            if any(e.get('scope') in {'system', 'allied_system', 'player_system', 'enemy_system'}
+                   for e in entries if isinstance(e, dict)):
+                yield adapter
+                break
+
+
 def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
     """PROJ-301: yield PlanetIntrinsicAbilitySource for planets with abilities.
 
@@ -193,6 +229,8 @@ def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> 
 register_source_provider_at_hex(_facility_provider)
 register_source_provider_at_hex(_storm_provider)
 register_source_provider_at_hex(_planet_intrinsic_provider)
+register_source_provider_at_hex(_star_provider)
 register_source_provider_in_system(_facility_provider)
 register_source_provider_in_system(_storm_provider)
 register_source_provider_in_system(_planet_intrinsic_provider)
+register_source_provider_in_system(_star_provider)

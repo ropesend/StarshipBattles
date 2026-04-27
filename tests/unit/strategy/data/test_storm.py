@@ -1,108 +1,15 @@
-"""Unit tests for Storm entity (PROJ-189 Phase 1)."""
+"""Unit tests for Storm entity (PROJ-189 Phase 1; PROJ-300 v2.0 abilities shape)."""
 
 import pytest
 from game.core.hex_math import HexCoord
-from game.strategy.data.storm import Storm, StormEffect
+from game.strategy.data.storm import Storm
 from game.strategy.data.galaxy import StarSystem, Galaxy
 from game.strategy.data.stars import Star, StarType, Spectrum
 
 
-class TestStormEffect:
-    """Tests for StormEffect dataclass."""
-
-    def test_default_values(self):
-        """StormEffect should have neutral defaults."""
-        effect = StormEffect()
-        assert effect.shield_capacity_mult == 1.0
-        assert effect.thrust_mult == 1.0
-        assert effect.strategic_mult == 1.0
-        assert effect.damage_per_tick == 0.0
-        assert effect.fuel_drain_per_tick == 0.0
-
-    def test_custom_values(self):
-        """StormEffect should accept custom values."""
-        effect = StormEffect(
-            shield_capacity_mult=0.5,
-            thrust_mult=0.75,
-            strategic_mult=0.8,
-            damage_per_tick=10.0,
-            fuel_drain_per_tick=5.0
-        )
-        assert effect.shield_capacity_mult == 0.5
-        assert effect.thrust_mult == 0.75
-        assert effect.strategic_mult == 0.8
-        assert effect.damage_per_tick == 10.0
-        assert effect.fuel_drain_per_tick == 5.0
-
-    def test_to_dict(self):
-        """StormEffect.to_dict should serialize all fields."""
-        effect = StormEffect(
-            shield_capacity_mult=0.5,
-            thrust_mult=0.75,
-            strategic_mult=0.8,
-            damage_per_tick=10.0,
-            fuel_drain_per_tick=5.0
-        )
-        result = effect.to_dict()
-        assert result == {
-            'shield_capacity_mult': 0.5,
-            'thrust_mult': 0.75,
-            'strategic_mult': 0.8,
-            'damage_per_tick': 10.0,
-            'fuel_drain_per_tick': 5.0
-        }
-
-    def test_from_dict(self):
-        """StormEffect.from_dict should deserialize all fields."""
-        data = {
-            'shield_capacity_mult': 0.5,
-            'thrust_mult': 0.75,
-            'strategic_mult': 0.8,
-            'damage_per_tick': 10.0,
-            'fuel_drain_per_tick': 5.0
-        }
-        effect = StormEffect.from_dict(data)
-        assert effect.shield_capacity_mult == 0.5
-        assert effect.thrust_mult == 0.75
-        assert effect.strategic_mult == 0.8
-        assert effect.damage_per_tick == 10.0
-        assert effect.fuel_drain_per_tick == 5.0
-
-    def test_from_dict_with_missing_keys_uses_defaults(self):
-        """StormEffect.from_dict should use defaults for missing keys."""
-        data = {'shield_capacity_mult': 0.3}
-        effect = StormEffect.from_dict(data)
-        assert effect.shield_capacity_mult == 0.3
-        assert effect.thrust_mult == 1.0
-        assert effect.strategic_mult == 1.0
-        assert effect.damage_per_tick == 0.0
-        assert effect.fuel_drain_per_tick == 0.0
-
-    def test_from_dict_empty_uses_all_defaults(self):
-        """StormEffect.from_dict with empty dict uses all defaults."""
-        effect = StormEffect.from_dict({})
-        assert effect.shield_capacity_mult == 1.0
-        assert effect.thrust_mult == 1.0
-        assert effect.strategic_mult == 1.0
-        assert effect.damage_per_tick == 0.0
-        assert effect.fuel_drain_per_tick == 0.0
-
-    def test_serialization_roundtrip(self):
-        """StormEffect should serialize and deserialize identically."""
-        original = StormEffect(
-            shield_capacity_mult=0.25,
-            thrust_mult=0.6,
-            strategic_mult=0.9,
-            damage_per_tick=15.5,
-            fuel_drain_per_tick=3.3
-        )
-        data = original.to_dict()
-        restored = StormEffect.from_dict(data)
-        assert restored.shield_capacity_mult == original.shield_capacity_mult
-        assert restored.thrust_mult == original.thrust_mult
-        assert restored.strategic_mult == original.strategic_mult
-        assert restored.damage_per_tick == original.damage_per_tick
-        assert restored.fuel_drain_per_tick == original.fuel_drain_per_tick
+# StormEffect tests removed in PROJ-300 Phase 7 — the legacy dataclass was
+# eradicated. Storm.abilities (Dict[str, Any]) replaces it; round-trip and
+# generation tests below cover the new shape.
 
 
 class TestStorm:
