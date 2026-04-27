@@ -5,6 +5,8 @@ PROJ-61 Phase 1.
 
 DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 """
+from __future__ import annotations
+
 import logging
 import os
 
@@ -65,7 +67,7 @@ class WorkshopShipIO:
         self._apply_loaded_ship = apply_loaded_ship_callback
 
     @profile_action("Builder: Save Ship")
-    def save_ship(self):
+    def save_ship(self) -> None:
         """Save ship design (context-aware)."""
         if self.context.mode == WorkshopMode.STANDALONE:
             # Use adapter for file-based I/O
@@ -114,7 +116,7 @@ class WorkshopShipIO:
                     self._show_error(message)
 
     @profile_action("Builder: Load Ship")
-    def load_ship(self):
+    def load_ship(self) -> None:
         """Load ship design (context-aware)."""
         if self.context.mode == WorkshopMode.STANDALONE:
             # Use adapter for file-based I/O
@@ -155,7 +157,7 @@ class WorkshopShipIO:
             except (OSError, ValueError, KeyError) as e:
                 logger.exception(f"Workshop Load: Exception during scan_designs(): {e}")
 
-            def on_design_selected(design_id: str):
+            def on_design_selected(design_id: str) -> None:
                 logger.info(f"Workshop: User selected design_id='{design_id}'")
                 load_result = library.load_design_data(design_id)
                 if load_result.success:
@@ -183,7 +185,7 @@ class WorkshopShipIO:
                 on_select_callback=on_design_selected
             )
 
-    def select_target(self):
+    def select_target(self) -> None:
         """Select target ship for weapons comparison (context-aware)."""
         if self.context.mode == WorkshopMode.STANDALONE:
             # Use adapter for file-based I/O
@@ -200,7 +202,7 @@ class WorkshopShipIO:
                 self.context.empire_id
             )
 
-            def on_target_selected(design_id: str):
+            def on_target_selected(design_id: str) -> None:
                 load_result = library.load_design_data(design_id)
                 if load_result.success:
                     # Use adapter to create ship from design data

@@ -9,6 +9,9 @@ PROJ-38: Access registries via gui.context.registries for DI.
 Cross-layer imports (acceptable for UI):
 - LayerType: Runtime - layer selection events and validation
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIDropDownMenu
@@ -38,7 +41,7 @@ class WorkshopEventRouter:
         """
         self.gui = gui
 
-    def _get_vehicle_classes(self):
+    def _get_vehicle_classes(self) -> Any:
         """PROJ-50: Get vehicle_classes from context registries (required)."""
         return self.gui.context.registries.vehicle_classes
 
@@ -151,7 +154,7 @@ class WorkshopEventRouter:
             
         return True
     
-    def _handle_quick_add(self, data):
+    def _handle_quick_add(self, data) -> None:
         """Handle quick-add from component palette '+' button."""
         gui = self.gui
         with profile_block("Builder: Quick Add"):
@@ -172,7 +175,7 @@ class WorkshopEventRouter:
                 if errors:
                     gui.show_error(f"Cannot add: {', '.join(errors)}")
 
-    def _handle_move_individual(self, data):
+    def _handle_move_individual(self, data) -> None:
         """Handle moving a single component up/down between layers."""
         gui = self.gui
         with profile_block("Builder: Move Individual"):
@@ -192,7 +195,7 @@ class WorkshopEventRouter:
                 gui.layer_panel.rebuild()
                 gui.update_stats()
 
-    def _handle_move_group(self, data):
+    def _handle_move_group(self, data) -> None:
         """Handle moving a component group (stack) up/down between layers."""
         gui = self.gui
         with profile_block("Builder: Move Group"):
@@ -217,7 +220,7 @@ class WorkshopEventRouter:
                 gui.layer_panel.rebuild()
                 gui.update_stats()
 
-    def _handle_select_component_type(self, data):
+    def _handle_select_component_type(self, data) -> None:
         """Handle component type selection from palette."""
         gui = self.gui
         with profile_block("Builder: Select Component Type"):
@@ -243,7 +246,7 @@ class WorkshopEventRouter:
             # Set as selected so modifiers panel updates
             gui.on_selection_changed(gui.controller.dragged_item)
     
-    def _handle_select_group(self, data):
+    def _handle_select_group(self, data) -> None:
         """Handle group selection in layer panel."""
         gui = self.gui
         with profile_block("Builder: Select Group"):
@@ -264,7 +267,7 @@ class WorkshopEventRouter:
             # Rebuild layer panel now that builder state is updated
             gui.layer_panel.rebuild()
     
-    def _handle_select_individual(self, data):
+    def _handle_select_individual(self, data) -> None:
         """Handle individual component selection."""
         gui = self.gui
         with profile_block("Builder: Select Individual"):
@@ -288,7 +291,7 @@ class WorkshopEventRouter:
             # Rebuild layer panel now that builder state is updated
             gui.layer_panel.rebuild()
     
-    def _handle_remove_group(self, data):
+    def _handle_remove_group(self, data) -> None:
         """Handle removing one component from a group.
 
         Args:
@@ -313,7 +316,7 @@ class WorkshopEventRouter:
             gui.viewmodel.remove_component(target_layer, found_idx)
             gui.update_stats()
     
-    def _handle_remove_individual(self, data):
+    def _handle_remove_individual(self, data) -> None:
         """Handle removing an individual component.
 
         Args:
@@ -336,7 +339,7 @@ class WorkshopEventRouter:
 
         gui.update_stats()
     
-    def _handle_add_component(self, act_type, data):
+    def _handle_add_component(self, act_type, data) -> None:
         """Handle adding a component (cloned from group or individual).
 
         Args:

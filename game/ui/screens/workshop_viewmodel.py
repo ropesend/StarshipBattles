@@ -11,7 +11,7 @@ PROJ-40: Moved cross-layer imports to TYPE_CHECKING, removed backward-compat fal
 """
 from __future__ import annotations
 
-from typing import List, Tuple, Optional, TYPE_CHECKING
+from typing import List, Tuple, Optional, TYPE_CHECKING, Any
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService
 from game.ui.screens.builder_utils import BuilderEvents
@@ -109,15 +109,15 @@ class WorkshopViewModel:
         return self._ship
     
     @ship.setter
-    def ship(self, value: Ship):
+    def ship(self, value: Ship) -> None:
         self._ship = value
         self._emit_ship_updated()
         
-    def _emit_ship_updated(self):
+    def _emit_ship_updated(self) -> None:
         """Emit SHIP_UPDATED event."""
         self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self._ship)
         
-    def notify_ship_changed(self):
+    def notify_ship_changed(self) -> None:
         """Call when ship's internal state has changed (e.g., components added)."""
         if self._ship:
             self._ship.recalculate_stats()
@@ -142,7 +142,7 @@ class WorkshopViewModel:
         """The primary (last) selected component, or None if nothing selected."""
         return self._selected_components[-1] if self._selected_components else None
 
-    def select_component(self, new_selection, append: bool = False, toggle: bool = False):
+    def select_component(self, new_selection, append: bool = False, toggle: bool = False) -> None:
         """
         Handle selection changes.
         
@@ -195,7 +195,7 @@ class WorkshopViewModel:
                     norm_selection.append((None, -1, item))
         return norm_selection
         
-    def _handle_append_selection(self, norm_selection: List, toggle: bool):
+    def _handle_append_selection(self, norm_selection: List, toggle: bool) -> None:
         """Handle append/toggle selection logic."""
         if not self._selected_components:
             self._selected_components = norm_selection
@@ -225,11 +225,11 @@ class WorkshopViewModel:
             else:
                 self._selected_components.append(item)
                 
-    def _emit_selection_changed(self):
+    def _emit_selection_changed(self) -> None:
         """Emit SELECTION_CHANGED event."""
         self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.primary_selection)
         
-    def clear_selection(self):
+    def clear_selection(self) -> None:
         """Clear all selected components."""
         self._selected_components = []
         self._emit_selection_changed()
@@ -244,7 +244,7 @@ class WorkshopViewModel:
         return self._dragged_item
     
     @dragged_item.setter
-    def dragged_item(self, value: Optional[Component]):
+    def dragged_item(self, value: Optional[Component]) -> None:
         self._dragged_item = value
         self.event_bus.emit(BuilderEvents.DRAG_STATE_CHANGED, value)
         
@@ -257,7 +257,7 @@ class WorkshopViewModel:
         """List of available components for the current ship configuration."""
         return self._available_components
     
-    def refresh_available_components(self):
+    def refresh_available_components(self) -> None:
         """Refresh the available components list from registry.
 
         PROJ-40: Removed fallback to global get_all_components() - use registries.
@@ -274,7 +274,7 @@ class WorkshopViewModel:
         return self._show_hull_layer
     
     @show_hull_layer.setter
-    def show_hull_layer(self, value: bool):
+    def show_hull_layer(self, value: bool) -> None:
         if self._show_hull_layer != value:
             self._show_hull_layer = value
             self.event_bus.emit(BuilderEvents.HULL_LAYER_VISIBILITY_CHANGED, value)
@@ -288,7 +288,7 @@ class WorkshopViewModel:
     # Modifier Synchronization
     # ─────────────────────────────────────────────────────────────────
     
-    def on_modifier_changed(self):
+    def on_modifier_changed(self) -> None:
         """Called when any modifier changes on the primary selected component.
 
         Syncs modifiers to other selected components (multi-selection),
@@ -302,7 +302,7 @@ class WorkshopViewModel:
 
         self.notify_ship_changed()
 
-    def _sync_modifiers_to_selection(self):
+    def _sync_modifiers_to_selection(self) -> None:
         """Copy modifiers from primary to all other selected components."""
         primary = self.primary_selection
         if not primary:
@@ -516,7 +516,7 @@ class WorkshopViewModel:
             logger.warning(f"Failed to change class: {result.errors}")
             return False
 
-    def validate_design(self):
+    def validate_design(self) -> Any:
         """
         Validate the current ship design using the service.
 
@@ -552,7 +552,7 @@ class WorkshopViewModel:
             return {}
         return self._ship_service.get_ship_summary(self._ship)
 
-    def clear_design(self):
+    def clear_design(self) -> None:
         """Clear the current ship design (keeping hull)."""
         if not self._require_ship("clear design"):
             return
