@@ -5,8 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Codify the convention so future broad excepts get justification comments without needing another cleanup project.
+
+**Completion Notes:** CLAUDE.md "Long-Term Quality" updated with the strengthened rule. `docs/05_ERROR_HANDLING.md` "Intentional Broad Catch Convention" rewritten with the new format, legitimate/not-legitimate examples, and a `Last verified: 2026-04-27 (PROJ-308)` stamp. MEMORY.md update deferred to user-verification gate per task 3.4.
 
 **Prerequisites:** Phase 2 complete — every site is narrow / justified / deleted.
 

@@ -50,7 +50,7 @@ class EventBus:
             return
         try:
             self._handler(event_type, **kwargs)
-        except Exception:
+        except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation
             logger.exception(f"Event handler error for {event_type}")
 
 
@@ -84,5 +84,5 @@ def log_event(event_type: str, **kwargs: Any) -> None:
         return
     try:
         _event_handler(event_type, **kwargs)
-    except Exception:
+    except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation
         logger.exception(f"Event handler error for {event_type}")

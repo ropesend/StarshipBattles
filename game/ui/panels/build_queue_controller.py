@@ -214,7 +214,7 @@ class BuildQueueController:
 
                 result = validator.validate(load_result.data)
                 d.design_valid = not result.has_issues
-            except Exception:
+            except Exception:  # Intentional broad catch: design validation traverses arbitrary registry/save data; queue panel must remain usable on validator failure
                 d.design_valid = True  # Can't validate, assume valid
 
     def set_category(self, category: str):

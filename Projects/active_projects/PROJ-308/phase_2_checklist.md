@@ -5,8 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Execute the action chosen in Phase 1 for each site: narrow the type, add a justification comment, or delete the handler.
+
+**Completion Notes:** All 24 sites applied. Spec verification (`grep "except Exception:" game/ | grep -v "Intentional"`) returns zero hits. AST sweep also confirmed zero un-justified `except Exception:` (without bound name) in `game/`. Targeted tests passed: `tests/unit/core/` + `tests/unit/simulation/combat/` (1367 passed) and `tests/unit/ui/` (3489 passed). Out of scope: 11 `except Exception as e:` (with bound binding) sites in game/ — these were not in the verified 24-site manifest and are tracked for a possible follow-up.
 
 **Prerequisites:** Phase 1 triage complete; `findings/triage.md` populated.
 

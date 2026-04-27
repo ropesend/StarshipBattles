@@ -523,15 +523,35 @@ except Exception as e:
 
 ## Intentional Broad Catch Convention
 
-In some cases, catching `Exception` broadly is justified -- for example, in crash handlers, platform-dependent code, and event handler isolation where an unexpected exception must not propagate and crash the application. The codebase convention is to annotate these with an inline comment:
+> **Last verified:** 2026-04-27 (PROJ-308)
+
+Prefer narrowed exception types. When a broad `except Exception:` is genuinely necessary, it MUST carry a justification comment.
+
+### Broad Catches
+
+**Format:**
 
 ```python
-# Intentional broad catch: <reason>
-except Exception as e:
-    logger.error(f"Unexpected error in event handler: {e}")
+except Exception:  # Intentional broad catch: <specific reason>
 ```
 
-This annotation signals to reviewers (and to automated audits) that the broad catch was deliberate, not accidental. Always include a brief reason explaining why a broad catch is appropriate at that call site.
+The justification line MUST appear on the same line as the `except` clause OR on the line immediately above it. The reason must say *what* failures are expected and *why* fire-and-forget is correct.
+
+**Legitimate reasons:**
+- Third-party callback dispatch (handler may raise anything)
+- Platform-dependent init (Tkinter, audio, GPU — exception types vary by OS)
+- Defensive UI updates (a failed redraw shouldn't crash the session)
+- Telemetry / event emission (instrumentation must never break the host)
+- Registry-provider lookups that may run before initialization (tests, CLI tools)
+- Save-state / library loads where I/O + JSON + schema-validation errors all need to fall back to a safe default
+
+**Not legitimate (don't write these):**
+- "general defensive code"
+- "third-party stuff"
+- "legacy"
+- any comment that doesn't say *what* failures are expected and *why* fire-and-forget is correct
+
+A broad catch without a justification comment is a code-review failure. See [PROJ-308](../Projects/active_projects/PROJ-308/) for the audit that established this convention (24 sites triaged 2026-04-27).
 
 **PROJ-251 Changes:** The turn engine's `_time_phase()` no longer swallows exceptions. It wraps them in `EnginePhaseError` and re-raises to halt the turn. The serialization chain (`Fleet.from_dict()`, `Empire.from_dict()`, `OrderSerializer.deserialize_orders()`, `Galaxy.from_dict()`) no longer silently skips corrupt entries — it raises `PersistenceException`. The `_log_empire_state()` debug logging method retains its broad catch (acceptable — logging must not crash the turn).
 

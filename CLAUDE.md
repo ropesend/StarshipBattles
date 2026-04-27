@@ -249,7 +249,7 @@ When faced with choices, prefer:
 - Root cause fix over workaround
 - Comprehensive tests over minimal tests
 - Named constants over magic numbers
-- Specific exceptions over broad catches
+- **Specific exceptions over broad catches.** When a broad catch is genuinely necessary (e.g., third-party callback dispatch, platform-dependent init, fire-and-forget event emission), it MUST carry an `# Intentional broad catch: <specific reason>` comment on the same line or the line above. A broad catch without a justification comment is a code-review failure.
 - Extract abstraction over copy-paste
 - Dependency injection over singletons
 - Delegate to existing logic over reimplementing it

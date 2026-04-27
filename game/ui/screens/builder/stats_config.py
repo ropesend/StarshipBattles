@@ -238,6 +238,6 @@ def resolve_section_visibility(
 # Load sections config on module import
 try:
     SECTIONS_CONFIG, ALWAYS_VISIBLE = load_sections_config()
-except Exception:
+except (OSError, ValueError, KeyError):
     logger.warning("Failed to load stats_sections.json, using empty config")
     SECTIONS_CONFIG, ALWAYS_VISIBLE = {}, {}

@@ -423,7 +423,7 @@ class TransferDialog(UIWindow):
             library = DesignLibrary(session.save_path, empire_id)
             pod_designs = library.filter_designs(vehicle_type="Drop Pod")
             return sorted(set(d.name for d in pod_designs))
-        except Exception:
+        except Exception:  # Intentional broad catch: DesignLibrary load surfaces I/O, JSON, and schema-validation errors; transfer dialog falls back to empty pod list
             logger.debug("Could not discover pod designs, falling back to empty list")
             return []
 
