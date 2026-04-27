@@ -4,24 +4,30 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-311 | Return Type Annotation Backfill and Convention | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-310 | Deep Nesting Investigative Review | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-308 | Broad Exception Handler Justifications | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-307 | Documentation Freshness Timestamps | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-305 | Fleet Strategic-Layer Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-304 | Star System Archetype Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-303 | Warp Point Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-302 | Star Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-301 | Planet Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-299 | Race Description Generator (LLM) | Awaiting Verification | 2026-04-26 | 2026-04-26 |
 | PROJ-298 | FleetOrder Rename Cleanup | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-297 | Code Review Cleanup - Quick Wins | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-296 | LLM Service Foundation | Awaiting Verification | 2026-04-26 | 2026-04-26 |
-| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Awaiting Verification | 2026-04-26 | 2026-04-26 |
-| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Planning | 2026-04-26 | 2026-04-26 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-299 | Race Description Generator (LLM) | Archived | 2026-04-26 | 2026-04-27 |
+| PROJ-296 | LLM Service Foundation | Archived | 2026-04-26 | 2026-04-27 |
+| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Archived | 2026-04-26 | 2026-04-27 |
+| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Archived | 2026-04-26 | 2026-04-27 |
+| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Archived | 2026-04-26 | 2026-04-27 |
 | PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | Archived | 2026-04-18 | 2026-04-26 |
 | PROJ-291 | Audit Critical Fixes (PROJ-283..290 Sign-off Blocker) | Archived | 2026-04-18 | 2026-04-26 |
 | PROJ-290 | Empire Treasury + Uncolonized Habitability UI | Archived | 2026-04-18 | 2026-04-26 |
@@ -36,11 +42,6 @@
 | PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | Archived | 2026-04-17 | 2026-04-26 |
 | PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | Archived | 2026-04-17 | 2026-04-18 |
 | PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | Archived | 2026-04-17 | 2026-04-18 |
-| PROJ-277 | First-Class A/B Comparison Runner | Archived | 2026-04-16 | 2026-04-18 |
-| PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | Archived | 2026-04-16 | 2026-04-18 |
-| PROJ-275 | N-Team Combat Support | Archived | 2026-04-16 | 2026-04-18 |
-| PROJ-274 | Unified ShipMaterializer Service | Archived | 2026-04-16 | 2026-04-18 |
-| PROJ-273 | Shared Ability Stat Key Registry | Archived | 2026-04-16 | 2026-04-18 |
 | PROJ-278 | Unified Role Registry (design_role + Combat Lab scenario_role) | Archived | 2026-04-17 | 2026-04-18 |
 
 ---

@@ -669,7 +669,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     def _show_llm_dialog(self, field: str, *, threshold: int) -> None:
         """Construct the still-working modal. Pattern mirrors `_show_save_update_dialog`."""
         self._llm_dialog_field = field
-        screen_w, screen_h = self.window_display_size
+        # Centre within the screen's own container — same pattern used by
+        # `_show_save_update_dialog` (line ~1326). NOT `self.window_display_size`,
+        # which doesn't exist on UIWindow.
+        screen_w, screen_h = self.get_container().get_size()
         dialog_w, dialog_h = 480, 180
         x = (screen_w - dialog_w) // 2
         y = (screen_h - dialog_h) // 2
@@ -764,7 +767,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self._socio_error_seen = True
 
     def _show_llm_error_popup(self, message: str) -> None:
-        screen_w, screen_h = self.window_display_size
+        # Same centring pattern as _show_save_update_dialog — `self.get_container()`
+        # returns the screen's UIPanel/Container; `.get_size()` is its (w, h).
+        screen_w, screen_h = self.get_container().get_size()
         dialog_w, dialog_h = 480, 160
         x = (screen_w - dialog_w) // 2
         y = (screen_h - dialog_h) // 2
@@ -1041,6 +1046,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         PROJ-66 Phase 6: Added identity and aptitudes panels.
         BUG-81: Update panel race_config references before populating.
+        PROJ-299: ALSO update the description LLM controller — without this,
+        the controller writes generated text into the orphaned old
+        race_config while the panel reads from the new one (silent data loss).
         """
         # Update all panel race_config references to current config (BUG-81)
         for panel in [self._identity_panel, self._flag_gallery,
@@ -1049,6 +1057,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                       self._description_panel, self._summary_panel]:
             if panel is not None:
                 panel.race_config = self.race_config
+        # PROJ-299: keep the controller's race_config reference in sync.
+        # Use getattr so test mocks that skip __init__ don't break.
+        controller = getattr(self, "_description_controller", None)
+        if controller is not None:
+            controller.set_race_config(self.race_config)
 
         # PROJ-66: Update identity panel (replaces old name_input)
         if self._identity_panel:
@@ -1293,7 +1306,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Full validation (may have warnings for missing env preferences)
         validation_result = self.race_config.validate()
         if not validation_result.is_valid:
-            logger.warning(f"Saving race with validation warnings: {validation_result.first_error}")
+            logger.warning(f"Saving race with validation warnings: {validation_result.message}")
 
         # FEAT-05: If editing a loaded species, prompt for overwrite vs save-as-new
         if self.is_editing and self.race_config.race_id:

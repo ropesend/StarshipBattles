@@ -106,6 +106,17 @@ class ValidationResult:
         """
         return self.errors[0] if self.errors else ""
 
+    @property
+    def first_error(self) -> str:
+        """First error message; semantic alias for `message`.
+
+        `first_error` reads more clearly at call sites that handle
+        error reporting (e.g., `f"Validation failed: {result.first_error}"`).
+        Both names return the same value — pick the clearer one for the
+        context.
+        """
+        return self.message
+
     def add_error(self, error: str, code: Optional[Union[str, ErrorCode]] = None) -> None:
         """Add an error and mark result as invalid.
 

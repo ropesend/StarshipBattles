@@ -102,17 +102,34 @@ care which provider is in use.
 - `LLM_PROVIDER` — provider name lookup key. Default `"deepseek"`.
 
 **Tunable defaults (`game.core.config.LLMConfig`):**
-timeout, retry policy (5xx only, never 429), `MAX_CONCURRENT_CALLS`,
-default model, User-Agent string.
+timeout, retry policy (5xx only, never 429), `MAX_CONCURRENT_CALLS=3`,
+`DEFAULT_MODEL="deepseek-v4-flash"`, User-Agent string.
+
+> DeepSeek's `deepseek-chat` and `deepseek-reasoner` model names are
+> deprecated by the provider. The current generation is `deepseek-v4-flash`
+> (general) and `deepseek-v4-pro` (premium). 1M context window for both.
+> See https://api-docs.deepseek.com/quick_start/pricing.
 
 **Error model (`game/core/exceptions.py` `LLMException` branch):**
 `LLMConfigError` (L001), `LLMNetworkError` (L002), `LLMResponseError`
 (L003), `LLMRateLimited` (L004), `LLMTimeoutError` (L005),
 `LLMCancelled` (L006). All inherit from `LLMException` → `GameException`.
 
-**Status:** Foundation only — no consumers wired yet. Race description
-generation (separate triage doc) and diplomacy are the planned
-consumers.
+**Consumers (PROJ-299 onwards):**
+- `RaceDescriptionLLMController` (`game/strategy/services/race_description_llm_controller.py`) —
+  pygame-free state machine that owns one `LLMBackgroundCall` per
+  description field (bio + socio). Translates `CallStatus` →
+  domain-specific `FieldStatus`. Drives the Race Setup Description tab
+  via an `on_change` callback. The canonical reference consumer of
+  Pattern #28 (Background Service Call). When adding a new LLM
+  consumer, copy this shape.
+
+When the screen reassigns its `race_config` (e.g. on Load Race), it
+MUST call `controller.set_race_config(new_race)` so the controller
+writes generation results into the new instance — otherwise the
+results land in an orphaned old instance the UI no longer reads. See
+`_populate_ui_from_config` in `RaceSetupScreen` for the canonical
+sync site.
 
 ---
 

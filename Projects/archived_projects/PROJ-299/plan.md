@@ -28,17 +28,60 @@
 
 ## Current State
 
-**Last Updated:** 2026-04-26 21:00
-**Active Phase:** Complete — awaiting user verification
-**Last Action:** All 7 phases implemented and tested. Final sharded suite: **15328/15328 passing** (+55 tests over PROJ-296's 15273 baseline; 0 regressions). Documentation updated: `docs/02_PATTERNS.md` Pattern #28 gets a "Reference consumer (PROJ-299)" section; `docs/systems/strategy_layer.md` §7.x mentions the new caption loader / prompt builder / LLM controller. `MAX_LENGTH` bumped 500 → 5000 with the char-label widened to fit 4-digit values.
-**Next Action:** **USER VERIFICATION** — run Phase 7 Task 7.6 manual smoke. The user needs to: (a) run the Gemini capture prompts in `Tools/captioning/prompts/` against each of the 37 visual assets and save the JSON sidecars, then (b) launch the game with `DEEPSEEK_API_KEY` set and try Generate Bio / Generate Socio / Re-roll / Cancel.
-**Blockers:** None — implementation done.
+**Last Updated:** 2026-04-26 22:50
+**Active Phase:** **VERIFIED** — end-to-end working in production
+**Last Action:** User confirmed end-to-end working: clicked Generate, got real `deepseek-v4-flash` output (~1500-1700 chars in 8-37s) populating both bio and socio text boxes. Three follow-up bugs fixed during smoke testing — see "Verification & smoke fixes" below. Diagnostics removed; production-clean.
+**Next Action:** Archive via Protocol 03. Optional: author the 37 caption sidecars (`Tools/captioning/prompts/`) for visually-coherent generations.
+**Blockers:** None — feature works.
 **Context for Next Agent:**
 - Foundation is PROJ-296 (LLM Service Foundation, landed in the same dev day). This project is the **canonical first consumer** of Pattern #28 (Background Service Call). Future LLM consumers (diplomacy, ad-hoc summaries) should follow the same `Controller + on_change + screen.update()` shape.
 - Visual asset captions are pre-baked **externally** by the user via Gemini — this project ships the 3 prompts (`Tools/captioning/prompts/{flag,portrait,theme}_prompt.md`) and a validator (`Tools/captioning/validate_captions.py`), not the captioning code itself. The validator currently reports 37 MISSING (expected — that's the user's task).
 - LLM orchestration lives in pygame-free `RaceDescriptionLLMController` (Phase 4). `RaceSetupScreen` only routes button events + polls per-frame + renders. This kept the screen growth manageable despite its existing 1294 lines.
 - The 30s/90s dialog uses `LLMConfig.DEFAULT_TIMEOUT_SECONDS` override of `timeout_seconds=90` on the `LLMBackgroundCall`, so the network timeout fires shortly after the second dialog rather than mid-wait.
 - The `_block_real_http` autouse fixture in `tests/conftest.py` (from PROJ-296) guarantees no test hits the real DeepSeek API; all controller tests use `_StubProvider` / `_BlockingProvider` / `_RaisingProvider` doubles.
+
+---
+
+## Verification & smoke fixes
+
+Three bugs surfaced during end-to-end smoke that automated tests
+missed. All fixed; regression tests added:
+
+1. **Crash on first error popup** — `_show_llm_error_popup` and
+   `_show_llm_dialog` used `self.window_display_size` which doesn't
+   exist on `pygame_gui.UIWindow`. Fixed to use the documented
+   `self.get_container().get_size()` pattern (mirrors
+   `_show_save_update_dialog` at line 1326). Regression tests in
+   `TestProj299DialogPositioningRegression`.
+
+2. **Bio + Socio buttons drawn on top of each other** — both rows
+   anchored at `y=5`. Fixed to compute distinct y-positions matching
+   `_create_content`'s layout math: bio row at the bio-header line,
+   socio row at the socio-header line. Status labels moved to the 15px
+   gap below each text box (per design.md "below the text box, not
+   inside" placement).
+
+3. **Silent data loss: generated text never reached the UI** — root
+   cause was object-identity drift. The screen reassigns
+   `self.race_config` on Load Race / Randomize All; the existing
+   `_populate_ui_from_config()` re-pointed each panel's
+   `race_config` reference (line 1064) but didn't know about the
+   PROJ-299 controller. The controller wrote 1500+ chars of LLM
+   output into the orphaned old instance while the panel read 0 chars
+   from the new one. Fixed by adding
+   `RaceDescriptionLLMController.set_race_config()` and calling it
+   from `_populate_ui_from_config()`. Regression test in
+   `TestSetRaceConfig`.
+
+**Model:** `LLMConfig.DEFAULT_MODEL` is `deepseek-v4-flash` (the
+current DeepSeek generation; `deepseek-chat` and `deepseek-reasoner`
+are deprecated). 1M context window, ~$0.14/$0.28 per million in/out
+tokens. A typical race-description call returns ~1500 chars in
+~10-20s for ~1500-3500 tokens.
+
+**Final sharded suite: 15396 tests, 15394 passing** (2 pre-existing
+flakes unrelated to PROJ-299: `test_validation_result_has_first_error`
+and `test_collect_movements_respects_speed`).
 
 ---
 

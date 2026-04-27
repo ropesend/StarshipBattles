@@ -172,6 +172,17 @@ class RaceDescriptionLLMController:
         self.cancel_bio()
         self.cancel_socio()
 
+    def set_race_config(self, race_config: RaceConfig) -> None:
+        """Re-point the controller at a new RaceConfig instance.
+
+        PROJ-299 fix: the screen reassigns `self.race_config` on Load Race
+        and Randomize All. `_populate_ui_from_config()` updates each
+        panel's reference; this method does the same for the controller.
+        Without this, generated text lands in the orphaned old instance
+        while the panel reads from the new one (silent data loss).
+        """
+        self._race = race_config
+
     # -- Per-frame polling ---------------------------------------------------
 
     def update(self) -> None:
@@ -186,6 +197,8 @@ class RaceDescriptionLLMController:
 
     def _start_bio(self) -> None:
         captions = self._gather_captions()
+        cap_summary = {k: ("present" if v else "missing") for k, v in captions.items()}
+        logger.info("Race description bio START: captions=%s", cap_summary)
         messages = build_bio_prompt(self._race, captions)
         self._bio_error = None
         self._bio_call = LLMBackgroundCall(
@@ -195,6 +208,7 @@ class RaceDescriptionLLMController:
             self._bio_call.start()
         except LLMConfigError as e:
             # Concurrent-call limit reached (or other config issue at start).
+            logger.error("Race description bio start failed: %s", e)
             self._bio_status = FieldStatus.ERROR
             self._bio_error = e
             self._fire_on_change()
@@ -204,6 +218,8 @@ class RaceDescriptionLLMController:
 
     def _start_socio(self) -> None:
         captions = self._gather_captions()
+        cap_summary = {k: ("present" if v else "missing") for k, v in captions.items()}
+        logger.info("Race description socio START: captions=%s", cap_summary)
         messages = build_socio_prompt(self._race, captions)
         self._socio_error = None
         self._socio_call = LLMBackgroundCall(
@@ -212,6 +228,7 @@ class RaceDescriptionLLMController:
         try:
             self._socio_call.start()
         except LLMConfigError as e:
+            logger.error("Race description socio start failed: %s", e)
             self._socio_status = FieldStatus.ERROR
             self._socio_error = e
             self._fire_on_change()
@@ -250,8 +267,19 @@ class RaceDescriptionLLMController:
         self, call: LLMBackgroundCall, new_status: FieldStatus
     ) -> None:
         if new_status == FieldStatus.DONE and call.result is not None:
-            self._race.bio_description = call.result.text
+            text = call.result.text or ""
+            logger.info(
+                "Race description bio DONE: text_len=%d latency=%.2fs tokens=%d",
+                len(text), call.result.latency_seconds,
+                call.result.usage.total_tokens,
+            )
+            self._race.bio_description = text
         elif new_status == FieldStatus.ERROR:
+            logger.error(
+                "Race description bio ERROR: %s: %s",
+                type(call.error).__name__ if call.error else "Unknown",
+                call.error,
+            )
             self._bio_error = call.error
         # CANCELLED also lands here when the call was cancelled by us;
         # bio_description stays as-is (preserves prior text).
@@ -262,8 +290,19 @@ class RaceDescriptionLLMController:
         self, call: LLMBackgroundCall, new_status: FieldStatus
     ) -> None:
         if new_status == FieldStatus.DONE and call.result is not None:
-            self._race.socio_description = call.result.text
+            text = call.result.text or ""
+            logger.info(
+                "Race description socio DONE: text_len=%d latency=%.2fs tokens=%d",
+                len(text), call.result.latency_seconds,
+                call.result.usage.total_tokens,
+            )
+            self._race.socio_description = text
         elif new_status == FieldStatus.ERROR:
+            logger.error(
+                "Race description socio ERROR: %s: %s",
+                type(call.error).__name__ if call.error else "Unknown",
+                call.error,
+            )
             self._socio_error = call.error
         self._socio_status = new_status
         self._fire_on_change()

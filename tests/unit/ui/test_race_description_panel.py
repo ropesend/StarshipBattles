@@ -329,6 +329,11 @@ class TestProj299ControllerIntegration:
         panel.lbl_bio_status = MagicMock()
         panel.lbl_socio_status = MagicMock()
         panel._controller = None
+        # Race config — set_state DONE branch reads bio/socio_description
+        # to push generated text into the text boxes.
+        panel.race_config = MagicMock()
+        panel.race_config.bio_description = "Generated bio text"
+        panel.race_config.socio_description = "Generated socio text"
         return panel
 
     def test_set_state_idle_shows_only_generate_bio(self):
@@ -412,3 +417,52 @@ class TestProj299ControllerIntegration:
         panel.lbl_bio_status.set_text.assert_called()
         text = panel.lbl_bio_status.set_text.call_args[0][0]
         assert "fail" in text.lower() or "error" in text.lower()
+
+    def test_set_state_done_pushes_generated_text_into_text_box(self):
+        """Regression: PROJ-299 v1 had a bug where set_state() updated
+        button visibility but NEVER pushed race_config.bio_description /
+        socio_description into the UI text box. The user clicked Generate,
+        the LLM completed, the data model had the text — but the box stayed
+        empty. Verify both fields push their text on the DONE transition."""
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        panel = self._make_panel_with_widgets()
+        panel.race_config.bio_description = "BIO_OUTPUT"
+        panel.race_config.socio_description = "SOCIO_OUTPUT"
+        # Text boxes currently report a different value (so the equality
+        # guard doesn't short-circuit the set_text call).
+        panel.bio_text_box.get_text.return_value = ""
+        panel.socio_text_box.get_text.return_value = ""
+
+        ctrl = MagicMock()
+        ctrl.bio_status = FieldStatus.DONE
+        ctrl.socio_status = FieldStatus.DONE
+        ctrl.bio_elapsed_seconds = 0.0
+        ctrl.socio_elapsed_seconds = 0.0
+        panel._controller = ctrl
+
+        panel.set_state(ctrl)
+
+        panel.bio_text_box.set_text.assert_called_with("BIO_OUTPUT")
+        panel.socio_text_box.set_text.assert_called_with("SOCIO_OUTPUT")
+
+    def test_set_state_done_skips_set_text_when_unchanged(self):
+        """Equality guard: don't repaint the text box every frame when
+        nothing changed — set_state() is called from on_change, which
+        fires often."""
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        panel = self._make_panel_with_widgets()
+        panel.race_config.bio_description = "SAME"
+        panel.bio_text_box.get_text.return_value = "SAME"
+
+        ctrl = MagicMock()
+        ctrl.bio_status = FieldStatus.DONE
+        ctrl.socio_status = FieldStatus.IDLE
+        ctrl.bio_elapsed_seconds = 0.0
+        ctrl.socio_elapsed_seconds = 0.0
+        panel._controller = ctrl
+
+        panel.set_state(ctrl)
+
+        panel.bio_text_box.set_text.assert_not_called()

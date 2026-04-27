@@ -378,3 +378,38 @@ class TestReRoll:
         _wait_until(lambda: (controller.update(), True)[1] and controller.bio_status == FieldStatus.DONE
                      and race.bio_description == "second")
         assert race.bio_description == "second"
+
+
+# ============================================================================
+# Regression: PROJ-299 race_config object-identity sync
+# ============================================================================
+
+
+class TestSetRaceConfig:
+    """Regression for the silent-data-loss bug where the screen reassigned
+    `self.race_config` (e.g. on Load Race) and updated each panel's reference
+    via `_populate_ui_from_config`, but the controller's `_race` reference
+    was not updated. Generated text would land in the orphaned old object
+    while the panel read from the new one — silent data loss.
+    """
+
+    def test_set_race_config_repoints_controller(self, race, caption_loader):
+        from game.strategy.services.race_description_llm_controller import (
+            RaceDescriptionLLMController,
+        )
+
+        controller = RaceDescriptionLLMController(
+            race_config=race, provider=_StubProvider(),
+            caption_loader=caption_loader, on_change=lambda: None,
+        )
+        new_race = RaceConfig(name="Different", race_name="DiffSpecies")
+        assert new_race is not race
+
+        controller.set_race_config(new_race)
+
+        # Generation now writes to the NEW race_config, not the original.
+        controller.generate_bio()
+        _wait_until(lambda: (controller.update(), True)[1] and controller.bio_status.name == "DONE")
+        assert new_race.bio_description != ""
+        # Original should be untouched.
+        assert race.bio_description == ""

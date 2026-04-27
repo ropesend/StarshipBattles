@@ -40,7 +40,7 @@ class TestLLMConfig:
         assert LLMConfig.CONNECT_TIMEOUT_SECONDS == 5.0
         assert LLMConfig.DEFAULT_MAX_TOKENS == 4096
         assert LLMConfig.DEFAULT_TEMPERATURE == 0.7
-        assert LLMConfig.DEFAULT_MODEL == "deepseek-chat"
+        assert LLMConfig.DEFAULT_MODEL == "deepseek-v4-flash"
         assert LLMConfig.MAX_RETRIES_5XX == 2
         assert LLMConfig.RETRY_BACKOFF_BASE_SECONDS == 1.0
         assert LLMConfig.MAX_CONCURRENT_CALLS == 3

@@ -12,6 +12,7 @@ Provides UI controls for configuring:
 - Biological description (max 500 chars)
 - Sociological description (max 500 chars)
 """
+import logging
 import pygame
 import pygame_gui
 from typing import Optional, TYPE_CHECKING
@@ -23,6 +24,8 @@ if TYPE_CHECKING:
     from game.strategy.services.race_description_llm_controller import (
         RaceDescriptionLLMController,
     )
+
+logger = logging.getLogger(__name__)
 
 
 class RaceDescriptionPanel:
@@ -152,87 +155,90 @@ class RaceDescriptionPanel:
     def attach_controller(self, controller: 'RaceDescriptionLLMController') -> None:
         """Bind a `RaceDescriptionLLMController` and create the LLM-related widgets.
 
-        Creates the per-field Generate / Cancel / Re-roll buttons and a
-        status label below each text box. Initial visibility is set by
-        `set_state(controller)` (call from the on_change callback).
+        Layout — mirrors `_create_content()`'s y-coordinate math so the
+        per-field buttons sit in their own header row (NOT both at y=5
+        — that overlap was the v1 bug):
+
+            y=5        : "Biological Description:" header + bio buttons (right) + bio_char_label (far right)
+            y=33       : bio_text_box (height = text_area_height)
+            y=33+TAH   : lbl_bio_status (slim status label in the 15px gap)
+            y=33+TAH+15: "Sociological Description:" header + socio buttons + socio_char_label
+            ...etc
+
+        where TAH = text_area_height = (panel_height - 100) // 2.
         """
         self._controller = controller
 
-        # Layout: a small row of 3 buttons + a status label, just under each
-        # text box. The text box already eats `text_area_height`, so we
-        # piggyback off the same horizontal coordinates.
         panel_width = self.panel.get_relative_rect().width - 20
+        panel_height = self.panel.get_relative_rect().height - 20
+        text_area_height = (panel_height - 100) // 2
 
-        # Bio buttons row — placed immediately below the bio text box.
-        # Estimated y-coord: header (28) + text_area_height — but we don't
-        # have that here; instead, drop the buttons at the bottom of the
-        # panel and let pygame_gui's container clipping hide them gracefully.
-        # For real layout, race_setup_screen rebuilds on tab switch.
-        btn_w = 110
-        btn_h = 28
-        gap = 6
-        # Bio row — anchor near bio_text_box position. We ask pygame_gui
-        # to place us at the panel's left edge, near the bottom of the bio
-        # area. For test-friendliness we use a fixed y; production layout
-        # is refined visually.
-        bio_row_y = 5  # row anchor for bio (above text); refined visually
-        socio_row_y = 5  # row anchor for socio
+        # Header rows: same y math as _create_content().
+        bio_row_y = 5
+        socio_row_y = 5 + 28 + text_area_height + 15
 
+        # Status labels live in the gap below each text box (the 15px gap
+        # between bio_text_box and the socio header — this is the
+        # "below the text box, not inside it" placement from design.md).
+        bio_status_y = 33 + text_area_height + 1  # 1px below bio_text_box
+        socio_status_y = socio_row_y + 28 + text_area_height + 1
+
+        # Buttons: 3 per row, 80px each with 4px gaps. Anchored to the
+        # LEFT of the char_label (which lives at panel_width-110, w=110).
+        btn_w = 80
+        btn_h = 25
+        gap = 4
+        char_label_w = 110
+        buttons_total_w = 3 * btn_w + 2 * gap
+        buttons_x = panel_width - char_label_w - 10 - buttons_total_w
+
+        def _btn_x(idx: int) -> int:
+            return buttons_x + idx * (btn_w + gap)
+
+        # ---------- Bio row ----------
         self.btn_generate_bio = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(panel_width - 3 * (btn_w + gap), bio_row_y, btn_w, btn_h),
-            text="Generate Bio",
-            manager=self.ui_manager,
-            container=self.panel,
+            relative_rect=pygame.Rect(_btn_x(0), bio_row_y, btn_w, btn_h),
+            text="Generate", manager=self.ui_manager, container=self.panel,
             object_id="#btn_generate_bio",
         )
         self.btn_cancel_bio = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(panel_width - 2 * (btn_w + gap), bio_row_y, btn_w, btn_h),
-            text="Cancel",
-            manager=self.ui_manager,
-            container=self.panel,
+            relative_rect=pygame.Rect(_btn_x(1), bio_row_y, btn_w, btn_h),
+            text="Cancel", manager=self.ui_manager, container=self.panel,
             object_id="#btn_cancel_bio",
         )
         self.btn_re_roll_bio = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(panel_width - (btn_w + gap), bio_row_y, btn_w, btn_h),
-            text="Re-roll",
-            manager=self.ui_manager,
-            container=self.panel,
+            relative_rect=pygame.Rect(_btn_x(2), bio_row_y, btn_w, btn_h),
+            text="Re-roll", manager=self.ui_manager, container=self.panel,
             object_id="#btn_re_roll_bio",
         )
 
+        # ---------- Socio row ----------
         self.btn_generate_socio = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(panel_width - 3 * (btn_w + gap), socio_row_y, btn_w, btn_h),
-            text="Generate Socio",
-            manager=self.ui_manager,
-            container=self.panel,
+            relative_rect=pygame.Rect(_btn_x(0), socio_row_y, btn_w, btn_h),
+            text="Generate", manager=self.ui_manager, container=self.panel,
             object_id="#btn_generate_socio",
         )
         self.btn_cancel_socio = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(panel_width - 2 * (btn_w + gap), socio_row_y, btn_w, btn_h),
-            text="Cancel",
-            manager=self.ui_manager,
-            container=self.panel,
+            relative_rect=pygame.Rect(_btn_x(1), socio_row_y, btn_w, btn_h),
+            text="Cancel", manager=self.ui_manager, container=self.panel,
             object_id="#btn_cancel_socio",
         )
         self.btn_re_roll_socio = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(panel_width - (btn_w + gap), socio_row_y, btn_w, btn_h),
-            text="Re-roll",
-            manager=self.ui_manager,
-            container=self.panel,
+            relative_rect=pygame.Rect(_btn_x(2), socio_row_y, btn_w, btn_h),
+            text="Re-roll", manager=self.ui_manager, container=self.panel,
             object_id="#btn_re_roll_socio",
         )
 
-        # Status labels — below the text boxes. Placed at fixed offsets;
-        # production layout is fine-tuned visually.
+        # ---------- Status labels (below each text box) ----------
         self.lbl_bio_status = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, bio_row_y + btn_h + 2, panel_width - 20, 20),
+            relative_rect=pygame.Rect(10, bio_status_y, panel_width - 20, 13),
             text="",
             manager=self.ui_manager,
             container=self.panel,
             object_id="#lbl_bio_status",
         )
         self.lbl_socio_status = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, socio_row_y + btn_h + 2, panel_width - 20, 20),
+            relative_rect=pygame.Rect(10, socio_status_y, panel_width - 20, 13),
             text="",
             manager=self.ui_manager,
             container=self.panel,
@@ -243,7 +249,11 @@ class RaceDescriptionPanel:
         """Reconcile widget visibility / labels / text-box lock with controller state.
 
         Called from the screen's `on_change` callback whenever the
-        controller's state transitions.
+        controller's state transitions. On DONE this ALSO pushes the
+        freshly-generated text from `race_config.bio_description` /
+        `socio_description` into the corresponding text box — without
+        this, the LLM result lands in the data model but never reaches
+        the UI.
         """
         # Late import to avoid the strategy → UI cycle at import time.
         from game.strategy.services.race_description_llm_controller import FieldStatus
@@ -258,6 +268,7 @@ class RaceDescriptionPanel:
             btn_cancel=self.btn_cancel_bio,
             btn_re_roll=self.btn_re_roll_bio,
             lbl_status=self.lbl_bio_status,
+            race_field_attr="bio_description",
             FieldStatus=FieldStatus,
         )
         self._apply_field_state(
@@ -270,13 +281,14 @@ class RaceDescriptionPanel:
             btn_cancel=self.btn_cancel_socio,
             btn_re_roll=self.btn_re_roll_socio,
             lbl_status=self.lbl_socio_status,
+            race_field_attr="socio_description",
             FieldStatus=FieldStatus,
         )
 
     def _apply_field_state(
         self, *, status, elapsed, error, label_prefix,
         text_box, btn_generate, btn_cancel, btn_re_roll, lbl_status,
-        FieldStatus,
+        race_field_attr, FieldStatus,
     ) -> None:
         """Per-field state reconciliation."""
         if status == FieldStatus.IDLE:
@@ -300,6 +312,25 @@ class RaceDescriptionPanel:
             btn_re_roll.show()
             lbl_status.set_text("")
             text_box.enable()
+            # Push the freshly-generated text into the UI. Controller
+            # has written to race_config; we reconcile the text box
+            # from there. Guarded by an equality check to avoid a
+            # repaint storm when set_state() is called repeatedly.
+            new_text = getattr(self.race_config, race_field_attr) or ""
+            current_text = text_box.get_text()
+            if current_text != new_text:
+                text_box.set_text(new_text)
+                # pygame_gui UITextEntryBox sometimes doesn't re-render
+                # after set_text if the widget was just enable()'d in the
+                # same frame — force a layout rebuild to be safe.
+                if hasattr(text_box, "rebuild"):
+                    try:
+                        text_box.rebuild()
+                    except Exception as e:  # Intentional broad catch: rebuild is defensive
+                        logger.warning(
+                            "RaceDescriptionPanel: text_box.rebuild() failed: %s", e
+                        )
+                self.update_char_counts()
         elif status == FieldStatus.ERROR:
             btn_generate.show()
             btn_generate.enable()

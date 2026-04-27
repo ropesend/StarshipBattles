@@ -270,3 +270,8 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-270 | Unified Battle Simulator Entry/Exit - Closure | 2026-04-13 | PROJ-251-300 |
 | PROJ-271 | Strategic Modifier Battle-Math Track B | 2026-04-13 | PROJ-251-300 |
 | PROJ-272 | Strategic Modifier System Cleanup + Round-2 Audit Fixes | 2026-04-16 | PROJ-251-300 |
+| PROJ-273 | Shared Ability Stat Key Registry | 2026-04-18 | PROJ-251-300 |
+| PROJ-274 | Unified ShipMaterializer Service | 2026-04-18 | PROJ-251-300 |
+| PROJ-275 | N-Team Combat Support | 2026-04-18 | PROJ-251-300 |
+| PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | 2026-04-18 | PROJ-251-300 |
+| PROJ-277 | First-Class A/B Comparison Runner | 2026-04-18 | PROJ-251-300 |

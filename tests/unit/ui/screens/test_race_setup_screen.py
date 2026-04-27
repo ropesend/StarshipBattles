@@ -1166,3 +1166,56 @@ class TestProj299KillHookAndErrorMessages:
 
         msg = RaceSetupScreen._llm_error_message(LLMResponseError("x"))
         assert "response" in msg.lower() or "unexpected" in msg.lower()
+
+
+# =============================================================================
+# Regression: PROJ-299 dialog/popup constructors must use the correct attr
+# =============================================================================
+
+
+class TestProj299DialogPositioningRegression:
+    """Regression for the AttributeError crash in _show_llm_error_popup /
+    _show_llm_dialog: original code used `self.window_display_size` which
+    doesn't exist on pygame_gui.UIWindow. The fix is to use the documented
+    pattern `self.get_container().get_size()` (matches _show_save_update_dialog).
+    """
+
+    def test_show_llm_error_popup_does_not_reference_window_display_size(self):
+        """The crash was AttributeError on `self.window_display_size`.
+        Verify the source no longer references that name."""
+        import inspect
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        src = inspect.getsource(RaceSetupScreen._show_llm_error_popup)
+        # Strip comments before checking — we mention the bad name in
+        # a comment as guidance for future readers; only the attribute
+        # access matters.
+        code_only = "\n".join(line.split("#", 1)[0] for line in src.splitlines())
+        assert "self.window_display_size" not in code_only, (
+            "PROJ-299 regression: _show_llm_error_popup must not use "
+            "the non-existent UIWindow attribute `window_display_size`. "
+            "Use `self.get_container().get_size()` instead."
+        )
+
+    def test_show_llm_dialog_does_not_reference_window_display_size(self):
+        import inspect
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        src = inspect.getsource(RaceSetupScreen._show_llm_dialog)
+        # Strip comments before checking — we mention the bad name in
+        # a comment as guidance for future readers; only the attribute
+        # access matters.
+        code_only = "\n".join(line.split("#", 1)[0] for line in src.splitlines())
+        assert "self.window_display_size" not in code_only, (
+            "PROJ-299 regression: _show_llm_dialog must not use the "
+            "non-existent UIWindow attribute `window_display_size`. "
+            "Use `self.get_container().get_size()` instead."
+        )
+
+    def test_show_llm_error_popup_uses_get_container_size(self):
+        """Positive assertion: the fix uses the established pattern."""
+        import inspect
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        src = inspect.getsource(RaceSetupScreen._show_llm_error_popup)
+        assert "get_container()" in src and "get_size()" in src

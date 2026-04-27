@@ -155,7 +155,7 @@ class LLMConfig:
     # Completion knobs (defaults; consumer can override per call)
     DEFAULT_MAX_TOKENS: int = 4096
     DEFAULT_TEMPERATURE: float = 0.7
-    DEFAULT_MODEL: str = "deepseek-chat"
+    DEFAULT_MODEL: str = "deepseek-v4-flash"
 
     # Retry policy
     # Exponential backoff on 5xx only; never auto-retry on 429 (rate-limit

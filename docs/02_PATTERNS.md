@@ -1407,7 +1407,7 @@ between retries; in-flight HTTP work completes in the background and is
 discarded (logical cancel, not physical).
 
 ```python
-call = LLMBackgroundCall(provider, messages, model="deepseek-chat")
+call = LLMBackgroundCall(provider, messages, model="deepseek-v4-flash")
 call.start()
 # ... in the screen's update():
 if call.status == CallStatus.DONE:

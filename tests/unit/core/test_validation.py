@@ -84,6 +84,44 @@ class TestValidationResultMessage:
         assert result.message == ""
 
 
+class TestValidationResultFirstError:
+    """Tests for the first_error semantic alias of message."""
+
+    def test_first_error_returns_first_error(self):
+        result = ValidationResult(is_valid=False, errors=["First", "Second"])
+        assert result.first_error == "First"
+
+    def test_first_error_empty_when_no_errors(self):
+        result = ValidationResult(is_valid=True)
+        assert result.first_error == ""
+
+    def test_first_error_matches_message(self):
+        """first_error and message must always return the same value.
+
+        Regression: an earlier half-merged rename left `.first_error`
+        used by call sites (race_setup_screen save handler,
+        test_quickstart_races) without the property actually existing
+        on the class. Adding the property as an alias prevented those
+        call sites from crashing. The alias contract is: both names
+        return identical values for any state.
+        """
+        # Empty
+        r = ValidationResult()
+        assert r.first_error == r.message
+
+        # Single error
+        r = ValidationResult(is_valid=False, errors=["Only error"])
+        assert r.first_error == r.message
+
+        # Multiple errors
+        r = ValidationResult(is_valid=False, errors=["A", "B", "C"])
+        assert r.first_error == r.message
+
+        # Warnings only
+        r = ValidationResult(warnings=["A warning"])
+        assert r.first_error == r.message
+
+
 class TestValidationResultAddError:
     """Tests for add_error method."""
 
