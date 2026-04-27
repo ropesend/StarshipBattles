@@ -9,6 +9,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | FEAT-10 | 2026-03-24 | Add "Fleet Operations" filter tab to Event Log window | Awaiting Confirmation | [FEAT-10.md](active_features/FEAT-10.md) |
 | FEAT-11 | 2026-03-25 | Data-driven planet resource generation with mass scaling (expand astrophysics.json) | Awaiting Confirmation | [FEAT-11.md](active_features/FEAT-11.md) |
+| FEAT-12 | 2026-04-26 | Race Setup randomization — Environment + Aptitudes buttons + master "Randomize All" on Summary tab | Awaiting Confirmation | [FEAT-12.md](features/active/FEAT-12.md) |
 
 ## 3. Current Focus: None
 No features currently in progress.

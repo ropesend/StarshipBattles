@@ -41,7 +41,8 @@ class RaceSummaryPanel:
         manager: pygame_gui.UIManager,
         race_config: 'RaceConfig',
         asset_loader: 'RaceAssetLoader',
-        on_load_race_callback: Optional[Callable[[], None]] = None
+        on_load_race_callback: Optional[Callable[[], None]] = None,
+        on_randomize_all_callback: Optional[Callable[[], None]] = None,
     ):
         """
         Create summary panel content.
@@ -52,12 +53,15 @@ class RaceSummaryPanel:
             race_config: RaceConfig to display values from
             asset_loader: RaceAssetLoader for loading flag/portrait images
             on_load_race_callback: Optional callback for Load Race button
+            on_randomize_all_callback: Optional callback for the master
+                "Randomize All" button (FEAT-12).
         """
         self.panel = panel
         self.ui_manager = manager
         self.race_config = race_config
         self._asset_loader = asset_loader
         self.on_load_race_callback = on_load_race_callback
+        self.on_randomize_all_callback = on_randomize_all_callback
 
         # UI element references
         self.summary_labels: Dict[str, pygame_gui.elements.UILabel] = {}
@@ -73,6 +77,8 @@ class RaceSummaryPanel:
 
         # Load Race button
         self.btn_load: Optional[pygame_gui.elements.UIButton] = None
+        # FEAT-12: master "Randomize All" button.
+        self.btn_randomize_all: Optional[pygame_gui.elements.UIButton] = None
 
         self._create_content()
 
@@ -96,6 +102,17 @@ class RaceSummaryPanel:
             text="Load Saved Species",
             manager=self.ui_manager,
             container=self.panel
+        )
+        # FEAT-12: master Randomize All button — left of Load Saved Species.
+        self.btn_randomize_all = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(panel_width - 370, y, 180, 40),
+            text="Randomize All",
+            manager=self.ui_manager,
+            container=self.panel,
+            tool_tip_text=(
+                "Roll a complete species — identity, visuals, ships, "
+                "environment, and aptitudes — within the 100-point budget."
+            ),
         )
         y += 55
 

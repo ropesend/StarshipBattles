@@ -824,3 +824,287 @@ class TestRaceRegistryInvalidationOnSave:
         screen._do_save()  # Must not raise
 
         mocks['race_library'].save_race.assert_called_once()
+
+
+# ===========================================================================
+# FEAT-12: Per-Tab Randomize + Master Randomize All
+# ===========================================================================
+
+
+class TestFeat12NavigationButtonVisibility:
+    """FEAT-12 Sub-task 4: visibility filter shows btn_randomize on
+    Identity, Visuals, Ships, Environment, AND Aptitudes tabs.
+    """
+
+    def test_randomize_button_visible_on_identity_tab(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_IDENTITY
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.show.assert_called()
+
+    def test_randomize_button_visible_on_visuals_tab(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_VISUALS
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.show.assert_called()
+
+    def test_randomize_button_visible_on_ships_tab(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_SHIPS
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.show.assert_called()
+
+    def test_randomize_button_visible_on_environment_tab(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_ENVIRONMENT
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.show.assert_called()
+
+    def test_randomize_button_visible_on_aptitudes_tab(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_APTITUDES
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.show.assert_called()
+
+    def test_randomize_button_hidden_on_summary_tab(self):
+        """Summary tab uses the master 'Randomize All' button on the
+        summary panel — the bottom-bar button is hidden there."""
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_SUMMARY
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.hide.assert_called()
+
+    def test_randomize_button_hidden_on_descriptions_tab(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen.current_step = screen.TAB_DESCRIPTIONS
+        RaceSetupScreen._update_navigation_buttons(screen)
+        screen.btn_randomize.hide.assert_called()
+
+
+class TestFeat12OnRandomizeDispatch:
+    """FEAT-12 Sub-task 4: `_on_randomize` dispatches to the right
+    per-tab handler.
+    """
+
+    def _attach_real_dispatcher(self, screen):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        screen._on_randomize = RaceSetupScreen._on_randomize.__get__(screen)
+
+    def test_dispatches_to_randomize_environment_when_on_env_tab(self):
+        screen, _ = _make_race_setup_screen()
+        self._attach_real_dispatcher(screen)
+        screen.current_step = screen.TAB_ENVIRONMENT
+        screen._randomize_environment = MagicMock()
+        screen._randomize_aptitudes = MagicMock()
+
+        screen._on_randomize()
+
+        screen._randomize_environment.assert_called_once()
+        screen._randomize_aptitudes.assert_not_called()
+
+    def test_dispatches_to_randomize_aptitudes_when_on_aptitudes_tab(self):
+        screen, _ = _make_race_setup_screen()
+        self._attach_real_dispatcher(screen)
+        screen.current_step = screen.TAB_APTITUDES
+        screen._randomize_environment = MagicMock()
+        screen._randomize_aptitudes = MagicMock()
+
+        screen._on_randomize()
+
+        screen._randomize_aptitudes.assert_called_once()
+        screen._randomize_environment.assert_not_called()
+
+
+class TestFeat12RandomizeEnvironmentHandler:
+    """FEAT-12 Sub-task 4: `_randomize_environment` writes results to
+    `race_config` and refreshes the environment + aptitudes panels."""
+
+    def test_writes_preferences_homeworld_repro_happiness_to_config(self):
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        # Use a real RaceConfig so dataclass attribute access works.
+        from game.strategy.data.race_config import RaceConfig
+        screen.race_config = RaceConfig()
+
+        fake_pref = EnvironmentalPreference(
+            setpoint=9.81, tolerance=2.0,
+            min_value=0.1, max_value=30.0, step=0.98,
+        )
+        fake_result = {
+            "preferences": {"gravity": fake_pref},
+            "homeworld_type": "CONTINENTAL",
+            "base_reproduction_rate": 0.05,
+            "base_happiness": 0.7,
+        }
+        with patch(
+            "game.ui.screens.race_setup_screen.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_environment.return_value = fake_result
+            RaceSetupScreen._randomize_environment(screen)
+
+        assert screen.race_config.preferences["gravity"] is fake_pref
+        assert screen.race_config.homeworld_type == "CONTINENTAL"
+        assert screen.race_config.base_reproduction_rate == 0.05
+        assert screen.race_config.base_happiness == 0.7
+
+    def test_refreshes_environment_and_aptitudes_panels(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.strategy.data.race_config import RaceConfig
+
+        screen, mocks = _make_race_setup_screen()
+        screen.race_config = RaceConfig()
+
+        with patch(
+            "game.ui.screens.race_setup_screen.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_environment.return_value = {
+                "preferences": {},
+                "homeworld_type": "CONTINENTAL",
+                "base_reproduction_rate": 0.03,
+                "base_happiness": 0.5,
+            }
+            RaceSetupScreen._randomize_environment(screen)
+
+        mocks['environment_panel'].set_from_config.assert_called()
+        mocks['aptitudes_panel'].update_budget_display.assert_called()
+
+
+class TestFeat12RandomizeAptitudesHandler:
+    """FEAT-12 Sub-task 4: `_randomize_aptitudes` writes aptitude
+    attributes to `race_config` and refreshes panels."""
+
+    def test_writes_seven_aptitude_attrs_to_config(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.strategy.data.race_config import RaceConfig
+
+        screen, _ = _make_race_setup_screen()
+        screen.race_config = RaceConfig()
+
+        fake_aptitudes = {
+            "strength": 60,
+            "intelligence": 70,
+            "constitution": 50,
+            "dexterity": 30,
+            "tolerance_other_species": 50,
+            "cooperation": 50,
+            "conflict_tolerance": 40,
+        }
+        with patch(
+            "game.ui.screens.race_setup_screen.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_aptitudes.return_value = fake_aptitudes
+            RaceSetupScreen._randomize_aptitudes(screen)
+
+        for name, value in fake_aptitudes.items():
+            assert getattr(screen.race_config, f"aptitude_{name}") == value
+
+    def test_refreshes_aptitudes_panel(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.strategy.data.race_config import RaceConfig
+
+        screen, mocks = _make_race_setup_screen()
+        screen.race_config = RaceConfig()
+
+        with patch(
+            "game.ui.screens.race_setup_screen.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_aptitudes.return_value = {
+                "strength": 50, "intelligence": 50, "constitution": 50,
+                "dexterity": 50, "tolerance_other_species": 50,
+                "cooperation": 50, "conflict_tolerance": 50,
+            }
+            RaceSetupScreen._randomize_aptitudes(screen)
+
+        mocks['aptitudes_panel'].set_from_config.assert_called()
+
+
+class TestFeat12RandomizeAllHandler:
+    """FEAT-12 Sub-task 5: master Randomize All handler invokes the
+    orchestrator and applies the result via `_populate_ui_from_config`."""
+
+    def test_invokes_orchestrator_and_repopulates_ui(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+        from game.strategy.data.race_config import RaceConfig
+
+        screen, _ = _make_race_setup_screen()
+        screen.race_config = RaceConfig()
+        screen._populate_ui_from_config = MagicMock()
+        screen._refresh_summary = MagicMock()
+        screen._refresh_ship_preview = MagicMock()
+
+        # Mock galleries' _discover_assets to return non-empty pools.
+        screen._flag_gallery._discover_assets = MagicMock(
+            return_value=[("flag_a",), ("flag_b",)]
+        )
+        screen._portrait_gallery._discover_assets = MagicMock(
+            return_value=[("p_a.jpg",), ("p_b.jpg",)]
+        )
+        screen._theme_gallery._discover_assets = MagicMock(
+            return_value=[("Federation",), ("Klingons",)]
+        )
+
+        fake_pref = EnvironmentalPreference(
+            setpoint=9.81, tolerance=2.0,
+            min_value=0.1, max_value=30.0, step=0.98,
+        )
+        fake_all = {
+            "race_name": "Rossarian",
+            "race_name_plural": "Rossarians",
+            "leader_name": "Zara IV",
+            "physical_type": "Humanoid",
+            "government_type": "Empire",
+            "government_organization": "Autocracy",
+            "leader_title": "Emperor",
+            "society_type": "Explorers",
+            "faction_name": "Rossarian Empire",
+            "flag_id": "flag_a",
+            "portrait_id": "p_a.jpg",
+            "theme_id": "Federation",
+            "homeworld_type": "CONTINENTAL",
+            "preferences": {"gravity": fake_pref},
+            "base_reproduction_rate": 0.05,
+            "base_happiness": 0.7,
+            "aptitudes": {
+                "strength": 60, "intelligence": 70, "constitution": 50,
+                "dexterity": 30, "tolerance_other_species": 50,
+                "cooperation": 50, "conflict_tolerance": 40,
+            },
+        }
+        with patch(
+            "game.ui.screens.race_setup_screen.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_all.return_value = fake_all
+            RaceSetupScreen._randomize_all(screen)
+
+        mock_rand.randomize_all.assert_called_once()
+        # Identity field written
+        assert screen.race_config.race_name == "Rossarian"
+        assert screen.race_config.faction_name == "Rossarian Empire"
+        # Visuals
+        assert screen.race_config.flag_id == "flag_a"
+        assert screen.race_config.portrait_id == "p_a.jpg"
+        assert screen.race_config.theme_id == "Federation"
+        # Env
+        assert screen.race_config.homeworld_type == "CONTINENTAL"
+        assert screen.race_config.preferences["gravity"] is fake_pref
+        # Aptitudes
+        assert screen.race_config.aptitude_strength == 60
+        # Full UI repopulation triggered
+        screen._populate_ui_from_config.assert_called_once()

@@ -14,6 +14,7 @@
 | BUG-111 | 2026-03-28 | SeekerPointDefenseNoneScenario crashes during batch run — missing `attacker` attribute | Awaiting Confirmation | [BUG-111.md](active_bugs/BUG-111.md) |
 | BUG-113 | 2026-03-28 | Combat Lab — Projectile weapon tests show no pass/fail indicators | Pending | [BUG-113.md](active_bugs/BUG-113.md) |
 | BUG-114 | 2026-03-28 | Combat Lab — Projectile test targets remain stationary (regression) | Pending | [BUG-114.md](active_bugs/BUG-114.md) |
+| BUG-115 | 2026-04-26 | New Game Setup — Cancel button does not work | Pending | [BUG-115.md](bugs/active/BUG-115.md) |
 
 ## 3. Current Focus: None
 No bugs currently in progress.

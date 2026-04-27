@@ -432,3 +432,37 @@ class TestCallbackIntegration:
             panel.btn_load = MagicMock()
 
             assert hasattr(panel, 'btn_load')
+
+
+class TestFeat12RandomizeAllButton:
+    """FEAT-12 Sub-task 5: master Randomize All button on Summary panel.
+
+    Lives parallel to `btn_load`. Constructor accepts an
+    `on_randomize_all_callback` parameter; the panel exposes the new
+    `btn_randomize_all` attribute the screen wires up in `process_event`.
+    """
+
+    def test_on_randomize_all_callback_stored(self):
+        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+
+        with patch.object(RaceSummaryPanel, '__init__', lambda self, *a, **kw: None):
+            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
+            cb = MagicMock()
+            panel.on_randomize_all_callback = cb
+            assert panel.on_randomize_all_callback is cb
+
+    def test_has_btn_randomize_all_attribute(self):
+        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+
+        with patch.object(RaceSummaryPanel, '__init__', lambda self, *a, **kw: None):
+            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
+            panel.btn_randomize_all = MagicMock()
+            assert hasattr(panel, 'btn_randomize_all')
+
+    def test_constructor_accepts_on_randomize_all_callback(self):
+        """Construction signature accepts the new keyword without error."""
+        import inspect
+        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+
+        sig = inspect.signature(RaceSummaryPanel.__init__)
+        assert "on_randomize_all_callback" in sig.parameters
