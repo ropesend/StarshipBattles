@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Quantify and rank deeply-nested code | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Categorize causes (per archetype) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Recommend remediation projects | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Quantify and rank deeply-nested code | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Categorize causes (per archetype) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Recommend remediation projects | Agent-Done (awaiting user review) | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for investigation)
-**Last Action:** Project created from 2026-04-26 review remaining-items list. Verified deep-nesting count: 389 of 563 `.py` files in `game/` (69.1%) contain code at 4+ indent levels (vs. claim of 373/67%)
-**Next Action:** Begin Phase 1 — quantify deep nesting per file and per function with a Python AST script
+**Last Updated:** 2026-04-27
+**Active Phase:** Phase 3 — Agent-Done, awaiting user review
+**Last Action:** Wrote `findings/nesting_review.md` (the main deliverable). 8 numbered recommendations sized S/M, with explicit overlap-with-PROJ-309 notes. Headline: of 192 functions at visual depth >= 4, ~65% (dispatch-ladder + loop-stack) are addressed by 2 module-level idiom-fixes (Recommendations 1 & 2); ~10% are legitimate (parsers, state-machines).
+**Next Action:** User reviews `findings/nesting_review.md`, fills in §7 accept/reject/defer table, then MEMORY.md entry per phase_3_checklist Task 3.7.
 **Blockers:** None — read-only project
 **Context for Next Agent:** This is an INVESTIGATIVE project, not a refactor. Output is a written review document (`findings/nesting_review.md`) that proposes specific follow-up refactor projects. The user's directive: "I want a focused review on the > 3 layers deep nesting." 4-level nesting often signals a code-smell (compounded conditionals, nested loops, defensive checks) but is sometimes legitimate (parsing, state machines). The review must distinguish.
 
