@@ -165,7 +165,7 @@ class BuildQueueScreen:
         self._refresh_items_list()
         self._refresh_queue_display()
 
-    def _validate_params(self, hex_coord, galaxy, empire, build_context):
+    def _validate_params(self, hex_coord, galaxy, empire, build_context) -> None:
         """Validate required constructor parameters."""
         if hex_coord is None:
             raise ValidationException(
@@ -307,14 +307,14 @@ class BuildQueueScreen:
     # Refresh Methods (delegate to renderer)
     # -----------------------------------------------------------------------
 
-    def _refresh_items_list(self):
+    def _refresh_items_list(self) -> None:
         """Refresh the items list based on selected category."""
         designs, roles_list = self.controller.load_designs_by_category(self.controller.selected_category)
         self.renderer.refresh_items_list(designs, self.controller.selected_category)
         if hasattr(self.renderer, 'refresh_roles_list'):
             self.renderer.refresh_roles_list(roles_list, getattr(self.controller, 'selected_role', 'Any'))
 
-    def _refresh_queue_display(self):
+    def _refresh_queue_display(self) -> None:
         """Refresh the build queue display via VirtualTable."""
         is_multi = len(self.selected_queue_indices) > 1
         queue = self._get_active_queue() if not is_multi else []
@@ -330,7 +330,7 @@ class BuildQueueScreen:
             on_queue_selector_refresh=self._refresh_queue_selector,
         )
 
-    def _refresh_queue_selector(self):
+    def _refresh_queue_selector(self) -> None:
         """Rebuild queue selector UI elements."""
         if self._queue_selector:
             self._queue_selector.refresh()
@@ -339,7 +339,7 @@ class BuildQueueScreen:
     # Event Handling
     # -----------------------------------------------------------------------
 
-    def handle_event(self, event: pygame.event.Event):
+    def handle_event(self, event: pygame.event.Event) -> None:
         """Handle UI events for the build queue screen."""
         if event.type == pygame.KEYDOWN:
             logger.debug(f"BuildQueueScreen.handle_event: KEYDOWN key={event.key}")
@@ -434,7 +434,7 @@ class BuildQueueScreen:
                 self._dispatch_remove_from_queue_command(row_idx)
                 self.controller.add_to_queue(design_id, turns, category, row_idx + 1)
 
-    def _handle_remove(self):
+    def _handle_remove(self) -> None:
         """Handle remove from queue action.
 
         PROJ-208: Routes removal through RemoveFromConstructionQueueCommand.
@@ -558,7 +558,7 @@ class BuildQueueScreen:
     # Planet Selection
     # -----------------------------------------------------------------------
 
-    def _prompt_target_planet(self, planets, on_selected):
+    def _prompt_target_planet(self, planets, on_selected) -> None:
         """Open planet selection window for complex target planet."""
         rect = pygame.Rect(200, 100, 950, 650)
         self.planet_selection_window = PlanetSelectionWindow(
@@ -576,7 +576,7 @@ class BuildQueueScreen:
     # Lifecycle
     # -----------------------------------------------------------------------
 
-    def _close(self):
+    def _close(self) -> None:
         """Close the build queue screen."""
         if self.planet_selection_window:
             self.planet_selection_window.kill()
@@ -588,11 +588,11 @@ class BuildQueueScreen:
         if self.on_close:
             self.on_close()
 
-    def update(self, time_delta: float):
+    def update(self, time_delta: float) -> None:
         """Update the UI manager."""
         self.manager.update(time_delta)
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         """Draw the UI."""
         self.manager.draw_ui(screen)
         self.drag_handler.draw_drag_preview(screen)

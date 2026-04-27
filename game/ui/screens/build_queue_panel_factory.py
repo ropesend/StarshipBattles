@@ -173,7 +173,7 @@ class BuildQueuePanelFactory:
             manager=self.manager
         )
 
-    def _create_context_report_panel(self, container: ui.UIPanel):
+    def _create_context_report_panel(self, container: ui.UIPanel) -> tuple:
         """Create context report panel (planet or fleet info).
 
         Returns:
@@ -279,7 +279,7 @@ class BuildQueuePanelFactory:
             container=container
         )
 
-    def _create_items_list_panel(self, container: ui.UIPanel):
+    def _create_items_list_panel(self, container: ui.UIPanel) -> tuple:
         """Create available designs panel.
 
         Returns:
@@ -312,7 +312,7 @@ class BuildQueuePanelFactory:
 
         return panel, scrollable
 
-    def _create_build_queue_panel(self, container: ui.UIPanel):
+    def _create_build_queue_panel(self, container: ui.UIPanel) -> tuple:
         """Create build queue panel with VirtualTable.
 
         PROJ-221 Phase 4: Replaced hardcoded columns with VirtualTable.
@@ -373,7 +373,7 @@ class BuildQueuePanelFactory:
 
         return panel, header_text, virtual_table, column_manager, data_source
 
-    def _create_filter_panel(self, container: ui.UIPanel):
+    def _create_filter_panel(self, container: ui.UIPanel) -> tuple:
         """Create categories/filter panel.
 
         Returns:
@@ -461,7 +461,7 @@ class BuildQueuePanelFactory:
 
         return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, roles_scrollable
 
-    def _create_bottom_bar(self, container: ui.UIPanel, format_empire_resources):
+    def _create_bottom_bar(self, container: ui.UIPanel, format_empire_resources) -> tuple:
         """Create bottom bar with close button and info.
 
         Returns:
