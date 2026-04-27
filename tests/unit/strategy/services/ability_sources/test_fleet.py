@@ -129,3 +129,37 @@ def test_satisfies_iability_source_protocol():
     src = FleetAbilitySource(fleet=_MockFleet())
     assert isinstance(src, IAbilitySource)
     assert is_ability_source(src)
+
+
+def test_flagship_shield_projector_component_is_mountable():
+    """PROJ-305 D10: the sample 'Flagship Shield Projector' component must
+    be loadable from data/components.json AND project a ShieldModifier
+    scope: allied_sector. This addresses the skeptical-review 'dead data'
+    finding — the component is reachable through any ship design that
+    mounts it (via the design workshop UI), not just a pre-built sample."""
+    import json
+    from pathlib import Path
+
+    components_path = Path(__file__).resolve().parents[5] / "data" / "components.json"
+    with components_path.open('r', encoding='utf-8') as f:
+        registry = json.load(f)
+    components = registry.get('components', [])
+    flagship = next(
+        (c for c in components if c.get('id') == 'flagship_shield_projector'),
+        None,
+    )
+    assert flagship is not None, (
+        "PROJ-305 sample component 'flagship_shield_projector' missing from "
+        "data/components.json — D10 sample is dead data."
+    )
+    abilities = flagship.get('abilities', {})
+    assert 'ShieldModifier' in abilities
+    sm = abilities['ShieldModifier']
+    assert sm.get('scope') == 'allied_sector', (
+        "Flagship Shield Projector must declare scope=allied_sector for "
+        "PROJ-305 strategic-layer projection (D10)."
+    )
+    assert sm.get('multiplier', 1.0) > 1.0, (
+        "Flagship Shield Projector should be a buff (multiplier > 1.0); "
+        "design intent is allied shield bonus."
+    )

@@ -524,7 +524,93 @@ class TestProviderUniversalFields:
         assert provider['planet_name'] == 'Tarsis IV'
         assert provider['facility_name'] == 'Facility-f-1'
 
-    def test_storm_provider_has_universal_fields(self):
+class TestD17OwnerlessScopeValidation:
+    """PROJ-300 D17: ownerless sources may only declare ownership-neutral scopes."""
+
+    def test_ownerless_storm_with_enemy_sector_scope_skipped(self, caplog):
+        """A storm (ownerless) declaring 'enemy_sector' is undefined ('enemy of whom?')
+        — skip the entry and log a warning, but don't crash the collector."""
+        from dataclasses import dataclass, field
+        from typing import Any, FrozenSet
+        from game.core.hex_math import HexCoord
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        @dataclass
+        class _StormWithBadScope:
+            name: str = "Bad Storm"
+            abilities: dict = field(default_factory=lambda: {
+                "ShieldModifier": {"multiplier": 0.5, "scope": "enemy_sector"},
+            })
+            occupied_hexes: FrozenSet = frozenset({HexCoord(0, 0)})
+
+        system = _make_system("S", [])
+        system.storms = [_StormWithBadScope()]
+        system.global_location = HexCoord(0, 0)
+
+        with caplog.at_level("WARNING"):
+            result = collect_sector_effects(system, HexCoord(0, 0), empire_id=1)
+        # The bad-scope entry should be skipped (no ShieldModifier from this storm).
+        shield_effects = [e for e in result if e['ability_name'] == 'ShieldModifier']
+        assert shield_effects == []
+        # And a D17 warning should be logged.
+        assert any("D17" in rec.message for rec in caplog.records)
+
+    def test_ownerless_storm_with_neutral_sector_scope_passes(self):
+        """Storms with 'sector' scope (ownership-neutral) are fine."""
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.storm import Storm
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        storm = Storm(
+            name="Good Storm",
+            storm_type="ion_storm",
+            location=HexCoord(0, 0),
+            hex_offsets=frozenset({HexCoord(0, 0)}),
+            abilities={"ShieldModifier": {"multiplier": 0.5, "scope": "sector"}},
+        )
+        system = _make_system("S", [])
+        system.storms = [storm]
+        system.global_location = HexCoord(0, 0)
+
+        result = collect_sector_effects(system, HexCoord(0, 0), empire_id=1)
+        assert any(e['ability_name'] == 'ShieldModifier' for e in result)
+
+
+class TestD16MixedKindValidation:
+    """PROJ-300 D16: mixed-kind groups (multiplier-only + rate-only entries)
+    skip the offender with a warning."""
+
+    def test_rate_group_with_multiplier_only_entry_skipped(self, caplog):
+        """A rate-style ability (EnvironmentalDamage) with an entry that has
+        only a multiplier (no rate) is a registry smell — skip it."""
+        from dataclasses import dataclass, field
+        from typing import Any, FrozenSet
+        from game.core.hex_math import HexCoord
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        @dataclass
+        class _MixedKindStorm:
+            name: str = "Mixed Storm"
+            abilities: dict = field(default_factory=lambda: {
+                "EnvironmentalDamage": [
+                    {"rate": 0.5, "damage_type": "plasma", "scope": "sector"},
+                    {"multiplier": 0.7, "damage_type": "plasma", "scope": "sector"},  # bad
+                ],
+            })
+            occupied_hexes: FrozenSet = frozenset({HexCoord(0, 0)})
+
+        system = _make_system("S", [])
+        system.storms = [_MixedKindStorm()]
+        system.global_location = HexCoord(0, 0)
+
+        with caplog.at_level("WARNING"):
+            result = collect_sector_effects(system, HexCoord(0, 0), empire_id=1)
+        env = [e for e in result if e['ability_name'] == 'EnvironmentalDamage']
+        # Aggregate value should be 0.5 (only the rate-style entry contributes).
+        assert env
+        assert env[0]['aggregate_value'] == pytest.approx(0.5)
+        # Warning logged.
+        assert any("D16" in rec.message for rec in caplog.records)
         from game.core.hex_math import HexCoord
         from game.strategy.data.storm import Storm
         from game.strategy.services.system_effects_collector import collect_sector_effects

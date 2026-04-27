@@ -81,6 +81,15 @@ SYSTEM_EFFECT_ABILITIES = {
 _RATE_ABILITIES = frozenset({'EnvironmentalDamage', 'FuelDrain'})
 
 
+# PROJ-300 D17: ownership-aware scopes can only be declared by sources with
+# an owner_id ("enemy of whom?" is undefined for ownerless sources).
+_OWNER_AWARE_SCOPES = frozenset({
+    'allied_sector', 'enemy_sector', 'player_sector',
+    'allied_system', 'enemy_system', 'player_system',
+    'allied_empire',
+})
+
+
 def _ability_kind(ability_name: str) -> str:
     return 'rate' if ability_name in _RATE_ABILITIES else 'multiplier'
 
@@ -268,6 +277,21 @@ def _aggregate(
                 if entry_scope not in allowed_scopes:
                     continue
 
+                # PROJ-300 D17: ownerless sources may only declare ownership-
+                # neutral scopes. "enemy_sector" on a storm is undefined
+                # ("enemy of whom?"). Skip + log; do not crash the collector.
+                if owner_id is None and entry_scope in _OWNER_AWARE_SCOPES:
+                    logger.warning(
+                        "PROJ-300 D17 violation: ownerless %s '%s' declares "
+                        "scope=%s on ability '%s'. Skipping. Use 'sector' or "
+                        "'system' for ownerless sources.",
+                        getattr(source, 'source_kind', '?'),
+                        getattr(source, 'source_id', '?'),
+                        entry_scope,
+                        ability_name,
+                    )
+                    continue
+
                 group_key = _make_group_key(ability_name, entry)
                 display_name = _make_display_name(ability_name, entry)
 
@@ -345,6 +369,31 @@ def _aggregate(
         entries_for_agg = active_entries if active_entries else [p['ability_data'] for p in providers]
 
         kind = group_data['kind']
+        # PROJ-300 D16: mixed-kind validation. A group declared as multiplier
+        # but containing rate-style entries (or vice versa) is a registry
+        # smell — skip the offender and log so the issue is debuggable
+        # without crashing the panel.
+        clean_entries = []
+        for entry in entries_for_agg:
+            entry_has_rate = isinstance(entry, dict) and 'rate' in entry
+            entry_has_mult = isinstance(entry, dict) and 'multiplier' in entry
+            if kind == 'rate' and entry_has_mult and not entry_has_rate:
+                logger.warning(
+                    "PROJ-300 D16: mixed-kind in group '%s' — multiplier-style "
+                    "entry in rate-grouped ability. Skipping entry.",
+                    group_key,
+                )
+                continue
+            if kind == 'multiplier' and entry_has_rate and not entry_has_mult:
+                logger.warning(
+                    "PROJ-300 D16: mixed-kind in group '%s' — rate-style "
+                    "entry in multiplier-grouped ability. Skipping entry.",
+                    group_key,
+                )
+                continue
+            clean_entries.append(entry)
+        entries_for_agg = clean_entries
+
         if kind == 'rate':
             # Adapt entry shape for aggregator: rate field maps to 'rate'.
             agg_entries = [
