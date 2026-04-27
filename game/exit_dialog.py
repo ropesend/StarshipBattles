@@ -3,6 +3,8 @@ Exit confirmation dialog for the game application.
 
 Handles drawing and click detection for the exit confirmation dialog.
 """
+from __future__ import annotations
+
 import pygame
 
 # Dialog button rects (module-level for click detection)
@@ -10,7 +12,7 @@ _exit_yes_rect = None
 _exit_no_rect = None
 
 
-def draw_exit_dialog(screen, font_large, font_med):
+def draw_exit_dialog(screen, font_large, font_med) -> None:
     """
     Draw the exit confirmation dialog.
 
@@ -71,7 +73,7 @@ def draw_exit_dialog(screen, font_large, font_med):
     screen.blit(no_txt, (no_x + (btn_w - no_txt.get_width()) // 2, no_y + 8))
 
 
-def handle_exit_dialog_click(pos):
+def handle_exit_dialog_click(pos) -> bool:
     """
     Check if click was on Yes button.
 
@@ -86,7 +88,7 @@ def handle_exit_dialog_click(pos):
     return False
 
 
-def handle_exit_dialog_cancel(pos):
+def handle_exit_dialog_cancel(pos) -> bool:
     """
     Check if click was on No button.
 
