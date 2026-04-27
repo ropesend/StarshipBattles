@@ -4,9 +4,11 @@ Battle Results Screen
 Full-screen IScene showing post-battle statistics: ship HP bars,
 weapon accuracy, team summaries, and navigation buttons.
 """
+from __future__ import annotations
+
 import pygame
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from game.ui.fonts import get_font
 from game.ui.colors import (
@@ -29,7 +31,7 @@ SHIP_CARD_PADDING = 8
 SCROLL_SPEED = 30
 
 
-def _hp_color(percent: float):
+def _hp_color(percent: float) -> Any:
     """Get HP bar color based on percentage."""
     if percent <= 0:
         return HP_DESTROYED
@@ -73,7 +75,7 @@ class BattleResultsScreen:
         self._body_font = get_font(18)
         self._small_font = get_font(14)
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Handle input events (IScene protocol)."""
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
@@ -89,7 +91,7 @@ class BattleResultsScreen:
             if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
                 self._trigger_return()
 
-    def _handle_scroll(self, delta: int, mouse_x: int):
+    def _handle_scroll(self, delta: int, mouse_x: int) -> None:
         """Scroll the column under the mouse cursor."""
         mid = self.screen_width // 2
         if mouse_x < mid:
@@ -97,21 +99,21 @@ class BattleResultsScreen:
         else:
             self._scroll_offset_1 = max(0, self._scroll_offset_1 + delta)
 
-    def _trigger_return(self):
+    def _trigger_return(self) -> None:
         if self.scene_callback:
             self.scene_callback("return_to_destination",
                                 destination=self.results.return_destination)
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         """Update (IScene protocol). No animations needed."""
         pass
 
-    def handle_resize(self, width, height):
+    def handle_resize(self, width, height) -> None:
         """Handle window resize."""
         self.screen_width = width
         self.screen_height = height
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         """Draw the results screen (IScene protocol)."""
         screen.fill(BG_BATTLE)
         w, h = self.screen_width, self.screen_height
@@ -144,7 +146,7 @@ class BattleResultsScreen:
         # === Footer ===
         self._draw_footer(screen, w, h)
 
-    def _draw_header(self, screen: pygame.Surface, w: int):
+    def _draw_header(self, screen: pygame.Surface, w: int) -> None:
         """Draw title and winner text."""
         # Title
         title_surf = self._title_font.render("BATTLE RESULTS", True, WHITE)
@@ -175,7 +177,7 @@ class BattleResultsScreen:
     def _draw_team_column(
         self, screen, x, y, w, h,
         ships, summary, team_id, scroll_offset
-    ):
+    ) -> None:
         """Draw one team's column with summary and ship cards."""
         team_color = TEAM_1_TEXT if team_id == 0 else TEAM_2_TEXT
         team_bg = TEAM_1_BANNER_BG if team_id == 0 else TEAM_2_BANNER_BG
@@ -209,7 +211,7 @@ class BattleResultsScreen:
 
         screen.set_clip(old_clip)
 
-    def _draw_ship_card(self, screen, x, y, w, ship: ShipResult):
+    def _draw_ship_card(self, screen, x, y, w, ship: ShipResult) -> None:
         """Draw a single ship's result card."""
         # Background
         bg_color = (30, 35, 50) if ship.is_alive else (25, 20, 20)
@@ -267,7 +269,7 @@ class BattleResultsScreen:
             line_surf = self._small_font.render(line, True, HUD_TEXT)
             screen.blit(line_surf, (weapon_x, weapon_y + i * 14))
 
-    def _draw_footer(self, screen, w, h):
+    def _draw_footer(self, screen, w, h) -> None:
         """Draw the return button."""
         _RETURN_TEXT = {
             "test_lab": "Return to Combat Lab",

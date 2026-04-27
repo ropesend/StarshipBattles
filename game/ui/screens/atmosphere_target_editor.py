@@ -3,6 +3,8 @@
 Provides sliders and numeric display for each gas, plus a "Set to Species Ideal"
 button that populates targets from the colony's species atmosphere preferences.
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import pygame_gui
@@ -10,7 +12,7 @@ from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIHorizontalSlider,
     UIScrollingContainer,
 )
-from typing import Dict, Optional, Callable
+from typing import Any, Dict, Optional, Callable
 
 from game.ui.screens.species_selector_mixin import (
     build_species_selector, get_selected_race_id, load_race_config,
@@ -92,7 +94,7 @@ class AtmosphereTargetEditor(UIWindow):
 
         self._build_ui()
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         """Build the editor UI with sliders for each gas."""
         content_rect = self.get_container().get_rect()
         container_w = content_rect.width
@@ -200,7 +202,7 @@ class AtmosphereTargetEditor(UIWindow):
             container=self,
         )
 
-    def update(self, time_delta: float):
+    def update(self, time_delta: float) -> None:
         """Update slider value labels."""
         super().update(time_delta)
 
@@ -235,7 +237,7 @@ class AtmosphereTargetEditor(UIWindow):
 
         return handled
 
-    def _on_apply(self):
+    def _on_apply(self) -> None:
         """Apply the current slider values as atmosphere target."""
         target = {}
         for gas, slider in self.sliders.items():
@@ -248,7 +250,7 @@ class AtmosphereTargetEditor(UIWindow):
 
         self.kill()
 
-    def _set_species_ideal(self):
+    def _set_species_ideal(self) -> None:
         """Set sliders to the selected species' ideal atmosphere composition.
 
         PROJ-283 Phase 4: gas factor setpoints store partial pressure (Pa)
@@ -266,20 +268,20 @@ class AtmosphereTargetEditor(UIWindow):
             slider.set_current_value(target_pa)
             self.value_labels[gas].set_text(f"{target_pa:.0f} Pa")
 
-    def _set_match_current(self):
+    def _set_match_current(self) -> None:
         """Set sliders to match current atmosphere (no change target)."""
         for gas, slider in self.sliders.items():
             current_pa = self.planet.atmosphere.get(gas, 0.0)
             slider.set_current_value(current_pa)
             self.value_labels[gas].set_text(f"{current_pa:.0f} Pa")
 
-    def _clear_target(self):
+    def _clear_target(self) -> None:
         """Clear all target values (set all sliders to 0)."""
         for gas, slider in self.sliders.items():
             slider.set_current_value(0.0)
             self.value_labels[gas].set_text("0 Pa")
 
-    def _get_active_race_config(self):
+    def _get_active_race_config(self) -> Any:
         """Get the race config for the currently selected species."""
         if self._species_dropdown is not None:
             race_id = get_selected_race_id(self._species_dropdown)
