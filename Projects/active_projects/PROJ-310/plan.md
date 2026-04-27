@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Quantify and rank deeply-nested code | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Categorize causes (per archetype) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Quantify and rank deeply-nested code | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Categorize causes (per archetype) | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Recommend remediation projects | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for investigation)
-**Last Action:** Project created from 2026-04-26 review remaining-items list. Verified deep-nesting count: 389 of 563 `.py` files in `game/` (69.1%) contain code at 4+ indent levels (vs. claim of 373/67%)
-**Next Action:** Begin Phase 1 — quantify deep nesting per file and per function with a Python AST script
+**Last Updated:** 2026-04-27
+**Active Phase:** Phase 2 (Categorize causes)
+**Last Action:** Phase 1 complete. AST tool reports 297 functions at AST depth ≥4 (5.6%) and 192 at *visual* depth ≥4 (3.6%) — much sharper than the regex-based "69.1% of files" figure. Top offenders cluster heavily in `game/ui/screens/` (event-router elif ladders) and `game/ui/screens/builder/` + `game/strategy/services/` (genuine multi-level loops).
+**Next Action:** Phase 2 — categorize each top-30 function by archetype
 **Blockers:** None — read-only project
 **Context for Next Agent:** This is an INVESTIGATIVE project, not a refactor. Output is a written review document (`findings/nesting_review.md`) that proposes specific follow-up refactor projects. The user's directive: "I want a focused review on the > 3 layers deep nesting." 4-level nesting often signals a code-smell (compounded conditionals, nested loops, defensive checks) but is sometimes legitimate (parsing, state machines). The review must distinguish.
 
