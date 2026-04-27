@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Classify each top-30 function by the kind of nesting it has. Identify which archetypes are worth refactoring and which are legitimate.
 
 **Prerequisites:** Phase 1 complete; top-30 rankings exist.
@@ -46,7 +46,7 @@ Output format:
 **Notes:** ~30 lines collapse to ~15
 ```
 
-- [ ] Process all 30 functions; save to `findings/archetype_assignments.md`
+- [x] Process all 30 functions; save to `findings/archetype_assignments.md`
 
 **Notes:**
 
@@ -56,17 +56,17 @@ Output format:
 **File:** Update `findings/archetype_assignments.md`
 **Tests:** None.
 
-- [ ] Scan the assignments — do specific archetypes cluster in specific subsystems? (e.g., is `defensive` rampant in UI but rare in Simulation?)
-- [ ] Are there 2-3 idiom-level fixes that would knock out many sites? (e.g., introducing a `safe_get` helper would defang every `defensive` chain)
-- [ ] Add a "Cross-cutting patterns" section to `findings/archetype_assignments.md`
+- [x] Scan the assignments — do specific archetypes cluster in specific subsystems? (e.g., is `defensive` rampant in UI but rare in Simulation?)
+- [x] Are there 2-3 idiom-level fixes that would knock out many sites? (e.g., introducing a `safe_get` helper would defang every `defensive` chain)
+- [x] Add a "Cross-cutting patterns" section to `findings/archetype_assignments.md`
 
 **Notes:**
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All top-30 functions assigned archetypes and verdicts
-- [ ] Cross-cutting patterns identified
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase (Phase 3)
+- [x] All top-30 functions assigned archetypes and verdicts
+- [x] Cross-cutting patterns identified
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase (Phase 3)
