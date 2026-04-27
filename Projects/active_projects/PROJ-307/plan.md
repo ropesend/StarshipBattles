@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Backfill timestamps to 21 docs | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Establish convention in CLAUDE.md | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Backfill timestamps to 21 docs | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Establish convention in CLAUDE.md | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for implementation)
-**Last Action:** Project created from 2026-04-26 review remaining-items list
-**Next Action:** Begin Phase 1 — `git log -1` each doc to get its true last-modified date, then add `> **Last verified:** YYYY-MM-DD` line to each
+**Last Updated:** 2026-04-27
+**Active Phase:** Phase 2 — convention enforcement
+**Last Action:** Phase 1 complete — all 21 doc files backfilled with `> **Last verified:** YYYY-MM-DD` directly below their H1, using each file's `git log -1 --format=%cs` baseline. `02_PATTERNS.md` summary references PROJ-297 pattern-count correction.
+**Next Action:** Phase 2 — add the timestamp rule to `CLAUDE.md` Rule 2 (DO + DO NOT) and add §"Documentation Freshness" to `docs/03_CONVENTIONS.md`.
 **Blockers:** None
-**Context for Next Agent:** Only [docs/README.md:4](docs/README.md#L4) currently has a "Last verified" timestamp. The other 21 doc files lack any freshness indicator. The format used in README is `> **Last verified:** YYYY-MM-DD — <one-sentence summary of what was verified>`. For backfill, copy each file's most recent commit date from `git log` and use a short summary like "current as of <topic> implementation."
+**Context for Next Agent:** All 22 doc files now carry the marker (verified via `grep -L` returning zero, `grep -c` returning 1 per file).
 
 ## Overview
 Add a "Last verified" timestamp line near the top of every `docs/**/*.md` file. Establish the convention in CLAUDE.md so future doc edits maintain freshness markers. Helps future agents and contributors quickly judge whether a doc is likely stale or current.

@@ -1,5 +1,7 @@
 # AI System Architecture
 
+> **Last verified:** 2026-04-11
+
 This document describes the combat AI system that controls autonomous ship behavior during battles.
 
 ---

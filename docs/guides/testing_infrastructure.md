@@ -1,5 +1,7 @@
 # Testing Infrastructure Guide
 
+> **Last verified:** 2026-04-16
+
 Reference for agents working with the Starship Battles test suite. Covers DI fixtures, conftest hierarchy, test helpers, and common patterns.
 
 ---

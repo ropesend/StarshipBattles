@@ -1,5 +1,7 @@
 # Starship Battles - Architecture Reference
 
+> **Last verified:** 2026-04-26
+
 Primary architecture document for the Starship Battles codebase. All claims verified against source code.
 
 ---

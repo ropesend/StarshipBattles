@@ -1,5 +1,7 @@
 # Conventions
 
+> **Last verified:** 2026-04-18
+
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
 ---

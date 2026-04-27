@@ -1,5 +1,7 @@
 # Adding New Modifiers
 
+> **Last verified:** 2026-03-14
+
 > Step-by-step guide for adding new modifiers to the game.
 
 ## Quick Start

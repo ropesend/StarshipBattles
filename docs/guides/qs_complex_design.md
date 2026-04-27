@@ -1,5 +1,7 @@
 # QS Complex Design Guide
 
+> **Last verified:** 2026-04-11
+
 > How to create and manage Quickstart (QS) planetary complex designs.
 > For component abilities, see [ability_reference.md](../systems/ability_reference.md).
 > For the production system, see [production_system.md](../systems/production_system.md).

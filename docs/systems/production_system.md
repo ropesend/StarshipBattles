@@ -1,5 +1,7 @@
 # Production System
 
+> **Last verified:** 2026-04-18
+
 This document describes the unified construction/production system: build queues, tick-based resource consumption, turn estimation, and item spawning. The same `ProductionEngine` algorithm handles all build contexts — planet base queues (complexes), planet shipyard facility queues (ships), and fleet space yard queues (ships and complexes).
 
 ---

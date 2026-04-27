@@ -1,5 +1,7 @@
 # Ability Reference
 
+> **Last verified:** 2026-04-17
+
 > Comprehensive catalog of all component abilities available in the game.
 > Source: `game/simulation/components/abilities/`
 > Registry: `ABILITY_REGISTRY` in `abilities/__init__.py`

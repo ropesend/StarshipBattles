@@ -1,5 +1,7 @@
 # UI Style Guide
 
+> **Last verified:** 2026-04-11
+
 Comprehensive reference for all color constants, theming systems, and usage patterns
 in the Starship Battles UI. The visual identity is a dark blue-gray palette with cyan
 accents -- a futuristic military starship aesthetic.
