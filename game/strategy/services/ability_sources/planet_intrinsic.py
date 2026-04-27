@@ -62,7 +62,9 @@ class PlanetIntrinsicAbilitySource:
             return False
 
         # Multi-hex: walk every occupied local-hex, translated to global.
-        radius_hexes = getattr(self.planet, 'radius_hexes', 0) or 0
+        radius_hexes = getattr(self.planet, 'radius_hexes', 0)
+        if not isinstance(radius_hexes, int):
+            radius_hexes = 0
         if radius_hexes > 0:
             occupied = getattr(self.planet, 'occupied_hexes', None)
             if occupied is None:

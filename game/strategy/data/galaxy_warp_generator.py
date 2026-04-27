@@ -329,7 +329,8 @@ class GalaxyWarpGenerator:
         galaxy: 'Galaxy',
         k_neighbors: int = 20,
         region_classifier: 'Optional[RegionClassifier]' = None,
-        inter_region_mode: str = 'normal'
+        inter_region_mode: str = 'normal',
+        rng: Optional[random.Random] = None,
     ) -> None:
         """Generate warp lanes ensuring connectivity (MST) and adding density.
 
@@ -370,7 +371,7 @@ class GalaxyWarpGenerator:
         self._add_density_edges(systems, edges, region_classifier, inter_region_mode)
 
         # 4. PROJ-303: roll warp_type + intrinsic abilities for each generated point.
-        _apply_warp_point_intrinsic_abilities(systems)
+        _apply_warp_point_intrinsic_abilities(systems, rng=rng)
 
 
 # PROJ-303 — module-level warp point intrinsics helper.
@@ -414,8 +415,13 @@ def _roll_warp_type(rng) -> str:
     return 'stable'
 
 
-def _apply_warp_point_intrinsic_abilities(systems) -> None:
-    """PROJ-303: roll warp_type + intrinsic abilities for each warp point."""
+def _apply_warp_point_intrinsic_abilities(systems, rng=None) -> None:
+    """PROJ-303: roll warp_type + intrinsic abilities for each warp point.
+
+    Caller-supplied seeded RNG threads determinism through galaxy generation
+    (PROJ-303 follow-up to skeptical-review RNG-determinism finding).
+    Defaults to unseeded Random() for back-compat.
+    """
     import random as _random
     from game.strategy.services.ability_sources import roll_intrinsic_abilities
 
@@ -423,7 +429,8 @@ def _apply_warp_point_intrinsic_abilities(systems) -> None:
     if not types_data:
         return
 
-    rng = _random.Random()
+    if rng is None:
+        rng = _random.Random()
     for system in systems:
         for wp in getattr(system, 'warp_points', []) or []:
             # Idempotent: respect pre-set warp_type from scenarios.

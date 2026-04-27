@@ -49,12 +49,20 @@ class GalaxySystemGenerator:
         self._image_registry = image_registry
         self._storm_gen = storm_generator
 
-    def generate_planets(self, galaxy: 'Galaxy', system: 'StarSystem') -> None:
+    def generate_planets(
+        self,
+        galaxy: 'Galaxy',
+        system: 'StarSystem',
+        rng: Optional[random.Random] = None,
+    ) -> None:
         """Generate planets for a system based on its star type.
 
         Args:
             galaxy: Galaxy instance for planet registration.
             system: StarSystem to generate planets for.
+            rng: Optional seeded RNG for deterministic intrinsic ability
+                rolls (PROJ-301/302). When None, uses unseeded Random()
+                (back-compat with existing callers).
         """
         if not system.stars:
             return
@@ -65,9 +73,9 @@ class GalaxySystemGenerator:
         system.planets.sort(key=lambda p: (p.orbit_distance, -p.mass))
 
         # PROJ-301: roll planet-intrinsic abilities from data/planet_types.json.
-        _apply_planet_intrinsic_abilities(system.planets)
+        _apply_planet_intrinsic_abilities(system.planets, rng=rng)
         # PROJ-302: roll star-intrinsic abilities from data/star_types.json.
-        _apply_star_intrinsic_abilities(system.stars)
+        _apply_star_intrinsic_abilities(system.stars, rng=rng)
 
         # Register all planets with the galaxy
         for planet in system.planets:
@@ -147,13 +155,18 @@ class GalaxySystemGenerator:
         consecutive_failures = 0
         max_consecutive_failures = 10  # Stop after 10 consecutive failed placements
 
-        # Create separate RNG for storms to avoid consuming main RNG state
-        # This preserves determinism of system placement
+        # Create separate RNGs for storms + intrinsic-ability rolls to avoid
+        # consuming main RNG state. This preserves determinism of system
+        # placement while threading a seeded RNG through PROJ-301/302/303/304
+        # intrinsic-ability rolls.
         if rng is not None:
             storm_seed = rng.randint(0, 2**32 - 1)
+            intrinsic_seed = rng.randint(0, 2**32 - 1)
             storm_rng = random.Random(storm_seed)
+            intrinsic_rng = random.Random(intrinsic_seed)
         else:
             storm_rng = random.Random()
+            intrinsic_rng = random.Random()
 
         while len(generated) < count:
             # Use strategy to sample a valid location
@@ -180,14 +193,17 @@ class GalaxySystemGenerator:
             stars = self._star_gen.generate_system_stars(name)
 
             sys = StarSystem(name, coord, stars=stars)
-            self.generate_planets(galaxy, sys)
+            # PROJ-301/302: thread seeded intrinsic RNG.
+            self.generate_planets(galaxy, sys, rng=intrinsic_rng)
 
             # Generate storms after planets (PROJ-189)
             if storm_blueprint_config is not None:
                 self.generate_storms(sys, storm_blueprint_config, storm_rng)
 
             # PROJ-304: roll system archetype + intrinsic abilities (~15% by default).
-            _apply_system_archetype(sys, storm_rng)
+            # Uses intrinsic_rng (separate stream from storm_rng) so storm
+            # generation parameters don't shift archetype roll sequence.
+            _apply_system_archetype(sys, intrinsic_rng)
 
             galaxy.add_system(sys)
             generated.append(sys)
@@ -221,11 +237,18 @@ def _load_planet_types() -> Dict[str, Dict[str, Any]]:
     return _PLANET_TYPES_CACHE
 
 
-def _apply_planet_intrinsic_abilities(planets: List['Planet']) -> None:
+def _apply_planet_intrinsic_abilities(
+    planets: List['Planet'],
+    rng: Optional[random.Random] = None,
+) -> None:
     """Roll intrinsic abilities for each planet from data/planet_types.json (PROJ-301).
 
     Idempotent: planets with non-empty `intrinsic_abilities` are left alone
     (e.g. for hand-crafted scenario planets).
+
+    PROJ-301 D9 (added 2026-04-27): caller-supplied seeded RNG threads
+    determinism through galaxy generation. Defaults to an unseeded
+    Random() for back-compat with existing callers.
     """
     from game.strategy.services.ability_sources import roll_intrinsic_abilities
 
@@ -233,7 +256,8 @@ def _apply_planet_intrinsic_abilities(planets: List['Planet']) -> None:
     if not types_data:
         return
 
-    rng = random.Random()  # Per-planet roll; unseeded for now (gen call already deterministic upstream).
+    if rng is None:
+        rng = random.Random()
     for planet in planets:
         if planet.intrinsic_abilities:  # Idempotent: respect pre-set values.
             continue
@@ -265,15 +289,24 @@ def _load_star_types() -> Dict[str, Dict[str, Any]]:
     return _STAR_TYPES_CACHE
 
 
-def _apply_star_intrinsic_abilities(stars: List[Any]) -> None:
-    """PROJ-302: roll intrinsic abilities for each star from data/star_types.json."""
+def _apply_star_intrinsic_abilities(
+    stars: List[Any],
+    rng: Optional[random.Random] = None,
+) -> None:
+    """PROJ-302: roll intrinsic abilities for each star from data/star_types.json.
+
+    Caller-supplied seeded RNG threads determinism through galaxy generation
+    (PROJ-302 follow-up to skeptical-review RNG-determinism finding).
+    Defaults to unseeded Random() for back-compat.
+    """
     from game.strategy.services.ability_sources import roll_intrinsic_abilities
 
     types_data = _load_star_types()
     if not types_data:
         return
 
-    rng = random.Random()
+    if rng is None:
+        rng = random.Random()
     for star in stars:
         if star.intrinsic_abilities:
             continue
