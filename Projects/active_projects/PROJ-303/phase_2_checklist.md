@@ -1,6 +1,6 @@
 # Phase 2: `WarpPoint.intrinsic_abilities` field + generation
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Add the field, populate during generation, save/load roundtrip.
 
 ---

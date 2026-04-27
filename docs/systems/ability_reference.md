@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-04-17
+> **Last verified:** 2026-04-27 — PROJ-300..305 added the §"Strategic-Layer Sector/System Abilities" section (EnvironmentalDamage, FuelDrain, StrategicSpeedModifier, ThrustModifier) and the IAbilitySource sources-by-kind summary.
 
 > Comprehensive catalog of all component abilities available in the game.
 > Source: `game/simulation/components/abilities/`
@@ -1630,3 +1630,43 @@ All modifier stat keys that affect abilities at runtime.
 | StatKey | Typical Consumers |
 |---------|-------------------|
 | ARC_SET | WeaponAbility firing arc (overrides base value) |
+
+
+---
+
+## PROJ-300..305 — Strategic-Layer Sector/System Abilities
+
+### EnvironmentalDamage (rate)
+
+Per-turn hull damage applied by storms, planet intrinsics, star intrinsics, warp points, or system archetypes. Damage flows through `environmental_hazard_engine.process_environmental_tick` per `aggregate_value` from `collect_sector_effects`.
+
+**Data fields:**
+- `rate`: float, hull HP damage per turn (>= 0).
+- `damage_type`: `'plasma' | 'radiation' | 'thermal' | 'environmental' | 'warp' | 'debris'` (free-form string; identifies the row group).
+- `scope`: `'sector'` (most uses) or `'system'` (star intrinsics like neutron-star radiation).
+
+**Stacking:** intra-group (same `damage_type`) MAX, inter-group SUM via `aggregate_rates`. Two radiation belts at the same hex: MAX(0.4, 0.5) = 0.5; plasma + radiation: 0.5 + 0.8 = 1.3 total per turn.
+
+### FuelDrain (rate)
+
+Per-turn fuel drain. Same aggregation rules as EnvironmentalDamage but with no sub-type (single group).
+
+### StrategicSpeedModifier (multiplier)
+
+Multiplies fleet strategic-map movement speed when the fleet is in the affected hex/system. Read by `fleet_movement_engine._get_effective_fleet_speed`.
+
+### ThrustModifier (multiplier)
+
+Multiplies effective combat thrust. Wired through `ABILITY_STAT_REGISTRY` to `external_stats['thrust_mult']` (PROJ-300 D14). Storms multiply per-provider (no shared `stack_group`).
+
+### IAbilitySource sources by kind
+
+| Source kind | Owner | Typical scopes | Generation |
+|---|---|---|---|
+| facility | Empire (planet.owner_id) | sector / system | built by player |
+| storm | None (ownerless) | sector | rolled at galaxy gen (storm_generator) |
+| planet | None | sector | rolled at galaxy gen from `data/planet_types.json` per PlanetType (PROJ-301) |
+| star | None | system (most), sector at star hex | rolled from `data/star_types.json` per StarType (PROJ-302) |
+| warp_point | None | sector | rolled from `data/warp_point_types.json` per warp_type (PROJ-303) |
+| system | None | system | rolled from `data/system_archetypes.json`; ~15% of systems get an archetype (PROJ-304) |
+| fleet | Empire (fleet.owner_id) | allied_sector / sector / system / etc. | ship-component-driven; surfaces only when `set_fleet_lookups` registered (PROJ-305) |

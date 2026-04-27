@@ -1,6 +1,6 @@
 # Phase 6: Migrate consumers off `AreaEffectManager`
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Rewrite the three consumers (movement engine, environmental hazard engine, combat spec compiler) to query `collect_sector_effects` directly. After this phase, no production code references `AreaEffectManager` or `EnvironmentalEffects` — Phase 7 deletes them.
 
 Each sub-phase is independent and can be committed separately, but all three must land before pushing (because Phase 5 left `area_effect_manager.py` broken when `StormEffect` was deleted).

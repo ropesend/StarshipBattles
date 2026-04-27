@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Add a rate-style aggregator that mirrors `aggregate_multipliers`'s shape but uses inter-group SUM (not MULTIPLY) and default 0.0 (not 1.0). Smallest, most isolated change in the project — establishes the rate-vs-multiplier distinction the rest of the work depends on.
 
 ---

@@ -1,6 +1,6 @@
 # Phase 1: Planet types data registry
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Create `data/planet_types.json` with intrinsic ability templates per planet type.
 
 > **2026-04-27 update:** the original Phase 1 also shipped the `roll_intrinsic_abilities` helper. Per PROJ-300 decisions.md D15, that helper now ships in PROJ-300 (alongside the IAbilitySource framework). PROJ-301 imports it; Task 1.2 is removed.

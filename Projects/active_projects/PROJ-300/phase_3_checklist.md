@@ -1,6 +1,6 @@
 # Phase 3: `IAbilitySource` protocol + Facility/Storm adapters + iterator
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Define the universal `IAbilitySource` protocol; build the two adapter classes that wrap existing entities; build the unified iterator that future projects extend. No behavior change yet — the collector still uses its current planet-walking path.
 
 ---

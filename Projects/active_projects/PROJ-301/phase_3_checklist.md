@@ -1,6 +1,6 @@
 # Phase 3: `PlanetIntrinsicAbilitySource` adapter + iterator registration
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Implement the adapter and register it with the iterator. After this phase, planet intrinsic abilities flow through the existing collector and appear in the Sector panel automatically.
 
 ---

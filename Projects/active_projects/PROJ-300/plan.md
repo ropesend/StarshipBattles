@@ -24,10 +24,10 @@
 | 9. Docs sync | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (plan approved)
-**Last Action:** Project documents populated from approved master plan
-**Next Action:** Begin Phase 1 — write failing tests for `aggregate_rates`
+**Last Updated:** 2026-04-27
+**Active Phase:** Complete (post-remediation 2026-04-27)
+**Last Action:** Skeptical-review remediation landed: critical/high fixes, RNG seeded, D16/D17/D13 validations, Phase-3 integration tests
+**Next Action:** D20 perf baseline + final docs sync (low priority follow-up)
 **Blockers:** None
 **Context for Next Agent:** Master design is in [design.md](design.md). All architectural decisions are in [decisions.md](decisions.md). The companion projects PROJ-301..305 add new source kinds on top of this framework — do not pull their work into this project; this project's scope is **framework + storms + facilities only**.
 

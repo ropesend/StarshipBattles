@@ -1,6 +1,6 @@
 # Phase 4: Refactor `system_effects_collector` onto the iterator
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Replace the planet-walking logic in `_collect_effects` with iterator-based source enumeration. Existing tests should stay green — this is a behavior-preserving refactor.
 
 ---

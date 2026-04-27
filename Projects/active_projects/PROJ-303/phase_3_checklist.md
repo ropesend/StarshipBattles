@@ -1,6 +1,6 @@
 # Phase 3: `WarpPointAbilitySource` adapter + iterator registration
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 
 ---
 

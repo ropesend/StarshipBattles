@@ -1,6 +1,6 @@
 # Phase 1: Star types data registry
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Confirm the canonical star_type taxonomy. Create `data/star_types.json` with intrinsic ability templates per star type.
 
 > **2026-04-27 update:** the original Phase 1 had a fallback "ship `roll_intrinsic_abilities` here if PROJ-301 hasn't landed" task. Per PROJ-300 D15 the helper now ships in PROJ-300 alongside the IAbilitySource framework. Task 1.3 is removed; PROJ-302 imports the helper from PROJ-300 unconditionally.

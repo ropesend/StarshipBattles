@@ -13,11 +13,11 @@
 | 4. UI verification + docs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (plan approved, awaiting PROJ-300 completion)
-**Last Action:** Project documents populated from approved master plan
-**Next Action:** Wait for PROJ-300, then begin Phase 1
-**Blockers:** PROJ-300 framework
+**Last Updated:** 2026-04-27
+**Active Phase:** Complete (post-remediation 2026-04-27)
+**Last Action:** Skeptical-review remediation landed: critical/high fixes, RNG seeded, D16/D17/D13 validations, Phase-3 integration tests
+**Next Action:** D20 perf baseline + final docs sync (low priority follow-up)
+**Blockers:** None
 **Context for Next Agent:** Read `Projects/active_projects/PROJ-300/design.md` first. Warp points are fixed single-hex entities that can declare sector-scope intrinsic abilities (warp shear, navigational hazard, scan obscuration). Most are mechanically simpler than stars/planets — single sector, no system-scope reach.
 
 ## Overview

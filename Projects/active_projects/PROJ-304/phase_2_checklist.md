@@ -1,6 +1,6 @@
 # Phase 2: `StarSystem.archetype` + `intrinsic_abilities` fields + generation
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 
 ---
 

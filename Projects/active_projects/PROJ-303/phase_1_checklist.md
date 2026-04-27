@@ -1,6 +1,6 @@
 # Phase 1: Warp point types data registry
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Confirm the warp_point type taxonomy. Create `data/warp_point_types.json` with intrinsic ability templates.
 
 ---

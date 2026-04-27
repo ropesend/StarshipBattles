@@ -1,6 +1,6 @@
 # Phase 4: UI verification + docs
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Verify the existing System panel shows star-projected system-scope effects; the Sector panel shows star sector-scope effects at the star's hex. Update docs.
 
 ---

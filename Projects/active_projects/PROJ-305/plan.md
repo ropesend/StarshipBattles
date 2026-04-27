@@ -11,11 +11,11 @@
 | 4. Performance check + UI verification + docs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (plan approved, awaiting PROJ-300 completion)
-**Last Action:** Project documents populated from approved master plan
-**Next Action:** Wait for PROJ-300, then begin Phase 1
-**Blockers:** PROJ-300 framework
+**Last Updated:** 2026-04-27
+**Active Phase:** Complete (post-remediation 2026-04-27)
+**Last Action:** Skeptical-review remediation landed: critical/high fixes, RNG seeded, D16/D17/D13 validations, Phase-3 integration tests
+**Next Action:** D20 perf baseline + final docs sync (low priority follow-up)
+**Blockers:** None
 **Context for Next Agent:** Read `Projects/active_projects/PROJ-300/design.md` first. **Per user decision**, fleet abilities are **strategic-layer hex effects** — a flagship at hex H projects sector-scope abilities visible in the Sector panel for entities at H. This is distinct from existing combat-only fleet auras (handled by `FleetAuraManager`); those continue to function unchanged. The unification adds a NEW capability: ship components can now declare strategic-scope abilities (sector / system / allied_sector / etc.) that are picked up by the unified collector and rendered in the strategy UI.
 
 ## Overview

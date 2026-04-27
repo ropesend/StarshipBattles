@@ -1,6 +1,6 @@
 # Phase 3: Sample component (Flagship Shield Projector) + integration
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Add a real, gameplay-meaningful component that exercises the fleet-projection path end-to-end. Validates the framework with actual data, not just synthetic tests.
 
 > **2026-04-27 update (decisions.md D10):** Original plan referenced `SensorBoost scope: allied_sector` on a "Flagship Sensor Array". `SensorBoost` does not exist in the codebase, and inventing it is a separate design item (range? detection? fog-of-war?). PROJ-305 is plumbing, not new ability semantics. The sample is now a **Flagship Shield Projector** using `ShieldModifier`, which already supports `allied_sector` ([planetary.py:443](../../../game/simulation/components/abilities/planetary.py#L443)). Zero new ability work.

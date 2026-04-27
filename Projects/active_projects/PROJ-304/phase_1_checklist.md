@@ -1,6 +1,6 @@
 # Phase 1: System archetypes data registry
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Create `data/system_archetypes.json` with the initial archetype set.
 
 ---

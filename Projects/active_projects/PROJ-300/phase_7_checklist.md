@@ -1,6 +1,6 @@
 # Phase 7: Eradicate `AreaEffectManager` + `EnvironmentalEffects` + `StormEffect`
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Delete the parallel system. Per CLAUDE.md Rule 3 + System Migration Policy, no fallback paths, no compatibility shims. Grep guard at the end confirms zero references remain.
 
 ---

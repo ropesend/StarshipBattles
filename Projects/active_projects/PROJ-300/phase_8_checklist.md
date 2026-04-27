@@ -1,6 +1,6 @@
 # Phase 8: UI integration
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Make the Sector panel render storm effects identically to facility effects (using the unified `source_label`); add rate-style value formatting for `EnvironmentalDamage` and `FuelDrain`; strip the per-effect breakdown from the storm detail panel (lore only).
 
 ---

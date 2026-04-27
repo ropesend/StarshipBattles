@@ -1,6 +1,6 @@
 # Phase 2: `Planet.intrinsic_abilities` field + generation
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Add the `intrinsic_abilities: Dict[str, Any]` field to `Planet`. Populate it during generation by reading the registry and rolling per-instance values. Save/load roundtrip preserves rolled values.
 
 ---

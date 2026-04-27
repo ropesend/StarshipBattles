@@ -2,7 +2,7 @@
 
 > **Last verified:** 2026-04-27 — Body count "(28 patterns)" corrected to 27 (matches header and TOC); PROJ-297 originally fixed CLAUDE.md/README references.
 
-Agent-optimized reference for every core pattern in the codebase (27 patterns).
+Agent-optimized reference for every core pattern in the codebase (29 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -37,6 +37,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 26. [Ability-Stat Registry](#26-ability-stat-registry-proj-273)
 27. [Budget-Aware Randomization](#27-budget-aware-randomization-feat-12)
 28. [Background Service Call](#28-background-service-call-proj-296)
+29. [Universal Ability Source (PROJ-300..305)](#29-universal-ability-source-proj-300305)
 
 ---
 
@@ -1509,3 +1510,35 @@ exposes per-domain status, and is polled by the UI.
 - Use **VehicleDesignService**, not ShipBuilderService.
 - **PolicyManager** is at `game/ai/policy_manager.py`.
 - **EventBus** is at `game/ui/screens/builder/event_bus.py`.
+
+
+## 29. Universal Ability Source (PROJ-300..305)
+
+### Where
+- Protocol: [`game/core/protocols/strategy_entities.py`](../game/core/protocols/strategy_entities.py) — `IAbilitySource` + `is_ability_source` TypeGuard
+- Adapter package: [`game/strategy/services/ability_sources/`](../game/strategy/services/ability_sources/) — `FacilityAbilitySource`, `StormAbilitySource`, `PlanetIntrinsicAbilitySource`, `StarAbilitySource`, `WarpPointAbilitySource`, `SystemAbilitySource`, `FleetAbilitySource`, plus shared helpers (`roll_intrinsic_abilities`, `format_intrinsic_source_label`)
+- Iterator: [`game/strategy/services/ability_iterator.py`](../game/strategy/services/ability_iterator.py)
+- Collector: [`game/strategy/services/system_effects_collector.py`](../game/strategy/services/system_effects_collector.py)
+- Aggregation: [`game/strategy/services/strategic_ability_scanner.py`](../game/strategy/services/strategic_ability_scanner.py) — `aggregate_multipliers` (intra-MAX, inter-MULTIPLY) + `aggregate_rates` (intra-MAX, inter-SUM)
+
+### How It Works
+Every locatable entity that contributes strategic-layer abilities — facility, storm, planet, star, warp point, system archetype, fleet — implements `IAbilitySource`. Each one declares `source_kind` / `source_label` / `source_id` / `owner_id` for UI rendering, `get_abilities()` for the ability dict, and `affects_hex` / `affects_system` for filtering.
+
+Adapters register a provider function with `register_source_provider_at_hex` / `register_source_provider_in_system`. The iterator yields `IAbilitySource` instances; the collector walks them, applies owner-filter (ownerless apply to all empires; owned to matching empire) + scope-filter (`_SECTOR_SCOPES` vs `_SYSTEM_SCOPES`), groups by `(ability_name, resource_type | damage_type)`, and dispatches to either `aggregate_multipliers` or `aggregate_rates` depending on the effect's `kind`.
+
+**PROJ-305 fleet integration:** `_fleet_provider` gates on `_FLEETS_AT_HEX_LOOKUP` / `_FLEETS_IN_SYSTEM_LOOKUP` callbacks registered via `set_fleet_lookups`. `GameInitializer._wire_fleet_lookups` connects them at session start.
+
+**Validations:**
+- D16 — mixed-kind groups (multiplier-only + rate-only entries in the same group) skip the offender + log warning.
+- D17 — ownerless sources may not declare ownership-aware scopes (`enemy_sector`, `allied_sector`, etc.); offending entries are skipped + logged.
+- D13 — components must not declare both combat scopes (self/fleet/team) and strategic scopes (sector/system/etc) on the same ability instance (test enforces).
+- AST static-analysis guard prevents `get_default_registry_provider()` calls inside the adapter package (PROJ-306 layering rule).
+
+### When to Use
+- Any new entity kind that should project strategic-layer effects to a hex or system: write an adapter implementing `IAbilitySource`, register a provider.
+- Storm-style "things at a hex apply effects" become one-line plug-ins instead of bespoke pipelines.
+
+### Key behavior
+- Overlapping storms multiply per-provider (no shared `stack_group`) — two ion storms apply 0.25× shields, not 0.5× (PROJ-300 D6).
+- ThrustModifier is wired into combat propulsion via `ABILITY_STAT_REGISTRY` (PROJ-300 D14).
+- Hostile star systems are deliberately uncapped (PROJ-302 D7); a hazard hint UI in `system_tree_panel` warns the player (D8).

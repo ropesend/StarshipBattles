@@ -1,6 +1,6 @@
 # Phase 3: `StarAbilitySource` adapter + iterator registration
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Implement the adapter; register with both hex and system iterators; verify system-scope effects flow into the System panel and sector-scope (at star's hex) flow into the Sector panel.
 
 ---

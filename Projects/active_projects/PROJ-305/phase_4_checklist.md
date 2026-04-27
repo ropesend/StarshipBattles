@@ -1,6 +1,6 @@
 # Phase 4: Performance check + UI verification + docs
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Profile `collect_sector_effects` under realistic load; add per-turn caching if needed. Manual UI verification. Final docs sync. Run the canonical "all 7 source kinds active at one hex" smoke test.
 
 ---

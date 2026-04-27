@@ -1,6 +1,6 @@
 # Phase 2: Register four new ability names
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Add `ThrustModifier`, `StrategicSpeedModifier`, `EnvironmentalDamage`, `FuelDrain` to the recognized ability registries so the collector and combat path treat them as first-class. Pure additive change — no behavior change yet.
 
 ---

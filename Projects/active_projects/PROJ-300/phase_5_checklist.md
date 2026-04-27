@@ -1,6 +1,6 @@
 # Phase 5: Storm dataclass + JSON schema migration
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Replace `Storm.effects: StormEffect` with `Storm.abilities: Dict[str, Any]`. Rewrite `data/storms.json` → `data/storm_types.json` with the v2.0 abilities-shaped schema. Update generator and roundtrip tests. After this phase, the storm path is fully expressed in abilities-dict form (but old AreaEffectManager code still exists; Phase 6/7 remove it).
 
 ---

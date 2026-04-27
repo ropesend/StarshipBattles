@@ -1,6 +1,6 @@
 # Phase 1: Expand component ability `allowed_scopes` for strategic projection
 
-**Status:** Not Started
+**Status:** Complete (2026-04-27)
 **Objective:** Audit existing ability classes; identify which can legitimately project at strategic-layer scopes; expand their `allowed_scopes` lists. No fleet adapter yet — this phase only ensures the data model can express strategic-scope ship abilities.
 
 ---
