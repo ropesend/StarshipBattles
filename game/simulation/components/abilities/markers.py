@@ -27,7 +27,7 @@ class VehicleLaunchAbility(Ability):
         self._base_capacity = self.capacity
         self.cycle_time = data.get('cycle_time', 5.0)
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         # Apply capacity mult
         self.capacity = int(self._base_capacity * self.get_effective_stat('capacity_mult', 1.0))
 
@@ -36,13 +36,13 @@ class VehicleLaunchAbility(Ability):
             self.cooldown -= PhysicsConfig.TICK_RATE
         return True
 
-    def try_launch(self):
+    def try_launch(self) -> bool:
         if self.cooldown <= 0:
             self.cooldown = self.cycle_time
             return True
         return False
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [
             {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': HINT_NEUTRAL},
             {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': HINT_NEUTRAL}
@@ -57,7 +57,7 @@ class CommandAndControl(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [{'label': 'Command', 'value': 'Active', 'color_hint': HINT_CREW_CAP}]
 
     def get_primary_value(self) -> float:
@@ -94,7 +94,7 @@ class RequiresCommandAndControl(Ability):
                     return True
         return False
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': HINT_REQUIREMENT}]
 
     def get_primary_value(self) -> float:
@@ -106,7 +106,7 @@ class RequiresCombatMovement(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [{'label': 'Requires Propulsion', 'value': 'Yes', 'color_hint': HINT_REQUIREMENT}]
 
     def get_primary_value(self) -> float:
@@ -118,5 +118,5 @@ class StructuralIntegrity(Ability):
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [{'label': 'Structural Integrity', 'value': 'Yes', 'color_hint': HINT_CREW_CAP}]

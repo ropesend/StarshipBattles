@@ -81,7 +81,7 @@ class Projectile(PhysicsBody):
         # Status for UI tracking
         self.status = 'active' # active, hit, miss, destroyed
         
-    def update(self):
+    def update(self) -> None:
         if not self.is_alive: return
 
         dt = PhysicsConfig.TICK_RATE
@@ -118,7 +118,7 @@ class Projectile(PhysicsBody):
                           reason="max_range",
                           tick=0)
 
-    def _update_guidance(self, dt):
+    def _update_guidance(self, dt: float) -> None:
         target = self.target
         p_pos = self.position
         p_vel = self.velocity
@@ -182,7 +182,7 @@ class Projectile(PhysicsBody):
                 new_vel = current_dir.rotate(rotation) * self.max_speed
                 self.velocity = new_vel
 
-    def take_damage(self, amount):
+    def take_damage(self, amount: float) -> None:
         self.hp -= amount
         if self.hp <= 0:
             self.is_alive = False

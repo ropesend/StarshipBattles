@@ -1,6 +1,13 @@
+from __future__ import annotations
+
 import logging
 import uuid
-from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Iterator
+from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Iterator, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .ship_component_manager import ShipComponentManager
+    from .ship_combat_manager import ShipCombatManager
+    from .ship_combat_engine import ShipCombatEngine
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -242,7 +249,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     # =========================================================================
 
     @property
-    def component_manager(self):
+    def component_manager(self) -> "ShipComponentManager":
         """Get or create the ShipComponentManager for this ship.
 
         Lazy initialization avoids circular import issues.
@@ -257,7 +264,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     # =========================================================================
 
     @property
-    def combat_manager(self):
+    def combat_manager(self) -> "ShipCombatManager":
         """Get or create the ShipCombatManager for this ship.
 
         Lazy initialization avoids circular import issues.
@@ -268,7 +275,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         return self._combat_manager
 
     @property
-    def combat_engine(self):
+    def combat_engine(self) -> "ShipCombatEngine":
         """Get or create the ShipCombatEngine for this ship.
 
         Delegates to ShipCombatManager for lazy initialization.
@@ -380,7 +387,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         return self.component_manager.add_component(component, layer_type)
 
     @property
-    def cached_summary(self):
+    def cached_summary(self) -> Optional[Dict[str, Any]]:
         """Cached dictionary of high-level ship stats (DPS, Speed, etc)."""
         return self._cached_summary
 

@@ -17,7 +17,7 @@ from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
 
 
-def get_or_create_validator(*, registry_provider):
+def get_or_create_validator(*, registry_provider) -> ShipDesignValidator:
     """Get the ship design validator, creating it if necessary.
 
     PROJ-174: Uses IRegistryProvider pattern for registry access.

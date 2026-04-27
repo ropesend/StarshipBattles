@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import logging
 import math
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from game.core.config import PhysicsConfig
 from game.core.math import angle_from_vector
@@ -75,7 +77,7 @@ class WeaponAbility(Ability):
         AbilityStatBinding(StatKey.ARC_ADD, 'firing_arc', 'add', '_base_firing_arc'),
     ]
 
-    def _get_raw_field(self, data, key: str, default, fallback_key: str = None):
+    def _get_raw_field(self, data, key: str, default, fallback_key: Optional[str] = None) -> Any:
         """Get a raw field value from data dict or component fallback.
 
         Args:
@@ -123,7 +125,7 @@ class WeaponAbility(Ability):
 
         self._base_firing_arc = self.firing_arc
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         super().sync_data(data)
         if not isinstance(data, dict):
             return
@@ -157,7 +159,7 @@ class WeaponAbility(Ability):
             )
             self.reload_time = self._base_reload
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         # Apply modifiers to base stats using get_effective_stat for multi-ability support
         self.damage = self._base_damage * self.get_effective_stat('damage_mult', 1.0)
         self.range = self._base_range * self.get_effective_stat('range_mult', 1.0)
@@ -181,7 +183,7 @@ class WeaponAbility(Ability):
             self.cooldown_timer -= PhysicsConfig.TICK_RATE
         return True
 
-    def can_fire(self):
+    def can_fire(self) -> bool:
         return self.cooldown_timer <= 0
 
     def fire(self, target: Any) -> bool:
@@ -215,7 +217,7 @@ class WeaponAbility(Ability):
             return base * self.get_effective_stat('damage_mult', 1.0)
         return self.damage
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [
             {'label': 'Damage', 'value': f"{self.damage:.0f}", 'color_hint': HINT_DAMAGE},
             {'label': 'Range', 'value': f"{self.range:.0f}", 'color_hint': HINT_RANGE},
@@ -264,7 +266,7 @@ class ProjectileWeaponAbility(WeaponAbility):
         else:
             self.projectile_speed = float(getattr(self.component, 'projectile_speed', 500))
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         rows = super().get_ui_rows()
         rows.append({'label': 'Speed', 'value': f"{self.projectile_speed:.0f}", 'color_hint': HINT_PROJECTILE_SPEED})
         return rows
@@ -293,16 +295,16 @@ class BeamWeaponAbility(WeaponAbility):
             self.pdc_valid_targets = list(self._DEFAULT_PDC_VALID_TARGETS)
         self._base_accuracy = self.base_accuracy
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         super().sync_data(data)
         if isinstance(data, dict) and 'pdc_valid_targets' in data:
             self.pdc_valid_targets = list(data['pdc_valid_targets'])
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         super().recalculate()
         self.base_accuracy = self._base_accuracy + self.get_effective_stat('accuracy_add', 0.0)
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         rows = super().get_ui_rows()
         rows.append({'label': 'Accuracy', 'value': f"{int(self.base_accuracy * 100)}%", 'color_hint': HINT_ACCURACY})
         return rows
@@ -370,7 +372,7 @@ class SeekerWeaponAbility(WeaponAbility):
             self.range = int(self.projectile_speed * self.endurance * 0.8)
             self._base_range = self.range
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         super().recalculate()
         # Apply seeker-specific stats using get_effective_stat for multi-ability support
         self.endurance = self._base_endurance * self.get_effective_stat('endurance_mult', 1.0)

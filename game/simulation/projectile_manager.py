@@ -21,10 +21,10 @@ class ProjectileManager:
     def get_active_projectiles(self) -> List[Any]:
         return self.projectiles
 
-    def add_projectile(self, projectile: Any):
+    def add_projectile(self, projectile: Any) -> None:
         self.projectiles.append(projectile)
 
-    def clear(self):
+    def clear(self) -> None:
         self.projectiles = []
 
     def update(self, grid: 'SpatialGrid') -> None:

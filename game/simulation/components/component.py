@@ -57,8 +57,10 @@ Key Classes:
     LayerType: Enum (CORE, INNER, OUTER)
     ApplicationModifier: Applied modifier with value
 """
+from __future__ import annotations
+
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from game.core.constants import CombatConstants
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -73,6 +75,8 @@ from .component_health_manager import ComponentHealthManager
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.simulation.components.abilities.base import Ability
+    from game.simulation.components.component_constants import ApplicationModifier
 
 class Component:
     def __init__(self, data, *, registries: 'GameRegistries'):
@@ -163,24 +167,24 @@ class Component:
         return self._ability_mgr
 
     @property
-    def ability_instances(self):
+    def ability_instances(self) -> List["Ability"]:
         """Facade: access ability instances through delegate. PROJ-241."""
         return self._ability_mgr.ability_instances
 
     @ability_instances.setter
-    def ability_instances(self, value):
+    def ability_instances(self, value: List["Ability"]) -> None:
         """Facade: setter for backward compat (test code assigns lists). PROJ-241."""
         self._ability_mgr._instances = value
 
-    def get_abilities(self, ability_name: str):
+    def get_abilities(self, ability_name: str) -> List["Ability"]:
         """Get all abilities of a specific type. Delegates to ability_manager."""
         return self._ability_mgr.get_abilities(ability_name)
 
-    def get_ability(self, ability_name: str):
+    def get_ability(self, ability_name: str) -> Optional["Ability"]:
         """Get first ability of type. Delegates to ability_manager."""
         return self._ability_mgr.get_ability(ability_name)
 
-    def has_ability(self, ability_name: str):
+    def has_ability(self, ability_name: str) -> bool:
         """Check if component has ability. Delegates to ability_manager."""
         return self._ability_mgr.has_ability(ability_name)
 
@@ -210,12 +214,12 @@ class Component:
         return self._modifier_mgr
 
     @property
-    def modifiers(self):
+    def modifiers(self) -> List["ApplicationModifier"]:
         """Facade: access modifier list through delegate. PROJ-241."""
         return self.modifier_manager.modifiers
 
     @modifiers.setter
-    def modifiers(self, value):
+    def modifiers(self, value: List["ApplicationModifier"]) -> None:
         """Facade: setter for backward compat during transition. PROJ-241."""
         self.modifier_manager._modifiers = value
 
@@ -240,18 +244,18 @@ class Component:
         return self.health_manager.hp_ratio
 
     @property
-    def cooldown_timer(self):
+    def cooldown_timer(self) -> float:
         # Map to first weapon ability if present
         ab = self.get_ability('WeaponAbility')
         if ab: return ab.cooldown_timer
         return 0.0
-        
+
     @cooldown_timer.setter
-    def cooldown_timer(self, value):
+    def cooldown_timer(self, value: float) -> None:
         ab = self.get_ability('WeaponAbility')
         if ab: ab.cooldown_timer = float(value)
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         """Aggregate UI rows from all ability instances.
 
         Returns list of dicts: [{'label': 'Thrust', 'value': '1500 N'}, ...]
@@ -260,15 +264,15 @@ class Component:
         """
         return self._ability_mgr.get_ui_rows()
 
-    def _instantiate_abilities(self):
+    def _instantiate_abilities(self) -> None:
         """Re-instantiate and re-index abilities. Delegates to ability_manager.
 
         Called by ComponentStatsCalculator.recalculate to sync ability
         instances after data changes (e.g., modifier effects on abilities).
         """
         self._ability_mgr.instantiate_and_index()
-            
-    def update(self):
+
+    def update(self) -> None:
         """Update component state for one tick (resource consumption, cooldowns).
 
         Any ability returning False from update() marks the component as
@@ -291,18 +295,18 @@ class Component:
         self._is_operational = all_satisfied and self.is_active
 
     @property
-    def is_operational(self):
+    def is_operational(self) -> bool:
         return self._is_operational and self.is_active
 
-    def can_afford_activation(self):
+    def can_afford_activation(self) -> bool:
         """Check if component can afford activation costs. Delegates to resource_manager."""
         return self.resource_manager.can_afford_activation()
 
-    def consume_activation(self):
+    def consume_activation(self) -> None:
         """Consume activation costs. Delegates to resource_manager."""
         self.resource_manager.consume_activation()
 
-    def try_activate(self):
+    def try_activate(self) -> bool:
         """Check and consume activation costs atomically. Delegates to resource_manager."""
         return self.resource_manager.try_activate()
 
@@ -313,31 +317,31 @@ class Component:
         """Apply damage to component. Delegates to health_manager."""
         return self.health_manager.take_damage(amount)
 
-    def reset_hp(self):
+    def reset_hp(self) -> None:
         """Restore component to full HP. Delegates to health_manager."""
         self.health_manager.reset_hp()
 
-    def get_resource_cost(self, context: dict = None):
+    def get_resource_cost(self, context: Optional[dict] = None) -> dict:
         """Returns the current resource costs. Delegates to resource_manager."""
         return self.resource_manager.get_resource_cost(context)
 
-    def add_modifier(self, mod_id, value=None):
+    def add_modifier(self, mod_id: str, value: Optional[float] = None) -> bool:
         """Add a modifier to this component. Delegates to modifier_manager."""
         result = self.modifier_manager.add_modifier(mod_id, value)
         if result:
             self.recalculate_stats()
         return result
 
-    def remove_modifier(self, mod_id):
+    def remove_modifier(self, mod_id: str) -> None:
         """Remove a modifier from this component. Delegates to modifier_manager."""
         self.modifier_manager.remove_modifier(mod_id)
         self.recalculate_stats()
 
-    def get_modifier(self, mod_id):
+    def get_modifier(self, mod_id: str) -> Optional["ApplicationModifier"]:
         """Get a modifier by ID. Delegates to modifier_manager."""
         return self.modifier_manager.get_modifier(mod_id)
 
-    def get_all_modifier_effects(self):
+    def get_all_modifier_effects(self) -> List[Any]:
         """Get all evaluated effects from all applied modifiers.
 
         Delegates to modifier_manager.
@@ -347,7 +351,7 @@ class Component:
         """
         return self.modifier_manager.get_all_effects()
 
-    def get_modifier_stat_summary(self):
+    def get_modifier_stat_summary(self) -> Dict[str, Dict]:
         """Get summary grouped by stat with net values and contributors.
 
         Delegates to modifier_manager.
@@ -357,7 +361,7 @@ class Component:
         """
         return self.modifier_manager.get_stat_summary()
 
-    def recalculate_stats(self, context: dict = None):
+    def recalculate_stats(self, context: Optional[dict] = None) -> None:
         """Recalculate component stats with multiplicative modifier stacking.
 
         Delegates to ComponentStatsCalculator for the multi-phase calculation.
@@ -369,7 +373,7 @@ class Component:
         """
         ComponentStatsCalculator.recalculate(self, context)
 
-    def clone(self):
+    def clone(self) -> "Component":
         # Create a new instance with the same data
         # PROJ-38: Pass registries to the clone for DI consistency
         return self.__class__(self.data, registries=self._registries)
