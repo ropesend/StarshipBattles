@@ -828,8 +828,9 @@ class ComparisonScenario(TestScenario):
         legacy code exposed.
         """
         from game.ai.ai_factory import AIControllerFactory
+        from game.core.registry import get_default_registry_provider
         from game.simulation.battle_runner import (
-            _default_ship_builder_from_context,
+            build_context_ship_builder,
             run_battle,
         )
 
@@ -840,8 +841,13 @@ class ComparisonScenario(TestScenario):
         # (DesignOnlyMaterializer installed by Combat Lab's TestRunner);
         # the closure only handles role tagging, which is scenario-specific
         # bookkeeping orthogonal to materialization.
+        # PROJ-306: pass `registry_provider` explicitly — Combat Lab is
+        # outside the Simulation layer and is allowed to call
+        # `get_default_registry_provider()`.
         baseline_ships: dict = {}
-        _context_builder = _default_ship_builder_from_context()
+        _context_builder = build_context_ship_builder(
+            registry_provider=get_default_registry_provider(),
+        )
 
         def ship_builder(ship_spec, team_id):
             ship = _context_builder(ship_spec, team_id)

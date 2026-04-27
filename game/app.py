@@ -570,10 +570,14 @@ class Game:
         # default `InstanceBackedMaterializer` (pulled from
         # ApplicationContext) handles materialization. No ship_builder
         # closure required.
+        # PROJ-306: pass `registry_provider` explicitly — game/app.py is
+        # outside the Simulation layer and is allowed to call
+        # `get_default_registry_provider()`.
         controller = BattleController()
         controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
+            registry_provider=get_default_registry_provider(),
             config=config,
         )
 

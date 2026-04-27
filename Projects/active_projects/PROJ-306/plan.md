@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Eliminate `battle_runner` fallback | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Eliminate `registry_loader` fallback | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Eliminate `battle_runner` fallback | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Eliminate `registry_loader` fallback | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Verification & Doc Update | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for implementation)
-**Last Action:** Project created from PROJ-298/follow-up review of PROJ-274 closure
-**Next Action:** Begin Phase 1 — make `ship_builder` parameter required (or inject via context) and eliminate the `_default_ship_builder_from_context` fallback
+**Last Updated:** 2026-04-27
+**Active Phase:** Phase 2 — registry_loader fallback
+**Last Action:** Phase 1 complete — `_default_ship_builder_from_context` renamed to public `build_context_ship_builder(registry_provider=...)`, all 6 production callers migrated (1 surprise caller in `test_lab/screen.py` not in the original inventory), `run_battle` and `BattleController.start_from_spec` now require `registry_provider` when `ship_builder is None`. AST-based static guard in `tests/unit/simulation/test_battle_runner_di.py` passes for `battle_runner.py` (still flags `registry_loader.py` — Phase 2's job).
+**Next Action:** Phase 2 Task 2.1 — survey `reload_registries_from_directory` callers (verified test-only) and migrate to required-parameter pattern.
 **Blockers:** None
-**Context for Next Agent:** PROJ-274 introduced `_default_ship_builder_from_context()` as a *transitional* fallback that calls `get_default_registry_provider()` when callers omit the `ship_builder` kwarg. PROJ-274 has been **archived**, but the fallback code (and its sibling `registry_loader.py:91` call) remained, leaving two confirmed Simulation-layer global-lookup violations. This project finishes that closure.
+**Context for Next Agent:** PROJ-274 introduced `_default_ship_builder_from_context()` as a transitional fallback. Phase 1 of PROJ-306 has now eliminated it. Phase 2 will fix the second surviving global-lookup at `registry_loader.py:91`.
 
 ## Overview
 Eliminate the two remaining `get_default_registry_provider()` calls in the Simulation layer. They were left in place during PROJ-274 as documented transitional fallbacks for callers that didn't yet pass `ship_builder` / `registry_provider` explicitly. PROJ-274 is now archived, so the fallbacks are no longer transitional — they're undeleted graveyard code per the System Migration Policy.

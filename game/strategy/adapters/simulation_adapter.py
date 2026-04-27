@@ -149,9 +149,14 @@ class SimulationBattleResolver(IBattleResolver):
         # `run_battle` invokes the compiler's `PostBattleHook` which
         # writes outcome data back into the ShipInstances and prunes
         # destroyed/retreated ships from the fleets.
+        # PROJ-306: pass `registry_provider` explicitly — the Strategy
+        # layer is allowed to call `get_default_registry_provider()`;
+        # the Simulation layer cannot.
+        from game.core.registry import get_default_registry_provider
         outcome = run_battle(
             spec,
             ai_factory=self._ai_factory,
+            registry_provider=get_default_registry_provider(),
         )
 
         winner = self._determine_winner(outcome)
