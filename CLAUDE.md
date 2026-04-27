@@ -144,7 +144,7 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 **Tech Stack:**
 - Python **3.13+** (upgraded from 3.10 in PROJ-295 on 2026-04-26; 3.10 EOL was 2026-10-04). Repo declares `requires-python = ">=3.13"` in `pyproject.toml`. Activate the local venv via `.\.venv\Scripts\Activate.ps1` (PowerShell) or `source .venv/Scripts/activate` (bash).
 - Pygame for rendering (pygame-ce 2.5.7)
-- Pytest for testing (15112 tests baseline)
+- Pytest for testing (15405 tests baseline; 100% return-type annotation coverage in `game/` per PROJ-311)
 - Test parallelization with pytest-xdist; sharded runner at `Tools/test_sharded/test_sharded.py`
 
 **Display Target:**
@@ -165,13 +165,16 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 
 ```
 game/
-├── core/              # Foundation (registries, validation, utilities)
+├── core/              # Foundation (registries, validation, utilities, protocols, formula_evaluator)
 ├── simulation/        # Combat simulation engine
+│   ├── combat/        # Damage pipeline, telemetry, events
 │   ├── components/    # Ship components and abilities
-│   └── formula_system.py  # Damage, accuracy, movement calculations
+│   ├── entities/      # Ship, projectile, ship_combat_engine
+│   ├── services/      # registry_loader, ship_materializer
+│   └── systems/       # battle_engine, resource_manager
 ├── strategy/          # Galaxy map, fleets, planets, research
-├── ai/                # AI controllers and targeting
-└── ui/                # Pygame screens and rendering
+├── ai/                # AI controllers, behaviors, spatial_behaviors
+└── ui/                # Pygame screens, panels, widgets, services
 
 tests/
 ├── unit/              # Fast unit tests
@@ -312,7 +315,7 @@ When faced with choices, prefer:
 - **CLI parallel workers:** 12 (`-n 12`)
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 15112 passed, 0 skipped
+- **Baseline:** 15405 passed, 2 skipped (post-PROJ-311). One known flake — `test_colony_owner_id_matches_empire` — passes when run alone (test-isolation issue, unrelated to PROJ-311).
 
 ---
 

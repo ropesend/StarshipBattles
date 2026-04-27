@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Reference
 
-> **Last verified:** 2026-04-26
+> **Last verified:** 2026-04-27 — PROJ-306 closed the last Simulation→Core global-lookup violation; layer-separation rule is now strictly enforced (no `get_default_registry_provider` calls in `game/simulation/`). Updated by PROJ-297 (formula_system.py + singleton.py removed) and PROJ-298 (FleetOrder rename complete).
 
 Primary architecture document for the Starship Battles codebase. All claims verified against source code.
 
