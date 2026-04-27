@@ -3,6 +3,9 @@
 This module extracts data reload logic from DesignWorkshopScreen to reduce
 its line count and improve separation of concerns.
 """
+from __future__ import annotations
+
+from typing import Any
 import logging
 import os
 from tkinter import filedialog
@@ -75,26 +78,26 @@ class WorkshopDataReloader:
         self._update_stats = update_stats_callback
 
     @property
-    def right_panel(self):
+    def right_panel(self) -> Any:
         """Get right panel via deferred reference."""
         return self._right_panel_ref()
 
     @property
-    def left_panel(self):
+    def left_panel(self) -> Any:
         """Get left panel via deferred reference."""
         return self._left_panel_ref()
 
     @property
-    def view(self):
+    def view(self) -> Any:
         """Get schematic view via deferred reference."""
         return self._view_ref()
 
     @property
-    def controller(self):
+    def controller(self) -> Any:
         """Get interaction controller via deferred reference."""
         return self._controller_ref()
 
-    def on_select_data_pressed(self):
+    def on_select_data_pressed(self) -> None:
         """Open dialog to select a data directory and reload game data."""
         if not tk_root:
             self.show_error("Tkinter not initialized, cannot open dialog")
@@ -110,7 +113,7 @@ class WorkshopDataReloader:
             with profile_block(f"Builder: Reload Data from {os.path.basename(directory)}"):
                 self.reload_data(directory)
 
-    def load_standard_data(self):
+    def load_standard_data(self) -> None:
         """Load standard data from 'data/' directory and set ship directory."""
         with profile_block("Builder: Load Standard Data"):
             directory = Paths.DATA_DIR
@@ -118,7 +121,7 @@ class WorkshopDataReloader:
             self._ship_io_adapter.set_ships_folder(Paths.SHIPS_DIR)
             self.show_error(f"Loaded Standard Data • Ships: {Paths.SHIPS_DIR}")
 
-    def load_test_data(self):
+    def load_test_data(self) -> None:
         """Load test data from 'tests/data/' directory and set ship directory to 'tests/data/ships/'."""
         with profile_block("Builder: Load Test Data"):
             directory = os.path.join(os.getcwd(), "tests", "data")
@@ -126,7 +129,7 @@ class WorkshopDataReloader:
             self._ship_io_adapter.set_ships_folder(os.path.join("tests", "data", "ships"))
             self.show_error("Loaded Test Data • Ships: tests/data/ships/")
 
-    def reload_data(self, directory: str):
+    def reload_data(self, directory: str) -> None:
         """Reload global game data from the specified directory.
 
         Data loading is delegated to WorkshopDataLoader for better testability.
@@ -156,7 +159,7 @@ class WorkshopDataReloader:
             logger.exception(f"Failed to reload data: {e}")
             self.show_error(f"Error reloading data: {e}")
 
-    def _refresh_ui_after_data_reload(self, default_class: str):
+    def _refresh_ui_after_data_reload(self, default_class: str) -> None:
         """Refresh all UI panels after data reload.
 
         Extracted from _reload_data to separate data loading from UI concerns.

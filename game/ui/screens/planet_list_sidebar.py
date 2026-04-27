@@ -3,6 +3,10 @@
 Extracted from planet_list_window.py (Phase 1) for better modularity.
 Builds filter controls, column toggles, and preset management UI.
 """
+from __future__ import annotations
+
+from typing import Any
+
 import pygame
 from pygame_gui.elements import (
     UIScrollingContainer, UILabel, UIButton, UITextEntryLine,
@@ -11,7 +15,7 @@ from pygame_gui.elements import (
 
 
 def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
-                  planet_ranges, columns, preset_manager):
+                  planet_ranges, columns, preset_manager) -> dict[str, Any]:
     """Build sidebar UI controls for planet list filtering.
 
     Args:
@@ -128,7 +132,7 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
         y_off += 35
 
     # --- Range Sliders ---
-    def add_range(label, key, min_limit, max_limit):
+    def add_range(label, key, min_limit, max_limit) -> None:
         nonlocal y_off
         UILabel(pygame.Rect(10, y_off, width, 20), label, manager, container=content_container)
         y_off += 20

@@ -7,7 +7,7 @@ Extracted from StrategyInputHandler for router decomposition (PROJ-173 Phase 3).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pygame
 
@@ -36,7 +36,7 @@ class FleetCommandRouter:
         self._handler = handler
 
     @property
-    def scene(self):
+    def scene(self) -> Any:
         """Access scene through handler."""
         return self._handler.scene
 

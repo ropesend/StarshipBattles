@@ -2,6 +2,9 @@
 
 Handles saving and loading of filter/column presets for the planet list window.
 """
+from __future__ import annotations
+
+from typing import Any
 import os
 from game.core.paths import Paths
 from game.core.json_utils import load_json, save_json
@@ -18,42 +21,42 @@ class PresetManager:
     def __init__(self):
         self.presets = self._load_from_disk()
 
-    def _load_from_disk(self):
+    def _load_from_disk(self) -> Any:
         """Load presets from disk."""
         path = os.path.join(Paths.DATA_DIR, self.PRESET_FILENAME)
         return load_json(path, default={})
 
-    def save_to_disk(self):
+    def save_to_disk(self) -> None:
         """Save presets to disk."""
         path = os.path.join(Paths.DATA_DIR, self.PRESET_FILENAME)
         save_json(path, self.presets)
 
-    def get_preset_names(self):
+    def get_preset_names(self) -> Any:
         """Get list of preset names."""
         opts = list(self.presets.keys())
         if "Default" not in opts:
             opts.insert(0, "Default")
         return opts
 
-    def save_preset(self, name, state):
+    def save_preset(self, name, state) -> None:
         """Save a preset with the given name and state."""
         self.presets[name] = state
         self.save_to_disk()
         logger.info(f"Saved Preset: {name}")
 
-    def get_preset(self, name):
+    def get_preset(self, name) -> Any:
         """Get a preset by name, or None if not found."""
         return self.presets.get(name)
 
-    def has_preset(self, name):
+    def has_preset(self, name) -> bool:
         """Check if a preset exists."""
         return name in self.presets
 
-    def get_all_presets(self):
+    def get_all_presets(self) -> Any:
         """Get all presets as a dictionary."""
         return self.presets
 
-    def delete_preset(self, name):
+    def delete_preset(self, name) -> bool:
         """Delete a preset by name. Returns True if deleted, False if not found."""
         if name in self.presets:
             del self.presets[name]
@@ -62,7 +65,7 @@ class PresetManager:
         return False
 
 
-def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters):
+def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters) -> dict:
     """Capture current planet list state for saving as a preset.
 
     Args:
@@ -107,7 +110,7 @@ def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_own
     }
 
 
-def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters, filter_owner=None):
+def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters, filter_owner=None) -> Any:
     """Apply a saved state to the planet list.
 
     Args:

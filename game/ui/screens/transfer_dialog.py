@@ -112,7 +112,7 @@ class TransferDialog(UIWindow):
         self._apply_tooltips()
         self._populate_initial_data()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Initialize UI elements."""
         padding = 10
         label_h = 20
@@ -195,7 +195,7 @@ class TransferDialog(UIWindow):
             container=self
         )
 
-    def _populate_initial_data(self):
+    def _populate_initial_data(self) -> None:
         """Find fleets and planets at the hex and populate dropdowns.
 
         Also checks the fleet's projected position (from queued MOVE/WARP orders)
@@ -254,7 +254,7 @@ class TransferDialog(UIWindow):
         self.drop_source = self._recreate_dropdown(self.drop_source, source_labels, starting)
         self._on_source_changed(self.drop_source.selected_option)
 
-    def _recreate_dropdown(self, old_dropdown, options, selected):
+    def _recreate_dropdown(self, old_dropdown, options, selected) -> Any:
         """Recreate a dropdown (UIDropDownMenu lacks dynamic update)."""
         rect = old_dropdown.relative_rect
         container = old_dropdown.ui_container
@@ -267,13 +267,13 @@ class TransferDialog(UIWindow):
             container=container
         )
 
-    def _extract_dropdown_value(self, value):
+    def _extract_dropdown_value(self, value) -> Any:
         """Extract string value from dropdown selection (may be tuple)."""
         if isinstance(value, tuple):
             return value[0]
         return value
 
-    def _on_source_changed(self, label):
+    def _on_source_changed(self, label) -> None:
         """Update targets and grid when source changes."""
         label = self._extract_dropdown_value(label)
         source = next((s for s in self.available_sources if s['label'] == label), None)
@@ -297,7 +297,7 @@ class TransferDialog(UIWindow):
 
         self._reset_and_build_grid()
 
-    def _on_target_changed(self, label):
+    def _on_target_changed(self, label) -> None:
         """Update grid when target changes."""
         label = self._extract_dropdown_value(label)
         self._current_target = next(
@@ -305,7 +305,7 @@ class TransferDialog(UIWindow):
         )
         self._reset_and_build_grid()
 
-    def _reset_and_build_grid(self):
+    def _reset_and_build_grid(self) -> None:
         """Clear pending transfers and rebuild the grid."""
         self.pending_transfers.clear()
         self._build_grid()
@@ -332,7 +332,7 @@ class TransferDialog(UIWindow):
 
         return amounts
 
-    def _build_grid(self):
+    def _build_grid(self) -> None:
         """Build all grid rows inside the scrolling container."""
         # Clear old grid
         for w in self._grid_widgets:
@@ -427,7 +427,7 @@ class TransferDialog(UIWindow):
             logger.debug("Could not discover pod designs, falling back to empty list")
             return []
 
-    def _add_pod_rows(self, source_obj, target_obj):
+    def _add_pod_rows(self, source_obj, target_obj) -> None:
         """Add rows for staging yard / carried items (drop pods).
 
         Pods are discrete items transferred 1 at a time between
@@ -468,7 +468,7 @@ class TransferDialog(UIWindow):
             })
 
     def _add_row(self, y: int, cargo_key: str, display_name: str,
-                 source_amt: int, target_amt: int):
+                 source_amt: int, target_amt: int) -> None:
         """Add one row to the grid."""
         container = self.grid_container
 
@@ -565,7 +565,7 @@ class TransferDialog(UIWindow):
             return f"Drop {int(abs(amount))}"
         return "0"
 
-    def _on_arrow_click(self, cargo_key: str, delta: int):
+    def _on_arrow_click(self, cargo_key: str, delta: int) -> None:
         """Adjust pending transfer by delta. Resets from Max to specific amount."""
         current = self.pending_transfers.get(cargo_key, 0)
         # If currently at Max, reset to 0 before applying delta
@@ -574,7 +574,7 @@ class TransferDialog(UIWindow):
         self.pending_transfers[cargo_key] = current + delta
         self._update_pending_label(cargo_key)
 
-    def _on_max_click(self, cargo_key: str, direction: str):
+    def _on_max_click(self, cargo_key: str, direction: str) -> None:
         """Set pending to Max (all available at execution time)."""
         if direction == 'load':
             self.pending_transfers[cargo_key] = self.MAX_LOAD
@@ -582,20 +582,20 @@ class TransferDialog(UIWindow):
             self.pending_transfers[cargo_key] = self.MAX_DROP
         self._update_pending_label(cargo_key)
 
-    def _update_pending_label(self, cargo_key: str):
+    def _update_pending_label(self, cargo_key: str) -> None:
         """Update the pending label for a cargo key."""
         lbl = self._pending_labels.get(cargo_key)
         if lbl:
             val = self.pending_transfers.get(cargo_key, 0)
             lbl.set_text(self._format_pending(val))
 
-    def _on_filter_toggle(self):
+    def _on_filter_toggle(self) -> None:
         """Toggle filter and rebuild grid."""
         self._filter_empty = not self._filter_empty
         self.btn_filter.set_text("Show All" if self._filter_empty else "Filter Empty")
         self._build_grid()
 
-    def _on_clear_all(self):
+    def _on_clear_all(self) -> None:
         """Clear all pending transfers after confirmation."""
         # Reset all pending values to 0
         for key in self.pending_transfers:
@@ -605,7 +605,7 @@ class TransferDialog(UIWindow):
             self._update_pending_label(key)
         logger.info("TransferDialog: Cleared all pending transfers")
 
-    def _on_confirm(self):
+    def _on_confirm(self) -> None:
         """Issue all non-zero transfers as commands."""
         logger.info(
             f"TransferDialog._on_confirm: source={self._current_source} "
@@ -724,7 +724,7 @@ class TransferDialog(UIWindow):
             return True
         return False
 
-    def process_event(self, event):
+    def process_event(self, event) -> bool:
         """Handle UI events."""
         super().process_event(event)
 
@@ -759,7 +759,7 @@ class TransferDialog(UIWindow):
             elif btn == self.btn_clear_all:
                 self._on_clear_all()
 
-    def handle_external_selection(self, obj):
+    def handle_external_selection(self, obj) -> None:
         """Update source/target selection based on an external selection."""
         from game.core.protocols import is_fleet, is_planet
 

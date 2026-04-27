@@ -92,7 +92,7 @@ class SystemSelectionWindow(UIWindow):
             container=self
         )
 
-    def update(self, time_delta):
+    def update(self, time_delta: float) -> None:
         """Process button presses and handle selection confirmation."""
         super().update(time_delta)
 

@@ -3,11 +3,14 @@
 This module contains the filtering and sorting logic for the planet list,
 separated from the UI rendering code.
 """
+from __future__ import annotations
+
+from typing import Any
 from game.core.constants import EARTH_MASS
 from game.ui.utils.formatters import format_compact_number
 
 
-def gather_planets(galaxy, empire):
+def gather_planets(galaxy, empire) -> Any:
     """Collect all planets from the galaxy with pre-computed filter values.
 
     Args:
@@ -40,7 +43,7 @@ def gather_planets(galaxy, empire):
     return planets
 
 
-def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max_t, min_m, max_m, filter_owner=None, empire=None):
+def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max_t, min_m, max_m, filter_owner=None, empire=None) -> Any:
     """Filter planets based on search criteria.
 
     Args:
@@ -58,7 +61,7 @@ def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max
     """
     empire_id = empire.id if empire else -1
 
-    def matches_filter(p):
+    def matches_filter(p) -> bool:
         # Name (use cached lowercase)
         if search_lower and search_lower not in p._cached_name_lower:
             return False
@@ -96,7 +99,7 @@ def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max
     return [p for p in planets if matches_filter(p)]
 
 
-def sort_planets(planets, sort_column_id, sort_descending, columns):
+def sort_planets(planets, sort_column_id, sort_descending, columns) -> Any:
     """Sort planets by the specified column.
 
     Args:
@@ -128,7 +131,7 @@ def sort_planets(planets, sort_column_id, sort_descending, columns):
         planets.sort(key=lambda p: p._cached_type_category, reverse=sort_descending)
     else:
         # Fallback for other columns
-        def sort_key(p):
+        def sort_key(p) -> Any:
             if 'func' in col:
                 return col['func'](p)
             elif 'attr' in col:
@@ -146,7 +149,7 @@ def sort_planets(planets, sort_column_id, sort_descending, columns):
     return planets
 
 
-def get_column_value(planet, col):
+def get_column_value(planet, col) -> Any:
     """Get the display value for a planet in a given column.
 
     Args:
@@ -174,7 +177,7 @@ def get_column_value(planet, col):
     return ""
 
 
-def compute_planet_ranges(all_planets):
+def compute_planet_ranges(all_planets) -> Any:
     """Compute min/max ranges for filter sliders from actual planet data.
 
     Args:
@@ -227,7 +230,7 @@ def compute_planet_ranges(all_planets):
     return ranges
 
 
-def get_system_name(planet):
+def get_system_name(planet) -> Any:
     """Get the system name for a planet.
 
     Uses cached system name attached during gather_planets().
@@ -242,7 +245,7 @@ def get_system_name(planet):
     return getattr(planet, '_cached_system_name', "?")
 
 
-def get_owner_name(planet, empires, empire):
+def get_owner_name(planet, empires, empire) -> Any:
     """Get the owner name for a planet, with proper empire lookup.
 
     PROJ-198 Phase 4: Changed signature from (planet, galaxy, empire) to (planet, empires, empire)
@@ -274,7 +277,7 @@ def get_owner_name(planet, empires, empire):
     return "Enemy"
 
 
-def get_mass_earth(planet):
+def get_mass_earth(planet) -> str:
     """Get the mass of a planet in Earth masses.
 
     Args:
@@ -287,7 +290,7 @@ def get_mass_earth(planet):
     return f"{planet.mass/m_earth:.2f}"
 
 
-def get_resource_str(planet, resource_name):
+def get_resource_str(planet, resource_name) -> str:
     """Get formatted resource string for a planet.
 
     Args:

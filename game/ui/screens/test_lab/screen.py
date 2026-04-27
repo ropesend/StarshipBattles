@@ -11,6 +11,9 @@ This screen follows the MVVM pattern documented in
 class under 300 lines — delegate logic to ViewModel / Renderer /
 InputHandler / Controller. FleetBattleSetupScreen is the sibling exemplar.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 import os
@@ -141,65 +144,65 @@ class TestLabScreen:
     # ─────────────────────────────────────────────────────────────────
 
     @property
-    def selected_category(self):
+    def selected_category(self) -> Any:
         return self.controller.ui_state.get_selected_category()
 
     @selected_category.setter
-    def selected_category(self, value):
+    def selected_category(self, value) -> None:
         self.controller.ui_state.select_category(value)
 
     @property
-    def selected_test_id(self):
+    def selected_test_id(self) -> Any:
         return self.controller.ui_state.get_selected_test_id()
 
     @selected_test_id.setter
-    def selected_test_id(self, value):
+    def selected_test_id(self, value) -> None:
         self.controller.ui_state.select_test(value)
 
     @property
-    def category_hover(self):
+    def category_hover(self) -> Any:
         return self.controller.ui_state.get_category_hover()
 
     @category_hover.setter
-    def category_hover(self, value):
+    def category_hover(self, value) -> None:
         self.controller.ui_state.set_category_hover(value)
 
     @property
-    def test_hover(self):
+    def test_hover(self) -> Any:
         return self.controller.ui_state.get_test_hover()
 
     @test_hover.setter
-    def test_hover(self, value):
+    def test_hover(self, value) -> None:
         self.controller.ui_state.set_test_hover(value)
 
     @property
-    def headless_running(self):
+    def headless_running(self) -> Any:
         return self.controller.ui_state.is_headless_running()
 
     @headless_running.setter
-    def headless_running(self, value):
+    def headless_running(self, value) -> None:
         self.controller.ui_state.set_headless_running(value)
 
     @property
-    def output_log(self):
+    def output_log(self) -> Any:
         return self.controller.output_log
 
     @property
-    def all_scenarios(self):
+    def all_scenarios(self) -> Any:
         return self.controller.all_scenarios
 
     @property
-    def batch_running(self):
+    def batch_running(self) -> Any:
         """Delegate batch_running to executor."""
         return self._executor.batch_running
 
     @property
-    def batch_current_index(self):
+    def batch_current_index(self) -> Any:
         """Delegate batch_current_index to executor."""
         return self._executor.batch_current_index
 
     @property
-    def batch_total(self):
+    def batch_total(self) -> Any:
         """Delegate batch_total to executor."""
         return self._executor.batch_total
 
@@ -208,52 +211,52 @@ class TestLabScreen:
     # ─────────────────────────────────────────────────────────────────
 
     @property
-    def ship_panels(self):
+    def ship_panels(self) -> Any:
         return self._viewmodel.ship_panels
 
     @property
-    def component_panels(self):
+    def component_panels(self) -> Any:
         return self._viewmodel.component_panels
 
     @property
-    def tabbed_ship_panel(self):
+    def tabbed_ship_panel(self) -> Any:
         return self._viewmodel.tabbed_ship_panel
 
     @property
-    def results_panel(self):
+    def results_panel(self) -> Any:
         return self._viewmodel.results_panel
 
     @property
-    def test_details_panel(self):
+    def test_details_panel(self) -> Any:
         return self._viewmodel.test_details_panel
 
     @property
-    def json_popup(self):
+    def json_popup(self) -> Any:
         return self._viewmodel.json_popup
 
     @property
-    def confirmation_dialog(self):
+    def confirmation_dialog(self) -> Any:
         return self._viewmodel.confirmation_dialog
 
     # ─────────────────────────────────────────────────────────────────
     # Delegate methods
     # ─────────────────────────────────────────────────────────────────
 
-    def _extract_ships_from_scenario(self, test_id):
+    def _extract_ships_from_scenario(self, test_id) -> Any:
         """Extract ship information from test scenario metadata."""
         return self._data_extractor.extract_ships(test_id)
 
-    def _load_component_data(self, component_id):
+    def _load_component_data(self, component_id) -> Any:
         """Load component JSON from components.json by ID."""
         return self._data_extractor.load_component(component_id)
 
-    def _create_ship_panels(self, test_id):
+    def _create_ship_panels(self, test_id) -> None:
         """Create ship panels and component panels for the selected test."""
         panels = self._panel_manager.create_ship_panels(test_id, self)
         ship_panels, component_panels, tabbed_panel = panels
         self._viewmodel.update_ship_panels(ship_panels, component_panels, tabbed_panel)
 
-    def _create_results_panel(self, test_id):
+    def _create_results_panel(self, test_id) -> None:
         """Create results panel for selected test."""
         callbacks = {
             'on_view_battle_states': self._on_view_battle_states,
@@ -266,14 +269,14 @@ class TestLabScreen:
         results_panel, details_panel = panels
         self._viewmodel.update_results_panels(results_panel, details_panel)
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create UI buttons."""
         self.btn_back, callbacks = self._panel_manager.create_ui_buttons(
             self.ui_manager, self._on_back
         )
         self._button_callbacks.update(callbacks)
 
-    def _get_filtered_scenarios(self):
+    def _get_filtered_scenarios(self) -> Any:
         """Get scenarios filtered by selected category/group and tags."""
         # Start with category or group filter
         selected_group = self.controller.ui_state.get_selected_group()
@@ -308,7 +311,7 @@ class TestLabScreen:
 
         return filtered
 
-    def reset_selection(self):
+    def reset_selection(self) -> None:
         """Capture results from visual test and preserve selection.
 
         Called when returning from battle. Stores test results if the test
@@ -349,7 +352,7 @@ class TestLabScreen:
         # Keep selected_test_id so the test remains visually selected
         logger.debug(f"Returned from battle, test selection preserved: {self.selected_test_id}")
 
-    def _on_back(self):
+    def _on_back(self) -> None:
         """Return to main menu via scene_callback (PROJ-65 pattern)."""
         if self.scene_callback:
             self.scene_callback("return_to_menu")
@@ -358,7 +361,7 @@ class TestLabScreen:
     # Executor callback helpers
     # ─────────────────────────────────────────────────────────────────
 
-    def _render_progress(self, title, subtitle, detail):
+    def _render_progress(self, title, subtitle, detail) -> None:
         """Render a progress overlay for headless test execution."""
         overlay = pygame.Surface((600, 200))
         overlay.fill(theme.BG_OVERLAY)
@@ -380,17 +383,17 @@ class TestLabScreen:
         screen_center_y = self.game.screen.get_height() // 2
         self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
 
-    def _draw_and_flip(self):
+    def _draw_and_flip(self) -> None:
         """Draw current screen state with progress overlay and flip display."""
         self.game.screen.fill(theme.BG_PRIMARY)
         self.draw(self.game.screen)
         pygame.display.flip()
 
-    def _get_engine(self):
+    def _get_engine(self) -> Any:
         """Get the battle engine from battle scene."""
         return self.game.battle_scene.engine
 
-    def _ensure_engine(self):
+    def _ensure_engine(self) -> None:
         """Ensure battle engine exists (create if needed)."""
         if self.game.battle_scene.engine is None:
             from game.ai.ai_factory import AIControllerFactory
@@ -398,7 +401,7 @@ class TestLabScreen:
                 ai_factory=AIControllerFactory()
             )
 
-    def _switch_to_battle(self, scenario):
+    def _switch_to_battle(self, scenario) -> None:
         """Configure a visual-mode battle via the spec compiler + controller.
 
         PROJ-269 Phase 6 Task 6.9/6.10: the legacy `scenario.setup(engine)`
@@ -488,7 +491,7 @@ class TestLabScreen:
         if self.scene_callback:
             self.scene_callback("start_test_battle", scenario=scenario)
 
-    def _on_view_battle_states(self, run_record, run_number):
+    def _on_view_battle_states(self, run_record, run_number) -> None:
         """Open the battle state viewer for a test run."""
         from combat_lab.battle_state_capture import load_battle_state_json
 
@@ -510,12 +513,12 @@ class TestLabScreen:
         else:
             self.output_log.append("ERROR: Could not load battle state files")
 
-    def _on_use_seed_from_run(self, seed):
+    def _on_use_seed_from_run(self, seed) -> None:
         """Copy the seed from a test run to the custom seed control."""
         self.controller.ui_state.set_custom_seed(seed)
         self.output_log.append(f"Seed set to: {seed}")
 
-    def _on_copy_results(self, run_record, run_number):
+    def _on_copy_results(self, run_record, run_number) -> None:
         """Copy test results to clipboard."""
         lines = []
         lines.append(f"Test: {self.selected_test_id}")
@@ -552,15 +555,15 @@ class TestLabScreen:
         except pygame.error as e:
             self.output_log.append(f"Failed to copy to clipboard: {e}")
 
-    def _on_run(self):
+    def _on_run(self) -> None:
         """Run the selected test scenario visually in Combat Lab."""
         self._executor.run_visual(self.selected_test_id)
 
-    def _on_run_visual_baseline(self):
+    def _on_run_visual_baseline(self) -> None:
         """Run the baseline battle of a ComparisonScenario visually."""
         self._executor.run_visual_baseline(self.selected_test_id)
 
-    def _on_run_headless(self):
+    def _on_run_headless(self) -> None:
         """Run the selected test scenario in headless mode (fast, no visuals)."""
         self.headless_running = True
         self._executor.run_headless(self.selected_test_id)
@@ -569,15 +572,15 @@ class TestLabScreen:
         if self._viewmodel.results_panel:
             self._viewmodel.results_panel.set_test(self.selected_test_id)
 
-    def _on_run_all_tests(self):
+    def _on_run_all_tests(self) -> None:
         """Run all visible tests headlessly in sequence."""
         self._executor.run_all(self._get_filtered_scenarios())
 
-    def _continue_batch_test(self):
+    def _continue_batch_test(self) -> None:
         """Continue batch execution (called from event handler)."""
         self._executor.continue_batch()
 
-    def _prompt_for_custom_seed(self):
+    def _prompt_for_custom_seed(self) -> None:
         """Prompt user to enter a custom seed value."""
         import tkinter as tk
         from tkinter import simpledialog
@@ -613,18 +616,18 @@ class TestLabScreen:
     # IScene Protocol
     # ─────────────────────────────────────────────────────────────────
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Handle a single pygame event (IScene protocol)."""
         self.handle_input([event])
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         """Handle window resize (IScene protocol)."""
         self.screen_width = width
         self.screen_height = height
         self.ui_manager.set_window_resolution((width, height))
         self._create_ui()
 
-    def handle_input(self, events):
+    def handle_input(self, events) -> None:
         """Handle user input for category selection, test selection, and buttons."""
         for event in events:
             # Process pygame_gui events first
@@ -643,7 +646,7 @@ class TestLabScreen:
                 event, filtered_scenarios, self.categories, self._executor
             )
 
-    def update(self, dt: float = 0):
+    def update(self, dt: float = 0) -> None:
         """Update UI state (IScene protocol)."""
         # Update tabbed ship panel (hover states)
         if self._viewmodel.tabbed_ship_panel:
@@ -661,7 +664,7 @@ class TestLabScreen:
         if self._viewmodel.results_panel:
             self._viewmodel.results_panel.update()
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the Combat Lab UI."""
         # Delegate to renderer
         self._renderer.draw(
@@ -683,7 +686,7 @@ class TestLabScreen:
     # Backward compatibility methods (kept for external callers)
     # ─────────────────────────────────────────────────────────────────
 
-    def _show_ships_json(self, test_id):
+    def _show_ships_json(self, test_id) -> None:
         """Show JSON for all ships used in the test."""
         if test_id is None:
             return
@@ -719,7 +722,7 @@ class TestLabScreen:
         popup = JSONPopup(f"Ships JSON - {test_id}", ships_data, WIDTH, HEIGHT, self.ui_manager)
         self._viewmodel.open_json_popup(popup)
 
-    def _show_components_json(self):
+    def _show_components_json(self) -> None:
         """Show JSON for all components in the test data."""
         components_path = os.path.join(get_test_data_dir(), 'components.json')
 

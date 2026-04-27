@@ -2,6 +2,7 @@
 
 Contains popup dialogs for displaying JSON data and confirming changes.
 """
+from __future__ import annotations
 
 import json
 import pygame
@@ -60,13 +61,13 @@ class JSONPopup:
         )
         self.is_open = True
 
-    def close(self):
+    def close(self) -> None:
         """Close the popup."""
         self.is_open = False
         if self.close_button:
             self.close_button.kill()
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle user input."""
         # Handle pygame_gui button press
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -82,7 +83,7 @@ class JSONPopup:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.close()
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the popup."""
         if not self.is_open:
             return
@@ -177,7 +178,7 @@ class ConfirmationDialog:
         self.is_open = True
         self.result = None  # Will be 'confirm' or 'cancel'
 
-    def _handle_confirm(self):
+    def _handle_confirm(self) -> None:
         """User confirmed changes."""
         self.result = 'confirm'
         self.is_open = False
@@ -185,7 +186,7 @@ class ConfirmationDialog:
         if self.on_confirm:
             self.on_confirm()
 
-    def _handle_cancel(self):
+    def _handle_cancel(self) -> None:
         """User canceled changes."""
         self.result = 'cancel'
         self.is_open = False
@@ -193,14 +194,14 @@ class ConfirmationDialog:
         if self.on_cancel:
             self.on_cancel()
 
-    def _kill_buttons(self):
+    def _kill_buttons(self) -> None:
         """Kill UIButtons when dialog closes."""
         if self.confirm_button:
             self.confirm_button.kill()
         if self.cancel_button:
             self.cancel_button.kill()
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle user input."""
         # Handle pygame_gui button presses
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -215,7 +216,7 @@ class ConfirmationDialog:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self._handle_cancel()
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the confirmation dialog."""
         if not self.is_open:
             return

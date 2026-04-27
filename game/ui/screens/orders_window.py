@@ -105,13 +105,13 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
         self.rebuild_list()
         self._apply_tooltips()
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         super().update(dt)
         if len(self.entity.orders) != self._last_order_count:
             self._last_order_count = len(self.entity.orders)
             self.rebuild_list()
 
-    def rebuild_list(self):
+    def rebuild_list(self) -> None:
         """Clear and rebuild the order list rows."""
         for row in self.rows:
             for key, element in row.items():
@@ -207,7 +207,7 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
 
             self.rows.append(row_dict)
 
-    def _get_order_description(self, order):
+    def _get_order_description(self, order) -> str:
         """Get human-readable description for an order."""
         if order.type == OrderType.MOVE:
             t = order.target
@@ -271,7 +271,7 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
             return True
         return False
 
-    def process_event(self, event):
+    def process_event(self, event) -> bool:
         handled = super().process_event(event)
 
         if event.type == pygame.KEYDOWN:
@@ -304,7 +304,7 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
 
         return handled
 
-    def move_order(self, index, direction):
+    def move_order(self, index, direction) -> None:
         if not self._reorder_order_callback:
             return
         new_index = index + direction
@@ -312,21 +312,21 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
             self._reorder_order_callback(self.entity.id, index, direction)
             self.rebuild_list()
 
-    def edit_order(self, index):
+    def edit_order(self, index) -> None:
         if not self._edit_order_callback:
             return
         if 0 <= index < len(self.entity.orders):
             order = self.entity.orders[index]
             self._edit_order_callback(self.entity.id, index, order)
 
-    def delete_order(self, index):
+    def delete_order(self, index) -> None:
         if not self._delete_order_callback:
             return
         if 0 <= index < len(self.entity.orders):
             self._delete_order_callback(self.entity.id, index)
             self.rebuild_list()
 
-    def show_clear_confirmation(self):
+    def show_clear_confirmation(self) -> None:
         entity_label = self.entity.name if self.entity_type == "planet" else f"fleet {self.entity.id}"
         UIConfirmationDialog(
             rect=pygame.Rect(0, 0, 300, 200),
@@ -338,7 +338,7 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
             object_id='#confirm_clear_orders'
         )
 
-    def handle_global_event(self, event):
+    def handle_global_event(self, event) -> bool:
         """Handle events from the wider application (like dialog confirmations)."""
         if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element.object_ids[-1] == '#confirm_clear_orders':

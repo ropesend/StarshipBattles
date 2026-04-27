@@ -77,7 +77,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         self._create_ui()
         self._load_races()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the dialog UI elements."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -120,7 +120,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         )
         self.no_races_label.hide()
 
-    def _load_races(self):
+    def _load_races(self) -> None:
         """Load all races and populate the list."""
         races = self.race_library.get_all_races()
 
@@ -250,7 +250,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         """
         return self._asset_loader.load_flag_preview(flag_id, self.PREVIEW_SIZE)
 
-    def _select_row(self, index: int):
+    def _select_row(self, index: int) -> None:
         """Select a race row."""
         # Deselect previous
         if self.selected_row_index >= 0 and self.selected_row_index < len(self.race_rows):

@@ -5,6 +5,10 @@ Mirrors planet_list_presets.py for stars.
 
 PROJ-231: Star List Panel.
 """
+from __future__ import annotations
+
+from typing import Any
+
 from game.ui.screens.planet_list_presets import PresetManager
 
 
@@ -17,7 +21,7 @@ class StarPresetManager(PresetManager):
     PRESET_FILENAME = 'star_ui_presets.json'
 
 
-def capture_star_list_state(columns, txt_name_filter, filter_types, ui_filters):
+def capture_star_list_state(columns, txt_name_filter, filter_types, ui_filters) -> dict[str, Any]:
     """Capture current star list state for saving as a preset.
 
     Args:
@@ -53,7 +57,7 @@ def capture_star_list_state(columns, txt_name_filter, filter_types, ui_filters):
     }
 
 
-def apply_star_list_state(state, columns, txt_name_filter, filter_types, ui_filters):
+def apply_star_list_state(state, columns, txt_name_filter, filter_types, ui_filters) -> list:
     """Apply a saved state to the star list.
 
     Args:

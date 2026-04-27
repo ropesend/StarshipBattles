@@ -13,6 +13,8 @@ Cross-layer imports (acceptable for UI):
 - RaceConfig: Runtime - callback data and configuration state
 - RaceLibrary: Runtime - save/load race configurations
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from typing import Callable, Optional, List, Tuple, TYPE_CHECKING
@@ -178,7 +180,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._create_ui()
         self._show_step(self.current_step)
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create all UI elements."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -205,7 +207,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             container=container
         )
 
-    def _create_tab_buttons(self, container, content_width: int):
+    def _create_tab_buttons(self, container, content_width: int) -> None:
         """Create clickable tab buttons for navigation."""
         tab_y = 5
         num_tabs = len(self.TAB_NAMES)
@@ -223,7 +225,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             btn.tab_index = i  # Store tab index on button
             self.tab_buttons.append(btn)
 
-    def _create_step_panels(self, container, width: int, top: int, height: int):
+    def _create_step_panels(self, container, width: int, top: int, height: int) -> None:
         """Create panels for each tab.
 
         PROJ-66 Phase 6: Expanded from 5 to 7 panels (added Identity and Aptitudes).
@@ -305,7 +307,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Identity Panel (NEW - PROJ-66 Phase 6)
     # =========================================================================
 
-    def _create_identity_panel_content(self, panel):
+    def _create_identity_panel_content(self, panel) -> None:
         """Create content for Identity tab using RaceIdentityPanel.
 
         PROJ-66 Phase 6: New panel for race identity configuration.
@@ -320,7 +322,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Visuals Panel (Flags and Portraits)
     # =========================================================================
 
-    def _create_visuals_panel_content(self, panel):
+    def _create_visuals_panel_content(self, panel) -> None:
         """Create content for Visuals tab: Flags and Portraits.
 
         PROJ-66 Phase 6: Race name moved to Identity tab.
@@ -357,7 +359,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             asset_loader=self._asset_loader
         )
 
-    def _on_theme_selected(self, theme_id: str):
+    def _on_theme_selected(self, theme_id: str) -> None:
         """Handle theme selection.
 
         PROJ-12 Phase 4: Button highlighting now handled by RaceThemeGallery.
@@ -373,7 +375,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Ships Panel (dedicated ship theme selection)
     # =========================================================================
 
-    def _create_ships_panel_content(self, panel):
+    def _create_ships_panel_content(self, panel) -> None:
         """Create content for Ships tab: Ship theme selection with large previews."""
         panel_width = panel.get_relative_rect().width - 20
         panel_height = panel.get_relative_rect().height
@@ -419,7 +421,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         # Note: theme selection is handled by RaceThemeGallery via on_select_callback
 
-    def _refresh_ship_preview(self, theme_id: str):
+    def _refresh_ship_preview(self, theme_id: str) -> None:
         """Refresh the ship preview area with ships from the selected theme."""
         logger.debug(f"_refresh_ship_preview called with theme_id: {theme_id}")
 
@@ -553,7 +555,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Environment Panel (PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel)
     # =========================================================================
 
-    def _create_environment_panel_content(self, panel):
+    def _create_environment_panel_content(self, panel) -> None:
         """Create content for Environment tab using extracted RaceEnvironmentPanel."""
         self._environment_panel = RaceEnvironmentPanel(
             panel=panel,
@@ -565,7 +567,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Aptitudes Panel (NEW - PROJ-66 Phase 6)
     # =========================================================================
 
-    def _create_aptitudes_panel_content(self, panel):
+    def _create_aptitudes_panel_content(self, panel) -> None:
         """Create content for Aptitudes tab using RaceAptitudesPanel.
 
         PROJ-66 Phase 6: New panel for point-buy aptitude configuration.
@@ -580,7 +582,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Descriptions Panel (PROJ-12 Phase 4: Delegates to RaceDescriptionPanel)
     # =========================================================================
 
-    def _create_descriptions_panel_content(self, panel):
+    def _create_descriptions_panel_content(self, panel) -> None:
         """Create content for Descriptions tab using extracted RaceDescriptionPanel."""
         self._description_panel = RaceDescriptionPanel(
             panel=panel,
@@ -799,7 +801,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._llm_error_popup = None
         self._llm_error_popup_btn_ok = None
 
-    def _update_description_char_counts(self):
+    def _update_description_char_counts(self) -> None:
         """Update character count labels for description text boxes.
 
         PROJ-12 Phase 4: Delegates to RaceDescriptionPanel.
@@ -807,7 +809,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if self._description_panel:
             self._description_panel.update_char_counts()
 
-    def _update_descriptions_from_text(self):
+    def _update_descriptions_from_text(self) -> None:
         """Update race_config from description text boxes.
 
         PROJ-12 Phase 4: Delegates to RaceDescriptionPanel.
@@ -819,7 +821,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Summary Panel (Landing Page) - PROJ-44 Phase 7: Delegates to RaceSummaryPanel
     # =========================================================================
 
-    def _create_summary_panel_content(self, panel):
+    def _create_summary_panel_content(self, panel) -> None:
         """Create content for Summary tab using extracted RaceSummaryPanel."""
         self._summary_panel = RaceSummaryPanel(
             panel=panel,
@@ -834,7 +836,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # FEAT-12: master Randomize All button reference.
         self.btn_randomize_all = self._summary_panel.btn_randomize_all
 
-    def _refresh_summary(self):
+    def _refresh_summary(self) -> None:
         """Refresh summary panel with current race_config data.
 
         PROJ-44 Phase 7: Delegates to RaceSummaryPanel.
@@ -852,7 +854,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Navigation
     # =========================================================================
 
-    def _create_navigation_buttons(self, container, content_width: int, content_height: int):
+    def _create_navigation_buttons(self, container, content_width: int, content_height: int) -> None:
         """Create bottom action buttons."""
         button_y = content_height - 60
         button_width = 120
@@ -884,7 +886,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             container=container
         )
 
-    def _show_step(self, step_num: int):
+    def _show_step(self, step_num: int) -> None:
         """
         Show the specified tab panel.
 
@@ -928,7 +930,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             if self._aptitudes_panel:
                 self._aptitudes_panel.update_budget_display()
 
-    def _update_navigation_buttons(self):
+    def _update_navigation_buttons(self) -> None:
         """Update navigation button visibility based on current tab."""
         # Save button is only shown on Summary tab
         if self.current_step == self.TAB_SUMMARY:
@@ -950,7 +952,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         else:
             self.btn_randomize.hide()
 
-    def _update_tab_highlighting(self):
+    def _update_tab_highlighting(self) -> None:
         """Update tab button visual states to show current tab."""
         for i, btn in enumerate(self.tab_buttons):
             if i == self.current_step:
@@ -993,11 +995,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         result = validator.validate(self.race_config)
         return result.is_valid, result.message
 
-    def _on_tab_clicked(self, tab_index: int):
+    def _on_tab_clicked(self, tab_index: int) -> None:
         """Handle tab button click."""
         self._show_step(tab_index)
 
-    def _on_load_race(self):
+    def _on_load_race(self) -> None:
         """Handle Load Race button click - open in-game race browser dialog."""
         logger.debug("Opening race browser dialog")
 
@@ -1021,7 +1023,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             on_cancel_callback=self._on_race_browser_cancelled
         )
 
-    def _on_race_selected(self, loaded_config: RaceConfig):
+    def _on_race_selected(self, loaded_config: RaceConfig) -> None:
         """Handle race selection from browser dialog."""
         logger.info(f"Loaded race: {loaded_config.name}")
         self.race_config = loaded_config
@@ -1037,11 +1039,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Refresh the summary
         self._refresh_summary()
 
-    def _on_race_browser_cancelled(self):
+    def _on_race_browser_cancelled(self) -> None:
         """Handle race browser cancellation."""
         logger.debug("Race browser cancelled")
 
-    def _populate_ui_from_config(self):
+    def _populate_ui_from_config(self) -> None:
         """Populate all UI elements from the current race_config.
 
         PROJ-66 Phase 6: Added identity and aptitudes panels.
@@ -1091,7 +1093,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if self._description_panel:
             self._description_panel.set_from_config()
 
-    def _on_randomize(self):
+    def _on_randomize(self) -> None:
         """Handle Generate Random button click — dispatches by current tab."""
         if self.current_step == self.TAB_IDENTITY:
             self._randomize_identity()
@@ -1104,7 +1106,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         elif self.current_step == self.TAB_APTITUDES:
             self._randomize_aptitudes()
 
-    def _randomize_identity(self):
+    def _randomize_identity(self) -> None:
         """Randomize all identity fields using portrait-aware names."""
         portrait_id = self.race_config.portrait_id or None
         result = RaceRandomizer.randomize_identity(portrait_id=portrait_id)
@@ -1124,7 +1126,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         logger.info(f"Randomized identity: {result['race_name']}")
 
-    def _randomize_visuals(self):
+    def _randomize_visuals(self) -> None:
         """Randomize flag and portrait selections."""
         if self._flag_gallery:
             flag_ids = [a[0] for a in self._flag_gallery._discover_assets()]
@@ -1142,7 +1144,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         logger.info(f"Randomized visuals: flag={self.race_config.flag_id}, portrait={self.race_config.portrait_id}")
 
-    def _randomize_ships(self):
+    def _randomize_ships(self) -> None:
         """Randomize ship theme selection."""
         if self._theme_gallery:
             theme_ids = [a[0] for a in self._theme_gallery._discover_assets()]
@@ -1158,7 +1160,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # FEAT-12: Environment, Aptitudes, and Randomize All
     # =========================================================================
 
-    def _randomize_environment(self):
+    def _randomize_environment(self) -> None:
         """Randomize environmental preferences within the available budget.
 
         Available budget = 100 - cost(other categories). If the user has
@@ -1194,7 +1196,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             f"happiness={result['base_happiness']:.2f}"
         )
 
-    def _randomize_aptitudes(self):
+    def _randomize_aptitudes(self) -> None:
         """Randomize the 7 paid aptitudes within the available budget."""
         from game.strategy.data.race_point_budget import RacePointBudget
 
@@ -1218,7 +1220,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         logger.info(f"Randomized aptitudes: {aptitudes}")
 
-    def _randomize_all(self):
+    def _randomize_all(self) -> None:
         """Master "Randomize All" — fills every category except Description.
 
         Delegates to `RaceRandomizer.randomize_all` for the heavy lifting,
@@ -1285,13 +1287,13 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             f"Randomized all: {result['race_name']} on {result['homeworld_type']}"
         )
 
-    def _on_cancel(self):
+    def _on_cancel(self) -> None:
         """Handle Cancel button click."""
         logger.debug("Race setup cancelled")
         self.on_cancel_callback()
         self.kill()
 
-    def _on_save(self):
+    def _on_save(self) -> None:
         """Handle Save button click.
 
         FEAT-05: When editing a loaded species, shows a dialog asking whether
@@ -1316,7 +1318,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # New species — save directly
         self._do_save()
 
-    def _do_save(self):
+    def _do_save(self) -> None:
         """Execute the actual save to library."""
         success, message = self.race_library.save_race(self.race_config)
         if success:
@@ -1328,7 +1330,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         else:
             self.error_label.set_text(message)
 
-    def _show_save_update_dialog(self):
+    def _show_save_update_dialog(self) -> None:
         """FEAT-05: Show dialog asking to overwrite or save as new species."""
         if self._save_update_dialog is not None:
             return  # Already showing
@@ -1396,14 +1398,14 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             object_id="#btn_save_cancel"
         )
 
-    def _on_overwrite_save(self):
+    def _on_overwrite_save(self) -> None:
         """FEAT-05: Overwrite existing species (keep race_id)."""
         if self._save_update_dialog:
             self._save_update_dialog.kill()
             self._save_update_dialog = None
         self._do_save()
 
-    def _on_save_as_new(self):
+    def _on_save_as_new(self) -> None:
         """FEAT-05: Save as new species (clear race_id to generate fresh one)."""
         if self._save_update_dialog:
             self._save_update_dialog.kill()
@@ -1414,7 +1416,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.btn_save.set_text("Save")
         self._do_save()
 
-    def _on_save_dialog_cancel(self):
+    def _on_save_dialog_cancel(self) -> None:
         """FEAT-05: Cancel save dialog — return to editing."""
         if self._save_update_dialog:
             self._save_update_dialog.kill()

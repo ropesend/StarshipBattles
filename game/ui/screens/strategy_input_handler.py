@@ -6,6 +6,7 @@ Extracted from StrategyScreen to reduce file size and improve testability.
 PROJ-71: Refactored to use InputMapper for data-driven keybinding resolution.
 """
 from __future__ import annotations
+from typing import Any
 
 import logging
 import pygame
@@ -40,7 +41,7 @@ class StrategyInputHandler:
         self._click_dispatch = ClickModeDispatcher(self)
         self._ui_router = UIActionRouter(self)
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """
         Process pygame events.
 
@@ -80,7 +81,7 @@ class StrategyInputHandler:
         elif event.type == pygame.MOUSEWHEEL:
             self._handle_scroll(event)
 
-    def _handle_button_press(self, event):
+    def _handle_button_press(self, event) -> None:
         """Handle UI button presses."""
         ui = self.scene.ui
 
@@ -106,13 +107,13 @@ class StrategyInputHandler:
         elif event.ui_element == ui.btn_next_fleet:
             self.scene.cycle_selection('fleet', 1)
 
-    def _handle_keydown(self, event):
+    def _handle_keydown(self, event) -> None:
         """Handle keyboard input via InputMapper."""
         if self._mapper:
             self._handle_keydown_mapped(event)
         # No mapper = no keyboard input (mapper is required)
 
-    def _handle_keydown_mapped(self, event):
+    def _handle_keydown_mapped(self, event) -> None:
         """Handle keyboard input using InputMapper (PROJ-71)."""
         # Build context list based on current state
         contexts = ["strategy", "global", "detail_panel"]
@@ -141,7 +142,7 @@ class StrategyInputHandler:
         if self._fleet_router.handle_detail_action(action):
             return
 
-    def handle_click(self, mx, my, button):
+    def handle_click(self, mx, my, button) -> Any:
         """Handle mouse clicks.
 
         Args:
@@ -156,7 +157,7 @@ class StrategyInputHandler:
             return True
         return self._click_dispatch.dispatch_click(mx, my, button)
 
-    def _handle_scroll(self, event):
+    def _handle_scroll(self, event) -> None:
         """Handle mouse wheel scroll events (PROJ-88: folded from app.py).
 
         Forwards scroll events to the camera, filtering based on mouse position
@@ -180,7 +181,7 @@ class StrategyInputHandler:
         # Forward to camera as single-event list for its update_input processing
         self.scene.camera.update_input(0, [event])
 
-    def update_input(self, dt, events):
+    def update_input(self, dt, events) -> None:
         """
         Update per-frame input state (keyboard polling, hover).
 

@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 
 import pygame
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from game.ui.config import UIConfig
 from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
 
@@ -134,37 +134,37 @@ class StrategyScreen:
     # =========================================================================
 
     @property
-    def galaxy(self):
+    def galaxy(self) -> Any:
         return self.session.galaxy
 
     @property
-    def empires(self):
+    def empires(self) -> Any:
         return self.session.empires
 
     @property
-    def systems(self):
+    def systems(self) -> Any:
         return self.session.systems
 
     @property
-    def player_empire(self):
+    def player_empire(self) -> Any:
         return self.session.player_empire
 
     @property
-    def enemy_empire(self):
+    def enemy_empire(self) -> Any:
         return self.session.enemy_empire
 
     @property
-    def human_player_ids(self):
+    def human_player_ids(self) -> Any:
         return self.session.human_player_ids
 
     @property
-    def current_empire(self):
+    def current_empire(self) -> Any:
         """Get the empire for the current player (supports N players)."""
         current_player_id = self.human_player_ids[self.current_player_index]
         return next((e for e in self.empires if e.id == current_player_id), self.empires[0])
 
     @property
-    def facade(self):
+    def facade(self) -> Any:
         """Public accessor for the strategy session facade.
 
         Used by dialogs and child components that need to issue commands
@@ -173,24 +173,24 @@ class StrategyScreen:
         return self._facade
 
     @property
-    def input_mode(self):
+    def input_mode(self) -> Any:
         return self._input.input_mode
 
     @input_mode.setter
-    def input_mode(self, value):
+    def input_mode(self, value) -> None:
         self._input.input_mode = value
 
     # =========================================================================
     # Lifecycle Methods
     # =========================================================================
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         """Update scene state."""
         self.camera.update(dt)
         self._renderer.update(dt)
         self.ui.update(dt)
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Render the scene."""
         # Always fill entire screen first to prevent remnants from other screens
         screen.fill(BG_BATTLE)
@@ -206,7 +206,7 @@ class StrategyScreen:
         if self.build_queue_screen is not None:
             self.build_queue_screen.draw(screen)
 
-    def handle_resize(self, width, height):
+    def handle_resize(self, width, height) -> None:
         """Handle window resize."""
         self.screen_width = width
         self.screen_height = height
@@ -219,15 +219,15 @@ class StrategyScreen:
     # Event Handling (delegates to InputHandler)
     # =========================================================================
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Process pygame events."""
         self._input.handle_event(event)
 
-    def handle_click(self, mx, my, button):
+    def handle_click(self, mx, my, button) -> Any:
         """Handle mouse clicks."""
         return self._input.handle_click(mx, my, button)
 
-    def update_input(self, dt, events):
+    def update_input(self, dt, events) -> None:
         """Update input state."""
         self._input.update_input(dt, events)
 
@@ -235,11 +235,11 @@ class StrategyScreen:
     # Navigation (delegates to CameraNavigator)
     # =========================================================================
 
-    def center_camera_on(self, obj):
+    def center_camera_on(self, obj) -> None:
         """Center camera on a game object."""
         self._camera_nav.center_on(obj)
 
-    def cycle_selection(self, obj_type, direction):
+    def cycle_selection(self, obj_type, direction) -> None:
         """Cycle selection through colonies or fleets."""
         new_obj = self._camera_nav.cycle_selection(obj_type, direction)
         if new_obj:
@@ -250,7 +250,7 @@ class StrategyScreen:
     # Colonization (delegates to ColonizationSystem)
     # =========================================================================
 
-    def on_colonize_click(self):
+    def on_colonize_click(self) -> None:
         """Handle colonize action — always opens load transfer dialog first.
 
         Flow:
@@ -272,7 +272,7 @@ class StrategyScreen:
         # Input mode is set to COLONIZE_TARGET by the fleet_command_router
         # regardless of whether the load dialog was opened
 
-    def _on_colonize_planet_selected(self, planet):
+    def _on_colonize_planet_selected(self, planet) -> None:
         """Handle planet selection — issue colonize command, then open drop dialog.
 
         Orders queued: MOVE + COLONIZE, then TRANSFER(unload) from drop dialog.
@@ -290,7 +290,7 @@ class StrategyScreen:
                 self.ui.open_transfer_dialog(fleet, planet_global_hex)
             self.on_ui_selection(fleet)
 
-    def request_colonize_order(self, fleet, planet=None):
+    def request_colonize_order(self, fleet, planet=None) -> None:
         """Handle colonize request from UI."""
         self.selected_fleet = fleet
         result = self._colonization.request_colonize_order(fleet, planet)
@@ -306,7 +306,7 @@ class StrategyScreen:
     _edit_move_order_index = None
     _edit_move_fleet = None
 
-    def on_edit_order(self, entity, order_index, order):
+    def on_edit_order(self, entity, order_index, order) -> None:
         """Handle edit request for an order in the queue.
 
         Args:
@@ -319,7 +319,7 @@ class StrategyScreen:
         elif order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
             self._start_edit_transfer(entity, order_index, order)
 
-    def _start_edit_move(self, fleet, order_index, order):
+    def _start_edit_move(self, fleet, order_index, order) -> None:
         """Enter EDIT_MOVE mode: pan to old destination, show ghost, wait for new click."""
         old_hex = order.target
         if not isinstance(old_hex, HexCoord):
@@ -334,7 +334,7 @@ class StrategyScreen:
         self._camera_nav.center_on_hex(old_hex)
         self.input_mode = 'EDIT_MOVE'
 
-    def complete_edit_move(self, new_hex):
+    def complete_edit_move(self, new_hex) -> None:
         """Finalize MOVE order edit: update the order target in-place.
 
         Args:
@@ -358,7 +358,7 @@ class StrategyScreen:
             self.ui.window_manager.fleet_orders_window.rebuild_list()
         self.on_ui_selection(fleet)
 
-    def _start_edit_transfer(self, fleet, order_index, order):
+    def _start_edit_transfer(self, fleet, order_index, order) -> None:
         """Re-open transfer dialog pre-populated with current order amounts."""
         # Determine the hex where this transfer will occur
         # Walk orders up to this index to find the last MOVE destination
@@ -380,7 +380,7 @@ class StrategyScreen:
     # Turn Management (delegates to GameStateManager)
     # =========================================================================
 
-    def advance_turn(self):
+    def advance_turn(self) -> None:
         """End current player's order phase. Process turn when all humans ready."""
         self._game_state.advance_turn()
 
@@ -388,7 +388,7 @@ class StrategyScreen:
     # Selection
     # =========================================================================
 
-    def on_ui_selection(self, obj):
+    def on_ui_selection(self, obj) -> None:
         """Called when user selects an item in the UI list."""
         self.selected_object = obj
 
@@ -421,19 +421,19 @@ class StrategyScreen:
     # Actions
     # =========================================================================
 
-    def on_build_yard_click(self):
+    def on_build_yard_click(self) -> None:
         """Open build queue screen for selected planet."""
         self._build_queue.on_build_yard_click()
 
-    def on_navigate_to_hex_build(self, hex_coord, source):
+    def on_navigate_to_hex_build(self, hex_coord, source) -> None:
         """Navigate to the build queue screen for a specific hex and source."""
         self._build_queue.on_navigate_to_hex_build(hex_coord, source)
 
-    def on_fleet_build_click(self):
+    def on_fleet_build_click(self) -> None:
         """Open build queue screen for selected fleet (PROJ-67: Fleet Space Yards)."""
         self._build_queue.on_fleet_build_click()
 
-    def on_design_click(self):
+    def on_design_click(self) -> None:
         """Handle 'Design' button click - opens Design Workshop."""
         logger.debug("Design button clicked - opening Design Workshop")
 
@@ -446,7 +446,7 @@ class StrategyScreen:
         if self.scene_callback:
             self.scene_callback("open_builder", context_data=context_data)
 
-    def on_menu_option(self, option: str):
+    def on_menu_option(self, option: str) -> None:
         """Dispatch menu option from the strategy menu panel.
 
         Args:
@@ -467,7 +467,7 @@ class StrategyScreen:
             if self.scene_callback:
                 self.scene_callback("quit_game")
 
-    def _show_load_game_dialog(self):
+    def _show_load_game_dialog(self) -> None:
         """Open the save selection window for loading a game."""
         from game.ui.screens.save_selection_window import SaveSelectionWindow
         from game.ui.utils import create_centered_rect
@@ -480,7 +480,7 @@ class StrategyScreen:
             on_cancel_callback=lambda: None
         )
 
-    def _on_load_selected(self, save_path, turn_number=None):
+    def _on_load_selected(self, save_path, turn_number=None) -> None:
         """Handle save selection from load dialog.
 
         Args:
@@ -490,7 +490,7 @@ class StrategyScreen:
         if self.scene_callback:
             self.scene_callback("load_game", save_path=save_path, turn_number=turn_number)
 
-    def _confirm_quit_to_menu(self):
+    def _confirm_quit_to_menu(self) -> None:
         """Show confirmation dialog before quitting to main menu."""
         import pygame_gui.windows
 
@@ -503,13 +503,13 @@ class StrategyScreen:
             window_title="Quit to Menu"
         )
 
-    def _handle_quit_confirmed(self):
+    def _handle_quit_confirmed(self) -> None:
         """Handle quit-to-menu confirmation dialog result."""
         self._quit_confirm_dialog = None
         if self.scene_callback:
             self.scene_callback("quit_to_menu")
 
-    def _show_coming_soon(self, feature_name: str):
+    def _show_coming_soon(self, feature_name: str) -> None:
         """Show a 'Coming Soon' placeholder dialog.
 
         Args:
@@ -526,7 +526,7 @@ class StrategyScreen:
             window_title=feature_name
         )
 
-    def on_save_game_click(self):
+    def on_save_game_click(self) -> None:
         """Handle 'Save Game' button click."""
         from game.strategy.systems.save_game_service import SaveGameService
         import pygame_gui.windows
@@ -562,17 +562,17 @@ class StrategyScreen:
     # Pathfinding (for external access)
     # =========================================================================
 
-    def calculate_hybrid_path(self, start_hex, end_hex):
+    def calculate_hybrid_path(self, start_hex, end_hex) -> Any:
         """Calculate path combining local hex movement and warp jumps."""
         from game.strategy.data.pathfinding import find_hybrid_path
         return find_hybrid_path(self.galaxy, start_hex, end_hex)
 
-    def _get_system_at_hex(self, hex_c):
+    def _get_system_at_hex(self, hex_c) -> Any:
         """Find which system owns this hex."""
         from game.strategy.data.pathfinding import get_system_at_hex
         return get_system_at_hex(self.galaxy, hex_c)
 
-    def _find_nearest_system(self, hex_c):
+    def _find_nearest_system(self, hex_c) -> Any:
         """Find the nearest system to a hex coordinate."""
         from game.strategy.data.pathfinding import find_nearest_system
         return find_nearest_system(self.galaxy, hex_c)
@@ -581,7 +581,7 @@ class StrategyScreen:
     # Private Helpers
     # =========================================================================
 
-    def _focus_on_player_home(self):
+    def _focus_on_player_home(self) -> None:
         """Focus camera on player's home colony at startup."""
         if self.player_empire.colonies:
             home_colony = self.player_empire.colonies[0]
@@ -591,7 +591,7 @@ class StrategyScreen:
                 fx, fy = hex_to_pixel(target_hex, 10)
                 self.camera.position = pygame.math.Vector2(fx, fy)
 
-    def _load_assets(self):
+    def _load_assets(self) -> None:
         """Load visual assets using AssetManager and RaceAssetLoader."""
         from game.assets.asset_manager import get_asset_manager
         from game.strategy.engine.game_config import GameConfig
@@ -609,7 +609,7 @@ class StrategyScreen:
                 asset_base
             )
 
-    def _get_object_asset(self, obj):
+    def _get_object_asset(self, obj) -> Any:
         """Resolve the visual asset for a data object."""
         from game.assets.asset_manager import get_asset_manager
         am = get_asset_manager()

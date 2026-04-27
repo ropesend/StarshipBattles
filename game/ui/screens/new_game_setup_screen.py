@@ -76,7 +76,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create UI elements."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -204,7 +204,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         self.error_label.text_colour = pygame.Color(*TEXT_ERROR)
 
-    def _create_empire_inputs(self):
+    def _create_empire_inputs(self) -> None:
         """Create empire name input fields with race selection for each player slot."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -299,7 +299,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         # Update visibility based on current player count
         self._update_empire_visibility()
 
-    def _update_empire_visibility(self):
+    def _update_empire_visibility(self) -> None:
         """Show/hide empire inputs based on player count."""
         for i in range(4):
             visible = i < self.player_count
@@ -322,7 +322,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 self.player_races[i] = None
                 self._update_race_display(i)
 
-    def _update_race_display(self, player_index: int):
+    def _update_race_display(self, player_index: int) -> None:
         """Update the race preview display for a player."""
         race = self.player_races[player_index]
 
@@ -397,7 +397,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
         return handled
 
-    def _on_load_race_clicked(self, player_index: int):
+    def _on_load_race_clicked(self, player_index: int) -> None:
         """Handle Load Race button click - open race browser dialog."""
         logger.debug(f"Opening race browser for player {player_index + 1}")
 
@@ -425,7 +425,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         self.race_modal_player_index = player_index
 
-    def _on_setup_race_clicked(self, player_index: int):
+    def _on_setup_race_clicked(self, player_index: int) -> None:
         """Handle Setup Race button click - open race setup screen."""
         logger.debug(f"Opening race setup for player {player_index + 1}")
 
@@ -459,7 +459,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         self.race_modal_player_index = player_index
 
-    def _on_race_selected(self, player_index: int, race_config: RaceConfig):
+    def _on_race_selected(self, player_index: int, race_config: RaceConfig) -> None:
         """Handle race selection from browser dialog."""
         logger.info(f"Player {player_index + 1} selected race: {race_config.name}")
         self.player_races[player_index] = race_config
@@ -467,7 +467,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.active_race_modal = None
         self.race_modal_player_index = -1
 
-    def _on_race_created(self, player_index: int, race_config: RaceConfig):
+    def _on_race_created(self, player_index: int, race_config: RaceConfig) -> None:
         """Handle race creation from setup screen."""
         logger.info(f"Player {player_index + 1} created race: {race_config.name}")
         self.player_races[player_index] = race_config
@@ -475,13 +475,13 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.active_race_modal = None
         self.race_modal_player_index = -1
 
-    def _on_race_dialog_cancelled(self):
+    def _on_race_dialog_cancelled(self) -> None:
         """Handle race dialog cancellation."""
         logger.debug("Race dialog cancelled")
         self.active_race_modal = None
         self.race_modal_player_index = -1
 
-    def _on_start_clicked(self):
+    def _on_start_clicked(self) -> None:
         """Handle Start Game button click."""
         save_name = self.save_name_input.get_text().strip()
 
@@ -522,7 +522,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.on_start_callback(config)
         self.kill()
 
-    def _on_cancel_clicked(self):
+    def _on_cancel_clicked(self) -> None:
         """Handle Cancel button click."""
         logger.debug("New game setup cancelled")
         self.on_cancel_callback()

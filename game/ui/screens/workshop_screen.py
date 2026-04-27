@@ -3,9 +3,11 @@ Design Workshop Screen - MVVM-based ship design editor.
 
 Production version of the ship builder with dependency injection and MVVM architecture.
 """
+from __future__ import annotations
+
 import logging
 import os
-from typing import Optional
+from typing import Optional, Any
 
 import pygame
 import pygame_gui
@@ -191,11 +193,11 @@ class DesignWorkshopScreen:
             update_stats_callback=self.update_stats
         )
 
-    def _get_vehicle_classes(self):
+    def _get_vehicle_classes(self) -> Any:
         """PROJ-50: Get vehicle_classes from context registries (required)."""
         return self.context.registries.vehicle_classes
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Initialize all UI panels for the workshop screen.
 
         Creates and lays out:
@@ -326,11 +328,11 @@ class DesignWorkshopScreen:
         self.left_panel.update_component_list()
         self.rebuild_modifier_ui()
 
-    def update_stats(self):
+    def update_stats(self) -> None:
         self.layer_panel.rebuild()
         self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.viewmodel.ship)
         
-    def on_selection_changed(self, new_selection, append=False, toggle=False):
+    def on_selection_changed(self, new_selection, append=False, toggle=False) -> None:
         """Handle selection changes.
 
         Args:
@@ -351,11 +353,11 @@ class DesignWorkshopScreen:
         self.rebuild_modifier_ui()
         self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.selected_component)
 
-    def _on_modifier_change(self):
+    def _on_modifier_change(self) -> None:
         # Delegate to ViewModel - syncs modifiers across selection and recalculates ship stats
         self.viewmodel.on_modifier_changed()
 
-    def rebuild_modifier_ui(self):
+    def rebuild_modifier_ui(self) -> None:
         editing_component = self.selected_component[2] if self.selected_component else None
         
         is_readonly = False
@@ -367,47 +369,47 @@ class DesignWorkshopScreen:
         self.modifier_panel.layout(0)
         
     @property
-    def selected_component(self):
+    def selected_component(self) -> Any:
         return self.controller.selected_component
         
     @selected_component.setter
-    def selected_component(self, value):
+    def selected_component(self, value) -> None:
         self.controller.selected_component = value
         
     @property
-    def dragged_item(self):
+    def dragged_item(self) -> Any:
         return self.controller.dragged_item
         
     @dragged_item.setter
-    def dragged_item(self, value):
+    def dragged_item(self, value) -> None:
         self.controller.dragged_item = value
 
     # --- Viewmodel delegation properties (used by builder sub-panels) ---
     @property
-    def ship(self):
+    def ship(self) -> Any:
         return self.viewmodel.ship
 
     @property
-    def selected_components(self):
+    def selected_components(self) -> Any:
         return self.viewmodel.selected_components
 
     @selected_components.setter
-    def selected_components(self, value):
+    def selected_components(self, value) -> None:
         self.viewmodel.selected_components = value
 
     @property
-    def available_components(self):
+    def available_components(self) -> Any:
         return self.viewmodel.available_components
 
     @available_components.setter
-    def available_components(self, value):
+    def available_components(self, value) -> None:
         self.viewmodel.available_components = value
 
-    def show_error(self, msg):
+    def show_error(self, msg) -> None:
         self.error_message = msg
         self.error_timer = 3.0
         
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Route events through the event router (IScene protocol).
 
         All event handling logic has been extracted to WorkshopEventRouter
@@ -415,7 +417,7 @@ class DesignWorkshopScreen:
         """
         return self.event_router.handle_event(event)
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         """Handle window resize (IScene protocol).
 
         Note: Full resize requires recreating UI panels. For now, just update dimensions.
@@ -428,7 +430,7 @@ class DesignWorkshopScreen:
         # Note: Full panel recreation would require significant refactoring
         # For now, the workshop handles resize gracefully but may need manual reload
 
-    def execute_pending_action(self):
+    def execute_pending_action(self) -> None:
         """Execute the action stored in self.pending_action."""
         if self.pending_action:
             act, data = self.pending_action
@@ -465,7 +467,7 @@ class DesignWorkshopScreen:
             # Fallback for simple clear if pending_action not set
             self._clear_design()
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         if self.error_timer > 0:
             self.error_timer -= dt
             
@@ -500,7 +502,7 @@ class DesignWorkshopScreen:
         if new_name != self.viewmodel.ship.name:
             self.viewmodel.set_ship_name(new_name)
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         screen.fill(BG_COLOR)
         
         # Determine efficient hover
@@ -546,15 +548,15 @@ class DesignWorkshopScreen:
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))
 
-    def save_ship(self):
+    def save_ship(self) -> None:
         """Save ship design (delegates to WorkshopShipIO)."""
         self.ship_io.save_ship()
 
-    def load_ship(self):
+    def load_ship(self) -> None:
         """Load ship design (delegates to WorkshopShipIO)."""
         self.ship_io.load_ship()
 
-    def _apply_loaded_ship(self, new_ship, message):
+    def _apply_loaded_ship(self, new_ship, message) -> None:
         """Apply a loaded ship to the workshop"""
         self.viewmodel.ship = new_ship
         # Fully refresh UI controls to match new ship state
@@ -567,7 +569,7 @@ class DesignWorkshopScreen:
         self.rebuild_modifier_ui()
         logger.info(message)
 
-    def show_clear_confirmation(self):
+    def show_clear_confirmation(self) -> None:
         self.pending_action = ('clear_design', None)
         self.confirm_dialog = UIConfirmationDialog(
             rect=pygame.Rect((self.width // 2 - 150, self.height // 2 - 100), (300, 200)),
@@ -576,7 +578,7 @@ class DesignWorkshopScreen:
             window_title="Confirm Clear"
         )
 
-    def _get_button_definitions(self):
+    def _get_button_definitions(self) -> Any:
         """
         Returns button definitions based on launch mode.
 
@@ -616,7 +618,7 @@ class DesignWorkshopScreen:
 
         return buttons
 
-    def _clear_design(self):
+    def _clear_design(self) -> None:
         # Delegate ship mutation to ViewModel
         self.viewmodel.clear_design()
 
@@ -629,11 +631,11 @@ class DesignWorkshopScreen:
 
         self.weapons_report_panel.clear_target()
 
-    def on_select_target_pressed(self):
+    def on_select_target_pressed(self) -> None:
         """Select target ship (delegates to WorkshopShipIO)."""
         self.ship_io.select_target()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """
         Clean up all UI elements when exiting the workshop.
 

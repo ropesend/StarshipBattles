@@ -5,9 +5,12 @@ separated from the UI rendering code. Mirrors planet_list_filters.py.
 
 PROJ-231: Star List Panel.
 """
+from __future__ import annotations
+
+from typing import Any
 
 
-def gather_stars(galaxy):
+def gather_stars(galaxy) -> Any:
     """Collect all stars from the galaxy with pre-computed filter values.
 
     Args:
@@ -41,7 +44,7 @@ def gather_stars(galaxy):
 def filter_stars(stars, search_lower, filter_types,
                  min_mass, max_mass, min_temp, max_temp,
                  min_lum, max_lum, min_age, max_age,
-                 min_radius, max_radius):
+                 min_radius, max_radius) -> Any:
     """Filter stars based on search criteria.
 
     Args:
@@ -58,7 +61,7 @@ def filter_stars(stars, search_lower, filter_types,
         List of filtered stars
     """
 
-    def matches_filter(s):
+    def matches_filter(s) -> bool:
         # Name (use cached lowercase)
         if search_lower and search_lower not in s._cached_name_lower:
             return False
@@ -92,7 +95,7 @@ def filter_stars(stars, search_lower, filter_types,
     return [s for s in stars if matches_filter(s)]
 
 
-def sort_stars(stars, sort_column_id, sort_descending, columns):
+def sort_stars(stars, sort_column_id, sort_descending, columns) -> Any:
     """Sort stars by the specified column.
 
     Args:
@@ -128,7 +131,7 @@ def sort_stars(stars, sort_column_id, sort_descending, columns):
         stars.sort(key=lambda s: s._cached_type_category, reverse=sort_descending)
     else:
         # Fallback for other columns (func/attr based)
-        def sort_key(s):
+        def sort_key(s) -> Any:
             if 'func' in col:
                 return col['func'](s)
             elif 'attr' in col:
@@ -146,7 +149,7 @@ def sort_stars(stars, sort_column_id, sort_descending, columns):
     return stars
 
 
-def compute_star_ranges(all_stars):
+def compute_star_ranges(all_stars) -> Any:
     """Compute min/max ranges for filter sliders from actual star data.
 
     Args:
@@ -172,7 +175,7 @@ def compute_star_ranges(all_stars):
     ages = [s.age for s in all_stars]
     radii = [float(s.radius_hexes) for s in all_stars]
 
-    def padded_range(values, min_floor=0.0):
+    def padded_range(values, min_floor=0.0) -> tuple:
         v_min, v_max = min(values), max(values)
         v_range = v_max - v_min if v_max > v_min else max(abs(v_min) * 0.1, 1.0)
         return (max(min_floor, v_min - v_range * 0.05), v_max + v_range * 0.05)
@@ -186,7 +189,7 @@ def compute_star_ranges(all_stars):
     return ranges
 
 
-def get_system_name(star):
+def get_system_name(star) -> Any:
     """Get the system name for a star.
 
     Uses cached system name attached during gather_stars().
@@ -200,7 +203,7 @@ def get_system_name(star):
     return getattr(star, '_cached_system_name', "?")
 
 
-def get_star_type_display(star):
+def get_star_type_display(star) -> Any:
     """Get human-readable display name for a star's type.
 
     Args:

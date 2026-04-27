@@ -2,6 +2,9 @@
 
 Provides a dropdown menu for selecting ship components.
 """
+from __future__ import annotations
+
+from typing import Any
 
 import pygame
 
@@ -42,7 +45,7 @@ class ComponentDropdown:
 
         self.hovered_index = -1
 
-    def handle_click(self, event):
+    def handle_click(self, event) -> bool:
         """Handle mouse clicks on dropdown."""
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_x, mouse_y = event.pos
@@ -80,7 +83,7 @@ class ComponentDropdown:
 
         return False
 
-    def handle_hover(self):
+    def handle_hover(self) -> None:
         """Track hovered option for visual feedback."""
         if not self.is_expanded:
             self.hovered_index = -1
@@ -95,14 +98,14 @@ class ComponentDropdown:
         else:
             self.hovered_index = -1
 
-    def get_selected_component_id(self):
+    def get_selected_component_id(self) -> Any:
         """Get currently selected component ID."""
         if 0 <= self.selected_index < len(self.component_ids):
             comp_id = self.component_ids[self.selected_index]
             return comp_id if comp_id != "No components" else None
         return None
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the dropdown menu."""
         # Draw closed header
         header_rect = (self.x, self.y, self.width, self.height)
