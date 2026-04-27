@@ -44,7 +44,8 @@
       "Bash(git ls-files:*)",
       "Bash(git -C \"c:\\\\Dev\\\\Starship Battles\" log --all --oneline -- saves/)",
       "Bash(for seed:*)",
-      "Bash(do python:*)"
+      "Bash(do python:*)",
+      "Read(//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**)"
     ],
     "additionalDirectories": [
       "c:\\Dev\\Starship Battles\\Projects\\active_projects\\PROJ-216\\findings",
