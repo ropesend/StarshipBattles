@@ -12,6 +12,8 @@ Usage:
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     result = registry.dispatch('IssueColonizeCommand', session, command)
 """
+from __future__ import annotations
+
 from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable, Optional
 import logging
 
@@ -24,6 +26,8 @@ from game.strategy.systems.design_library import DesignLibrary
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.planet import Planet
     from game.strategy.engine.game_session import GameSession
     from game.strategy.engine.commands import (
         Command, IssueColonizeCommand, IssueMoveCommand, IssueInterceptCommand,
@@ -138,7 +142,7 @@ class BaseCommandHandler:
         return (fleet, None)
 
     @staticmethod
-    def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None):
+    def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None) -> 'Fleet':
         """Resolve a fleet by ID, raising ValueError if not found.
 
         Use this when fleet must exist - avoids tuple unpacking boilerplate.
@@ -182,7 +186,7 @@ class BaseCommandHandler:
         return (planet, None)
 
     @staticmethod
-    def _resolve_planet_optional(session: 'GameSession', planet_id: int, required: bool = True):
+    def _resolve_planet_optional(session: 'GameSession', planet_id: int, required: bool = True) -> Optional['Planet']:
         """Resolve a planet by ID with configurable error handling.
 
         Use this when planet may or may not be required.
@@ -207,7 +211,7 @@ class BaseCommandHandler:
         return planet
 
     @staticmethod
-    def _resolve_build_entity(session: 'GameSession', entity_id: int, entity_type: str):
+    def _resolve_build_entity(session: 'GameSession', entity_id: int, entity_type: str) -> Any:
         """Resolve a planet or fleet by ID and type.
 
         BUG-103: Extracted to BaseCommandHandler for shared use by all
@@ -261,7 +265,7 @@ class BaseCommandHandler:
         return getattr(entity, 'construction_queue', None)
 
     @staticmethod
-    def _build_colonize_target(planet, cmd):
+    def _build_colonize_target(planet, cmd) -> Any:
         """Build COLONIZE order target — Planet or dict with amounts.
 
         If population_amount or cargo_amounts are specified on the command,

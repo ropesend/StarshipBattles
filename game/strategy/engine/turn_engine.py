@@ -55,11 +55,14 @@ Example:
         conflict_engine=mock_conflict
     )
 """
+from __future__ import annotations
+
 import time
 import logging
 
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
+
 from typing import Any, List, Optional, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
@@ -106,7 +109,7 @@ class _NullBattleResolver:
     requiring an AI factory for non-combat scenarios.
     """
 
-    def resolve_battle(self, *args, **kwargs):
+    def resolve_battle(self, *args, **kwargs) -> Any:
         raise RuntimeError(
             "No battle resolver configured. Provide ai_factory or battle_resolver "
             "to TurnEngine when combat resolution is needed."
@@ -232,7 +235,7 @@ class TurnEngine:
             'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
         }
 
-    def _time_phase(self, key: str, fn, *args, **kwargs):
+    def _time_phase(self, key: str, fn, *args, **kwargs) -> Any:
         """Execute a phase function and accumulate its duration to _phase_times.
 
         PROJ-251: On failure, wraps the exception in EnginePhaseError and

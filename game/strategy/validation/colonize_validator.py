@@ -86,7 +86,7 @@ class ColonizeValidator:
         return False
 
     @staticmethod
-    def _validate_drop_pod_availability(fleet: 'Fleet', skip_chain_check: bool = False):
+    def _validate_drop_pod_availability(fleet: 'Fleet', skip_chain_check: bool = False) -> Optional[ValidationResult]:
         """Check drop pod availability and chain limits.
 
         Returns:

@@ -22,7 +22,9 @@ Cost model:
       refund). Linear-in-rate refund (not Python's banker's-round integer
       steps) so a 0.5% rate refunds exactly -5 — see decisions.md.
 """
-from typing import Dict, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import Dict, Iterator, TYPE_CHECKING
 
 from game.strategy.data.habitability_factors import get_factor
 
@@ -79,7 +81,7 @@ class RacePointBudget:
             total += self._single_aptitude_cost(value)
         return total
 
-    def _iter_paid_aptitudes(self, race_config: 'RaceConfig'):
+    def _iter_paid_aptitudes(self, race_config: 'RaceConfig') -> Iterator[int]:
         """Yield the 7 aptitudes that contribute to point cost.
         PROJ-283 dropped `happiness` and `population_growth`."""
         yield race_config.aptitude_strength

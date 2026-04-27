@@ -8,8 +8,10 @@ Unlike fleet actions, planets act every tick (no speed concept).
 execution_progress increments by 1 each tick until it reaches action_time.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
@@ -283,7 +285,7 @@ class PlanetActionEngine(IPlanetActionEngine):
                 f"(current phase: {current.phase.value})"
             )
 
-    def _resolve_component_key(self, facility, order, ability_name: str):
+    def _resolve_component_key(self, facility, order, ability_name: str) -> Tuple[Optional[str], Optional[str]]:
         """Resolve the composite component key for an order target.
 
         Returns (component_key, component_id) or (None, None) if not found.
@@ -350,7 +352,7 @@ class PlanetActionEngine(IPlanetActionEngine):
 
         return any(f.instance_id == facility_id for f in planet.facilities)
 
-    def _find_target_facility(self, planet: 'Planet', order: 'Order'):
+    def _find_target_facility(self, planet: 'Planet', order: 'Order') -> Optional[Any]:
         """Find the target facility for an order."""
         target = order.target
         if isinstance(target, dict):

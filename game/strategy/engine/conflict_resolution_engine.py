@@ -9,6 +9,8 @@ Responsibilities:
 - Apply combat results to fleet rosters
 """
 
+from __future__ import annotations
+
 import logging
 import random
 from dataclasses import dataclass
@@ -20,7 +22,7 @@ from game.strategy.interfaces.engines import IConflictEngine
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.interfaces.battle_resolver import IBattleResolver
+    from game.strategy.interfaces.battle_resolver import BattleResult, IBattleResolver
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
     from game.strategy.services.area_effect_manager import AreaEffectManager
@@ -197,7 +199,7 @@ class ConflictResolutionEngine(IConflictEngine):
             fleets_destroyed=self._fleets_destroyed
         )
 
-    def _resolve_conflicts(self, empires):
+    def _resolve_conflicts(self, empires) -> None:
         """Check for collisions and resolve battles."""
         # Map: Hex -> List[(Empire, Fleet)]
         hex_map = {}
@@ -219,7 +221,7 @@ class ConflictResolutionEngine(IConflictEngine):
                 # CONFLICT!
                 self._resolve_combat_at_hex(occupants)
 
-    def _resolve_combat_at_hex(self, occupants):
+    def _resolve_combat_at_hex(self, occupants) -> None:
         """Resolve a multi-empire conflict at one hex as a single N-team battle.
 
         PROJ-275 Phase 7: replaced the legacy sequential 2-fleet
@@ -295,7 +297,7 @@ class ConflictResolutionEngine(IConflictEngine):
                     winner_fleet, fleet, location, environmental_effects
                 )
 
-    def _rng_resolve_empty_fleets(self, fleets: List['Fleet']):
+    def _rng_resolve_empty_fleets(self, fleets: List['Fleet']) -> 'BattleResult':
         """Edge-case resolver for empty-fleet "combat" — no ships exist
         so the simulation isn't applicable; the engine's RNG just picks
         one team to win so empire bookkeeping still happens.
@@ -309,7 +311,7 @@ class ConflictResolutionEngine(IConflictEngine):
             team_survivors={i: [] for i in range(len(fleets))},
         )
 
-    def _lookup_environmental_effects(self, location):
+    def _lookup_environmental_effects(self, location) -> Optional[Any]:
         """PROJ-189: Query environmental effects at the combat location."""
         if self._area_effect_manager is None or self._galaxy is None:
             return None

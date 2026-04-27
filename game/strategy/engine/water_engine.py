@@ -6,6 +6,8 @@ permanent — they persist even if the facility is later removed.
 
 Processed once per turn (not per tick), alongside AtmosphereEngine.
 """
+from __future__ import annotations
+
 import logging
 from typing import List, TYPE_CHECKING
 
@@ -75,7 +77,7 @@ class WaterEngine:
         new_water = max(0.0, min(1.0, current + actual_change))
         colony.surface_water = new_water
 
-    def _extract_water_modifier(self, comp):
+    def _extract_water_modifier(self, comp) -> dict | list | None:
         """Extract WaterModifier ability data from a component entry."""
         from game.strategy.services.component_inspector import extract_abilities_from_component
         abilities = extract_abilities_from_component(comp, self._registries)
