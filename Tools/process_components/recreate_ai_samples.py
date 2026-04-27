@@ -97,8 +97,23 @@ def files_from_names(names: list[str]) -> list[Path]:
     return files
 
 
-def prompt_for(path: Path, mode: str) -> str:
+def prompt_for(path: Path, mode: str, key_color: str = "#00ff00") -> str:
     component_id = path.stem.replace("1024Portrait_", "")
+    if mode == "enhanced_opaque":
+        return f"""
+Use case: style-transfer
+Asset type: 1024x1024 sci-fi strategy game component image
+Input image: reference image for {component_id}
+Primary request: Recreate and enhance the referenced starship component image as a premium game asset while preserving the complete image concept, including its background or scene.
+Subject: Keep the same functional object, silhouette, viewing angle, proportions, major layout, recognizable details, and any existing background or scene context from the reference. Enhance with tasteful high-end material detail, sharper geometry, clean bevels, worn edges, glass, panels, cables, machinery, and emissive accents where appropriate.
+Style/medium: high-end 3D game icon or scene render with photorealistic sci-fi materials; polished and readable at game UI sizes.
+Composition/framing: centered in a square 1024x1024 image, same approximate camera angle and framing as the reference, full important subject visible.
+Scene/backdrop: preserve and enhance the reference backdrop or scene. Do not isolate the object. Do not make the background transparent. Do not replace the scene with a chroma-key color.
+Lighting/mood: cinematic studio or environment lighting appropriate to the reference; internal glows should remain vivid and attached to the object.
+Constraints: fully opaque final image with no alpha holes. One coherent component image only. No text, no watermark, no border, no extra unrelated objects.
+Avoid: transparent background, chroma-key background, checkerboard, cutout-only presentation, cropped edges, changing the component category, excessive redesign.
+""".strip()
+
     if mode == "enhanced":
         return f"""
 Use case: background-extraction
@@ -108,9 +123,9 @@ Primary request: Recreate and enhance the referenced starship component as a pre
 Subject: Keep the same functional object, silhouette, viewing angle, proportions, major layout, and recognizable details from the reference. Enhance the object with tasteful high-end material detail, sharper geometry, small mechanical features, clean bevels, vents, cables, panels, worn edges, glass, and emissive accents where appropriate.
 Style/medium: high-end 3D game icon with photorealistic sci-fi materials; readable at game UI sizes, polished but not redesigned into a different object.
 Composition/framing: centered in a square 1024x1024 image, same approximate isometric/three-quarter view as the reference, full object visible with generous padding.
-Scene/backdrop: perfectly flat solid #00ff00 chroma-key background for local background removal.
+Scene/backdrop: perfectly flat solid {key_color} chroma-key background for local background removal.
 Lighting/mood: clean studio asset lighting with soft rim highlights; keep internal glows attached to the object; no cast shadow.
-Constraints: one component only. Background must be one uniform #00ff00 color with no shadows, gradients, texture, floor plane, reflections, haze, or vignette. Do not use #00ff00 anywhere in the component. No text, no watermark, no border, no extra objects.
+Constraints: one component only. Background must be one uniform {key_color} color with no shadows, gradients, texture, floor plane, reflections, haze, or vignette. Do not use {key_color} anywhere in the component. Internal glowing cores, lenses, glass, screens, reactor centers, and energy cells must remain opaque visible parts of the component, not transparent holes. No text, no watermark, no border, no extra objects.
 Avoid: black background, starfield, smoke, dark halo, contact shadow, cropped edges, changing the component category, excessive redesign.
 """.strip()
 
@@ -122,9 +137,9 @@ Primary request: Recreate the referenced starship component as a clean isolated 
 Subject: Preserve the component's overall shape, viewing angle, silhouette, proportions, material types, major colors, and recognizable mechanical details from the reference.
 Style/medium: polished 3D-rendered sci-fi game asset, realistic metallic and industrial materials.
 Composition/framing: centered in a square 1024x1024 image, same approximate isometric/three-quarter view as the reference, generous padding around the object.
-Scene/backdrop: perfectly flat solid #00ff00 chroma-key background for local background removal.
+Scene/backdrop: perfectly flat solid {key_color} chroma-key background for local background removal.
 Lighting/mood: clean studio-like asset lighting; keep useful internal glows as part of the object, but no cast shadow.
-Constraints: background must be one uniform #00ff00 color with no shadows, gradients, texture, floor plane, reflections, haze, or vignette. Do not use #00ff00 anywhere in the component. No text, no watermark, no border, no extra objects.
+Constraints: background must be one uniform {key_color} color with no shadows, gradients, texture, floor plane, reflections, haze, or vignette. Do not use {key_color} anywhere in the component. Internal glowing cores, lenses, glass, screens, reactor centers, and energy cells must remain opaque visible parts of the component, not transparent holes. No text, no watermark, no border, no extra objects.
 Avoid: black background, starfield, smoke, dark halo, contact shadow, cropped edges.
 """.strip()
 
@@ -166,7 +181,7 @@ def run_command(command: list[str], retries: int = 0, retry_delay: int = 0) -> N
 def add_manifest_entry(
     manifest: dict,
     source: Path,
-    chroma_out: Path,
+    chroma_out: Path | None,
     final_out: Path,
     mode: str,
 ) -> dict:
@@ -182,7 +197,7 @@ def add_manifest_entry(
         "removed_pixels": 0,
         "notes": "",
         "source": str(source),
-        "chroma_source": str(chroma_out),
+        "chroma_source": str(chroma_out) if chroma_out else "",
         "alpha_bbox": alpha_bbox,
         "alpha_extrema": alpha_extrema,
     }
@@ -190,7 +205,7 @@ def add_manifest_entry(
     return {
         "filename": source.name,
         "source": str(source),
-        "chroma": str(chroma_out),
+        "chroma": str(chroma_out) if chroma_out else "",
         "output": str(final_out),
         "alpha_bbox": alpha_bbox,
         "alpha_extrema": alpha_extrema,
@@ -200,10 +215,11 @@ def add_manifest_entry(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Recreate component images with GPT Image and chroma-key removal.")
     parser.add_argument("--output-root", type=Path, default=OUTPUT_ROOT)
-    parser.add_argument("--mode", choices=["faithful", "enhanced"], default="faithful")
+    parser.add_argument("--mode", choices=["faithful", "enhanced", "enhanced_opaque"], default="faithful")
     parser.add_argument("--limit", type=int, default=25)
     parser.add_argument("--names", nargs="*", default=[])
     parser.add_argument("--quality", choices=["low", "medium", "high", "auto"], default="medium")
+    parser.add_argument("--key-color", default="#00ff00", help="Chroma key color for transparent-background modes.")
     parser.add_argument("--retries", type=int, default=0)
     parser.add_argument("--retry-delay", type=int, default=60)
     parser.add_argument("--force", action="store_true", help="Regenerate even if final output already exists.")
@@ -271,7 +287,7 @@ def main() -> None:
                 "--image",
                 str(source),
                 "--prompt",
-                prompt_for(source, args.mode),
+                prompt_for(source, args.mode, args.key_color),
                 "--size",
                 "1024x1024",
                 "--quality",
@@ -286,25 +302,32 @@ def main() -> None:
             retries=args.retries,
             retry_delay=args.retry_delay,
         )
-        run_command(
-            [
-                sys.executable,
-                str(REMOVE_CHROMA),
-                "--input",
-                str(chroma_out),
-                "--out",
-                str(final_out),
-                "--auto-key",
-                "border",
-                "--soft-matte",
-                "--transparent-threshold",
-                "12",
-                "--opaque-threshold",
-                "220",
-                "--despill",
-                "--force",
-            ]
-        )
+        if args.mode == "enhanced_opaque":
+            with Image.open(chroma_out).convert("RGBA") as image:
+                image.putalpha(255)
+                image.save(final_out)
+        else:
+            run_command(
+                [
+                    sys.executable,
+                    str(REMOVE_CHROMA),
+                    "--input",
+                    str(chroma_out),
+                    "--out",
+                    str(final_out),
+                    "--auto-key",
+                    "border",
+                    "--key-color",
+                    args.key_color,
+                    "--soft-matte",
+                    "--transparent-threshold",
+                    "12",
+                    "--opaque-threshold",
+                    "220",
+                    "--despill",
+                    "--force",
+                ]
+            )
         rows.append(add_manifest_entry(manifest, source, chroma_out, final_out, args.mode))
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         report_path.write_text(json.dumps(rows, indent=2), encoding="utf-8")
