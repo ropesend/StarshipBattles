@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-26
+> **Last verified:** 2026-04-27 — PROJ-300 added §10 Universal IAbilitySource Framework; AreaEffectManager / EnvironmentalEffects / StormEffect eradicated.
 
 System documentation for the turn-based strategy layer.
 
@@ -1495,3 +1495,37 @@ Two UI surfaces consume the PROJ-286/287/288 infrastructure:
 - **Empire Treasury → Population Upkeep row.** `EmpireEconomySnapshot.total_population_upkeep: Dict[str, float]` aggregates per-resource drain across every empire colony via `PlanetEconomyProjector._project_upkeep`. `EmpireTreasuryPanel` renders the aggregate as one expense row labeled "Population Upkeep" with signed-negative cells; the row is HIDDEN when all values are zero or the dict is empty (fresh game with no populations yet). Production wiring: `empire_panel_window._build_treasury_tab` threads `get_default_economy_config()` + `facade.get_race_registry()` into `EmpireEconomyCalculator(economy_config=..., race_registry=...)`. When either dep is missing the calculator short-circuits upkeep aggregation to `{}` — backward-compat for legacy callers that only pass `registries=`.
 
 - **Uncolonized-planet habitability list.** `format_uncolonized_habitability_for_empire(planet, empire, race_registry)` at `game/ui/screens/strategy_detail_fmt.py` emits an HTML section listing every `empire.resident_species()` entry with a 0-100 integer habitability score, sorted BEST-FIT FIRST. Score formula: `int(round(score_planet_for_race(planet, race_config) * 100))`. The section renders only when all three conditions hold: `planet.owner_id is None` AND `empire is not None` AND `race_registry is not None`. Display-name resolution follows the PROJ-287 convention: `race_config.race_name` → `race_config.name` → `race_id`. `race_id` values whose `registry.get_race()` returns None are silently skipped (save-drift defense, same as `planet_habitability_multiplier`). Production wiring: `PlanetReportPanel.__init__` + `update_planet` accept `empire` + `race_registry` kwargs — they stack with PROJ-289's `view` kwarg in the same panel signature; `strategy_window_manager._open_planet_list_window` pulls `facade.get_race_registry()` and threads it through `PlanetListWindow` → `PlanetReportPanel`.
+
+
+## 10. Universal IAbilitySource Framework (PROJ-300)
+
+After PROJ-300, "things at a hex/system project effects" flows through one path. Storms, planetary facilities, and (post-PROJ-301..305) planets-themselves, stars, warp points, system archetypes, and fleets all plug in by satisfying the `IAbilitySource` protocol.
+
+**Pipeline:**
+
+```
+[entities at hex/system]
+        ↓ adapters (IAbilitySource)
+[FacilityAbilitySource, StormAbilitySource, ...]
+        ↓ ability_iterator (registered providers)
+iter_ability_sources_at_hex(system, hex_coord)
+        ↓ system_effects_collector
+collect_sector_effects() / collect_system_effects()
+        ↓ aggregate_multipliers / aggregate_rates
+[effect rows: ability_name, kind, aggregate_value, providers[]]
+        ↓ consumers
+fleet_movement_engine, environmental_hazard_engine, spec_compiler, system_tree_panel
+```
+
+**Key files:**
+- `game/core/protocols/strategy_entities.py` — `IAbilitySource` protocol + `is_ability_source` TypeGuard
+- `game/strategy/services/ability_sources/` — adapter package (`FacilityAbilitySource`, `StormAbilitySource`, plus the shared `roll_intrinsic_abilities` and `format_intrinsic_source_label` helpers used by PROJ-301..304)
+- `game/strategy/services/ability_iterator.py` — provider registration + iterator
+- `game/strategy/services/system_effects_collector.py` — aggregation pipeline + `find_sector_effect`/`aggregate_value_or` helpers
+- `game/strategy/services/strategic_ability_scanner.py` — `aggregate_multipliers` (intra-MAX, inter-MULTIPLY) and `aggregate_rates` (intra-MAX, inter-SUM)
+
+**Storm migration:** Storms now declare `abilities: Dict[str, Any]` matching components.json. Five storm types in `data/storms.json` v2.0 declare ShieldModifier, ThrustModifier, StrategicSpeedModifier, EnvironmentalDamage (with damage_type), FuelDrain. Overlapping storms multiply per-provider (decisions.md D6) — `tests/integration/strategy/test_overlapping_storm_combat.py` locks in 0.5x · 0.5x = 0.25x for two ion storms.
+
+**Combat consumption:** `_entries_from_sector_effects(sector_effects)` in `spec_compiler.py` emits one `ModifierEntry` per ACTIVE provider. ShieldModifier, DamageModifier, and ThrustModifier (PROJ-300 D14) flow through the same path with the appropriate stat_keys via `ABILITY_STAT_REGISTRY`.
+
+**Eradicated in Phase 7:** `AreaEffectManager`, `EnvironmentalEffects`, `StormEffect` dataclass, `Storm.effects` field, `IStorm.effects` property, `_entries_from_environmental_effects`. Old saves with the legacy `effects` shape FAIL TO LOAD per decisions.md D19 — save files are disposable.

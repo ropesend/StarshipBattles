@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-04-27
+> **Last verified:** 2026-04-27 — PROJ-300 replaced AreaEffectManager + EnvironmentalEffects + StormEffect with the universal IAbilitySource framework (system_effects_collector, ability_iterator, ability_sources/ adapter package).
 
 ## Overview
 
@@ -927,44 +927,63 @@ projected = FleetCargoProjector.get_projected_cargo(fleet, 'passengers')
 
 ---
 
-### AreaEffectManager
+### Universal IAbilitySource Framework (PROJ-300)
 
-**Location:** `game/strategy/services/area_effect_manager.py`
+**Location:** `game/strategy/services/system_effects_collector.py`, `game/strategy/services/ability_iterator.py`, `game/strategy/services/ability_sources/`
 
-**Purpose:** Aggregates environmental effects from storms at a hex location. Queries the galaxy's zone spatial index and combines effects from overlapping storms.
+**Purpose:** Single, unified pipeline for "things at a hex/system project effects." Replaces the legacy AreaEffectManager + EnvironmentalEffects + StormEffect triad. Storms, planetary facilities, and (post-PROJ-301..305) planets-themselves, stars, warp points, system archetypes, and fleets all flow through one path.
 
-**Dependencies:** None (no constructor args).
+**Architecture:**
+- **`IAbilitySource` protocol** (`game/core/protocols/strategy_entities.py`) — any locatable entity that contributes abilities. Exposes `source_kind`/`source_label`/`source_id`/`owner_id` for UI rendering, `get_abilities()` for the ability dict, and `affects_hex(h)` / `affects_system(s)` / `get_activation_state(name)` for filtering.
+- **Adapters** in `game/strategy/services/ability_sources/`: `FacilityAbilitySource` (wraps a planetary facility), `StormAbilitySource` (wraps a Storm). PROJ-301..305 add planet/star/warp_point/system/fleet adapters.
+- **Iterator** in `ability_iterator.py`: `iter_ability_sources_at_hex(system, hex_coord)` and `iter_ability_sources_in_system(system)` walk a registered list of provider functions and yield IAbilitySource adapters. PROJ-301..305 register their own providers via `register_source_provider_at_hex` / `register_source_provider_in_system` — no central edits needed.
+- **Collector** in `system_effects_collector.py`: `collect_sector_effects(system, hex_coord, empire_id)` and `collect_system_effects(system, empire_id)` walk the iterator output, filter by scope, group, and aggregate per kind (multiplier vs rate).
+- **Aggregation** in `strategic_ability_scanner.py`: `aggregate_multipliers` (intra-MAX, inter-MULTIPLY, default 1.0) and `aggregate_rates` (intra-MAX, inter-SUM, default 0.0).
 
-**Data Type:**
+**Effect dict shape:**
 ```python
-@dataclass
-class EnvironmentalEffects:
-    shield_capacity_mult: float = 1.0   # Multiplier for shield capacity
-    thrust_mult: float = 1.0            # Multiplier for tactical movement
-    strategic_mult: float = 1.0         # Multiplier for strategic movement speed
-    damage_per_tick: float = 0.0        # Hull damage per tick in storm
-    fuel_drain_per_tick: float = 0.0    # Fuel consumed per tick in storm
-    in_storm: bool = False              # True if any storm is present
-    storm_names: List[str]              # Names of storms at this location
+{
+    'ability_name': str,
+    'display_name': str,
+    'group_key': str,
+    'status': 'Active' | 'Inactive' | 'Activating (N)' | 'Deactivating (N)',
+    'resource_type': Optional[str],
+    'damage_type': Optional[str],
+    'kind': 'multiplier' | 'rate',
+    'aggregate_value': float,
+    'providers': [{
+        'source_kind': str,
+        'source_label': str,
+        'source_id': str,
+        'owner_id': Optional[int],
+        'status': str,
+        'is_active': bool,
+        'value': float,
+        'ability_data': dict,
+    }, ...]
+}
 ```
 
-**Stacking rules:** Multiplicative effects stack multiplicatively; additive effects sum.
+**Storm migration:** Storms now declare an `abilities: Dict[str, Any]` matching the components.json shape (PROJ-300 v2.0 schema in `data/storms.json`). Five storm types declare ShieldModifier/ThrustModifier/StrategicSpeedModifier/EnvironmentalDamage/FuelDrain. Overlapping storms multiply per-provider (no shared `stack_group`) — two ion storms apply 0.5x · 0.5x = 0.25x shields, locked in by `tests/integration/strategy/test_overlapping_storm_combat.py`.
 
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `get_effects_at_global_hex` | `(galaxy, global_hex) -> EnvironmentalEffects` | Get aggregated storm effects at a hex; returns neutral effects if no storms |
+**Helpers:** `find_sector_effect(effects, ability_name, **filters)` and `aggregate_value_or(effects, ability_name, default, **filters)` are convenience wrappers used by movement / hazard / spec_compiler consumers.
 
 **Usage:**
 ```python
-from game.strategy.services.area_effect_manager import AreaEffectManager
+from game.strategy.services.system_effects_collector import (
+    collect_sector_effects, aggregate_value_or,
+)
 
-manager = AreaEffectManager()
-effects = manager.get_effects_at_global_hex(galaxy, fleet.location)
-if effects.in_storm:
-    print(f"In storm: shields at {effects.shield_capacity_mult:.0%}")
+effects = collect_sector_effects(system, fleet.location, empire_id=fleet.owner_id)
+strategic_mult = aggregate_value_or(effects, 'StrategicSpeedModifier', 1.0)
+damage_per_turn = sum(
+    e['aggregate_value'] for e in effects if e['ability_name'] == 'EnvironmentalDamage'
+)
 ```
+
+**Shared helpers for PROJ-301..304** (intrinsic ability sources):
+- `roll_intrinsic_abilities(template, rng)` in `ability_sources/intrinsic_roll.py` — convert `{"min": x, "max": y}` ranges to scalar rolls.
+- `format_intrinsic_source_label(entity_name, type_name)` in `ability_sources/labels.py` — canonical label format.
 
 ---
 
@@ -1202,7 +1221,8 @@ Stateless services require no constructor args:
 ```python
 service = BattleService()
 nav_service = FleetNavigationService()
-manager = AreaEffectManager()
+# Sector/system effects are now functions, not a service:
+# from game.strategy.services.system_effects_collector import collect_sector_effects
 # FleetSpeedCalculator, ActionTimeResolver, DesignCostCalculator use only static methods
 ```
 
@@ -1261,7 +1281,7 @@ for warning in result.warnings:
 |              FleetSpeedCalculator, ComponentInspector,   |
 |              ActionTimeResolver, CargoTransferService,   |
 |              DesignCostCalculator, FleetCargoProjector,  |
-|              AreaEffectManager, SystemEffectsCollector,  |
+|              SystemEffectsCollector + ability_sources/   |
 |              BuildQueueController, BuildQueueRenderer    |
 +----------------------------+----------------------------+
                              | Uses
