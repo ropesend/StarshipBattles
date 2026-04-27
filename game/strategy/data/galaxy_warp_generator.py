@@ -368,3 +368,70 @@ class GalaxyWarpGenerator:
 
         # 3. Add density edges beyond MST
         self._add_density_edges(systems, edges, region_classifier, inter_region_mode)
+
+        # 4. PROJ-303: roll warp_type + intrinsic abilities for each generated point.
+        _apply_warp_point_intrinsic_abilities(systems)
+
+
+# PROJ-303 — module-level warp point intrinsics helper.
+_WARP_POINT_TYPES_CACHE = None
+
+
+def _load_warp_point_types() -> dict:
+    global _WARP_POINT_TYPES_CACHE
+    if _WARP_POINT_TYPES_CACHE is None:
+        from pathlib import Path
+        import json
+        from game.core.paths import Paths
+
+        path = Path(Paths.WARP_POINT_TYPES_FILE)
+        if path.exists():
+            with path.open('r', encoding='utf-8') as f:
+                data = json.load(f)
+            _WARP_POINT_TYPES_CACHE = data.get('warp_point_types', {})
+        else:
+            _WARP_POINT_TYPES_CACHE = {}
+    return _WARP_POINT_TYPES_CACHE
+
+
+# Default weighted distribution for warp_type rolls. Most warp points are stable.
+_DEFAULT_WARP_TYPE_WEIGHTS = [
+    ('stable', 80),
+    ('unstable', 10),
+    ('dimensional_rift', 7),
+    ('precursor_gateway', 3),
+]
+
+
+def _roll_warp_type(rng) -> str:
+    total = sum(w for _, w in _DEFAULT_WARP_TYPE_WEIGHTS)
+    pick = rng.randint(1, total)
+    cumulative = 0
+    for type_name, weight in _DEFAULT_WARP_TYPE_WEIGHTS:
+        cumulative += weight
+        if pick <= cumulative:
+            return type_name
+    return 'stable'
+
+
+def _apply_warp_point_intrinsic_abilities(systems) -> None:
+    """PROJ-303: roll warp_type + intrinsic abilities for each warp point."""
+    import random as _random
+    from game.strategy.services.ability_sources import roll_intrinsic_abilities
+
+    types_data = _load_warp_point_types()
+    if not types_data:
+        return
+
+    rng = _random.Random()
+    for system in systems:
+        for wp in getattr(system, 'warp_points', []) or []:
+            # Idempotent: respect pre-set warp_type from scenarios.
+            if wp.warp_type and wp.warp_type != 'stable':
+                continue
+            if wp.intrinsic_abilities:
+                continue
+            wp.warp_type = _roll_warp_type(rng)
+            template = types_data.get(wp.warp_type, {}).get('abilities', {})
+            if template:
+                wp.intrinsic_abilities = roll_intrinsic_abilities(template, rng)

@@ -32,15 +32,21 @@ if TYPE_CHECKING:
 
 
 class WarpPoint:
-    def __init__(self, destination_id, location):
+    def __init__(self, destination_id, location, warp_type='stable', intrinsic_abilities=None):
         self.destination_id = destination_id
-        self.location = location # HexCoord (Local to system)
+        self.location = location  # HexCoord (Local to system)
+        # PROJ-303: warp point type (stable, unstable, dimensional_rift, etc.)
+        # — drives intrinsic abilities. Defaults to 'stable' (no effects).
+        self.warp_type = warp_type
+        self.intrinsic_abilities = dict(intrinsic_abilities) if intrinsic_abilities else {}
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize WarpPoint to dict."""
         return {
             'destination_id': self.destination_id,
-            'location': hex_to_dict(self.location)
+            'location': hex_to_dict(self.location),
+            'warp_type': self.warp_type,
+            'intrinsic_abilities': dict(self.intrinsic_abilities),
         }
 
     @classmethod
@@ -68,7 +74,9 @@ class WarpPoint:
 
         return cls(
             destination_id=data['destination_id'],
-            location=location
+            location=location,
+            warp_type=data.get('warp_type', 'stable'),
+            intrinsic_abilities=data.get('intrinsic_abilities') or {},
         )
 
 class StarSystem:

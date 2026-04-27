@@ -1,0 +1,32 @@
+{
+    "version": "1.0",
+    "description": "Warp point intrinsic ability templates. Registered as IAbilitySource via WarpPointAbilitySource (PROJ-303). Sector-scope only — warp points are single-hex entities. Most warp points are 'stable' with no abilities; rarer types add hazards or perks.",
+    "warp_point_types": {
+        "stable": {
+            "name": "Stable Warp Point",
+            "description": "Standard warp point; safe transit.",
+            "abilities": {}
+        },
+        "unstable": {
+            "name": "Unstable Warp Point",
+            "description": "Warp shear damages ships transiting nearby hexes.",
+            "abilities": {
+                "EnvironmentalDamage": {"rate": {"min": 0.3, "max": 0.6}, "damage_type": "warp", "scope": "sector"}
+            }
+        },
+        "dimensional_rift": {
+            "name": "Dimensional Rift",
+            "description": "Sensor obscuration from interdimensional turbulence.",
+            "abilities": {
+                "ShieldModifier": {"multiplier": {"min": 0.7, "max": 0.85}, "scope": "sector"}
+            }
+        },
+        "precursor_gateway": {
+            "name": "Precursor Gateway",
+            "description": "Ancient construct; provides shield boost to allied ships nearby.",
+            "abilities": {
+                "ShieldModifier": {"multiplier": {"min": 1.1, "max": 1.25}, "scope": "allied_sector"}
+            }
+        }
+    }
+}

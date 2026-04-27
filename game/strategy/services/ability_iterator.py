@@ -17,6 +17,7 @@ from game.strategy.services.ability_sources import (
     StormAbilitySource,
     PlanetIntrinsicAbilitySource,  # PROJ-301
     StarAbilitySource,  # PROJ-302
+    WarpPointAbilitySource,  # PROJ-303
 )
 
 
@@ -224,13 +225,28 @@ def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> 
             yield adapter
 
 
-# Register the built-in providers at module load. PROJ-302..305 register their
+def _warp_point_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """PROJ-303: yield WarpPointAbilitySource for warp points with abilities."""
+    if system is None:
+        return
+    warp_points = getattr(system, 'warp_points', None) or []
+    for wp in warp_points:
+        if not getattr(wp, 'intrinsic_abilities', None):
+            continue
+        adapter = WarpPointAbilitySource(warp_point=wp, system=system)
+        if hex_coord is None or adapter.affects_hex(hex_coord):
+            yield adapter
+
+
+# Register the built-in providers at module load. PROJ-304..305 register their
 # own additional providers from their own modules.
 register_source_provider_at_hex(_facility_provider)
 register_source_provider_at_hex(_storm_provider)
 register_source_provider_at_hex(_planet_intrinsic_provider)
 register_source_provider_at_hex(_star_provider)
+register_source_provider_at_hex(_warp_point_provider)
 register_source_provider_in_system(_facility_provider)
 register_source_provider_in_system(_storm_provider)
 register_source_provider_in_system(_planet_intrinsic_provider)
 register_source_provider_in_system(_star_provider)
+register_source_provider_in_system(_warp_point_provider)

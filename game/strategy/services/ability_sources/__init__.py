@@ -23,6 +23,7 @@ from .facility import FacilityAbilitySource
 from .storm import StormAbilitySource
 from .planet_intrinsic import PlanetIntrinsicAbilitySource  # PROJ-301
 from .star import StarAbilitySource  # PROJ-302
+from .warp_point import WarpPointAbilitySource  # PROJ-303
 from .intrinsic_roll import roll_intrinsic_abilities
 from .labels import format_intrinsic_source_label
 
@@ -31,6 +32,7 @@ __all__ = [
     'StormAbilitySource',
     'PlanetIntrinsicAbilitySource',
     'StarAbilitySource',
+    'WarpPointAbilitySource',
     'roll_intrinsic_abilities',
     'format_intrinsic_source_label',
 ]
