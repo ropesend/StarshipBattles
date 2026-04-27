@@ -15,6 +15,8 @@ operating when possible:
 
 For fatal errors that indicate programming bugs, TargetingException is raised.
 """
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional, Tuple
 
 from game.core.math import Vector2
@@ -36,7 +38,7 @@ class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
 
     @staticmethod
-    def _eval_distance_rule(ship, candidate, rule, distance_cache):
+    def _eval_distance_rule(ship, candidate, rule, distance_cache) -> tuple[float, bool]:
         """Evaluate distance-based rules: nearest, farthest, distance.
 
         Args:
@@ -76,7 +78,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_mass_rule(candidate, rule):
+    def _eval_mass_rule(candidate, rule) -> tuple[float, bool]:
         """Evaluate mass/size-based rules: mass, largest, smallest, strongest, weakest.
 
         Args:
@@ -108,7 +110,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_speed_rule(candidate, rule):
+    def _eval_speed_rule(candidate, rule) -> tuple[float, bool]:
         """Evaluate speed-based rules: fastest, slowest.
 
         Args:
@@ -132,7 +134,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_damage_rule(candidate, rule, stat_helpers):
+    def _eval_damage_rule(candidate, rule, stat_helpers) -> tuple[float, bool]:
         """Evaluate damage-based rules: most_damaged, least_damaged.
 
         Args:
@@ -164,7 +166,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_has_weapons_rule(candidate, rule, ship_capabilities_cache):
+    def _eval_has_weapons_rule(candidate, rule, ship_capabilities_cache) -> tuple[float, bool]:
         """Evaluate has_weapons rule.
 
         PROJ-272 Phase 3: projectile candidates (missiles) have no
@@ -192,7 +194,7 @@ class TargetEvaluator:
         return (0, not required)
 
     @staticmethod
-    def _eval_least_armor_rule(candidate, rule):
+    def _eval_least_armor_rule(candidate, rule) -> tuple[float, bool]:
         """Evaluate least_armor rule.
 
         PROJ-272 Phase 3: projectile candidates have no armor layer —
@@ -213,7 +215,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_pdc_arc_rule(ship, candidate, rule, stat_helpers):
+    def _eval_pdc_arc_rule(ship, candidate, rule, stat_helpers) -> tuple[float, bool]:
         """Evaluate pdc_arc/missiles_in_pdc_arc rule."""
         weight = rule.get('weight', 0)
         required = rule.get('required', False)
@@ -236,7 +238,7 @@ class TargetEvaluator:
         return (-999999, False)
 
     @staticmethod
-    def _eval_capability_rule(ship, candidate, rule, stat_helpers, ship_capabilities_cache):
+    def _eval_capability_rule(ship, candidate, rule, stat_helpers, ship_capabilities_cache) -> tuple[float, bool]:
         """Evaluate capability-based rules: has_weapons, least_armor, pdc_arc/missiles_in_pdc_arc.
 
         Args:

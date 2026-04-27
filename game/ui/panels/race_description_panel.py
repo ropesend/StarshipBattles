@@ -12,6 +12,8 @@ Provides UI controls for configuring:
 - Biological description (max 500 chars)
 - Sociological description (max 500 chars)
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import pygame_gui
@@ -68,7 +70,7 @@ class RaceDescriptionPanel:
 
         self._create_content()
 
-    def _create_content(self):
+    def _create_content(self) -> None:
         """Create all panel content."""
         panel_width = self.panel.get_relative_rect().width - 20
         panel_height = self.panel.get_relative_rect().height - 20
@@ -114,7 +116,7 @@ class RaceDescriptionPanel:
             object_id="#description_box"
         )
 
-    def update_char_counts(self):
+    def update_char_counts(self) -> None:
         """Update character count labels for description text boxes."""
         if self.bio_text_box and self.bio_char_label:
             text = self.bio_text_box.get_text()
@@ -126,7 +128,7 @@ class RaceDescriptionPanel:
             count = len(text)
             self.socio_char_label.set_text(f"{count}/{self.MAX_LENGTH}")
 
-    def update_config(self):
+    def update_config(self) -> None:
         """Update race_config from description text boxes."""
         if self.bio_text_box:
             text = self.bio_text_box.get_text()
@@ -138,7 +140,7 @@ class RaceDescriptionPanel:
             # Enforce max char limit
             self.race_config.socio_description = text[:self.MAX_LENGTH]
 
-    def set_from_config(self):
+    def set_from_config(self) -> None:
         """Set text box values from race_config (for loading saved races)."""
         if self.bio_text_box:
             self.bio_text_box.set_text(self.race_config.bio_description or "")

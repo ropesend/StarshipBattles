@@ -3,6 +3,9 @@ Battle UI - Handles all UI rendering and interaction for the BattleScreen.
 
 Provides HUD elements, ship stats panels, seeker monitors, and battle control panel.
 """
+from __future__ import annotations
+
+from typing import Any
 import logging
 import pygame
 import math
@@ -42,12 +45,12 @@ class BattleUI:
         # The logic inside draws overlays or buttons. Let's give it full screen to manage global overlays.
         self.control_panel = BattleControlPanel(scene, 0, 0, screen_width, screen_height)
 
-    def track_projectile(self, proj):
+    def track_projectile(self, proj) -> None:
         """Add a projectile to the tracker if it is a missile."""
         if getattr(proj, 'type', None) == AttackType.MISSILE:
             self.seeker_panel.add_seeker(proj)
 
-    def handle_resize(self, width, height):
+    def handle_resize(self, width, height) -> None:
         """Update UI elements for new resolution."""
         self.width = width
         self.height = height
@@ -68,7 +71,7 @@ class BattleUI:
         self.control_panel.rect.height = height
         self.control_panel.surface = None
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the battle scene UI elements (excluding ships/projectiles)."""
         # Draw grid
         self.draw_grid(screen)
@@ -81,7 +84,7 @@ class BattleUI:
         self.seeker_panel.draw(screen)
         self.control_panel.draw(screen)
 
-    def handle_click(self, mx, my, button):
+    def handle_click(self, mx, my, button) -> Any:
         """Handle mouse clicks. Returns True if click was handled."""
 
         # Control Panel (End Battle / View Results button)
@@ -102,11 +105,11 @@ class BattleUI:
 
         return False
 
-    def handle_scroll(self, scroll_y, screen_height):
+    def handle_scroll(self, scroll_y, screen_height) -> None:
         """Handle mouse wheel scroll. Currently no scrollable content in battle view."""
         pass
 
-    def draw_grid(self, screen):
+    def draw_grid(self, screen) -> None:
         """Draw the background grid."""
         grid_spacing = UIConfig.GRID_SPACING
         sw, sh = screen.get_size()
@@ -132,7 +135,7 @@ class BattleUI:
             p2 = camera.world_to_screen(pygame.math.Vector2(end_x, y))
             pygame.draw.line(screen, grid_color, p1, p2, 1)
 
-    def draw_debug_overlay(self, screen):
+    def draw_debug_overlay(self, screen) -> None:
         """Draw debug information overlay for battle visualization.
 
         Renders the following debug elements for each ship:

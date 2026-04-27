@@ -4,7 +4,9 @@ Fleet Report Sidebar - Sidebar UI component for FleetReportWindow.
 PROJ-173 Phase 1: Extracted from FleetReportWindow to reduce god class size.
 PROJ-220 Phase 3: Replaced paired filter buttons with TriStateFilterWidget.
 """
-from typing import Dict
+from __future__ import annotations
+
+from typing import Any, Dict
 
 import pygame
 from pygame_gui.elements import UIPanel, UILabel, UIButton
@@ -106,7 +108,7 @@ class FleetReportSidebar:
         # Build all widgets
         self._build_widgets()
 
-    def _build_widgets(self):
+    def _build_widgets(self) -> None:
         """Build all sidebar widgets."""
         y = 10
 
@@ -340,7 +342,7 @@ class FleetReportSidebar:
         y += 20
         return y
 
-    def _build_actions_section(self, y: int):
+    def _build_actions_section(self, y: int) -> None:
         """Build action buttons."""
         UILabel(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
@@ -360,7 +362,7 @@ class FleetReportSidebar:
         )
         self.btn_remove_selected.disable()  # Disabled until selection exists
 
-    def update_summary(self, fleet):
+    def update_summary(self, fleet) -> None:
         """
         Update the fleet summary labels.
 
@@ -438,7 +440,7 @@ class FleetReportSidebar:
         else:
             self.lbl_warp_jumps.set_text(f"Warp Jumps: {warp_jumps}")
 
-    def update_remove_button(self, selected_count: int):
+    def update_remove_button(self, selected_count: int) -> None:
         """
         Enable/disable remove button and update text based on selection count.
 
@@ -452,7 +454,7 @@ class FleetReportSidebar:
             self.btn_remove_selected.disable()
             self.btn_remove_selected.set_text("Remove Selected")
 
-    def update_filter_button(self, filter_id: str, is_enabled: bool):
+    def update_filter_button(self, filter_id: str, is_enabled: bool) -> None:
         """
         Update a status filter button's appearance.
 
@@ -469,7 +471,7 @@ class FleetReportSidebar:
             btn.unselect()
             btn.set_text(label)
 
-    def update_column_button(self, col_id: str, is_visible: bool):
+    def update_column_button(self, col_id: str, is_visible: bool) -> None:
         """
         Update a column toggle button's appearance.
 
@@ -485,7 +487,7 @@ class FleetReportSidebar:
         else:
             btn.set_text(f"[ ] {title}")
 
-    def check_button_presses(self):
+    def check_button_presses(self) -> Any:
         """
         Check for button presses and return actions.
 

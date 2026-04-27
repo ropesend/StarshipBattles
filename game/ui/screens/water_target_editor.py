@@ -4,11 +4,13 @@ Provides a single slider for setting a target water coverage level (0.0 to 1.0),
 displayed as a percentage. Includes Species Ideal, Match Current, Clear, and
 Apply buttons.
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UILabel, UIButton, UIHorizontalSlider
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 
 from game.ui.screens.species_selector_mixin import (
     build_species_selector, get_selected_race_id, load_race_config,
@@ -61,7 +63,7 @@ class WaterTargetEditor(UIWindow):
 
         self._build_ui()
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         """Build the editor UI with species selector, water slider, and buttons."""
         content_rect = self.get_container().get_rect()
         container_w = content_rect.width
@@ -151,7 +153,7 @@ class WaterTargetEditor(UIWindow):
             container=self,
         )
 
-    def update(self, time_delta: float):
+    def update(self, time_delta: float) -> None:
         """Update the target label when the slider moves."""
         super().update(time_delta)
 
@@ -185,7 +187,7 @@ class WaterTargetEditor(UIWindow):
 
         return handled
 
-    def _on_apply(self):
+    def _on_apply(self) -> None:
         """Apply the current slider value as water coverage target."""
         water_level = self.slider.get_current_value()
 
@@ -199,7 +201,7 @@ class WaterTargetEditor(UIWindow):
 
         self.kill()
 
-    def _set_species_ideal(self):
+    def _set_species_ideal(self) -> None:
         """Set slider to the selected species' ideal water coverage."""
         rc = self._get_active_race_config()
         if rc is None:
@@ -216,7 +218,7 @@ class WaterTargetEditor(UIWindow):
         self.lbl_target.set_text(f"Target: {clamped * 100:.1f}%")
         logger.debug("Set water to species ideal: %.1f%%", clamped * 100)
 
-    def _get_active_race_config(self):
+    def _get_active_race_config(self) -> Any:
         """Get the race config for the currently selected species."""
         if self._species_dropdown is not None:
             race_id = get_selected_race_id(self._species_dropdown)
@@ -230,14 +232,14 @@ class WaterTargetEditor(UIWindow):
                 return rc
         return self.race_config
 
-    def _set_match_current(self):
+    def _set_match_current(self) -> None:
         """Set slider to match current planet water coverage."""
         clamped = max(MIN_WATER, min(MAX_WATER, self.current_water))
         self.slider.set_current_value(clamped)
         self.lbl_target.set_text(f"Target: {clamped * 100:.1f}%")
         logger.debug("Set water to match current: %.1f%%", clamped * 100)
 
-    def _clear_target(self):
+    def _clear_target(self) -> None:
         """Clear water target (apply None)."""
         logger.info("Clearing water target for planet %s", self.planet.name)
 

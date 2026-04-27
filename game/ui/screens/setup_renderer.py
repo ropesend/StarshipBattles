@@ -4,6 +4,9 @@ Battle setup screen rendering functions.
 Pure rendering functions for drawing the setup screen UI elements.
 
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 from game.ui.fonts import get_default_font
 from game.ui.colors import (
@@ -22,14 +25,14 @@ from game.ui.colors import (
 )
 
 
-def draw_title(screen, sw):
+def draw_title(screen, sw) -> None:
     """Draw the battle setup title."""
     title_font = get_default_font(64)
     title = title_font.render("BATTLE SETUP", True, SETUP_TITLE)
     screen.blit(title, (sw // 2 - title.get_width() // 2, 30))
 
 
-def draw_available_ships(screen, col_x, available_designs, available_formations, label_font, item_font):
+def draw_available_ships(screen, col_x, available_designs, available_formations, label_font, item_font) -> Any:
     """
     Draw the available ships and formations list.
 
@@ -72,7 +75,7 @@ def draw_available_ships(screen, col_x, available_designs, available_formations,
     return ships_end_y
 
 
-def draw_load_save_buttons(screen, btn_y, label_font):
+def draw_load_save_buttons(screen, btn_y, label_font) -> None:
     """Draw load and save buttons."""
     # Load button
     pygame.draw.rect(screen, BTN_NEUTRAL_BG, (50, btn_y, 120, 50))
@@ -87,7 +90,7 @@ def draw_load_save_buttons(screen, btn_y, label_font):
     screen.blit(sav_text, (180 + 60 - sav_text.get_width() // 2, btn_y + 12))
 
 
-def draw_team(screen, display_list, col_x, title_text, color, label_font, item_font):
+def draw_team(screen, display_list, col_x, title_text, color, label_font, item_font) -> None:
     """
     Draw a team column with ships and formations.
 
@@ -142,7 +145,7 @@ def draw_team(screen, display_list, col_x, title_text, color, label_font, item_f
         screen.blit(x_text, (col_x + 315, y + 5))
 
 
-def draw_action_buttons(screen, sw, btn_y, has_teams, label_font):
+def draw_action_buttons(screen, sw, btn_y, has_teams, label_font) -> None:
     """
     Draw the main action buttons.
 
@@ -180,7 +183,7 @@ def draw_action_buttons(screen, sw, btn_y, has_teams, label_font):
     screen.blit(quick_text, (sw // 2 + 330 - quick_text.get_width() // 2, btn_y + 12))
 
 
-def draw_ai_dropdown(screen, ai_strategies, team_idx, display_idx, col2_x, col3_x, item_font):
+def draw_ai_dropdown(screen, ai_strategies, team_idx, display_idx, col2_x, col3_x, item_font) -> None:
     """
     Draw AI strategy dropdown overlay.
 

@@ -6,6 +6,8 @@ and increases the quality value of the target resource each turn.
 Changes are permanent — they persist even if the facility is later removed.
 Quality caps at 100.0.
 """
+from __future__ import annotations
+
 import logging
 from typing import List, TYPE_CHECKING
 
@@ -87,7 +89,7 @@ class QualityEngine:
                     f"{colony.name}: {resource_type} quality {current_quality:.1f} -> {new_quality:.1f}"
                 )
 
-    def _extract_quality_improvement(self, comp):
+    def _extract_quality_improvement(self, comp) -> dict | list | None:
         """Extract QualityImprovement ability data from a component entry."""
         from game.strategy.services.component_inspector import extract_abilities_from_component
         abilities = extract_abilities_from_component(comp, self._registries)

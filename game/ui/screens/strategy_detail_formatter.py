@@ -317,7 +317,7 @@ class StrategyDetailFormatter:
                     return True
         return False
 
-    def _layout_action_buttons(self):
+    def _layout_action_buttons(self) -> None:
         """Position all visible action buttons in a horizontal row at the bottom."""
         try:
             all_buttons = [

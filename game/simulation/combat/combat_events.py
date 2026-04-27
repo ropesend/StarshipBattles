@@ -158,7 +158,7 @@ class CombatEventBus:
         for cb in handlers:
             try:
                 cb(event)
-            except Exception:
+            except Exception:  # Intentional broad catch: subscribers may raise anything; one buggy observer must not break combat event dispatch
                 logger.exception(
                     f"Combat event handler error for {event.event_type}"
                 )

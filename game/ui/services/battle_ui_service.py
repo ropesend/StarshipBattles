@@ -9,6 +9,8 @@ access to battle state through immutable DTOs.
 PROJ-113: Added PROJECTILE_COLORS mapping to move visual properties
 from simulation layer to UI layer.
 """
+from __future__ import annotations
+
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from game.ui.interfaces.battle_ui import (
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
     from game.simulation.services import BattleService
     from game.simulation.entities.ship import Ship
     from game.core.protocols import ICombatShip
+    from game.simulation.systems.battle_engine import BattleEngine
 
 # PROJ-113: Projectile color mapping moved from simulation to UI layer
 # Maps AttackType to RGB color tuple
@@ -61,7 +64,7 @@ class BattleUIService:
         """
         self._battle_service = battle_service
 
-    def _get_engine_or_none(self):
+    def _get_engine_or_none(self) -> BattleEngine | None:
         """Get the battle engine, or None if not available.
 
         This helper centralizes engine access to reduce code duplication.

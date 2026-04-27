@@ -5,6 +5,9 @@ This module handles running test scenarios both visually and headlessly,
 including batch execution of multiple tests. It is decoupled from the
 screen's pygame rendering through callback interfaces.
 """
+from __future__ import annotations
+
+from typing import Any
 import time
 import pygame
 
@@ -70,7 +73,7 @@ class TestLabExecutor:
         self.batch_current_index = 0
         self.batch_total = 0
 
-    def run_visual(self, test_id):
+    def run_visual(self, test_id) -> None:
         """
         Run the selected test scenario visually in Combat Lab.
 
@@ -123,7 +126,7 @@ class TestLabExecutor:
         finally:
             runner.cleanup()
 
-    def run_visual_baseline(self, test_id):
+    def run_visual_baseline(self, test_id) -> None:
         """
         Run the baseline battle of a ComparisonScenario visually.
 
@@ -169,7 +172,7 @@ class TestLabExecutor:
         finally:
             runner.cleanup()
 
-    def run_headless(self, test_id):
+    def run_headless(self, test_id) -> Any:
         """
         Run the selected test scenario in headless mode (fast, no visuals).
 
@@ -235,7 +238,7 @@ class TestLabExecutor:
 
     def _run_scenario_via_run_battle(
         self, *, test_id, scenario, seed, runner, progress_label,
-    ):
+    ) -> bool:
         """Run a scenario headless through `run_battle(spec)`.
 
         PROJ-269 Phase 6 Task 6.9: replaces the legacy
@@ -252,7 +255,7 @@ class TestLabExecutor:
         # State capture bridged across run_battle via manual __enter__/__exit__.
         state_capture = BattleStateCapture(engine=None, test_id=test_id, seed=seed)
 
-        def pre_tick_loop_hook(engine):
+        def pre_tick_loop_hook(engine) -> None:
             # Now the engine has ships + state → safe to capture initial.
             state_capture.engine = engine
             state_capture.__enter__()
@@ -300,7 +303,7 @@ class TestLabExecutor:
             )
         return True
 
-    def run_all(self, filtered_scenarios):
+    def run_all(self, filtered_scenarios) -> None:
         """
         Run all visible tests headlessly in sequence.
 
@@ -319,7 +322,7 @@ class TestLabExecutor:
         self.output_log.append(f"Starting batch run of {self.batch_total} tests...")
         self.run_next_batch()
 
-    def run_next_batch(self):
+    def run_next_batch(self) -> None:
         """Run the next test in the batch sequence."""
         if self.batch_current_index >= self.batch_total:
             # All tests complete
@@ -384,7 +387,7 @@ class TestLabExecutor:
         # Use a small delay to allow UI updates, then continue
         pygame.time.set_timer(pygame.USEREVENT + 1, 50, loops=1)
 
-    def continue_batch(self):
+    def continue_batch(self) -> None:
         """Continue batch execution (called from event handler)."""
         if self.batch_running:
             self.run_next_batch()

@@ -2,6 +2,9 @@
 
 Displays detailed information for a selected test run.
 """
+from __future__ import annotations
+
+from typing import Any
 
 import pygame
 
@@ -54,18 +57,18 @@ class TestRunDetailsPanel:
         self.copy_results_button_rect = None
         self.on_copy_results = None  # Callback for copying results to clipboard
 
-    def set_run(self, run_record, run_number):
+    def set_run(self, run_record, run_number) -> None:
         """Set the run to display details for."""
         self.selected_run = (run_record, run_number)
         self.scroll.reset()
         self._calculate_scroll()
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear selected run."""
         self.selected_run = None
         self.scroll.reset()
 
-    def _calculate_scroll(self):
+    def _calculate_scroll(self) -> None:
         """Calculate max scroll based on content height."""
         if not self.selected_run:
             self.scroll.content_height = 0
@@ -87,7 +90,7 @@ class TestRunDetailsPanel:
         self.scroll.viewport_height = self.height - 20
         self.scroll.clamp()
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle scroll and click events."""
         if not self.selected_run:
             return False
@@ -122,7 +125,7 @@ class TestRunDetailsPanel:
                     return True
         return False
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the test run details panel."""
         pygame.draw.rect(surface, self.bg_color, (self.x, self.y, self.width, self.height))
         pygame.draw.rect(surface, self.border_color, (self.x, self.y, self.width, self.height), 2)
@@ -173,7 +176,7 @@ class TestRunDetailsPanel:
         if self.scroll.can_scroll:
             self._draw_scrollbar(surface)
 
-    def _draw_header_and_status(self, surface, run_record, run_number, y_offset):
+    def _draw_header_and_status(self, surface, run_record, run_number, y_offset) -> Any:
         """Draw run info header and pass/fail status.
 
         Returns updated y_offset.
@@ -194,7 +197,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_metadata(self, surface, run_record, y_offset):
+    def _draw_metadata(self, surface, run_record, y_offset) -> Any:
         """Draw seed and ticks information.
 
         Returns updated y_offset.
@@ -214,7 +217,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_action_buttons(self, surface, run_record, y_offset):
+    def _draw_action_buttons(self, surface, run_record, y_offset) -> Any:
         """Draw View States, Use Seed, and Copy Results buttons.
 
         Returns updated y_offset.
@@ -306,7 +309,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_metrics(self, surface, run_record, y_offset):
+    def _draw_metrics(self, surface, run_record, y_offset) -> Any:
         """Draw test metrics section.
 
         Returns updated y_offset.
@@ -331,7 +334,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_validation_results(self, surface, run_record, y_offset):
+    def _draw_validation_results(self, surface, run_record, y_offset) -> Any:
         """Draw validation results section grouped by phase with expected/actual/status.
 
         Checks are grouped into DATA, PRECONDITION, and OUTCOME phases.
@@ -391,7 +394,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_single_validation(self, surface, vr, y_offset):
+    def _draw_single_validation(self, surface, vr, y_offset) -> Any:
         """Draw a single validation result item.
 
         Returns updated y_offset.
@@ -484,7 +487,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_numeric_difference(self, surface, expected, actual, status, y_offset, indent, label_width):
+    def _draw_numeric_difference(self, surface, expected, actual, status, y_offset, indent, label_width) -> Any:
         """Draw the difference/percentage line for numeric values.
 
         Returns updated y_offset.
@@ -529,17 +532,17 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _is_propulsion_test(self, run_record):
+    def _is_propulsion_test(self, run_record) -> Any:
         """Check if this run record is from a propulsion test."""
         test_id = run_record.metrics.get('test_id', '')
         return test_id.startswith('PROP-')
 
-    def _is_resource_test(self, run_record):
+    def _is_resource_test(self, run_record) -> Any:
         """Check if this run record is from a resource test."""
         test_id = run_record.metrics.get('test_id', '')
         return test_id.startswith('RESOURCE-')
 
-    def _draw_resource_outcomes(self, surface, run_record, y_offset):
+    def _draw_resource_outcomes(self, surface, run_record, y_offset) -> Any:
         """Draw resource test outcomes section (detailed view)."""
         metrics = run_record.metrics
         test_id = metrics.get('test_id', '')
@@ -581,7 +584,7 @@ class TestRunDetailsPanel:
         return y_offset
 
     def _draw_fuel_outcomes(self, surface, metrics, y_offset, label_color, value_color,
-                            highlight_color, indent, label_width):
+                            highlight_color, indent, label_width) -> Any:
         """Draw fuel test outcomes."""
         initial_fuel = metrics.get('initial_fuel', 0)
         final_fuel = metrics.get('final_fuel', 0)
@@ -646,7 +649,7 @@ class TestRunDetailsPanel:
         return y_offset
 
     def _draw_energy_outcomes(self, surface, metrics, y_offset, label_color, value_color,
-                               highlight_color, indent, label_width):
+                               highlight_color, indent, label_width) -> Any:
         """Draw energy test outcomes."""
         initial_energy = metrics.get('initial_energy', 0)
         final_energy = metrics.get('final_energy', 0)
@@ -707,7 +710,7 @@ class TestRunDetailsPanel:
         return y_offset
 
     def _draw_ammo_outcomes(self, surface, metrics, y_offset, label_color, value_color,
-                             highlight_color, indent, label_width, test_id):
+                             highlight_color, indent, label_width, test_id) -> Any:
         """Draw ammo test outcomes."""
         initial_ammo = metrics.get('initial_ammo', 0)
         final_ammo = metrics.get('final_ammo', 0)
@@ -773,7 +776,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_propulsion_outcomes(self, surface, run_record, y_offset):
+    def _draw_propulsion_outcomes(self, surface, run_record, y_offset) -> Any:
         """Draw propulsion test outcomes section."""
         metrics = run_record.metrics
 
@@ -814,7 +817,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_motion_outcomes(self, surface, metrics, y_offset, label_color, value_color, highlight_color):
+    def _draw_motion_outcomes(self, surface, metrics, y_offset, label_color, value_color, highlight_color) -> Any:
         """Draw motion test outcomes (velocity, position, distance)."""
         indent = 15
 
@@ -859,7 +862,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_turn_outcomes(self, surface, metrics, y_offset, label_color, value_color, highlight_color):
+    def _draw_turn_outcomes(self, surface, metrics, y_offset, label_color, value_color, highlight_color) -> Any:
         """Draw turn test outcomes (angles, expected vs actual)."""
         indent = 15
 
@@ -921,7 +924,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_stationary_outcomes(self, surface, metrics, y_offset, label_color, value_color):
+    def _draw_stationary_outcomes(self, surface, metrics, y_offset, label_color, value_color) -> Any:
         """Draw stationary test outcomes (no motion)."""
         indent = 15
 
@@ -944,7 +947,7 @@ class TestRunDetailsPanel:
 
         return y_offset
 
-    def _draw_scrollbar(self, surface):
+    def _draw_scrollbar(self, surface) -> None:
         """Draw scrollbar indicator."""
         visible_height = self.height
         total_content_height = visible_height + self.scroll.max_offset

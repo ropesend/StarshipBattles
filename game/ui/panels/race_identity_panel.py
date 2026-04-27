@@ -12,6 +12,8 @@ Provides UI controls for:
 - Society type selection
 - Faction name (auto-generated or custom)
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from typing import Optional, TYPE_CHECKING
@@ -66,7 +68,7 @@ class RaceIdentityPanel:
 
         self._create_content()
 
-    def _init_empty_refs(self):
+    def _init_empty_refs(self) -> None:
         """Initialize all UI references to None."""
         # Text inputs
         self.race_name_input: Optional[pygame_gui.elements.UITextEntryLine] = None
@@ -81,7 +83,7 @@ class RaceIdentityPanel:
         self.leader_title_dropdown: Optional[pygame_gui.elements.UIDropDownMenu] = None
         self.society_type_dropdown: Optional[pygame_gui.elements.UIDropDownMenu] = None
 
-    def _create_content(self):
+    def _create_content(self) -> None:
         """Create all panel content."""
         panel_width = self.panel.get_relative_rect().width - 20
         y = 5
@@ -315,7 +317,7 @@ class RaceIdentityPanel:
         else:
             return ""
 
-    def _update_faction_if_not_overridden(self, race_name: str, government_type: str):
+    def _update_faction_if_not_overridden(self, race_name: str, government_type: str) -> None:
         """
         Update faction name if not manually overridden.
 
@@ -350,7 +352,7 @@ class RaceIdentityPanel:
             return ""
         return value
 
-    def update_config(self):
+    def update_config(self) -> None:
         """Update race_config from UI element values."""
         if self.race_name_input:
             self.race_config.race_name = self.race_name_input.get_text()
@@ -379,7 +381,7 @@ class RaceIdentityPanel:
         if self.society_type_dropdown:
             self.race_config.society_type = self._get_dropdown_value(self.society_type_dropdown)
 
-    def set_from_config(self):
+    def set_from_config(self) -> None:
         """Set UI element values from race_config (for loading saved races)."""
         if self.race_name_input:
             self.race_name_input.set_text(self.race_config.race_name or "")
@@ -418,7 +420,7 @@ class RaceIdentityPanel:
         self.society_type_dropdown = self._recreate_dropdown(
             self.society_type_dropdown, society_options, self.race_config.society_type)
 
-    def _recreate_dropdown(self, dropdown, options_list, value: str):
+    def _recreate_dropdown(self, dropdown, options_list, value: str) -> "pygame_gui.elements.UIDropDownMenu | None":
         """
         Recreate a dropdown with a new selected value.
 
@@ -450,7 +452,7 @@ class RaceIdentityPanel:
             container=container,
         )
 
-    def update_labels(self):
+    def update_labels(self) -> None:
         """Update display labels. No-op for this panel (labels are static)."""
         pass
 

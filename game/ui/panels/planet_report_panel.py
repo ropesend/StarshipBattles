@@ -4,6 +4,8 @@ Planet Report Panel - Reusable widget for displaying planet information.
 This widget encapsulates the planet detail display from the strategy screen,
 showing planet portrait, comprehensive stats, and atmosphere composition graph.
 """
+from __future__ import annotations
+
 
 import os
 from typing import Dict, List, Optional
@@ -130,7 +132,7 @@ def _stockpile_cell(store: dict, rid: str) -> str:
     return format_compact_number(store[rid])
 
 
-def _net_cell_color(net: float):
+def _net_cell_color(net: float) -> tuple[int, int, int]:
     """Colour for a Net cell — green positive, red negative, default zero.
     Reuses the existing HP colour constants (`HP_HEALTHY` / `HP_CRITICAL`)
     so the palette stays consistent with other "good vs bad" indicators."""
@@ -323,7 +325,7 @@ class PlanetReportPanel:
         view=None,
         empire=None,
         race_registry=None,
-    ):
+    ) -> None:
         """
         Update display for a new planet.
 
@@ -382,7 +384,7 @@ class PlanetReportPanel:
         self._update_complexes_list()
         self._update_resource_grid()
 
-    def _update_portrait(self, portrait_surface=None):
+    def _update_portrait(self, portrait_surface=None) -> None:
         """Update planet portrait image."""
         if portrait_surface:
             # Use provided portrait surface (from strategy scene asset system)
@@ -429,7 +431,7 @@ class PlanetReportPanel:
             # Update UIImage
             self.portrait_image.set_image(portrait_surf)
 
-    def _update_graph(self):
+    def _update_graph(self) -> None:
         """Update atmosphere graph visualization."""
         # Render atmosphere graph vertically then rotate -90 degrees (matches strategy screen)
         graph_surface = self.graph.render(self.planet, vertical=True)
@@ -438,7 +440,7 @@ class PlanetReportPanel:
         # Update UIImage
         self.graph_image.set_image(graph_surface)
 
-    def _update_complexes_list(self):
+    def _update_complexes_list(self) -> None:
         """Update the list of built complexes on the planet."""
         # Check if complexes list is enabled
         if not self.complexes_container:
@@ -640,7 +642,7 @@ class PlanetReportPanel:
                 pygame.draw.rect(surf, WHITE, surf.get_rect(), 1)
                 self._resource_icons[resource] = surf
 
-    def get_height_required(self):
+    def get_height_required(self) -> int:
         """
         Get minimum height required for this panel.
 
@@ -649,7 +651,7 @@ class PlanetReportPanel:
         """
         return 350 + RESOURCE_PANEL_HEIGHT
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up all UI elements."""
         # Clean up resource grid items
         for item in self._resource_grid_items:

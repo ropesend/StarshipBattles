@@ -406,7 +406,7 @@ class Planet:
         """Remove all orders from the planet's queue."""
         self.orders.clear()
 
-    def add_production(self, design_id: str, turns: int, vehicle_type: str = "ship"):
+    def add_production(self, design_id: str, turns: int, vehicle_type: str = "ship") -> None:
         """Add item to construction queue.
 
         Args:

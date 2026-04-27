@@ -1,4 +1,6 @@
 """Event bus for decoupled communication between UI components."""
+from __future__ import annotations
+
 import logging
 
 from game.core.exceptions import ValidationException
@@ -13,7 +15,7 @@ class EventBus:
     def __init__(self):
         self._subscribers = {}
 
-    def subscribe(self, event_type, callback):
+    def subscribe(self, event_type, callback) -> None:
         """Register a callback for an event type.
 
         Args:
@@ -33,7 +35,7 @@ class EventBus:
             self._subscribers[event_type] = []
         self._subscribers[event_type].append(callback)
 
-    def unsubscribe(self, event_type, callback):
+    def unsubscribe(self, event_type, callback) -> None:
         """Remove a callback from an event type.
 
         Args:
@@ -44,7 +46,7 @@ class EventBus:
             if callback in self._subscribers[event_type]:
                 self._subscribers[event_type].remove(callback)
 
-    def emit(self, event_type, data=None):
+    def emit(self, event_type, data=None) -> None:
         """Emit an event to all subscribers.
 
         Args:

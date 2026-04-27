@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Establish convention in CLAUDE.md | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. mypy/pyright baseline | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Backfill annotations (per layer) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Establish convention in CLAUDE.md | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. mypy/pyright baseline | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Backfill annotations (per layer) | Ready for parallel waves | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CI enforcement | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for implementation)
-**Last Action:** Project created. Verified annotation coverage: **1408 unannotated functions of 4930 total = 71.4% annotated** (NOT 59.5%/2145 as in original review). Dunder methods excluded from the denominator
-**Next Action:** Begin Phase 1 — add the convention to CLAUDE.md so the rule is in place before backfill starts
-**Blockers:** None — depends on no other project. Can run in parallel with everything except code that's actively being moved by PROJ-309
-**Context for Next Agent:** Python 3.13+ baseline (per PROJ-295) means PEP 604 union types (`int | None`) are available; no need for `Optional[int]`. Use modern syntax in new annotations.
+**Last Updated:** 2026-04-27
+**Active Phase:** Phase 1+2 complete; Phase 3 ready for parallel waves
+**Last Action:** Phase 1 landed convention in CLAUDE.md "Code Quality" + new §8 Type Annotations in `docs/03_CONVENTIONS.md` (renumbered Documentation Freshness to §9). Phase 2 built `findings/annotation_audit.py`, ran on `game/`, produced `inventory.csv` (5349 rows) and `unannotated.csv` (1408 rows). Confirmed baseline: **1408 unannotated of 4933 non-dunder = 71.46% coverage**, exact match to design.md.
+**Next Action:** Phase 3 — six parallel waves per `findings/wave_order.md`. Wave A (core+ai+other, 88 funcs), Wave B (simulation, 109), Wave C (strategy, 57), Wave D1 (ui non-screens, 188), Wave D2 (ui/screens A–M, ~480), Wave D3 (ui/screens N–Z, ~480).
+**Blockers:** None for the audit. Phase 3 must coordinate with PROJ-309 (file decomposition) on overlapping files.
+**Context for Next Agent:** Python 3.13+ baseline (per PROJ-295) means PEP 604 union types (`int | None`) are available; no need for `Optional[int]`. Use modern syntax in new annotations. The audit script is reusable — re-run after each wave to confirm coverage drops to 0 in that subsystem.
 
 ## Overview
 Bring return-type annotation coverage from 71.4% to ≥95% across `game/`. Establish CLAUDE.md convention requiring return annotations on every public function. Optionally add a CI check (`mypy --strict-equality` or `pyright`) to prevent regression.

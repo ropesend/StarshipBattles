@@ -11,6 +11,8 @@ PROJ-147: Moved from game/research/ui/ to game/ui/research/ to fix architecture
 layer violation. This module now correctly lives under the UI layer and can
 import Camera directly without the late import workaround.
 """
+from __future__ import annotations
+
 import logging
 from typing import Optional
 import pygame
@@ -144,7 +146,7 @@ class ResearchTreeScene:
 
         logger.info(f"ResearchTreeScene: Initialized with {len(self.tech_tree.nodes)} nodes")
 
-    def _calculate_layout(self):
+    def _calculate_layout(self) -> None:
         """Calculate world positions for all nodes (left-to-right by depth)."""
         max_depth = self.tech_tree.get_max_depth()
 
@@ -161,7 +163,7 @@ class ResearchTreeScene:
 
         logger.debug(f"ResearchTreeScene: Layout calculated for {len(self.node_positions)} nodes")
 
-    def _center_camera(self):
+    def _center_camera(self) -> None:
         """Center the camera on the tech tree."""
         if not self.node_positions:
             return
@@ -177,7 +179,7 @@ class ResearchTreeScene:
         center_y = (min_y + max_y) / 2
         self.camera.position = pygame.math.Vector2(center_x, center_y)
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         """
         Update the scene.
 
@@ -187,7 +189,7 @@ class ResearchTreeScene:
         self.camera.update(dt)
         self.ui_manager.update(dt)
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         """
         Draw the scene.
 
@@ -211,7 +213,7 @@ class ResearchTreeScene:
         # Draw pygame_gui elements
         self.ui_manager.draw_ui(screen)
 
-    def handle_event(self, event: pygame.event):
+    def handle_event(self, event: pygame.event) -> None:
         """
         Handle pygame events.
 
@@ -245,7 +247,7 @@ class ResearchTreeScene:
             if mx < self.canvas_width:
                 self.camera.update_input(0, [event])
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         """
         Handle window resize.
 
@@ -283,7 +285,7 @@ class ResearchTreeScene:
             if node:
                 self.control_panel.update_selected_node(node, self.tracker)
 
-    def _handle_click(self, mx: int, my: int):
+    def _handle_click(self, mx: int, my: int) -> None:
         """
         Handle canvas click for node selection.
 
@@ -328,7 +330,7 @@ class ResearchTreeScene:
 
         return None
 
-    def _on_next_turn(self):
+    def _on_next_turn(self) -> None:
         """Process one turn of research."""
         # Cache tech_levels once for performance (avoid recomputing)
         tech_levels = self.tracker.get_all_tech_levels()
@@ -351,13 +353,13 @@ class ResearchTreeScene:
 
         logger.info(f"Turn {self.tracker.turn_number}: {len(events)} events")
 
-    def _on_close(self):
+    def _on_close(self) -> None:
         """Close the scene."""
         logger.info("ResearchTreeScene: Closing")
         if self.on_close_callback:
             self.on_close_callback()
 
-    def _on_reset(self):
+    def _on_reset(self) -> None:
         """Reset the research session."""
         logger.info("ResearchTreeScene: Resetting session")
 
@@ -373,7 +375,7 @@ class ResearchTreeScene:
         # Update control panel via proper reset method (RES-01 fix)
         self.control_panel.reset(self.tracker, self.tech_tree)
 
-    def _on_auto_spread_changed(self, enabled: bool):
+    def _on_auto_spread_changed(self, enabled: bool) -> None:
         """Handle auto-spread toggle change."""
         logger.debug(f"Auto-spread {'enabled' if enabled else 'disabled'}")
 
@@ -383,7 +385,7 @@ class ResearchTreeScene:
             if node:
                 self.control_panel.update_selected_node(node, self.tracker)
 
-    def handle_input(self, dt: float, events: list):
+    def handle_input(self, dt: float, events: list) -> None:
         """
         Handle continuous input (keyboard pan).
 

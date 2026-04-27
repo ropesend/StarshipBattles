@@ -4,6 +4,8 @@ Builder Widgets - UI components for the Design Workshop.
 PROJ-38: Added registries parameter for dependency injection.
 PROJ-50: Made registries mandatory, removed fallback pattern.
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import pygame_gui
@@ -63,11 +65,11 @@ class ModifierEditorPanel:
         self.scroll_container = None  # UIScrollingContainer for modifier rows
         self._cached_scroll_position = 0  # Preserve scroll on rebuild
 
-    def _get_modifiers(self):
+    def _get_modifiers(self) -> dict:
         """PROJ-50: Get modifiers from injected registries."""
         return self._registries.modifiers
 
-    def rebuild(self, editing_component, is_readonly=False):
+    def rebuild(self, editing_component, is_readonly=False) -> None:
         """Rebuild/Update the modifier UI based on current state."""
         self.editing_component = editing_component
         self.is_readonly = is_readonly
@@ -76,15 +78,15 @@ class ModifierEditorPanel:
             # Ensure mandatory modifiers are present in data model
             self._logic.ensure_mandatory_modifiers(self.editing_component)
 
-    def set_panel_height(self, height):
+    def set_panel_height(self, height) -> None:
         """Set the available height for the modifier panel."""
         self._panel_height = height
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         """Update panel state. Called each frame by workshop_screen."""
         pass
 
-    def layout(self, start_y):
+    def layout(self, start_y) -> None:
         """Update layout and reconciliation with scrolling support."""
         # Cache scroll position before clearing
         if self.scroll_container:
@@ -191,7 +193,7 @@ class ModifierEditorPanel:
             )
             self.extra_ui_elements.append(hint_label)
 
-    def _clear_scroll_container(self):
+    def _clear_scroll_container(self) -> None:
         """Clear the scroll container and all modifier rows.
 
         When the scroll container is killed, all UI elements inside it are also killed.
@@ -205,13 +207,13 @@ class ModifierEditorPanel:
         # This ensures build_ui() is called for all rows when layout() runs
         self._clear_all_rows()
 
-    def _clear_all_rows(self):
+    def _clear_all_rows(self) -> None:
         """Clear all modifier rows."""
         for row in self.modifier_rows.values():
             row.kill()
         self.modifier_rows = {}
             
-    def _ensure_row(self, mod_id, mod_def, y, container=None):
+    def _ensure_row(self, mod_id, mod_def, y, container=None) -> None:
         """Ensure a modifier row exists, creating it if necessary.
 
         Args:
@@ -240,12 +242,12 @@ class ModifierEditorPanel:
                 row.container = target_container
                 row.width = row_width
 
-    def _clear_extra_ui(self):
+    def _clear_extra_ui(self) -> None:
         for el in self.extra_ui_elements:
             el.kill()
         self.extra_ui_elements = []
 
-    def _on_row_change(self, action_type, mod_id, value):
+    def _on_row_change(self, action_type, mod_id, value) -> None:
         """Callback from rows."""
         if not self.editing_component:
             return
@@ -275,7 +277,7 @@ class ModifierEditorPanel:
         if mod_id in self.modifier_rows:
             self.modifier_rows[mod_id].update(self.editing_component, {})
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> tuple[str, object] | None:
         """Processes events."""
         # 1. Check Global Buttons
         if event.type == pygame_gui.UI_BUTTON_PRESSED:

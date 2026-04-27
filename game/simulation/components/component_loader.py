@@ -6,11 +6,16 @@ and registry-populating wrappers (load_components, load_modifiers).
 Also provides ComponentCacheManager (singleton) for caching loaded data,
 and factory functions (create_component, get_all_components).
 """
+from __future__ import annotations
+
 import copy
 import json
 import logging
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.simulation.components.component import Component
 
 from game.core.json_utils import load_json_required
 from game.core.paths import Paths
@@ -59,7 +64,7 @@ class ComponentCacheManager:
         self.last_modifier_file = None
 
 
-def reset_component_caches():
+def reset_component_caches() -> None:
     """Reset all caches for test isolation."""
     global _default_cache_manager
     _default_cache_manager = ComponentCacheManager()
@@ -131,7 +136,7 @@ def load_components_data(
         return {}
 
 
-def load_components(file_path=None, *, registry_provider=None):
+def load_components(file_path: Optional[str] = None, *, registry_provider=None) -> None:
     """Load components from JSON and populate the global registry.
 
     PROJ-211: registry_provider is now required (no fallback).
@@ -232,7 +237,7 @@ def load_modifiers_data(file_path: str = None) -> dict:
         return {}
 
 
-def load_modifiers(file_path=None, *, registry_provider=None):
+def load_modifiers(file_path: Optional[str] = None, *, registry_provider=None) -> None:
     """Load modifiers from JSON and populate the global registry.
 
     PROJ-211: registry_provider is now required (no fallback).
@@ -270,7 +275,7 @@ def load_modifiers(file_path=None, *, registry_provider=None):
 # Factory Functions
 # =============================================================================
 
-def create_component(component_id, *, registries: 'GameRegistries'):
+def create_component(component_id: str, *, registries: 'GameRegistries') -> Optional["Component"]:
     """Create a clone of a component from the registry by ID.
 
     PROJ-50: Strict DI - registries is required.
@@ -298,7 +303,7 @@ def create_component(component_id, *, registries: 'GameRegistries'):
     return None
 
 
-def get_all_components(*, registries: 'GameRegistries'):
+def get_all_components(*, registries: 'GameRegistries') -> List["Component"]:
     """Get a list of all components in the registry.
 
     PROJ-50: Strict DI - registries is required.

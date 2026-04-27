@@ -8,9 +8,11 @@ The collector handles the perspective of a single fleet:
 - Allied/player-scoped boosters from the fleet owner's facilities → benefit
 - Enemy-scoped suppressors from opponent facilities → penalty
 """
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.strategy.services.strategic_ability_scanner import (
     find_abilities_in_scope,
@@ -150,7 +152,7 @@ def collect_combat_modifiers(
     return result
 
 
-def _find_reference_planet(location, galaxy, empires):
+def _find_reference_planet(location, galaxy, empires) -> Optional[Any]:
     """Find any colonized planet at the battle location for scope resolution."""
     if galaxy is None:
         return None
@@ -174,7 +176,7 @@ def _find_reference_planet(location, galaxy, empires):
     return None
 
 
-def _find_empire(empire_id, empires):
+def _find_empire(empire_id, empires) -> Optional[Any]:
     """Find an empire by ID."""
     for emp in empires:
         if getattr(emp, 'id', None) == empire_id:

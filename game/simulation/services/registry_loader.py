@@ -22,15 +22,17 @@ logger = logging.getLogger(__name__)
 # These imports are legal here - Simulation layer can import its own modules
 from game.simulation.components.component import load_modifiers, load_components
 from game.simulation.entities.ship_loader import load_vehicle_classes
-from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRegistryProvider
     from game.core.registry import RegistryManager
 
 
 def reload_registries_from_directory(
     registry_manager: "RegistryManager",
-    data_dir: Union[str, Path]
+    data_dir: Union[str, Path],
+    *,
+    registry_provider: "IRegistryProvider",
 ) -> bool:
     """
     Reload all registry data from a directory.
@@ -44,11 +46,19 @@ def reload_registries_from_directory(
     PROJ-90: Extracted from RegistryManager to Simulation layer to fix
     the Core -> Simulation layer violation.
 
+    PROJ-306: `registry_provider` is now a REQUIRED keyword argument. Per
+    PROJ-252, Simulation-layer code cannot resolve the provider via global
+    lookup. Callers (all in test code today; no production callers) must
+    supply the provider explicitly — typically by calling
+    `get_default_registry_provider()` from outside the Simulation layer.
+
     Args:
         registry_manager: The RegistryManager instance to populate.
         data_dir: Path to directory containing data files (string or Path).
                  Looks for: components.json, modifiers.json, vehicleclasses.json
                  Also checks for test_* prefixed versions.
+        registry_provider: REQUIRED. The IRegistryProvider threaded through
+            to `load_modifiers`, `load_components`, and `load_vehicle_classes`.
 
     Returns:
         True if directory exists (even if some files missing), False if directory invalid.
@@ -74,7 +84,7 @@ def reload_registries_from_directory(
     registry_manager._validator = None
 
     # Helper to find file with test_ prefix fallback
-    def find_file(*names):
+    def find_file(*names) -> "Path | None":
         """Find first existing file from names, checking test_ prefix first."""
         for name in names:
             # Check test_ prefix first (for test data directories)
@@ -87,8 +97,10 @@ def reload_registries_from_directory(
                 return std_path
         return None
 
-    # PROJ-211: Pass registry_provider explicitly (no fallback)
-    provider = get_default_registry_provider()
+    # PROJ-211 / PROJ-306: registry_provider is supplied by the caller;
+    # the previous `get_default_registry_provider()` fallback is GONE
+    # per PROJ-252's Simulation-layer DI rule.
+    provider = registry_provider
 
     # Load modifiers first (components may depend on them)
     mod_path = find_file("modifiers.json")

@@ -9,8 +9,10 @@ Cross-layer imports (acceptable for UI):
 - IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand: Runtime (local) - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand
 from game.strategy.facade.dto.fleet_dto import FleetInfo
@@ -36,15 +38,15 @@ class FleetOperations:
         self.facade = facade
 
     @property
-    def camera(self):
+    def camera(self) -> Any:
         return self.scene.camera
 
     @property
-    def empires(self):
+    def empires(self) -> Any:
         return self.scene.empires
 
     @property
-    def hex_size(self):
+    def hex_size(self) -> Any:
         return self.scene.hex_size
 
     def get_fleet_at_hex(self, hex_coord) -> Optional[FleetInfo]:
@@ -63,7 +65,7 @@ class FleetOperations:
         fleets = self.facade.get_fleets_at_hex(hex_coord)
         return fleets[0] if fleets else None
 
-    def handle_move_designation(self, mx, my, selected_fleet):
+    def handle_move_designation(self, mx, my, selected_fleet) -> Any:
         """
         Handle designating a move target.
 
@@ -102,7 +104,7 @@ class FleetOperations:
         else:
             return self.execute_move(selected_fleet, target_hex)
 
-    def execute_move(self, fleet, target_hex):
+    def execute_move(self, fleet, target_hex) -> dict:
         """
         Execute standard move command.
 
@@ -129,7 +131,7 @@ class FleetOperations:
             logger.warning("Move failed: No path (Unreachable)")
             return {'type': 'error', 'message': 'Unreachable'}
 
-    def execute_intercept(self, fleet, target_fleet: FleetInfo):
+    def execute_intercept(self, fleet, target_fleet: FleetInfo) -> dict:
         """
         Execute intercept order.
 
@@ -152,7 +154,7 @@ class FleetOperations:
             logger.warning(f"Intercept Failed: {msg}")
             return {'type': 'error', 'message': msg}
 
-    def handle_join_designation(self, mx, my, selected_fleet):
+    def handle_join_designation(self, mx, my, selected_fleet) -> Any:
         """
         Handle designating a fleet to join.
 
@@ -192,7 +194,7 @@ class FleetOperations:
         # Multiple valid targets — prompt user to choose
         return {'type': 'choice', 'fleets': valid_targets}
 
-    def execute_join(self, fleet, target_fleet_info: 'FleetInfo'):
+    def execute_join(self, fleet, target_fleet_info: 'FleetInfo') -> dict:
         """
         Execute join fleet command.
 

@@ -4,6 +4,8 @@ Service for loading and scaling modifier icons.
 This service manages the mapping between modifier IDs and their corresponding
 icon assets, providing scaled pygame Surfaces and handling caching.
 """
+from __future__ import annotations
+
 import os
 import logging
 import pygame
@@ -80,6 +82,6 @@ class ModifierIconService:
             logger.error(f"Error loading modifier icon {icon_path}: {e}")
             return None
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear the icon cache."""
         self._cache.clear()

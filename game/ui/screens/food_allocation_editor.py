@@ -106,7 +106,7 @@ def resolve_food_resource_name(
         return resource_id
     try:
         definition = resource_catalog.get(resource_id)
-    except Exception:
+    except (KeyError, AttributeError):
         return resource_id
     if definition is None:
         return resource_id

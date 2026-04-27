@@ -1,6 +1,8 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase (28 patterns).
+> **Last verified:** 2026-04-27 — Body count "(28 patterns)" corrected to 27 (matches header and TOC); PROJ-297 originally fixed CLAUDE.md/README references.
+
+Agent-optimized reference for every core pattern in the codebase (27 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---

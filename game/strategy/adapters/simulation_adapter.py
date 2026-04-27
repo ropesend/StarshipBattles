@@ -18,6 +18,8 @@ PROJ-269 Phase 6 Tasks 6.5 + 6.11:
     report. `FleetBattleAdapter.update_from_battle_results` is deleted.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING
 
@@ -27,6 +29,7 @@ from game.strategy.interfaces.battle_resolver import BattleResult, IBattleResolv
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from game.simulation.battle_spec import BattleSpec
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
     from game.strategy.services.area_effect_manager import EnvironmentalEffects
@@ -149,9 +152,14 @@ class SimulationBattleResolver(IBattleResolver):
         # `run_battle` invokes the compiler's `PostBattleHook` which
         # writes outcome data back into the ShipInstances and prunes
         # destroyed/retreated ships from the fleets.
+        # PROJ-306: pass `registry_provider` explicitly — the Strategy
+        # layer is allowed to call `get_default_registry_provider()`;
+        # the Simulation layer cannot.
+        from game.core.registry import get_default_registry_provider
         outcome = run_battle(
             spec,
             ai_factory=self._ai_factory,
+            registry_provider=get_default_registry_provider(),
         )
 
         winner = self._determine_winner(outcome)
@@ -192,7 +200,7 @@ class SimulationBattleResolver(IBattleResolver):
         registries: Optional['GameRegistries'],
         environmental_effects: Optional['EnvironmentalEffects'],
         modifiers: Optional[Mapping[int, Any]],
-    ):
+    ) -> BattleSpec:
         from game.strategy.combat.spec_compiler import build_strategy_battle_spec
 
         team_modifiers: Optional[Dict[int, Any]] = None

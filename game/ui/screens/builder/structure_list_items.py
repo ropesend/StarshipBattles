@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIImage
@@ -172,7 +175,7 @@ class IndividualComponentItem:
             anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
         
-    def update(self, component, max_mass, is_selected, is_last=False):
+    def update(self, component, max_mass, is_selected, is_last=False) -> None:
         """Update relevant data in-place."""
         self.component = component
         self.is_selected = is_selected
@@ -189,7 +192,7 @@ class IndividualComponentItem:
 
         self._rebuild_modifier_icons()
 
-    def _rebuild_modifier_icons(self):
+    def _rebuild_modifier_icons(self) -> None:
         """Build modifier icons for non-default values."""
         # Clear existing
         for icon in self.modifier_icons:
@@ -232,7 +235,7 @@ class IndividualComponentItem:
                 self.modifier_icons.append(icon_image)
                 current_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
 
-    def _create_tree_line(self, is_last, config):
+    def _create_tree_line(self, is_last, config) -> Any:
         surf = pygame.Surface((20, self.height), pygame.SRCALPHA)
         color = pygame.Color(config.TREE_LINE_COLOR)
         
@@ -255,11 +258,11 @@ class IndividualComponentItem:
         
         return surf
 
-    def get_abs_rect(self):
+    def get_abs_rect(self) -> Any:
         """Get the absolute screen rect of this item's panel."""
         return self.panel.get_abs_rect()
         
-    def handle_event(self, event):
+    def handle_event(self, event) -> Any:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.remove_button:
                 return self.event_handler.handle_item_action(ACTION_REMOVE_INDIVIDUAL, (self.component, self.layer_type))
@@ -275,7 +278,7 @@ class IndividualComponentItem:
                 return self.event_handler.handle_item_action(ACTION_SELECT_INDIVIDUAL, self.component)
         return False
 
-    def set_move_buttons_enabled(self, can_move_up: bool, can_move_down: bool):
+    def set_move_buttons_enabled(self, can_move_up: bool, can_move_down: bool) -> None:
         """Enable/disable move buttons based on layer availability."""
         if can_move_up:
             self.move_up_button.enable()
@@ -286,7 +289,7 @@ class IndividualComponentItem:
         else:
             self.move_down_button.disable()
 
-    def kill(self):
+    def kill(self) -> None:
         self.panel.kill()
 
 class LayerComponentItem:
@@ -443,7 +446,7 @@ class LayerComponentItem:
             anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
 
-    def update(self, count, total_mass, total_pct, is_expanded, is_selected, component_name):
+    def update(self, count, total_mass, total_pct, is_expanded, is_selected, component_name) -> None:
         self.count = count
         self.is_selected = is_selected
         
@@ -466,7 +469,7 @@ class LayerComponentItem:
 
         self._rebuild_modifier_icons()
 
-    def _rebuild_modifier_icons(self):
+    def _rebuild_modifier_icons(self) -> None:
         """Build modifier icons for non-default values."""
         # Clear existing
         for icon in self.modifier_icons:
@@ -510,7 +513,7 @@ class LayerComponentItem:
                 self.modifier_icons.append(icon_image)
                 current_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> Any:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.expand_button:
                 self.event_handler.handle_item_action(ACTION_TOGGLE_GROUP, self.group_key)
@@ -527,7 +530,7 @@ class LayerComponentItem:
                 return self.event_handler.handle_item_action(ACTION_SELECT_GROUP, self.group_key)
         return False
 
-    def set_move_buttons_enabled(self, can_move_up: bool, can_move_down: bool):
+    def set_move_buttons_enabled(self, can_move_up: bool, can_move_down: bool) -> None:
         """Enable/disable move buttons based on layer availability."""
         if can_move_up:
             self.move_up_button.enable()
@@ -538,10 +541,10 @@ class LayerComponentItem:
         else:
             self.move_down_button.disable()
 
-    def get_abs_rect(self):
+    def get_abs_rect(self) -> Any:
         return self.panel.get_abs_rect()
 
-    def kill(self):
+    def kill(self) -> None:
         self.panel.kill()
 
 class LayerHeaderItem:
@@ -611,7 +614,7 @@ class LayerHeaderItem:
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
         
-    def update(self, current_mass, max_mass, is_expanded):
+    def update(self, current_mass, max_mass, is_expanded) -> None:
         arrow = "▲" if is_expanded else "▼"
         self.arrow_label.set_text(arrow)
         
@@ -623,7 +626,7 @@ class LayerHeaderItem:
         # PygameGUI doesn't support changing object_id easily at runtime without rebuild. 
         # But we can change text color if we track the labels. For now, text update is good.
         
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool | tuple:
         if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.button:
             # Check for toggle suppression (e.g. from drop event)
             if self.event_handler.toggle_suppress_timer > 0:
@@ -633,5 +636,5 @@ class LayerHeaderItem:
             return ('refresh_ui', None)
         return False
         
-    def kill(self):
+    def kill(self) -> None:
         self.panel.kill()

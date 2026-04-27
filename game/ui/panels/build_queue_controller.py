@@ -134,7 +134,7 @@ class BuildQueueController:
         self.selected_queue_sources = list(sources)
         logger.info(f"Controller: Multi-select mode with {len(sources)} queues")
 
-    def load_designs_by_category(self, category: str):
+    def load_designs_by_category(self, category: str) -> tuple[list, list[str]]:
         """
         Load designs filtered by vehicle type.
 
@@ -214,10 +214,10 @@ class BuildQueueController:
 
                 result = validator.validate(load_result.data)
                 d.design_valid = not result.has_issues
-            except Exception:
+            except Exception:  # Intentional broad catch: design validation traverses arbitrary registry/save data; queue panel must remain usable on validator failure
                 d.design_valid = True  # Can't validate, assume valid
 
-    def set_category(self, category: str):
+    def set_category(self, category: str) -> None:
         """
         Set the active category filter.
 
@@ -229,7 +229,7 @@ class BuildQueueController:
         self.on_queue_changed()
         logger.info(f"Build queue category changed to: {category}")
 
-    def set_role(self, role: str):
+    def set_role(self, role: str) -> None:
         """
         Set the active role filter.
 
@@ -315,7 +315,7 @@ class BuildQueueController:
             "resources_consumed": {res: 0.0 for res in total_cost},
         }
 
-    def add_to_queue(self, design_id: str, turns: Optional[float] = None, category: str = None, index: int = None):
+    def add_to_queue(self, design_id: str, turns: Optional[float] = None, category: str = None, index: int = None) -> None:
         """
         Add a design to the appropriate queue(s).
 
@@ -479,7 +479,7 @@ class BuildQueueController:
                     if p.owner_id == self.empire.id
                 ]
 
-                def on_planet_selected(planet):
+                def on_planet_selected(planet) -> None:
                     """Callback when planet is selected."""
                     self._add_item_with_target_planet(
                         source, design_id, category, planet.id, index
@@ -615,7 +615,7 @@ class BuildQueueController:
         else:
             logger.warning(f"Cannot add to fallback queue: callback={self._add_to_queue_callback}, entity_id={entity_id}")
 
-    def refresh_design_report(self, design_id: str):
+    def refresh_design_report(self, design_id: str) -> None:
         """
         Update design report panel with selected design.
 

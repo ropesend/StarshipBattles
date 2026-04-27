@@ -4,6 +4,8 @@ Provides a dropdown for selecting which species' preferences to use
 when multiple species are present on a planet. Used by atmosphere,
 gravity, water, and radiation editors.
 """
+from __future__ import annotations
+
 import logging
 from typing import List, Optional, Any
 
@@ -106,7 +108,7 @@ def get_selected_race_id(dropdown) -> Optional[str]:
     return race_id_map.get(selected)
 
 
-def load_race_config(race_id: Optional[str]):
+def load_race_config(race_id: Optional[str]) -> Any | None:
     """Load a RaceConfig by race_id.
 
     Args:
@@ -121,6 +123,6 @@ def load_race_config(race_id: Optional[str]):
         from game.strategy.systems.race_library import RaceLibrary
         race_lib = RaceLibrary()
         return race_lib.get_race(race_id)
-    except Exception:
+    except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; UI mixin must not crash species selection on bad data
         logger.warning("Failed to load race config for %s", race_id)
         return None

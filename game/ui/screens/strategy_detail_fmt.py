@@ -316,7 +316,7 @@ def _planet_has_shield_facility(planet) -> bool:
     try:
         provider = get_default_registry_provider()
         component_registry = provider.get_components()
-    except Exception:
+    except Exception:  # Intentional broad catch: registry provider may be uninitialized; fall back to inline-ability inspection
         pass
 
     for facility in planet.facilities:
@@ -414,7 +414,7 @@ def _planet_has_ability_facility(planet, ability_key: str) -> bool:
     try:
         from game.core.registry import get_default_registry_manager
         registries = get_default_registry_manager()
-    except Exception:
+    except Exception:  # Intentional broad catch: registry manager may be uninitialized; fall back to inline-ability inspection
         pass
 
     for facility in getattr(planet, 'facilities', []):

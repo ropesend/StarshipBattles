@@ -58,12 +58,14 @@ DO:
 - DO NOT assume docs are up to date — verify by reading them
 - DO NOT leave documentation updates for "later" — later never comes
 - DO NOT silently diverge from documented patterns without raising it
+- DO NOT bump the **Last verified:** date for cosmetic edits (typos, formatting). Bump only when you've actually re-read the file and confirmed it matches current code.
 
 DO:
 - Treat docs as part of the deliverable, not an afterthought
 - When you find a discrepancy between docs and code, STOP and raise it with the user
 - Update docs in the same commit as the code change, not a separate commit
 - When in doubt about whether a doc needs updating, update it
+- Update the **Last verified:** date at the top of any doc you verify or substantively edit. Format: `> **Last verified:** YYYY-MM-DD — <one-sentence summary>`. The date represents an intentional accuracy check, not a cosmetic edit.
 
 **The docs directory is the source of truth.** See the [Documentation First](#documentation-first) section below for the full reading order.
 
@@ -142,7 +144,7 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 **Tech Stack:**
 - Python **3.13+** (upgraded from 3.10 in PROJ-295 on 2026-04-26; 3.10 EOL was 2026-10-04). Repo declares `requires-python = ">=3.13"` in `pyproject.toml`. Activate the local venv via `.\.venv\Scripts\Activate.ps1` (PowerShell) or `source .venv/Scripts/activate` (bash).
 - Pygame for rendering (pygame-ce 2.5.7)
-- Pytest for testing (15112 tests baseline)
+- Pytest for testing (15405 tests baseline; 100% return-type annotation coverage in `game/` per PROJ-311)
 - Test parallelization with pytest-xdist; sharded runner at `Tools/test_sharded/test_sharded.py`
 
 **Display Target:**
@@ -163,13 +165,16 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 
 ```
 game/
-├── core/              # Foundation (registries, validation, utilities)
+├── core/              # Foundation (registries, validation, utilities, protocols, formula_evaluator)
 ├── simulation/        # Combat simulation engine
+│   ├── combat/        # Damage pipeline, telemetry, events
 │   ├── components/    # Ship components and abilities
-│   └── formula_system.py  # Damage, accuracy, movement calculations
+│   ├── entities/      # Ship, projectile, ship_combat_engine
+│   ├── services/      # registry_loader, ship_materializer
+│   └── systems/       # battle_engine, resource_manager
 ├── strategy/          # Galaxy map, fleets, planets, research
-├── ai/                # AI controllers and targeting
-└── ui/                # Pygame screens and rendering
+├── ai/                # AI controllers, behaviors, spatial_behaviors
+└── ui/                # Pygame screens, panels, widgets, services
 
 tests/
 ├── unit/              # Fast unit tests
@@ -236,7 +241,8 @@ pytest tests/ --cov=game -n 12
 ## Key Conventions
 
 ### Code Quality
-- Use type hints for function signatures
+- **Return-type annotations are required on every public function/method.** Use modern syntax (PEP 604 unions like `int | None`, native generics like `list[int]`). `__init__` and other dunders are exempt (PEP 484). Functions with no `return` statement annotate `-> None` explicitly.
+- Use type hints for function parameters where they aid clarity (parameter coverage is not yet enforced project-wide; return coverage is).
 - Add docstrings to public APIs
 - Keep functions focused and small (<50 lines preferred)
 - Avoid deep nesting (max 3 levels)
@@ -247,7 +253,7 @@ When faced with choices, prefer:
 - Root cause fix over workaround
 - Comprehensive tests over minimal tests
 - Named constants over magic numbers
-- Specific exceptions over broad catches
+- **Specific exceptions over broad catches.** When a broad catch is genuinely necessary (e.g., third-party callback dispatch, platform-dependent init, fire-and-forget event emission), it MUST carry an `# Intentional broad catch: <specific reason>` comment on the same line or the line above. A broad catch without a justification comment is a code-review failure.
 - Extract abstraction over copy-paste
 - Dependency injection over singletons
 - Delegate to existing logic over reimplementing it
@@ -309,7 +315,7 @@ When faced with choices, prefer:
 - **CLI parallel workers:** 12 (`-n 12`)
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 15112 passed, 0 skipped
+- **Baseline:** 15405 passed, 2 skipped (post-PROJ-311). One known flake — `test_colony_owner_id_matches_empire` — passes when run alone (test-isolation issue, unrelated to PROJ-311).
 
 ---
 

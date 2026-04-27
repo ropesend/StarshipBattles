@@ -9,7 +9,9 @@ Cross-layer imports (acceptable for UI):
 - QueueImplodePlanetMissionCommand, etc.: Runtime - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
-from typing import TYPE_CHECKING, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,19 +45,19 @@ class SuperweaponOperations:
         self.facade = facade
 
     @property
-    def systems(self):
+    def systems(self) -> Any:
         return self.scene.systems
 
     @property
-    def camera(self):
+    def camera(self) -> Any:
         return self.scene.camera
 
     @property
-    def hex_size(self):
+    def hex_size(self) -> Any:
         return self.scene.hex_size
 
     @property
-    def galaxy(self):
+    def galaxy(self) -> Any:
         return self.scene.galaxy
 
     def handle_implode_planet_designation(self, mx: int, my: int, fleet: 'Fleet') -> Optional[dict]:
@@ -90,7 +92,7 @@ class SuperweaponOperations:
             return self._queue_implode_planet(fleet, target_hex, planets[0])
         else:
             # Multiple planets - prompt selection
-            def on_selected(planet):
+            def on_selected(planet) -> None:
                 self._queue_implode_planet(fleet, target_hex, planet)
 
             self.scene.ui.prompt_planet_selection(planets, on_selected)
@@ -98,7 +100,7 @@ class SuperweaponOperations:
 
     def _queue_implode_planet(self, fleet: 'Fleet', target_hex, planet) -> dict:
         """Queue implode planet mission with confirmation."""
-        def on_confirm():
+        def on_confirm() -> None:
             cmd = QueueImplodePlanetMissionCommand(fleet.id, target_hex, planet.id, empire_id=fleet.owner_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
@@ -142,7 +144,7 @@ class SuperweaponOperations:
             logger.debug("No star system at target location.")
             return {'type': 'error', 'message': 'No star system at target location'}
 
-        def on_confirm():
+        def on_confirm() -> None:
             cmd = QueueStellerateStarMissionCommand(fleet.id, target_hex, empire_id=fleet.owner_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
@@ -204,7 +206,7 @@ class SuperweaponOperations:
             logger.debug("No available systems to link to.")
             return {'type': 'error', 'message': 'No available systems to link to'}
 
-        def on_system_selected(system_name: str):
+        def on_system_selected(system_name: str) -> None:
             cmd = QueueOpenWarpPointMissionCommand(fleet.id, target_hex, system_name, empire_id=fleet.owner_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
@@ -244,7 +246,7 @@ class SuperweaponOperations:
             logger.debug("No warp point at target location.")
             return {'type': 'error', 'message': 'No warp point at target location'}
 
-        def on_confirm():
+        def on_confirm() -> None:
             cmd = QueueCloseWarpPointMissionCommand(fleet.id, target_hex, warp_point.destination_id, empire_id=fleet.owner_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
@@ -288,7 +290,7 @@ class SuperweaponOperations:
             logger.debug("No star system at target location.")
             return {'type': 'error', 'message': 'No star system at target location'}
 
-        def on_confirm():
+        def on_confirm() -> None:
             cmd = QueueCreateDysonSphereMissionCommand(fleet.id, target_hex, empire_id=fleet.owner_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
@@ -325,7 +327,7 @@ class SuperweaponOperations:
             logger.warning("No ships with Self-Destruct Device in fleet.")
             return {'type': 'error', 'message': 'No ships with Self-Destruct Device in fleet'}
 
-        def on_ships_selected(ship_ids: List[int]):
+        def on_ships_selected(ship_ids: List[int]) -> None:
             if not ship_ids:
                 return
             cmd = IssueSelfDestructCommand(fleet.id, ship_ids, empire_id=fleet.owner_id)
@@ -343,12 +345,12 @@ class SuperweaponOperations:
     # Helper Methods
     # =========================================================================
 
-    def _get_system_at_hex(self, hex_coord):
+    def _get_system_at_hex(self, hex_coord) -> Any:
         """Find system at hex coordinate."""
         from game.strategy.data.pathfinding import get_system_at_hex
         return get_system_at_hex(self.galaxy, hex_coord)
 
-    def _get_warp_point_at_hex(self, hex_coord):
+    def _get_warp_point_at_hex(self, hex_coord) -> Any:
         """Find warp point at the given global hex coordinate."""
         system = self._get_system_at_hex(hex_coord)
         if not system:
@@ -360,7 +362,7 @@ class SuperweaponOperations:
                 return wp
         return None
 
-    def _show_confirmation(self, title: str, message: str, on_confirm, is_warning: bool = False):
+    def _show_confirmation(self, title: str, message: str, on_confirm, is_warning: bool = False) -> None:
         """
         Show a confirmation dialog.
 
@@ -373,7 +375,7 @@ class SuperweaponOperations:
         # PROJ-198: Direct call - show_confirmation_dialog is always available
         self.scene.ui.show_confirmation_dialog(title, message, on_confirm, is_warning=is_warning)
 
-    def _show_system_picker(self, systems, current_system, on_selected):
+    def _show_system_picker(self, systems, current_system, on_selected) -> None:
         """
         Show system picker dialog for Open Warp Point.
 
@@ -385,7 +387,7 @@ class SuperweaponOperations:
         # PROJ-198: Direct call - show_system_picker is always available
         self.scene.ui.show_system_picker(systems, current_system, on_selected)
 
-    def _show_ship_picker(self, ships, ability_name: str, on_selected):
+    def _show_ship_picker(self, ships, ability_name: str, on_selected) -> None:
         """
         Show ship picker dialog for multi-select.
 

@@ -1,8 +1,10 @@
 """Main game entry point - coordinates scenes and game loop."""
+from __future__ import annotations
+
 import argparse
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 import pygame
 import pygame_gui
@@ -13,7 +15,7 @@ from game.core.paths import Paths
 logger = logging.getLogger(__name__)
 
 
-def configure_logging():
+def configure_logging() -> None:
     """Set up application logging. Called once at app startup."""
     os.makedirs(os.path.dirname(Paths.BATTLE_LOG), exist_ok=True)
 
@@ -60,7 +62,7 @@ BG_COLOR = (10, 10, 20)
 from game.core.constants import GameState
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Starship Battles")
     parser.add_argument('--force-resolution', action='store_true',
@@ -205,7 +207,7 @@ class Game:
         self.strategy_scene = StrategyScreen(self.width, self.height, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
         self.test_lab_scene = TestLabScreen(self, scene_callback=self._handle_test_lab_action)
 
-    def _get_menu_button_config(self):
+    def _get_menu_button_config(self) -> list[tuple[str, Any]]:
         """Get button configuration for MenuScene."""
         return [
             ("Quickstart 1P", self.start_quickstart_1p),
@@ -239,7 +241,7 @@ class Game:
         self.active_scene = scene
 
     @profile_action("App: Start Builder")
-    def start_builder(self, return_to=None, context=None):
+    def start_builder(self, return_to=None, context=None) -> None:
         """Enter design workshop. Uses state stack for return-to-previous."""
         if context is None:
             context = WorkshopContext.standalone(tech_preset_name="default", registries=self.registries)
@@ -249,7 +251,7 @@ class Game:
         self.state_machine.push_and_transition(GameState.BUILDER)
         self.active_scene = self.builder_scene
 
-    def on_builder_return(self, custom_ship=None):
+    def on_builder_return(self, custom_ship=None) -> None:
         """Return from design workshop to caller (via state stack)."""
         if hasattr(self, 'builder_scene') and hasattr(self.builder_scene, 'cleanup'):
             self.builder_scene.cleanup()
@@ -263,13 +265,13 @@ class Game:
             self.active_scene = self._menu_scene
 
     @profile_action("App: Start Battle Setup")
-    def start_battle_setup(self, preserve_teams=False):
+    def start_battle_setup(self, preserve_teams=False) -> None:
         """Enter battle setup screen."""
         self.return_state = GameState.BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
         self._switch_scene(GameState.BATTLE_SETUP, self.battle_setup)
 
-    def start_strategy_layer(self):
+    def start_strategy_layer(self) -> None:
         """Show new game setup screen."""
         import pygame_gui
 
@@ -290,7 +292,7 @@ class Game:
         # Set flag to render window
         self.showing_new_game_setup = True
 
-    def _on_new_game_start(self, config):
+    def _on_new_game_start(self, config) -> None:
         """Handle new game start from setup screen."""
         from game.strategy.engine.game_session import GameSession
         from game.strategy.systems.save_game_service import SaveGameService
@@ -333,12 +335,12 @@ class Game:
                 window_title="Error"
             )
 
-    def _on_new_game_cancel(self):
+    def _on_new_game_cancel(self) -> None:
         """Cancel new game setup."""
         self.showing_new_game_setup = False
         logger.debug("New game setup cancelled")
 
-    def _start_quickstart(self, player_count: int):
+    def _start_quickstart(self, player_count: int) -> None:
         """
         Start a quickstart game with the specified number of players.
 
@@ -379,15 +381,15 @@ class Game:
         else:
             logger.error(f"Quickstart {player_count}P failed: {message}")
 
-    def start_quickstart_1p(self):
+    def start_quickstart_1p(self) -> None:
         """Start a single-player quickstart game."""
         self._start_quickstart(player_count=1)
 
-    def start_quickstart_2p(self):
+    def start_quickstart_2p(self) -> None:
         """Start a two-player quickstart game."""
         self._start_quickstart(player_count=2)
 
-    def show_load_menu(self):
+    def show_load_menu(self) -> None:
         """Show load game menu."""
         from game.ui.screens.save_selection_window import SaveSelectionWindow
         import pygame_gui
@@ -409,7 +411,7 @@ class Game:
         # Set flag to render window
         self.showing_load_menu = True
 
-    def _on_load_game(self, save_path, turn_number=None):
+    def _on_load_game(self, save_path, turn_number=None) -> None:
         """Load the selected save game."""
         from game.strategy.systems.save_game_service import SaveGameService
         from game.ai.ai_factory import AIControllerFactory
@@ -439,17 +441,17 @@ class Game:
                 window_title="Error"
             )
 
-    def _on_load_cancel(self):
+    def _on_load_cancel(self) -> None:
         """Cancel load game."""
         self.showing_load_menu = False
         logger.debug("Load game cancelled")
 
-    def start_test_lab(self):
+    def start_test_lab(self) -> None:
         """Enter Combat Lab."""
         self.return_state = GameState.TEST_LAB
         self._switch_scene(GameState.TEST_LAB, self.test_lab_scene)
 
-    def start_research_tree(self):
+    def start_research_tree(self) -> None:
         """Enter Research Tree sandbox."""
         from game.ui.research.research_scene import ResearchTreeScene
 
@@ -460,12 +462,12 @@ class Game:
         )
         self._switch_scene(GameState.RESEARCH_TREE, self.research_tree_scene)
 
-    def on_research_tree_return(self):
+    def on_research_tree_return(self) -> None:
         """Return from Research Tree to menu."""
         self.research_tree_scene = None
         self._switch_scene(GameState.MENU, self._menu_scene)
 
-    def start_galaxy_test(self):
+    def start_galaxy_test(self) -> None:
         """Enter Galaxy Test screen."""
         logger.info("Starting Galaxy Test screen")
         self.galaxy_test_scene = GalaxyTestScreen(
@@ -474,12 +476,12 @@ class Game:
         )
         self._switch_scene(GameState.GALAXY_TEST, self.galaxy_test_scene)
 
-    def on_galaxy_test_return(self):
+    def on_galaxy_test_return(self) -> None:
         """Return from Galaxy Test to menu."""
         self.galaxy_test_scene = None
         self._switch_scene(GameState.MENU, self._menu_scene)
 
-    def start_keybindings(self):
+    def start_keybindings(self) -> None:
         """Open the keybindings editor scene (PROJ-71 Phase 4)."""
         from game.ui.screens.keybindings_scene import KeybindingsScene
 
@@ -493,7 +495,7 @@ class Game:
         self.state_machine.push_and_transition(GameState.KEYBINDINGS)
         self.active_scene = self.keybindings_scene
 
-    def on_keybindings_return(self):
+    def on_keybindings_return(self) -> None:
         """Return from keybindings editor to previous scene (via state stack)."""
         logger.info("Returning from keybindings editor")
         return_state = self.state_machine.pop_and_return()
@@ -505,7 +507,7 @@ class Game:
         else:
             self.active_scene = self._menu_scene
 
-    def start_race_setup(self):
+    def start_race_setup(self) -> None:
         """Open race setup wizard."""
         import pygame_gui
 
@@ -528,19 +530,19 @@ class Game:
 
         self.showing_race_setup = True
 
-    def _on_race_setup_complete(self, race_config):
+    def _on_race_setup_complete(self, race_config) -> None:
         """Handle race setup completion."""
         logger.info(f"Race setup complete: {race_config.name}")
         self.showing_race_setup = False
         self.race_setup_window = None
 
-    def _on_race_setup_cancel(self):
+    def _on_race_setup_cancel(self) -> None:
         """Cancel race setup."""
         self.showing_race_setup = False
         self.race_setup_window = None
         logger.debug("Race setup cancelled")
 
-    def start_battle(self, spec, *, headless=False):
+    def start_battle(self, spec, *, headless=False) -> None:
         """Start a battle from a compiled `BattleSpec`.
 
         PROJ-270 Phase 3: consumes a `BattleSpec` directly. The caller
@@ -570,17 +572,21 @@ class Game:
         # default `InstanceBackedMaterializer` (pulled from
         # ApplicationContext) handles materialization. No ship_builder
         # closure required.
+        # PROJ-306: pass `registry_provider` explicitly — game/app.py is
+        # outside the Simulation layer and is allowed to call
+        # `get_default_registry_provider()`.
         controller = BattleController()
         controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
+            registry_provider=get_default_registry_provider(),
             config=config,
         )
 
         self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)
 
-    def run(self):
+    def run(self) -> None:
         """Main game loop."""
         while self.running:
             frame_time = self.clock.tick(0) / 1000.0
@@ -605,7 +611,7 @@ class Game:
 
         pygame.quit()
 
-    def _handle_exit_dialog_events(self, events):
+    def _handle_exit_dialog_events(self, events) -> None:
         """Handle events when exit dialog is shown."""
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -616,7 +622,7 @@ class Game:
                 elif handle_exit_dialog_cancel(event.pos):
                     self.show_exit_dialog = False
 
-    def _handle_normal_events(self, events):
+    def _handle_normal_events(self, events) -> None:
         """Handle events during normal gameplay.
 
         PROJ-88 Phase 5: Removed legacy MOUSEBUTTONDOWN/MOUSEWHEEL dispatch.
@@ -645,7 +651,7 @@ class Game:
 
             self._forward_event_to_scene(event)
 
-    def _forward_event_to_scene(self, event):
+    def _forward_event_to_scene(self, event) -> None:
         """Forward event to the current active scene (PROJ-65: unified dispatch)."""
         # Handle overlay dialogs on menu - these use the menu's ui_manager
         if self.state == GameState.MENU:
@@ -662,7 +668,7 @@ class Game:
         # Unified dispatch to active scene
         self.active_scene.handle_event(event)
 
-    def _handle_resize(self, w, h):
+    def _handle_resize(self, w, h) -> None:
         """Handle window resize (PROJ-65: unified dispatch)."""
         self.width, self.height = w, h
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
@@ -673,7 +679,7 @@ class Game:
         # Unified dispatch to active scene
         self.active_scene.handle_resize(w, h)
 
-    def _handle_battle_action(self, action: str, **kwargs):
+    def _handle_battle_action(self, action: str, **kwargs) -> None:
         """Handle scene actions from BattleScreen or BattleResultsScreen.
 
         Unified routing: all battle exits go through 'show_results' or
@@ -698,7 +704,7 @@ class Game:
         elif action == "return_to_setup":
             self._return_to("battle_setup")
 
-    def _return_to(self, destination: str):
+    def _return_to(self, destination: str) -> None:
         """Navigate to the specified destination after a battle."""
         logger.debug(f"Returning to: {destination}")
         if destination == "test_lab":
@@ -709,7 +715,7 @@ class Game:
         elif destination == "strategy":
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
 
-    def _handle_strategy_action(self, action: str, **kwargs):
+    def _handle_strategy_action(self, action: str, **kwargs) -> None:
         """Handle scene actions from StrategyScreen."""
         if action == "open_builder":
             context_data = kwargs.get("context_data", {})
@@ -729,7 +735,7 @@ class Game:
             logger.info("Quitting game from strategy menu")
             self.running = False
 
-    def _create_workshop_context(self, context_data: dict):
+    def _create_workshop_context(self, context_data: dict) -> Optional["WorkshopContext"]:
         """Create WorkshopContext from strategy scene context data."""
         empire = context_data.get('empire')
         game_session = context_data.get('game_session')
@@ -760,14 +766,14 @@ class Game:
             registries=self.registries
         )
 
-    def _handle_test_lab_action(self, action: str, **kwargs):
+    def _handle_test_lab_action(self, action: str, **kwargs) -> None:
         """Handle scene actions from TestLabScreen."""
         if action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
         elif action == "start_test_battle":
             self._switch_scene(GameState.BATTLE, self.battle_scene)
 
-    def _update_and_draw(self, frame_time, events):
+    def _update_and_draw(self, frame_time, events) -> None:
         """Update logic and draw current scene (PROJ-65: unified dispatch).
 
         PROJ-88 Phase 5: StrategyScreen event dispatch is now fully through
@@ -798,7 +804,7 @@ class Game:
         if self.show_exit_dialog:
             draw_exit_dialog(self.screen, self.font_large, self.font_med)
 
-    def _handle_battle_setup_action(self, action: str, **kwargs):
+    def _handle_battle_setup_action(self, action: str, **kwargs) -> None:
         """Handle scene actions from BattleSetupScreen.
 
         PROJ-270 Phase 3: `start_battle` / `start_headless` now carry a
@@ -823,7 +829,7 @@ class Game:
             self._switch_scene(GameState.MENU, self._menu_scene)
 
 
-def main():
+def main() -> None:
     configure_logging()
     args = parse_args()
     game = Game(args)

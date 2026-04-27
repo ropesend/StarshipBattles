@@ -1,5 +1,7 @@
 # Simulation Testing Guide
 
+> **Last verified:** 2026-04-18
+
 Consolidated guide for the Starship Battles simulation test system. Covers test architecture, the TestScenario pattern, validation, troubleshooting, and writing new tests.
 
 > **Last major API revision:** PROJ-270 (2026-04-12) — `TestScenario`

@@ -83,17 +83,17 @@ class ResourceState:
         """Check if enough resource is available without consuming."""
         return self.current_value >= amount
 
-    def add(self, amount: float):
+    def add(self, amount: float) -> None:
         """Add resource, clamping to max."""
         self.current_value = min(self.max_value, self.current_value + amount)
-    
-    def set_max(self, value: float):
+
+    def set_max(self, value: float) -> None:
         self.max_value = value
         # Clamp current if max reduced? Usually yes.
         if self.current_value > self.max_value:
             self.current_value = self.max_value
-            
-    def update(self):
+
+    def update(self) -> None:
         """Apply regeneration for one tick."""
         if self.regen_rate > 0 and self.current_value < self.max_value:
             self.current_value = min(self.max_value, self.current_value + (self.regen_rate * PhysicsConfig.TICK_RATE))
@@ -130,7 +130,7 @@ class ResourceRegistry:
         res = self._resources.get(name)
         return res.max_value if res else 0.0
 
-    def register_storage(self, name: str, amount: float):
+    def register_storage(self, name: str, amount: float) -> None:
         """
         Add storage capacity for a resource. Increase max_value.
         Note: Does not automatically fill current_value unless initialized implicitly elsewhere.
@@ -142,14 +142,14 @@ class ResourceRegistry:
         res = self._resources[name]
         res.max_value += amount
 
-    def register_generation(self, name: str, rate: float):
+    def register_generation(self, name: str, rate: float) -> None:
         """Add generation rate (units/sec) for a resource."""
         if name not in self._resources:
             self._resources[name] = ResourceState(name)
         
         self._resources[name].regen_rate += rate
 
-    def reset_stats(self):
+    def reset_stats(self) -> None:
         """
         Reset max values and regeneration rates to 0 before a full stat recalculation.
         Current resource values are PERSISTED to maintain game state.
@@ -159,12 +159,12 @@ class ResourceRegistry:
             res.regen_rate = 0.0
             # Note: We DON'T reset current_value here, as that is the game state.
 
-    def update(self):
+    def update(self) -> None:
         """Update all resources for one tick (apply regeneration)."""
         for res in self._resources.values():
             res.update()
 
-    def set_value(self, name: str, value: float):
+    def set_value(self, name: str, value: float) -> None:
         """Set current value of a resource."""
         res = self._resources.get(name)
         if res:
@@ -174,7 +174,7 @@ class ResourceRegistry:
             if res.current_value > res.max_value:
                  res.current_value = res.max_value
 
-    def modify_value(self, name: str, amount: float):
+    def modify_value(self, name: str, amount: float) -> None:
         """Modify current value of a resource by amount."""
         res = self._resources.get(name)
         if res:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -80,10 +82,10 @@ class StarSystem:
         self.region_id = region_id  # Optional[int] - which arm/cluster this belongs to
 
     @property
-    def primary_star(self):
+    def primary_star(self) -> Optional[Star]:
         return self.stars[0] if self.stars else None
 
-    def add_warp_point(self, destination_id, location):
+    def add_warp_point(self, destination_id, location) -> None:
         self.warp_points.append(WarpPoint(destination_id, location))
 
     def __repr__(self):
@@ -195,7 +197,7 @@ class Galaxy:
         self._registry = GalaxyEntityRegistry(self)
         self._spatial = GalaxySpatialIndex(self)
         
-    def add_system(self, system):
+    def add_system(self, system) -> None:
         """Add a system to the galaxy map."""
         self.systems[system.global_location] = system
         self.name_map[system.name] = system

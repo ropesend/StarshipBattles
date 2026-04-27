@@ -12,7 +12,7 @@ editor can be used by other screens that want to edit fleet hierarchies
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import Any, TYPE_CHECKING, Optional
 
 from game.strategy.data.fleet_hierarchy import CombatPolicy
 from game.strategy.data.squadron import Squadron
@@ -171,7 +171,7 @@ class FleetHierarchyEditor:
         )
 
 
-def _get_registries():
+def _get_registries() -> Any | None:
     """Pull GameRegistries from the default provider for ship-cloning.
 
     Returns None if the provider isn't initialized — tests that don't
@@ -187,5 +187,5 @@ def _get_registries():
             resources=provider.get_resources(),
             resource_catalog=provider.get_resource_catalog(),
         )
-    except Exception:
+    except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals "no registries" to callers
         return None

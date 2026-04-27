@@ -7,7 +7,7 @@ Extracted from StrategyInputHandler for router decomposition (PROJ-173 Phase 3).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pygame
 
@@ -36,7 +36,7 @@ class FleetCommandRouter:
         self._handler = handler
 
     @property
-    def scene(self):
+    def scene(self) -> Any:
         """Access scene through handler."""
         return self._handler.scene
 
@@ -256,7 +256,7 @@ class FleetCommandRouter:
         try:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
-        except Exception:
+        except Exception:  # Intentional broad catch: registry provider may be uninitialized; ability-button handler falls back to no registry
             pass
 
         target_facility_id = None

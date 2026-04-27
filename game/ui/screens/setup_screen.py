@@ -6,6 +6,9 @@ PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization
 to get registries from get_default_registry_provider() when first needed.
 """
+from __future__ import annotations
+
+from typing import Any
 import os
 import pygame
 import tkinter as tk
@@ -91,7 +94,7 @@ class BattleSetupScreen:
         self.ai_dropdown_open = None
         self.ai_strategies = [mid for mid, _ in _MOVEMENT_OPTIONS]
 
-    def start(self, preserve_teams=False):
+    def start(self, preserve_teams=False) -> None:
         """Initialize or reset the setup screen."""
         self.available_ship_designs = scan_ship_designs()
 
@@ -102,13 +105,13 @@ class BattleSetupScreen:
         self.scroll = ScrollState()
         self.ai_dropdown_open = None
 
-    def get_ships(self):
+    def get_ships(self) -> tuple:
         """Load and return ships for both teams."""
         team0_ships = load_ships_from_entries(self.team1, team_id=0, start_x=20000, start_y=30000, facing_angle=0)
         team1_ships = load_ships_from_entries(self.team2, team_id=1, start_x=80000, start_y=30000, facing_angle=180)
         return team0_ships, team1_ships
 
-    def save_setup(self):
+    def save_setup(self) -> None:
         """Open dialog to save current setup to JSON."""
         root = tk.Tk()
         root.withdraw()
@@ -127,7 +130,7 @@ class BattleSetupScreen:
         if filepath:
             save_battle_setup(filepath, self.team1, self.team2)
 
-    def load_setup(self):
+    def load_setup(self) -> None:
         """Open dialog to load a battle setup."""
         root = tk.Tk()
         root.withdraw()
@@ -149,7 +152,7 @@ class BattleSetupScreen:
             self.team2 = new_team2
             self.ai_dropdown_open = None
 
-    def get_team_display_groups(self, team_list):
+    def get_team_display_groups(self, team_list) -> Any:
         """Group team entries for display."""
         display_items = []
         for i, entry in enumerate(team_list):
@@ -162,23 +165,23 @@ class BattleSetupScreen:
             })
         return display_items
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Handle a single pygame event (IScene protocol)."""
         if event.type == pygame.MOUSEBUTTONDOWN:
             self._handle_click(event.pos[0], event.pos[1], event.button,
                                self.screen_width, self.screen_height)
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         """Update scene logic (IScene protocol). dt is time since last frame."""
         # BattleSetupScreen has no time-based updates
         pass
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         """Handle window resize (IScene protocol)."""
         self.screen_width = width
         self.screen_height = height
 
-    def _handle_click(self, mx, my, button, sw, sh):
+    def _handle_click(self, mx, my, button, sw, sh) -> None:
         """Handle mouse click at position."""
         col1_x, col2_x, col3_x = 50, sw // 3 + 50, 2 * sw // 3 + 50
         btn_y = sh - 80
@@ -211,7 +214,7 @@ class BattleSetupScreen:
         if self.ai_dropdown_open is not None:
             self._handle_dropdown_click(mx, my, col2_x, col3_x)
 
-    def _handle_ships_click(self, mx, my, button):
+    def _handle_ships_click(self, mx, my, button) -> bool:
         """Handle click on available ships column."""
         for i, design in enumerate(self.available_ship_designs):
             y = 150 + i * 40
@@ -222,7 +225,7 @@ class BattleSetupScreen:
 
         return False
 
-    def _handle_action_buttons(self, mx, my, sw, btn_y):
+    def _handle_action_buttons(self, mx, my, sw, btn_y) -> None:
         """Handle clicks on action buttons."""
         if sw // 2 - 100 <= mx < sw // 2 + 100 and btn_y <= my < btn_y + 50:
             if self.team1 and self.team2:
@@ -236,19 +239,19 @@ class BattleSetupScreen:
             if self.team1 and self.team2:
                 self._trigger_start_battle(headless=True)
 
-    def _trigger_start_battle(self, headless: bool):
+    def _trigger_start_battle(self, headless: bool) -> None:
         """Trigger battle start via callback."""
         if self.scene_callback:
             team0, team1 = self.get_ships()
             action = "start_headless" if headless else "start_battle"
             self.scene_callback(action, team0=team0, team1=team1)
 
-    def _trigger_return_to_menu(self):
+    def _trigger_return_to_menu(self) -> None:
         """Trigger return to menu via callback."""
         if self.scene_callback:
             self.scene_callback("return_to_menu")
 
-    def _handle_team_click(self, mx, my, col_x, team_list, team_idx):
+    def _handle_team_click(self, mx, my, col_x, team_list, team_idx) -> None:
         """Handle click on team column."""
         display_list = self.get_team_display_groups(team_list)
         for i, item in enumerate(display_list):
@@ -265,7 +268,7 @@ class BattleSetupScreen:
                     self.ai_dropdown_open = (team_idx, i)
                     return
 
-    def _handle_dropdown_click(self, mx, my, col2_x, col3_x):
+    def _handle_dropdown_click(self, mx, my, col2_x, col3_x) -> None:
         """Handle click on AI strategy dropdown."""
         team_idx, display_idx = self.ai_dropdown_open
         team_list = self.team1 if team_idx == 1 else self.team2
@@ -290,7 +293,7 @@ class BattleSetupScreen:
 
         self.ai_dropdown_open = None
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the battle setup screen."""
         screen.fill(BG_PANEL_DARK)
         sw, sh = screen.get_size()

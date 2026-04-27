@@ -94,7 +94,7 @@ class FleetSelectionWindow(UIWindow):
             container=self,
         )
 
-    def update(self, time_delta):
+    def update(self, time_delta) -> None:
         super().update(time_delta)
 
         if self.btn_confirm.check_pressed():

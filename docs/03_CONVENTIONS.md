@@ -1,5 +1,7 @@
 # Conventions
 
+> **Last verified:** 2026-04-27 — PROJ-311 added §Type Annotations
+
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
 ---
@@ -471,3 +473,40 @@ When a new system replaces an old one, **eradicate the old system completely**. 
 - **Functions/methods:** `snake_case`.
 - **Private members:** Single underscore prefix (`_private_method`).
 - **File names:** `snake_case`, matching the primary class (`battle_engine.py` contains `BattleEngine`).
+
+---
+
+## 8. Type Annotations
+
+### Return types (required)
+Every public function/method must carry a return-type annotation.
+
+- **Modern syntax only:** `int | None`, `list[int]`, `dict[str, T]` — not `Optional[int]`/`List[int]`/`Dict[str, T]`. Python 3.13+ baseline (PROJ-295) means we don't need legacy syntax
+- **No `return` statement:** annotate `-> None` explicitly
+- **`__init__` and other dunders:** exempt per PEP 484
+- **Forward references:** add `from __future__ import annotations` at the top of the file if needed (or use string literals in the annotation)
+- **Don't lie:** if the function returns `Any`, annotate `Any`. Don't make up a more specific type the code doesn't enforce
+
+### Parameter types (encouraged)
+Parameter annotations are encouraged but not project-wide-mandatory yet. Add them where they improve clarity.
+
+### Generics and protocols
+Prefer `Protocol` (from `game.core.protocols.*`) over concrete types when the function only needs duck-typed surface. Use `TypeVar` for generic helpers.
+
+See PROJ-311 for the audit that established the return-type requirement.
+
+---
+
+## 9. Documentation Freshness
+
+Every file under `docs/` must carry a verification timestamp directly below its H1:
+
+> **Last verified:** YYYY-MM-DD — <one-sentence summary of what was verified>
+
+Rules:
+- **Date format:** `YYYY-MM-DD` (ISO 8601)
+- **"Verified" means:** the maintainer read the file and confirmed it matches current code/behavior — not that they made a cosmetic edit
+- **Bump the date when:** you substantively edit the doc, or you re-read it and confirm current accuracy
+- **Don't bump:** for typo/formatting fixes that don't reflect any verification work
+
+See PROJ-307 for the backfill that established this convention.

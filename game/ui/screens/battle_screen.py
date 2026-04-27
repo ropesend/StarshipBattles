@@ -9,10 +9,12 @@ Can optionally use BattleController for unified battle mode support
 PROJ-40: Removed unused AIController import. BattleService is instantiated at
 runtime so must remain a runtime import.
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import time
-from typing import Optional, List, TYPE_CHECKING
+from typing import Any, Optional, List, TYPE_CHECKING
 
 from game.core.config import PhysicsConfig
 
@@ -173,7 +175,7 @@ class BattleScreen:
         return self._controller
 
     @property
-    def engine(self):
+    def engine(self) -> Any:
         """Access the underlying BattleEngine."""
         return self._battle_service.get_engine()
 
@@ -189,7 +191,7 @@ class BattleScreen:
         """
         return self._ui_service
 
-    def handle_resize(self, width, height):
+    def handle_resize(self, width, height) -> None:
         """Handle window resize."""
         self.screen_width = width
         self.screen_height = height
@@ -200,30 +202,30 @@ class BattleScreen:
         self.ui.handle_resize(width, height)
 
     @property
-    def show_overlay(self):
+    def show_overlay(self) -> Any:
         return self.ui.show_overlay
     
     @show_overlay.setter
-    def show_overlay(self, value):
+    def show_overlay(self, value) -> None:
         self.ui.show_overlay = value
 
     @property
-    def stats_panel_width(self):
+    def stats_panel_width(self) -> Any:
         return self.ui.stats_panel.rect.width
 
     @property
-    def ships(self):
+    def ships(self) -> Any:
         return self.engine.ships
 
     @property
-    def projectiles(self):
+    def projectiles(self) -> Any:
         return self.engine.projectiles
 
     @property
-    def ai_controllers(self):
+    def ai_controllers(self) -> Any:
         return self.engine.ai_controllers
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Handle a single pygame event (IScene protocol)."""
         if event.type == pygame.KEYDOWN:
             self._handle_keydown(event)
@@ -241,7 +243,7 @@ class BattleScreen:
         elif event.type == pygame.MOUSEWHEEL:
             self.camera.update_input(0, [event], allow_wasd=False)
 
-    def _resolve_focus_target(self, focus_target):
+    def _resolve_focus_target(self, focus_target) -> Any | None:
         """Resolve a panel focus result into something the camera can follow."""
         if focus_target is None:
             return None
@@ -266,7 +268,7 @@ class BattleScreen:
 
         return None
 
-    def _handle_keydown(self, event):
+    def _handle_keydown(self, event) -> None:
         """Handle keyboard shortcuts during battle."""
         key = event.key
 
@@ -291,7 +293,7 @@ class BattleScreen:
         elif key == pygame.K_SLASH:
             self.sim_speed_multiplier = UI_PAUSE_SPEED
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         """Update battle simulation (IScene protocol).
 
         Args:
@@ -302,7 +304,7 @@ class BattleScreen:
         else:
             self._update_visual(dt)
 
-    def _update_headless(self):
+    def _update_headless(self) -> None:
         """Run headless battle simulation (fast mode without rendering)."""
         for _ in range(1000):
             self._run_single_tick()
@@ -319,7 +321,7 @@ class BattleScreen:
             t2 = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
             logger.debug(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
 
-    def _update_visual(self, dt: float):
+    def _update_visual(self, dt: float) -> None:
         """Update visual battle simulation with proper timing."""
         # Update visuals (camera, beams) - always run once per frame
         self._update_visual_effects(dt)
@@ -362,7 +364,7 @@ class BattleScreen:
         # Update tick rate for HUD
         self._update_tick_rate(dt)
 
-    def _run_single_tick(self):
+    def _run_single_tick(self) -> None:
         """Run a single simulation tick via the controller."""
         if self.engine.is_battle_over():
             return
@@ -388,7 +390,7 @@ class BattleScreen:
             b_visual['timer'] = 0.15
             self.beams.append(b_visual)
 
-    def _update_visual_effects(self, dt: float):
+    def _update_visual_effects(self, dt: float) -> None:
         """Update visual effects like beams, hit effects, and camera."""
         # Update Beams
         for b in self.beams:
@@ -405,7 +407,7 @@ class BattleScreen:
         # Update Camera (smooth zoom, target follow)
         self.camera.update(dt)
 
-    def _update_tick_rate(self, dt: float):
+    def _update_tick_rate(self, dt: float) -> None:
         """Update tick rate calculation for HUD display."""
         self.tick_rate_timer += dt
         if self.tick_rate_timer >= 1.0:
@@ -413,7 +415,7 @@ class BattleScreen:
             self.tick_rate_count = 0
             self.tick_rate_timer = 0.0
 
-    def _on_battle_ended(self):
+    def _on_battle_ended(self) -> None:
         """Unified exit path for all battle modes.
 
         Routes to results screen or directly to destination based on config.
@@ -440,7 +442,7 @@ class BattleScreen:
             if self.scene_callback:
                 self.scene_callback("return_to_destination", destination=dest)
 
-    def _cycle_focus_ship(self, direction):
+    def _cycle_focus_ship(self, direction) -> None:
         """Cycle camera focus through alive ships."""
         alive_ships = [s for s in self.engine.ships if s.is_alive]
         if not alive_ships:
@@ -456,7 +458,7 @@ class BattleScreen:
 
     # === Combat Event Handlers (Visual Effects) ===
 
-    def _subscribe_combat_events(self):
+    def _subscribe_combat_events(self) -> None:
         """Subscribe to combat events on the engine's event bus."""
         bus = self.engine.combat_events
         bus.subscribe(CombatEventType.SHIELD_HIT, self._on_shield_hit)
@@ -464,36 +466,36 @@ class BattleScreen:
         bus.subscribe(CombatEventType.COMPONENT_DESTROYED, self._on_component_destroyed)
         bus.subscribe(CombatEventType.SHIP_DESTROYED, self._on_ship_destroyed)
 
-    def _add_hit_effect(self, effect_type: HitEffectType, ship):
+    def _add_hit_effect(self, effect_type: HitEffectType, ship) -> None:
         """Create and add a hit effect, respecting the cap."""
         if len(self.hit_effects) >= MAX_ACTIVE_EFFECTS:
             return
         self.hit_effects.append(create_hit_effect(effect_type, ship))
 
-    def _on_shield_hit(self, event: CombatEvent):
+    def _on_shield_hit(self, event: CombatEvent) -> None:
         self._add_hit_effect(HitEffectType.SHIELD_HIT, event.target_ship)
 
-    def _on_component_hit(self, event: CombatEvent):
+    def _on_component_hit(self, event: CombatEvent) -> None:
         self._add_hit_effect(HitEffectType.ARMOR_HIT, event.target_ship)
 
-    def _on_component_destroyed(self, event: CombatEvent):
+    def _on_component_destroyed(self, event: CombatEvent) -> None:
         self._add_hit_effect(HitEffectType.COMPONENT_DESTROYED, event.target_ship)
 
-    def _on_ship_destroyed(self, event: CombatEvent):
+    def _on_ship_destroyed(self, event: CombatEvent) -> None:
         self._add_hit_effect(HitEffectType.SHIP_DESTROYED, event.target_ship)
 
-    def is_battle_over(self):
+    def is_battle_over(self) -> Any:
         """Check if the battle has ended."""
         # In test mode, battle is over when scenario completes
         if self.test_mode and self.test_scenario is None and self.test_tick_count > 0:
             return True  # Test has completed
         return self._battle_service.is_battle_over()
 
-    def get_winner(self):
+    def get_winner(self) -> Any:
         """Get the winning team. Returns 0, 1, or -1 for draw."""
         return self._battle_service.get_winner()
     
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the battle scene."""
         screen.fill(BG_BATTLE)
         
@@ -542,7 +544,7 @@ class BattleScreen:
         self.ui.control_panel.draw(screen)
     
 
-    def draw_hud(self, screen, font=None, profiler_active=False):
+    def draw_hud(self, screen, font=None, profiler_active=False) -> None:
         """Draw battle HUD elements (tick counters, speed indicator).
 
         Args:
@@ -659,7 +661,7 @@ class BattleScreen:
                 lines.append(f"T{team_id} {ability}={formatted} ({source})")
         return lines
 
-    def print_headless_summary(self):
+    def print_headless_summary(self) -> None:
         """Print summary of headless battle results."""
         # Skip summary for test mode - test framework handles results
         if self.test_mode:

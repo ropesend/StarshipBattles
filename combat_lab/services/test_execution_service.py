@@ -83,12 +83,19 @@ class TestExecutionService:
             # deterministic per design_id. PROJ-274: both calls rely on
             # the context materializer (DesignOnlyMaterializer installed
             # by TestRunner); no explicit ship_builder kwarg required.
+            # PROJ-306: pass `registry_provider` explicitly — Combat Lab
+            # services are outside the Simulation layer and are allowed
+            # to call `get_default_registry_provider()`.
+            from game.core.registry import get_default_registry_provider
             from game.simulation.battle_runner import (
-                _default_ship_builder_from_context,
+                build_context_ship_builder,
             )
+            registry_provider = get_default_registry_provider()
             _pre_teams, pre_ships_by_role = materialize_spec_ships(
                 spec,
-                ship_builder=_default_ship_builder_from_context(),
+                ship_builder=build_context_ship_builder(
+                    registry_provider=registry_provider,
+                ),
             )
             initial_state = {
                 role: _snapshot_ship_state(ship)
@@ -100,6 +107,7 @@ class TestExecutionService:
             _result, ships_by_role = controller.start_from_spec(
                 spec,
                 ai_factory=AIControllerFactory(),
+                registry_provider=registry_provider,
                 config=config,
             )
             engine = controller.service.get_engine()

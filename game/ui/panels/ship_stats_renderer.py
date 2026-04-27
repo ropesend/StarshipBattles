@@ -6,6 +6,8 @@ weapons, and components display in the battle UI.
 PROJ-40: Import LayerType from core/constants (canonical location).
 ComponentStatus import from simulation layer is acceptable for status display.
 """
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import pygame
@@ -39,7 +41,7 @@ RESOURCE_COLORS = {
 RESOURCE_ORDER_PRIORITY = {"fuel": 0, "energy": 1, "ammo": 2}
 
 
-def draw_stat_bar(surface, x, y, width, height, pct, color):
+def draw_stat_bar(surface, x, y, width, height, pct, color) -> None:
     """Draw a progress bar.
 
     Args:
@@ -56,7 +58,7 @@ def draw_stat_bar(surface, x, y, width, height, pct, color):
     pygame.draw.rect(surface, BAR_BORDER, (x, y, width, height), 1)
 
 
-def get_component_status_display(comp):
+def get_component_status_display(comp) -> tuple[str, tuple[int, int, int]]:
     """Get status text and color for a component.
 
     Args:
@@ -86,7 +88,7 @@ def get_component_status_display(comp):
     return status_text, status_color
 
 
-def get_hp_bar_color(hp_pct, is_active=True):
+def get_hp_bar_color(hp_pct, is_active=True) -> tuple[int, int, int]:
     """Get the appropriate color for an HP bar.
 
     Delegates to the shared ``get_damage_color`` utility for HP-based
@@ -105,7 +107,7 @@ def get_hp_bar_color(hp_pct, is_active=True):
     return get_damage_color(hp_pct)
 
 
-def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font):
+def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font) -> int:
     """Draw resource bars for a ship.
 
     Args:
@@ -147,7 +149,7 @@ def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h,
     return y
 
 
-def draw_weapon_entry(surface, comp, x_indent, y, panel_w, font):
+def draw_weapon_entry(surface, comp, x_indent, y, panel_w, font) -> int:
     """Draw a single weapon component entry.
 
     Args:
@@ -196,7 +198,7 @@ def draw_weapon_entry(surface, comp, x_indent, y, panel_w, font):
     return y + UIConfig.ELEMENT_SPACING
 
 
-def draw_component_entry(surface, comp, x_indent, y, font):
+def draw_component_entry(surface, comp, x_indent, y, font) -> int:
     """Draw a single non-weapon component entry.
 
     Args:
@@ -236,7 +238,7 @@ def draw_component_entry(surface, comp, x_indent, y, font):
     return y + UIConfig.ELEMENT_SPACING
 
 
-def draw_ship_info_header(surface, ship, x_indent, y, font):
+def draw_ship_info_header(surface, ship, x_indent, y, font) -> int:
     """Draw ship info header (file, AI strategy).
 
     Args:
@@ -262,7 +264,7 @@ def draw_ship_info_header(surface, ship, x_indent, y, font):
     return y
 
 
-def draw_ship_vitals(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font):
+def draw_ship_vitals(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font) -> int:
     """Draw ship vital stats (shield, HP).
 
     Args:
@@ -296,7 +298,7 @@ def draw_ship_vitals(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, fo
     return y
 
 
-def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
+def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font) -> int:
     """Draw ship combat stats (speed, shots, crew, target).
 
     Args:
@@ -352,7 +354,7 @@ def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
     return y
 
 
-def draw_fleet_bonuses(surface, ship, x_indent, y, font, aura_manager):
+def draw_fleet_bonuses(surface, ship, x_indent, y, font, aura_manager) -> int:
     """Draw active fleet/system/empire bonuses for a ship.
 
     Args:
@@ -389,7 +391,7 @@ def draw_fleet_bonuses(surface, ship, x_indent, y, font, aura_manager):
     return y + 4
 
 
-def draw_ship_weapons(surface, ship: 'ICombatShip', x_indent, y, panel_w, font):
+def draw_ship_weapons(surface, ship: 'ICombatShip', x_indent, y, panel_w, font) -> int:
     """Draw all weapon components for a ship.
 
     Args:
@@ -414,7 +416,7 @@ def draw_ship_weapons(surface, ship: 'ICombatShip', x_indent, y, panel_w, font):
     return y + 8
 
 
-def draw_ship_components(surface, ship: 'ICombatShip', x_indent, y, font):
+def draw_ship_components(surface, ship: 'ICombatShip', x_indent, y, font) -> int:
     """Draw all non-weapon components for a ship.
 
     Args:

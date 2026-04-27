@@ -188,7 +188,7 @@ class CargoTransferService:
             if not planet_info:
                 continue
 
-            def _label(race_id, count, _name=colony.name):
+            def _label(race_id, count, _name=colony.name) -> str:
                 if race_id:
                     return f"{_name}: {race_id} ({count})"
                 return f"{_name}: Population ({count})"

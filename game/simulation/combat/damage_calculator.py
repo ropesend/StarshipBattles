@@ -11,6 +11,8 @@ Emits combat events at each pipeline stage when an event bus is provided.
 
 Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 """
+from __future__ import annotations
+
 import random
 from typing import Optional, TYPE_CHECKING
 
@@ -83,7 +85,7 @@ class DamageCalculator:
     # -- pipeline stages --------------------------------------------------
 
     @staticmethod
-    def _absorb_shields(ship, damage, context, event_bus):
+    def _absorb_shields(ship, damage, context, event_bus) -> float:
         """Stage 1: Absorb damage from shield pool."""
         if ship.current_shields <= 0:
             return damage
@@ -101,7 +103,7 @@ class DamageCalculator:
         return damage
 
     @staticmethod
-    def _reduce_emissive_armor(ship, damage, context, event_bus):
+    def _reduce_emissive_armor(ship, damage, context, event_bus) -> float:
         """Stage 2: Flat damage reduction from emissive armor."""
         ea = ship.emissive_armor
         if ea <= 0:
@@ -118,7 +120,7 @@ class DamageCalculator:
         return damage
 
     @staticmethod
-    def _absorb_regenerating_armor(ship, damage, context, event_bus):
+    def _absorb_regenerating_armor(ship, damage, context, event_bus) -> float:
         """Stage 3: SRA absorbs overflow and recharges shields."""
         sra = ship.shield_regenerating_armor
         if sra <= 0:
@@ -136,7 +138,7 @@ class DamageCalculator:
             ))
         return damage
 
-    def _distribute_hull_damage(self, ship, damage, context, event_bus):
+    def _distribute_hull_damage(self, ship, damage, context, event_bus) -> float:
         """Stage 4: Distribute remaining damage across hull layers (outer first)."""
         sorted_layers = sorted(
             ship.layers.items(),
@@ -150,7 +152,7 @@ class DamageCalculator:
         return damage
 
     @staticmethod
-    def _finalize_damage(ship, original_damage, remaining, was_derelict, context, event_bus):
+    def _finalize_damage(ship, original_damage, remaining, was_derelict, context, event_bus) -> None:
         """Stage 5: Recalculate stats and emit derelict event if needed.
 
         PROJ-253: Uses recalculate_stats_if_dirty() — the dirty flag is already

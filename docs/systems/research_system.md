@@ -1,5 +1,7 @@
 # Research System Architecture
 
+> **Last verified:** 2026-03-14
+
 This document describes the stochastic tech tree research system.
 
 ---

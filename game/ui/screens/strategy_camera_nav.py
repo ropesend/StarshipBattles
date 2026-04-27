@@ -8,6 +8,9 @@ Cross-layer imports (acceptable for UI):
 - hex_to_pixel, HexCoord: Runtime - coordinate conversions for camera targeting
 - StarSystem: Runtime - isinstance check for selection cycling
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import logging
 
@@ -29,18 +32,18 @@ class CameraNavigator:
         self.scene = scene
 
     @property
-    def camera(self):
+    def camera(self) -> Any:
         return self.scene.camera
 
     @property
-    def systems(self):
+    def systems(self) -> Any:
         return self.scene.systems
 
     @property
-    def hex_size(self):
+    def hex_size(self) -> Any:
         return self.scene.hex_size
 
-    def center_on(self, obj):
+    def center_on(self, obj) -> None:
         """
         Center camera on a game object (Planet, Fleet, System).
 
@@ -57,7 +60,7 @@ class CameraNavigator:
         else:
             logger.debug(f"Could not center camera on {obj}")
 
-    def center_on_hex(self, hex_coord: HexCoord):
+    def center_on_hex(self, hex_coord: HexCoord) -> None:
         """Center camera directly on a hex coordinate.
 
         Args:
@@ -68,7 +71,7 @@ class CameraNavigator:
         self.camera.position.y = fy
         logger.debug(f"Camera centered on hex {hex_coord}")
 
-    def _resolve_global_hex(self, obj):
+    def _resolve_global_hex(self, obj) -> Any:
         """
         Resolve object to its global hex coordinate.
 
@@ -91,7 +94,7 @@ class CameraNavigator:
             return obj.global_location
         return None
 
-    def zoom_to_galaxy(self):
+    def zoom_to_galaxy(self) -> None:
         """
         Zoom out to show entire galaxy (Shift+G).
 
@@ -133,7 +136,7 @@ class CameraNavigator:
 
         logger.debug(f"Galaxy View: zoom={self.camera.zoom:.2f}")
 
-    def zoom_to_system(self, target_sys=None):
+    def zoom_to_system(self, target_sys=None) -> None:
         """
         Zoom to 2x on a system (Shift+S).
 
@@ -171,7 +174,7 @@ class CameraNavigator:
 
         logger.debug(f"System View: {target_sys.name} at zoom=2.0")
 
-    def cycle_selection(self, obj_type, direction):
+    def cycle_selection(self, obj_type, direction) -> Any:
         """
         Cycle through colonies or fleets.
 

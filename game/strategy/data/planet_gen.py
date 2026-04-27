@@ -416,7 +416,7 @@ class PlanetGenerator:
             image_rotation=image_rotation
         )
 
-    def _generate_surface_flags(self, mass: float, temp: float):
+    def _generate_surface_flags(self, mass: float, temp: float) -> tuple[float, float, float]:
         """
         Generate surface water, tectonic activity, and magnetic field.
         """

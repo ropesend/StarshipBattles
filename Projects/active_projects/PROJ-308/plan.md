@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Triage every site (narrow vs justify vs delete) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Apply per-site action | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Add convention to CLAUDE.md / 05_ERROR_HANDLING.md | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Triage every site (narrow vs justify vs delete) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Apply per-site action | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Add convention to CLAUDE.md / 05_ERROR_HANDLING.md | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for implementation)
-**Last Action:** Project created from 2026-04-26 review remaining-items list. Verified site count: **24 broad `except Exception:` clauses across 18 files** (not 28 as originally claimed)
-**Next Action:** Begin Phase 1 — read each of the 24 sites, decide per-site whether to narrow the type, justify with comment, or delete the handler entirely
+**Last Updated:** 2026-04-27
+**Active Phase:** Complete — pending user verification
+**Last Action:** Phases 1–3 complete. Triage at `findings/triage.md` (4 NARROW / 20 JUSTIFY / 0 DELETE). All 24 sites updated. Spec verification (`grep "except Exception:" game/ | grep -v "Intentional"`) returns zero hits. Targeted tests pass: tests/unit/core + tests/unit/simulation/combat (1367 passed); tests/unit/ui (3489 passed). CLAUDE.md "Long-Term Quality" + docs/05_ERROR_HANDLING.md updated. MEMORY.md update deferred per task 3.4.
+**Next Action:** User verification + run full sharded suite + update MEMORY.md + archive the project
 **Blockers:** None
-**Context for Next Agent:** 2 of the 24 sites already have intent comments ([game/ui/services/tkinter_utils.py:100](game/ui/services/tkinter_utils.py#L100) "Intentional: destroy may fail if already destroyed", [game/ui/screens/workshop_data_reloader.py:23](game/ui/screens/workshop_data_reloader.py#L23) "Intentional broad catch: Tkinter init is platform-dependent"). The other 22 are uncommented. The user wants WHY-comments on every broad except, not just bulk justification — this is a triage exercise per site.
+**Context for Next Agent:** Worktree branch `worktree-agent-af42de0ec35d4eb7b`. Out of scope: 11 `except Exception as e:` (with bound binding) sites in game/ — these were not in the verified 24-site manifest and could be a follow-up project. Examples: `game/strategy/engine/turn_engine.py:263,500`, `game/strategy/services/design_validator.py:76,92`.
 
 ## Overview
 Address every broad `except Exception:` clause in production code (`game/`). Per CLAUDE.md "Long-Term Quality" rules, the preference order is:

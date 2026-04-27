@@ -32,7 +32,7 @@ class TestReloadRegistriesFromDirectory:
         """Non-existent directory returns False."""
         nonexistent = tmp_path / "does_not_exist"
 
-        result = reload_registries_from_directory(mock_registry_manager, nonexistent)
+        result = reload_registries_from_directory(mock_registry_manager, nonexistent, registry_provider=mock_registry_manager)
 
         assert result is False
 
@@ -48,7 +48,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True
         assert mock_registry_manager.components == {}
@@ -74,7 +74,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers', side_effect=track_modifiers):
             with patch('game.simulation.services.registry_loader.load_components', side_effect=track_components):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert call_order.index("modifiers") < call_order.index("components")
 
@@ -86,7 +86,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components') as mock_load:
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         # PROJ-211: Now passes registry_provider kwarg
         mock_load.assert_called_once()
@@ -102,7 +102,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes') as mock_load:
-                    reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         # PROJ-211: Now passes registry_provider kwarg
         mock_load.assert_called_once()
@@ -120,7 +120,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes') as mock_load:
-                    reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         # PROJ-211: Now passes registry_provider kwarg
         mock_load.assert_called_once()
@@ -140,7 +140,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components') as mock_load:
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         # Should use test_ prefixed version
         # PROJ-211: Now passes registry_provider kwarg
@@ -157,7 +157,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers') as mock_mod:
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True
         mock_mod.assert_not_called()  # No modifiers file to load
@@ -170,7 +170,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components') as mock_comp:
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True
         mock_comp.assert_not_called()  # No components file to load
@@ -181,7 +181,7 @@ class TestReloadRegistriesFromDirectory:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True
 
@@ -190,7 +190,7 @@ class TestReloadRegistriesFromDirectory:
         mock_registry_manager._check_frozen.side_effect = FrozenStateException("Registry is frozen")
 
         with pytest.raises(FrozenStateException):
-            reload_registries_from_directory(mock_registry_manager, tmp_path)
+            reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
     def test_reload_component_load_error_logged(self, mock_registry_manager, tmp_path, caplog):
         """JSONDecodeError in components is logged, not raised."""
@@ -200,7 +200,7 @@ class TestReloadRegistriesFromDirectory:
             with patch('game.simulation.services.registry_loader.load_components',
                        side_effect=json.JSONDecodeError("test", "doc", 0)):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True  # Should not crash
         assert "Failed to load components" in caplog.text
@@ -213,7 +213,7 @@ class TestReloadRegistriesFromDirectory:
                    side_effect=TypeError("test error")):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True  # Should not crash
         assert "Failed to load modifiers" in caplog.text
@@ -239,7 +239,7 @@ class TestReloadRegistriesPathHandling:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, str(tmp_path))
+                    result = reload_registries_from_directory(mock_registry_manager, str(tmp_path), registry_provider=mock_registry_manager)
 
         assert result is True
 
@@ -248,7 +248,7 @@ class TestReloadRegistriesPathHandling:
         with patch('game.simulation.services.registry_loader.load_modifiers'):
             with patch('game.simulation.services.registry_loader.load_components'):
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
-                    result = reload_registries_from_directory(mock_registry_manager, tmp_path)
+                    result = reload_registries_from_directory(mock_registry_manager, tmp_path, registry_provider=mock_registry_manager)
 
         assert result is True
 
@@ -257,6 +257,68 @@ class TestReloadRegistriesPathHandling:
         file_path = tmp_path / "not_a_dir.txt"
         file_path.write_text("content")
 
-        result = reload_registries_from_directory(mock_registry_manager, file_path)
+        result = reload_registries_from_directory(mock_registry_manager, file_path, registry_provider=mock_registry_manager)
 
         assert result is False
+
+
+class TestRegistryProviderIsRequired:
+    """PROJ-306 Phase 2: `reload_registries_from_directory` REQUIRES a
+    `registry_provider` argument. Per PROJ-252, Simulation-layer code
+    cannot resolve the provider via global lookup — callers must pass
+    it explicitly. The previous `get_default_registry_provider()`
+    fallback at line 91 has been DELETED.
+    """
+
+    @pytest.fixture
+    def mock_registry_manager(self):
+        manager = MagicMock()
+        manager.components = {}
+        manager.modifiers = {}
+        manager.vehicle_classes = {}
+        manager.resources = {}
+        manager._validator = MagicMock()
+        manager._check_frozen = MagicMock()
+        return manager
+
+    def test_omitting_registry_provider_raises_typeerror(
+        self, mock_registry_manager, tmp_path,
+    ):
+        """Calling without `registry_provider` raises TypeError (required kw)."""
+        with pytest.raises(TypeError):
+            # Note: explicitly omitting the keyword.
+            reload_registries_from_directory(  # type: ignore[call-arg]
+                mock_registry_manager, tmp_path,
+            )
+
+    def test_passing_registry_provider_threads_through_to_loaders(
+        self, mock_registry_manager, tmp_path,
+    ):
+        """The supplied `registry_provider` is forwarded to load_modifiers,
+        load_components, and load_vehicle_classes — no global lookup."""
+        # Create dummy files so each branch executes.
+        (tmp_path / "modifiers.json").write_text("{}")
+        (tmp_path / "components.json").write_text("{}")
+        (tmp_path / "vehicleclasses.json").write_text("{}")
+
+        provider = MagicMock(name="explicit_provider")
+
+        with patch(
+            "game.simulation.services.registry_loader.load_modifiers"
+        ) as load_mod, patch(
+            "game.simulation.services.registry_loader.load_components"
+        ) as load_comp, patch(
+            "game.simulation.services.registry_loader.load_vehicle_classes"
+        ) as load_vc:
+            result = reload_registries_from_directory(
+                mock_registry_manager,
+                tmp_path,
+                registry_provider=provider,
+            )
+
+        assert result is True
+        # Each loader was called with the EXPLICIT provider — not a
+        # globally-fetched one.
+        assert load_mod.call_args.kwargs["registry_provider"] is provider
+        assert load_comp.call_args.kwargs["registry_provider"] is provider
+        assert load_vc.call_args.kwargs["registry_provider"] is provider

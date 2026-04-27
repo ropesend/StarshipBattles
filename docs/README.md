@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-13 — PROJ-270 closure complete, PROJ-271 Track B landed. Every battle compiles a `BattleSpec` and emits a `BattleOutcome`; strategy + Battle Setup modifier math emits real stat_keys (`shield_capacity_mult`, `damage_mult`, `shield_bonus_add`) that flow through `FleetAuraManager` → `ship.external_stats` → `get_effective_stat`; `FleetAuraManager` respects `stack_group` (intra-group MAX, inter-group SUM) on external entries; `ReturnDestination` lives at `game/core/return_destination.py`; `BattleConfig` trimmed to visual-mode operational options only. See `Projects/active_projects/PROJ-270/plan.md` and `Projects/active_projects/PROJ-271/plan.md`.
+> **Last verified:** 2026-04-27 — Post-PROJ-297/298/306/307/308/310/311 verification pass. Reading table includes `resource_system.md` (PROJ-297); pattern count is 27 (PROJ-297); every doc under `docs/` carries a `Last verified:` marker (PROJ-307). Earlier PROJ-270/271 architecture summary still applies: every battle compiles a `BattleSpec` and emits a `BattleOutcome`; modifier math emits real stat_keys (`shield_capacity_mult`, `damage_mult`, `shield_bonus_add`) that flow through `FleetAuraManager` → `ship.external_stats` → `get_effective_stat`.
 
 ---
 

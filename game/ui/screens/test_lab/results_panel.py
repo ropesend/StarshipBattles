@@ -2,6 +2,7 @@
 
 Displays test run history with run selection.
 """
+from __future__ import annotations
 
 import pygame
 
@@ -51,11 +52,11 @@ class ResultsPanel:
         self.clear_test_button_rect = None
         self.clear_all_button_rect = None
 
-    def set_details_panel(self, details_panel):
+    def set_details_panel(self, details_panel) -> None:
         """Set reference to details panel for displaying selected run."""
         self.details_panel = details_panel
 
-    def set_test(self, test_id):
+    def set_test(self, test_id) -> None:
         """Update panel to show runs for specific test."""
         self.current_test_id = test_id
         self.scroll.reset()
@@ -93,7 +94,7 @@ class ResultsPanel:
                 card = self.run_cards[0]
                 self.details_panel.set_run(card.run_record, card.run_number)
 
-    def _recalculate_scroll(self):
+    def _recalculate_scroll(self) -> None:
         """Recalculate maximum scroll offset."""
         if not self.run_cards:
             self.scroll.content_height = 0
@@ -109,7 +110,7 @@ class ResultsPanel:
         self.scroll.viewport_height = self.height - 10
         self.scroll.clamp()
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle mouse events."""
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
@@ -148,7 +149,7 @@ class ResultsPanel:
 
         return False
 
-    def update(self):
+    def update(self) -> None:
         """Update hover states."""
         mx, my = pygame.mouse.get_pos()
 
@@ -157,7 +158,7 @@ class ResultsPanel:
         for card in self.run_cards:
             card.handle_hover(mx, adjusted_my)
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the results panel."""
         # Draw background
         pygame.draw.rect(surface, self.bg_color,
@@ -188,7 +189,7 @@ class ResultsPanel:
         if self.scroll.can_scroll:
             self._draw_scrollbar(surface)
 
-    def _draw_header(self, surface):
+    def _draw_header(self, surface) -> None:
         """Draw panel header."""
         # Title
         title_text = "TEST RUN HISTORY"
@@ -233,7 +234,7 @@ class ResultsPanel:
         text2_y = self.clear_all_button_rect.y + (button_height - button2_text.get_height()) // 2
         surface.blit(button2_text, (text2_x, text2_y))
 
-    def _is_card_visible(self, card_y, card_height):
+    def _is_card_visible(self, card_y, card_height) -> bool:
         """Check if card is visible in viewport."""
         visible_top = self.y + 90
         visible_bottom = self.y + self.height
@@ -244,7 +245,7 @@ class ResultsPanel:
         # Card is visible if it overlaps with visible area
         return card_bottom > visible_top and card_top < visible_bottom
 
-    def _draw_scrollbar(self, surface):
+    def _draw_scrollbar(self, surface) -> None:
         """Draw scrollbar indicator."""
         visible_height = self.height - 90
         total_content_height = visible_height + self.scroll.max_offset

@@ -4,6 +4,8 @@ EmpirePanelWindow - Multi-tab empire information panel.
 PROJ-99 Phase 3: Main window with Treasury, Population, and placeholder tabs.
 Provides empire-wide overview of economy, species data, and future features.
 """
+from __future__ import annotations
+
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
@@ -100,7 +102,7 @@ class EmpirePanelWindow(UIWindow):
         self._create_ui()
         self._show_tab(TAB_TREASURY)
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create all UI elements."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -113,7 +115,7 @@ class EmpirePanelWindow(UIWindow):
         panel_height = content_height - PANEL_TOP - 20
         self._create_tab_panels(container, content_width, PANEL_TOP, panel_height)
 
-    def _create_tab_buttons(self, container, width: int):
+    def _create_tab_buttons(self, container, width: int) -> None:
         """Create clickable tab buttons for navigation."""
         num_tabs = len(TAB_NAMES)
         btn_width = (width - 10) // num_tabs
@@ -129,7 +131,7 @@ class EmpirePanelWindow(UIWindow):
             btn.tab_index = i
             self.tab_buttons.append(btn)
 
-    def _create_tab_panels(self, container, width: int, top: int, height: int):
+    def _create_tab_panels(self, container, width: int, top: int, height: int) -> None:
         """Create panels for each tab."""
         panel_rect = pygame.Rect(10, top, width, height)
 
@@ -163,7 +165,7 @@ class EmpirePanelWindow(UIWindow):
         self._build_placeholder_tab(panel_more)
         self.step_panels.append(panel_more)
 
-    def _show_tab(self, tab_index: int):
+    def _show_tab(self, tab_index: int) -> None:
         """
         Show the specified tab panel.
 
@@ -188,7 +190,7 @@ class EmpirePanelWindow(UIWindow):
             else:
                 btn.unselect()
 
-    def _build_treasury_tab(self, panel: UIPanel):
+    def _build_treasury_tab(self, panel: UIPanel) -> None:
         """Build Treasury tab content using EmpireTreasuryPanel.
 
         PROJ-290: threads `economy_config` + `race_registry` into the
@@ -216,7 +218,7 @@ class EmpirePanelWindow(UIWindow):
             self._resource_icons
         )
 
-    def _build_population_tab(self, panel: UIPanel):
+    def _build_population_tab(self, panel: UIPanel) -> None:
         """Build Population tab with species card."""
         # Get panel dimensions for scroll container
         panel_rect = panel.get_relative_rect()
@@ -489,7 +491,7 @@ class EmpirePanelWindow(UIWindow):
 
         return y_offset
 
-    def _build_placeholder_tab(self, panel: UIPanel):
+    def _build_placeholder_tab(self, panel: UIPanel) -> None:
         """Build placeholder tab with coming soon message."""
         panel_rect = panel.get_relative_rect()
 
@@ -522,7 +524,7 @@ class EmpirePanelWindow(UIWindow):
 
         return handled
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up and fire close callback."""
         if self.on_close_callback:
             self.on_close_callback()

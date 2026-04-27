@@ -1,7 +1,7 @@
 """Build Queue List Window - Shows all active build queues for an empire (BUG-67)."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import Any, TYPE_CHECKING, Optional
 
 import pygame
 import pygame_gui
@@ -27,7 +27,7 @@ class BuildQueueListWindow(UIWindow):
         self.row_labels = []
         self._build_list()
 
-    def _build_list(self):
+    def _build_list(self) -> None:
         """Build the list of all active build queues."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -112,7 +112,7 @@ class BuildQueueListWindow(UIWindow):
             return True
         return False
 
-    def process_event(self, event):
+    def process_event(self, event) -> Any:
         """Handle pygame events, including hotkeys."""
         handled = super().process_event(event)
         if event.type == pygame.KEYDOWN:
@@ -120,7 +120,7 @@ class BuildQueueListWindow(UIWindow):
                 return True
         return handled
 
-    def kill(self):
+    def kill(self) -> None:
         for lbl in self.row_labels:
             lbl.kill()
         self.row_labels = []

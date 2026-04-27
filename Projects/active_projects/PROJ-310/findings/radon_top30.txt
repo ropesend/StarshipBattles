@@ -1,0 +1,32 @@
+Top 30 by cyclomatic complexity (radon cc):
+
+cc= 52  game/ui/screens/race_setup_screen.py::RaceSetupScreen.process_event
+cc= 37  game/ui/screens/battle_setup/input_handler.py::BattleSetupInputHandler._handle_button
+cc= 31  game/ui/screens/planet_list_window.py::PlanetListWindow.process_event
+cc= 31  game/ui/screens/battle_setup/panels/center_panel.py::build
+cc= 31  game/ui/panels/system_tree_panel.py::SystemTreePanel.set_items
+cc= 28  game/ui/screens/strategy_detail_fmt.py::format_planet_info
+cc= 28  game/ui/screens/strategy_detail_fmt.py::_format_orders
+cc= 28  game/ui/screens/planet_list_presets.py::apply_planet_list_state
+cc= 28  game/ui/screens/builder/left_panel.py::BuilderLeftPanel.update_component_list
+cc= 28  game/strategy/services/system_effects_collector.py::_collect_effects
+cc= 27  game/ui/renderer/game_renderer.py::draw_ship
+cc= 27  game/strategy/services/strategic_ability_scanner.py::_resolve_planets_for_scope
+cc= 27  game/core/formula_evaluator.py::_eval_node
+cc= 26  game/strategy/engine/order_processor.py::OrderProcessor.process_transfer
+cc= 26  game/simulation/combat/fleet_aura_manager.py::FleetAuraManager._recalculate
+cc= 25  game/ui/screens/star_list_window.py::StarListWindow.process_event
+cc= 25  game/ui/screens/builder/stat_rows_dynamic.py::_build_resource_rows
+cc= 25  game/ui/screens/builder/left_panel.py::BuilderLeftPanel.handle_event
+cc= 24  game/simulation/combat/formation.py::_compute_local_positions
+cc= 23  game/ui/screens/transfer_dialog.py::TransferDialog._on_confirm
+cc= 23  game/ui/screens/strategy_renderer.py::StrategyRenderer._draw_system_details
+cc= 23  game/ui/screens/strategy_renderer.py::StrategyRenderer._draw_storms
+cc= 23  game/ui/screens/star_list_presets.py::apply_star_list_state
+cc= 23  game/ui/screens/builder/layer_panel.py::LayerPanel.rebuild
+cc= 22  game/ui/screens/test_lab/test_run_card.py::TestRunCard._draw_header
+cc= 22  game/ui/screens/strategy_click_dispatcher.py::ClickModeDispatcher._handle_picking
+cc= 22  game/ui/screens/orders_window.py::OrdersWindow._get_order_description
+cc= 22  game/strategy/data/planet_gen.py::PlanetGenerator._determine_type
+cc= 21  game/ui/widgets/scrollable_json_panel.py::ScrollableJsonPanel._format_json_with_diff
+cc= 21  game/ui/screens/race_setup_screen.py::RaceSetupScreen._refresh_ship_preview

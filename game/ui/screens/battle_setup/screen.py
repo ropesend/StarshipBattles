@@ -19,6 +19,7 @@ exemplar.
 """
 from __future__ import annotations
 
+from typing import Any
 import logging
 
 from game.ui.screens.battle_setup.controller import BattleSetupController
@@ -60,21 +61,21 @@ class FleetBattleSetupScreen:
 
     # === IScene Protocol ===
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         if self._ui_manager:
             self._ui_manager.process_events(event)
         self.input_handler.handle_event(event)
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         if self._ui_manager:
             self._ui_manager.update(dt)
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         screen.fill((20, 25, 35))
         if self._ui_manager:
             self._ui_manager.draw_ui(screen)
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         self.screen_width = width
         self.screen_height = height
         if self._ui_manager:
@@ -110,7 +111,7 @@ class FleetBattleSetupScreen:
         self.view_model.active_fleet_index = value
 
     @property
-    def selected_tf_index(self):
+    def selected_tf_index(self) -> Any:
         return self.view_model.selected_tf_index
 
     @selected_tf_index.setter
@@ -118,7 +119,7 @@ class FleetBattleSetupScreen:
         self.view_model.selected_tf_index = value
 
     @property
-    def selected_sq_index(self):
+    def selected_sq_index(self) -> Any:
         return self.view_model.selected_sq_index
 
     @selected_sq_index.setter
@@ -126,7 +127,7 @@ class FleetBattleSetupScreen:
         self.view_model.selected_sq_index = value
 
     @property
-    def selected_ship_index(self):
+    def selected_ship_index(self) -> Any:
         return self.view_model.selected_ship_index
 
     @selected_ship_index.setter

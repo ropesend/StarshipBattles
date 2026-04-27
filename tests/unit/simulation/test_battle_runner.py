@@ -190,7 +190,9 @@ class TestShipBuilderDefaultsFromContext:
         )
 
     def test_ship_builder_omitted_uses_context_materializer(self, ship_builder):
-        """When `ship_builder=None`, `run_battle` pulls from context."""
+        """When `ship_builder=None` AND `registry_provider` is supplied,
+        `run_battle` pulls the materializer from context (PROJ-306)."""
+        from game.core.registry import get_default_registry_provider
         from game.simulation.services import ship_materializer as mat_mod
 
         # Materializer-spy that adapts the ship_builder fixture into the
@@ -209,7 +211,10 @@ class TestShipBuilderDefaultsFromContext:
             outcome = run_battle(
                 spec,
                 ai_factory=AIControllerFactory(),
-                # No ship_builder — relies on context default.
+                # No ship_builder — relies on context default. PROJ-306:
+                # `registry_provider` is required to assemble the
+                # GameRegistries bundle.
+                registry_provider=get_default_registry_provider(),
             )
         finally:
             mat_mod._default_ship_materializer = original

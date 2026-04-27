@@ -4,6 +4,8 @@ ComponentModifierGridPanel - A dedicated panel for displaying modifier impact gr
 This panel sits as a horizontal strip above the Weapons Report panel,
 providing more space for the modifier impact grid visualization.
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel
@@ -78,7 +80,7 @@ class ComponentModifierGridPanel:
 
         # Panel is always visible (persistent) - shows "no modifier effects" when nothing selected
 
-    def _on_selection_changed(self, selection_data):
+    def _on_selection_changed(self, selection_data) -> None:
         """Handle component selection changes."""
         if selection_data and isinstance(selection_data, tuple):
             self.update_component(selection_data[2])
@@ -87,12 +89,12 @@ class ComponentModifierGridPanel:
         else:
             self.update_component(None)
 
-    def _on_ship_updated(self, _data):
+    def _on_ship_updated(self, _data) -> None:
         """Refresh grid when ship/component changes."""
         if self.current_component:
             self.modifier_grid.update(self.current_component)
 
-    def update_component(self, component: Optional['Component']):
+    def update_component(self, component: Optional['Component']) -> None:
         """
         Update the panel with a new component.
 
@@ -107,7 +109,7 @@ class ComponentModifierGridPanel:
             # Show "no modifier effects to display" message (grid handles this)
             self.modifier_grid.update(None)
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         """
         Draw custom content on top of pygame_gui elements.
 
@@ -134,15 +136,15 @@ class ComponentModifierGridPanel:
             return self.modifier_grid.handle_event(event)
         return False
 
-    def show(self):
+    def show(self) -> None:
         """Show the panel."""
         self.panel.show()
 
-    def hide(self):
+    def hide(self) -> None:
         """Hide the panel."""
         self.panel.hide()
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up all UI elements."""
         self.modifier_grid.kill()
         if self.panel and self.panel.alive():

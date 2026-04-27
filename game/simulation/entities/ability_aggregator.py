@@ -65,7 +65,7 @@ def calculate_ability_totals(
     components,
     layer: Optional[AbilityLayer] = None,
     scope_filter: Optional[AbilityScope] = None
-):
+) -> dict:
     """Calculate total values for all abilities from components.
 
     Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
@@ -159,7 +159,7 @@ def calculate_ability_totals(
     return _aggregate_ability_groups(ability_groups)
 
 
-def get_ability_total(components, ability_name):
+def get_ability_total(components, ability_name: str) -> float:
     """Calculate total value of a specific ability across provided components.
 
     Args:

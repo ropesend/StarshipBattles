@@ -9,6 +9,9 @@ Cross-layer imports (acceptable for UI rendering):
 - hex_to_pixel, pixel_to_hex, HexCoord: Runtime - coordinate conversions for rendering
 - project_fleet_position: Runtime - projected fleet position for preview line
 """
+from __future__ import annotations
+
+from typing import Any
 import logging
 import math
 import os
@@ -112,41 +115,41 @@ class StrategyRenderer:
         """
         self._elapsed_time += dt
 
-    def _get_font(self, size, bold=False):
+    def _get_font(self, size, bold=False) -> Any:
         """Get a cached font by size and style (uses central font cache)."""
         return get_font(size, bold=bold)
 
     # --- Property Accessors (delegate to scene) ---
     @property
-    def camera(self):
+    def camera(self) -> Any:
         return self.scene.camera
 
     @property
-    def galaxy(self):
+    def galaxy(self) -> Any:
         return self.scene.galaxy
 
     @property
-    def systems(self):
+    def systems(self) -> Any:
         return self.scene.systems
 
     @property
-    def empires(self):
+    def empires(self) -> Any:
         return self.scene.empires
 
     @property
-    def hex_size(self):
+    def hex_size(self) -> Any:
         return self.scene.hex_size
 
     @property
-    def screen_width(self):
+    def screen_width(self) -> Any:
         return self.scene.screen_width
 
     @property
-    def screen_height(self):
+    def screen_height(self) -> Any:
         return self.scene.screen_height
 
     @property
-    def SIDEBAR_WIDTH(self):
+    def SIDEBAR_WIDTH(self) -> Any:
         return UIConfig.STRATEGY_SIDEBAR_WIDTH
 
     def _hex_radius_to_screen(self, radius_hexes: float) -> int:
@@ -171,14 +174,14 @@ class StrategyRenderer:
         return max(3, int(2 * hex_spacing * (radius_hexes / 2) ** _EXPONENT))
 
     @property
-    def TOP_BAR_HEIGHT(self):
+    def TOP_BAR_HEIGHT(self) -> Any:
         return self.scene.TOP_BAR_HEIGHT
 
     @property
-    def empire_assets(self):
+    def empire_assets(self) -> Any:
         return self.scene.empire_assets
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Main draw entry point for the galaxy map."""
         viewport_w = self.screen_width - self.SIDEBAR_WIDTH
         viewport_h = self.screen_height - self.TOP_BAR_HEIGHT
@@ -223,7 +226,7 @@ class StrategyRenderer:
             viewport_rect = pygame.Rect(0, self.TOP_BAR_HEIGHT, viewport_w, viewport_h)
             pygame.draw.rect(screen, COLORS['border_normal'], viewport_rect, 2)
 
-    def _draw_move_preview(self, screen):
+    def _draw_move_preview(self, screen) -> None:
         """Draw the move preview line from fleet's projected position to mouse cursor."""
         start_hex = project_fleet_position(self.scene.selected_fleet)
 
@@ -234,7 +237,7 @@ class StrategyRenderer:
 
         pygame.draw.line(screen, HP_HEALTHY, f_pos, (mx, my), 2)
 
-    def _draw_ghost_hex(self, screen, ghost_hex):
+    def _draw_ghost_hex(self, screen, ghost_hex) -> None:
         """Draw a dashed-style ghost hex outline for the old MOVE destination."""
         cx, cy = hex_to_pixel(ghost_hex, self.hex_size)
         corners_px = []
@@ -249,7 +252,7 @@ class StrategyRenderer:
         ghost_color = (255, 255, 100, 180)
         pygame.draw.lines(screen, ghost_color, True, corners_px, 2)
 
-    def _draw_hover_hex(self, screen):
+    def _draw_hover_hex(self, screen) -> None:
         """Draw highlight around the currently hovered hex."""
         cx, cy = hex_to_pixel(self.scene.hover_hex, self.hex_size)
         corners_px = []
@@ -264,7 +267,7 @@ class StrategyRenderer:
 
     # --- Hex Outline Methods (PROJ-214) ---
 
-    def _build_hex_outline_data(self):
+    def _build_hex_outline_data(self) -> Any:
         """Build mapping of occupied global hexes to ownership flags.
 
         Returns:
@@ -314,7 +317,7 @@ class StrategyRenderer:
 
         return result
 
-    def _get_hex_outline_data(self):
+    def _get_hex_outline_data(self) -> Any:
         """Get cached hex outline data, rebuilding if turn changed."""
         current_turn = getattr(self.scene.session, 'turn_number', 0)
         if self._hex_outline_cache is None or self._hex_outline_cache_turn != current_turn:
@@ -322,7 +325,7 @@ class StrategyRenderer:
             self._hex_outline_cache_turn = current_turn
         return self._hex_outline_cache
 
-    def _draw_hex_outlines(self, screen):
+    def _draw_hex_outlines(self, screen) -> None:
         """Draw inner hex outlines for occupied hexes.
 
         Red outline for any object, white for player-owned,
@@ -353,7 +356,7 @@ class StrategyRenderer:
             else:
                 self._draw_inner_hex(screen, cx, cy, 0.88, HEX_OUTLINE_OCCUPIED)
 
-    def _draw_inner_hex(self, screen, cx, cy, scale, color):
+    def _draw_inner_hex(self, screen, cx, cy, scale, color) -> None:
         """Draw a single inner hex outline at the given scale factor.
 
         Args:
@@ -372,7 +375,7 @@ class StrategyRenderer:
 
         pygame.draw.lines(screen, color, True, corners, 2)
 
-    def _draw_grid(self, screen):
+    def _draw_grid(self, screen) -> None:
         """Draw the hex grid with optimized snake lines."""
         # 1. Culling
         tl_world = self.camera.screen_to_world((0, 0))
@@ -446,14 +449,14 @@ class StrategyRenderer:
             if len(snake_points) > 1:
                 pygame.draw.lines(screen, grid_color, False, snake_points, 1)
 
-    def _draw_warp_lanes(self, screen):
+    def _draw_warp_lanes(self, screen) -> bool:
         """Draw warp lane connections between systems."""
         # Viewport culling bounds with margin
         margin = 100
         screen_w = self.screen_width
         screen_h = self.screen_height
 
-        def is_on_screen(scr_pos):
+        def is_on_screen(scr_pos) -> bool:
             """Check if a screen position is within the visible area."""
             return -margin <= scr_pos.x <= screen_w + margin and -margin <= scr_pos.y <= screen_h + margin
 
@@ -505,7 +508,7 @@ class StrategyRenderer:
 
                         pygame.draw.line(screen, WARP_LANE, scr_a, scr_b, 1)
 
-    def _draw_systems(self, screen):
+    def _draw_systems(self, screen) -> None:
         """Draw all star systems with stars, planets, and warp points."""
         tl = self.camera.screen_to_world((0, 0))
         br = self.camera.screen_to_world((self.screen_width, self.screen_height))
@@ -555,7 +558,7 @@ class StrategyRenderer:
             return img
         return None
 
-    def _draw_colony_marker(self, screen, sys, world_pos):
+    def _draw_colony_marker(self, screen, sys, world_pos) -> None:
         """Draw colony ownership marker at low zoom levels.
 
         Only draws when zoom < 0.5 and system has owned planets.
@@ -585,7 +588,7 @@ class StrategyRenderer:
         pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
         pygame.draw.circle(screen, WHITE, (int(marker_screen.x), int(marker_screen.y)), 6, 1)
 
-    def _draw_star(self, screen, star, system_center: tuple, system_name: str, is_primary: bool, is_selected_system: bool):
+    def _draw_star(self, screen, star, system_center: tuple, system_name: str, is_primary: bool, is_selected_system: bool) -> None:
         """Render a single star with image, selection highlight, and label.
 
         Uses star.image_id with core metadata from star_metadata.json for
@@ -652,7 +655,7 @@ class StrategyRenderer:
             text = font.render(label_text, True, STAR_LABEL)
             screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
 
-    def _draw_system_details(self, screen, sys, sys_world_pos):
+    def _draw_system_details(self, screen, sys, sys_world_pos) -> None:
         """Draw planets and warp points for a system."""
         # Render storms first (behind Dyson Spheres and planets)
         self._draw_storms(screen, sys, sys_world_pos)
@@ -785,7 +788,7 @@ class StrategyRenderer:
             else:
                 pygame.draw.circle(screen, WARPPOINT_FALLBACK, w_screen, max(2, int(5 * self.camera.zoom)))
 
-    def _draw_dyson_spheres(self, screen, sys, sys_world_pos):
+    def _draw_dyson_spheres(self, screen, sys, sys_world_pos) -> None:
         """Draw Dyson Sphere planets at their full multi-hex size.
 
         Dyson Spheres are rendered BEFORE normal planets so they appear behind them.
@@ -851,7 +854,7 @@ class StrategyRenderer:
                         pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, screen_diameter // 10))
                         pygame.draw.circle(screen, WHITE, marker_pos, max(3, screen_diameter // 10) + 1, 1)
 
-    def _draw_storms(self, screen, sys, sys_world_pos):
+    def _draw_storms(self, screen, sys, sys_world_pos) -> None:
         """Draw storm nebulae overlays for a star system.
 
         Storms are rendered BEFORE Dyson Spheres and planets so they appear behind them.
@@ -982,7 +985,7 @@ class StrategyRenderer:
                     dest = hex_surf.get_rect(center=(int(h_screen.x), int(h_screen.y)))
                     screen.blit(hex_surf, dest)
 
-    def _draw_storms_low_detail(self, screen, sys, sys_world_pos):
+    def _draw_storms_low_detail(self, screen, sys, sys_world_pos) -> None:
         """Draw storm zones at low zoom using simple colored hex fills."""
         storm_tints = {
             'ion_storm': STORM_ION + (80,),
@@ -1010,7 +1013,7 @@ class StrategyRenderer:
                 radius = max(2, int(self.hex_size * self.camera.zoom * 0.5))
                 pygame.draw.circle(screen, tint[:3], (int(h_screen.x), int(h_screen.y)), radius)
 
-    def _draw_planet_sprite(self, screen, planet, center_pos, size):
+    def _draw_planet_sprite(self, screen, planet, center_pos, size) -> None:
         """Draw a single planet sprite with colony marker if owned."""
         img = None
 
@@ -1049,7 +1052,7 @@ class StrategyRenderer:
                     pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, int(size / 3)))
                     pygame.draw.circle(screen, WHITE, marker_pos, max(3, int(size / 3)) + 1, 1)
 
-    def _load_planet_v3_image(self, image_id):
+    def _load_planet_v3_image(self, image_id) -> Any:
         """Load a planet image from the Planets_V3 directory.
 
         Args:
@@ -1071,7 +1074,7 @@ class StrategyRenderer:
 
         return img
 
-    def _load_dyson_sphere_image(self):
+    def _load_dyson_sphere_image(self) -> Any:
         """Load the Dyson Sphere image from Sphere world directory.
 
         Returns:
@@ -1089,7 +1092,7 @@ class StrategyRenderer:
 
         return img
 
-    def _draw_fleets(self, screen):
+    def _draw_fleets(self, screen) -> None:
         """Draw all fleets and their movement paths."""
         for emp in self.empires:
             for f in emp.fleets:
@@ -1154,7 +1157,7 @@ class StrategyRenderer:
                 if f == self.scene.selected_fleet:
                     self._draw_fleet_path(screen, f, f_screen)
 
-    def _draw_fleet_path(self, screen, fleet, fleet_screen_pos):
+    def _draw_fleet_path(self, screen, fleet, fleet_screen_pos) -> None:
         """Draw the movement path for a fleet."""
         segments = self.scene.session.get_fleet_path_projection(fleet, max_turns=50)
 
@@ -1193,7 +1196,7 @@ class StrategyRenderer:
 
             start_screen = end_screen
 
-    def draw_processing_overlay(self, screen):
+    def draw_processing_overlay(self, screen) -> None:
         """Draw a modal overlay for turn processing."""
         overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 150))

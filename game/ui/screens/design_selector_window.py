@@ -17,7 +17,7 @@ from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
 )
-from typing import Optional, Callable, List, Dict, Set, TYPE_CHECKING
+from typing import Any, Optional, Callable, List, Dict, Set, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
 import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
@@ -85,7 +85,7 @@ class DesignSelectorWindow(UIWindow):
         # Initial load
         self._refresh_designs()
 
-    def _create_sidebar(self):
+    def _create_sidebar(self) -> None:
         """Create the left sidebar with filters"""
         content_rect = self.get_container().get_rect()
 
@@ -200,7 +200,7 @@ class DesignSelectorWindow(UIWindow):
             container=self.sidebar_panel
         )
 
-    def _create_main_list(self):
+    def _create_main_list(self) -> None:
         """Create the main scrolling list of designs"""
         content_rect = self.get_container().get_rect()
 
@@ -223,7 +223,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Design rows will be created dynamically
 
-    def _create_bottom_buttons(self):
+    def _create_bottom_buttons(self) -> None:
         """Create bottom action buttons"""
         content_rect = self.get_container().get_rect()
 
@@ -257,7 +257,7 @@ class DesignSelectorWindow(UIWindow):
             anchors={'right': 'right'}
         )
 
-    def _refresh_designs(self):
+    def _refresh_designs(self) -> None:
         """Refresh the design list based on current filters"""
         # Get filter values
         # Note: pygame_gui dropdowns return tuples (current_value, previous_value)
@@ -322,7 +322,7 @@ class DesignSelectorWindow(UIWindow):
         # Rebuild UI
         self._rebuild_design_list()
 
-    def _get_role_filter_options(self):
+    def _get_role_filter_options(self) -> Any:
         """Get role display names for the filter dropdown."""
         from game.strategy.data.design_role_registry import get_default_design_role_registry
 
@@ -335,7 +335,7 @@ class DesignSelectorWindow(UIWindow):
             options.append(role.display_name)
         return options
 
-    def _rebuild_design_list(self):
+    def _rebuild_design_list(self) -> None:
         """Rebuild the design list UI"""
         # Clear existing rows
         for row in self.design_rows:
@@ -544,12 +544,12 @@ class DesignSelectorWindow(UIWindow):
 
         return handled
 
-    def _on_apply_filters(self):
+    def _on_apply_filters(self) -> None:
         """Handle apply filters button click"""
         self.filter_name = self.name_search_entry.get_text()
         self._refresh_designs()
 
-    def _toggle_obsolete(self):
+    def _toggle_obsolete(self) -> None:
         """Toggle show obsolete filter"""
         self.show_obsolete = not self.show_obsolete
 
@@ -559,7 +559,7 @@ class DesignSelectorWindow(UIWindow):
 
         self._refresh_designs()
 
-    def _on_toggle_obsolete(self, design_id: str, current_state: bool):
+    def _on_toggle_obsolete(self, design_id: str, current_state: bool) -> None:
         """
         Handle obsolete toggle button click.
 
@@ -578,7 +578,7 @@ class DesignSelectorWindow(UIWindow):
             # Refresh the list to show updated state
             self._refresh_designs()
 
-    def _on_design_selected(self, design_id: str):
+    def _on_design_selected(self, design_id: str) -> None:
         """
         Handle design row selection.
 
@@ -595,7 +595,7 @@ class DesignSelectorWindow(UIWindow):
         # directly loads the design instead of requiring a second click
         self._on_select()
 
-    def _on_select(self):
+    def _on_select(self) -> None:
         """Handle main Select button click"""
         logger.info(f"DesignSelector: Main Select button clicked")
         if self.selected_design_id and self.on_select_callback:
@@ -605,7 +605,7 @@ class DesignSelectorWindow(UIWindow):
         else:
             logger.warning(f"DesignSelector: Cannot select - selected_design_id={self.selected_design_id}, callback={self.on_select_callback is not None}")
 
-    def update(self, time_delta: float):
+    def update(self, time_delta: float) -> None:
         """
         Update window.
 

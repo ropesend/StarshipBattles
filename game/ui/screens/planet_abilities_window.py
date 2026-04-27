@@ -91,7 +91,7 @@ class PlanetAbilitiesWindow(UIWindow):
         self._widgets = []
         self._build_ui()
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         """Build environment editor buttons and ability rows."""
         container = self.get_container()
         y = 10

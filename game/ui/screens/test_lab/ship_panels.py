@@ -2,6 +2,9 @@
 
 Provides ship display panels: simple, tabbed, and component panels.
 """
+from __future__ import annotations
+
+from typing import Any
 
 import pygame
 
@@ -40,15 +43,15 @@ class ShipPanel:
         )
         self.ship_viewer.set_json_with_diff(json.dumps(ship_info['ship_data']), {})
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle input events (scrolling)."""
         return self.ship_viewer.handle_event(event)
 
-    def update(self):
+    def update(self) -> None:
         """No-op; reserved for interface consistency."""
         pass
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the ship panel."""
         self.ship_viewer.draw(surface)
 
@@ -108,7 +111,7 @@ class TabbedShipPanel:
         # Calculate tab widths
         self._calculate_tab_rects()
 
-    def _calculate_tab_rects(self):
+    def _calculate_tab_rects(self) -> None:
         """Calculate tab button rectangles."""
         self.tab_rects = []
         num_tabs = len(self.ships_info)
@@ -119,7 +122,7 @@ class TabbedShipPanel:
             tab_y = self.y + self.header_height
             self.tab_rects.append(pygame.Rect(tab_x, tab_y, tab_width, self.tab_height))
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle input events (tab clicks, scrolling)."""
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
@@ -133,11 +136,11 @@ class TabbedShipPanel:
             return self.viewers[self.selected_tab].handle_event(event)
         return False
 
-    def update(self):
+    def update(self) -> None:
         """No-op; reserved for interface consistency."""
         pass
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the tabbed ship panel."""
         # Draw background
         pygame.draw.rect(surface, self.bg_color,
@@ -177,7 +180,7 @@ class TabbedShipPanel:
         if self.selected_tab < len(self.viewers):
             self.viewers[self.selected_tab].draw(surface)
 
-    def get_selected_ship_info(self):
+    def get_selected_ship_info(self) -> Any:
         """Get the currently selected ship's info."""
         if self.selected_tab < len(self.ships_info):
             return self.ships_info[self.selected_tab]
@@ -229,7 +232,7 @@ class ComponentPanel:
         )
         self.component_viewer.set_json_with_diff(json.dumps(component_data) if component_data else None, {})
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle input events (scrolling, dropdown clicks)."""
         # Try dropdown first
         if self.component_dropdown.handle_click(event):
@@ -247,11 +250,11 @@ class ComponentPanel:
 
         return False
 
-    def update(self):
+    def update(self) -> None:
         """Update hover states."""
         self.component_dropdown.handle_hover()
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the component panel."""
         self.component_viewer.draw(surface)
         self.component_dropdown.draw(surface)  # Draw dropdown last so it's on top when expanded

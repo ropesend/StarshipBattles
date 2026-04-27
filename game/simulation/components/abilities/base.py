@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Any, List, Set, TYPE_CHECKING
 from enum import Enum, Flag, auto
 
@@ -207,7 +209,7 @@ class Ability:
         """
         return bool(self.layer & layer)
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         """Update internal state when component data changes.
 
         Always re-runs _parse_attrs(data) so subclass-specific attributes
@@ -224,7 +226,7 @@ class Ability:
         self._parse_attrs(data)
 
     @property
-    def tags(self):
+    def tags(self) -> set:
         return self._tags
 
     def update(self) -> bool:
@@ -253,7 +255,7 @@ class Ability:
     # Sentinel value to detect when default wasn't explicitly passed
     _NO_DEFAULT = object()
 
-    def get_effective_stat(self, stat_key: str, default=_NO_DEFAULT):
+    def get_effective_stat(self, stat_key: str, default=_NO_DEFAULT) -> Any:
         """
         Get the effective stat value for this ability, checking ability-specific
         stats first, then falling back to global component stats.
@@ -462,7 +464,7 @@ class StaticValueAbility(Ability):
         self.value = val
         self._base_value = val
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         """No-op: static values have no modifier bindings."""
         pass
 
@@ -514,7 +516,7 @@ class SimpleMultiplierAbility(Ability):
         setattr(self, self.base_attr, base_val)
         setattr(self, self.value_attr, base_val)
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         """Apply stat multiplier to base value."""
         base = getattr(self, self.base_attr)
         mult = self.get_effective_stat(self.stat_key, 1.0)

@@ -36,6 +36,8 @@ Note:
     Do NOT use json.load/json.dump directly for file operations in game/.
     Use these functions instead for consistent error handling and logging.
 """
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -51,7 +53,7 @@ logger = logging.getLogger(__name__)
 _SERIALIZABLE_REGISTRY: Dict[str, type] = {}
 
 
-def register_serializable(type_name: str = None):
+def register_serializable(type_name: str = None) -> Callable[[type], type]:
     """Decorator that registers a class as a serializable type.
 
     Optional — not required for serialization to work. Supports gradual adoption.
@@ -62,7 +64,7 @@ def register_serializable(type_name: str = None):
     Returns:
         The class unchanged.
     """
-    def decorator(cls):
+    def decorator(cls: type) -> type:
         key = type_name if type_name is not None else cls.__name__
         _SERIALIZABLE_REGISTRY[key] = cls
         return cls

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from typing import Any, List
 
@@ -67,7 +69,7 @@ class CrewRequired(Ability):
         self.amount = int(self._parse_primary_value(data, fallback_keys=('amount',)))
         self._base_amount = self.amount
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         # Crew requirements scale with mass (sqrt) AND specific multiplier
         mass_mult = self.get_effective_stat('mass_mult', 1.0)
         if mass_mult < 0:
@@ -76,7 +78,7 @@ class CrewRequired(Ability):
 
         self.amount = int(math.ceil(self._base_amount * crew_mult * self.get_effective_stat('crew_req_mult', 1.0)))
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> list[dict[str, str]]:
         return [{'label': 'Crew Req', 'value': f"{self.amount}", 'color_hint': HINT_CREW_REQ}]
 
     def get_primary_value(self) -> float:

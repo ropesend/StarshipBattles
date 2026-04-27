@@ -161,7 +161,7 @@ class KeybindingsScene:
         groups = list(ACTION_GROUPS.items())
 
         # Split groups across 2 columns — count total rows per group to balance
-        def group_height(actions):
+        def group_height(actions) -> Any:
             return _GROUP_HEADER_HEIGHT + len(actions) * _ROW_HEIGHT + _GROUP_GAP
 
         total_height = sum(group_height(a) for _, a in groups)

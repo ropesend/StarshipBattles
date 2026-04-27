@@ -75,7 +75,7 @@ class SettingsWindow(UIWindow):
             container=self,
         )
 
-    def process_event(self, event):
+    def process_event(self, event) -> bool:
         handled = super().process_event(event)
 
         if event.type == pygame.event.custom_type() or not hasattr(event, 'ui_element'):
@@ -94,7 +94,7 @@ class SettingsWindow(UIWindow):
 
         return handled
 
-    def update(self, time_delta):
+    def update(self, time_delta: float) -> None:
         super().update(time_delta)
 
         # Sync slider to settings (live preview)
@@ -103,7 +103,7 @@ class SettingsWindow(UIWindow):
             self._settings.background_brightness = value
             self._brightness_label.set_text(f"{value:.0%}")
 
-    def kill(self):
+    def kill(self) -> None:
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()

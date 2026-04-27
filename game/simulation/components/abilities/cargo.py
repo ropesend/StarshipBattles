@@ -46,7 +46,7 @@ class CargoStorage(Ability):
             self.capacity = 0.0
         self._base_capacity = self.capacity
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         """Update ability from new data."""
         super().sync_data(data)
         if isinstance(data, dict):
@@ -57,7 +57,7 @@ class CargoStorage(Ability):
             self.capacity = float(data)
             self._base_capacity = self.capacity
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         """Recalculate capacity with modifiers."""
         self.capacity = self._base_capacity * self.get_effective_stat('capacity_mult', 1.0)
 

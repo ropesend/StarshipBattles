@@ -36,7 +36,7 @@ from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 logger = logging.getLogger(__name__)
 
 
-def _get_registries():
+def _get_registries() -> Any | None:
     """Pull GameRegistries from the default provider.
 
     Duplicated verbatim from `battle_setup_screen.py` — both callsites
@@ -53,7 +53,7 @@ def _get_registries():
             resources=provider.get_resources(),
             resource_catalog=provider.get_resource_catalog(),
         )
-    except Exception:
+    except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals "no registries" to callers
         return None
 
 
@@ -197,7 +197,7 @@ class BattleSetupController:
             )
             self._on_change()
 
-    def _get_active_fleet(self):
+    def _get_active_fleet(self) -> Any | None:
         """Return the currently-active fleet, or None."""
         side = self._state.get_side(self._view_model.active_side)
         if self._view_model.active_fleet_index < len(side.fleets):
@@ -403,7 +403,7 @@ class BattleSetupController:
         except (ValueError, TypeError):
             pass
 
-    def _build_end_condition(self):
+    def _build_end_condition(self) -> Any:
         """Compose an `IEndCondition` from the current toggle settings."""
         from game.simulation.systems.battle_end_conditions import (
             AnyCondition,

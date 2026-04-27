@@ -6,6 +6,8 @@ Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer display and component filtering
 - ABILITY_REGISTRY: Runtime (local import) - displays component abilities
 """
+from __future__ import annotations
+
 import json
 import logging
 import pygame
@@ -80,7 +82,7 @@ class ComponentDetailPanel:
             container=self.panel
         )
 
-    def on_selection_changed(self, selection_data):
+    def on_selection_changed(self, selection_data) -> None:
         """Handle component selection changes from the event bus.
 
         Args:
@@ -101,7 +103,7 @@ class ComponentDetailPanel:
             self.show_component(None)
         
         
-    def show_component(self, comp):
+    def show_component(self, comp) -> None:
         if not comp:
             self.current_component = None
             self.last_img_comp = None
@@ -126,7 +128,7 @@ class ComponentDetailPanel:
         # 2. Update Stats
         lines = []
         
-        def add_line(text, color=HINT_DEFAULT):
+        def add_line(text, color=HINT_DEFAULT) -> None:
             # Proper HTML formatting
             if color != HINT_DEFAULT:
                 lines.append(f"<font color='{color}'>{text}</font>")
@@ -188,7 +190,7 @@ class ComponentDetailPanel:
             self.stats_text_box.rebuild()
             self.last_html = full_html
 
-    def show_details_popup(self):
+    def show_details_popup(self) -> None:
         if not self.current_component:
             return
 
@@ -219,14 +221,14 @@ class ComponentDetailPanel:
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
 
-    def _clear_display(self):
+    def _clear_display(self) -> None:
         self.stats_text_box.html_text = ""
         self.stats_text_box.rebuild()
         if self.image_element:
             self.image_element.kill()
             self.image_element = None
             
-    def _update_image(self, comp):
+    def _update_image(self, comp) -> None:
         # Only reload if changed
         if self.image_element:
             self.image_element.kill()
@@ -271,11 +273,11 @@ class ComponentDetailPanel:
                 container=self.panel
             )
 
-    def set_position(self, pos):
+    def set_position(self, pos) -> None:
         self.panel.set_position(pos)
         self.rect.topleft = pos
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle events for the detail panel.
         
         Most events are handled by the UI Manager or the Router's button handler,
@@ -283,7 +285,7 @@ class ComponentDetailPanel:
         """
         return False
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the panel.
         
         Currently all elements are handled by pygame_gui, so this is a placeholder

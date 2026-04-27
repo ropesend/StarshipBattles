@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Implementation Complete (awaiting user smoke for Tasks 3.4 + 3.5)
 **Objective:** Run the full sharded suite, confirm zero regressions, update docs that referred to the transitional fallback as legitimate.
 
 **Prerequisites:** Phases 1 and 2 complete.
@@ -18,11 +18,11 @@
 **File:** `docs/01_ARCHITECTURE.md`
 **Tests:** Manual verification
 
-- [ ] `grep -n "get_default_registry_provider\|_default_ship_builder_from_context\|PROJ-274.*fallback" docs/01_ARCHITECTURE.md`
-- [ ] Update or remove any reference to the transitional fallback as a legitimate pattern
-- [ ] If the doc mentions the layer-separation rule, add a note that Simulation→Core registry access is now exclusively via injected `IRegistryProvider` / `ApplicationContext`, never via global getters
+- [x] `grep -n "get_default_registry_provider\|_default_ship_builder_from_context\|PROJ-274.*fallback" docs/01_ARCHITECTURE.md`
+- [x] Update or remove any reference to the transitional fallback as a legitimate pattern
+- [x] If the doc mentions the layer-separation rule, add a note that Simulation→Core registry access is now exclusively via injected `IRegistryProvider` / `ApplicationContext`, never via global getters
 
-**Notes:**
+**Notes:** Updated 3 mentions in `docs/01_ARCHITECTURE.md` (the run_battle entry signature line, the spec-flow diagram, and the PROJ-270 Phase 10 visual-mode paragraph).
 
 ---
 
@@ -30,10 +30,10 @@
 **File:** `docs/01_ARCHITECTURE.md`, `docs/04_SERVICES.md`
 **Tests:** Manual verification
 
-- [ ] `grep -rn "_default_ship_builder_from_context\|PROJ-274.*transitional" docs/`
-- [ ] Update or remove
+- [x] `grep -rn "_default_ship_builder_from_context\|PROJ-274.*transitional" docs/`
+- [x] Update or remove
 
-**Notes:**
+**Notes:** `docs/04_SERVICES.md` had one paragraph (line 184) mentioning `_default_ship_builder_from_context()` and one signature for `reload_registries_from_directory` lacking the new `registry_provider` kwarg. Both updated. Also extended the "Call sites" table with a `registry_provider` column showing the production callers' explicit-provider pattern.
 
 ---
 
@@ -41,11 +41,11 @@
 **File:** None (test execution)
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Run the full sharded suite
-- [ ] Confirm baseline maintained (15389+ passing)
-- [ ] Investigate any new failures — if any are caused by PROJ-306, fix them; if pre-existing, document and skip
+- [x] Run the full sharded suite
+- [x] Confirm baseline maintained (15389+ passing)
+- [x] Investigate any new failures — if any are caused by PROJ-306, fix them; if pre-existing, document and skip
 
-**Notes:**
+**Notes:** Direct `pytest tests/ -n 12 --tb=no -q` reports **15406 passed, 2 skipped, 0 failed** in 62.8s. Above the 15389+ baseline (15406 = baseline + 4 new PROJ-306 contract tests + 13 absorbed from other recent additions in main). The `Tools/test_sharded/test_sharded.py` runner returned a parsing-quirk "0 tests | 0 passed" summary but per-shard output shows all 16 shards each ran 963 tests; this is a runner-output issue unrelated to PROJ-306 — the underlying pytest pass is clean.
 
 ---
 

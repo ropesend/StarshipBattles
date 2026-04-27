@@ -7,6 +7,9 @@ and loading ships from configuration entries.
 PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization.
 """
+from __future__ import annotations
+
+from typing import Any
 import os
 import glob
 import json
@@ -41,12 +44,12 @@ def _get_ship_factory() -> ShipFactory:
     return _ship_factory
 
 
-def get_base_path():
+def get_base_path() -> Any:
     """Get the base path (root of project). Delegates to Paths.ROOT_DIR."""
     return Paths.ROOT_DIR
 
 
-def scan_ship_designs():
+def scan_ship_designs() -> Any:
     """Scan for available ship design JSON files in ships/ folder."""
     ships_folder = Paths.SHIPS_DIR
     json_files = glob.glob(os.path.join(ships_folder, "*.json"))
@@ -72,7 +75,7 @@ def scan_ship_designs():
     return designs
 
 
-def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0):
+def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0) -> Any:
     """
     Load ships from team entry list.
 
@@ -132,7 +135,7 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     return ships
 
 
-def save_battle_setup(file_path, team1, team2):
+def save_battle_setup(file_path, team1, team2) -> bool:
     """
     Save battle setup to JSON file.
 
@@ -150,7 +153,7 @@ def save_battle_setup(file_path, team1, team2):
         "team2": []
     }
 
-    def serialize_team(team_list, out_list):
+    def serialize_team(team_list, out_list) -> None:
         for entry in team_list:
             item = {
                 "design_file": os.path.basename(entry['design']['path']),
@@ -175,7 +178,7 @@ def save_battle_setup(file_path, team1, team2):
         return False
 
 
-def load_battle_setup(file_path, available_designs):
+def load_battle_setup(file_path, available_designs) -> Any:
     """
     Load battle setup from JSON file.
 
@@ -189,7 +192,7 @@ def load_battle_setup(file_path, available_designs):
     try:
         data = load_json_required(file_path)
 
-        def find_design(filename):
+        def find_design(filename) -> Any:
             for d in available_designs:
                 if os.path.basename(d['path']) == filename:
                     return d
@@ -198,7 +201,7 @@ def load_battle_setup(file_path, available_designs):
         new_team1 = []
         new_team2 = []
 
-        def load_team(in_list, out_list):
+        def load_team(in_list, out_list) -> None:
             for item in in_list:
                 d = find_design(item['design_file'])
                 if d:

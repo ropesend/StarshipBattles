@@ -6,6 +6,9 @@ Mirrors PlanetListWindow architecture.
 
 PROJ-231: Star List Panel.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
@@ -180,22 +183,22 @@ class StarListWindow(UIWindow):
     # -----------------------------------------------------------------------
 
     @property
-    def filter_types(self):
+    def filter_types(self) -> Any:
         return self._filter_mgr.filter_types
 
     @filter_types.setter
-    def filter_types(self, value):
+    def filter_types(self, value) -> None:
         self._filter_mgr.filter_types = value
 
     @property
-    def filter_ranges(self):
+    def filter_ranges(self) -> Any:
         return self._filter_mgr.filter_ranges
 
     @filter_ranges.setter
-    def filter_ranges(self, value):
+    def filter_ranges(self, value) -> None:
         self._filter_mgr.filter_ranges = value
 
-    def refresh_list(self):
+    def refresh_list(self) -> None:
         """Filter, sort, and update the table."""
         # 1. Get search text
         search = self.txt_name_filter.get_text()
@@ -237,7 +240,7 @@ class StarListWindow(UIWindow):
         self.virtual_table.force_update()
         self.virtual_table.update_visible_rows()
 
-    def process_event(self, event):
+    def process_event(self, event) -> bool:
         handled = super().process_event(event)
 
         # Handle all button presses in event-driven path (not polled per-frame)
@@ -318,7 +321,7 @@ class StarListWindow(UIWindow):
 
         return handled
 
-    def update(self, time_delta):
+    def update(self, time_delta) -> None:
         super().update(time_delta)
 
         # Scrollbar movement (cheap — only updates rows when position changed)
@@ -365,7 +368,7 @@ class StarListWindow(UIWindow):
     # Event-driven button handlers (called from process_event, not polled)
     # -----------------------------------------------------------------------
 
-    def _set_all_type_filters(self, enabled: bool):
+    def _set_all_type_filters(self, enabled: bool) -> None:
         """Set all star type filters to enabled/disabled."""
         for key, btn in self.ui_filters.get('types', {}).items():
             self.filter_types[key] = enabled
@@ -377,7 +380,7 @@ class StarListWindow(UIWindow):
                 btn.set_text(f"{key}")
         self.refresh_list()
 
-    def _toggle_type_filter(self, key: str, btn):
+    def _toggle_type_filter(self, key: str, btn) -> None:
         """Toggle a single star type filter."""
         state = not self.filter_types[key]
         self.filter_types[key] = state
@@ -385,7 +388,7 @@ class StarListWindow(UIWindow):
         btn.set_text(f"[{key}]" if state else f"{key}")
         self.refresh_list()
 
-    def _toggle_column(self, btn):
+    def _toggle_column(self, btn) -> None:
         """Toggle column visibility from a sidebar button."""
         col = btn.col_ref
         new_visible = self.column_manager.toggle_column(col['id'])
@@ -397,7 +400,7 @@ class StarListWindow(UIWindow):
             self.virtual_table.rebuild_row_pool()
             self.refresh_list()
 
-    def _save_preset(self):
+    def _save_preset(self) -> None:
         """Save the current state as a preset."""
         name = self.txt_preset_name.get_text()
         if name:
@@ -415,14 +418,14 @@ class StarListWindow(UIWindow):
             )
             self.last_preset_selection = name
 
-    def _capture_current_state(self):
+    def _capture_current_state(self) -> Any:
         """Serialize current filters and column config."""
         return capture_star_list_state(
             self.columns, self.txt_name_filter,
             self.filter_types, self.ui_filters,
         )
 
-    def _apply_state(self, state):
+    def _apply_state(self, state) -> None:
         """Restore state from preset."""
         self.columns = apply_star_list_state(
             state, self.columns, self.txt_name_filter,
@@ -435,18 +438,18 @@ class StarListWindow(UIWindow):
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
 
-    def _navigate_to_selected(self):
+    def _navigate_to_selected(self) -> None:
         """Navigate camera to the selected star's system."""
         if self.selected_star and self.on_navigate_callback:
             loc = getattr(self.selected_star, '_cached_system_global_location', None)
             if loc:
                 self.on_navigate_callback(loc)
 
-    def set_dimensions(self, dimensions, clamp_to_container=False):
+    def set_dimensions(self, dimensions, clamp_to_container=False) -> None:
         """Handle window resize."""
         super().set_dimensions(dimensions, clamp_to_container)
 
-    def kill(self):
+    def kill(self) -> None:
         if self.virtual_table:
             self.virtual_table.kill()
 
