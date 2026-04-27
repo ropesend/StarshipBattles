@@ -26,6 +26,7 @@ Lifecycle (composition roots only):
     freeze_registry()   # After initialization
     clear_registry()    # Test cleanup
 """
+from __future__ import annotations
 
 __all__ = [
     # Core containers
@@ -41,7 +42,7 @@ __all__ = [
 ]
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, TYPE_CHECKING
+from typing import Dict, Any, Iterator, Optional, TYPE_CHECKING
 
 from game.core.exceptions import FrozenStateException
 from game.core.error_codes import ErrorCode
@@ -148,7 +149,7 @@ class RegistryManager:
         self._validator: Any = None
         self._frozen: bool = False
 
-    def freeze(self):
+    def freeze(self) -> None:
         """
         Prevent further modifications to the registry.
 
@@ -158,7 +159,7 @@ class RegistryManager:
         """
         self._frozen = True
 
-    def unfreeze(self):
+    def unfreeze(self) -> None:
         """Allow modifications to the registry.
 
         Used for test data reloads and other controlled reinitialisation.
@@ -168,7 +169,7 @@ class RegistryManager:
         self._frozen = False
 
     @contextmanager
-    def unfrozen(self):
+    def unfrozen(self) -> Iterator[RegistryManager]:
         """Scoped unfreeze that restores the prior frozen state on exit.
 
         Used by the Combat Lab runner and test fixtures to temporarily
@@ -183,7 +184,7 @@ class RegistryManager:
         finally:
             self._frozen = was_frozen
 
-    def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any], resources_data: Optional[Dict[str, Any]] = None):
+    def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any], resources_data: Optional[Dict[str, Any]] = None) -> None:
         """
         Fast hydration from pre-loaded dictionary data.
 
@@ -222,7 +223,7 @@ class RegistryManager:
         if resources_data:
             self.resources.update(resources_data)
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Clear all registries to empty state.
 
@@ -328,7 +329,7 @@ def set_validator(validator) -> None:
     get_default_registry_manager().set_validator(validator)
 
 
-def get_validator():
+def get_validator() -> Any:
     """Get the ship design validator.
 
     Returns:

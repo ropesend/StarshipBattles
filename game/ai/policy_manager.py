@@ -8,6 +8,7 @@ Exception Handling
 ==================
 - All policy lookups return defaults for missing keys (graceful degradation)
 """
+from __future__ import annotations
 
 import logging
 import os
@@ -63,7 +64,7 @@ class PolicyManager:
             'movement': {'behavior': 'kite', 'engage_distance': 'max_range', 'retreat_hp_threshold': 0.1, 'avoid_collisions': True},
         }
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Reset all policies. Used for test isolation.
 
@@ -73,7 +74,7 @@ class PolicyManager:
         self.movement_policies = {}
         self._loaded = False
 
-    def ensure_loaded(self, base_path: str = "data"):
+    def ensure_loaded(self, base_path: str = "data") -> None:
         """
         Ensure data is loaded (lazy loading).
 
