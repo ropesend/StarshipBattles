@@ -107,7 +107,7 @@ class WeaponsViewModel:
         return self._max_range
 
     @property
-    def hovered_weapon(self):
+    def hovered_weapon(self) -> Any:
         """Currently hovered weapon (for firing arc display)."""
         return self._hovered_weapon
 
@@ -246,7 +246,7 @@ class WeaponsViewModel:
         Returns:
             List of {'weapon': Component, 'count': int} dicts, sorted by name
         """
-        def get_key(w):
+        def get_key(w) -> tuple:
             ab = w.get_ability('WeaponAbility')
             if not ab:
                 return (w.id, (), 0, 0)
@@ -381,7 +381,7 @@ class WeaponsViewModel:
         attack_score = ship.get_total_sensor_score()
         defense_score = self._target_defense_mod
 
-        def calc_accuracy_at_range(r):
+        def calc_accuracy_at_range(r) -> Any | None:
             if not is_beam or base_acc is None or falloff is None:
                 return None
             range_penalty = falloff * r
@@ -389,7 +389,7 @@ class WeaponsViewModel:
             clamped = max(-20.0, min(20.0, net_score))
             return 1.0 / (1.0 + math.exp(-clamped))
 
-        def calc_damage_at_range(r):
+        def calc_damage_at_range(r) -> Any:
             return ab.get_damage(r)
 
         # 1. Add range percentage breakpoints

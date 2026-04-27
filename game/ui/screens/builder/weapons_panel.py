@@ -10,6 +10,9 @@ Thin coordinator using MVVM architecture:
 PROJ-172: Refactored from 1038 lines to MVVM pattern.
 PROJ-180: Extracted _check_tooltip_hover to WeaponsInputHandler.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
@@ -81,7 +84,7 @@ class WeaponsReportPanel:
         # Tooltip state (for rendering on top)
         self._tooltip_data = None
 
-    def _setup_filter_buttons(self, manager):
+    def _setup_filter_buttons(self, manager) -> None:
         """Set up weapon type filter buttons."""
         btn_y = 2
         btn_h = 24
@@ -112,11 +115,11 @@ class WeaponsReportPanel:
 
         self._update_button_colors()
 
-    def _update_button_colors(self):
+    def _update_button_colors(self) -> None:
         """Update button text to reflect current filter state."""
         states = self._viewmodel.filter_states
 
-        def set_text(btn, text, state):
+        def set_text(btn, text, state) -> None:
             prefix = "[x] " if state else "[ ] "
             btn.set_text(prefix + text)
 
@@ -128,7 +131,7 @@ class WeaponsReportPanel:
     # Event Handlers (ViewModel events)
     # ─────────────────────────────────────────────────────────────────
 
-    def _on_weapons_updated(self, data):
+    def _on_weapons_updated(self, data) -> None:
         """Handle weapons updated event from ViewModel."""
         # Invalidate renderer caches
         weapon_groups = data.get('groups', [])
@@ -140,13 +143,13 @@ class WeaponsReportPanel:
         # Update scrollbar
         self._update_scrollbar()
 
-    def _on_filter_changed(self, data):
+    def _on_filter_changed(self, data) -> None:
         """Handle filter changed event from ViewModel."""
         self._update_button_colors()
         # Reload weapons with new filter
         self._viewmodel.load_weapons(self.builder.ship)
 
-    def _update_scrollbar(self):
+    def _update_scrollbar(self) -> None:
         """Update scrollbar based on weapon count."""
         total_height = len(self._viewmodel.weapon_groups) * self.WEAPON_ROW_HEIGHT
         visible_height = self.rect.height - 50
@@ -164,7 +167,7 @@ class WeaponsReportPanel:
     # ─────────────────────────────────────────────────────────────────
 
     @property
-    def hovered_weapon(self):
+    def hovered_weapon(self) -> Any:
         """Currently hovered weapon (for firing arc display)."""
         return self._viewmodel.hovered_weapon
 
@@ -174,23 +177,23 @@ class WeaponsReportPanel:
         return self._viewmodel.verbose_tooltip
 
     @verbose_tooltip.setter
-    def verbose_tooltip(self, value: bool):
+    def verbose_tooltip(self, value: bool) -> None:
         """Set verbose tooltip mode."""
         self._viewmodel.verbose_tooltip = value
 
-    def set_target(self, ship):
+    def set_target(self, ship) -> None:
         """Set a specific target ship for calculations."""
         self._viewmodel.set_target(ship)
 
-    def clear_target(self):
+    def clear_target(self) -> None:
         """Reset to default target parameters."""
         self._viewmodel.clear_target()
 
-    def update(self):
+    def update(self) -> None:
         """Update weapon list and calculations."""
         self._viewmodel.load_weapons(self.builder.ship)
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Handle pygame events."""
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_proj:
@@ -214,7 +217,7 @@ class WeaponsReportPanel:
                     new_pct = max(0.0, min(1.0, new_pct))
                     self.scroll_bar.set_scroll_from_start_percentage(new_pct)
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the weapons report visualization."""
         # Draw target info if active
         if self._viewmodel.target_name:

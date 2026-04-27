@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
@@ -145,7 +148,7 @@ class BuilderLeftPanel:
         
         # Modifier Panel
 
-    def on_registry_reloaded(self, data):
+    def on_registry_reloaded(self, data) -> None:
         """Handle registry reload event - refresh component list and filter options."""
         # Update available components from new registry data
         from game.simulation.components.component import get_all_components
@@ -168,7 +171,7 @@ class BuilderLeftPanel:
         # Refresh the component list
         self.update_component_list()
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         """Update panel logic."""
         # Check for expanded dropdowns and track which one
         self._dropdown_expanded = False
@@ -210,7 +213,7 @@ class BuilderLeftPanel:
         """Check if any filter/sort dropdown is currently expanded."""
         return self._dropdown_expanded
         
-    def get_hovered_list_item(self, mx, my):
+    def get_hovered_list_item(self, mx, my) -> Any | None:
         """
         Returns the ComponentListItem that the mouse is hovering over, if any.
         Returns None if mouse is not over an item or if a dropdown is expanded.
@@ -234,13 +237,13 @@ class BuilderLeftPanel:
                     return item
         return None
         
-    def deselect_all(self):
+    def deselect_all(self) -> None:
         """Deselect all items in the list."""
         for item in self.items:
             item.set_selected(False)
         self.selected_item = None
         
-    def update_component_list(self):
+    def update_component_list(self) -> None:
         """Filter, sort, and populate the component list."""
         # Clear existing
         for item in self.items:
@@ -338,7 +341,7 @@ class BuilderLeftPanel:
         # Update Scroll Area
         self.scroll_container.set_scrollable_area_dimensions((item_width, y))
         
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         # Draw hover highlight overlay for hovered items
         for item in self.items:
             if item.is_hovered and item != self.selected_item:
@@ -356,7 +359,7 @@ class BuilderLeftPanel:
 
 
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> tuple | None:
         # Handle Sort Dropdown
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.sort_dropdown:
@@ -447,7 +450,7 @@ class BuilderLeftPanel:
         
         return None
 
-    def get_add_count(self):
+    def get_add_count(self) -> Any:
         """Return the current value of the bulk add counter."""
         try:
             val = int(self.count_entry.get_text())
@@ -455,7 +458,7 @@ class BuilderLeftPanel:
         except ValueError:
             return 1
 
-    def _get_selected_layer(self):
+    def _get_selected_layer(self) -> Any | None:
         """Return the LayerType from the layer filter dropdown, or None if 'All Layers'."""
         if self.current_layer_filter == "All Layers":
             return None
@@ -464,7 +467,7 @@ class BuilderLeftPanel:
                 return l_key
         return None
         
-    def get_hovered_component(self, mx, my):
+    def get_hovered_component(self, mx, my) -> Any | None:
         # Check if mouse is over any item button
         # Using pygame_gui check_hover logic might be tricky since button is internal
         # But we can check if button.rect contains mouse

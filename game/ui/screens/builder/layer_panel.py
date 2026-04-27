@@ -4,6 +4,9 @@ Displays and manages ship layer structure with component grouping.
 
 PROJ-43: Now uses ValidationService instead of direct VALIDATOR import.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
@@ -114,7 +117,7 @@ class LayerPanel(DropTarget):
         
         self.rebuild()
         
-    def rebuild(self):
+    def rebuild(self) -> None:
         """
         Rebuilds the list using reconciliation to preserve UI instances.
         """
@@ -290,7 +293,7 @@ class LayerPanel(DropTarget):
         self.items = new_items_list
         self.scroll_container.set_scrollable_area_dimensions((content_width, y_pos))
 
-    def handle_item_action(self, action, payload):
+    def handle_item_action(self, action, payload) -> bool | tuple:
         """Unified Action Handler (Command Pattern)"""
         # Return values are passed back to builder_gui 'handle_event' loop
         # Usually tuple: (action_string, payload)
@@ -352,7 +355,7 @@ class LayerPanel(DropTarget):
             
         return False
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> Any:
         # Local Event: Dropdown
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and event.ui_element == self.view_dropdown:
             selected = event.text
@@ -372,7 +375,7 @@ class LayerPanel(DropTarget):
                 return result
         return False
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         if self.toggle_suppress_timer > 0:
             self.toggle_suppress_timer -= dt
             
@@ -385,11 +388,11 @@ class LayerPanel(DropTarget):
             if not self.scroll_container.visible:
                 self.scroll_container.show()
             
-    def suppress_toggle(self):
+    def suppress_toggle(self) -> None:
         """Suppress toggle events for a short duration."""
         self.toggle_suppress_timer = 0.2
         
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         # Draw selection highlight overlays for selected items
         container_rect = self.scroll_container.get_abs_rect()
         for item in self.items:
@@ -407,10 +410,10 @@ class LayerPanel(DropTarget):
                         highlight_surf.fill(self.config.SELECTION_COLOR) 
                         screen.blit(highlight_surf, clipped.topleft)
 
-    def can_accept_drop(self, pos):
+    def can_accept_drop(self, pos) -> bool:
         return self.get_target_layer_at(pos) is not None
 
-    def accept_drop(self, pos, component, count=1):
+    def accept_drop(self, pos, component, count=1) -> bool:
         target_layer = self.get_target_layer_at(pos)
         if target_layer:
              # Validation
@@ -433,7 +436,7 @@ class LayerPanel(DropTarget):
                 return False
         return False
 
-    def get_target_layer_at(self, pos):
+    def get_target_layer_at(self, pos) -> Any | None:
         """
         Determines if the position is within a layer's drop zone.
         """
@@ -466,7 +469,7 @@ class LayerPanel(DropTarget):
             
         return None
 
-    def get_range_selection(self, start_comp, end_comp):
+    def get_range_selection(self, start_comp, end_comp) -> Any:
         """
         Returns a list of components corresponding to the UI items between start_comp and end_comp (inclusive).
         Handles both individual items and collapsed groups in the range.

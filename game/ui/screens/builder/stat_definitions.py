@@ -3,6 +3,8 @@
 StatDefinition: Maps a label to a ship attribute with formatting, units, validation.
 SectionDefinition: Groups StatDefinitions into display sections with visibility rules.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
@@ -29,7 +31,7 @@ class StatDefinition:
         self.unit = unit
         self.validator = validator  # func(ship, value) -> (is_ok, status_text)
 
-    def get_value(self, ship):
+    def get_value(self, ship) -> Any:
         """Get stat value from ship using configured getter or dynamic attr lookup."""
         if self.getter:
             if callable(self.getter):
@@ -38,17 +40,17 @@ class StatDefinition:
         # INTENTIONAL: Dynamic attribute lookup - see class docstring
         return getattr(ship, self.attr_key, 0)
 
-    def format_value(self, val):
+    def format_value(self, val) -> Any:
         if callable(self.formatter):
             return self.formatter(val)
         return self.formatter.format(val)
 
-    def get_display_unit(self, ship, val):
+    def get_display_unit(self, ship, val) -> Any:
         if callable(self.unit):
             return self.unit(ship, val)
         return self.unit
 
-    def get_status(self, ship, val):
+    def get_status(self, ship, val) -> Any:
         if self.validator:
             return self.validator(ship, val)
         return (True, "")

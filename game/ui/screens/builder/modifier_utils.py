@@ -1,7 +1,9 @@
 """Shared modifier utilities for the Design Workshop."""
 
 
-def copy_modifiers(source, target):
+from __future__ import annotations
+
+def copy_modifiers(source, target) -> None:
     """Copy all modifiers from source component to target component.
 
     Replaces target's modifiers with clones of source's modifiers,
