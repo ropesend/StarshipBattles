@@ -1,6 +1,7 @@
 """
 Component Constants - Enums and basic data classes for the component system.
 """
+from __future__ import annotations
 
 from enum import Enum, auto
 
@@ -41,10 +42,10 @@ class Modifier:
         self.max_val = param.get('max', 100)
         self.default_val = param.get('default', self.min_val)
 
-    def create_modifier(self, value=None):
+    def create_modifier(self, value=None) -> "ApplicationModifier":
         return ApplicationModifier(self, value)
 
-    def evaluate_effects(self, param_value):
+    def evaluate_effects(self, param_value) -> list:
         """
         Evaluate all effects with the given parameter value.
 

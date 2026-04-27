@@ -84,7 +84,7 @@ def reload_registries_from_directory(
     registry_manager._validator = None
 
     # Helper to find file with test_ prefix fallback
-    def find_file(*names):
+    def find_file(*names) -> "Path | None":
         """Find first existing file from names, checking test_ prefix first."""
         for name in names:
             # Check test_ prefix first (for test data directories)

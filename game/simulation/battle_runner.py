@@ -326,7 +326,13 @@ def run_battle(
     return outcome
 
 
-def _attach_telemetry(engine: "BattleEngine", spec: BattleSpec):
+def _attach_telemetry(
+    engine: "BattleEngine", spec: BattleSpec
+) -> tuple[
+    Optional[WeaponSummaryAggregator],
+    Optional[ShipStatsAggregator],
+    Optional[HitLogRecorder],
+]:
     """Instantiate + subscribe telemetry aggregators per `spec.telemetry_level`.
 
     Returns a `(weapon, stats, hit_log)` tuple with each element set to

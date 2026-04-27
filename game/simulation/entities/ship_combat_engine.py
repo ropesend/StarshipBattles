@@ -14,9 +14,12 @@ The engine itself handles only:
 Part of PROJ-12 God Class Decomposition.
 Refactored in PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 """
-from typing import TYPE_CHECKING, List, Optional, Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional, Any, Tuple
 
 from game.core.constants import CombatConstants
+from game.core.math import Vector2
 from game.simulation.combat.targeting_system import TargetingSystem
 from game.simulation.combat.damage_calculator import DamageCalculator
 from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
@@ -107,7 +110,7 @@ class ShipCombatEngine:
         """
         return self._targeting_system.select_target(self._ship, candidates)
 
-    def calculate_firing_solution(self, comp, target):
+    def calculate_firing_solution(self, comp, target) -> Tuple[Vector2, Vector2]:
         """
         Calculate aim position and vector for firing at a target.
 

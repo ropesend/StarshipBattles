@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from game.core.registry import GameRegistries
 
 
-def create_brick(x, y, *, registries: 'GameRegistries'):
+def create_brick(x, y, *, registries: 'GameRegistries') -> Ship:
     """Create "The Brick" ship - a heavily armored cruiser.
 
     Args:
@@ -36,7 +36,7 @@ def create_brick(x, y, *, registries: 'GameRegistries'):
     return ship
 
 
-def create_interceptor(x, y, *, registries: 'GameRegistries'):
+def create_interceptor(x, y, *, registries: 'GameRegistries') -> Ship:
     """Create "The Interceptor" ship - a fast maneuverable cruiser.
 
     Args:

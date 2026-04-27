@@ -7,12 +7,15 @@ which uses formula-based effects defined in JSON.
 V1 handler functions were removed in Phase 7 cleanup.
 All modifier behavior is now defined via formulas in data/modifiers.json.
 """
+from __future__ import annotations
+
 import logging
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
 
-def _apply_effect_to_dict(stat_key, effect_value, operation, target_dict):
+def _apply_effect_to_dict(stat_key, effect_value, operation, target_dict) -> None:
     """
     Apply a single effect to a stats dictionary.
 
@@ -48,7 +51,7 @@ def _apply_effect_to_dict(stat_key, effect_value, operation, target_dict):
         logger.warning(f"Unknown operation '{operation}' for stat '{stat_key}', effect ignored")
 
 
-def apply_modifier_effects(modifier_def, value, stats, component=None):
+def apply_modifier_effects(modifier_def, value, stats, component=None) -> None:
     """
     Applies the effects of a single modifier to the stats dictionary.
 
@@ -101,7 +104,7 @@ def apply_modifier_effects(modifier_def, value, stats, component=None):
         _apply_effect_to_dict(stat_key, effect_value, operation, stats)
 
 
-def get_default_stat_multipliers():
+def get_default_stat_multipliers() -> Dict[str, Any]:
     """
     Return default stat multipliers dictionary.
 
@@ -118,7 +121,7 @@ def get_default_stat_multipliers():
     return StatKey.create_default_stats_dict()
 
 
-def calculate_stat_multipliers(modifier_entries, modifier_registry):
+def calculate_stat_multipliers(modifier_entries: List[Dict[str, Any]], modifier_registry: Dict[str, Any]) -> Dict[str, Any]:
     """
     Calculate stat multipliers from a list of modifier entries.
 

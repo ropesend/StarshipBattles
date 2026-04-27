@@ -39,7 +39,7 @@ class ShieldProjection(SimpleMultiplierAbility):
         AbilityStatBinding(StatKey.SHIELD_CAPACITY_MULT, 'capacity', 'multiply', 'base_capacity'),
     ]
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         """Apply both capacity_mult and shield_capacity_mult multiplicatively."""
         capacity_mult = self.get_effective_stat('capacity_mult', 1.0)
         shield_capacity_mult = self.get_effective_stat('shield_capacity_mult', 1.0)

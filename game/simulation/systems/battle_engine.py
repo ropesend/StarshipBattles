@@ -104,7 +104,7 @@ class BattleLogger:
         """Destructor - ensures file is closed on garbage collection."""
         self.close()
         
-    def start_session(self):
+    def start_session(self) -> None:
         """Start a new logging session.
 
         ERR-010: Uses try/except/finally for proper cleanup on failure.
@@ -126,7 +126,7 @@ class BattleLogger:
                     except IOError:
                         pass  # Already in error state, ignore close failure
     
-    def log(self, message: str):
+    def log(self, message: str) -> None:
         """Log a message if logging is enabled."""
         if self.enabled and self.file:
             try:
@@ -135,7 +135,7 @@ class BattleLogger:
             except IOError as e:
                 logger.warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
     
-    def close(self):
+    def close(self) -> None:
         """Close the log file."""
         if self.file:
             try:

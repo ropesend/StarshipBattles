@@ -96,7 +96,7 @@ class ShipStatsCalculator:
         else:
             self._planetary_resource_ids = None  # Lazy: resolved on first calculate()
 
-    def _get_or_resolve_planetary_ids(self):
+    def _get_or_resolve_planetary_ids(self) -> list:
         """Return cached planetary resource IDs, resolving lazily from catalog."""
         if self._planetary_resource_ids is not None:
             return self._planetary_resource_ids

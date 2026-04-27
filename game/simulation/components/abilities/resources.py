@@ -1,6 +1,11 @@
-from typing import Dict, Any, List
+from __future__ import annotations
+
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
 from game.core.config import PhysicsConfig
+
+if TYPE_CHECKING:
+    from game.simulation.systems.resource_manager import ResourceRegistry
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_DEFAULT, HINT_RANGE, HINT_WARP_ENERGY, HINT_PROJECTILE_SPEED, HINT_EVASION, HINT_SHIELD_CAP, HINT_ACCURACY
@@ -28,7 +33,7 @@ class ResourceConsumption(Ability):
         self._base_amount = self.amount
         self.trigger = data.get('trigger', 'constant')  # 'constant' or 'activation'
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         super().sync_data(data)
         if isinstance(data, dict):
             self.resource_type = data.get('resource', self.resource_type)
@@ -40,10 +45,10 @@ class ResourceConsumption(Ability):
             self._base_amount = self.amount
             self.trigger = 'constant'  # Default for shortcut
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         self.amount = self._base_amount * self.get_effective_stat('consumption_mult', 1.0)
 
-    def _get_resource_registry(self, resources=None):
+    def _get_resource_registry(self, resources: Optional["ResourceRegistry"] = None) -> Optional["ResourceRegistry"]:
         """Get the resource registry to use.
 
         Args:
@@ -120,7 +125,7 @@ class ResourceConsumption(Ability):
             return self.amount
         return 0.0
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         if self.trigger == 'strategic_per_hex':
             trigger_str = "/hex"
         elif self.trigger == 'constant':
@@ -165,7 +170,7 @@ class ResourceStorage(Ability):
         self.max_amount = data.get('amount', 0.0)
         self._base_max_amount = self.max_amount
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         super().sync_data(data)
         if isinstance(data, dict):
             self.resource_type = data.get('resource', self.resource_type)
@@ -175,10 +180,10 @@ class ResourceStorage(Ability):
             self.max_amount = float(data)
             self._base_max_amount = self.max_amount
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         self.max_amount = self._base_max_amount * self.get_effective_stat('capacity_mult', 1.0)
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         color = HINT_EVASION  # Cyan default for caps
         if self.resource_type == 'shield':
             color = HINT_SHIELD_CAP  # Standard Shield Cyan
@@ -205,7 +210,7 @@ class ResourceGeneration(Ability):
         self.rate = data.get('amount', 0.0)
         self._base_rate = self.rate
 
-    def sync_data(self, data: Any):
+    def sync_data(self, data: Any) -> None:
         super().sync_data(data)
         if isinstance(data, dict):
             self.resource_type = data.get('resource', self.resource_type)
@@ -215,10 +220,10 @@ class ResourceGeneration(Ability):
             self.rate = float(data)
             self._base_rate = self.rate
 
-    def recalculate(self):
+    def recalculate(self) -> None:
         self.rate = self._base_rate * self.get_effective_stat('energy_gen_mult', 1.0)
 
-    def get_ui_rows(self):
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
         color = HINT_DEFAULT
         if self.resource_type == "energy":
             color = HINT_ACCURACY
