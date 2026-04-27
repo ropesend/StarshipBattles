@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import logging
 import time
 import uuid
 from functools import wraps
-from typing import Dict, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional
 from datetime import datetime
 from contextlib import contextmanager
 
@@ -45,34 +47,34 @@ class Profiler:
         self.start_time = None
         logger.info(f"Profiler initialized with session ID: {self.session_id}")
 
-    def clear(self):
+    def clear(self) -> None:
         """Reset all records. Used for test isolation."""
         self.records = []
         self.session_id = str(uuid.uuid4())
 
-    def start(self):
+    def start(self) -> None:
         """Enable profiling."""
         self.active = True
         self.start_time = time.time()
         logger.info("Profiling started")
 
-    def stop(self):
+    def stop(self) -> None:
         """Disable profiling."""
         self.active = False
         logger.info("Profiling stopped")
 
-    def toggle(self):
+    def toggle(self) -> bool:
         """Toggle profiling state."""
         if self.active:
             self.stop()
         else:
             self.start()
         return self.active
-    
-    def is_active(self):
+
+    def is_active(self) -> bool:
         return self.active
 
-    def record(self, name: str, duration: float, metadata: Optional[Dict] = None):
+    def record(self, name: str, duration: float, metadata: Optional[Dict] = None) -> None:
         """Record a profiled action."""
         if not self.active:
             return
@@ -85,7 +87,7 @@ class Profiler:
         }
         self.records.append(entry)
 
-    def save_history(self, filename: str = None):
+    def save_history(self, filename: str = None) -> None:
         """Save current session to history file."""
         if filename is None:
             filename = Paths.PROFILING_HISTORY
@@ -111,11 +113,11 @@ class Profiler:
             logger.error(f"Failed to save profiling history to {filename}")
 
 # Module-level decorators and context managers for convenient profiling
-def profile_action(name: str):
+def profile_action(name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to profile a function."""
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             profiler = _default_profiler
             if profiler is None or not profiler.is_active():
                 return func(*args, **kwargs)
@@ -132,7 +134,7 @@ def profile_action(name: str):
 
 
 @contextmanager
-def profile_block(name: str):
+def profile_block(name: str) -> Iterator[None]:
     """Context manager to profile a block of code."""
     profiler = _default_profiler
     if profiler is None or not profiler.is_active():

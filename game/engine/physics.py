@@ -33,6 +33,8 @@ Coordinate System:
               Positive rotation is clockwise
               90° = DOWN (South), 180° = LEFT (West), 270° = UP (North)
 """
+from __future__ import annotations
+
 from game.core.math import Vector2
 from game.core.config import PhysicsConfig
 
@@ -59,22 +61,22 @@ class PhysicsBody:
         self.angular_drag = PhysicsConfig.DEFAULT_ANGULAR_DRAG
 
     @property
-    def x(self):
+    def x(self) -> float:
         return self.position.x
 
     @x.setter
-    def x(self, value):
+    def x(self, value) -> None:
         self.position.x = value
 
     @property
-    def y(self):
+    def y(self) -> float:
         return self.position.y
 
     @y.setter
-    def y(self, value):
+    def y(self, value) -> None:
         self.position.y = value
 
-    def update(self, dt=1.0):
+    def update(self, dt=1.0) -> None:
         """
         Update physics. dt is ignored (1 tick = fixed step).
         NOTE: Ship class overrides this with its own cycle-based mixins.
@@ -95,12 +97,12 @@ class PhysicsBody:
         self.position += self.velocity
         self.angle += self.angular_velocity
 
-    def apply_force(self, force: Vector2):
+    def apply_force(self, force: Vector2) -> None:
         """Applies a force vector to the body."""
         if self.mass > 0:
             self.acceleration += force / self.mass
 
-    def forward_vector(self):
+    def forward_vector(self) -> Vector2:
         """Returns the forward directional vector based on angle."""
         # 0 degrees is RIGHT (1, 0) in standard math.
         vec = Vector2(1, 0)

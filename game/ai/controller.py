@@ -45,6 +45,8 @@ This module uses defensive programming for robustness during combat:
 - Formation dropout failures are logged but don't interrupt combat
 - All errors include ship/target context for debugging
 """
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
@@ -393,7 +395,7 @@ class AIController:
             if target or behavior_key in _NO_TARGET_BEHAVIORS:
                 self.current_behavior.update(target, behavior_context)
 
-    def check_avoidance(self):
+    def check_avoidance(self) -> Optional[Vector2]:
         """Check for nearby collisions."""
         nearby = self.grid.query_radius(self.ship.get_position(), BattleTuning.AVOIDANCE_RADIUS)
         closest = None
