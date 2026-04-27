@@ -68,7 +68,7 @@ class CargoQuickDialog(UIWindow):
         self._apply_tooltips()
         self._populate_items()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Initialize base UI elements (title label, buttons)."""
         padding = 10
 
@@ -96,7 +96,7 @@ class CargoQuickDialog(UIWindow):
             container=self
         )
 
-    def _populate_items(self):
+    def _populate_items(self) -> None:
         """Populate the cargo items based on direction."""
         if self.direction == 'unload':
             self._populate_unload_items()
@@ -113,7 +113,7 @@ class CargoQuickDialog(UIWindow):
                 container=self
             )
 
-    def _populate_unload_items(self):
+    def _populate_unload_items(self) -> None:
         """Populate items for unload (drop cargo from fleet)."""
         colonies = CargoTransferService.resolve_colonies(self.facade, self.hex_coord, self.fleet)
         items = CargoTransferService.get_unload_items(self.facade, self.fleet.id, colonies)
@@ -127,7 +127,7 @@ class CargoQuickDialog(UIWindow):
                 row_index=len(self.cargo_items)
             )
 
-    def _populate_load_items(self):
+    def _populate_load_items(self) -> None:
         """Populate items for load (load cargo from colony)."""
         colonies = CargoTransferService.resolve_colonies(self.facade, self.hex_coord, self.fleet)
         items = CargoTransferService.get_load_items(self.facade, colonies)
@@ -143,7 +143,7 @@ class CargoQuickDialog(UIWindow):
             )
 
     def _add_cargo_row(self, label: str, cargo_type: str, species_id, max_val: int,
-                       row_index: int, planet_id=None):
+                       row_index: int, planet_id=None) -> None:
         """Add a cargo item row with label, slider, value label, and All button."""
         padding = 10
         row_y = 50 + row_index * 45
@@ -219,7 +219,7 @@ class CargoQuickDialog(UIWindow):
             return True
         return False
 
-    def process_event(self, event):
+    def process_event(self, event) -> None:
         """Handle UI events."""
         super().process_event(event)
 
@@ -247,7 +247,7 @@ class CargoQuickDialog(UIWindow):
                         item['lbl_val'].set_text(str(item['max']))
                         break
 
-    def _issue_orders(self):
+    def _issue_orders(self) -> None:
         """Issue transfer commands for all items with non-zero slider values."""
         # Get first colony at hex for unload direction
         target_planet_id = None
