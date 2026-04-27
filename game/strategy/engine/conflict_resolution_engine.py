@@ -124,16 +124,22 @@ class ConflictResolutionEngine(IConflictEngine):
             if sys:
                 system_name = sys.name
 
-        # Get storm names from environmental effects or area effect manager
-        storm_names = []
-        if environmental_effects is not None and environmental_effects.in_storm:
-            storm_names = environmental_effects.storm_names
-        elif self._area_effect_manager is not None and self._galaxy is not None:
-            effects = self._area_effect_manager.get_effects_at_global_hex(
-                self._galaxy, location
-            )
-            if effects.in_storm:
-                storm_names = effects.storm_names
+        # PROJ-300: derive storm names from sector-effects providers.
+        # `environmental_effects` may be the new sector-effects list shape
+        # OR the legacy EnvironmentalEffects object. Handle both during
+        # the migration window.
+        storm_names: List[str] = []
+        if isinstance(environmental_effects, list):
+            seen = set()
+            for effect in environmental_effects:
+                for provider in effect.get('providers', []):
+                    if provider.get('source_kind') == 'storm':
+                        label = provider.get('source_label')
+                        if label and label not in seen:
+                            seen.add(label)
+                            storm_names.append(label)
+        elif environmental_effects is not None and getattr(environmental_effects, 'in_storm', False):
+            storm_names = list(getattr(environmental_effects, 'storm_names', []))
 
         if self._event_bus:
             self._event_bus.log_event(
@@ -312,11 +318,24 @@ class ConflictResolutionEngine(IConflictEngine):
         )
 
     def _lookup_environmental_effects(self, location) -> Optional[Any]:
-        """PROJ-189: Query environmental effects at the combat location."""
-        if self._area_effect_manager is None or self._galaxy is None:
+        """PROJ-189: Query environmental effects at the combat location.
+
+        PROJ-300: returns the new sector-effects list shape from the unified
+        collector. The spec compiler accepts either the legacy
+        EnvironmentalEffects object (effective during AreaEffectManager
+        deprecation) or this new list. Phase 7 deletes the legacy path.
+        """
+        if self._galaxy is None:
             return None
-        return self._area_effect_manager.get_effects_at_global_hex(
-            self._galaxy, location
+        get_system = getattr(self._galaxy, 'get_system_at_location', None)
+        if get_system is None:
+            return None
+        system = get_system(location)
+        if system is None:
+            return None
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+        return collect_sector_effects(
+            system, location, empire_id=None, registries=self._registries,
         )
 
     def _collect_team_modifiers(

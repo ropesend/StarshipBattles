@@ -98,39 +98,37 @@ class FleetMovementEngine(IMovementEngine):
         """
         Calculate effective fleet speed considering environmental effects.
 
-        PROJ-189: Storms can reduce fleet speed via strategic_mult.
-
-        Uses the fleet's stored .speed attribute (already set by FleetSpeedCalculator
-        when ships are added/removed) and applies environmental multipliers.
-
-        Args:
-            fleet: Fleet to calculate speed for
-            galaxy: Galaxy for zone lookup
+        PROJ-189: Storms can reduce fleet speed via StrategicSpeedModifier.
+        PROJ-300: Migrated to the unified IAbilitySource pipeline — queries
+        `collect_sector_effects` for the fleet's hex and aggregates the
+        StrategicSpeedModifier multiplier across all sources (storms,
+        facilities, future planet/star/system intrinsics).
 
         Returns:
             Effective speed (hexes per turn), >= 0.0
         """
-        # Use fleet's stored speed (maintained by FleetSpeedCalculator)
         base_speed = fleet.speed
-
         if base_speed <= 0:
             return 0.0
 
-        # If no area_effect_manager, use base speed
-        if self._area_effect_manager is None:
-            # Lazy-initialize default AreaEffectManager
-            from game.strategy.services.area_effect_manager import AreaEffectManager
-            self._area_effect_manager = AreaEffectManager()
+        from game.strategy.services.system_effects_collector import (
+            collect_sector_effects, aggregate_value_or,
+        )
+        get_system = getattr(galaxy, 'get_system_at_location', None)
+        if get_system is None:
+            return base_speed
+        system = get_system(fleet.location)
+        if system is None:
+            return base_speed
 
-        # Query environmental effects at fleet location
-        effects = self._area_effect_manager.get_effects_at_global_hex(galaxy, fleet.location)
-
-        # Apply strategic movement multiplier from storms
-        if effects.in_storm:
-            modified_speed = base_speed * effects.strategic_mult
-            return max(0.0, float(int(modified_speed)))
-
-        return base_speed
+        effects = collect_sector_effects(
+            system, fleet.location, empire_id=fleet.owner_id, registries=None,
+        )
+        mult = aggregate_value_or(effects, 'StrategicSpeedModifier', 1.0)
+        if mult >= 1.0 - 1e-9:
+            return base_speed
+        modified_speed = base_speed * mult
+        return max(0.0, float(int(modified_speed)))
 
     def apply_movement(
         self,

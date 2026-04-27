@@ -3,22 +3,23 @@
 This engine processes environmental effects during the 100-tick turn loop,
 applying damage and fuel drain to fleets in storm hexes.
 
+PROJ-300: migrated from `AreaEffectManager` (deleted in Phase 7) to the
+unified `system_effects_collector` pipeline. Damage and fuel-drain rates
+are now read from `EnvironmentalDamage` and `FuelDrain` ability rows;
+multiple sources (storms + facility-projected hazards) sum naturally.
+
 Turn Integration:
     Phase 0f: Called each tick after Phase 0e (construction) to apply
     storm effects to all fleets. Damage is distributed across ships,
     fuel is drained from each ship.
-
-Dependencies:
-    - AreaEffectManager: Queries aggregated storm effects at hex locations
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from game.strategy.interfaces.engines import IEnvironmentalHazardEngine
 
 if TYPE_CHECKING:
-    from game.strategy.services.area_effect_manager import AreaEffectManager
     from game.strategy.data.fleet import Fleet
 
 
@@ -28,7 +29,8 @@ class EnvironmentalEvent:
 
     Attributes:
         fleet_id: ID of the affected fleet.
-        storm_name: Name of the primary storm affecting the fleet.
+        storm_name: Name of a primary source (e.g. "Ion Storm Alpha"); kept
+            for back-compat with existing UI consumers.
         damage_dealt: Total hull damage dealt to the fleet this tick.
         fuel_drained: Total fuel drained from all ships this tick.
         tick: The tick number when this event occurred.
@@ -48,21 +50,12 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
     Damage is distributed across ships in the fleet. Fuel drain is applied
     to each ship individually.
 
-    PROJ-189: Part of the turn engine Phase 0f processing.
+    PROJ-189 / PROJ-300: queries the unified collector for
+    `EnvironmentalDamage` (rate) and `FuelDrain` (rate) at the fleet's hex.
     """
 
-    def __init__(self, area_effect_manager: Optional['AreaEffectManager'] = None):
-        """Initialize the environmental hazard engine.
-
-        Args:
-            area_effect_manager: Optional AreaEffectManager for dependency injection.
-                                If None, creates a default instance lazily.
-        """
-        if area_effect_manager is not None:
-            self._area_effect_manager = area_effect_manager
-        else:
-            from game.strategy.services.area_effect_manager import AreaEffectManager
-            self._area_effect_manager = AreaEffectManager()
+    def __init__(self):
+        """Initialize the engine. PROJ-300: no longer takes AreaEffectManager."""
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -102,50 +95,70 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
         self._validate_tick_inputs(empires)
         events: List[EnvironmentalEvent] = []
 
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+        get_system = getattr(galaxy, 'get_system_at_location', None)
+
         for empire in empires:
             for fleet in empire.fleets:
-                # Query effects at fleet location
-                effects = self._area_effect_manager.get_effects_at_global_hex(
-                    galaxy, fleet.location
-                )
-
-                if not effects.in_storm:
+                if get_system is None:
+                    continue
+                system = get_system(fleet.location)
+                if system is None:
                     continue
 
-                # Get combat-capable ships
+                # PROJ-300: empire_id=None so ownerless storms apply to all empires
+                # but owned facility-projected hazards are filtered by the collector.
+                effects = collect_sector_effects(
+                    system, fleet.location, empire_id=None, registries=None,
+                )
+                damage_effects = [e for e in effects if e['ability_name'] == 'EnvironmentalDamage']
+                fuel_effects = [e for e in effects if e['ability_name'] == 'FuelDrain']
+                if not damage_effects and not fuel_effects:
+                    continue
+
+                damage_per_turn = sum(e['aggregate_value'] for e in damage_effects)
+                fuel_per_turn = sum(e['aggregate_value'] for e in fuel_effects)
+
+                if damage_per_turn <= 0 and fuel_per_turn <= 0:
+                    continue
+
                 combat_ships = fleet.get_combat_capable_ships()
                 if not combat_ships:
                     continue
 
-                # Calculate per-tick amounts (1/100th of per-turn value)
-                damage_per_tick = effects.damage_per_tick / 100.0
-                fuel_drain_per_tick = effects.fuel_drain_per_tick / 100.0
+                damage_per_tick = damage_per_turn / 100.0
+                fuel_drain_per_tick = fuel_per_turn / 100.0
 
                 total_damage = 0.0
                 total_fuel_drained = 0.0
 
-                # Apply damage: distribute across ships
                 if damage_per_tick > 0:
                     damage_per_ship = damage_per_tick / len(combat_ships)
                     for ship in combat_ships:
                         total_damage += self._apply_damage_to_ship(ship, damage_per_ship)
-                else:
-                    # Record 0 damage for tracking
-                    total_damage = 0.0
 
-                # Apply fuel drain: each ship drains fuel
                 if fuel_drain_per_tick > 0:
                     for ship in combat_ships:
                         drained = self._drain_fuel_from_ship(ship, fuel_drain_per_tick)
                         total_fuel_drained += drained
-                else:
-                    total_fuel_drained = 0.0
 
-                # Create event for this fleet
-                storm_name = effects.storm_names[0] if effects.storm_names else "Unknown Storm"
+                # Pick a representative source label for the event record.
+                source_label = "Unknown Hazard"
+                for effect_list in (damage_effects, fuel_effects):
+                    for e in effect_list:
+                        for p in e.get('providers', []):
+                            label = p.get('source_label')
+                            if label:
+                                source_label = label
+                                break
+                        if source_label != "Unknown Hazard":
+                            break
+                    if source_label != "Unknown Hazard":
+                        break
+
                 events.append(EnvironmentalEvent(
                     fleet_id=fleet.id,
-                    storm_name=storm_name,
+                    storm_name=source_label,
                     damage_dealt=total_damage,
                     fuel_drained=total_fuel_drained,
                     tick=tick,

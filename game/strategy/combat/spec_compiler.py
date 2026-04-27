@@ -28,7 +28,7 @@ Phase 1 scope:
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from game.core.math import Vector2
 from game.simulation.battle_spec import (
@@ -342,9 +342,16 @@ def _build_modifier_stack(
     # `environmental_effects` (global) and `team_modifiers` (per-team).
     global_entries: List[ModifierEntry] = []
     if environmental_effects is not None:
-        global_entries.extend(
-            _entries_from_environmental_effects(environmental_effects)
-        )
+        # PROJ-300: accept either the new sector-effects list OR the legacy
+        # EnvironmentalEffects object. Phase 7 deletes the legacy path.
+        if isinstance(environmental_effects, list):
+            global_entries.extend(
+                _entries_from_sector_effects(environmental_effects)
+            )
+        else:
+            global_entries.extend(
+                _entries_from_environmental_effects(environmental_effects)
+            )
 
     per_team: Dict[int, Tuple[ModifierEntry, ...]] = {}
     for team_id in range(team_count):
@@ -393,6 +400,47 @@ def _emit_entries_team_scoped(
         stack_group=stack_group,
     )
     return [entry for _, entry in team_entries]
+
+
+def _entries_from_sector_effects(sector_effects: Sequence[Dict[str, Any]]) -> List[ModifierEntry]:
+    """Translate a PROJ-300 sector-effects list into `ModifierEntry` entries.
+
+    For each combat-relevant ability (`ShieldModifier`, `DamageModifier`,
+    `ThrustModifier` per D14), emit one entry per ACTIVE provider so
+    overlapping storms/facilities multiply naturally (no shared stack_group).
+    Per decisions.md D6, storm stacking goes from MAX (legacy) to MULTIPLY
+    (new) — two ion storms now apply 0.25x shields, not 0.5x.
+    """
+    combat_ability_names = {"ShieldModifier", "DamageModifier", "ThrustModifier"}
+    entries: List[ModifierEntry] = []
+    for effect in sector_effects:
+        ability_name = effect.get('ability_name')
+        if ability_name not in combat_ability_names:
+            continue
+        for provider in effect.get('providers', []):
+            if not provider.get('is_active', True):
+                continue
+            ability_data = provider.get('ability_data') or {}
+            mult = ability_data.get('multiplier', 1.0)
+            if mult == 1.0:
+                continue
+            source_kind = provider.get('source_kind', 'unknown')
+            source_id = provider.get('source_id', 'unknown')
+            source_label = provider.get('source_label', source_id)
+            stack_group = ability_data.get('stack_group')  # None on storms
+            team_entries = emit_entries_for_ability(
+                ability_name,
+                mult,
+                scope="self",
+                owner_team=0,
+                num_teams=1,
+                source=f"sector:{source_kind}",
+                source_modifier_id=source_id,
+                source_modifier_name=source_label,
+                stack_group=stack_group,
+            )
+            entries.extend(entry for _, entry in team_entries)
+    return entries
 
 
 def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
