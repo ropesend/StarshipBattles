@@ -238,7 +238,8 @@ pytest tests/ --cov=game -n 12
 ## Key Conventions
 
 ### Code Quality
-- Use type hints for function signatures
+- **Return-type annotations are required on every public function/method.** Use modern syntax (PEP 604 unions like `int | None`, native generics like `list[int]`). `__init__` and other dunders are exempt (PEP 484). Functions with no `return` statement annotate `-> None` explicitly.
+- Use type hints for function parameters where they aid clarity (parameter coverage is not yet enforced project-wide; return coverage is).
 - Add docstrings to public APIs
 - Keep functions focused and small (<50 lines preferred)
 - Avoid deep nesting (max 3 levels)

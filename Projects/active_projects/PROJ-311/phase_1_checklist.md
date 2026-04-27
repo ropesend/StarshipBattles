@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Document the requirement that every new public function carries a return annotation. Get this in place BEFORE backfill starts so the rule is enforceable.
 
 ---
@@ -18,15 +18,15 @@
 
 CLAUDE.md "Code Quality" already says "Use type hints for function signatures." Strengthen this for return types specifically.
 
-- [ ] Read CLAUDE.md "Key Conventions" → "Code Quality" section
-- [ ] Replace the existing line with:
+- [x] Read CLAUDE.md "Key Conventions" → "Code Quality" section
+- [x] Replace the existing line with:
   ```
   - **Return-type annotations are required on every public function/method.** Use modern syntax (PEP 604 unions like `int | None`, native generics like `list[int]`). `__init__` and other dunders are exempt (PEP 484). Functions with no `return` statement annotate `-> None` explicitly.
   - Use type hints for function parameters where they aid clarity (parameter coverage is not yet enforced project-wide; return coverage is).
   ```
-- [ ] **Verification:** `grep -n "Return-type annotations" CLAUDE.md` returns 1 hit
+- [x] **Verification:** `grep -n "Return-type annotations" CLAUDE.md` returns 1 hit
 
-**Notes:**
+**Notes:** Replacement landed at CLAUDE.md line 241. Single grep hit confirmed.
 
 ---
 
@@ -34,7 +34,7 @@ CLAUDE.md "Code Quality" already says "Use type hints for function signatures." 
 **File:** `docs/03_CONVENTIONS.md`
 **Tests:** Manual verification
 
-- [ ] Add a §"Type Annotations" section:
+- [x] Add a §"Type Annotations" section:
   ```markdown
   ## Type Annotations
 
@@ -55,10 +55,10 @@ CLAUDE.md "Code Quality" already says "Use type hints for function signatures." 
 
   See PROJ-311 for the audit that established the return-type requirement.
   ```
-- [ ] **Verification:** `grep -n "Type Annotations" docs/03_CONVENTIONS.md` returns 1 hit
-- [ ] Bump the doc's `Last verified:` date (set by PROJ-307)
+- [x] **Verification:** `grep -n "Type Annotations" docs/03_CONVENTIONS.md` returns 1 hit
+- [x] Bump the doc's `Last verified:` date (set by PROJ-307)
 
-**Notes:**
+**Notes:** Added as §8 (renumbered the existing Documentation Freshness section to §9). Last verified bumped to 2026-04-27 with summary "PROJ-311 added §Type Annotations".
 
 ---
 
@@ -66,17 +66,17 @@ CLAUDE.md "Code Quality" already says "Use type hints for function signatures." 
 **File:** None — review step.
 **Tests:** None.
 
-- [ ] Read CLAUDE.md and `docs/03_CONVENTIONS.md` Type Annotations section back-to-back
-- [ ] Polish if awkward
+- [x] Read CLAUDE.md and `docs/03_CONVENTIONS.md` Type Annotations section back-to-back
+- [x] Polish if awkward
 
-**Notes:**
+**Notes:** Reads cleanly. CLAUDE.md is the short-form rule; docs/03 is the long-form guidance. Both reference PROJ-311 for traceability.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] CLAUDE.md mentions return-type requirement
-- [ ] `docs/03_CONVENTIONS.md` has §Type Annotations
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase (Phase 2)
+- [x] All task checkboxes above are checked
+- [x] CLAUDE.md mentions return-type requirement
+- [x] `docs/03_CONVENTIONS.md` has §Type Annotations
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase (Phase 2)
