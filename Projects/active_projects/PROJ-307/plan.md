@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Backfill timestamps to 21 docs | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Establish convention in CLAUDE.md | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Establish convention in CLAUDE.md | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-27
-**Active Phase:** Phase 2 — convention enforcement
-**Last Action:** Phase 1 complete — all 21 doc files backfilled with `> **Last verified:** YYYY-MM-DD` directly below their H1, using each file's `git log -1 --format=%cs` baseline. `02_PATTERNS.md` summary references PROJ-297 pattern-count correction.
-**Next Action:** Phase 2 — add the timestamp rule to `CLAUDE.md` Rule 2 (DO + DO NOT) and add §"Documentation Freshness" to `docs/03_CONVENTIONS.md`.
+**Active Phase:** Complete — pending archive
+**Last Action:** Phase 2 complete. CLAUDE.md Rule 2 gained a DO and a DO NOT bullet about the `Last verified:` date. `docs/03_CONVENTIONS.md` gained §8 Documentation Freshness; its own timestamp bumped to 2026-04-27.
+**Next Action:** User verification, then archive PROJ-307.
 **Blockers:** None
-**Context for Next Agent:** All 22 doc files now carry the marker (verified via `grep -L` returning zero, `grep -c` returning 1 per file).
+**Context for Next Agent:** Verifications all pass — `grep -L "Last verified" docs/...` returns zero files; `grep -n "Last verified" CLAUDE.md` returns 2 hits; `grep -n "Documentation Freshness" docs/03_CONVENTIONS.md` returns 1 hit.
 
 ## Overview
 Add a "Last verified" timestamp line near the top of every `docs/**/*.md` file. Establish the convention in CLAUDE.md so future doc edits maintain freshness markers. Helps future agents and contributors quickly judge whether a doc is likely stale or current.

@@ -58,12 +58,14 @@ DO:
 - DO NOT assume docs are up to date — verify by reading them
 - DO NOT leave documentation updates for "later" — later never comes
 - DO NOT silently diverge from documented patterns without raising it
+- DO NOT bump the **Last verified:** date for cosmetic edits (typos, formatting). Bump only when you've actually re-read the file and confirmed it matches current code.
 
 DO:
 - Treat docs as part of the deliverable, not an afterthought
 - When you find a discrepancy between docs and code, STOP and raise it with the user
 - Update docs in the same commit as the code change, not a separate commit
 - When in doubt about whether a doc needs updating, update it
+- Update the **Last verified:** date at the top of any doc you verify or substantively edit. Format: `> **Last verified:** YYYY-MM-DD — <one-sentence summary>`. The date represents an intentional accuracy check, not a cosmetic edit.
 
 **The docs directory is the source of truth.** See the [Documentation First](#documentation-first) section below for the full reading order.
 
