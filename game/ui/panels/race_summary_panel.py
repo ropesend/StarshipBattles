@@ -11,6 +11,8 @@ Provides a summary view of the current race configuration including:
 - Environmental preferences summary
 - Description status
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import pygame_gui
@@ -82,7 +84,7 @@ class RaceSummaryPanel:
 
         self._create_content()
 
-    def _create_content(self):
+    def _create_content(self) -> None:
         """Create all panel content."""
         panel_width = self.panel.get_relative_rect().width - 20
         y = 10
@@ -204,7 +206,7 @@ class RaceSummaryPanel:
 
         return y + 170 + flag_preview_size
 
-    def _create_column2_content(self, x: int, y: int, col_width: int):
+    def _create_column2_content(self, x: int, y: int, col_width: int) -> None:
         """Create column 2: Portrait and Ship Theme."""
         # Portrait preview (larger)
         self.summary_labels['portrait_header'] = pygame_gui.elements.UILabel(
@@ -237,7 +239,7 @@ class RaceSummaryPanel:
             container=self.panel
         )
 
-    def _create_column3_content(self, x: int, y: int, col_width: int):
+    def _create_column3_content(self, x: int, y: int, col_width: int) -> None:
         """Create column 3: Environment, Aptitudes, and Descriptions.
 
         PROJ-66 Phase 6: Added homeworld, water, aptitudes, and budget display.
@@ -472,7 +474,7 @@ class RaceSummaryPanel:
     # Refresh Summary
     # =========================================================================
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh summary panel with current race_config data.
 
         PROJ-66 Phase 6: Added identity, homeworld, water, aptitudes, budget.
@@ -543,7 +545,7 @@ class RaceSummaryPanel:
         if 'socio_status' in self.summary_labels:
             self.summary_labels['socio_status'].set_text(self._format_socio_status())
 
-    def _refresh_flag_preview(self):
+    def _refresh_flag_preview(self) -> None:
         """Refresh flag preview images."""
         # Clear previous flag images
         for img in self.summary_flag_images:
@@ -582,7 +584,7 @@ class RaceSummaryPanel:
             )
             self.summary_flag_images.append(img)
 
-    def _refresh_portrait_preview(self):
+    def _refresh_portrait_preview(self) -> None:
         """Refresh portrait preview image."""
         # Clear previous portrait image
         if self.summary_portrait_image:
@@ -605,7 +607,7 @@ class RaceSummaryPanel:
             container=self.summary_portrait_panel
         )
 
-    def _refresh_ship_preview(self):
+    def _refresh_ship_preview(self) -> None:
         """Refresh ship preview images."""
         # Clear previous ship images
         for img in self.summary_ship_images:

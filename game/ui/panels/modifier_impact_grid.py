@@ -8,6 +8,8 @@ Displays a matrix with:
 
 Only shows stats that are actually affected (not at default values).
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel
@@ -97,7 +99,7 @@ class ModifierImpactGrid:
         # Cached surfaces for headers (rotated text)
         self._header_cache: Dict[str, pygame.Surface] = {}
 
-    def update(self, component: Optional['Component']):
+    def update(self, component: Optional['Component']) -> None:
         """
         Update the grid with data from a component.
 
@@ -347,7 +349,7 @@ class ModifierImpactGrid:
             self._header_cache[text] = rotated
         return self._header_cache[text]
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         """Build the grid UI elements."""
         if not self.stat_columns:
             # No affected stats - show message
@@ -364,7 +366,7 @@ class ModifierImpactGrid:
         # We'll draw the actual grid content in draw() method
         # since pygame_gui doesn't have a native grid/table
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         """
         Draw the grid content on top of the panel.
 
@@ -494,20 +496,20 @@ class ModifierImpactGrid:
 
         return False
 
-    def _clear_ui(self):
+    def _clear_ui(self) -> None:
         """Clear all dynamically created UI elements."""
         for element in self._ui_elements:
             element.kill()
         self._ui_elements = []
         self._header_cache.clear()
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up all UI elements."""
         self._clear_ui()
         if self.panel and self.panel.alive():
             self.panel.kill()
 
-    def set_position(self, pos: tuple):
+    def set_position(self, pos: tuple) -> None:
         """Set the position of the grid panel."""
         self.rect.topleft = pos
         self.panel.set_position(pos)

@@ -9,6 +9,8 @@ Provides UI controls for:
 - Point budget display with color coding
 - Tolerance cost display (read-only, reflects Environment tab choices)
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from typing import Dict, Optional, TYPE_CHECKING
@@ -86,7 +88,7 @@ class RaceAptitudesPanel:
 
         self._create_content()
 
-    def _create_content(self):
+    def _create_content(self) -> None:
         """Create all panel content."""
         panel_width = self.panel.get_relative_rect().width - 20
         y = 5
@@ -215,7 +217,7 @@ class RaceAptitudesPanel:
         attr_name = f"aptitude_{apt_name}"
         return getattr(self.race_config, attr_name, 5)
 
-    def _set_aptitude_value(self, apt_name: str, value: int):
+    def _set_aptitude_value(self, apt_name: str, value: int) -> None:
         """Set aptitude value in config."""
         attr_name = f"aptitude_{apt_name}"
         setattr(self.race_config, attr_name, int(value))
@@ -229,13 +231,13 @@ class RaceAptitudesPanel:
         else:
             return "0"
 
-    def update_config(self):
+    def update_config(self) -> None:
         """Update race_config from slider values."""
         for apt_name, slider in self.aptitude_sliders.items():
             value = int(slider.get_current_value())
             self._set_aptitude_value(apt_name, value)
 
-    def set_from_config(self):
+    def set_from_config(self) -> None:
         """Set slider values from race_config."""
         for apt_name, slider in self.aptitude_sliders.items():
             value = self._get_aptitude_value(apt_name)
@@ -244,7 +246,7 @@ class RaceAptitudesPanel:
         self.update_labels()
         self.update_budget_display()
 
-    def update_labels(self):
+    def update_labels(self) -> None:
         """Update value and cost labels from slider values."""
         for apt_name, slider in self.aptitude_sliders.items():
             value = int(slider.get_current_value())
@@ -258,7 +260,7 @@ class RaceAptitudesPanel:
                 cost = self.point_budget._single_aptitude_cost(value)
                 self.cost_labels[apt_name].set_text(self._format_cost(cost))
 
-    def update_budget_display(self):
+    def update_budget_display(self) -> None:
         """Update budget display with current remaining points."""
         remaining = self.point_budget.get_remaining_points(self.race_config)
         total = self.point_budget.total_budget

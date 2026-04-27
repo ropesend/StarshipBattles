@@ -88,7 +88,7 @@ class DesignReportPanel:
         self.placeholder_text = None
         self.show_placeholder()
 
-    def show_placeholder(self):
+    def show_placeholder(self) -> None:
         """Show placeholder message when no design is selected."""
         # Clear current ship
         self.current_ship = None
@@ -120,7 +120,7 @@ class DesignReportPanel:
             container=self.panel
         )
 
-    def update_design(self, ship: Ship):
+    def update_design(self, ship: Ship) -> None:
         """
         Update display for a selected design/ship.
 
@@ -166,7 +166,7 @@ class DesignReportPanel:
         # Expose rows_map for convenient test access
         self.rows_map = self._stats_panel.rows_map
 
-    def _update_portrait(self, ship: Ship):
+    def _update_portrait(self, ship: Ship) -> None:
         """Update ship portrait image by loading from file system."""
         import os
         import logging
@@ -220,7 +220,7 @@ class DesignReportPanel:
         """
         return 750
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up all UI elements."""
         if self._stats_panel is not None:
             self._stats_panel.kill()

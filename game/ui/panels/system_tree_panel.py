@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UIImage, UILabel, UIScrollingContainer
@@ -74,14 +76,14 @@ class SystemTreeItem:
         # Theme can contextually set "text_horiz_alignment": "left"?
         # Or we can subclass?
         
-    def add_child(self, item):
+    def add_child(self, item) -> None:
         self.children.append(item)
         
-    def set_expanded(self, expanded):
+    def set_expanded(self, expanded) -> None:
         self.expanded = expanded
         # Update arrow icon?
 
-    def set_position(self, y):
+    def set_position(self, y) -> None:
         self.y_pos = y
         # Move elements
         self.rect.y = y
@@ -93,17 +95,17 @@ class SystemTreeItem:
         text_x = (self.indent*20) + 5 + (25 if self.icon_image else 0)
         self.label.set_relative_position((text_x, y))
 
-    def show(self):
+    def show(self) -> None:
         self.button.show()
         self.label.show()
         if self.icon_image: self.icon_image.show()
         
-    def hide(self):
+    def hide(self) -> None:
         self.button.hide()
         self.label.hide()
         if self.icon_image: self.icon_image.hide()
         
-    def kill(self):
+    def kill(self) -> None:
         self.button.kill()
         self.label.kill()
         if self.icon_image: self.icon_image.kill()
@@ -132,7 +134,7 @@ class SystemTreePanel:
         
         self.on_selection_callback = None
         
-    def set_items(self, contents, scene_interface, flat_view=False, system_obj=None, hex_coord=None):
+    def set_items(self, contents, scene_interface, flat_view=False, system_obj=None, hex_coord=None) -> None:
         """
         Rebuild tree from content list.
         scene_interface used to fetch assets logic (dependency injection).
@@ -267,7 +269,7 @@ class SystemTreePanel:
         # 4. Planets
         if planets:
             # Helper to create planet nodes
-            def create_planet_nodes(parent_item, indent_level):
+            def create_planet_nodes(parent_item, indent_level) -> None:
                 # Group by Hex
                 hex_groups = {}
                 for p in planets:
@@ -365,7 +367,7 @@ class SystemTreePanel:
 
         self.layout()
 
-    def _get_empire_context(self, scene_interface):
+    def _get_empire_context(self, scene_interface) -> tuple[object | None, object | None]:
         """Extract empire_id and registries from the scene interface."""
         empire_id = None
         registries = None
@@ -379,7 +381,7 @@ class SystemTreePanel:
             registries = getattr(session, 'registries', None)
         return empire_id, registries
 
-    def _add_system_effects(self, system_obj, scene_interface):
+    def _add_system_effects(self, system_obj, scene_interface) -> None:
         """Add system-scope effects section to the tree."""
         try:
             from game.strategy.services.system_effects_collector import collect_system_effects
@@ -394,7 +396,7 @@ class SystemTreePanel:
             import logging
             logging.getLogger(__name__).debug("Could not load system effects", exc_info=True)
 
-    def _add_sector_effects(self, system_obj, scene_interface, hex_coord):
+    def _add_sector_effects(self, system_obj, scene_interface, hex_coord) -> None:
         """Add sector-scope effects section to the tree."""
         try:
             from game.strategy.services.system_effects_collector import collect_sector_effects
@@ -409,7 +411,7 @@ class SystemTreePanel:
             import logging
             logging.getLogger(__name__).debug("Could not load sector effects", exc_info=True)
 
-    def _add_effects_group(self, effects, group_label_prefix, group_key):
+    def _add_effects_group(self, effects, group_label_prefix, group_key) -> None:
         """Shared: render a collapsible effects group (system or sector).
 
         Args:
@@ -525,11 +527,11 @@ class SystemTreePanel:
                 return f"+{val}/turn"
         return ""
 
-    def layout(self):
+    def layout(self) -> None:
         """Reposition visible items (recursive)."""
         self.y_cursor = 5
         
-        def process_item(item):
+        def process_item(item) -> None:
             item.set_position(self.y_cursor)
             item.show()
             self.y_cursor += item.height + 2
@@ -548,13 +550,13 @@ class SystemTreePanel:
         # Update Scroll container content size
         self.scrolling_container.set_scrollable_area_dimensions((self.rect.width - 20, self.y_cursor))
         
-    def _hide_recursive(self, item):
+    def _hide_recursive(self, item) -> None:
         for child in item.children:
             child.hide()
             if hasattr(child, 'is_group'):
                 self._hide_recursive(child)
         
-    def process_event(self, event):
+    def process_event(self, event) -> bool:
         """Handle clicks."""
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             # Check if one of our items
@@ -564,7 +566,7 @@ class SystemTreePanel:
                     return True
         return False
         
-    def on_click(self, item):
+    def on_click(self, item) -> None:
         if hasattr(item, 'is_group'):
             # Toggle
             item.expanded = not item.expanded
@@ -588,10 +590,10 @@ class SystemTreePanel:
             if self.on_selection_callback:
                 self.on_selection_callback(item.obj)
                 
-    def set_selection_callback(self, callback):
+    def set_selection_callback(self, callback) -> None:
         self.on_selection_callback = callback
         
-    def set_dimensions(self, dimensions):
+    def set_dimensions(self, dimensions) -> None:
         self.rect.size = dimensions
         self.scrolling_container.set_dimensions(dimensions)
         self.layout()

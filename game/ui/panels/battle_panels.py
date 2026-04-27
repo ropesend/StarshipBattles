@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import pygame
 from game.core.profiling import profile_action
@@ -32,17 +34,17 @@ class BattlePanel:
         self.rect = pygame.Rect(x, y, w, h)
         self.surface = None  # Cached surface
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         raise NotImplementedError
 
-    def handle_click(self, mx, my):
+    def handle_click(self, mx, my) -> bool:
         return False
 
-    def draw_stat_bar(self, surface, x, y, width, height, pct, color):
+    def draw_stat_bar(self, surface, x, y, width, height, pct, color) -> None:
         """Draw a progress bar - delegates to extracted function."""
         draw_stat_bar(surface, x, y, width, height, pct, color)
 
-    def _get_ships(self):
+    def _get_ships(self) -> list:
         """Get ships from ui_service if available, otherwise fallback to scene.ships.
 
         BattleScreen always has ui_service; this fallback is for test mocks.
@@ -99,15 +101,15 @@ class ShipStatsPanel(ExpandableIdPanel):
         """
         return ship.id
 
-    def _is_expanded(self, ship):
+    def _is_expanded(self, ship) -> bool:
         """Check if a ship is expanded by its ID."""
         return self._is_id_expanded(self._get_ship_id(ship))
 
-    def _toggle_expanded(self, ship):
+    def _toggle_expanded(self, ship) -> None:
         """Toggle expansion state for a ship by its ID."""
         self._toggle_id_expanded(self._get_ship_id(ship))
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         # Validate cache size
         if (self.surface is None or
             self.surface.get_width() != self.rect.width or
@@ -160,7 +162,7 @@ class ShipStatsPanel(ExpandableIdPanel):
         screen.blit(self.surface, self.rect.topleft)
         pygame.draw.line(screen, BORDER_PANEL, self.rect.topleft, self.rect.bottomleft, 2)
         
-    def draw_ship_entry(self, surface, ship, y, panel_w, font_name, font_stat, banner_color):
+    def draw_ship_entry(self, surface, ship, y, panel_w, font_name, font_stat, banner_color) -> int:
         """Draw a single ship entry."""
         # PROJ-43: Use _is_expanded() for ID-based expansion tracking
         arrow = "▼" if self._is_expanded(ship) else "►"
@@ -192,7 +194,7 @@ class ShipStatsPanel(ExpandableIdPanel):
 
         return y
 
-    def draw_ship_details(self, surface, ship, y, panel_w, font):
+    def draw_ship_details(self, surface, ship, y, panel_w, font) -> int:
         """Draw expanded ship details."""
         x_indent = UIConfig.INDENT
         bar_w = UIConfig.BAR_WIDTH
@@ -222,7 +224,7 @@ class ShipStatsPanel(ExpandableIdPanel):
 
         return y
 
-    def get_expanded_height(self, ship):
+    def get_expanded_height(self, ship) -> int:
         base_height = 180
         if ship.max_shields > 0:
             base_height += 20
@@ -231,7 +233,7 @@ class ShipStatsPanel(ExpandableIdPanel):
         return base_height + comp_height + 5
 
     @profile_action("Battle: ShipStats Click")
-    def handle_click(self, mx, my):
+    def handle_click(self, mx, my) -> bool | tuple[str, str]:
         """Handle mouse click on the stats panel.
 
         Uses banner positions recorded during draw() for pixel-perfect
@@ -279,21 +281,21 @@ class SeekerMonitorPanel(ExpandableIdPanel):
         """
         return proj.id
 
-    def _is_seeker_expanded(self, proj):
+    def _is_seeker_expanded(self, proj) -> bool:
         """Check if a projectile is expanded by its ID."""
         return self._is_id_expanded(self._get_projectile_id(proj))
 
-    def _toggle_seeker_expanded(self, proj):
+    def _toggle_seeker_expanded(self, proj) -> None:
         """Toggle expansion state for a projectile by its ID."""
         self._toggle_id_expanded(self._get_projectile_id(proj))
 
-    def add_seeker(self, proj):
+    def add_seeker(self, proj) -> None:
         self.tracked_seekers.append(proj)
 
-    def clear_inactive(self):
+    def clear_inactive(self) -> None:
         self.tracked_seekers = [p for p in self.tracked_seekers if p.status == 'active']
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         # Validate cache
         if (self.surface is None or 
             self.surface.get_width() != self.rect.width or 
@@ -344,7 +346,7 @@ class SeekerMonitorPanel(ExpandableIdPanel):
         text_rect = text.get_rect(center=self.clear_btn_rect.center)
         screen.blit(text, text_rect)
     
-    def draw_seeker_entry(self, surface, proj, y, panel_w, font_name, font_stat):
+    def draw_seeker_entry(self, surface, proj, y, panel_w, font_name, font_stat) -> int:
         # PROJ-43: Use _is_seeker_expanded() for ID-based expansion tracking
         arrow = "▼" if self._is_seeker_expanded(proj) else "►"
         status = proj.status
@@ -388,7 +390,7 @@ class SeekerMonitorPanel(ExpandableIdPanel):
 
         return y
 
-    def draw_seeker_details(self, surface, proj, y, panel_w, font):
+    def draw_seeker_details(self, surface, proj, y, panel_w, font) -> int:
         x_indent = 20
         bar_w = 80
         bar_h = 8
@@ -437,7 +439,7 @@ class SeekerMonitorPanel(ExpandableIdPanel):
         return y
     
     @profile_action("Battle: SeekerPanel Click")
-    def handle_click(self, mx, my):
+    def handle_click(self, mx, my) -> bool:
         """Handle mouse click on the seeker panel.
 
         PROJ-43: Uses ID-based expansion tracking via _toggle_seeker_expanded().
@@ -481,7 +483,7 @@ class BattleControlPanel(BattlePanel):
         self.battle_end_button_rect = None
         self.end_battle_early_rect = None
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         # PROJ-43: Use _get_ships() for DTO-based access
         ships = self._get_ships()
         team0_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not s.is_derelict)
@@ -553,7 +555,7 @@ class BattleControlPanel(BattlePanel):
             self.battle_end_button_rect = None
     
     @profile_action("Battle: ControlPanel Click")
-    def handle_click(self, mx, my):
+    def handle_click(self, mx, my) -> str | bool:
         if self.battle_end_button_rect and self.battle_end_button_rect.collidepoint(mx, my):
             return "end_battle"
         if self.end_battle_early_rect and self.end_battle_early_rect.collidepoint(mx, my):

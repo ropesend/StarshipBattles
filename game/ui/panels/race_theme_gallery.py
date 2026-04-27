@@ -9,6 +9,8 @@ Provides UI controls for:
 - Theme selection with visual feedback
 - Preview of selected theme with sample ship images
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from typing import Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
@@ -128,7 +130,7 @@ class RaceThemeGallery(BaseGallery):
 
     # --- Overridden methods for vertical list layout ---
 
-    def _create_content(self, x: int, y: int, width: int, height: int):
+    def _create_content(self, x: int, y: int, width: int, height: int) -> None:
         """Create theme gallery with vertical list layout (no label or preview)."""
         self.scroll_container = pygame_gui.elements.UIScrollingContainer(
             relative_rect=pygame.Rect(x, y, width, height),
@@ -147,7 +149,7 @@ class RaceThemeGallery(BaseGallery):
         elif self.asset_buttons:
             self.on_asset_selected(self.asset_buttons[0][1])
 
-    def _populate_gallery(self, width: int):
+    def _populate_gallery(self, width: int) -> None:
         """Populate gallery with vertical list of theme buttons."""
         themes = self._discover_assets()
         btn_height = 50

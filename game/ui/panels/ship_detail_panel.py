@@ -85,7 +85,7 @@ class ShipDetailPanel:
         # Show placeholder initially
         self._show_placeholder()
 
-    def _show_placeholder(self):
+    def _show_placeholder(self) -> None:
         """Show placeholder when no ship selected."""
         self._clear_elements()
 
@@ -97,7 +97,7 @@ class ShipDetailPanel:
         )
         self.ui_elements.append(placeholder)
 
-    def _clear_elements(self):
+    def _clear_elements(self) -> None:
         """Clear all dynamic UI elements."""
         for element in self.ui_elements:
             element.kill()
@@ -141,7 +141,7 @@ class ShipDetailPanel:
 
         return result
 
-    def update_ship(self, ship_instance: Optional[ShipInstance]):
+    def update_ship(self, ship_instance: Optional[ShipInstance]) -> None:
         """
         Update display for a ship instance.
 
@@ -157,7 +157,7 @@ class ShipDetailPanel:
         self._clear_elements()
         self._build_ship_display(ship_instance)
 
-    def _build_ship_display(self, ship: ShipInstance):
+    def _build_ship_display(self, ship: ShipInstance) -> None:
         """Build the full ship display."""
         y = 10
         width = self.rect.width - 40
@@ -389,7 +389,7 @@ class ShipDetailPanel:
 
         return y + 5
 
-    def toggle_layer(self, layer_name: str):
+    def toggle_layer(self, layer_name: str) -> None:
         """Toggle a layer's expanded/collapsed state."""
         if layer_name in self.expanded_layers:
             self.expanded_layers[layer_name] = not self.expanded_layers[layer_name]
@@ -421,7 +421,7 @@ class ShipDetailPanel:
                     return True
         return False
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up all UI elements."""
         self._clear_elements()
         if self.panel:
