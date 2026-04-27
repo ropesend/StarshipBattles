@@ -1,15 +1,17 @@
-"""Storm entity for environmental hazards (PROJ-189).
+"""Storm entity for environmental hazards (PROJ-189; migrated PROJ-300).
 
 Storms are multi-hex environmental hazards that affect ships within their area.
-They apply effects like shield reduction, speed reduction, damage, and fuel drain.
+After PROJ-300 they project `abilities: Dict[str, Any]` (the unified shape) —
+the legacy `effects: StormEffect` field is now deprecated and only kept alive
+for the Phase 3->5 migration window. Phase 7 removes it entirely.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, FrozenSet
+from typing import Any, Dict, FrozenSet, Optional
 
 from game.core.hex_math import HexCoord, hex_to_dict, hex_from_dict
 from game.core.validation_helpers import require_keys
-from game.core.exceptions import PersistenceException
+from game.core.exceptions import PersistenceException, ValidationException
 from game.core.error_codes import ErrorCode
 
 
@@ -70,12 +72,20 @@ class Storm:
     Storms occupy multiple hexes defined by a center location and relative offsets.
     Ships within storm hexes are subject to environmental effects.
 
+    PROJ-300 migrated `effects: StormEffect` to `abilities: Dict[str, Any]` —
+    the abilities shape matches components.json. The `effects` field is
+    DEPRECATED and only kept alive for the Phase 3->5 migration window;
+    Phase 7 removes it. Old saves with `effects` shape FAIL TO LOAD per
+    PROJ-300 D19 — save files are disposable per CLAUDE.md.
+
     Attributes:
         name: Display name (e.g., "Ion Storm Alpha").
         storm_type: Type ID from storms.json (e.g., "ion_storm").
+        description: Lore blurb shown in the storm detail panel.
         location: Center hex, local to star system.
         hex_offsets: Relative offsets from location (includes HexCoord(0,0) for center).
-        effects: Environmental effects applied to ships in the storm.
+        abilities: PROJ-300 abilities dict matching components.json shape.
+        effects: DEPRECATED — legacy StormEffect; Phase 7 removes.
         image_variant: Index into nebulae image group (1-6).
         intensity: 0.0-1.0, controls rendering alpha.
     """
@@ -83,7 +93,9 @@ class Storm:
     storm_type: str
     location: HexCoord
     hex_offsets: FrozenSet[HexCoord]
-    effects: StormEffect
+    abilities: Dict[str, Any] = field(default_factory=dict)
+    description: str = ""
+    effects: Optional[StormEffect] = None  # DEPRECATED — Phase 7 removes
     image_variant: int = 1
     intensity: float = 1.0
 
@@ -101,15 +113,19 @@ class Storm:
     def to_dict(self) -> Dict[str, Any]:
         """Serialize Storm to dict.
 
+        PROJ-300: emits `abilities` (new shape) and `description`. Legacy
+        `effects` field is NOT serialized — old saves are disposable.
+
         Returns:
             Dict suitable for JSON serialization.
         """
         return {
             'name': self.name,
             'storm_type': self.storm_type,
+            'description': self.description,
             'location': hex_to_dict(self.location),
             'hex_offsets': [hex_to_dict(offset) for offset in self.hex_offsets],
-            'effects': self.effects.to_dict(),
+            'abilities': dict(self.abilities),
             'image_variant': self.image_variant,
             'intensity': self.intensity,
         }
@@ -161,16 +177,31 @@ class Storm:
                 }
             ) from e
 
-        # Parse effects (optional, defaults to neutral effects)
-        effects_data = data.get('effects', {})
-        effects = StormEffect.from_dict(effects_data)
+        # PROJ-300 D19: legacy `effects` shape on saves fails loudly.
+        # Save files are disposable per CLAUDE.md System Migration Policy.
+        if 'effects' in data and 'abilities' not in data:
+            raise ValidationException(
+                "Storm: legacy 'effects' shape detected — save predates PROJ-300 "
+                "storm migration. Old saves are not migrated; start a new game.",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={"source": "Storm", "field": "effects"},
+            )
+
+        abilities_data = data.get('abilities', {})
+        if not isinstance(abilities_data, dict):
+            raise PersistenceException(
+                f"Storm: 'abilities' must be a dict, got {type(abilities_data).__name__}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={"source": "Storm", "field": "abilities", "value": abilities_data},
+            )
 
         return cls(
             name=data['name'],
             storm_type=data['storm_type'],
+            description=data.get('description', ''),
             location=location,
             hex_offsets=hex_offsets,
-            effects=effects,
+            abilities=abilities_data,
             image_variant=data.get('image_variant', 1),
             intensity=data.get('intensity', 1.0),
         )

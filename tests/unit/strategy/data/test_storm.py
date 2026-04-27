@@ -115,7 +115,7 @@ class TestStorm:
             storm_type="ion_storm",
             location=HexCoord(5, -2),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(),
+            abilities={},
             image_variant=1,
             intensity=0.8
         )
@@ -123,7 +123,7 @@ class TestStorm:
         assert storm.storm_type == "ion_storm"
         assert storm.location == HexCoord(5, -2)
         assert storm.hex_offsets == frozenset({HexCoord(0, 0)})
-        assert storm.effects.shield_capacity_mult == 1.0
+        assert storm.abilities == {}
         assert storm.image_variant == 1
         assert storm.intensity == 0.8
 
@@ -134,7 +134,7 @@ class TestStorm:
             storm_type="plasma_storm",
             location=HexCoord(3, 4),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(),
+            abilities={},
             image_variant=2,
             intensity=0.5
         )
@@ -154,7 +154,7 @@ class TestStorm:
                 HexCoord(0, 1),   # down-right
                 HexCoord(-1, 1),  # down-left
             }),
-            effects=StormEffect(),
+            abilities={},
             image_variant=3,
             intensity=0.7
         )
@@ -167,54 +167,80 @@ class TestStorm:
         assert storm.occupied_hexes == expected
 
     def test_to_dict(self):
-        """Storm.to_dict should serialize all fields correctly."""
+        """Storm.to_dict should serialize all fields correctly (PROJ-300 v2.0)."""
         storm = Storm(
             name="Test Storm",
             storm_type="radiation_storm",
+            description="A test storm",
             location=HexCoord(7, -3),
             hex_offsets=frozenset({HexCoord(0, 0), HexCoord(1, 0)}),
-            effects=StormEffect(shield_capacity_mult=0.5, damage_per_tick=5.0),
+            abilities={
+                "ShieldModifier": {"multiplier": 0.5, "scope": "sector"},
+                "EnvironmentalDamage": {"rate": 5.0, "damage_type": "radiation", "scope": "sector"},
+            },
             image_variant=4,
-            intensity=0.6
+            intensity=0.6,
         )
         result = storm.to_dict()
 
         assert result['name'] == "Test Storm"
         assert result['storm_type'] == "radiation_storm"
+        assert result['description'] == "A test storm"
         assert result['location'] == {'q': 7, 'r': -3}
         assert result['image_variant'] == 4
         assert result['intensity'] == 0.6
-        assert result['effects']['shield_capacity_mult'] == 0.5
-        assert result['effects']['damage_per_tick'] == 5.0
+        assert result['abilities']['ShieldModifier']['multiplier'] == 0.5
+        assert result['abilities']['EnvironmentalDamage']['rate'] == 5.0
+        # No legacy 'effects' field in serialized output.
+        assert 'effects' not in result
         # hex_offsets should be a list of dicts
         assert len(result['hex_offsets']) == 2
         offsets_as_tuples = {(d['q'], d['r']) for d in result['hex_offsets']}
         assert offsets_as_tuples == {(0, 0), (1, 0)}
 
     def test_from_dict(self):
-        """Storm.from_dict should deserialize all fields correctly."""
+        """Storm.from_dict deserializes the v2.0 abilities shape."""
         data = {
             'name': "Deserialized Storm",
             'storm_type': "plasma_storm",
+            'description': "Plasma storm",
             'location': {'q': -5, 'r': 8},
             'hex_offsets': [{'q': 0, 'r': 0}, {'q': -1, 'r': 0}],
-            'effects': {'shield_capacity_mult': 0.3, 'thrust_mult': 0.7},
+            'abilities': {
+                'ShieldModifier': {'multiplier': 0.3, 'scope': 'sector'},
+                'ThrustModifier': {'multiplier': 0.7, 'scope': 'sector'},
+            },
             'image_variant': 5,
-            'intensity': 0.9
+            'intensity': 0.9,
         }
         storm = Storm.from_dict(data)
 
         assert storm.name == "Deserialized Storm"
         assert storm.storm_type == "plasma_storm"
+        assert storm.description == "Plasma storm"
         assert storm.location == HexCoord(-5, 8)
         assert storm.hex_offsets == frozenset({HexCoord(0, 0), HexCoord(-1, 0)})
-        assert storm.effects.shield_capacity_mult == 0.3
-        assert storm.effects.thrust_mult == 0.7
+        assert storm.abilities["ShieldModifier"]["multiplier"] == 0.3
+        assert storm.abilities["ThrustModifier"]["multiplier"] == 0.7
         assert storm.image_variant == 5
         assert storm.intensity == 0.9
 
+    def test_from_dict_legacy_effects_raises(self):
+        """PROJ-300 D19: legacy `effects` shape on saves fails loudly."""
+        from game.core.exceptions import ValidationException
+
+        data = {
+            'name': "Old Save Storm",
+            'storm_type': "ion_storm",
+            'location': {'q': 0, 'r': 0},
+            'hex_offsets': [{'q': 0, 'r': 0}],
+            'effects': {'shield_capacity_mult': 0.5},  # Legacy shape
+        }
+        with pytest.raises(ValidationException):
+            Storm.from_dict(data)
+
     def test_from_dict_with_missing_optional_fields(self):
-        """Storm.from_dict should use defaults for missing optional fields."""
+        """Storm.from_dict uses defaults for missing optional fields."""
         data = {
             'name': "Minimal Storm",
             'storm_type': "ion_storm",
@@ -225,17 +251,19 @@ class TestStorm:
 
         assert storm.name == "Minimal Storm"
         assert storm.storm_type == "ion_storm"
-        # Effects should use defaults
-        assert storm.effects.shield_capacity_mult == 1.0
+        # PROJ-300: abilities defaults to empty dict.
+        assert storm.abilities == {}
+        assert storm.description == ''
         # image_variant and intensity should have defaults
         assert storm.image_variant == 1
         assert storm.intensity == 1.0
 
     def test_serialization_roundtrip(self):
-        """Storm should serialize and deserialize identically."""
+        """Storm should serialize and deserialize identically (v2.0 shape)."""
         original = Storm(
             name="Roundtrip Storm",
             storm_type="radiation_storm",
+            description="Round-trip test",
             location=HexCoord(-10, 15),
             hex_offsets=frozenset({
                 HexCoord(0, 0),
@@ -243,28 +271,25 @@ class TestStorm:
                 HexCoord(0, -1),
                 HexCoord(-1, 0),
             }),
-            effects=StormEffect(
-                shield_capacity_mult=0.4,
-                thrust_mult=0.6,
-                strategic_mult=0.8,
-                damage_per_tick=12.5,
-                fuel_drain_per_tick=2.5
-            ),
+            abilities={
+                "ShieldModifier": {"multiplier": 0.4, "scope": "sector"},
+                "ThrustModifier": {"multiplier": 0.6, "scope": "sector"},
+                "StrategicSpeedModifier": {"multiplier": 0.8, "scope": "sector"},
+                "EnvironmentalDamage": {"rate": 12.5, "damage_type": "radiation", "scope": "sector"},
+                "FuelDrain": {"rate": 2.5, "scope": "sector"},
+            },
             image_variant=6,
-            intensity=0.75
+            intensity=0.75,
         )
         data = original.to_dict()
         restored = Storm.from_dict(data)
 
         assert restored.name == original.name
         assert restored.storm_type == original.storm_type
+        assert restored.description == original.description
         assert restored.location == original.location
         assert restored.hex_offsets == original.hex_offsets
-        assert restored.effects.shield_capacity_mult == original.effects.shield_capacity_mult
-        assert restored.effects.thrust_mult == original.effects.thrust_mult
-        assert restored.effects.strategic_mult == original.effects.strategic_mult
-        assert restored.effects.damage_per_tick == original.effects.damage_per_tick
-        assert restored.effects.fuel_drain_per_tick == original.effects.fuel_drain_per_tick
+        assert restored.abilities == original.abilities
         assert restored.image_variant == original.image_variant
         assert restored.intensity == original.intensity
 
@@ -316,9 +341,9 @@ class TestStarSystemStormIntegration:
             storm_type="ion_storm",
             location=HexCoord(2, 3),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(shield_capacity_mult=0.5),
+            abilities={"ShieldModifier": {"multiplier": 0.5, "scope": "sector"}},
             image_variant=1,
-            intensity=0.8
+            intensity=0.8,
         )
         system.storms.append(storm)
 
@@ -329,7 +354,7 @@ class TestStarSystemStormIntegration:
         assert data['storms'][0]['storm_type'] == "ion_storm"
 
     def test_star_system_with_storms_deserializes(self):
-        """StarSystem.from_dict should restore storms."""
+        """StarSystem.from_dict should restore storms (PROJ-300 v2.0)."""
         data = {
             'name': "Restored System",
             'global_location': {'q': 10, 'r': -5},
@@ -342,9 +367,11 @@ class TestStarSystemStormIntegration:
                     'storm_type': "plasma_storm",
                     'location': {'q': 1, 'r': 2},
                     'hex_offsets': [{'q': 0, 'r': 0}, {'q': 1, 'r': 0}],
-                    'effects': {'damage_per_tick': 5.0},
+                    'abilities': {
+                        'EnvironmentalDamage': {'rate': 5.0, 'damage_type': 'plasma', 'scope': 'sector'},
+                    },
                     'image_variant': 3,
-                    'intensity': 0.6
+                    'intensity': 0.6,
                 }
             ]
         }
@@ -355,12 +382,12 @@ class TestStarSystemStormIntegration:
         assert storm.name == "Plasma Storm"
         assert storm.storm_type == "plasma_storm"
         assert storm.location == HexCoord(1, 2)
-        assert storm.effects.damage_per_tick == 5.0
+        assert storm.abilities['EnvironmentalDamage']['rate'] == 5.0
         assert storm.image_variant == 3
         assert storm.intensity == 0.6
 
     def test_star_system_serialization_roundtrip_with_storms(self):
-        """StarSystem with storms should round-trip through serialization."""
+        """StarSystem with storms should round-trip through serialization (v2.0)."""
         system = StarSystem(
             name="Roundtrip System",
             global_location=HexCoord(20, 20)
@@ -370,13 +397,13 @@ class TestStarSystemStormIntegration:
             storm_type="radiation_storm",
             location=HexCoord(-5, 3),
             hex_offsets=frozenset({HexCoord(0, 0), HexCoord(1, -1)}),
-            effects=StormEffect(
-                shield_capacity_mult=0.4,
-                thrust_mult=0.7,
-                damage_per_tick=10.0
-            ),
+            abilities={
+                "ShieldModifier": {"multiplier": 0.4, "scope": "sector"},
+                "ThrustModifier": {"multiplier": 0.7, "scope": "sector"},
+                "EnvironmentalDamage": {"rate": 10.0, "damage_type": "radiation", "scope": "sector"},
+            },
             image_variant=5,
-            intensity=0.9
+            intensity=0.9,
         )
         system.storms.append(storm)
 
@@ -389,9 +416,7 @@ class TestStarSystemStormIntegration:
         assert rs.storm_type == storm.storm_type
         assert rs.location == storm.location
         assert rs.hex_offsets == storm.hex_offsets
-        assert rs.effects.shield_capacity_mult == storm.effects.shield_capacity_mult
-        assert rs.effects.thrust_mult == storm.effects.thrust_mult
-        assert rs.effects.damage_per_tick == storm.effects.damage_per_tick
+        assert rs.abilities == storm.abilities
         assert rs.image_variant == storm.image_variant
         assert rs.intensity == storm.intensity
 
@@ -476,7 +501,7 @@ class TestGalaxyStormZoneRegistration:
             storm_type="ion_storm",
             location=HexCoord(3, 2),
             hex_offsets=frozenset({HexCoord(0, 0), HexCoord(1, 0)}),
-            effects=StormEffect(),
+            abilities={},
             image_variant=1,
             intensity=0.8
         )
@@ -509,7 +534,7 @@ class TestGalaxyStormZoneRegistration:
             storm_type="plasma_storm",
             location=HexCoord(0, 0),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(),
+            abilities={},
             image_variant=2,
             intensity=0.5
         )
@@ -537,7 +562,7 @@ class TestGalaxyStormZoneRegistration:
             storm_type="radiation_storm",
             location=HexCoord(5, 5),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(damage_per_tick=10.0),
+            abilities={"EnvironmentalDamage": {"rate": 10.0, "damage_type": "radiation", "scope": "sector"}},
             image_variant=4,
             intensity=0.7
         )
@@ -576,7 +601,7 @@ class TestGalaxyStormZoneRegistration:
                 HexCoord(2, 0),   # right-right
                 HexCoord(0, 1),   # down
             }),
-            effects=StormEffect(),
+            abilities={},
             image_variant=3,
             intensity=0.6
         )

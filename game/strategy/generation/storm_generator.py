@@ -1,13 +1,18 @@
-"""Storm generator for environmental hazards (PROJ-189).
+"""Storm generator for environmental hazards (PROJ-189; PROJ-300 schema v2.0).
 
-Generates storm entities during galaxy system generation.
+Generates storm entities during galaxy system generation. Reads the v2.0
+storms.json schema (abilities-dict shape per PROJ-300) and emits Storm
+instances with `abilities` populated. The legacy v1.0 schema (with `effects`
+block) is no longer accepted — Phase 7 of PROJ-300 deletes the StormEffect
+class.
 """
+import copy
 import random
 from typing import Any, Dict, List, Optional, Set
 
 from game.core.hex_math import HexCoord, hex_random_cluster
 from game.core.string_utils import display_name
-from game.strategy.data.storm import Storm, StormEffect
+from game.strategy.data.storm import Storm
 
 # Greek letters for storm naming
 GREEK_LETTERS = [
@@ -94,15 +99,12 @@ class StormGenerator:
             # Generate cluster shape
             hex_offsets = hex_random_cluster(center, target_size, rng, frozenset(occupied))
 
-            # Build effects from type definition
-            effects_data = storm_type_def.get("effects", {})
-            effects = StormEffect(
-                shield_capacity_mult=effects_data.get("shield_capacity_mult", 1.0),
-                thrust_mult=effects_data.get("thrust_mult", 1.0),
-                strategic_mult=effects_data.get("strategic_mult", 1.0),
-                damage_per_tick=effects_data.get("damage_per_tick", 0.0),
-                fuel_drain_per_tick=effects_data.get("fuel_drain_per_tick", 0.0),
-            )
+            # PROJ-300 v2.0 schema: copy abilities from the type template.
+            # No min/max rolls on storms today — PROJ-301..304 use the shared
+            # roll_intrinsic_abilities helper for those.
+            abilities_template = storm_type_def.get("abilities", {})
+            storm_abilities: Dict[str, Any] = copy.deepcopy(abilities_template)
+            storm_description = storm_type_def.get("description", "")
 
             # Select image variant
             image_variants = storm_type_def.get("image_variants", [1])
@@ -117,13 +119,14 @@ class StormGenerator:
             name = f"{type_name} {greek_letter}"
             greek_index += 1
 
-            # Create storm
+            # Create storm (PROJ-300 v2.0 — abilities + description, no effects).
             storm = Storm(
                 name=name,
                 storm_type=storm_type_id,
+                description=storm_description,
                 location=center,
                 hex_offsets=hex_offsets,
-                effects=effects,
+                abilities=storm_abilities,
                 image_variant=image_variant,
                 intensity=intensity,
             )

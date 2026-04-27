@@ -35,19 +35,18 @@ class StormAbilitySource:
     def get_abilities(self) -> Dict[str, Any]:
         """Return storm abilities dict.
 
-        Phase-5-aware: if the storm carries an `abilities` dict (new shape),
-        return it. Otherwise, translate from the legacy `effects: StormEffect`
-        shape into the equivalent abilities dict on-the-fly.
+        Phase-5-aware: if the storm carries a non-empty `abilities` dict, use
+        it. Otherwise, fall back to translating from the legacy
+        `effects: StormEffect` shape (Phase 7 removes the fallback).
         """
         abilities_attr = getattr(self.storm, 'abilities', None)
-        if isinstance(abilities_attr, dict):
+        if isinstance(abilities_attr, dict) and abilities_attr:
             return abilities_attr
 
-        # Legacy translation — Phase 5 removes this once Storm.abilities is
-        # the only shape.
+        # Legacy translation — Phase 7 removes this once StormEffect is gone.
         effects = getattr(self.storm, 'effects', None)
         if effects is None:
-            return {}
+            return abilities_attr if isinstance(abilities_attr, dict) else {}
         return _legacy_effects_to_abilities(effects)
 
     def affects_hex(self, hex_coord) -> bool:

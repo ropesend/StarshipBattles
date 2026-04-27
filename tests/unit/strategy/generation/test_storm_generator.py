@@ -19,19 +19,24 @@ from game.strategy.data.storm import Storm, StormEffect
 def storm_defs():
     """Sample storm definitions for testing."""
     return {
-        "version": "1.0",
+        "version": "2.0",
         "storm_types": {
             "ion_storm": {
                 "name": "Ion Storm",
                 "description": "Test ion storm",
-                "effects": {"shield_capacity_mult": 0.5, "strategic_mult": 0.8},
+                "abilities": {
+                    "ShieldModifier":         {"multiplier": 0.5, "scope": "sector"},
+                    "StrategicSpeedModifier": {"multiplier": 0.8, "scope": "sector"},
+                },
                 "size": {"min": 2, "max": 5},
                 "image_variants": [1, 2, 3]
             },
             "plasma_storm": {
                 "name": "Plasma Storm",
                 "description": "Test plasma storm",
-                "effects": {"damage_per_tick": 0.5},
+                "abilities": {
+                    "EnvironmentalDamage": {"rate": 0.5, "damage_type": "plasma", "scope": "sector"},
+                },
                 "size": {"min": 3, "max": 7},
                 "image_variants": [4, 5, 6]
             }
@@ -311,8 +316,8 @@ class TestStormGeneratorOutputFormat:
         assert storm.name  # Non-empty name
         assert "Ion Storm" in storm.name  # Contains type name
 
-    def test_storm_has_correct_effects(self, storm_defs, mock_star_system):
-        """Generated storms have effects from type definition."""
+    def test_storm_has_correct_abilities(self, storm_defs, mock_star_system):
+        """Generated storms have abilities from type definition (PROJ-300 v2.0)."""
         from game.strategy.generation.storm_generator import StormGenerator
 
         generator = StormGenerator(storm_defs)
@@ -327,9 +332,11 @@ class TestStormGeneratorOutputFormat:
         storms = generator.generate_storms(mock_star_system, blueprint_config, rng)
 
         storm = storms[0]
-        # ion_storm has shield_capacity_mult=0.5, strategic_mult=0.8
-        assert storm.effects.shield_capacity_mult == 0.5
-        assert storm.effects.strategic_mult == 0.8
+        # ion_storm declares ShieldModifier 0.5x and StrategicSpeedModifier 0.8x.
+        assert storm.abilities["ShieldModifier"]["multiplier"] == 0.5
+        assert storm.abilities["StrategicSpeedModifier"]["multiplier"] == 0.8
+        # Description carried through from registry template.
+        assert storm.description == "Test ion storm"
 
     def test_storm_has_valid_image_variant(self, storm_defs, mock_star_system):
         """Generated storms have image_variant from type definition."""
