@@ -19,6 +19,46 @@ def _legacy_provider_label(provider: dict) -> str:
         return f"{facility} ({planet})"
     return facility or planet or "(unknown)"
 
+
+def _format_star_hazard_hints(effects) -> list:
+    """PROJ-302 D8: derive hazard messages from system-effects providers.
+
+    A "hazard" is any star-source ability that materially threatens fleets
+    in the system: ShieldModifier multiplier < 1.0, or EnvironmentalDamage
+    rate > 0. Returns a list of human-readable hint strings to display at
+    the top of the System panel. Empty list = no hazard hint.
+    """
+    messages = []
+    for effect in effects or []:
+        ability = effect.get('ability_name')
+        for provider in effect.get('providers', []) or []:
+            if provider.get('source_kind') != 'star':
+                continue
+            label = provider.get('source_label', 'Star')
+            ability_data = provider.get('ability_data') or {}
+            if ability == 'ShieldModifier':
+                mult = ability_data.get('multiplier', 1.0)
+                if mult < 1.0:
+                    pct = int(round((1.0 - mult) * 100))
+                    messages.append(
+                        f"⚠ Hazard: {label} — system-wide shields -{pct}%"
+                    )
+            elif ability == 'EnvironmentalDamage':
+                rate = ability_data.get('rate', 0.0)
+                if rate > 0:
+                    dtype = ability_data.get('damage_type', 'environmental')
+                    messages.append(
+                        f"⚠ Hazard: {label} — {dtype} damage {rate:.2f}/turn system-wide"
+                    )
+            elif ability == 'ThrustModifier':
+                mult = ability_data.get('multiplier', 1.0)
+                if mult < 1.0:
+                    pct = int(round((1.0 - mult) * 100))
+                    messages.append(
+                        f"⚠ Hazard: {label} — thrust impaired -{pct}% system-wide"
+                    )
+    return messages
+
 class SystemTreeItem:
     """Base class for items in the tree."""
     def __init__(self, obj, label, icon_surface=None, container=None, manager=None, 
@@ -276,6 +316,10 @@ class SystemTreePanel:
 
         # 3.5 System Effects (system panel) or Sector Effects (sector panel)
         if system_obj and not flat_view:
+            # PROJ-302 D8: hostile-system hazard hint comes BEFORE the
+            # full effects list so the warning is the first thing the
+            # player sees on a pulsar / neutron-star / black-hole system.
+            self._add_system_hazard_hint(system_obj, scene_interface)
             self._add_system_effects(system_obj, scene_interface)
         if system_obj and flat_view and hex_coord:
             self._add_sector_effects(system_obj, scene_interface, hex_coord)
@@ -394,6 +438,45 @@ class SystemTreePanel:
                 empire_id = player_empire.id
             registries = getattr(session, 'registries', None)
         return empire_id, registries
+
+    def _add_system_hazard_hint(self, system_obj, scene_interface) -> None:
+        """PROJ-302 D8: render a hazard warning at the top of the System
+        panel when the system's star projects hostile system-scope abilities.
+
+        Per D7 (uncapped hostile star systems), pulsars / neutron stars /
+        black holes / blue giants can apply system-wide ShieldModifier or
+        EnvironmentalDamage that would surprise an unprepared player. The
+        hazard hint surfaces these BEFORE combat so the danger is visible.
+        """
+        try:
+            from game.strategy.services.system_effects_collector import collect_system_effects
+
+            empire_id, registries = self._get_empire_context(scene_interface)
+            if empire_id is None:
+                return
+
+            effects = collect_system_effects(system_obj, empire_id, registries)
+            hazard_messages = _format_star_hazard_hints(effects)
+            if not hazard_messages:
+                return
+
+            for msg in hazard_messages:
+                hint_item = SystemTreeItem(
+                    None, msg, None,
+                    container=self.scrolling_container,
+                    manager=self.manager,
+                    width=self.rect.width - 20,
+                    indent=0,
+                    parent_panel=self,
+                )
+                # Mark for renderer styling: hazard items use a red border /
+                # color hint per the D8 spec. Renderer reads `is_hazard`.
+                hint_item.is_hazard = True
+                self.root_items.append(hint_item)
+                self.items.append(hint_item)
+        except Exception:  # Intentional broad catch: effect collection traverses save/registry data; tree panel must not crash on display
+            import logging
+            logging.getLogger(__name__).debug("Could not render system hazard hint", exc_info=True)
 
     def _add_system_effects(self, system_obj, scene_interface) -> None:
         """Add system-scope effects section to the tree."""

@@ -78,6 +78,38 @@ def test_affects_hex_at_global_location():
     assert src.affects_hex(HexCoord(99, 99)) is False
 
 
+def test_affects_hex_multi_hex_dyson_sphere():
+    """PROJ-301 D8: multi-hex planet (radius_hexes > 0) projects from EVERY
+    occupied hex, not just center. A Dyson sphere with radius_hexes=2 covers
+    7 hexes (center + 6-ring); intrinsic abilities must fire at all 7."""
+    @dataclass
+    class _DysonPlanet:
+        id: int = 99
+        name: str = "Dyson Alpha"
+        planet_type: Any = field(default_factory=lambda: _MockPlanetType(name="DYSON_SPHERE"))
+        location: Any = HexCoord(0, 0)
+        radius_hexes: int = 2  # center + ring 1 = 7 hexes
+        intrinsic_abilities: Dict[str, Any] = field(default_factory=lambda: {
+            "EnvironmentalDamage": {"rate": 0.5, "damage_type": "radiation", "scope": "sector"},
+        })
+
+    src = PlanetIntrinsicAbilitySource(
+        planet=_DysonPlanet(),
+        system=_MockSystem(global_location=HexCoord(10, 10)),
+    )
+    # Center
+    assert src.affects_hex(HexCoord(10, 10)) is True
+    # Ring 1 — all 6 neighbors of (10, 10) — using cube coordinates the six
+    # neighbors are: (1,0), (-1,0), (0,1), (0,-1), (1,-1), (-1,1).
+    for offset_q, offset_r in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]:
+        assert src.affects_hex(HexCoord(10 + offset_q, 10 + offset_r)) is True, (
+            f"Dyson sphere should project at ring-1 neighbor ({offset_q}, {offset_r})"
+        )
+    # Outside the footprint: not affected.
+    assert src.affects_hex(HexCoord(99, 99)) is False
+    assert src.affects_hex(HexCoord(12, 12)) is False
+
+
 def test_get_activation_state_is_none():
     src = PlanetIntrinsicAbilitySource(planet=_MockPlanet(), system=_MockSystem())
     assert src.get_activation_state("EnvironmentalDamage") is None

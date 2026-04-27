@@ -56,7 +56,46 @@ class GameInitializer:
         for empire in empires:
             empire.set_galaxy(galaxy)
 
+        # PROJ-305: wire fleet lookups so FleetAbilitySource surfaces in the
+        # ability iterator. Without this, _fleet_provider yields nothing and
+        # fleet sector-effects (e.g. Flagship Shield Projector) never render.
+        GameInitializer._wire_fleet_lookups(galaxy, empires)
+
         return galaxy, empires
+
+    @staticmethod
+    def _wire_fleet_lookups(galaxy: Galaxy, empires: List[Empire]) -> None:
+        """PROJ-305: register fleet-at-hex / fleets-in-system callbacks with
+        the unified ability iterator. The closures hold a reference to the
+        empires list (mutable — new fleets and dead empires are both seen).
+        """
+        from game.strategy.services.ability_iterator import set_fleet_lookups
+
+        def _at_hex(system, hex_coord):
+            for empire in empires:
+                for fleet in getattr(empire, 'fleets', []) or []:
+                    if getattr(fleet, 'location', None) == hex_coord:
+                        yield fleet
+
+        def _in_system(system):
+            sys_loc = getattr(system, 'global_location', None)
+            if sys_loc is None:
+                return
+            # System contains every hex within radius 50 of its global_location.
+            # Cheap path: check fleets whose location is within that radius.
+            from game.core.hex_math import hex_distance
+            for empire in empires:
+                for fleet in getattr(empire, 'fleets', []) or []:
+                    floc = getattr(fleet, 'location', None)
+                    if floc is None:
+                        continue
+                    try:
+                        if hex_distance(floc, sys_loc) <= 50:
+                            yield fleet
+                    except Exception:  # Intentional broad catch: hex impl errors don't poison iteration
+                        continue
+
+        set_fleet_lookups(at_hex=_at_hex, in_system=_in_system)
 
     @staticmethod
     def _create_empires(config: GameConfig) -> List[Empire]:

@@ -110,12 +110,14 @@ class TestGalaxyGenerationStorms:
         galaxy.generate_systems(count=8, min_dist=30)
 
         # Collect original storm data
+        # PROJ-300 Phase 7: Storm.effects/StormEffect were eradicated; the
+        # abilities-dict shape is now the single source of truth.
         original_storms = {}
         for system in galaxy.systems.values():
             if system.storms:
                 original_storms[system.name] = [
                     (s.name, s.storm_type, s.location, s.hex_offsets,
-                     s.effects.to_dict(), s.image_variant, s.intensity)
+                     dict(s.abilities), s.image_variant, s.intensity)
                     for s in system.storms
                 ]
 
@@ -139,13 +141,13 @@ class TestGalaxyGenerationStorms:
             assert restored_system is not None
             assert len(restored_system.storms) == len(original_storm_list)
 
-            for i, (name, stype, loc, offsets, effects, variant, intensity) in enumerate(original_storm_list):
+            for i, (name, stype, loc, offsets, abilities, variant, intensity) in enumerate(original_storm_list):
                 restored = restored_system.storms[i]
                 assert restored.name == name
                 assert restored.storm_type == stype
                 assert restored.location == loc
                 assert restored.hex_offsets == offsets
-                assert restored.effects.to_dict() == effects
+                assert dict(restored.abilities) == abilities
                 assert restored.image_variant == variant
                 assert restored.intensity == intensity
 
@@ -185,10 +187,18 @@ class TestGalaxyGenerationStorms:
                     f"Invalid intensity {storm.intensity} for '{storm.name}'"
                 )
 
-                # Effects should have valid multiplier ranges
-                eff = storm.effects
-                assert 0.0 <= eff.shield_capacity_mult <= 1.0
-                assert 0.0 <= eff.thrust_mult <= 1.0
-                assert 0.0 <= eff.strategic_mult <= 1.0
-                assert eff.damage_per_tick >= 0.0
-                assert eff.fuel_drain_per_tick >= 0.0
+                # PROJ-300 v2.0 — abilities dict, not StormEffect dataclass.
+                # Each ability entry: multipliers in [0.0, 1.0], rates >= 0.
+                for ability_name, entry in storm.abilities.items():
+                    if not isinstance(entry, dict):
+                        continue
+                    if 'multiplier' in entry:
+                        assert 0.0 <= entry['multiplier'] <= 1.0, (
+                            f"Storm '{storm.name}' {ability_name} multiplier "
+                            f"{entry['multiplier']} out of [0.0, 1.0]"
+                        )
+                    if 'rate' in entry:
+                        assert entry['rate'] >= 0.0, (
+                            f"Storm '{storm.name}' {ability_name} rate "
+                            f"{entry['rate']} is negative"
+                        )

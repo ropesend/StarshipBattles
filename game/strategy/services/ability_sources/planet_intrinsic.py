@@ -50,21 +50,34 @@ class PlanetIntrinsicAbilitySource:
         return dict(getattr(self.planet, 'intrinsic_abilities', None) or {})
 
     def affects_hex(self, hex_coord) -> bool:
-        """True if the queried hex is at the planet's global location.
+        """True if the queried hex is anywhere within the planet's footprint.
 
-        For multi-hex bodies (Dyson sphere with `radius_hexes > 0`), the
-        adapter currently only matches the planet center. PROJ-301 D8 notes
-        that future multi-hex support should walk all occupied hexes.
+        PROJ-301 D8: multi-hex bodies (Dyson sphere with `radius_hexes > 0`)
+        project intrinsic abilities from EVERY occupied hex, not just the
+        center. Standard single-hex planets reduce to the center match.
         """
         planet_loc = getattr(self.planet, 'location', None)
         sys_loc = getattr(self.system, 'global_location', None) or getattr(self.system, 'location', None)
         if planet_loc is None or sys_loc is None:
             return False
+
+        # Multi-hex: walk every occupied local-hex, translated to global.
+        radius_hexes = getattr(self.planet, 'radius_hexes', 0) or 0
+        if radius_hexes > 0:
+            occupied = getattr(self.planet, 'occupied_hexes', None)
+            if occupied is None:
+                # Fallback: compute from radius_hexes.
+                from game.core.hex_math import hex_circle_filled
+                occupied = hex_circle_filled(planet_loc, max(0, radius_hexes - 1))
+            try:
+                return any(hex_coord == sys_loc + local for local in occupied)
+            except TypeError:
+                return False
+
         try:
-            global_hex = sys_loc + planet_loc
+            return hex_coord == sys_loc + planet_loc
         except TypeError:
             return False
-        return hex_coord == global_hex
 
     def affects_system(self, system) -> bool:
         return system is self.system
