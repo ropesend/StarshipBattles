@@ -7,6 +7,8 @@ Supports:
 - Loading a specific turn from a save
 - Deleting saves
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
@@ -52,7 +54,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         self._create_ui()
         self._load_saves()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create UI elements."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
@@ -113,7 +115,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         self.btn_expand.disable()
         self.btn_delete.disable()
 
-    def _load_saves(self):
+    def _load_saves(self) -> None:
         """Load list of available saves from SaveGameService."""
         from game.strategy.systems.save_game_service import SaveGameService
 
@@ -128,7 +130,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         self.saves_list = saves
         self._refresh_list_display()
 
-    def _refresh_list_display(self):
+    def _refresh_list_display(self) -> None:
         """Refresh the list display based on current state."""
         from game.strategy.systems.save_game_service import SaveGameService
 
@@ -214,7 +216,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
 
         return handled
 
-    def _handle_selection_change(self):
+    def _handle_selection_change(self) -> None:
         """Handle selection change in list."""
         selected_item = self.saves_listbox.get_single_selection()
 
@@ -289,7 +291,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             self.info_label.set_text(f"Load {save_name} at Turn {turn_num}")
             logger.debug(f"Selected turn {turn_num} from {save_name}")
 
-    def _on_load_clicked(self):
+    def _on_load_clicked(self) -> None:
         """Handle Load button click."""
         if not self.selected_save:
             return
@@ -301,7 +303,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         self.on_load_callback(save_path, self.selected_turn)
         self.kill()
 
-    def _on_expand_clicked(self):
+    def _on_expand_clicked(self) -> None:
         """Toggle turn list expansion for selected save."""
         if not self.selected_save:
             return
@@ -326,7 +328,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
 
         self._refresh_list_display()
 
-    def _on_delete_clicked(self):
+    def _on_delete_clicked(self) -> None:
         """Handle Delete button click."""
         if not self.selected_save:
             return
@@ -345,13 +347,13 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             window_title="Delete Save Game"
         )
 
-    def _on_cancel_clicked(self):
+    def _on_cancel_clicked(self) -> None:
         """Handle Cancel button click."""
         logger.debug("Load game cancelled")
         self.on_cancel_callback()
         self.kill()
 
-    def _handle_delete_confirmation(self):
+    def _handle_delete_confirmation(self) -> None:
         """Actually delete the selected save."""
         from game.strategy.systems.save_game_service import SaveGameService
 
@@ -387,7 +389,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
                 window_title="Error"
             )
 
-    def update(self, time_delta):
+    def update(self, time_delta) -> None:
         """Update window."""
         super().update(time_delta)
 

@@ -5,6 +5,10 @@ Mirrors planet_list_sidebar.py for stars.
 
 PROJ-231: Star List Panel.
 """
+from __future__ import annotations
+
+from typing import Any
+
 import pygame
 from pygame_gui.elements import (
     UIScrollingContainer, UILabel, UIButton, UITextEntryLine,
@@ -15,7 +19,7 @@ from game.ui.screens.star_list_filter_manager import STAR_TYPES
 
 
 def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
-                  star_ranges, columns, preset_manager):
+                  star_ranges, columns, preset_manager) -> dict[str, Any]:
     """Build sidebar UI controls for star list filtering.
 
     Args:
@@ -86,7 +90,7 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
         y_off += 35
 
     # --- Range Sliders ---
-    def add_range(label, key, min_limit, max_limit):
+    def add_range(label, key, min_limit, max_limit) -> None:
         nonlocal y_off
         UILabel(pygame.Rect(10, y_off, width, 20), label, manager, container=content_container)
         y_off += 20
