@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Agent-Done (awaiting user review)
 **Objective:** Translate the categorized findings into concrete remediation projects. The final deliverable is `findings/nesting_review.md`.
 
 **Prerequisites:** Phase 2 complete; archetype assignments done.
@@ -24,8 +24,8 @@
 - What are the cross-cutting patterns
 - Bottom line: how much of the 69% deep-nesting figure is really a problem?
 
-- [ ] Write the executive summary
-- [ ] Save to top of `findings/nesting_review.md`
+- [x] Write the executive summary
+- [x] Save to top of `findings/nesting_review.md`
 
 **Notes:**
 
@@ -35,9 +35,9 @@
 **File:** `findings/nesting_review.md` (continue)
 **Tests:** None.
 
-- [ ] Top-10 functions by max_depth (with file paths and depth values)
-- [ ] Top-10 files by total nested-statement count
-- [ ] Distribution histogram (how many functions at depth 4, 5, 6, 7+)
+- [x] Top-10 functions by max_depth (with file paths and depth values)
+- [x] Top-10 files by total nested-statement count
+- [x] Distribution histogram (how many functions at depth 4, 5, 6, 7+)
 
 **Notes:**
 
@@ -52,7 +52,7 @@ For each archetype (defensive / try-ladder / state-machine / parser / loop-stack
 - 1-2 concrete examples from the codebase (file:line, with quoted code)
 - Verdict (legitimate vs refactor) + suggested approach
 
-- [ ] Write the catalog
+- [x] Write the catalog
 
 **Notes:**
 
@@ -78,8 +78,8 @@ Example format:
 **Suggested project ID:** PROJ-3xx (next available)
 ```
 
-- [ ] Write recommendations
-- [ ] Number recommendations 1, 2, 3, ...
+- [x] Write recommendations
+- [x] Number recommendations 1, 2, 3, ...
 
 **Notes:**
 
@@ -89,9 +89,9 @@ Example format:
 **File:** `findings/nesting_review.md` (continue)
 **Tests:** None.
 
-- [ ] List functions/files where deep nesting IS legitimate (parsers, state machines mirroring real domain shape)
-- [ ] Future agents reading the review must NOT propose refactoring these
-- [ ] Brief explanation per item
+- [x] List functions/files where deep nesting IS legitimate (parsers, state machines mirroring real domain shape)
+- [x] Future agents reading the review must NOT propose refactoring these
+- [x] Brief explanation per item
 
 **Notes:**
 
@@ -106,6 +106,7 @@ Example format:
 - [ ] Annotate `findings/nesting_review.md` with which recommendations were ACCEPTED, REJECTED, or DEFERRED
 
 **Notes:**
+- Pending user — agent run leaves §7 of `findings/nesting_review.md` blank with the annotation table ready to fill in.
 
 ---
 
@@ -117,13 +118,14 @@ Example format:
   - `- **PROJ-310** — Deep Nesting Investigative Review (2026-MM-DD). All 3 phases complete. Read-only investigation. Output: findings/nesting_review.md categorizes the 69.1% deep-nesting figure into legitimate vs refactor archetypes. Recommended N follow-up projects ([accepted M, rejected K, deferred L]).`
 
 **Notes:**
+- Deferred to user — out of scope for the agent run per the prompt.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] `findings/nesting_review.md` exists, complete
+- [x] `findings/nesting_review.md` exists, complete
 - [ ] User has reviewed the deliverable
 - [ ] Recommendation status (accept/reject/defer) annotated
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to "Complete — pending archive"
+- [x] Update status at top of this file to `Agent-Done`
+- [x] Update plan.md phase table row to `Awaiting User Review`
+- [x] Update plan.md Current State to "Agent run complete — pending user review"
