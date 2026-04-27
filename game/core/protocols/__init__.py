@@ -65,6 +65,7 @@ from game.core.protocols.strategy_domain import (
     is_ship_instance,
 )
 from game.core.protocols.strategy_entities import (
+    IAbilitySource,
     IFleet,
     IOrderable,
     IPlanet,
@@ -74,6 +75,7 @@ from game.core.protocols.strategy_entities import (
     IStorm,
     IWarpPoint,
     IZoneOccupant,
+    is_ability_source,
     is_fleet,
     is_planet,
     is_sector_environment,
@@ -103,6 +105,7 @@ __all__ = [
     "IWarpPoint",
     "ISectorEnvironment",
     "IStorm",
+    "IAbilitySource",
     # Strategy entities — TypeGuards
     "is_star_system",
     "is_star",
@@ -112,6 +115,7 @@ __all__ = [
     "is_sector_environment",
     "is_storm",
     "is_zone_occupant",
+    "is_ability_source",
     # Strategy domain — protocol classes
     "IEmpire",
     "IFacility",

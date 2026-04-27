@@ -356,6 +356,56 @@ class IStorm(Protocol):
         ...
 
 
+@runtime_checkable
+class IAbilitySource(Protocol):
+    """Protocol for any entity that contributes abilities to the unified collector (PROJ-300).
+
+    Sources expose their abilities as a `{ability_name: ability_data | [data,...]}`
+    dict matching the components.json shape. Each ability_data dict carries
+    `scope` plus multiplier/rate/etc. Sources also describe where they apply via
+    `affects_hex` (hex-scoped) and `affects_system` (system-scoped), and provide
+    identity for UI rendering.
+
+    Source-kind idiosyncrasies (facility activation states, owner filtering)
+    live inside source-specific adapters so the collector remains uniform.
+    """
+    @property
+    def source_kind(self) -> str:
+        """Discriminator: 'facility' | 'storm' | 'planet' | 'star' | 'warp_point' | 'system' | 'fleet'."""
+        ...
+
+    @property
+    def source_label(self) -> str:
+        """Human-readable: 'Ion Storm Alpha', 'Geologic Stabilizer (Tarsis IV)'."""
+        ...
+
+    @property
+    def source_id(self) -> str:
+        """Stable unique id for dedup."""
+        ...
+
+    @property
+    def owner_id(self) -> Optional[int]:
+        """None = ownerless (storms; later: stars, warp points, system itself)."""
+        ...
+
+    def get_abilities(self) -> Dict[str, Any]:
+        """Return abilities dict in components.json shape."""
+        ...
+
+    def affects_hex(self, hex_coord: Any) -> bool:
+        """True iff this source's abilities apply at the given hex."""
+        ...
+
+    def affects_system(self, system: Any) -> bool:
+        """True iff this source's abilities apply within the given star system."""
+        ...
+
+    def get_activation_state(self, ability_name: str) -> Optional[Any]:
+        """None = always active. Used for activatable abilities on facilities."""
+        ...
+
+
 # =============================================================================
 # TypeGuards
 # =============================================================================
@@ -394,6 +444,11 @@ def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:
 def is_storm(obj: Any) -> TypeGuard[IStorm]:
     """Check if obj has storm attributes (storm_type, effects)."""
     return _has_attrs(obj, 'storm_type', 'effects')
+
+
+def is_ability_source(obj: Any) -> TypeGuard[IAbilitySource]:
+    """Check if obj satisfies the IAbilitySource protocol (PROJ-300)."""
+    return _has_attrs(obj, 'source_kind', 'source_label', 'get_abilities', 'affects_hex')
 
 
 def is_zone_occupant(obj: Any) -> TypeGuard[IZoneOccupant]:

@@ -1,0 +1,178 @@
+"""Unified ability-source iterator (PROJ-300).
+
+Yields `IAbilitySource` adapters for the queried hex/system. Source providers
+register themselves via `register_source_provider`; PROJ-301..305 plug in by
+adding one provider function each. The iterator is the integration seam —
+adding a new source kind requires no central edits.
+
+**Adapter rule (post-PROJ-306):** providers and adapters that touch ship/
+component data take `registries` (or equivalent) via parameter injection.
+Never call `get_default_registry_provider()` from inside a provider — see
+PROJ-300 design.md task 4.5.
+"""
+from typing import Any, Callable, Iterable, List, Optional
+
+from game.strategy.services.ability_sources import (
+    FacilityAbilitySource,
+    StormAbilitySource,
+)
+
+
+# Provider signature: callable taking (system, hex_coord, registries) and yielding
+# IAbilitySource instances. hex_coord is None for system-wide queries.
+ProviderFn = Callable[[Any, Any, Any], Iterable[Any]]
+
+
+_HEX_PROVIDERS: List[ProviderFn] = []
+_SYSTEM_PROVIDERS: List[ProviderFn] = []
+
+
+def register_source_provider_at_hex(fn: ProviderFn) -> None:
+    """Register a provider that yields sources affecting a specific hex."""
+    if fn not in _HEX_PROVIDERS:
+        _HEX_PROVIDERS.append(fn)
+
+
+def register_source_provider_in_system(fn: ProviderFn) -> None:
+    """Register a provider that yields sources affecting a system as a whole."""
+    if fn not in _SYSTEM_PROVIDERS:
+        _SYSTEM_PROVIDERS.append(fn)
+
+
+def unregister_source_provider(fn: ProviderFn) -> None:
+    """Remove a provider from BOTH hex and system lists (test-isolation helper)."""
+    if fn in _HEX_PROVIDERS:
+        _HEX_PROVIDERS.remove(fn)
+    if fn in _SYSTEM_PROVIDERS:
+        _SYSTEM_PROVIDERS.remove(fn)
+
+
+def iter_ability_sources_at_hex(
+    system: Any,
+    hex_coord: Any,
+    *,
+    registries: Any = None,
+    include_system_sources: bool = True,
+) -> Iterable[Any]:
+    """Yield every ability source whose abilities apply to the queried hex.
+
+    Includes hex-located sources (storms here; planets/warp points/fleets in
+    later projects) AND system-scope sources (facilities; later: stars,
+    system archetype) when `include_system_sources=True`. Callers filter
+    further by scope via `_SECTOR_SCOPES` / `_SYSTEM_SCOPES`.
+    """
+    seen_ids = set()
+    for fn in _HEX_PROVIDERS:
+        for source in fn(system, hex_coord, registries):
+            sid = getattr(source, 'source_id', id(source))
+            if sid in seen_ids:
+                continue
+            seen_ids.add(sid)
+            yield source
+
+    if include_system_sources:
+        for fn in _SYSTEM_PROVIDERS:
+            for source in fn(system, None, registries):
+                sid = getattr(source, 'source_id', id(source))
+                if sid in seen_ids:
+                    continue
+                seen_ids.add(sid)
+                yield source
+
+
+def iter_ability_sources_in_system(
+    system: Any,
+    *,
+    registries: Any = None,
+) -> Iterable[Any]:
+    """Yield every ability source within the star system, regardless of hex."""
+    seen_ids = set()
+    for fn in _SYSTEM_PROVIDERS:
+        for source in fn(system, None, registries):
+            sid = getattr(source, 'source_id', id(source))
+            if sid in seen_ids:
+                continue
+            seen_ids.add(sid)
+            yield source
+    # Hex providers also walk system-wide for system-effect collection: a star
+    # at hex H projects system-scope abilities that apply at every hex of the
+    # system. PROJ-302 will exercise this path.
+    for fn in _HEX_PROVIDERS:
+        for source in fn(system, None, registries):
+            sid = getattr(source, 'source_id', id(source))
+            if sid in seen_ids:
+                continue
+            seen_ids.add(sid)
+            yield source
+
+
+# ---------------------------------------------------------------------------
+# Built-in providers (PROJ-300): facilities + storms.
+# PROJ-301..305 add their own providers by importing the registration API
+# from this module.
+# ---------------------------------------------------------------------------
+
+
+def _facility_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """Yield FacilityAbilitySource for every operational facility in the system.
+
+    `hex_coord=None` (system-wide query): yields every facility.
+    `hex_coord=<HexCoord>` (hex query): yields facilities whose planet is at
+    that hex. The collector then filters by scope.
+    """
+    if system is None:
+        return
+    planets = getattr(system, 'planets', None) or []
+    for planet in planets:
+        # Hex filter — when a specific hex is requested, only yield facilities
+        # whose planet sits there. System-wide query: yield all.
+        if hex_coord is not None:
+            planet_hex = _planet_global_hex(planet, system)
+            if planet_hex is None or planet_hex != hex_coord:
+                continue
+        facilities = getattr(planet, 'facilities', None) or []
+        for facility in facilities:
+            if not getattr(facility, 'is_operational', True):
+                continue
+            yield FacilityAbilitySource(
+                facility=facility, planet=planet, registries=registries,
+            )
+
+
+def _storm_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """Yield StormAbilitySource for every storm in the system that affects the hex.
+
+    `hex_coord=None` (system-wide): yields all storms in the system.
+    `hex_coord=<HexCoord>`: yields only storms whose `occupied_hexes` covers it.
+    """
+    if system is None:
+        return
+    storms = getattr(system, 'storms', None) or []
+    for storm in storms:
+        adapter = StormAbilitySource(storm=storm)
+        if hex_coord is None or adapter.affects_hex(hex_coord):
+            yield adapter
+
+
+def _planet_global_hex(planet: Any, system: Any) -> Optional[Any]:
+    """Compute the global hex of a planet by adding its system's offset.
+
+    Falls back to None if either side lacks the expected attributes; the
+    caller treats None as "skip hex match".
+    """
+    planet_loc = getattr(planet, 'location', None)
+    system_loc = getattr(system, 'global_location', None) or getattr(system, 'location', None)
+    if planet_loc is None or system_loc is None:
+        return None
+    try:
+        return system_loc + planet_loc
+    except TypeError:
+        return None
+
+
+# Register the two built-in providers at module load. PROJ-301..305 register
+# their own additional providers from their own modules.
+register_source_provider_at_hex(_facility_provider)
+register_source_provider_at_hex(_storm_provider)
+register_source_provider_in_system(_facility_provider)
+register_source_provider_in_system(_storm_provider)

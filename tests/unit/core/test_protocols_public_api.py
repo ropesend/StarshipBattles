@@ -20,7 +20,7 @@ PUBLIC_PROTOCOL_SYMBOLS = (
     "ILocatable",
     "INamed",
     "IOwnable",
-    # Strategy entities — protocol classes (9)
+    # Strategy entities — protocol classes (10)
     "IStarSystem",
     "IStar",
     "IPlanet",
@@ -30,7 +30,8 @@ PUBLIC_PROTOCOL_SYMBOLS = (
     "IWarpPoint",
     "ISectorEnvironment",
     "IStorm",
-    # Strategy entities — TypeGuards (8)
+    "IAbilitySource",  # PROJ-300
+    # Strategy entities — TypeGuards (9)
     "is_star_system",
     "is_star",
     "is_planet",
@@ -39,6 +40,7 @@ PUBLIC_PROTOCOL_SYMBOLS = (
     "is_sector_environment",
     "is_storm",
     "is_zone_occupant",
+    "is_ability_source",  # PROJ-300
     # Strategy domain — protocol classes (4)
     "IEmpire",
     "IFacility",
@@ -104,10 +106,13 @@ def test_private_but_imported_symbol_importable(symbol: str) -> None:
 
 
 def test_full_count_matches_decomposition_design() -> None:
-    """Symbol count matches the design doc (43 public + 1 private-but-public = 44 total)."""
-    assert len(PUBLIC_PROTOCOL_SYMBOLS) == 43, (
+    """Symbol count matches the design doc (45 public + 1 private-but-public = 46 total).
+
+    PROJ-300 added IAbilitySource + is_ability_source (45 = original 43 + 2).
+    """
+    assert len(PUBLIC_PROTOCOL_SYMBOLS) == 45, (
         "If you added a new protocol or TypeGuard, update PUBLIC_PROTOCOL_SYMBOLS "
-        "and the count here. The design doc enumerated 43 public symbols + _has_attrs."
+        "and the count here. PROJ-300 brought the count to 45."
     )
     assert len(PRIVATE_BUT_PUBLICLY_IMPORTED) == 1
 
