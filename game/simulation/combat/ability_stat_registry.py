@@ -72,6 +72,15 @@ ABILITY_STAT_REGISTRY: Dict[str, AbilityStatMapping] = {
         operation="multiply",
         value_field="multiplier",
     ),
+    # PROJ-300 D14 — ThrustModifier wired into combat propulsion stats.
+    # Reads through `external_stats['thrust_mult']` which is already a
+    # known external stat key consumed by the ship-stats aggregator.
+    "ThrustModifier": AbilityStatMapping(
+        ability_class_name="ThrustModifier",
+        stat_key="thrust_mult",
+        operation="multiply",
+        value_field="multiplier",
+    ),
 }
 
 

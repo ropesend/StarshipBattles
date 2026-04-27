@@ -45,6 +45,11 @@ SYSTEM_EFFECT_ABILITIES = {
     'QualityImprovement': 'Quality Enrichment',
     'ShieldModifier': 'Shield Modifier',
     'DamageModifier': 'Damage Modifier',
+    # PROJ-300 — storm/environmental abilities (formerly StormEffect fields).
+    'ThrustModifier': 'Thrust Modifier',
+    'StrategicSpeedModifier': 'Strategic Speed Modifier',
+    'EnvironmentalDamage': None,  # Display name derived from damage_type
+    'FuelDrain': 'Fuel Drain',
 }
 
 

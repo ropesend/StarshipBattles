@@ -143,6 +143,45 @@ def aggregate_multipliers(entries: List[Dict[str, Any]]) -> float:
     return result
 
 
+def aggregate_rates(entries: List[Dict[str, Any]]) -> float:
+    """Aggregate rate-style abilities using two-phase stacking (PROJ-300).
+
+    Phase 1 (intra-group): MAX within the same stack_group — duplicate phenomena
+    don't double-count (two radiation belts at the same hex apply the worse).
+    Phase 2 (inter-group): SUM across different groups — physically distinct
+    phenomena are additive (plasma damage + radiation damage = sum).
+
+    Entries without a stack_group each form their own group (so they sum).
+    Default rate when missing is 0.0.
+
+    Args:
+        entries: List of dicts, each with 'rate' and optional 'stack_group'.
+
+    Returns:
+        Combined rate (0.0 if no entries — additive neutral).
+    """
+    if not entries:
+        return 0.0
+
+    groups: Dict[Any, float] = {}
+    ungrouped_id = 0
+
+    for entry in entries:
+        rate = entry.get('rate', 0.0)
+        group = entry.get('stack_group')
+
+        if group is None:
+            group = f"__ungrouped_{ungrouped_id}"
+            ungrouped_id += 1
+
+        if group in groups:
+            groups[group] = max(groups[group], rate)
+        else:
+            groups[group] = rate
+
+    return sum(groups.values())
+
+
 def _resolve_planets_for_scope(
     target_planet: 'Planet',
     galaxy: 'Galaxy',

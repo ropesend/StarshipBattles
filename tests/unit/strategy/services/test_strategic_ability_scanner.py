@@ -8,6 +8,7 @@ from game.strategy.services.strategic_ability_scanner import (
     find_abilities_at_planet,
     find_abilities_in_scope,
     aggregate_multipliers,
+    aggregate_rates,
 )
 
 
@@ -662,3 +663,51 @@ class TestAggregateMultipliers:
         ]
         # 1.5 * 1.1 = 1.65
         assert aggregate_multipliers(entries) == pytest.approx(1.65)
+
+
+class TestAggregateRates:
+    """Two-phase rate stacking: intra-group MAX, inter-group SUM (PROJ-300)."""
+
+    def test_no_entries_returns_zero(self):
+        assert aggregate_rates([]) == pytest.approx(0.0)
+
+    def test_single_entry(self):
+        entries = [{"rate": 0.5, "stack_group": "radiation"}]
+        assert aggregate_rates(entries) == pytest.approx(0.5)
+
+    def test_same_group_takes_max(self):
+        """Two radiation belts at same hex: take the worst, don't sum."""
+        entries = [
+            {"rate": 0.5, "stack_group": "radiation"},
+            {"rate": 0.3, "stack_group": "radiation"},
+        ]
+        assert aggregate_rates(entries) == pytest.approx(0.5)
+
+    def test_different_groups_sum(self):
+        """Plasma damage + radiation damage: physically additive."""
+        entries = [
+            {"rate": 0.5, "stack_group": "plasma"},
+            {"rate": 0.3, "stack_group": "radiation"},
+        ]
+        assert aggregate_rates(entries) == pytest.approx(0.8)
+
+    def test_no_stack_group_each_sums(self):
+        """Ungrouped entries each form own group (sum)."""
+        entries = [{"rate": 0.4}, {"rate": 0.2}]
+        assert aggregate_rates(entries) == pytest.approx(0.6)
+
+    def test_mixed_groups_and_ungrouped(self):
+        entries = [
+            {"rate": 0.5, "stack_group": "a"},
+            {"rate": 0.2, "stack_group": "a"},  # MAX with above = 0.5
+            {"rate": 0.1},                       # own group
+        ]
+        assert aggregate_rates(entries) == pytest.approx(0.6)
+
+    def test_zero_rate_entries(self):
+        entries = [{"rate": 0.0, "stack_group": "a"}, {"rate": 0.0}]
+        assert aggregate_rates(entries) == pytest.approx(0.0)
+
+    def test_missing_rate_treated_as_zero(self):
+        entries = [{"stack_group": "a"}, {"rate": 0.5}]
+        assert aggregate_rates(entries) == pytest.approx(0.5)

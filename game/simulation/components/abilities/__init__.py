@@ -76,6 +76,9 @@ from .planetary import (
     AtmosphereModifierAbility, QualityImprovementAbility,
     ShieldModifierAbility, DamageModifierAbility,
     GravityModifierAbility, WaterModifierAbility, RadiationShieldAbility,
+    # PROJ-300 environmental abilities
+    ThrustModifierAbility, StrategicSpeedModifierAbility,
+    EnvironmentalDamageAbility, FuelDrainAbility,
 )
 
 # --- Registry ---
@@ -129,6 +132,11 @@ ABILITY_REGISTRY = {
     "GravityModifier": GravityModifierAbility,
     "WaterModifier": WaterModifierAbility,
     "RadiationShield": RadiationShieldAbility,
+    # PROJ-300 environmental / storm-style abilities
+    "ThrustModifier": ThrustModifierAbility,
+    "StrategicSpeedModifier": StrategicSpeedModifierAbility,
+    "EnvironmentalDamage": EnvironmentalDamageAbility,
+    "FuelDrain": FuelDrainAbility,
     # Superweapon abilities
     "DestroyPlanet": DestroyPlanet,
     "DestroyStar": DestroyStar,
@@ -277,6 +285,11 @@ __all__ = [
     'GravityModifierAbility',
     'WaterModifierAbility',
     'RadiationShieldAbility',
+    # PROJ-300 environmental abilities
+    'ThrustModifierAbility',
+    'StrategicSpeedModifierAbility',
+    'EnvironmentalDamageAbility',
+    'FuelDrainAbility',
     # Superweapons
     'DestroyPlanet',
     'DestroyStar',

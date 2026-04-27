@@ -760,3 +760,154 @@ class RadiationShieldAbility(Ability):
                 'color_hint': HINT_DEFAULT
             },
         ]
+
+
+# PROJ-300 — Environmental / storm-style abilities. Strategic-layer multipliers
+# and rates that flow through `system_effects_collector` and the unified
+# IAbilitySource framework.
+
+_STORM_SCOPES = [
+    AbilityScope.SELF, AbilityScope.SECTOR, AbilityScope.ALLIED_SECTOR,
+    AbilityScope.PLAYER_SECTOR, AbilityScope.ENEMY_SECTOR,
+    AbilityScope.SYSTEM, AbilityScope.ALLIED_SYSTEM,
+    AbilityScope.PLAYER_SYSTEM, AbilityScope.ENEMY_SYSTEM,
+]
+
+
+class ThrustModifierAbility(Ability):
+    """Multiplies effective combat thrust for entities within scope (PROJ-300).
+
+    Strategic-layer multiplier consumed pre-battle by the combat propulsion
+    stat aggregator (decisions.md D14 wires this end-to-end). Storm-projected
+    `gravitational_anomaly` reduces effective thrust to 0.6x; multiple sources
+    multiply per-provider (no shared stack_group on storms).
+
+    Data fields:
+        multiplier: Thrust multiplier (e.g., 0.6 for -40%; 1.25 for +25%)
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = _STORM_SCOPES
+    default_scope = AbilityScope.SECTOR
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.multiplier = data.get("multiplier", 1.0) if isinstance(data, dict) else 1.0
+
+    def get_primary_value(self) -> float:
+        return self.multiplier
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {'label': 'Thrust Modifier', 'value': f'{self.multiplier:.2f}x',
+             'color_hint': HINT_DEFAULT},
+            {'label': 'Scope', 'value': self.scope.value.replace('_', ' ').title(),
+             'color_hint': HINT_DEFAULT},
+        ]
+
+
+class StrategicSpeedModifierAbility(Ability):
+    """Multiplies fleet strategic-map movement speed for entities within scope.
+
+    Consumed by `fleet_movement_engine` to compute effective movement points.
+    Storm-projected `dark_nebula` slows fleets to 0.4x speed.
+
+    Data fields:
+        multiplier: Speed multiplier (e.g., 0.4 for -60%)
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = _STORM_SCOPES
+    default_scope = AbilityScope.SECTOR
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.multiplier = data.get("multiplier", 1.0) if isinstance(data, dict) else 1.0
+
+    def get_primary_value(self) -> float:
+        return self.multiplier
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {'label': 'Strategic Speed', 'value': f'{self.multiplier:.2f}x',
+             'color_hint': HINT_DEFAULT},
+            {'label': 'Scope', 'value': self.scope.value.replace('_', ' ').title(),
+             'color_hint': HINT_DEFAULT},
+        ]
+
+
+class EnvironmentalDamageAbility(Ability):
+    """Applies per-turn hull damage to fleets within scope (PROJ-300, rate-style).
+
+    Consumed by `environmental_hazard_engine`. Carries a `damage_type` parameter
+    for grouping (plasma, radiation, thermal, default 'environmental'). Two
+    radiation belts at the same hex aggregate via intra-MAX (worst); plasma +
+    radiation aggregate via inter-SUM.
+
+    Data fields:
+        rate: Hull HP damage per turn (>= 0)
+        damage_type: Type label for grouping in `aggregate_rates` (default 'environmental')
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = _STORM_SCOPES
+    default_scope = AbilityScope.SECTOR
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        if isinstance(data, dict):
+            self.rate = data.get("rate", 0.0)
+            self.damage_type = data.get("damage_type", "environmental")
+        else:
+            self.rate = 0.0
+            self.damage_type = "environmental"
+
+    def get_primary_value(self) -> float:
+        return self.rate
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {'label': f'Damage ({self.damage_type})',
+             'value': f'-{self.rate:.2f} hull/turn', 'color_hint': HINT_DAMAGE},
+            {'label': 'Scope', 'value': self.scope.value.replace('_', ' ').title(),
+             'color_hint': HINT_DEFAULT},
+        ]
+
+
+class FuelDrainAbility(Ability):
+    """Drains fleet fuel per turn when within scope (PROJ-300, rate-style).
+
+    Consumed by `environmental_hazard_engine`. Storm `radiation_belt` drains
+    0.1 fuel/turn; multiple sources sum per damage_type. (FuelDrain has no
+    sub-type so all entries share the same group.)
+
+    Data fields:
+        rate: Fuel units drained per turn (>= 0)
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = _STORM_SCOPES
+    default_scope = AbilityScope.SECTOR
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.rate = data.get("rate", 0.0) if isinstance(data, dict) else 0.0
+
+    def get_primary_value(self) -> float:
+        return self.rate
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {'label': 'Fuel Drain', 'value': f'-{self.rate:.2f}/turn',
+             'color_hint': HINT_WARP_ENERGY},
+            {'label': 'Scope', 'value': self.scope.value.replace('_', ' ').title(),
+             'color_hint': HINT_DEFAULT},
+        ]

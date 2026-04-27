@@ -32,15 +32,27 @@ def test_registry_module_imports():
     assert hasattr(ability_stat_registry, "OPPONENT_SCOPES")
 
 
-def test_registry_has_exactly_three_keys():
-    """Three known mappings: ShieldProjection, ShieldModifier, DamageModifier."""
+def test_registry_has_known_keys():
+    """Known mappings (PROJ-273 + PROJ-300 D14)."""
     from game.simulation.combat.ability_stat_registry import ABILITY_STAT_REGISTRY
 
     assert set(ABILITY_STAT_REGISTRY.keys()) == {
         "ShieldProjection",
         "ShieldModifier",
         "DamageModifier",
+        "ThrustModifier",  # PROJ-300 D14
     }
+
+
+def test_thrust_modifier_mapping():
+    """ThrustModifier -> thrust_mult / multiply / multiplier (PROJ-300 D14)."""
+    from game.simulation.combat.ability_stat_registry import ABILITY_STAT_REGISTRY
+
+    mapping = ABILITY_STAT_REGISTRY["ThrustModifier"]
+    assert mapping.ability_class_name == "ThrustModifier"
+    assert mapping.stat_key == "thrust_mult"
+    assert mapping.operation == "multiply"
+    assert mapping.value_field == "multiplier"
 
 
 def test_shield_projection_mapping():
