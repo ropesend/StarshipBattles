@@ -16,6 +16,7 @@ Categories
 - F: Formula (F001-F099)
 - C: Component (C001-C099)
 - T: Turn Processing (T001-T099)
+- L: LLM Service (L001-L099)
 
 Usage
 =====
@@ -161,6 +162,28 @@ class ErrorCode(Enum):
 
     SNAPSHOT_FAILED = "T003"
     """Failed to create pre-turn state snapshot."""
+
+    # =========================================================================
+    # LLM Service Codes (L001-L099) - PROJ-296
+    # =========================================================================
+
+    LLM_CONFIG_MISSING = "L001"
+    """LLM provider not configured (no API key, unknown provider)."""
+
+    LLM_NETWORK_ERROR = "L002"
+    """LLM network failure (connection, DNS, SSL, exhausted retries)."""
+
+    LLM_BAD_RESPONSE = "L003"
+    """LLM response was malformed or non-2xx (other than rate-limit)."""
+
+    LLM_RATE_LIMITED = "L004"
+    """LLM provider returned 429 - rate limit exceeded."""
+
+    LLM_TIMEOUT = "L005"
+    """LLM request exceeded its timeout."""
+
+    LLM_CANCELLED = "L006"
+    """LLM call was cancelled via cancel_token."""
 
 
 # =============================================================================

@@ -137,3 +137,38 @@ class TestErrorCodeMinimumSet:
         """SNAPSHOT_FAILED code exists (PROJ-251)."""
         assert ErrorCode.SNAPSHOT_FAILED.value == "T003"
 
+    def test_llm_config_missing_exists(self):
+        """LLM_CONFIG_MISSING code exists (PROJ-296)."""
+        assert ErrorCode.LLM_CONFIG_MISSING.value == "L001"
+
+    def test_llm_network_error_exists(self):
+        """LLM_NETWORK_ERROR code exists (PROJ-296)."""
+        assert ErrorCode.LLM_NETWORK_ERROR.value == "L002"
+
+    def test_llm_bad_response_exists(self):
+        """LLM_BAD_RESPONSE code exists (PROJ-296)."""
+        assert ErrorCode.LLM_BAD_RESPONSE.value == "L003"
+
+    def test_llm_rate_limited_exists(self):
+        """LLM_RATE_LIMITED code exists (PROJ-296)."""
+        assert ErrorCode.LLM_RATE_LIMITED.value == "L004"
+
+    def test_llm_timeout_exists(self):
+        """LLM_TIMEOUT code exists (PROJ-296)."""
+        assert ErrorCode.LLM_TIMEOUT.value == "L005"
+
+    def test_llm_cancelled_exists(self):
+        """LLM_CANCELLED code exists (PROJ-296)."""
+        assert ErrorCode.LLM_CANCELLED.value == "L006"
+
+
+class TestLLMErrorCodes:
+    """Tests for LLM category error codes (PROJ-296)."""
+
+    def test_llm_codes_start_with_l(self):
+        """All LLM_* codes start with 'L'."""
+        llm_codes = [c for c in ErrorCode if c.name.startswith('LLM_')]
+        assert len(llm_codes) >= 6, "Expected at least 6 LLM codes"
+        for code in llm_codes:
+            assert code.value.startswith('L'), f"{code.name} should start with L"
+

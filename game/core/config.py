@@ -137,6 +137,39 @@ class BattleTuning:
     FIGHTER_LAUNCH_SPEED: int = 100
 
 
+class LLMConfig:
+    """Tunable defaults for the LLM service (PROJ-296).
+
+    Plain class with class-level attributes (NOT @dataclass) per
+    docs/02_PATTERNS.md Pattern 12.
+
+    All fields can be overridden per-call via `LLMProvider.complete()`'s
+    explicit kwargs. Override these at the class level for application-wide
+    tuning; do not mutate per-instance.
+    """
+
+    # Timeouts (seconds)
+    DEFAULT_TIMEOUT_SECONDS: float = 60.0
+    CONNECT_TIMEOUT_SECONDS: float = 5.0
+
+    # Completion knobs (defaults; consumer can override per call)
+    DEFAULT_MAX_TOKENS: int = 4096
+    DEFAULT_TEMPERATURE: float = 0.7
+    DEFAULT_MODEL: str = "deepseek-chat"
+
+    # Retry policy
+    # Exponential backoff on 5xx only; never auto-retry on 429 (rate-limit
+    # is a clear back-off signal, not a transient failure).
+    MAX_RETRIES_5XX: int = 2
+    RETRY_BACKOFF_BASE_SECONDS: float = 1.0
+
+    # Concurrency safeguard. Enforced by LLMBackgroundCall.start().
+    MAX_CONCURRENT_CALLS: int = 3
+
+    # API citizenship
+    USER_AGENT: str = "starship-battles-llm/1.0"
+
+
 # UIConfig has been moved to game.ui.config (PROJ-113)
 # Import from game.ui.config directly
 

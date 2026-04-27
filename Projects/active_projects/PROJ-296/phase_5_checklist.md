@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** `LLMBackgroundCall` — wraps a provider's `complete()` on a worker thread. Exposes `status`, `result`, `error`, `elapsed_seconds`. Supports cancel. Enforces `MAX_CONCURRENT_CALLS`. Adds shutdown-hook to `game/app.py`.
 
 ---
@@ -16,7 +16,7 @@
 **File:** `game/services/llm/background.py` (NEW)
 **Tests:** `pytest tests/unit/services/llm/test_background.py`
 
-- [ ] Write failing tests (TDD):
+- [x] Write failing tests (TDD):
   - **Status transitions:**
     - Newly constructed: `status == PENDING`
     - After `start()`: `status == RUNNING` (briefly), then `DONE` once worker finishes
@@ -41,7 +41,7 @@
   - **Lock safety:**
     - 100 concurrent reads of `status` from different threads while the worker mutates it never raise / never see torn state (use `threading.Barrier` to align reads)
   - **`start()` is idempotent** — calling twice doesn't spawn two workers (returns early on second call)
-- [ ] Implement per design.md spec:
+- [x] Implement per design.md spec:
   - `CallStatus` enum: PENDING / RUNNING / DONE / ERROR / CANCELLED
   - Module-level counter `_in_flight_calls: int` and lock `_in_flight_lock`
   - `LLMBackgroundCall.__init__` validates inputs (raise `ValidationException` on empty messages or null provider) — Pattern 19/20
@@ -56,17 +56,17 @@
 **File:** `game/services/llm/background.py`, `game/app.py`
 **Tests:** `pytest tests/unit/services/llm/test_background.py`
 
-- [ ] Write failing tests:
+- [x] Write failing tests:
   - `shutdown_all_calls(timeout=5.0)` joins all in-flight worker threads with the given timeout
   - If timeout elapses with threads still alive, logs a warning and returns (does not hang)
   - After shutdown, `_in_flight_calls == 0`
-- [ ] Implement `shutdown_all_calls(timeout: float = 5.0) -> None` in `background.py`:
+- [x] Implement `shutdown_all_calls(timeout: float = 5.0) -> None` in `background.py`:
   - Iterates a module-level set `_active_workers: Set[threading.Thread]`
   - Calls `t.join(timeout=timeout)` on each
   - Logs warning for any thread that's still alive after join
   - Threads add themselves to `_active_workers` in `_run()` and remove themselves in the finally block
-- [ ] Add to `game/app.py`'s shutdown sequence (find where `pygame.quit()` is called; insert call to `shutdown_all_calls()` immediately before it). Likely site is around `game/app.py:600+`.
-- [ ] Add an integration test that constructs a long-running mock provider call, then calls `shutdown_all_calls(timeout=0.5)`, and verifies the warning was logged.
+- [x] Add to `game/app.py`'s shutdown sequence (find where `pygame.quit()` is called; insert call to `shutdown_all_calls()` immediately before it). Likely site is around `game/app.py:600+`.
+- [x] Add an integration test that constructs a long-running mock provider call, then calls `shutdown_all_calls(timeout=0.5)`, and verifies the warning was logged.
 
 **Notes:**
 
@@ -74,18 +74,18 @@
 **File:** `game/services/llm/__init__.py`
 **Tests:** `pytest tests/unit/services/llm/`
 
-- [ ] Re-export `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls` in `__init__.py` `__all__`
-- [ ] Run all `tests/unit/services/llm/` — green
+- [x] Re-export `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls` in `__init__.py` `__all__`
+- [x] Run all `tests/unit/services/llm/` — green
 
 **Notes:**
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] ~13 new tests in `test_background.py`
-- [ ] `pytest tests/unit/services/llm/` — all green
-- [ ] No baseline regression (run `python Tools/test_sharded/test_sharded.py`)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update `plan.md` phase table row to `Complete`
-- [ ] Update `plan.md` Current State to point to Phase 6
+- [x] All task checkboxes above are checked
+- [x] ~13 new tests in `test_background.py`
+- [x] `pytest tests/unit/services/llm/` — all green
+- [x] No baseline regression (run `python Tools/test_sharded/test_sharded.py`)
+- [x] Update status at top of this file to `Complete`
+- [x] Update `plan.md` phase table row to `Complete`
+- [x] Update `plan.md` Current State to point to Phase 6

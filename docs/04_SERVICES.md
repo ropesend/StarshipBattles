@@ -4,7 +4,8 @@
 
 The Starship Battles codebase uses a service layer pattern to provide clean abstractions between UI components and domain logic. Services act as facades that encapsulate complex operations and provide stable APIs for UI consumption.
 
-Services exist in two layers:
+Services exist in three layers:
+- **Top-level cross-cutting services** (`game/services/`, PROJ-296) -- LLM provider abstraction. Available to every layer; depends on Core only.
 - **Simulation services** (`game/simulation/services/`) -- battle lifecycle, ship design, component modifiers, design loading, registry loading
 - **Strategy services** (`game/strategy/services/`) -- fleet navigation, fleet speed, ship stats, cargo transfers, design costs, area effects, component inspection, action timing, modifier resolution, strategic ability scanning, system effects collection
 
@@ -13,6 +14,17 @@ Services exist in two layers:
 ## Service Directory
 
 ```
+game/services/                      # PROJ-296 — cross-cutting, depends on Core only
+    __init__.py
+    llm/
+        __init__.py                 # Public API re-exports
+        types.py                    # Role, FinishReason, Message, TokenUsage, CompletionResult
+        provider.py                 # LLMProvider Protocol
+        factory.py                  # LLMProviderFactory + register_provider()
+        deepseek.py                 # DeepSeekProvider concrete implementation
+        background.py               # LLMBackgroundCall + shutdown_all_calls
+        defaults.py                 # get/set_default_llm_provider() module-level accessors
+
 game/simulation/services/
     __init__.py
     battle_service.py           # Battle creation and simulation control
@@ -54,6 +66,54 @@ game/strategy/data/                # Data models (not services, but consumed via
 game/strategy/formulas/
     habitability.py             # PROJ-283: registry-driven calculate_habitability + score_planet_for_race
 ```
+
+---
+
+## Cross-Cutting Services (`game/services/`, PROJ-296)
+
+### LLM Service
+
+**Location:** `game/services/llm/`
+
+**Purpose:** Pluggable abstraction over chat-completion LLM providers
+(DeepSeek today; OpenAI / Anthropic / Gemini / local models can be
+added by registering a class with the factory). Used by future race
+description generation and diplomacy AI; designed so consumers don't
+care which provider is in use.
+
+**Public API (re-exported from `game.services.llm`):**
+
+| Symbol | Purpose |
+|--------|---------|
+| `LLMProvider` (Protocol) | Pluggable contract: `complete(messages, **opts) -> CompletionResult`. `@runtime_checkable`. |
+| `LLMProviderFactory.create(name=None)` | Construct the provider named `name` (or `LLM_PROVIDER` env, default `"deepseek"`). Returns `None` if the provider can't initialize (deferred validation). Raises `LLMConfigError` on unknown name. |
+| `register_provider(name, cls)` | Register a `LLMProvider` impl into the factory's dispatch dict. Provider modules call this at import time. |
+| `Role`, `FinishReason` | str-Enums for message role / completion termination reason. |
+| `Message`, `TokenUsage`, `CompletionResult` | Frozen DTOs. |
+| `LLMBackgroundCall` | Worker-thread wrapper for non-blocking `complete()` calls — see Pattern #28 in `docs/02_PATTERNS.md`. Exposes `status`, `result`, `error`, `elapsed_seconds`, `cancel()`. |
+| `CallStatus` | PENDING / RUNNING / DONE / ERROR / CANCELLED. |
+| `shutdown_all_calls(timeout=5.0)` | Joins in-flight workers; called from `game/app.py` before `pygame.quit()`. |
+| `get_default_llm_provider()` | Returns the application-wide default provider, or `None` when unconfigured. Consumer pattern: `if provider is not None: show_button()`. |
+| `set_default_llm_provider(p)` | Set the slot. Called by `ApplicationContext.create_production()` and by tests. |
+
+**Configuration (env vars):**
+
+- `DEEPSEEK_API_KEY` — required to use the DeepSeek provider. Read
+  per-request, never cached on the provider instance (security).
+- `LLM_PROVIDER` — provider name lookup key. Default `"deepseek"`.
+
+**Tunable defaults (`game.core.config.LLMConfig`):**
+timeout, retry policy (5xx only, never 429), `MAX_CONCURRENT_CALLS`,
+default model, User-Agent string.
+
+**Error model (`game/core/exceptions.py` `LLMException` branch):**
+`LLMConfigError` (L001), `LLMNetworkError` (L002), `LLMResponseError`
+(L003), `LLMRateLimited` (L004), `LLMTimeoutError` (L005),
+`LLMCancelled` (L006). All inherit from `LLMException` → `GameException`.
+
+**Status:** Foundation only — no consumers wired yet. Race description
+generation (separate triage doc) and diplomacy are the planned
+consumers.
 
 ---
 

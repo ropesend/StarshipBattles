@@ -41,8 +41,16 @@ GameException (base - don't raise directly)
     |       +-- EnginePhaseError
     |
     +-- SimulationException
-            +-- ComponentException
-            +-- FormulaException
+    |       +-- ComponentException
+    |       +-- FormulaException
+    |
+    +-- LLMException                   (PROJ-296)
+            +-- LLMConfigError         (no key / unknown provider)
+            +-- LLMNetworkError        (connection / DNS / SSL / exhausted retries)
+            +-- LLMResponseError       (malformed body or non-2xx other than 429)
+            +-- LLMRateLimited         (429 from provider)
+            +-- LLMTimeoutError        (request exceeded timeout)
+            +-- LLMCancelled           (cancelled via cancel_token)
 ```
 
 ### When to Use Each Exception Type
@@ -61,6 +69,13 @@ GameException (base - don't raise directly)
 | **SimulationException** | Combat simulation engine errors (currently used as catch target and base class only -- not directly raised) |
 | **ComponentException** | Component operations failures, invalid configurations (currently used as catch target and base class only -- not directly raised) |
 | **FormulaException** | Formula parsing/evaluation errors |
+| **LLMException** (PROJ-296) | Base class for LLM service errors -- don't raise directly |
+| **LLMConfigError** | LLM not configured: no API key, unknown provider, or concurrent-call limit reached |
+| **LLMNetworkError** | LLM network failure: connection, DNS, SSL, or exhausted retries on 5xx |
+| **LLMResponseError** | LLM response malformed or non-2xx (other than 429) |
+| **LLMRateLimited** | LLM provider returned 429 — never auto-retried |
+| **LLMTimeoutError** | LLM request exceeded its configured timeout |
+| **LLMCancelled** | LLM call was cancelled via `cancel_token` |
 
 ### Exception Attributes
 
@@ -126,6 +141,23 @@ Error codes are defined in `game/core/error_codes.py` using the `ErrorCode` enum
 | T001 | `PHASE_FAILED` | Sub-engine phase failed during turn processing |
 | T002 | `TURN_ROLLBACK` | Turn was rolled back due to phase failure |
 | T003 | `SNAPSHOT_FAILED` | Failed to create pre-turn state snapshot |
+
+### LLM Service Codes (L001-L099) — PROJ-296
+
+| Code | Name | Description |
+|------|------|-------------|
+| L001 | `LLM_CONFIG_MISSING` | No API key, unknown provider, or concurrent-call limit reached |
+| L002 | `LLM_NETWORK_ERROR` | Connection / DNS / SSL failure or exhausted retries on 5xx |
+| L003 | `LLM_BAD_RESPONSE` | Malformed body or non-2xx response (other than 429) |
+| L004 | `LLM_RATE_LIMITED` | Provider returned 429 — never auto-retried |
+| L005 | `LLM_TIMEOUT` | Request exceeded its configured timeout |
+| L006 | `LLM_CANCELLED` | Request cancelled via `cancel_token` |
+
+**Logging hygiene rule:** LLM exception `context` dicts must NEVER include
+the API key, the `Authorization` header, the request body, the response
+body, or message contents. Safe fields: `model`, `endpoint`, `status_code`,
+`error_code`, `request_duration_ms`, `attempt`. See PROJ-296 design.md
+§ "Security Model" for the full guardrails.
 
 ### Component Codes (C001-C099)
 

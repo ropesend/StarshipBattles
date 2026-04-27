@@ -10,7 +10,9 @@ Public API
 Exceptions (game.core.exceptions):
     GameException, StateException, FrozenStateException, ValidationException,
     ResourceException, MissingResourceException, PersistenceException,
-    SimulationException, ComponentException, FormulaException
+    SimulationException, ComponentException, FormulaException,
+    LLMException, LLMConfigError, LLMNetworkError, LLMResponseError,
+    LLMRateLimited, LLMTimeoutError, LLMCancelled (PROJ-296)
 
 Error Codes (game.core.error_codes):
     ErrorCode
@@ -49,7 +51,7 @@ Roles (game.core.roles, PROJ-278):
     Role, RoleRegistry, RoleRegistryReadOnlyError
 """
 
-# Exceptions (PROJ-45)
+# Exceptions (PROJ-45, extended PROJ-296)
 from game.core.exceptions import (
     GameException,
     StateException,
@@ -61,6 +63,14 @@ from game.core.exceptions import (
     SimulationException,
     ComponentException,
     FormulaException,
+    # LLM Service (PROJ-296)
+    LLMException,
+    LLMConfigError,
+    LLMNetworkError,
+    LLMResponseError,
+    LLMRateLimited,
+    LLMTimeoutError,
+    LLMCancelled,
 )
 
 # Error Codes (PROJ-45)
@@ -135,6 +145,9 @@ __all__ = [
     'GameException', 'StateException', 'FrozenStateException', 'ValidationException',
     'ResourceException', 'MissingResourceException', 'PersistenceException',
     'SimulationException', 'ComponentException', 'FormulaException',
+    # LLM Service Exceptions (PROJ-296)
+    'LLMException', 'LLMConfigError', 'LLMNetworkError', 'LLMResponseError',
+    'LLMRateLimited', 'LLMTimeoutError', 'LLMCancelled',
     # Error Codes (PROJ-45)
     'ErrorCode',
     # Math

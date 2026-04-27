@@ -34,6 +34,43 @@ os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
 
 
 # =============================================================================
+# Real HTTP Block (PROJ-296)
+# =============================================================================
+#
+# The codebase has no production HTTP code outside `game/services/llm/`.
+# This autouse session fixture replaces `requests.post` / `requests.get` /
+# `requests.request` with raisers, guaranteeing no test ever escapes to
+# the real network. Tests that need to exercise HTTP code must explicitly
+# `unittest.mock.patch('requests.post', ...)` (or whichever method) inside
+# their own scope — that patch wins because it's narrower than this one.
+#
+# If a future test needs to make real HTTP calls (integration test against
+# a deliberate server), mark it with `@pytest.mark.integration` and skip
+# in default runs.
+
+@pytest.fixture(autouse=True, scope='session')
+def _block_real_http():
+    """Forbid real HTTP calls in tests."""
+    import requests
+
+    def _raise(*args, **kwargs):
+        raise RuntimeError(
+            "Real HTTP forbidden in tests. Use unittest.mock.patch on "
+            "requests.post/get/request inside your test scope."
+        )
+
+    originals = {
+        name: getattr(requests, name) for name in
+        ('post', 'get', 'put', 'delete', 'patch', 'head', 'request')
+    }
+    for name in originals:
+        setattr(requests, name, _raise)
+    yield
+    for name, original in originals.items():
+        setattr(requests, name, original)
+
+
+# =============================================================================
 # Session-Scoped Data Loading Fixtures
 # =============================================================================
 

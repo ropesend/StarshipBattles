@@ -597,6 +597,12 @@ class Game:
             self._update_and_draw(frame_time, events)
             pygame.display.flip()
 
+        # PROJ-296: Wait for any in-flight LLM worker threads to finish
+        # before tearing down pygame. Bounded by a 5s timeout so that a
+        # hung remote endpoint can never freeze the game on shutdown.
+        from game.services.llm.background import shutdown_all_calls
+        shutdown_all_calls(timeout=5.0)
+
         pygame.quit()
 
     def _handle_exit_dialog_events(self, events):

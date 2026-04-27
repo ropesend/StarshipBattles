@@ -22,6 +22,13 @@ from game.core.exceptions import (
     FormulaException,
     StrategyException,
     EnginePhaseError,
+    LLMException,
+    LLMConfigError,
+    LLMNetworkError,
+    LLMResponseError,
+    LLMRateLimited,
+    LLMTimeoutError,
+    LLMCancelled,
 )
 
 
@@ -334,7 +341,63 @@ class TestExceptionAll:
             FormulaException,
             StrategyException,
             EnginePhaseError,
+            LLMException,
+            LLMConfigError,
+            LLMNetworkError,
+            LLMResponseError,
+            LLMRateLimited,
+            LLMTimeoutError,
+            LLMCancelled,
         ]
         for exc_class in exceptions:
             assert issubclass(exc_class, Exception)
             assert issubclass(exc_class, GameException)
+
+
+class TestLLMExceptions:
+    """Tests for LLM service exception branch (PROJ-296)."""
+
+    def test_llm_exception_inherits_from_game_exception(self):
+        """LLMException is a GameException."""
+        assert issubclass(LLMException, GameException)
+
+    def test_llm_subclasses_inherit_from_llm_exception(self):
+        """All LLM sub-classes inherit from LLMException."""
+        for cls in (LLMConfigError, LLMNetworkError, LLMResponseError,
+                    LLMRateLimited, LLMTimeoutError, LLMCancelled):
+            assert issubclass(cls, LLMException), f"{cls.__name__} should subclass LLMException"
+
+    def test_llm_exceptions_accept_code_and_context(self):
+        """Each LLM exception accepts message + code + context kwargs."""
+        from game.core.error_codes import ErrorCode
+        exc = LLMConfigError(
+            "no key",
+            code=ErrorCode.LLM_CONFIG_MISSING.value,
+            context={"provider": "deepseek"},
+        )
+        assert str(exc) == "no key"
+        assert exc.code == "L001"
+        assert exc.context == {"provider": "deepseek"}
+
+    def test_llm_chaining_preserves_cause(self):
+        """LLM exceptions support `raise from` chaining."""
+        try:
+            try:
+                raise ConnectionError("DNS failure")
+            except ConnectionError as e:
+                raise LLMNetworkError("network down", code="L002") from e
+        except LLMNetworkError as exc:
+            assert isinstance(exc.__cause__, ConnectionError)
+            assert str(exc.__cause__) == "DNS failure"
+
+    def test_llm_exceptions_are_catchable_as_llm_exception(self):
+        """Catching LLMException catches all sub-classes."""
+        for cls in (LLMConfigError, LLMNetworkError, LLMResponseError,
+                    LLMRateLimited, LLMTimeoutError, LLMCancelled):
+            with pytest.raises(LLMException):
+                raise cls("test")
+
+    def test_llm_exceptions_are_catchable_as_game_exception(self):
+        """LLM exceptions propagate through the GameException umbrella."""
+        with pytest.raises(GameException):
+            raise LLMRateLimited("429")
