@@ -4,6 +4,8 @@ Cross-layer imports (acceptable for rendering):
 - LayerType: Runtime - keys layer color map, iterates ship layers
 - LayerDefaults: Runtime - default radius percentages for ship layers
 """
+from __future__ import annotations
+
 import pygame
 import math
 from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
@@ -48,7 +50,7 @@ LAYER_COLORS = {
 }
 
 
-def draw_ship(surface, ship, camera):
+def draw_ship(surface, ship, camera) -> None:
     """Draw a ship with its layers and components."""
     if not ship.is_alive:
         return
@@ -64,7 +66,7 @@ def draw_ship(surface, ship, camera):
         return
 
     # Helper for scaling based on zoom
-    def scale(val):
+    def scale(val) -> int:
         return int(val * camera.zoom)
     
     # Use ship's calculated radius (based on actual mass)
