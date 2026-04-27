@@ -1,7 +1,9 @@
 # Phase 1: Star types data registry
 
 **Status:** Not Started
-**Objective:** Confirm the canonical star_type taxonomy. Create `data/star_types.json` with intrinsic ability templates per star type. Ensure `roll_intrinsic_abilities` is available (from PROJ-301 or shipped here).
+**Objective:** Confirm the canonical star_type taxonomy. Create `data/star_types.json` with intrinsic ability templates per star type.
+
+> **2026-04-27 update:** the original Phase 1 had a fallback "ship `roll_intrinsic_abilities` here if PROJ-301 hasn't landed" task. Per PROJ-300 D15 the helper now ships in PROJ-300 alongside the IAbilitySource framework. Task 1.3 is removed; PROJ-302 imports the helper from PROJ-300 unconditionally.
 
 ---
 
@@ -24,13 +26,9 @@
 
 **Notes:**
 
-### Task 1.3: Ensure `roll_intrinsic_abilities` available [Simple]
-**File:** `game/strategy/services/ability_sources/intrinsic_roll.py`
+### Task 1.3: ~~Ensure `roll_intrinsic_abilities` available~~ — REMOVED 2026-04-27
 
-- [ ] If PROJ-301 has merged, this file already exists. Confirm.
-- [ ] If PROJ-301 has NOT merged, create it here per PROJ-301's Phase 1 spec. Note in decisions.md and coordinate with PROJ-301 to avoid duplicate creation.
-
-**Notes:**
+Helper ships in PROJ-300 per PROJ-300 D15. Phase 2 imports it directly.
 
 ### Task 1.4: Validation test — every star_type has an entry [Simple]
 **File:** `tests/integration/data/test_star_types_registry.py` (NEW)

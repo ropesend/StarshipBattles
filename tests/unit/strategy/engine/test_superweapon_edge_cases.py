@@ -97,7 +97,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             # Path should be calculated from (8,8) not (5,5)
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
@@ -120,7 +120,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -142,7 +142,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -165,7 +165,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
             handler.execute(mock_session, cmd)

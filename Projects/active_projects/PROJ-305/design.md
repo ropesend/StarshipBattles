@@ -33,19 +33,21 @@ The framework's scope keywords split cleanly into two consumption groups:
 
 ### Expanding `allowed_scopes` on selected abilities
 
-Audit each ability class in `game/simulation/components/abilities/`:
-- For each ability, ask: "Does it make design sense for a SHIP to project this to nearby ships/sectors?"
-- Where yes, add the strategic scopes to the class's `allowed_scopes`.
+**Phase 1 audit task** — for each ability class in `game/simulation/components/abilities/`, check current `allowed_scopes` and ask: "Does it make design sense for a SHIP to project this to nearby ships/sectors?" Add strategic scopes only where the answer is yes.
 
-Likely candidates (examples; confirm during Phase 1):
-- `SensorBoost`: add `allied_sector`, `allied_system` (a sensor array on a flagship benefits nearby allies).
-- `ShieldProjection`: maybe add `allied_sector` (an escort projecting shield-bonus aura at the strategic level — design-meaningful?).
-- `EmissionShroud` / stealth abilities: add `sector` (cloaks the hex on the strategy map).
+**What's already in place** (confirmed via review 2026-04-27):
+- `ShieldModifier` already declares `[SELF, FLEET, SECTOR, ALLIED_SECTOR, PLAYER_SECTOR, ENEMY_SECTOR, SYSTEM, ALLIED_SYSTEM, PLAYER_SYSTEM, ENEMY_SYSTEM]` ([planetary.py:443](../../../game/simulation/components/abilities/planetary.py#L443)). **Ready to use as the PROJ-305 sample (per D10).**
+- `StrategicMovement` already declares `[SELF, ALLIED_SECTOR, ALLIED_SYSTEM]` ([propulsion.py:38-56](../../../game/simulation/components/abilities/propulsion.py#L38)). Surprising legacy support — Phase 1 confirms intent.
+
+**Other candidates** (examples; confirm during Phase 1 audit; do NOT auto-add):
+- `EmissionShroud` / stealth abilities: would add `sector` if/when they exist.
+- `ShieldProjection`: maybe add `allied_sector` if design-meaningful.
 
 Abilities that should NOT gain strategic scopes:
 - Combat damage modifiers, weapon abilities, propulsion (those are inherently combat-tick-rate).
+- Anything with no plausible "ship at hex H emits this to other ships at hex H" reading.
 
-The audit produces a list — do not blanket-add scopes; each addition is a design choice.
+The audit produces a list — do not blanket-add scopes; each addition is a design choice. *Per decisions.md D10, PROJ-305 does NOT introduce a new `SensorBoost` ability — that's a separate design item deferred to a future project.*
 
 ### `FleetAbilitySource` adapter
 
@@ -96,10 +98,23 @@ class FleetAbilitySource:
         return result
 
     def affects_hex(self, hex_coord) -> bool:
+        # Per D11: a cloaked / hidden fleet projects no abilities. Future
+        # stealth design sets fleet.is_cloaked / fleet.is_visible_to(empire).
+        # PROJ-305 baseline: assume always-visible.
+        if self._is_hidden:
+            return False
         return self.fleet.location == hex_coord
 
     def affects_system(self, system) -> bool:
+        if self._is_hidden:
+            return False
         return self.fleet.location in system  # or system.contains_hex(...)
+
+    @property
+    def _is_hidden(self) -> bool:
+        # Hook for future stealth design. PROJ-305 returns False unconditionally;
+        # PROJ-3XX (stealth) flips this to consult fleet visibility state.
+        return False
 
     def get_activation_state(self, ability_name: str) -> Optional[Any]:
         # Ship components can have activation state; aggregating across many
@@ -129,15 +144,25 @@ register_source_provider(_fleet_provider_at_hex)
 
 ### Performance
 
-A fleet with N ships and M components per ship requires `O(N*M)` ability extraction per `get_abilities()` call. With 100 systems × 10 fleets × 5 ships × 20 components = 100,000 component reads per turn-end if every consumer queries every fleet. Almost certainly need caching.
+A fleet with N ships and M components per ship requires `O(N*M)` ability extraction per `get_abilities()` call. With 100 systems × 10 fleets × 5 ships × 20 components = 100,000 component reads per turn-end if every consumer queries every fleet. Caching needed.
 
-**Plan**:
-1. Phase 4 profiles a representative galaxy (the QA galaxy fixture, or a 100-system seeded gen).
-2. If `collect_sector_effects` is hot, add a per-turn cache:
+**Plan** (per decisions.md D12, refined 2026-04-27):
+1. Phase 4 profiles a representative galaxy (the QA galaxy fixture, or a 100-system seeded gen). Compare against PROJ-300 Phase 4's `findings/perf_baseline.md`.
+2. **Per-fleet-snapshot memoization on `FleetAbilitySource.get_abilities()`**, NOT a per-turn collector cache:
    ```python
-   _SECTOR_EFFECTS_CACHE: Dict[Tuple[int, int, int], List[Dict]] = {}  # (turn, hex_id, empire_id) → effects
+   @dataclass(frozen=True)
+   class FleetAbilitySource:
+       fleet: Fleet
+       registries: GameRegistries
+       _abilities_cache: Optional[Dict[str, Any]] = field(default=None, init=False)
+
+       def get_abilities(self) -> Dict[str, Any]:
+           if self._abilities_cache is None:
+               object.__setattr__(self, '_abilities_cache', self._compute_abilities())
+           return self._abilities_cache
    ```
-3. Cache invalidation is per-turn (cache is cleared at turn start in TurnEngine).
+3. Per-turn cache is the WRONG granularity for fleet sources because fleets move mid-turn (a fleet that moved H→H' invalidates effects at both hexes). Per-instance memoization is correct: adapter instances are created during iteration and discarded after the query, so the cache lifecycle matches the snapshot lifecycle.
+4. Static-source caching (planet, star, system archetype) is handled in PROJ-300 Phase 4 perf work — separate concern.
 
 ## Swarm Findings Summary
 

@@ -32,8 +32,19 @@ def _make_race_setup_screen():
     """Create a RaceSetupScreen with mocked dependencies.
 
     Returns (screen, mocks_dict) where mocks_dict contains all mock objects.
+
+    PROJ-309 Sub-phase 3.1 — bypass-init helper updated to wire the
+    MVVM delegates (`_view_model`, `_renderer`, `_controller`,
+    `_input_handler`, `_llm_service`). Most legacy assertions still
+    address the screen object directly because the screen mirrors
+    `race_config`, `is_editing`, panel refs, etc. as plain instance
+    attributes for backwards-compat. Property shims (`current_step`,
+    `_description_controller`) route to the view_model / controller.
     """
     from game.ui.screens.race_setup_screen import RaceSetupScreen
+    from game.ui.screens.race_setup.controller import RaceSetupController
+    from game.ui.screens.race_setup.renderer import RaceSetupRenderer
+    from game.ui.screens.race_setup.view_model import RaceSetupViewModel
 
     with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **kw: None):
         screen = RaceSetupScreen.__new__(RaceSetupScreen)
@@ -48,30 +59,10 @@ def _make_race_setup_screen():
     screen.race_config = race_config
     screen.is_editing = False
 
-    # State
-    screen.current_step = 0  # TAB_SUMMARY
-
-    # Tab constants
-    screen.TAB_SUMMARY = 0
-    screen.TAB_IDENTITY = 1
-    screen.TAB_VISUALS = 2
-    screen.TAB_SHIPS = 3
-    screen.TAB_ENVIRONMENT = 4
-    screen.TAB_APTITUDES = 5
-    screen.TAB_DESCRIPTIONS = 6
-
-    screen.TAB_NAMES = [
-        "Summary", "Identity", "Visuals", "Ships",
-        "Environment", "Aptitudes", "Descriptions"
-    ]
-
     # Race library
     screen.race_library = MagicMock()
-
     # PROJ-287: Session-scoped race registry (None when editor runs pre-game).
     screen.race_registry = None
-
-    # Asset loader
     screen._asset_loader = MagicMock()
 
     # Panels (extracted components)
@@ -94,14 +85,50 @@ def _make_race_setup_screen():
     screen.btn_save = MagicMock()
     screen.btn_load = MagicMock()
     screen.btn_randomize = MagicMock()
+    screen.btn_randomize_all = MagicMock()
     screen.error_label = MagicMock()
     screen.name_input = MagicMock()
+    screen.ship_preview_scroll = MagicMock()
 
-    # FEAT-05: Save/Update dialog (created on demand)
-    screen._save_update_dialog = None
-    screen._btn_overwrite = None
-    screen._btn_save_new = None
-    screen._btn_save_cancel = None
+    # PROJ-309 Sub-phase 3.1: MVVM delegates. ViewModel + Controller +
+    # Renderer wired with the mocks above; the renderer is bypass-init
+    # so its dialog widget refs default to None.
+    screen._view_model = RaceSetupViewModel(is_editing=False)
+    screen._renderer = RaceSetupRenderer.__new__(RaceSetupRenderer)
+    screen._renderer._screen = screen
+    screen._renderer.save_update_dialog = None
+    screen._renderer.btn_overwrite = None
+    screen._renderer.btn_save_new = None
+    screen._renderer.btn_save_cancel = None
+    screen._renderer.llm_dialog_window = None
+    screen._renderer.llm_dialog_btn_keep = None
+    screen._renderer.llm_dialog_btn_stop = None
+    screen._renderer.llm_dialog_field = ""
+    screen._renderer.llm_error_popup = None
+    screen._renderer.llm_error_popup_btn_ok = None
+    screen._renderer._ship_preview = MagicMock()
+    screen._controller = RaceSetupController.__new__(RaceSetupController)
+    screen._controller._screen = screen
+    screen._controller._vm = screen._view_model
+    screen._controller._renderer = screen._renderer
+    screen._controller.race_config = race_config
+    screen._controller.race_library = screen.race_library
+    screen._controller.race_registry = None
+    screen._controller.on_complete_callback = screen.on_complete_callback
+    screen._controller.on_cancel_callback = screen.on_cancel_callback
+    screen._controller._description_controller = None
+
+    # InputHandler — used by tests that call screen.process_event() to
+    # exercise event routing (e.g. slider dispatch).
+    from game.ui.screens.race_setup.input_handler import RaceSetupInputHandler
+    screen._input_handler = RaceSetupInputHandler(screen=screen)
+
+    # LLMDialogService stub — used by `update()` callers; no test
+    # currently invokes it via the helper, but wire it for consistency.
+    from game.ui.screens.race_setup.llm_dialog_service import LLMDialogService
+    screen._llm_service = LLMDialogService(
+        view_model=screen._view_model, renderer=screen._renderer
+    )
 
     mocks = {
         'ui_manager': screen.ui_manager,
@@ -113,6 +140,9 @@ def _make_race_setup_screen():
         'aptitudes_panel': screen._aptitudes_panel,
         'step_panels': screen.step_panels,
         'tab_buttons': screen.tab_buttons,
+        'controller': screen._controller,
+        'renderer': screen._renderer,
+        'view_model': screen._view_model,
     }
 
     return screen, mocks
@@ -583,20 +613,25 @@ class TestRaceSetupLoadSpecies:
     """Test that loading a saved species updates all panels (BUG-81)."""
 
     def test_on_race_selected_updates_panel_race_configs(self):
-        """Loading a race should update all panel race_config references."""
+        """Loading a race should update all panel race_config references.
+
+        PROJ-309 Sub-phase 3.1: load handler moved to
+        `RaceSetupController.on_race_selected` (was `screen._on_race_selected`)."""
         screen, mocks = _make_race_setup_screen()
+        screen._refresh_summary = MagicMock()  # avoid summary refresh in unit test
         old_config = screen.race_config
 
         # Create a new "loaded" config
         new_config = _make_race_config_mock()
         new_config.name = "Loaded Species"
 
-        # Call _on_race_selected (the load handler)
-        screen._on_race_selected(new_config)
+        screen._controller.on_race_selected(new_config)
 
-        # Screen's race_config should be updated
+        # Screen's race_config should be updated (mirror — controller is
+        # the authoritative writer).
         assert screen.race_config is new_config
         assert screen.race_config is not old_config
+        assert screen._controller.race_config is new_config
 
         # All panels should have updated race_config reference
         assert screen._identity_panel.race_config is new_config
@@ -611,9 +646,10 @@ class TestRaceSetupLoadSpecies:
     def test_on_race_selected_calls_set_from_config(self):
         """Loading a race should call set_from_config on all panels."""
         screen, mocks = _make_race_setup_screen()
+        screen._refresh_summary = MagicMock()
         new_config = _make_race_config_mock()
 
-        screen._on_race_selected(new_config)
+        screen._controller.on_race_selected(new_config)
 
         screen._identity_panel.set_from_config.assert_called()
         screen._environment_panel.set_from_config.assert_called()
@@ -631,28 +667,36 @@ class TestRaceSetupLoadSpecies:
 class TestSaveUpdateDialog:
     """FEAT-05: Tests for the overwrite vs save-as-new dialog workflow."""
 
+    # PROJ-309 Sub-phase 3.1: save flow methods migrated from
+    # `screen._on_save / _on_overwrite_save / _on_save_as_new /
+    # _on_save_dialog_cancel` → `screen._controller.on_save / ...`.
+    # The save-update dialog widget refs migrated from `screen._save_update_dialog`
+    # → `screen._renderer.save_update_dialog`.
+
     def test_new_species_saves_directly(self):
         """New species (not editing) should save without showing dialog."""
         screen, mocks = _make_race_setup_screen()
         screen.is_editing = False
         screen.race_config.race_id = None
-        screen._validate_for_save = MagicMock(return_value=(True, ""))
+        screen._controller.validate_for_save = MagicMock(return_value=(True, ""))
         screen.race_config.validate.return_value = MagicMock(is_valid=True)
         mocks['race_library'].save_race.return_value = (True, "Saved")
         screen.kill = MagicMock()
 
-        screen._on_save()
+        screen._controller.on_save()
 
         # Should save directly, no dialog
-        assert screen._save_update_dialog is None
+        assert screen._renderer.save_update_dialog is None
         mocks['race_library'].save_race.assert_called_once()
 
     def test_editing_species_shows_dialog(self):
         """Editing a loaded species should show the save/update dialog."""
         screen, mocks = _make_race_setup_screen()
         screen.is_editing = True
+        # FEAT-05 branch reads `view_model.is_editing`, controller mirrors the flag.
+        screen._view_model.is_editing = True
         screen.race_config.race_id = "existing_race_abc123"
-        screen._validate_for_save = MagicMock(return_value=(True, ""))
+        screen._controller.validate_for_save = MagicMock(return_value=(True, ""))
         screen.race_config.validate.return_value = MagicMock(is_valid=True)
         screen.get_container = MagicMock()
         screen.get_container.return_value.get_size.return_value = (800, 600)
@@ -660,10 +704,10 @@ class TestSaveUpdateDialog:
         with patch('pygame_gui.elements.UIWindow'):
             with patch('pygame_gui.elements.UILabel'):
                 with patch('pygame_gui.elements.UIButton') as MockBtn:
-                    screen._on_save()
+                    screen._controller.on_save()
 
         # Dialog should be shown, save NOT called yet
-        assert screen._save_update_dialog is not None
+        assert screen._renderer.save_update_dialog is not None
         mocks['race_library'].save_race.assert_not_called()
 
     def test_overwrite_keeps_race_id(self):
@@ -672,45 +716,46 @@ class TestSaveUpdateDialog:
         screen.is_editing = True
         screen.race_config.race_id = "existing_race_abc123"
         dialog_mock = MagicMock()
-        screen._save_update_dialog = dialog_mock
+        screen._renderer.save_update_dialog = dialog_mock
         mocks['race_library'].save_race.return_value = (True, "Saved")
         screen.kill = MagicMock()
 
-        screen._on_overwrite_save()
+        screen._controller.on_overwrite_save()
 
         # race_id should be preserved
         assert screen.race_config.race_id == "existing_race_abc123"
         mocks['race_library'].save_race.assert_called_once()
         dialog_mock.kill.assert_called()
-        assert screen._save_update_dialog is None
+        assert screen._renderer.save_update_dialog is None
 
     def test_save_as_new_clears_race_id(self):
         """Save as New button should clear race_id for fresh generation."""
         screen, mocks = _make_race_setup_screen()
         screen.is_editing = True
+        screen._view_model.is_editing = True
         screen.race_config.race_id = "existing_race_abc123"
         dialog_mock = MagicMock()
-        screen._save_update_dialog = dialog_mock
+        screen._renderer.save_update_dialog = dialog_mock
         mocks['race_library'].save_race.return_value = (True, "Saved")
         screen.kill = MagicMock()
 
-        screen._on_save_as_new()
+        screen._controller.on_save_as_new()
 
         # race_id should be cleared
         assert screen.race_config.race_id is None
         assert screen.is_editing is False
         mocks['race_library'].save_race.assert_called_once()
         dialog_mock.kill.assert_called()
-        assert screen._save_update_dialog is None
+        assert screen._renderer.save_update_dialog is None
 
     def test_cancel_dialog_does_not_save(self):
         """Cancel button should close dialog without saving."""
         screen, mocks = _make_race_setup_screen()
-        screen._save_update_dialog = MagicMock()
+        screen._renderer.save_update_dialog = MagicMock()
 
-        screen._on_save_dialog_cancel()
+        screen._controller.on_save_dialog_cancel()
 
-        assert screen._save_update_dialog is None
+        assert screen._renderer.save_update_dialog is None
         mocks['race_library'].save_race.assert_not_called()
 
 
@@ -782,46 +827,50 @@ class TestSliderEventDispatch:
 # ===========================================================================
 
 class TestRaceRegistryInvalidationOnSave:
-    """After a successful save, the screen must invalidate the session's
-    race registry so subsequent reads see the freshly-saved race.
+    """After a successful save, the controller must invalidate the
+    session's race registry so subsequent reads see the freshly-saved
+    race.
 
-    When the editor runs pre-game (no session), `race_registry` is None
-    and _do_save must still succeed without attempting invalidation.
+    PROJ-309 Sub-phase 3.1: `_do_save` migrated to
+    `RaceSetupController.do_save`; `race_registry` lives on the
+    controller (the screen mirror is preserved).
     """
 
     def test_successful_save_invalidates_registry_entry(self):
         """Successful save calls registry.invalidate(race_id)."""
         screen, mocks = _make_race_setup_screen()
         screen.race_config.race_id = "edited_race_123"
-        screen.race_registry = MagicMock()
+        screen._controller.race_registry = MagicMock()
         mocks['race_library'].save_race.return_value = (True, "Saved")
         screen.kill = MagicMock()
 
-        screen._do_save()
+        screen._controller.do_save()
 
-        screen.race_registry.invalidate.assert_called_once_with("edited_race_123")
+        screen._controller.race_registry.invalidate.assert_called_once_with(
+            "edited_race_123"
+        )
 
     def test_failed_save_does_not_invalidate(self):
         """Failed save must NOT invalidate (cache stays coherent with disk)."""
         screen, mocks = _make_race_setup_screen()
         screen.race_config.race_id = "edited_race_123"
-        screen.race_registry = MagicMock()
+        screen._controller.race_registry = MagicMock()
         mocks['race_library'].save_race.return_value = (False, "Disk full")
         screen.kill = MagicMock()
 
-        screen._do_save()
+        screen._controller.do_save()
 
-        screen.race_registry.invalidate.assert_not_called()
+        screen._controller.race_registry.invalidate.assert_not_called()
 
     def test_save_without_registry_still_works(self):
         """Pre-game save (race_registry=None) completes without error."""
         screen, mocks = _make_race_setup_screen()
         screen.race_config.race_id = "new_race_456"
-        screen.race_registry = None
+        screen._controller.race_registry = None
         mocks['race_library'].save_race.return_value = (True, "Saved")
         screen.kill = MagicMock()
 
-        screen._do_save()  # Must not raise
+        screen._controller.do_save()  # Must not raise
 
         mocks['race_library'].save_race.assert_called_once()
 
@@ -896,37 +945,35 @@ class TestFeat12NavigationButtonVisibility:
 
 
 class TestFeat12OnRandomizeDispatch:
-    """FEAT-12 Sub-task 4: `_on_randomize` dispatches to the right
+    """FEAT-12 Sub-task 4: `on_randomize` dispatches to the right
     per-tab handler.
-    """
 
-    def _attach_real_dispatcher(self, screen):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
-        screen._on_randomize = RaceSetupScreen._on_randomize.__get__(screen)
+    PROJ-309 Sub-phase 3.1: dispatcher migrated from
+    `RaceSetupScreen._on_randomize` → `RaceSetupController.on_randomize`.
+    Per-tab handlers migrated from `screen._randomize_<tab>` →
+    `controller.randomize_<tab>`."""
 
     def test_dispatches_to_randomize_environment_when_on_env_tab(self):
         screen, _ = _make_race_setup_screen()
-        self._attach_real_dispatcher(screen)
         screen.current_step = screen.TAB_ENVIRONMENT
-        screen._randomize_environment = MagicMock()
-        screen._randomize_aptitudes = MagicMock()
+        screen._controller.randomize_environment = MagicMock()
+        screen._controller.randomize_aptitudes = MagicMock()
 
-        screen._on_randomize()
+        screen._controller.on_randomize()
 
-        screen._randomize_environment.assert_called_once()
-        screen._randomize_aptitudes.assert_not_called()
+        screen._controller.randomize_environment.assert_called_once()
+        screen._controller.randomize_aptitudes.assert_not_called()
 
     def test_dispatches_to_randomize_aptitudes_when_on_aptitudes_tab(self):
         screen, _ = _make_race_setup_screen()
-        self._attach_real_dispatcher(screen)
         screen.current_step = screen.TAB_APTITUDES
-        screen._randomize_environment = MagicMock()
-        screen._randomize_aptitudes = MagicMock()
+        screen._controller.randomize_environment = MagicMock()
+        screen._controller.randomize_aptitudes = MagicMock()
 
-        screen._on_randomize()
+        screen._controller.on_randomize()
 
-        screen._randomize_aptitudes.assert_called_once()
-        screen._randomize_environment.assert_not_called()
+        screen._controller.randomize_aptitudes.assert_called_once()
+        screen._controller.randomize_environment.assert_not_called()
 
 
 class TestFeat12RandomizeEnvironmentHandler:
@@ -939,8 +986,12 @@ class TestFeat12RandomizeEnvironmentHandler:
 
         screen, _ = _make_race_setup_screen()
         # Use a real RaceConfig so dataclass attribute access works.
+        # Both the screen mirror and the controller's authoritative
+        # reference must point at the same instance.
         from game.strategy.data.race_config import RaceConfig
-        screen.race_config = RaceConfig()
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
 
         fake_pref = EnvironmentalPreference(
             setpoint=9.81, tolerance=2.0,
@@ -952,11 +1003,16 @@ class TestFeat12RandomizeEnvironmentHandler:
             "base_reproduction_rate": 0.05,
             "base_happiness": 0.7,
         }
+        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # `game.ui.screens.race_setup.controller`, so we patch the
+        # canonical module path that the controller actually imports
+        # from. The legacy `game.ui.screens.race_setup_screen`
+        # re-export still exists but is no longer the import site.
         with patch(
-            "game.ui.screens.race_setup_screen.RaceRandomizer"
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
             mock_rand.randomize_environment.return_value = fake_result
-            RaceSetupScreen._randomize_environment(screen)
+            screen._controller.randomize_environment()
 
         assert screen.race_config.preferences["gravity"] is fake_pref
         assert screen.race_config.homeworld_type == "CONTINENTAL"
@@ -968,10 +1024,17 @@ class TestFeat12RandomizeEnvironmentHandler:
         from game.strategy.data.race_config import RaceConfig
 
         screen, mocks = _make_race_setup_screen()
-        screen.race_config = RaceConfig()
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
 
+        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # `game.ui.screens.race_setup.controller`, so we patch the
+        # canonical module path that the controller actually imports
+        # from. The legacy `game.ui.screens.race_setup_screen`
+        # re-export still exists but is no longer the import site.
         with patch(
-            "game.ui.screens.race_setup_screen.RaceRandomizer"
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
             mock_rand.randomize_environment.return_value = {
                 "preferences": {},
@@ -979,7 +1042,7 @@ class TestFeat12RandomizeEnvironmentHandler:
                 "base_reproduction_rate": 0.03,
                 "base_happiness": 0.5,
             }
-            RaceSetupScreen._randomize_environment(screen)
+            screen._controller.randomize_environment()
 
         mocks['environment_panel'].set_from_config.assert_called()
         mocks['aptitudes_panel'].update_budget_display.assert_called()
@@ -990,11 +1053,12 @@ class TestFeat12RandomizeAptitudesHandler:
     attributes to `race_config` and refreshes panels."""
 
     def test_writes_seven_aptitude_attrs_to_config(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         from game.strategy.data.race_config import RaceConfig
 
         screen, _ = _make_race_setup_screen()
-        screen.race_config = RaceConfig()
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
 
         fake_aptitudes = {
             "strength": 60,
@@ -1005,11 +1069,16 @@ class TestFeat12RandomizeAptitudesHandler:
             "cooperation": 50,
             "conflict_tolerance": 40,
         }
+        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # `game.ui.screens.race_setup.controller`, so we patch the
+        # canonical module path that the controller actually imports
+        # from. The legacy `game.ui.screens.race_setup_screen`
+        # re-export still exists but is no longer the import site.
         with patch(
-            "game.ui.screens.race_setup_screen.RaceRandomizer"
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
             mock_rand.randomize_aptitudes.return_value = fake_aptitudes
-            RaceSetupScreen._randomize_aptitudes(screen)
+            screen._controller.randomize_aptitudes()
 
         for name, value in fake_aptitudes.items():
             assert getattr(screen.race_config, f"aptitude_{name}") == value
@@ -1019,17 +1088,24 @@ class TestFeat12RandomizeAptitudesHandler:
         from game.strategy.data.race_config import RaceConfig
 
         screen, mocks = _make_race_setup_screen()
-        screen.race_config = RaceConfig()
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
 
+        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # `game.ui.screens.race_setup.controller`, so we patch the
+        # canonical module path that the controller actually imports
+        # from. The legacy `game.ui.screens.race_setup_screen`
+        # re-export still exists but is no longer the import site.
         with patch(
-            "game.ui.screens.race_setup_screen.RaceRandomizer"
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
             mock_rand.randomize_aptitudes.return_value = {
                 "strength": 50, "intelligence": 50, "constitution": 50,
                 "dexterity": 50, "tolerance_other_species": 50,
                 "cooperation": 50, "conflict_tolerance": 50,
             }
-            RaceSetupScreen._randomize_aptitudes(screen)
+            screen._controller.randomize_aptitudes()
 
         mocks['aptitudes_panel'].set_from_config.assert_called()
 
@@ -1039,15 +1115,23 @@ class TestFeat12RandomizeAllHandler:
     orchestrator and applies the result via `_populate_ui_from_config`."""
 
     def test_invokes_orchestrator_and_repopulates_ui(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         from game.strategy.data.environmental_preference import EnvironmentalPreference
         from game.strategy.data.race_config import RaceConfig
 
         screen, _ = _make_race_setup_screen()
-        screen.race_config = RaceConfig()
-        screen._populate_ui_from_config = MagicMock()
+        # Use a real RaceConfig so dataclass attribute access works.
+        # Both the screen (mirror) and controller (authoritative writer)
+        # need the same reference.
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
+        # PROJ-309 Sub-phase 3.1: `_populate_ui_from_config` migrated to
+        # `RaceSetupController.populate_ui_from_config`. Patch the
+        # controller's method so the assertion below targets the
+        # post-refactor home.
+        screen._controller.populate_ui_from_config = MagicMock()
         screen._refresh_summary = MagicMock()
-        screen._refresh_ship_preview = MagicMock()
+        screen._renderer.refresh_ship_preview = MagicMock()
 
         # Mock galleries' _discover_assets to return non-empty pools.
         screen._flag_gallery._discover_assets = MagicMock(
@@ -1087,27 +1171,34 @@ class TestFeat12RandomizeAllHandler:
                 "cooperation": 50, "conflict_tolerance": 40,
             },
         }
+        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # `game.ui.screens.race_setup.controller`, so we patch the
+        # canonical module path that the controller actually imports
+        # from. The legacy `game.ui.screens.race_setup_screen`
+        # re-export still exists but is no longer the import site.
         with patch(
-            "game.ui.screens.race_setup_screen.RaceRandomizer"
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
             mock_rand.randomize_all.return_value = fake_all
-            RaceSetupScreen._randomize_all(screen)
+            screen._controller.randomize_all()
 
         mock_rand.randomize_all.assert_called_once()
-        # Identity field written
-        assert screen.race_config.race_name == "Rossarian"
-        assert screen.race_config.faction_name == "Rossarian Empire"
+        # Identity field written (controller writes onto its own
+        # race_config reference — which the test fixture aliased to
+        # `screen.race_config`).
+        assert screen._controller.race_config.race_name == "Rossarian"
+        assert screen._controller.race_config.faction_name == "Rossarian Empire"
         # Visuals
-        assert screen.race_config.flag_id == "flag_a"
-        assert screen.race_config.portrait_id == "p_a.jpg"
-        assert screen.race_config.theme_id == "Federation"
+        assert screen._controller.race_config.flag_id == "flag_a"
+        assert screen._controller.race_config.portrait_id == "p_a.jpg"
+        assert screen._controller.race_config.theme_id == "Federation"
         # Env
-        assert screen.race_config.homeworld_type == "CONTINENTAL"
-        assert screen.race_config.preferences["gravity"] is fake_pref
+        assert screen._controller.race_config.homeworld_type == "CONTINENTAL"
+        assert screen._controller.race_config.preferences["gravity"] is fake_pref
         # Aptitudes
-        assert screen.race_config.aptitude_strength == 60
-        # Full UI repopulation triggered
-        screen._populate_ui_from_config.assert_called_once()
+        assert screen._controller.race_config.aptitude_strength == 60
+        # Full UI repopulation triggered (post-refactor home: controller).
+        screen._controller.populate_ui_from_config.assert_called_once()
 
 
 # =============================================================================
@@ -1116,6 +1207,11 @@ class TestFeat12RandomizeAllHandler:
 
 
 class TestProj299KillHookAndErrorMessages:
+    """PROJ-309 Sub-phase 3.1: `kill()` stays on the screen because it
+    overrides `pygame_gui.elements.UIWindow.kill`. The
+    `_llm_error_message` mapper migrated to
+    `LLMDialogService.error_message` (a static method)."""
+
     def test_kill_cancels_description_controller(self):
         """RaceSetupScreen.kill() must call controller.cancel_all() so
         worker threads don't try to populate dead UI widgets."""
@@ -1125,46 +1221,55 @@ class TestProj299KillHookAndErrorMessages:
 
         with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **k: None):
             screen = RaceSetupScreen.__new__(RaceSetupScreen)
-            controller = MagicMock()
-            screen._description_controller = controller
+            # The screen reads the description controller through its
+            # MVVM controller; provide a mock controller with the
+            # `description_controller` attribute the screen looks at.
+            description_controller = MagicMock()
+            mvvm_controller = MagicMock()
+            mvvm_controller.description_controller = description_controller
+            screen._controller = mvvm_controller
             # Mock super().kill() — patch the bound super by patching the parent class.
             with patch('pygame_gui.elements.UIWindow.kill') as super_kill:
                 screen.kill()
-            controller.cancel_all.assert_called_once()
+            description_controller.cancel_all.assert_called_once()
             super_kill.assert_called_once()
 
     def test_kill_when_no_controller_does_not_raise(self):
-        from unittest.mock import patch
+        from unittest.mock import MagicMock, patch
 
         from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **k: None):
             screen = RaceSetupScreen.__new__(RaceSetupScreen)
-            screen._description_controller = None
+            mvvm_controller = MagicMock()
+            mvvm_controller.description_controller = None
+            screen._controller = mvvm_controller
             with patch('pygame_gui.elements.UIWindow.kill'):
                 screen.kill()  # MUST NOT raise
 
     def test_llm_error_message_for_each_exception_type(self):
-        from game.core.error_codes import ErrorCode
         from game.core.exceptions import (
             LLMConfigError, LLMNetworkError, LLMRateLimited,
             LLMResponseError, LLMTimeoutError,
         )
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        # PROJ-309 Sub-phase 3.1: error mapper migrated from
+        # `RaceSetupScreen._llm_error_message` →
+        # `LLMDialogService.error_message`.
+        from game.ui.screens.race_setup.llm_dialog_service import LLMDialogService
 
-        msg = RaceSetupScreen._llm_error_message(LLMRateLimited("x"))
+        msg = LLMDialogService.error_message(LLMRateLimited("x"))
         assert "rate limit" in msg.lower()
 
-        msg = RaceSetupScreen._llm_error_message(LLMTimeoutError("x"))
+        msg = LLMDialogService.error_message(LLMTimeoutError("x"))
         assert "timed out" in msg.lower() or "timeout" in msg.lower()
 
-        msg = RaceSetupScreen._llm_error_message(LLMNetworkError("x"))
+        msg = LLMDialogService.error_message(LLMNetworkError("x"))
         assert "network" in msg.lower()
 
-        msg = RaceSetupScreen._llm_error_message(LLMConfigError("x"))
+        msg = LLMDialogService.error_message(LLMConfigError("x"))
         assert "configured" in msg.lower() or "config" in msg.lower()
 
-        msg = RaceSetupScreen._llm_error_message(LLMResponseError("x"))
+        msg = LLMDialogService.error_message(LLMResponseError("x"))
         assert "response" in msg.lower() or "unexpected" in msg.lower()
 
 
@@ -1174,48 +1279,53 @@ class TestProj299KillHookAndErrorMessages:
 
 
 class TestProj299DialogPositioningRegression:
-    """Regression for the AttributeError crash in _show_llm_error_popup /
-    _show_llm_dialog: original code used `self.window_display_size` which
+    """Regression for the AttributeError crash in show_llm_error_popup /
+    show_llm_dialog: original code used `self.window_display_size` which
     doesn't exist on pygame_gui.UIWindow. The fix is to use the documented
-    pattern `self.get_container().get_size()` (matches _show_save_update_dialog).
+    pattern `screen.get_container().get_size()` (matches show_save_update_dialog).
+
+    PROJ-309 Sub-phase 3.1: dialog/popup constructors migrated from
+    `RaceSetupScreen._show_llm_*` → `RaceSetupRenderer.show_llm_*`.
+    The renderer uses `self._screen.get_container().get_size()` since
+    it holds a back-reference to the screen.
     """
 
     def test_show_llm_error_popup_does_not_reference_window_display_size(self):
         """The crash was AttributeError on `self.window_display_size`.
         Verify the source no longer references that name."""
         import inspect
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.ui.screens.race_setup.renderer import RaceSetupRenderer
 
-        src = inspect.getsource(RaceSetupScreen._show_llm_error_popup)
+        src = inspect.getsource(RaceSetupRenderer.show_llm_error_popup)
         # Strip comments before checking — we mention the bad name in
         # a comment as guidance for future readers; only the attribute
         # access matters.
         code_only = "\n".join(line.split("#", 1)[0] for line in src.splitlines())
         assert "self.window_display_size" not in code_only, (
-            "PROJ-299 regression: _show_llm_error_popup must not use "
+            "PROJ-299 regression: show_llm_error_popup must not use "
             "the non-existent UIWindow attribute `window_display_size`. "
-            "Use `self.get_container().get_size()` instead."
+            "Use `screen.get_container().get_size()` instead."
         )
 
     def test_show_llm_dialog_does_not_reference_window_display_size(self):
         import inspect
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.ui.screens.race_setup.renderer import RaceSetupRenderer
 
-        src = inspect.getsource(RaceSetupScreen._show_llm_dialog)
+        src = inspect.getsource(RaceSetupRenderer.show_llm_dialog)
         # Strip comments before checking — we mention the bad name in
         # a comment as guidance for future readers; only the attribute
         # access matters.
         code_only = "\n".join(line.split("#", 1)[0] for line in src.splitlines())
         assert "self.window_display_size" not in code_only, (
-            "PROJ-299 regression: _show_llm_dialog must not use the "
+            "PROJ-299 regression: show_llm_dialog must not use the "
             "non-existent UIWindow attribute `window_display_size`. "
-            "Use `self.get_container().get_size()` instead."
+            "Use `screen.get_container().get_size()` instead."
         )
 
     def test_show_llm_error_popup_uses_get_container_size(self):
         """Positive assertion: the fix uses the established pattern."""
         import inspect
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.ui.screens.race_setup.renderer import RaceSetupRenderer
 
-        src = inspect.getsource(RaceSetupScreen._show_llm_error_popup)
+        src = inspect.getsource(RaceSetupRenderer.show_llm_error_popup)
         assert "get_container()" in src and "get_size()" in src

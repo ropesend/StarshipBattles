@@ -331,7 +331,7 @@ class TestStrategyUIPassesMapper:
         _, kwargs = MockWindow.call_args
         assert kwargs.get('input_mapper') is mapper
 
-    @patch('game.ui.screens.strategy_window_manager.BuildQueueListWindow')
+    @patch('game.ui.screens.strategy_windows.build_queue_windows.BuildQueueListWindow')
     def test_open_build_queue_list_passes_mapper(self, MockWindow, mapper):
         """open_build_queue_list passes input_mapper to BuildQueueListWindow via window manager."""
         from game.ui.screens.strategy_window_manager import StrategyWindowManager

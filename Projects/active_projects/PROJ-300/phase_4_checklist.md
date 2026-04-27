@@ -93,11 +93,31 @@
 
 **Notes:**
 
+### Task 4.5: Add explicit "no global registry lookups in adapters" rule [Trivial]
+**File:** docstring on `iter_ability_sources_at_hex` + adapter `__init__.py` module docstring.
+
+- [ ] Add a paragraph documenting: "Adapters that touch ship/component data take `registry_provider` (or equivalent) via constructor injection. NEVER call `get_default_registry_provider()` or any module-level registry getter from inside an adapter. Per PROJ-306 the global lookups in `game/simulation/` are forbidden, and PROJ-305's `FleetAbilitySource` will follow the same rule."
+- [ ] Add a static-analysis guard test that AST-scans `game/strategy/services/ability_sources/` for `get_default_registry_provider` references and fails if any appear.
+
+**Notes:** Defensive against accidental regression of the PROJ-306 work.
+
+### Task 4.6: Perf profiling pass [Medium] *(added 2026-04-27, decisions.md D20)*
+**File:** `Projects/active_projects/PROJ-300/findings/perf_baseline.md` (NEW)
+
+- [ ] Profile a representative-galaxy turn end-to-end (use the QA seeded galaxy or a 100-system fixture). Record times for `collect_sector_effects` calls from movement / hazard / spec_compiler / UI paths.
+- [ ] Capture: total time per turn, calls to `collect_sector_effects` per turn, mean/p99 per call.
+- [ ] If `collect_sector_effects` is hot (e.g. >5% of turn-end time, or p99 over a few ms), implement per-turn `(hex, empire_id) → effects` memoization in this same phase. Cache lives in `system_effects_collector` module-state; cleared at turn start by `TurnEngine` via a new `clear_collector_cache()` hook.
+- [ ] If perf is fine, document "no caching needed at PROJ-300 scope; revisit when PROJ-305 (fleets) adds heaviest source kind" and move on.
+- [ ] Either way, write `perf_baseline.md` with numbers so PROJ-305 Phase 4 has a baseline to compare against.
+
+**Notes:** D20 decision is "decide here, not later". Cheaper to settle while design is fresh.
+
 ---
 
 ## Phase Completion Checklist
 - [ ] All tasks complete
 - [ ] All `test_system_effects_collector.py` tests green (existing + new)
 - [ ] `pytest tests/ --testmon` — no regressions
+- [ ] D20 perf baseline written to `findings/perf_baseline.md`
 - [ ] Update status to `Complete`
 - [ ] Update plan.md

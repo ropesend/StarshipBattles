@@ -4,8 +4,8 @@
 |------|------|-------|
 | `data/warp_point_types.json` | Data | NEW. Warp point type templates. |
 | `game/core/paths.py` | Production | Add `Paths.WARP_POINT_TYPES_FILE`. |
-| `game/strategy/data/` (warp_point file) | Production | Add `intrinsic_abilities` field. |
-| `game/strategy/generation/` (warp_point generator) | Production | Load registry; populate intrinsic_abilities via `roll_intrinsic_abilities`. |
+| `game/strategy/data/galaxy.py` (`WarpPoint` dataclass) | Production | Add `type: str` field AND `intrinsic_abilities: Dict[str, Any]` field. *(2026-04-27: WarpPoint has no type field today — PROJ-303 introduces it.)* |
+| `game/strategy/generation/` (warp_point generator) | Production | Assign `type` at generation; load registry; populate `intrinsic_abilities` via `roll_intrinsic_abilities` (imported from PROJ-300). |
 | `game/strategy/services/ability_sources/warp_point.py` | Production | NEW. Adapter. |
 | `game/strategy/services/ability_sources/__init__.py` | Production | Re-export `WarpPointAbilitySource`. |
 | `game/strategy/services/ability_iterator.py` | Production | Register `_warp_point_provider`. |

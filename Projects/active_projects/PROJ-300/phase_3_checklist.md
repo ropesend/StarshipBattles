@@ -107,6 +107,35 @@
 
 **Notes:** This file is the integration seam for PROJ-301..305. Document the registration API clearly so future projects don't have to guess.
 
+### Task 3.6: Ship the shared `roll_intrinsic_abilities` helper [Simple] *(added 2026-04-27, decisions.md D15)*
+**File:** `game/strategy/services/ability_sources/intrinsic_roll.py` (NEW)
+**Tests:** `tests/unit/strategy/services/ability_sources/test_intrinsic_roll.py` (NEW)
+
+- [ ] Failing tests first:
+  - [ ] `test_pass_through_for_scalar_values` — `{"multiplier": 0.5}` round-trips unchanged.
+  - [ ] `test_rolls_min_max_to_scalar_float` — `{"rate": {"min": 0.1, "max": 0.5}}` rolls to a float in [0.1, 0.5] using injected `random.Random(seed)`.
+  - [ ] `test_rolls_min_max_to_scalar_int_when_both_endpoints_int` — `{"size": {"min": 2, "max": 5}}` returns int in [2,5].
+  - [ ] `test_preserves_string_fields` — `damage_type`, `scope`, `stack_group` pass through verbatim.
+  - [ ] `test_deterministic_for_same_seed` — two calls with the same `random.Random(42)` produce identical output.
+  - [ ] `test_does_not_mutate_input_template` — input dict is unchanged after call.
+- [ ] Implement the helper per the design.md §Shared Helpers signature.
+- [ ] Document that PROJ-301..304 are pure consumers and MUST NOT reimplement this logic.
+
+**Notes:** This used to live in PROJ-301's scope; pulled into PROJ-300 per D15 to avoid coordination hazards across the four sibling projects.
+
+### Task 3.7: Ship the shared `format_intrinsic_source_label` helper [Trivial] *(added 2026-04-27, decisions.md D15)*
+**File:** `game/strategy/services/ability_sources/labels.py` (NEW)
+**Tests:** `tests/unit/strategy/services/ability_sources/test_labels.py` (NEW)
+
+- [ ] Failing tests first:
+  - [ ] `test_format_planet_label` — `("Tarsis IV", "volcanic")` → `"Tarsis IV (volcanic)"`.
+  - [ ] `test_format_star_label` — `("Sol", "G-class")` → `"Sol (G-class)"`.
+  - [ ] `test_format_warp_point_label` — `("Warp Point Alpha", "unstable")` → `"Warp Point Alpha (unstable)"`.
+- [ ] Implement per the design.md signature.
+- [ ] PROJ-301..304 adapters MUST use this helper for `source_label`.
+
+**Notes:** Single-line helper; the value is consistency. Without it, four sibling projects ad-hoc each label format and the UI looks inconsistent.
+
 ---
 
 ## Phase Completion Checklist

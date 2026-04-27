@@ -246,6 +246,7 @@ pytest tests/ --cov=game -n 12
 - Add docstrings to public APIs
 - Keep functions focused and small (<50 lines preferred)
 - Avoid deep nesting (max 3 levels)
+- Keep production-source files under 500 lines. When a file approaches 500 LOC, that's a signal to split into single-responsibility sub-modules. Test files are exempt — long test files are often legitimate. See `docs/03_CONVENTIONS.md` §File Size and PROJ-309 for the audit that established this rule.
 
 ### Long-Term Quality
 When faced with choices, prefer:

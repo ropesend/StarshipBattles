@@ -1,6 +1,8 @@
 # PROJ-304: Star System Archetype Ability Sources
 
-> **PRECONDITION:** PROJ-300 (Universal IAbilitySource Framework). PROJ-301 strongly recommended (provides `roll_intrinsic_abilities`).
+> **PRECONDITION:** PROJ-300 (Universal IAbilitySource Framework). PROJ-300 ships the shared `roll_intrinsic_abilities` + `format_intrinsic_source_label` helpers (D15); PROJ-304 is a pure consumer. PROJ-301 is no longer a precondition for the helpers.
+
+> **2026-04-27 review note:** the original design left the galaxy-generation insertion point unpinned ("roll archetype on ~15% of systems" — when in the pipeline?). Pin to **post-system-generation, gated by `galaxy_generation_config.archetype_chance` (default 0.15, set to 0.0 in deterministic-fixture tests)**. Phase 2 makes this explicit; tests that rely on deterministic system attributes set the chance to 0.0.
 
 ## Quick Status
 | Phase | Status | Checklist |

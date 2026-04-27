@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Get the 500-LOC ceiling rule into CLAUDE.md and `docs/03_CONVENTIONS.md` BEFORE the first decomposition. Reasons:
 - Future contributors land on a documented standard
 - The decompositions in Phase 3 are guided by the rule (no resulting module >500 LOC)
@@ -24,11 +24,11 @@ CLAUDE.md "Key Conventions" → "Code Quality" already has:
 
 Add a parallel rule for files.
 
-- [ ] Read `CLAUDE.md` "Code Quality" section
-- [ ] Add bullet: `- Keep production-source files under 500 lines. When a file approaches 500 LOC, that's a signal to split into single-responsibility sub-modules. Test files are exempt — long test files are often legitimate.`
-- [ ] **Verification:** `grep -n "500 lines\|500 LOC" CLAUDE.md` returns at least 1 hit
+- [x] Read `CLAUDE.md` "Code Quality" section
+- [x] Add bullet: `- Keep production-source files under 500 lines. When a file approaches 500 LOC, that's a signal to split into single-responsibility sub-modules. Test files are exempt — long test files are often legitimate.`
+- [x] **Verification:** `grep -n "500 lines\|500 LOC" CLAUDE.md` returns at least 1 hit
 
-**Notes:**
+**Notes:** Bullet inserted at CLAUDE.md:249 directly after the "max 3 levels" nesting bullet so all file/function/nesting size rules sit together. Cross-references `docs/03_CONVENTIONS.md` §File Size and PROJ-309.
 
 ---
 
@@ -36,7 +36,7 @@ Add a parallel rule for files.
 **File:** `docs/03_CONVENTIONS.md`
 **Tests:** Manual verification
 
-- [ ] Add a §"File Size" section:
+- [x] Add a §"File Size" section:
   ```markdown
   ## File Size
 
@@ -50,10 +50,10 @@ Add a parallel rule for files.
 
   See PROJ-309 for the audit that established this rule.
   ```
-- [ ] **Verification:** `grep -n "File Size" docs/03_CONVENTIONS.md` returns 1 hit
-- [ ] Bump the `Last verified:` date (set by PROJ-307)
+- [x] **Verification:** `grep -n "File Size" docs/03_CONVENTIONS.md` returns 1 hit
+- [x] Bump the `Last verified:` date (set by PROJ-307)
 
-**Notes:**
+**Notes:** A §"File Size" section already existed at §2.3 (under §2 File Organization) with weaker language. Per Rule 3 (clean-sheet) and to avoid doc duplication, expanded the existing §2.3 in place with the PROJ-309 prescriptive content (diagnose / split / preserve API / test exemption / PROJ-309 backref) rather than creating a duplicate top-level §File Size heading. Last verified bumped to 2026-04-27 noting the PROJ-309 expansion. `grep "### 2.3 File Size"` returns 1 hit.
 
 ---
 
@@ -61,16 +61,16 @@ Add a parallel rule for files.
 **File:** None — review step
 **Tests:** None.
 
-- [ ] Read CLAUDE.md "Code Quality" + `docs/03_CONVENTIONS.md` §File Size — consistent? Helpful?
+- [x] Read CLAUDE.md "Code Quality" + `docs/03_CONVENTIONS.md` §File Size — consistent? Helpful?
 
-**Notes:**
+**Notes:** Both reads cross-reference each other. CLAUDE.md gives the one-line rule (file <500, tests exempt) and points to docs/03_CONVENTIONS.md §File Size for the full how-to (diagnose / split / preserve API / re-export shim vs caller migration). Both flag tests as exempt and reference PROJ-309. Consistent.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] CLAUDE.md mentions 500-LOC rule
-- [ ] `docs/03_CONVENTIONS.md` has §File Size
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase (Phase 2)
+- [x] All task checkboxes above are checked
+- [x] CLAUDE.md mentions 500-LOC rule
+- [x] `docs/03_CONVENTIONS.md` has §File Size
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase (Phase 2)

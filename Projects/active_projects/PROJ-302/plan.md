@@ -1,6 +1,6 @@
 # PROJ-302: Star Intrinsic Ability Sources
 
-> **PRECONDITION:** PROJ-300 (Universal IAbilitySource Framework) merged. PROJ-301 (Planet intrinsic abilities) recommended but not strictly required — this project shares the `roll_intrinsic_abilities` helper PROJ-301 introduces; if PROJ-301 hasn't landed, ship the helper here.
+> **PRECONDITION:** PROJ-300 (Universal IAbilitySource Framework) merged. PROJ-300 ships the shared `roll_intrinsic_abilities` and `format_intrinsic_source_label` helpers (per PROJ-300 D15) — PROJ-302 is a pure consumer. PROJ-301 is no longer a precondition for the helpers (was, in the original 2026-04-26 plan).
 
 > **WORKING ON THIS PROJECT:**
 > - Run `python Projects/scripts/current_task.py PROJ-302` to see what to do next

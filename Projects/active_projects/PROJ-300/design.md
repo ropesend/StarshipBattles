@@ -182,10 +182,65 @@ Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` and (where com
 | Storm field today      | New ability name           | Kind        | Stat key                        |
 |------------------------|----------------------------|-------------|---------------------------------|
 | `shield_capacity_mult` | `ShieldModifier` (existing)| multiplier  | `shield_capacity_mult`          |
-| `thrust_mult`          | `ThrustModifier`           | multiplier  | `thrust_mult` (combat consumption out-of-scope) |
+| `thrust_mult`          | `ThrustModifier`           | multiplier  | `thrust_mult` (combat-consumed in PROJ-300 — see §Combat Consumption — ThrustModifier; per D14) |
 | `strategic_mult`       | `StrategicSpeedModifier`   | multiplier  | n/a (consumed by movement engine) |
 | `damage_per_tick`      | `EnvironmentalDamage`      | rate        | n/a (consumed by hazard engine; carries `damage_type` parameter) |
 | `fuel_drain_per_tick`  | `FuelDrain`                | rate        | n/a (consumed by hazard engine) |
+
+### Combat Consumption — ThrustModifier
+
+Per decisions.md D14, `ThrustModifier` is wired end-to-end in this project (no dead data flow). Two changes:
+
+1. **`spec_compiler._entries_from_sector_effects`** emits a `ThrustModifier` entry per provider, mirroring `ShieldModifier` (no shared `stack_group` — overlapping storms multiply naturally).
+2. **Combat propulsion stat aggregation** — `game/simulation/combat/ability_stat_registry.py` registers `thrust_mult` so the ship-stats consumer in `game/simulation/entities/ship_combat_engine.py` (or wherever combat propulsion stats are aggregated; confirm in Phase 1 audit) multiplies a ship's effective thrust by the aggregated `thrust_mult` from external modifiers. Symmetrical with `shield_capacity_mult` consumption today.
+
+**Tests** (Phase 6 — alongside the storm-stacking balance test):
+- Single storm with `ThrustModifier 0.6` → ship at hex applies `thrust × 0.6` in combat.
+- Two overlapping storms with `ThrustModifier 0.6` each → `thrust × 0.36` (multiplicative; matches D6 storm stacking).
+- Mix of facility-projected + storm-projected `ThrustModifier` → multiplicative across providers.
+
+### Shared Helpers (used by PROJ-301..304)
+
+Per decisions.md D15, two helpers ship in PROJ-300 so the four sibling projects are pure consumers:
+
+```python
+# game/strategy/services/ability_sources/intrinsic_roll.py
+
+def roll_intrinsic_abilities(
+    template: Dict[str, Any],
+    *,
+    rng: random.Random,
+) -> Dict[str, Any]:
+    """Materialize an instance abilities dict from a registry template.
+
+    For each ability in `template`, copies the ability data verbatim except:
+    - any field with shape `{"min": x, "max": y}` is rolled to a scalar via
+      `rng.uniform(x, y)` for floats or `rng.randint(x, y)` for ints (decided
+      by the values' types).
+    - `damage_type`, `scope`, `stack_group`, and other string fields pass through.
+
+    Returns a dict in the same shape as a `Storm.abilities` / facility component
+    abilities — ready to drop onto the entity instance and feed to the iterator.
+    """
+
+# game/strategy/services/ability_sources/labels.py
+
+def format_intrinsic_source_label(
+    *,
+    entity_name: str,
+    type_name: str,
+) -> str:
+    """Canonical label for intrinsic ability sources used by PROJ-301..304.
+
+    Format: `"{entity_name} ({type_name})"` — e.g. "Tarsis IV (volcanic)",
+    "Sol (G-class)", "Warp Point Alpha (unstable)".
+
+    Adapters with no `entity_name` (system archetypes — the system itself)
+    use the system's display name.
+    """
+```
+
+These are tested in PROJ-300 Phase 3 alongside the protocol/iterator. PROJ-301..304 import and use them; they do NOT reimplement the roll logic or the label format.
 
 ### Storm Data Model — `data/storm_types.json` v2.0
 

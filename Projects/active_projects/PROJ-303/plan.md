@@ -1,6 +1,8 @@
 # PROJ-303: Warp Point Intrinsic Ability Sources
 
-> **PRECONDITION:** PROJ-300 (Universal IAbilitySource Framework). PROJ-301 strongly recommended (provides `roll_intrinsic_abilities`).
+> **PRECONDITION:** PROJ-300 (Universal IAbilitySource Framework). PROJ-300 ships the shared `roll_intrinsic_abilities` + `format_intrinsic_source_label` helpers (D15); PROJ-303 is a pure consumer. PROJ-301 is no longer a precondition for the helpers.
+
+> **2026-04-27 review note:** the original plan treated `WarpPoint` types as an existing concept that just needed registry-ifying. Verified during review: `WarpPoint` ([game/strategy/data/galaxy.py:34-72](../../../game/strategy/data/galaxy.py#L34)) currently has only `destination_id`, `location`, `to_dict`, `from_dict` — there is no `type` field. PROJ-303 is therefore introducing the warp-point-type concept itself, not just registry-driving an existing taxonomy. Phase 1 must add a `type: str` field to `WarpPoint` AND the type registry. Re-scope or split if this becomes too large for a 4-phase project.
 
 ## Quick Status
 | Phase | Status | Checklist |

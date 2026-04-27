@@ -374,7 +374,7 @@ class TestColonizeMissionCommandHandler:
         mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=None, target_hex=(100, 100))
 
         # PROJ-207: Patch at command_handlers where function is imported
-        with patch('game.strategy.engine.command_handlers.find_hybrid_path', return_value=None):
+        with patch('game.strategy.engine.handlers.base.find_hybrid_path', return_value=None):
             result = handler.execute(mock_session, mock_cmd)
 
         assert not result.is_valid
@@ -647,7 +647,7 @@ class TestCommandHelpers:
 
         target = HexCoord(5, 5)
 
-        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(5, 5)]
             result = add_move_order_if_needed(mock_session, mock_fleet, target)
 
@@ -668,7 +668,7 @@ class TestCommandHelpers:
         mock_session = Mock()
         mock_session.galaxy = Mock()
 
-        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_path.return_value = None
             result = add_move_order_if_needed(mock_session, mock_fleet, HexCoord(100, 100))
 

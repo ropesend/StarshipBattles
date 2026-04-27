@@ -7,7 +7,7 @@
 |-------|--------|-----------|
 | 1. Expand component ability `allowed_scopes` for strategic scopes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `FleetAbilitySource` adapter + iterator registration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Sample component (Flagship Sensor Array) + integration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Sample component (Flagship Shield Projector) + integration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Performance check + UI verification + docs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
@@ -20,7 +20,9 @@
 
 ## Overview
 
-After PROJ-300..304 land, planets-themselves, stars, warp points, system archetypes, storms, and facilities all flow through the unified ability framework. This final project adds **fleets/ships** — a fleet at hex H projects sector-scope abilities visible to other entities at H on the strategy map. A flagship with a "Sensor Array" component (`SensorBoost scope: allied_sector`) lights up the hex with sensor coverage; a stealth-equipped fleet might project `EmissionShroud scope: sector`.
+After PROJ-300..304 land, planets-themselves, stars, warp points, system archetypes, storms, and facilities all flow through the unified ability framework. This final project adds **fleets/ships** — a fleet at hex H projects sector-scope abilities visible to other entities at H on the strategy map. A flagship with a "Shield Projector" component (`ShieldModifier scope: allied_sector`) buffs allied ships sharing the hex; future components can extend the pattern.
+
+> **2026-04-27 update (decisions.md D10):** original plan referenced a `SensorBoost` ability that does not exist in the codebase. Inventing it is a separate design item. PROJ-305 sample component now uses `ShieldModifier`, which already supports `allied_sector` ([planetary.py:443](../../game/simulation/components/abilities/planetary.py#L443)). PROJ-305 is plumbing only.
 
 This is structurally distinct from the existing combat-only `FleetAuraManager`, which handles `scope: fleet` and `scope: team` aura abilities during battle. Those continue to function unchanged. PROJ-305 adds a parallel **strategic** projection path, gated by scope: components declare `scope: sector` (or system) → strategic-layer projection; `scope: fleet` (or team) → combat-internal aura.
 
@@ -28,7 +30,7 @@ This is structurally distinct from the existing combat-only `FleetAuraManager`, 
 - Expand component ability `allowed_scopes` lists where appropriate so ship components can legitimately declare strategic-scope abilities (sector / system / allied_sector / enemy_sector). Tests for scope validation.
 - `FleetAbilitySource` adapter wrapping a Fleet, walking its ships, walking their components, gathering abilities with strategic scopes (NOT combat-only scopes).
 - Iterator registration: fleets at the queried hex contribute to sector effects.
-- Sample component definition: `data/components.json` adds a "Flagship Sensor Array" with `SensorBoost scope: allied_sector` ability — proves the integration works end-to-end.
+- Sample component definition: `data/components.json` adds a "Flagship Shield Projector" with `ShieldModifier scope: allied_sector` (multiplier 1.25) — proves the integration works end-to-end. *(Per D10: re-uses an already-existing ability; no new ability classes invented in this project.)*
 - Tests covering scope-filter-correctness (combat scopes don't leak into strategic projection; strategic scopes don't leak into combat aura).
 - Performance check: fleet movements should not cause performance regression in the collector. Add caching if needed.
 - UI: fleet provider in Sector Effects shows `source_label = "Flagship 'Indomitable' (Player 1)"`.

@@ -167,7 +167,7 @@ TBD against PROJ-300 framework.
 ### Dependencies & Risks
 1. **`star_type` taxonomy alignment** — registry must match the actual generated star types. Add a coverage validation test like PROJ-301.
 2. **System-scope filtering** — confirm PROJ-300's `_aggregate` correctly filters system vs sector scope when ownerless sources are included. Tests should cover all four cases (system source × system query, system source × sector query → not picked up unless at star's hex with sector scope, etc.).
-3. **Pulsar's `ShieldModifier scope: system`** is a meaningful combat behavior change — every battle in a pulsar system gets stacked shield reduction with whatever facilities project. Confirm this is the intent before generating production data.
+3. **Pulsar's `ShieldModifier scope: system` is intended hostile-system design** *(decisions.md D7, 2026-04-27)*. NO balance cap, NO floor multiplier — the player is expected to recognize hostile systems and avoid them. The corresponding UI hazard hint (D8) is mandatory: implemented in Phase 4. Without the hint, the player can't see the hazard before flying in.
 
 ### Opportunities Discovered
 - The system × sector scope distinction is exercised more thoroughly here than in PROJ-300/301. Tests written here strengthen the framework's invariants for PROJ-303 (warp points) and PROJ-304 (system archetypes) which also span both scopes.

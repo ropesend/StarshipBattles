@@ -1,6 +1,6 @@
 # PROJ-304: Design Document
 
-> **PRECONDITION:** PROJ-300. PROJ-301 for `roll_intrinsic_abilities`. Read [`Projects/active_projects/PROJ-300/design.md`](../PROJ-300/design.md) first.
+> **PRECONDITION:** PROJ-300 (ships `roll_intrinsic_abilities` + `format_intrinsic_source_label` per D15). PROJ-301 is no longer required for the helpers. Read [`Projects/active_projects/PROJ-300/design.md`](../PROJ-300/design.md) first.
 
 ---
 

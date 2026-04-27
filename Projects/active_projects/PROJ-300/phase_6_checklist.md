@@ -70,7 +70,7 @@ Each sub-phase is independent and can be committed separately, but all three mus
       entries = []
       for effect in sector_effects:
           ability = effect['ability_name']
-          if ability not in {'ShieldModifier', 'DamageModifier'}:  # ThrustModifier added when consumed
+          if ability not in {'ShieldModifier', 'DamageModifier', 'ThrustModifier'}:  # ThrustModifier wired in PROJ-300 per D14
               continue
           for provider in effect['providers']:
               if not provider['is_active']:
@@ -106,6 +106,32 @@ Each sub-phase is independent and can be committed separately, but all three mus
 
 **Notes:** Confirm `emit_entries_for_ability` accepts `stack_group=None` — if storms emit None and facilities emit a string, the combat aggregator treats Nones as ungrouped (multiply across them). This matches the user-decided MULTIPLY behavior.
 
+### Task 6.4: Wire `ThrustModifier` combat consumption [Medium] *(added 2026-04-27, decisions.md D14)*
+**Files:** `game/simulation/combat/ability_stat_registry.py`, the combat propulsion stat aggregator (Phase 1 audit identifies the exact site — likely in `game/simulation/entities/ship_combat_engine.py` or a propulsion-stats helper).
+**Tests:** `tests/integration/strategy/combat/test_storm_thrust_modifier.py` (NEW)
+
+- [ ] Failing tests first:
+  - [ ] `test_single_storm_thrust_modifier_applies_in_combat` — ship in `gravitational_anomaly` (`ThrustModifier 0.6`) gets `effective_thrust = base_thrust * 0.6`.
+  - [ ] `test_overlapping_thrust_modifiers_multiply` — two storms each with `ThrustModifier 0.6` → ship at hex gets `0.36 × thrust`.
+  - [ ] `test_facility_projected_thrust_modifier` — a facility component with `ThrustModifier scope: enemy_sector` reduces enemy ship thrust at the hex.
+  - [ ] `test_no_storms_no_thrust_change` — control: ship in clear hex has unmodified thrust.
+- [ ] In `ABILITY_STAT_REGISTRY`, register `ThrustModifier` → `thrust_mult` so storm/facility-emitted entries flow into the combat stat stack.
+- [ ] In the combat propulsion stat aggregator, multiply effective thrust by aggregated `thrust_mult` from external modifiers (symmetrical with `shield_capacity_mult` consumption today).
+- [ ] Run tests — green.
+
+**Notes:** This task closes out D14 (no more dead-data-flow). Treat `ThrustModifier` symmetrically with `ShieldModifier` for the rest of the project — wherever one is mentioned, the other should be too.
+
+### Task 6.5: Storm-stacking balance regression test [Simple] *(added 2026-04-27, decisions.md D18)*
+**File:** `tests/integration/strategy/test_overlapping_storm_combat.py` (NEW)
+
+- [ ] Failing test first: `test_two_overlapping_ion_storms_apply_025x_shields_in_combat` — multiplicative stacking, NOT MAX.
+- [ ] Failing test: `test_three_overlapping_ion_storms_apply_0125x_shields` — confirms the multiply scales correctly past two.
+- [ ] Failing test: `test_single_ion_storm_applies_05x_shields` — single-storm baseline.
+- [ ] Comment at top of file references decisions.md D6 + D18 documenting the deliberate behavior change from the legacy MAX behavior.
+- [ ] Run — green.
+
+**Notes:** Test exists explicitly to lock in the MAX→MULTIPLY change so a future contributor doesn't accidentally reintroduce shared `stack_group="storm_shield_interference"`.
+
 ---
 
 ## Phase Completion Checklist
@@ -113,5 +139,7 @@ Each sub-phase is independent and can be committed separately, but all three mus
 - [ ] All consumer-related tests green
 - [ ] No production code references `AreaEffectManager` or `EnvironmentalEffects` (verify with grep)
 - [ ] **NOTE: `pytest tests/ --testmon` may still fail because the old `area_effect_manager.py` file still exists and may be importable but broken; Phase 7 cleans this up.**
+- [ ] D14 ThrustModifier consumption tests green (Task 6.4).
+- [ ] D18 storm-stacking balance regression test green (Task 6.5).
 - [ ] Update status to `Complete`
 - [ ] Update plan.md

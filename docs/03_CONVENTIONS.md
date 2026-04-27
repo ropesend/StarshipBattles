@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-04-27 — PROJ-311 added §Type Annotations
+> **Last verified:** 2026-04-27 — PROJ-309 expanded §2.3 File Size with the 500-LOC rule (diagnose / split / preserve API) and exemption for test files
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -168,9 +168,19 @@ the new names and import paths directly.
 
 ### 2.3 File Size
 
-- **Target:** ~500 lines maximum per file.
-- **When to extract:** If a file exceeds 500 lines or has clearly separable responsibilities, extract into a subpackage or sibling module.
-- **Subpackage vs flat:** Use a subpackage (directory with `__init__.py`) when there are 3+ closely related files that form a logical unit (e.g., `builder/`, `battle_controller/`). Keep it flat when files are loosely related.
+Production-source files under `game/` should remain **below 500 lines**. When a file approaches or crosses 500 LOC, that's a signal it has accreted multiple responsibilities and needs to be split.
+
+**When a file crosses 500 LOC:**
+
+1. **Diagnose:** Has the file accreted multiple responsibilities? Almost always yes once it crosses this threshold.
+2. **Split:** Extract cohesive sub-modules. The split direction depends on the file — by render layer, by domain, by concern, etc. Avoid arbitrary "first half / second half" splits — each sub-module should have one reason to change.
+3. **Preserve API:** Use a re-export shim (the original module re-exports from the new sub-modules) when many callers exist; full caller migration when few. The choice is per-file.
+
+**Subpackage vs flat:** Use a subpackage (directory with `__init__.py`) when there are 3+ closely related files that form a logical unit (e.g., `builder/`, `battle_controller/`). Keep it flat when files are loosely related.
+
+**Test files are exempt.** Long test files (under `tests/`, `combat_lab/`, etc.) are often legitimate — do not apply the 500-line rule to them.
+
+See PROJ-309 for the audit that established this rule and the decomposition of the original top-10 files.
 
 ### 2.4 UI Screen Line Budget (PROJ-282)
 

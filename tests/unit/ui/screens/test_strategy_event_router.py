@@ -55,6 +55,8 @@ def mock_ui():
     ui.window_manager.planet_selection_window = None
     ui.window_manager.system_selection_window = None
     ui.window_manager.fleet_selection_window = None
+    # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
+    ui.window_manager.planet_abilities_window = None
 
     # Menu panel not open
     ui.menu_panel = None

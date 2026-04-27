@@ -275,3 +275,9 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-275 | N-Team Combat Support | 2026-04-18 | PROJ-251-300 |
 | PROJ-276 | Eradicate Legacy component_damage Dual-Tracking | 2026-04-18 | PROJ-251-300 |
 | PROJ-277 | First-Class A/B Comparison Runner | 2026-04-18 | PROJ-251-300 |
+| PROJ-278 | Unified Role Registry (design_role + Combat Lab scenario_role) | 2026-04-18 | PROJ-251-300 |
+| PROJ-279 | Combat Lab Spec Compiler — Explicit Composition (delete to_spec monkey-patch) | 2026-04-18 | PROJ-251-300 |
+| PROJ-280 | Combat Lab Template Deduplication + Authoring Rules | 2026-04-18 | PROJ-251-300 |
+| PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | 2026-04-26 | PROJ-251-300 |
+| PROJ-282 | FleetBattleSetupScreen MVVM Decomposition | 2026-04-26 | PROJ-251-300 |
+| PROJ-283 | Race Setup & Habitability Foundation | 2026-04-26 | PROJ-251-300 |

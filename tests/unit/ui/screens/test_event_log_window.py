@@ -294,6 +294,8 @@ class TestStrategyUIEventLogIntegration:
         ui.window_manager.planet_selection_window = None
         ui.window_manager.system_selection_window = None
         ui.window_manager.fleet_selection_window = None
+        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
+        ui.window_manager.planet_abilities_window = None
 
         # PROJ-86 Phase 7: Event router
         from game.ui.screens.strategy_event_router import StrategyEventRouter

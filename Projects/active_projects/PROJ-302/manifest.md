@@ -7,7 +7,8 @@
 | `game/strategy/data/stars.py` | Production | Add `intrinsic_abilities` field to Star. |
 | `game/strategy/generation/` (star generator file — confirm during Phase A) | Production | Load star_types.json; populate intrinsic_abilities via `roll_intrinsic_abilities`. |
 | `game/strategy/services/ability_sources/star.py` | Production | NEW. `StarAbilitySource` adapter. |
-| `game/strategy/services/ability_sources/intrinsic_roll.py` | Production | Created by PROJ-301; used here. |
+| `game/strategy/services/ability_sources/intrinsic_roll.py` | Imported | Created by PROJ-300 (D15); imported here as a pure consumer. No code change. |
+| `game/strategy/services/ability_sources/labels.py` | Imported | Created by PROJ-300 (D15); `format_intrinsic_source_label` used by `StarAbilitySource.source_label`. |
 | `game/strategy/services/ability_sources/__init__.py` | Production | Re-export `StarAbilitySource`. |
 | `game/strategy/services/ability_iterator.py` | Production | Register star at-hex and in-system providers. |
 | `tests/unit/strategy/services/ability_sources/test_star.py` | Test | NEW. Adapter cases. |

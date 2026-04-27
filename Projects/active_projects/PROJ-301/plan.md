@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Planet types data registry + roll support | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Planet types data registry (helper now in PROJ-300) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `Planet.intrinsic_abilities` field + generation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `PlanetIntrinsicAbilitySource` adapter + iterator registration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI verification + docs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |

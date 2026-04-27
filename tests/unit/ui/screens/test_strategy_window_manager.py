@@ -107,7 +107,7 @@ class TestHandleResize:
 class TestPlanetListWindow:
     """Tests for planet list window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.PlanetListWindow')
+    @patch('game.ui.screens.strategy_windows.list_windows.PlanetListWindow')
     def test_open_planet_list_creates_window(self, mock_window_class, window_manager):
         """Test open_planet_list creates PlanetListWindow."""
         window_manager.open_planet_list()
@@ -115,7 +115,7 @@ class TestPlanetListWindow:
         mock_window_class.assert_called_once()
         assert window_manager.planet_list_window is not None
 
-    @patch('game.ui.screens.strategy_window_manager.PlanetListWindow')
+    @patch('game.ui.screens.strategy_windows.list_windows.PlanetListWindow')
     def test_open_planet_list_passes_correct_params(self, mock_window_class, window_manager):
         """Test open_planet_list passes correct parameters."""
         window_manager.open_planet_list()
@@ -147,7 +147,7 @@ class TestPlanetListWindow:
 class TestBuildQueueListWindow:
     """Tests for build queue list window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.BuildQueueListWindow')
+    @patch('game.ui.screens.strategy_windows.build_queue_windows.BuildQueueListWindow')
     def test_open_build_queue_list_creates_window(self, mock_window_class, window_manager):
         """Test open_build_queue_list creates BuildQueueListWindow."""
         window_manager.open_build_queue_list()
@@ -155,7 +155,7 @@ class TestBuildQueueListWindow:
         mock_window_class.assert_called_once()
         assert window_manager.build_queue_list_window is not None
 
-    @patch('game.ui.screens.strategy_window_manager.BuildQueueListWindow')
+    @patch('game.ui.screens.strategy_windows.build_queue_windows.BuildQueueListWindow')
     def test_open_build_queue_list_kills_existing(self, mock_window_class, window_manager):
         """Test open_build_queue_list kills existing window first."""
         existing = Mock()
@@ -181,7 +181,7 @@ class TestBuildQueueListWindow:
 class TestEmpireBuildQueueWindow:
     """Tests for empire build queue window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.EmpireBuildQueueWindow')
+    @patch('game.ui.screens.strategy_windows.build_queue_windows.EmpireBuildQueueWindow')
     def test_open_empire_build_queue_creates_window(self, mock_window_class, window_manager):
         """Test open_empire_build_queue_window creates window."""
         window_manager.open_empire_build_queue_window()
@@ -189,7 +189,7 @@ class TestEmpireBuildQueueWindow:
         mock_window_class.assert_called_once()
         assert window_manager.empire_build_queue_window is not None
 
-    @patch('game.ui.screens.strategy_window_manager.EmpireBuildQueueWindow')
+    @patch('game.ui.screens.strategy_windows.build_queue_windows.EmpireBuildQueueWindow')
     def test_open_empire_build_queue_kills_existing(self, mock_window_class, window_manager):
         """Test open_empire_build_queue_window kills existing first."""
         existing = Mock()
@@ -215,7 +215,7 @@ class TestEmpireBuildQueueWindow:
 class TestEventLogWindow:
     """Tests for event log window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.EventLogWindow')
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_event_log_creates_window(self, mock_window_class, window_manager):
         """Test open_event_log creates EventLogWindow."""
         window_manager.open_event_log()
@@ -223,7 +223,7 @@ class TestEventLogWindow:
         mock_window_class.assert_called_once()
         assert window_manager.event_log_window is not None
 
-    @patch('game.ui.screens.strategy_window_manager.EventLogWindow')
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_event_log_kills_existing(self, mock_window_class, window_manager):
         """Test open_event_log kills existing window first."""
         existing = Mock()
@@ -233,7 +233,7 @@ class TestEventLogWindow:
 
         existing.kill.assert_called_once()
 
-    @patch('game.ui.screens.strategy_window_manager.EventLogWindow')
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_event_log_with_events(self, mock_window_class, window_manager):
         """Test open_event_log_with_events passes specific events."""
         events = [{'type': 'test', 'message': 'Hello'}]
@@ -303,14 +303,21 @@ class TestEventLogNavigation:
         # Camera should still be moved
         mock_camera_nav.center_on_hex.assert_called_once()
 
-    @patch('game.ui.screens.strategy_window_manager.EventLogWindow')
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_event_log_passes_navigate_callback(self, mock_window_class, window_manager):
-        """Test open_event_log passes navigation callback to window."""
+        """Test open_event_log passes navigation callback to window.
+
+        PROJ-309 sub-phase 3.10: the navigate callback now lives on the
+        EventLogRegistrar; the composer's ``_on_event_log_navigate`` method
+        delegates to it. The contract is that the callback passed to
+        EventLogWindow drives the registrar's _on_navigate behavior.
+        """
         window_manager.open_event_log()
 
         call_kwargs = mock_window_class.call_args[1]
         assert 'on_navigate_callback' in call_kwargs
-        assert call_kwargs['on_navigate_callback'] == window_manager._on_event_log_navigate
+        # The bound method object lives on the registrar now.
+        assert call_kwargs['on_navigate_callback'] == window_manager._event_log._on_navigate
 
 
 # =============================================================================
@@ -320,7 +327,7 @@ class TestEventLogNavigation:
 class TestEmpirePanelWindow:
     """Tests for empire panel window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.EmpirePanelWindow')
+    @patch('game.ui.screens.strategy_windows.empire_panel_ctrl.EmpirePanelWindow')
     def test_open_empire_panel_creates_window(self, mock_window_class, window_manager):
         """Test open_empire_panel creates EmpirePanelWindow."""
         window_manager.open_empire_panel()
@@ -328,7 +335,7 @@ class TestEmpirePanelWindow:
         mock_window_class.assert_called_once()
         assert window_manager.empire_panel_window is not None
 
-    @patch('game.ui.screens.strategy_window_manager.EmpirePanelWindow')
+    @patch('game.ui.screens.strategy_windows.empire_panel_ctrl.EmpirePanelWindow')
     def test_open_empire_panel_kills_existing(self, mock_window_class, window_manager):
         """Test open_empire_panel kills existing window first."""
         existing = Mock()
@@ -393,7 +400,7 @@ class TestFleetOrdersWindow:
 class TestFleetReportWindow:
     """Tests for fleet report window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.FleetReportWindow')
+    @patch('game.ui.screens.strategy_windows.fleet_report_ctrl.FleetReportWindow')
     def test_open_fleet_report_creates_window(self, mock_window_class, window_manager):
         """Test open_fleet_report_window creates FleetReportWindow."""
         fleet = Mock()
@@ -403,7 +410,7 @@ class TestFleetReportWindow:
         mock_window_class.assert_called_once()
         assert window_manager.fleet_report_window is not None
 
-    @patch('game.ui.screens.strategy_window_manager.FleetReportWindow')
+    @patch('game.ui.screens.strategy_windows.fleet_report_ctrl.FleetReportWindow')
     def test_open_fleet_report_kills_existing(self, mock_window_class, window_manager):
         """Test open_fleet_report_window kills existing first."""
         existing = Mock()
@@ -489,7 +496,7 @@ class TestCargoQuickDialog:
 class TestPlanetSelectionPrompt:
     """Tests for planet selection prompt."""
 
-    @patch('game.ui.screens.strategy_window_manager.PlanetSelectionWindow')
+    @patch('game.ui.screens.strategy_windows.selection_prompts.PlanetSelectionWindow')
     def test_prompt_planet_selection_creates_window(self, mock_window_class, window_manager):
         """Test prompt_planet_selection creates selection window."""
         planets = [Mock(), Mock()]
@@ -499,7 +506,7 @@ class TestPlanetSelectionPrompt:
 
         mock_window_class.assert_called_once()
 
-    @patch('game.ui.screens.strategy_window_manager.PlanetSelectionWindow')
+    @patch('game.ui.screens.strategy_windows.selection_prompts.PlanetSelectionWindow')
     def test_prompt_planet_selection_passes_planets_and_callback(self, mock_window_class, window_manager):
         """Test prompt_planet_selection passes planets and callback."""
         planets = [Mock(name="P1"), Mock(name="P2")]
@@ -519,7 +526,7 @@ class TestPlanetSelectionPrompt:
 class TestSystemSelectionPrompt:
     """Tests for system selection prompt."""
 
-    @patch('game.ui.screens.strategy_window_manager.SystemSelectionWindow')
+    @patch('game.ui.screens.strategy_windows.selection_prompts.SystemSelectionWindow')
     def test_open_system_selection_creates_window(self, mock_window_class, window_manager):
         """Test open_system_selection creates selection window."""
         systems = [Mock(), Mock()]
@@ -530,7 +537,7 @@ class TestSystemSelectionPrompt:
 
         mock_window_class.assert_called_once()
 
-    @patch('game.ui.screens.strategy_window_manager.SystemSelectionWindow')
+    @patch('game.ui.screens.strategy_windows.selection_prompts.SystemSelectionWindow')
     def test_open_system_selection_passes_args(self, mock_window_class, window_manager):
         """Test open_system_selection passes systems, current_system, and callback."""
         systems = [Mock(), Mock()]
@@ -552,9 +559,9 @@ class TestSystemSelectionPrompt:
 class TestMoveChoicePrompt:
     """Tests for move choice prompt."""
 
-    @patch('game.ui.screens.strategy_window_manager.pygame_gui.elements.UIWindow')
-    @patch('game.ui.screens.strategy_window_manager.pygame_gui.elements.UIButton')
-    @patch('game.ui.screens.strategy_window_manager.pygame_gui.elements.UILabel')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIWindow')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIButton')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UILabel')
     def test_prompt_move_choice_creates_window(self, mock_label, mock_button, mock_window, window_manager):
         """Test prompt_move_choice creates choice window."""
         fleet = Mock()
@@ -568,9 +575,9 @@ class TestMoveChoicePrompt:
         # Two buttons should be created
         assert mock_button.call_count == 2
 
-    @patch('game.ui.screens.strategy_window_manager.pygame_gui.elements.UIWindow')
-    @patch('game.ui.screens.strategy_window_manager.pygame_gui.elements.UIButton')
-    @patch('game.ui.screens.strategy_window_manager.pygame_gui.elements.UILabel')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIWindow')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIButton')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UILabel')
     def test_prompt_move_choice_registers_callbacks(self, mock_label, mock_button, mock_window, window_manager):
         """Test prompt_move_choice registers callbacks in ui_callbacks."""
         # Each UIButton() call returns a unique mock
@@ -663,9 +670,9 @@ class TestConfirmationDialog:
 class TestMultipleWindows:
     """Tests for handling multiple windows simultaneously."""
 
-    @patch('game.ui.screens.strategy_window_manager.PlanetListWindow')
-    @patch('game.ui.screens.strategy_window_manager.FleetReportWindow')
-    @patch('game.ui.screens.strategy_window_manager.EventLogWindow')
+    @patch('game.ui.screens.strategy_windows.list_windows.PlanetListWindow')
+    @patch('game.ui.screens.strategy_windows.fleet_report_ctrl.FleetReportWindow')
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_multiple_windows(self, mock_event, mock_fleet, mock_planet, window_manager):
         """Test opening multiple windows simultaneously."""
         window_manager.open_planet_list()

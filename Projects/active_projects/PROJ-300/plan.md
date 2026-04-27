@@ -69,7 +69,11 @@ Subsequent projects (PROJ-301..305) add new source kinds (planets-themselves, st
 - Warp point intrinsic abilities (PROJ-303).
 - Star system archetype abilities (PROJ-304).
 - Fleet strategic-layer abilities (PROJ-305).
-- Combat consumption of `ThrustModifier` (registered but not consumed — wire up in a follow-up).
+
+**Pulled INTO PROJ-300 scope (resolved 2026-04-27 review):**
+- Combat consumption of `ThrustModifier` is wired end-to-end in this project (not deferred). See `decisions.md` D14 and `design.md §Combat Consumption — ThrustModifier`.
+- `roll_intrinsic_abilities` shared helper ships in this project so PROJ-301..304 are pure consumers. Lives at `game/strategy/services/ability_sources/intrinsic_roll.py`.
+- `format_intrinsic_source_label(entity, type_name) -> str` ships in this project for label consistency across PROJ-301..304 adapters.
 
 ## Key Files
 
@@ -79,6 +83,8 @@ Subsequent projects (PROJ-301..305) add new source kinds (planets-themselves, st
 | Adapter package | `game/strategy/services/ability_sources/` (NEW) |
 | `FacilityAbilitySource` | `game/strategy/services/ability_sources/facility.py` (NEW) |
 | `StormAbilitySource` | `game/strategy/services/ability_sources/storm.py` (NEW) |
+| Shared roll helper | `game/strategy/services/ability_sources/intrinsic_roll.py` (NEW) |
+| Shared label helper | `game/strategy/services/ability_sources/labels.py` (NEW) |
 | Unified iterator | `game/strategy/services/ability_iterator.py` (NEW) |
 | Effect collector | `game/strategy/services/system_effects_collector.py` |
 | Aggregation helpers | `game/strategy/services/strategic_ability_scanner.py` |

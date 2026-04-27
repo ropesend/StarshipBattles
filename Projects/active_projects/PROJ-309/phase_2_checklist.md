@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** For each of the 10 target files, produce a per-file decomposition design. Each design lives at `findings/<filename>_decomposition.md` and answers: what sub-modules emerge, what each owns, public API choices, caller-update strategy, test plan.
 
 **Prerequisites:** Phase 1 complete — convention is documented.
@@ -57,11 +57,11 @@ Which symbols must remain importable from the original module name?
 **File:** `Projects/active_projects/PROJ-309/findings/race_setup_screen_decomposition.md` (NEW)
 **Tests:** None — design step.
 
-- [ ] Read `game/ui/screens/race_setup_screen.py` (1588 lines)
-- [ ] Identify distinct responsibilities (genome editing, traits, preview, controls, etc.)
-- [ ] Propose sub-module layout under `game/ui/screens/race_setup/`
-- [ ] Document caller-update strategy
-- [ ] Save to `findings/race_setup_screen_decomposition.md`
+- [x] Read `game/ui/screens/race_setup_screen.py` (1588 lines)
+- [x] Identify distinct responsibilities (genome editing, traits, preview, controls, etc.)
+- [x] Propose sub-module layout under `game/ui/screens/race_setup/`
+- [x] Document caller-update strategy
+- [x] Save to `findings/race_setup_screen_decomposition.md`
 
 **Notes:**
 
@@ -71,10 +71,10 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/strategy_renderer_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/ui/screens/strategy_renderer.py` (1205 lines)
-- [ ] Identify render-layer concerns
-- [ ] Propose sub-module layout
-- [ ] Save to `findings/strategy_renderer_decomposition.md`
+- [x] Read `game/ui/screens/strategy_renderer.py` (1205 lines)
+- [x] Identify render-layer concerns
+- [x] Propose sub-module layout
+- [x] Save to `findings/strategy_renderer_decomposition.md`
 
 **Notes:**
 
@@ -84,8 +84,8 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/test_lab_renderer_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/ui/screens/test_lab/renderer.py` (1193 lines)
-- [ ] Save to `findings/test_lab_renderer_decomposition.md`
+- [x] Read `game/ui/screens/test_lab/renderer.py` (1193 lines)
+- [x] Save to `findings/test_lab_renderer_decomposition.md`
 
 **Notes:**
 
@@ -95,13 +95,13 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/core_protocols_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/core/protocols.py` (1087 lines)
-- [ ] Group protocols by domain (combat / strategy / AI / UI / registry)
-- [ ] Propose package layout: `game/core/protocols/__init__.py` (re-export) + per-domain files
-- [ ] **Caller-update strategy: Option A is mandatory** — too many callers
-- [ ] Save to `findings/core_protocols_decomposition.md`
+- [x] Read `game/core/protocols.py` (1087 lines)
+- [x] Group protocols by domain (combat / strategy / AI / UI / registry)
+- [x] Propose package layout: `game/core/protocols/__init__.py` (re-export) + per-domain files
+- [x] **Caller-update strategy: Option A is mandatory** — too many callers
+- [x] Save to `findings/core_protocols_decomposition.md`
 
-**Notes:** Heavy import surface. Re-export from package `__init__.py` is the only viable strategy.
+**Notes:** Heavy import surface — 132 import statements across 80 files. Option A re-export mandatory. Final layout (post-cross-review): 9 sub-modules — `__init__.py`, `common.py`, `registry.py`, `strategy_entities.py` (~340 LOC), `strategy_domain.py` (~180 LOC), `combat.py`, `boundary.py`, `ui.py`, `persistence.py`. The original "single `strategy.py`" estimate was ~520 LOC (over cap); cross-review locked the upfront entities/domain split per the natural source-file seam (lines 116–460 vs 467–625).
 
 ---
 
@@ -109,9 +109,9 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/command_handlers_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/strategy/engine/command_handlers.py` (1072 lines)
-- [ ] One handler-class-per-file under `game/strategy/engine/handlers/`
-- [ ] Save to `findings/command_handlers_decomposition.md`
+- [x] Read `game/strategy/engine/command_handlers.py` (1072 lines)
+- [x] One handler-class-per-file under `game/strategy/engine/handlers/`
+- [x] Save to `findings/command_handlers_decomposition.md`
 
 **Notes:** PROJ-298 just touched this file (renamed handler classes). Confirm latest state before designing.
 
@@ -121,8 +121,8 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/test_run_details_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/ui/screens/test_lab/test_run_details.py` (957 lines)
-- [ ] Save to `findings/test_run_details_decomposition.md`
+- [x] Read `game/ui/screens/test_lab/test_run_details.py` (957 lines)
+- [x] Save to `findings/test_run_details_decomposition.md`
 
 **Notes:**
 
@@ -132,9 +132,9 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/strategy_session_facade_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/strategy/facade/strategy_session_facade.py` (922 lines)
-- [ ] Per-domain slices (fleet, planet, research, economy, ...)
-- [ ] Save to `findings/strategy_session_facade_decomposition.md`
+- [x] Read `game/strategy/facade/strategy_session_facade.py` (922 lines)
+- [x] Per-domain slices (fleet, planet, research, economy, ...)
+- [x] Save to `findings/strategy_session_facade_decomposition.md`
 
 **Notes:**
 
@@ -144,8 +144,8 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/workshop_viewmodel_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/ui/screens/workshop_viewmodel.py` (873 lines)
-- [ ] Save to `findings/workshop_viewmodel_decomposition.md`
+- [x] Read `game/ui/screens/workshop_viewmodel.py` (873 lines)
+- [x] Save to `findings/workshop_viewmodel_decomposition.md`
 
 **Notes:**
 
@@ -155,9 +155,9 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/app_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/app.py` (849 lines)
-- [ ] Bootstrap / run-loop / screen management probably the three concerns
-- [ ] Save to `findings/app_decomposition.md`
+- [x] Read `game/app.py` (849 lines)
+- [x] Bootstrap / run-loop / screen management probably the three concerns
+- [x] Save to `findings/app_decomposition.md`
 
 **Notes:**
 
@@ -167,8 +167,8 @@ Which symbols must remain importable from the original module name?
 **File:** `findings/strategy_window_manager_decomposition.md`
 **Tests:** None.
 
-- [ ] Read `game/ui/screens/strategy_window_manager.py` (817 lines)
-- [ ] Save to `findings/strategy_window_manager_decomposition.md`
+- [x] Read `game/ui/screens/strategy_window_manager.py` (817 lines)
+- [x] Save to `findings/strategy_window_manager_decomposition.md`
 
 **Notes:**
 
@@ -178,19 +178,24 @@ Which symbols must remain importable from the original module name?
 **File:** None — review step.
 **Tests:** None.
 
-- [ ] Read all 10 design docs back-to-back
-- [ ] Look for overlap (does the protocols split affect the renderer split?)
-- [ ] Look for inconsistencies (one design uses Option A, similar file uses Option B — same reasons?)
-- [ ] If any design has unanswered questions or weak risk analysis, send back
+- [x] Read all 10 design docs back-to-back
+- [x] Look for overlap (does the protocols split affect the renderer split?)
+- [x] Look for inconsistencies (one design uses Option A, similar file uses Option B — same reasons?)
+- [x] If any design has unanswered questions or weak risk analysis, send back
 
-**Notes:**
+**Notes:** Review report at `findings/_cross_design_review.md`. Verdict: **APPROVE WITH FIXES**. All 10 docs are template-complete; no resends. Three fixes identified:
+1. **Applied** — `core_protocols_decomposition.md` updated to commit upfront to the `strategy_entities.py` + `strategy_domain.py` split (avoids landing at ~520 LOC).
+2. **Phase 3 prerequisite** — small note in `docs/03_CONVENTIONS.md` about renderer subpackage naming convention (capture during whichever sub-phase lands first; flagged in handoff).
+3. **Phase 3 prerequisite** — `test_run_details/details/validation.py` should import shared draw helpers from the test_lab `renderer/_draw_helpers.py` rather than re-implementing (capture during sub-phase 6).
+
+Phase 3 sequencing recommendation (lowest risk → highest): protocols → command_handlers → workshop_viewmodel → strategy_session_facade → test_lab/renderer → test_run_details → strategy_renderer → strategy_window_manager → race_setup_screen → app.py (last; entry-point).
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All 10 design docs exist in `findings/`
-- [ ] Each design has all template sections filled
-- [ ] Cross-design review complete
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase (Phase 3)
+- [x] All 10 design docs exist in `findings/`
+- [x] Each design has all template sections filled
+- [x] Cross-design review complete
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase (Phase 3)

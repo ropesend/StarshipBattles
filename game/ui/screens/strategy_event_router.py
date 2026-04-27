@@ -88,6 +88,9 @@ class StrategyEventRouter:
             return True
         if wm.fleet_selection_window is not None:
             return True
+        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
+        if wm.planet_abilities_window is not None:
+            return True
 
         return False
 
@@ -509,6 +512,8 @@ class StrategyEventRouter:
             ('planet_selection_window', wm.planet_selection_window),
             ('system_selection_window', wm.system_selection_window),
             ('fleet_selection_window', wm.fleet_selection_window),
+            # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
+            ('planet_abilities_window', wm.planet_abilities_window),
         ]
         for name, window in blocking_windows:
             if window is not None:

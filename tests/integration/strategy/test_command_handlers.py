@@ -346,7 +346,7 @@ class TestColonizeMissionCommandHandler:
 
         # Mock pathfinding to return None (no path)
         # PROJ-207: Patch at command_handlers where function is imported
-        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_path.return_value = None
 
             result = session.handle_command(cmd)
@@ -417,7 +417,7 @@ class TestColonizeMissionCommandHandler:
 
         # Mock pathfinding - path should start from (5,5) not (0,0)
         # PROJ-207: Patch at command_handlers where function is imported
-        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
 
             result = session.handle_command(cmd)

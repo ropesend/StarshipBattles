@@ -401,8 +401,10 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         """Handle Load Race button click - open race browser dialog."""
         logger.debug(f"Opening race browser for player {player_index + 1}")
 
-        # Import here to avoid circular imports
-        from game.ui.screens.race_setup_screen import RaceBrowserDialog
+        # PROJ-309 Sub-phase 3.1: import directly from the canonical
+        # location instead of through the legacy `race_setup_screen`
+        # leaked re-export.
+        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
 
         # Get window position for dialog placement
         window_rect = self.get_abs_rect()
