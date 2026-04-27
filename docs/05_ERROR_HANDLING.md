@@ -1,5 +1,7 @@
 # Error Handling Guidelines
 
+> **Last verified:** 2026-04-26
+
 Error handling conventions, exception hierarchy, logging standards, and reference patterns for the Starship Battles codebase.
 
 > **Reference Implementation:** `game/core/json_utils.py` demonstrates all patterns described here.

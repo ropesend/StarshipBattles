@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Backfill timestamps to 21 docs | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Establish convention in CLAUDE.md | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Backfill timestamps to 21 docs | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Establish convention in CLAUDE.md | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-26
-**Active Phase:** Planning (approved, ready for implementation)
-**Last Action:** Project created from 2026-04-26 review remaining-items list
-**Next Action:** Begin Phase 1 — `git log -1` each doc to get its true last-modified date, then add `> **Last verified:** YYYY-MM-DD` line to each
+**Last Updated:** 2026-04-27
+**Active Phase:** Complete — pending archive
+**Last Action:** Phase 2 complete. CLAUDE.md Rule 2 gained a DO and a DO NOT bullet about the `Last verified:` date. `docs/03_CONVENTIONS.md` gained §8 Documentation Freshness; its own timestamp bumped to 2026-04-27.
+**Next Action:** User verification, then archive PROJ-307.
 **Blockers:** None
-**Context for Next Agent:** Only [docs/README.md:4](docs/README.md#L4) currently has a "Last verified" timestamp. The other 21 doc files lack any freshness indicator. The format used in README is `> **Last verified:** YYYY-MM-DD — <one-sentence summary of what was verified>`. For backfill, copy each file's most recent commit date from `git log` and use a short summary like "current as of <topic> implementation."
+**Context for Next Agent:** Verifications all pass — `grep -L "Last verified" docs/...` returns zero files; `grep -n "Last verified" CLAUDE.md` returns 2 hits; `grep -n "Documentation Freshness" docs/03_CONVENTIONS.md` returns 1 hit.
 
 ## Overview
 Add a "Last verified" timestamp line near the top of every `docs/**/*.md` file. Establish the convention in CLAUDE.md so future doc edits maintain freshness markers. Helps future agents and contributors quickly judge whether a doc is likely stale or current.

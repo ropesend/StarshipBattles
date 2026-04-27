@@ -1,5 +1,7 @@
 # Service Layer Architecture
 
+> **Last verified:** 2026-04-27
+
 ## Overview
 
 The Starship Battles codebase uses a service layer pattern to provide clean abstractions between UI components and domain logic. Services act as facades that encapsulate complex operations and provide stable APIs for UI consumption.

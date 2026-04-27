@@ -1,5 +1,7 @@
 # Combat Simulation System
 
+> **Last verified:** 2026-04-18
+
 System documentation for the real-time combat simulation layer.
 
 ---

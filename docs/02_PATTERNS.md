@@ -1,5 +1,7 @@
 # Design Patterns Reference
 
+> **Last verified:** 2026-04-27 — Pattern count corrected to 27 in PROJ-297
+
 Agent-optimized reference for every core pattern in the codebase (28 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 

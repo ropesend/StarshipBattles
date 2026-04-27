@@ -1,5 +1,7 @@
 # Strategy Orders System Architecture
 
+> **Last verified:** 2026-04-07
+
 > **PROJ-187**: Strategy Orders Tick-Based Action System
 
 This document describes the unified tick-based orders system for the strategy layer. All fleet orders—movement, colonization, transfers, and superweapons—execute through a consistent tick-based mechanism.

@@ -1,5 +1,7 @@
 # Component System
 
+> **Last verified:** 2026-04-16
+
 This document provides an overview of the ship component system in Starship Battles.
 
 ## Overview

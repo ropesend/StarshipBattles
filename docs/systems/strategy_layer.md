@@ -1,5 +1,7 @@
 # Strategy Layer System
 
+> **Last verified:** 2026-04-26
+
 System documentation for the turn-based strategy layer.
 
 ---

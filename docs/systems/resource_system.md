@@ -1,5 +1,7 @@
 # Resource System
 
+> **Last verified:** 2026-03-31
+
 The resource system provides a unified, data-driven framework for all material and
 consumable types in the game. Both planetary materials (metals, organics, etc.) and
 operational consumables (fuel, energy, ammo) are defined as **resources** in a single
