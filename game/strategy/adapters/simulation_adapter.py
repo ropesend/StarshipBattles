@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     from game.simulation.battle_spec import BattleSpec
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
-    from game.strategy.services.area_effect_manager import EnvironmentalEffects
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
 
 
@@ -70,7 +69,7 @@ class SimulationBattleResolver(IBattleResolver):
         modifiers: Optional[Mapping[int, Any]] = None,
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
-        environmental_effects: Optional['EnvironmentalEffects'] = None,
+        environmental_effects: Any = None,  # PROJ-300: now a sector-effects list
     ) -> BattleResult:
         """Resolve a battle between N fleets via the unified entry.
 
@@ -198,7 +197,7 @@ class SimulationBattleResolver(IBattleResolver):
         *,
         seed: int,
         registries: Optional['GameRegistries'],
-        environmental_effects: Optional['EnvironmentalEffects'],
+        environmental_effects: Any,  # PROJ-300: now a sector-effects list
         modifiers: Optional[Mapping[int, Any]],
     ) -> BattleSpec:
         from game.strategy.combat.spec_compiler import build_strategy_battle_spec

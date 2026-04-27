@@ -10,7 +10,6 @@ from tests.fixtures.strategy_entities import (
     create_test_spectrum,
     create_test_star,
     create_test_warp_point,
-    create_test_storm_effect,
     create_test_storm,
     create_test_species_population,
     create_test_facility,
@@ -88,24 +87,22 @@ class TestWarpPointFactory:
         assert restored.destination_id == wp.destination_id
 
 
-class TestStormEffectFactory:
-    def test_creates_valid_effect(self):
-        e = create_test_storm_effect()
-        assert isinstance(e.shield_capacity_mult, float)
+class TestStormAbilitiesFactory:
+    """PROJ-300 v2.0 — abilities dict factory."""
 
-    def test_to_dict_round_trip(self):
-        from game.strategy.data.storm import StormEffect
-        e = create_test_storm_effect()
-        d = e.to_dict()
-        restored = StormEffect.from_dict(d)
-        assert restored == e
+    def test_creates_valid_abilities_dict(self):
+        from tests.fixtures.strategy_entities import create_test_storm_abilities
+        abilities = create_test_storm_abilities()
+        assert isinstance(abilities, dict)
+        assert "ShieldModifier" in abilities
+        assert abilities["ShieldModifier"]["multiplier"] == 0.7
 
 
 class TestStormFactory:
     def test_creates_valid_storm(self):
         s = create_test_storm()
         assert s.name
-        assert s.effects is not None
+        assert s.abilities  # PROJ-300: abilities dict, not effects
         assert len(s.hex_offsets) > 0
 
     def test_to_dict_round_trip(self):

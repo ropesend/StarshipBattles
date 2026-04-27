@@ -306,15 +306,24 @@ class TestStackGroupThreadingInStrategyCompiler:
     `stack_group="storm_shield_interference"`; fleet multipliers share
     team-scoped groups."""
 
-    def test_storm_entry_has_storm_stack_group(self):
-        from game.strategy.combat.spec_compiler import _entries_from_environmental_effects
-        from game.strategy.services.area_effect_manager import EnvironmentalEffects
-        effects = EnvironmentalEffects(shield_capacity_mult=0.5)
-        entries = _entries_from_environmental_effects(effects)
+    def test_storm_entry_has_no_stack_group_per_d6(self):
+        """PROJ-300 D6: storms emit ungrouped entries so they MULTIPLY, not MAX."""
+        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+        sector_effects = [{
+            'ability_name': 'ShieldModifier',
+            'providers': [{
+                'source_kind': 'storm',
+                'source_label': 'Ion Storm Alpha',
+                'source_id': 'storm:Ion Storm Alpha',
+                'is_active': True,
+                'ability_data': {'multiplier': 0.5, 'scope': 'sector'},
+            }],
+        }]
+        entries = _entries_from_sector_effects(sector_effects)
         assert entries
-        assert entries[0].stack_group == "storm_shield_interference", (
-            f"Storm entry should use a dedicated stack_group so overlapping "
-            f"storms MAX instead of SUM. Got stack_group={entries[0].stack_group!r}"
+        assert entries[0].stack_group is None, (
+            "PROJ-300 D6 — overlapping storms now MULTIPLY (no shared "
+            f"stack_group). Got stack_group={entries[0].stack_group!r}"
         )
 
     def test_fleet_shield_mult_has_team_scoped_stack_group(self):
@@ -458,23 +467,30 @@ class TestStrategyCompilerNFleets:
     def test_storm_global_applies_to_three_team_battle(
         self, session_registries, ship_factory
     ):
-        """Environmental effects are global — they apply to every team
-        regardless of N. With 3 fleets present we should still see the
-        single global storm entry."""
-        from game.strategy.services.area_effect_manager import EnvironmentalEffects
-
+        """PROJ-300: sector-effects entries are global — they apply to every team
+        regardless of N. With 3 fleets present we should still see the global
+        storm entry."""
         fleets = _three_fleets(ship_factory)
-        effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
+        sector_effects = [{
+            'ability_name': 'ShieldModifier',
+            'providers': [{
+                'source_kind': 'storm',
+                'source_label': 'Ion Storm Alpha',
+                'source_id': 'storm:Ion Storm Alpha',
+                'is_active': True,
+                'ability_data': {'multiplier': 0.5, 'scope': 'sector'},
+            }],
+        }]
         spec = build_strategy_battle_spec(
             fleets,
             empires={},
             settings=None,
             registries=session_registries,
-            environmental_effects=effects,
+            environmental_effects=sector_effects,
         )
         storm_entries = [
             e for e in spec.modifier_stack.global_
-            if e.source == "environment:storm_shield_interference"
+            if e.source == "sector:storm"
         ]
         assert len(storm_entries) == 1
         assert storm_entries[0].effect.stat_key == "shield_capacity_mult"

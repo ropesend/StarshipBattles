@@ -27,7 +27,6 @@ from game.core.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
     from game.strategy.services.fleet_navigation_service import FleetNavigationService
-    from game.strategy.services.area_effect_manager import AreaEffectManager
 
 
 @dataclass
@@ -57,7 +56,6 @@ class FleetMovementEngine(IMovementEngine):
     def __init__(
         self,
         nav_service: Optional['FleetNavigationService'] = None,
-        area_effect_manager: Optional['AreaEffectManager'] = None,
     ):
         """
         Initialize the fleet movement engine.
@@ -65,11 +63,12 @@ class FleetMovementEngine(IMovementEngine):
         Args:
             nav_service: Optional FleetNavigationService for dependency injection.
                          If None, service is lazily initialized on first use.
-            area_effect_manager: Optional AreaEffectManager for environmental effects.
-                         If None, creates default instance lazily.
+
+        PROJ-300 Phase 7: AreaEffectManager removed; environmental speed
+        modifiers are now read by `_get_effective_fleet_speed` directly via
+        the unified `system_effects_collector`.
         """
         self._nav_service = nav_service
-        self._area_effect_manager = area_effect_manager
 
     def calculate_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
         """

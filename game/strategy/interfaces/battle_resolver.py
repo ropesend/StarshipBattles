@@ -20,7 +20,6 @@ from game.core.protocols import IPostBattleShip
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
-    from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
 
 @dataclass
@@ -64,7 +63,7 @@ class IBattleResolver(ABC):
         modifiers: Optional[Mapping[int, Any]] = None,
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
-        environmental_effects: Optional['EnvironmentalEffects'] = None,
+        environmental_effects: Any = None,  # PROJ-300: now a sector-effects list
     ) -> BattleResult:
         """
         Resolve a battle between N fleets.
@@ -76,9 +75,10 @@ class IBattleResolver(ABC):
                 with per-team strategic modifiers.
             seed: Optional random seed for deterministic battles.
             registries: Optional GameRegistries for DI (PROJ-50).
-            environmental_effects: Optional environmental effects from
-                storms (PROJ-189). When `shield_capacity_mult < 1.0`,
-                ships have reduced shield capacity during combat.
+            environmental_effects: PROJ-300 sector-effects list from
+                `collect_sector_effects` (or None). The spec compiler
+                emits one ModifierEntry per active provider so overlapping
+                storms multiply.
 
         Returns:
             BattleResult with winner, tick count, and per-team survivors.

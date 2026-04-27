@@ -6,7 +6,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.core.protocols import IAbilitySource
-from game.strategy.data.storm import Storm, StormEffect
+from game.strategy.data.storm import Storm
 from game.strategy.services.ability_iterator import (
     iter_ability_sources_at_hex,
     iter_ability_sources_in_system,
@@ -54,7 +54,7 @@ def _ion_storm_at(*hexes):
         storm_type="ion_storm",
         location=HexCoord(0, 0),
         hex_offsets=offsets,
-        effects=StormEffect(shield_capacity_mult=0.5),
+        abilities={"ShieldModifier": {"multiplier": 0.5, "scope": "sector"}},
     )
 
 

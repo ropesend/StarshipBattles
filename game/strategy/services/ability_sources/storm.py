@@ -33,21 +33,9 @@ class StormAbilitySource:
         return None  # Storms are ownerless — apply to all empires.
 
     def get_abilities(self) -> Dict[str, Any]:
-        """Return storm abilities dict.
-
-        Phase-5-aware: if the storm carries a non-empty `abilities` dict, use
-        it. Otherwise, fall back to translating from the legacy
-        `effects: StormEffect` shape (Phase 7 removes the fallback).
-        """
+        """Return storm abilities dict (PROJ-300 v2.0 shape only)."""
         abilities_attr = getattr(self.storm, 'abilities', None)
-        if isinstance(abilities_attr, dict) and abilities_attr:
-            return abilities_attr
-
-        # Legacy translation — Phase 7 removes this once StormEffect is gone.
-        effects = getattr(self.storm, 'effects', None)
-        if effects is None:
-            return abilities_attr if isinstance(abilities_attr, dict) else {}
-        return _legacy_effects_to_abilities(effects)
+        return abilities_attr if isinstance(abilities_attr, dict) else {}
 
     def affects_hex(self, hex_coord) -> bool:
         # Storm.occupied_hexes is in local-system coordinates; the iterator
@@ -68,51 +56,3 @@ class StormAbilitySource:
 
     def get_activation_state(self, ability_name: str) -> Optional[Any]:
         return None  # Storms are always active.
-
-
-def _legacy_effects_to_abilities(effects: Any) -> Dict[str, Any]:
-    """Translate a legacy `StormEffect` instance to the abilities-dict shape.
-
-    Used during the Phase 3-5 migration window. Removed in Phase 5 when
-    `Storm.abilities` becomes the single source of truth.
-    """
-    abilities: Dict[str, Any] = {}
-
-    shield_mult = getattr(effects, 'shield_capacity_mult', 1.0)
-    if shield_mult != 1.0:
-        abilities['ShieldModifier'] = {
-            'multiplier': shield_mult,
-            'scope': 'sector',
-        }
-
-    thrust_mult = getattr(effects, 'thrust_mult', 1.0)
-    if thrust_mult != 1.0:
-        abilities['ThrustModifier'] = {
-            'multiplier': thrust_mult,
-            'scope': 'sector',
-        }
-
-    strategic_mult = getattr(effects, 'strategic_mult', 1.0)
-    if strategic_mult != 1.0:
-        abilities['StrategicSpeedModifier'] = {
-            'multiplier': strategic_mult,
-            'scope': 'sector',
-        }
-
-    damage_per_tick = getattr(effects, 'damage_per_tick', 0.0)
-    if damage_per_tick > 0.0:
-        # Legacy data is per-tick; framework speaks per-turn. /tick * 100 = /turn.
-        abilities['EnvironmentalDamage'] = {
-            'rate': damage_per_tick * 100.0,
-            'damage_type': 'environmental',
-            'scope': 'sector',
-        }
-
-    fuel_drain_per_tick = getattr(effects, 'fuel_drain_per_tick', 0.0)
-    if fuel_drain_per_tick > 0.0:
-        abilities['FuelDrain'] = {
-            'rate': fuel_drain_per_tick * 100.0,
-            'scope': 'sector',
-        }
-
-    return abilities

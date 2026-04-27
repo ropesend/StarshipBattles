@@ -323,7 +323,6 @@ class TurnEngine:
         """Return conflict engine, lazily creating default if not injected."""
         if self._conflict_engine is None:
             from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-            from game.strategy.services.area_effect_manager import AreaEffectManager
             # PROJ-239: Lazily create battle resolver if not injected
             battle_resolver = self._battle_resolver
             if battle_resolver is None and self._ai_factory is not None:
@@ -336,12 +335,12 @@ class TurnEngine:
                     "Combat resolution will fail if battles occur."
                 )
                 battle_resolver = _NullBattleResolver()
-            # PROJ-50: Pass registries for strict DI compliance
-            # PROJ-189: Pass AreaEffectManager for storm shield interference
+            # PROJ-50: Pass registries for strict DI compliance.
+            # PROJ-300 Phase 7: AreaEffectManager removed; sector effects are
+            # now read by the engine itself via collect_sector_effects.
             self._conflict_engine = ConflictResolutionEngine(
                 battle_resolver,
                 registries=self._registries,
-                area_effect_manager=AreaEffectManager(),
                 event_bus=self._event_bus,
             )
         return self._conflict_engine

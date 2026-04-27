@@ -380,11 +380,21 @@ class TestStrategyCompilerBehavioralStatKeys:
     """
 
     def test_storm_compiler_emits_shield_capacity_mult(self):
-        from game.strategy.combat.spec_compiler import _entries_from_environmental_effects
-        from game.strategy.services.area_effect_manager import EnvironmentalEffects
+        """PROJ-300 Phase 7: legacy _entries_from_environmental_effects deleted;
+        sector-effects path emits the same shield_capacity_mult stat_key."""
+        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
 
-        effects = EnvironmentalEffects(shield_capacity_mult=0.5)
-        entries = _entries_from_environmental_effects(effects)
+        sector_effects = [{
+            'ability_name': 'ShieldModifier',
+            'providers': [{
+                'source_kind': 'storm',
+                'source_label': 'Ion Storm Alpha',
+                'source_id': 'storm:Ion Storm Alpha',
+                'is_active': True,
+                'ability_data': {'multiplier': 0.5, 'scope': 'sector'},
+            }],
+        }]
+        entries = _entries_from_sector_effects(sector_effects)
         assert len(entries) >= 1
         entry = entries[0]
         assert entry.effect.stat_key == "shield_capacity_mult", (

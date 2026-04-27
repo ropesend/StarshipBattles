@@ -1,68 +1,18 @@
 """Storm entity for environmental hazards (PROJ-189; migrated PROJ-300).
 
 Storms are multi-hex environmental hazards that affect ships within their area.
-After PROJ-300 they project `abilities: Dict[str, Any]` (the unified shape) —
-the legacy `effects: StormEffect` field is now deprecated and only kept alive
-for the Phase 3->5 migration window. Phase 7 removes it entirely.
+After PROJ-300 they project `abilities: Dict[str, Any]` (the unified shape).
+The legacy `StormEffect` dataclass and `Storm.effects` field were eradicated
+in PROJ-300 Phase 7.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, FrozenSet, Optional
+from typing import Any, Dict, FrozenSet
 
 from game.core.hex_math import HexCoord, hex_to_dict, hex_from_dict
 from game.core.validation_helpers import require_keys
 from game.core.exceptions import PersistenceException, ValidationException
 from game.core.error_codes import ErrorCode
-
-
-@dataclass
-class StormEffect:
-    """Environmental effects applied by a storm.
-
-    All multipliers default to 1.0 (no effect), all rates default to 0.0.
-
-    Attributes:
-        shield_capacity_mult: Multiplier for shield capacity (0.5 = 50% shields).
-        thrust_mult: Multiplier for thrust/tactical movement.
-        strategic_mult: Multiplier for strategic map movement speed.
-        damage_per_tick: Hull damage applied per tick while in storm.
-        fuel_drain_per_tick: Fuel consumed per tick while in storm.
-    """
-    shield_capacity_mult: float = 1.0
-    thrust_mult: float = 1.0
-    strategic_mult: float = 1.0
-    damage_per_tick: float = 0.0
-    fuel_drain_per_tick: float = 0.0
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize StormEffect to dict."""
-        return {
-            'shield_capacity_mult': self.shield_capacity_mult,
-            'thrust_mult': self.thrust_mult,
-            'strategic_mult': self.strategic_mult,
-            'damage_per_tick': self.damage_per_tick,
-            'fuel_drain_per_tick': self.fuel_drain_per_tick,
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'StormEffect':
-        """Deserialize StormEffect from dict.
-
-        Missing keys use default values.
-
-        Args:
-            data: Dict with optional effect fields.
-
-        Returns:
-            StormEffect instance.
-        """
-        return cls(
-            shield_capacity_mult=data.get('shield_capacity_mult', 1.0),
-            thrust_mult=data.get('thrust_mult', 1.0),
-            strategic_mult=data.get('strategic_mult', 1.0),
-            damage_per_tick=data.get('damage_per_tick', 0.0),
-            fuel_drain_per_tick=data.get('fuel_drain_per_tick', 0.0),
-        )
 
 
 @dataclass
@@ -72,11 +22,10 @@ class Storm:
     Storms occupy multiple hexes defined by a center location and relative offsets.
     Ships within storm hexes are subject to environmental effects.
 
-    PROJ-300 migrated `effects: StormEffect` to `abilities: Dict[str, Any]` —
-    the abilities shape matches components.json. The `effects` field is
-    DEPRECATED and only kept alive for the Phase 3->5 migration window;
-    Phase 7 removes it. Old saves with `effects` shape FAIL TO LOAD per
-    PROJ-300 D19 — save files are disposable per CLAUDE.md.
+    PROJ-300 migrated `effects: StormEffect` to `abilities: Dict[str, Any]`
+    matching components.json. Phase 7 removed the StormEffect class and the
+    Storm.effects field entirely. Old saves with the legacy `effects` shape
+    FAIL TO LOAD per PROJ-300 D19 — save files are disposable per CLAUDE.md.
 
     Attributes:
         name: Display name (e.g., "Ion Storm Alpha").
@@ -85,7 +34,6 @@ class Storm:
         location: Center hex, local to star system.
         hex_offsets: Relative offsets from location (includes HexCoord(0,0) for center).
         abilities: PROJ-300 abilities dict matching components.json shape.
-        effects: DEPRECATED — legacy StormEffect; Phase 7 removes.
         image_variant: Index into nebulae image group (1-6).
         intensity: 0.0-1.0, controls rendering alpha.
     """
@@ -95,7 +43,6 @@ class Storm:
     hex_offsets: FrozenSet[HexCoord]
     abilities: Dict[str, Any] = field(default_factory=dict)
     description: str = ""
-    effects: Optional[StormEffect] = None  # DEPRECATED — Phase 7 removes
     image_variant: int = 1
     intensity: float = 1.0
 

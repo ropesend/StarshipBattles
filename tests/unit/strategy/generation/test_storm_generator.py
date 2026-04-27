@@ -8,7 +8,7 @@ import random
 import pytest
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.storm import Storm, StormEffect
+from game.strategy.data.storm import Storm
 
 
 # =============================================================================

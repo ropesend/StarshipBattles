@@ -25,7 +25,6 @@ if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import BattleResult, IBattleResolver
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
-    from game.strategy.services.area_effect_manager import AreaEffectManager
     from game.strategy.data.galaxy import Galaxy
 
 
@@ -53,7 +52,6 @@ class ConflictResolutionEngine(IConflictEngine):
         battle_resolver: 'IBattleResolver',
         *,
         registries: Optional['GameRegistries'] = None,
-        area_effect_manager: Optional['AreaEffectManager'] = None,
         event_bus=None,
     ):
         """
@@ -65,10 +63,11 @@ class ConflictResolutionEngine(IConflictEngine):
                            SimulationBattleResolver creation (which needed AI import).
             registries: Optional GameRegistries for DI. Required for strict DI
                        compliance in PROJ-50.
-            area_effect_manager: Optional AreaEffectManager for environmental
-                                effects (PROJ-189). When provided, storm effects
-                                are applied to ships during combat.
             event_bus: Optional EventBus for structured event logging.
+
+        PROJ-300 Phase 7: AreaEffectManager removed; environmental effects
+        are read by `_lookup_environmental_effects` directly via the unified
+        `system_effects_collector`.
         """
         # Battle seed counter for deterministic battles
         self._battle_seed_counter = 0
@@ -78,8 +77,6 @@ class ConflictResolutionEngine(IConflictEngine):
         # PROJ-50: Store registries for passing to battle resolver
         self._registries = registries
 
-        # PROJ-189: Store area effect manager for storm integration
-        self._area_effect_manager: Optional['AreaEffectManager'] = area_effect_manager
         self._galaxy: Optional['Galaxy'] = None  # Set during resolve_all_conflicts
 
         # PROJ-252: Session-scoped EventBus for structured event logging
@@ -124,10 +121,7 @@ class ConflictResolutionEngine(IConflictEngine):
             if sys:
                 system_name = sys.name
 
-        # PROJ-300: derive storm names from sector-effects providers.
-        # `environmental_effects` may be the new sector-effects list shape
-        # OR the legacy EnvironmentalEffects object. Handle both during
-        # the migration window.
+        # PROJ-300 Phase 7: derive storm names from sector-effects providers.
         storm_names: List[str] = []
         if isinstance(environmental_effects, list):
             seen = set()
@@ -138,8 +132,6 @@ class ConflictResolutionEngine(IConflictEngine):
                         if label and label not in seen:
                             seen.add(label)
                             storm_names.append(label)
-        elif environmental_effects is not None and getattr(environmental_effects, 'in_storm', False):
-            storm_names = list(getattr(environmental_effects, 'storm_names', []))
 
         if self._event_bus:
             self._event_bus.log_event(

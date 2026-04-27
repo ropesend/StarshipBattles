@@ -720,48 +720,47 @@ class TestGameStateQueriesSavePath:
 
 
 class TestStormQueries:
-    """Tests for storm query methods (PROJ-215 Phase 5)."""
+    """Tests for storm query methods (PROJ-215 Phase 5; rewritten for PROJ-300)."""
 
     def test_get_storm_names_at_hex_returns_storm_names(self):
-        """get_storm_names_at_hex returns storm names from AreaEffectManager."""
+        """PROJ-300: queries the galaxy zone index directly."""
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.storm import Storm
+
+        storm_a = Storm(
+            name="Ion Storm Alpha",
+            storm_type="ion_storm",
+            location=HexCoord(0, 0),
+            hex_offsets=frozenset({HexCoord(0, 0)}),
+            abilities={"ShieldModifier": {"multiplier": 0.5, "scope": "sector"}},
+        )
+        storm_b = Storm(
+            name="Plasma Storm",
+            storm_type="plasma_storm",
+            location=HexCoord(0, 0),
+            hex_offsets=frozenset({HexCoord(0, 0)}),
+            abilities={"ShieldModifier": {"multiplier": 0.7, "scope": "sector"}},
+        )
+
+        galaxy = Mock()
+        galaxy.get_zones_at_global_hex = Mock(return_value=[storm_a, storm_b])
         session = Mock()
-        # Mock galaxy for AreaEffectManager call
-        session.galaxy = Mock()
+        session.galaxy = galaxy
 
         facade = StrategySessionFacade(session)
-
-        # Patch AreaEffectManager at the source module (deferred import)
-        with patch('game.strategy.services.area_effect_manager.AreaEffectManager') as MockManager:
-            mock_manager = MockManager.return_value
-            mock_effects = Mock()
-            mock_effects.in_storm = True
-            mock_effects.storm_names = ["Ion Storm Alpha", "Plasma Storm"]
-            mock_manager.get_effects_at_global_hex.return_value = mock_effects
-
-            result = facade.get_storm_names_at_hex(HexCoord(5, 3))
-
-            assert result == ["Ion Storm Alpha", "Plasma Storm"]
-            mock_manager.get_effects_at_global_hex.assert_called_once_with(
-                session.galaxy, HexCoord(5, 3)
-            )
+        result = facade.get_storm_names_at_hex(HexCoord(5, 3))
+        assert result == ["Ion Storm Alpha", "Plasma Storm"]
+        galaxy.get_zones_at_global_hex.assert_called_once_with(HexCoord(5, 3))
 
     def test_get_storm_names_at_hex_returns_empty_when_no_storms(self):
-        """get_storm_names_at_hex returns empty list when not in storm."""
+        from game.core.hex_math import HexCoord
+        galaxy = Mock()
+        galaxy.get_zones_at_global_hex = Mock(return_value=[])
         session = Mock()
-        session.galaxy = Mock()
+        session.galaxy = galaxy
 
         facade = StrategySessionFacade(session)
-
-        with patch('game.strategy.services.area_effect_manager.AreaEffectManager') as MockManager:
-            mock_manager = MockManager.return_value
-            mock_effects = Mock()
-            mock_effects.in_storm = False
-            mock_effects.storm_names = []
-            mock_manager.get_effects_at_global_hex.return_value = mock_effects
-
-            result = facade.get_storm_names_at_hex(HexCoord(0, 0))
-
-            assert result == []
+        assert facade.get_storm_names_at_hex(HexCoord(0, 0)) == []
 
 
 class TestRaceRegistryAccessor:

@@ -334,7 +334,7 @@ class ISectorEnvironment(Protocol):
 
 @runtime_checkable
 class IStorm(Protocol):
-    """Protocol for Storm entities (PROJ-189)."""
+    """Protocol for Storm entities (PROJ-189; abilities-shape since PROJ-300)."""
     @property
     def name(self) -> str:
         """Storm display name."""
@@ -346,8 +346,8 @@ class IStorm(Protocol):
         ...
 
     @property
-    def effects(self) -> Any:
-        """StormEffect with multipliers and rates."""
+    def abilities(self) -> Dict[str, Any]:
+        """PROJ-300: abilities dict matching components.json shape."""
         ...
 
     @property
@@ -442,8 +442,8 @@ def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:
 
 
 def is_storm(obj: Any) -> TypeGuard[IStorm]:
-    """Check if obj has storm attributes (storm_type, effects)."""
-    return _has_attrs(obj, 'storm_type', 'effects')
+    """Check if obj has storm attributes (storm_type, abilities)."""
+    return _has_attrs(obj, 'storm_type', 'abilities')
 
 
 def is_ability_source(obj: Any) -> TypeGuard[IAbilitySource]:

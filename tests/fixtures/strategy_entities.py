@@ -15,7 +15,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.stars import Spectrum, Star, StarType
-from game.strategy.data.storm import Storm, StormEffect
+from game.strategy.data.storm import Storm
 from game.strategy.data.galaxy import WarpPoint, StarSystem
 from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.planetary_facility import PlanetaryFacility
@@ -84,27 +84,26 @@ def create_test_warp_point(**overrides) -> WarpPoint:
     return WarpPoint(**defaults)
 
 
-def create_test_storm_effect(**overrides) -> StormEffect:
-    """Create a StormEffect with non-default values."""
-    defaults = dict(
-        shield_capacity_mult=0.7,
-        thrust_mult=0.8,
-        strategic_mult=0.9,
-        damage_per_tick=2.5,
-        fuel_drain_per_tick=1.0,
-    )
-    defaults.update(overrides)
-    return StormEffect(**defaults)
+def create_test_storm_abilities() -> dict:
+    """Create a representative storm abilities dict (PROJ-300 v2.0 shape)."""
+    return {
+        "ShieldModifier":         {"multiplier": 0.7, "scope": "sector"},
+        "ThrustModifier":         {"multiplier": 0.8, "scope": "sector"},
+        "StrategicSpeedModifier": {"multiplier": 0.9, "scope": "sector"},
+        "EnvironmentalDamage":    {"rate": 2.5, "damage_type": "environmental", "scope": "sector"},
+        "FuelDrain":              {"rate": 1.0, "scope": "sector"},
+    }
 
 
 def create_test_storm(**overrides) -> Storm:
-    """Create a Storm with effects and hex offsets."""
+    """Create a Storm with abilities and hex offsets (PROJ-300 v2.0)."""
     defaults = dict(
         name="Ion Storm Alpha",
         storm_type="ion_storm",
+        description="A test ion storm.",
         location=HexCoord(3, -2),
         hex_offsets=frozenset({HexCoord(0, 0), HexCoord(1, 0), HexCoord(0, 1)}),
-        effects=create_test_storm_effect(),
+        abilities=create_test_storm_abilities(),
         image_variant=2,
         intensity=0.75,
     )

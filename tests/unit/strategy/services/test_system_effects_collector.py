@@ -401,7 +401,7 @@ class TestKindDiscriminator:
     def test_rate_ability_kind_via_storm(self):
         """Storm-projected EnvironmentalDamage flows through with kind=rate."""
         from game.core.hex_math import HexCoord
-        from game.strategy.data.storm import Storm, StormEffect
+        from game.strategy.data.storm import Storm
         from game.strategy.services.system_effects_collector import collect_sector_effects
 
         storm = Storm(
@@ -409,7 +409,7 @@ class TestKindDiscriminator:
             storm_type="plasma_storm",
             location=HexCoord(0, 0),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(damage_per_tick=0.005),
+            abilities={"EnvironmentalDamage": {"rate": 0.5, "damage_type": "plasma", "scope": "sector"}},
         )
         system = _make_system("S", [])
         system.storms = [storm]
@@ -420,7 +420,7 @@ class TestKindDiscriminator:
         assert env_damage
         assert env_damage[0]['kind'] == 'rate'
         assert env_damage[0]['aggregate_value'] == pytest.approx(0.5)
-        assert env_damage[0]['damage_type'] == 'environmental'
+        assert env_damage[0]['damage_type'] == 'plasma'
 
 
 class TestDamageTypeGrouping:
@@ -429,12 +429,9 @@ class TestDamageTypeGrouping:
     def test_plasma_and_radiation_are_separate_groups(self):
         """Two different damage_types yield two effect rows that SUM."""
         from game.core.hex_math import HexCoord
-        from game.strategy.data.storm import Storm, StormEffect
         from game.strategy.services.system_effects_collector import collect_sector_effects
 
-        # We can't get distinct damage_types from the legacy StormEffect path
-        # since it only emits one default damage_type. So construct storms with
-        # the new abilities-dict shape directly (Phase 5 readiness).
+        # Build storms via the abilities-dict shape directly.
         from dataclasses import dataclass, field
         from typing import Any, FrozenSet
 
@@ -529,7 +526,7 @@ class TestProviderUniversalFields:
 
     def test_storm_provider_has_universal_fields(self):
         from game.core.hex_math import HexCoord
-        from game.strategy.data.storm import Storm, StormEffect
+        from game.strategy.data.storm import Storm
         from game.strategy.services.system_effects_collector import collect_sector_effects
 
         storm = Storm(
@@ -537,7 +534,7 @@ class TestProviderUniversalFields:
             storm_type="ion_storm",
             location=HexCoord(0, 0),
             hex_offsets=frozenset({HexCoord(0, 0)}),
-            effects=StormEffect(shield_capacity_mult=0.5),
+            abilities={"ShieldModifier": {"multiplier": 0.5, "scope": "sector"}},
         )
         system = _make_system("S", [])
         system.storms = [storm]

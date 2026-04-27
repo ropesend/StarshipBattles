@@ -342,16 +342,11 @@ def _build_modifier_stack(
     # `environmental_effects` (global) and `team_modifiers` (per-team).
     global_entries: List[ModifierEntry] = []
     if environmental_effects is not None:
-        # PROJ-300: accept either the new sector-effects list OR the legacy
-        # EnvironmentalEffects object. Phase 7 deletes the legacy path.
-        if isinstance(environmental_effects, list):
-            global_entries.extend(
-                _entries_from_sector_effects(environmental_effects)
-            )
-        else:
-            global_entries.extend(
-                _entries_from_environmental_effects(environmental_effects)
-            )
+        # PROJ-300 Phase 7: only the new sector-effects list shape is accepted.
+        # Legacy EnvironmentalEffects path was deleted alongside AreaEffectManager.
+        global_entries.extend(
+            _entries_from_sector_effects(environmental_effects)
+        )
 
     per_team: Dict[int, Tuple[ModifierEntry, ...]] = {}
     for team_id in range(team_count):
@@ -440,39 +435,6 @@ def _entries_from_sector_effects(sector_effects: Sequence[Dict[str, Any]]) -> Li
                 stack_group=stack_group,
             )
             entries.extend(entry for _, entry in team_entries)
-    return entries
-
-
-def _entries_from_environmental_effects(effects: Any) -> List[ModifierEntry]:
-    """Translate an `EnvironmentalEffects` value into `ModifierEntry` entries.
-
-    PROJ-270 Phase 6.1: storm shield interference emits a REAL
-    `stat_key="shield_capacity_mult"` so the `FleetAuraManager`
-    applies the effect to ship shield capacity during battle.
-
-    PROJ-273 Phase 3: emits via the shared `ability_stat_registry`
-    helper (ShieldModifier → shield_capacity_mult). Returned entries
-    are placed in `ModifierStack.global_` by the caller (they apply
-    to every team on the battlefield). The helper's per-team routing
-    is bypassed by stripping team_ids — global entries don't need them.
-    """
-    entries: List[ModifierEntry] = []
-    shield_mult = getattr(effects, "shield_capacity_mult", 1.0)
-    if shield_mult is not None and shield_mult != 1.0:
-        # owner_team=0, num_teams=1 yields [(0, entry)]; caller places in global_.
-        team_entries = emit_entries_for_ability(
-            "ShieldModifier",
-            shield_mult,
-            scope="self",
-            owner_team=0,
-            num_teams=1,
-            source="environment:storm_shield_interference",
-            source_modifier_id="storm_shield_interference",
-            source_modifier_name=f"Storm Shield x{shield_mult:.2f}",
-            # PROJ-272 Phase 2: overlapping storms MAX, not SUM.
-            stack_group="storm_shield_interference",
-        )
-        entries.extend(entry for _, entry in team_entries)
     return entries
 
 

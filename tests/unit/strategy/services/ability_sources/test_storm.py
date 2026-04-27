@@ -1,31 +1,19 @@
-"""Tests for StormAbilitySource (PROJ-300 Phase 3)."""
-from dataclasses import dataclass
-from typing import Any, FrozenSet
-
+"""Tests for StormAbilitySource (PROJ-300 Phase 3 + Phase 7)."""
 import pytest
 
 from game.core.hex_math import HexCoord
 from game.core.protocols import IAbilitySource, is_ability_source
-from game.strategy.data.storm import Storm, StormEffect
+from game.strategy.data.storm import Storm
 from game.strategy.services.ability_sources import StormAbilitySource
 
 
-def _make_storm(name="Ion Storm Alpha", storm_type="ion_storm",
-                shield_capacity_mult=1.0, thrust_mult=1.0,
-                strategic_mult=1.0, damage_per_tick=0.0,
-                fuel_drain_per_tick=0.0):
+def _make_storm(name="Ion Storm Alpha", storm_type="ion_storm", abilities=None):
     return Storm(
         name=name,
         storm_type=storm_type,
         location=HexCoord(0, 0),
         hex_offsets=frozenset({HexCoord(0, 0), HexCoord(1, 0)}),
-        effects=StormEffect(
-            shield_capacity_mult=shield_capacity_mult,
-            thrust_mult=thrust_mult,
-            strategic_mult=strategic_mult,
-            damage_per_tick=damage_per_tick,
-            fuel_drain_per_tick=fuel_drain_per_tick,
-        ),
+        abilities=abilities or {},
     )
 
 
@@ -52,70 +40,15 @@ def test_owner_id_is_none():
     assert src.owner_id is None
 
 
-def test_get_abilities_translates_legacy_shield():
-    src = StormAbilitySource(storm=_make_storm(shield_capacity_mult=0.5))
-    abilities = src.get_abilities()
-    assert "ShieldModifier" in abilities
-    assert abilities["ShieldModifier"]["multiplier"] == 0.5
-    assert abilities["ShieldModifier"]["scope"] == "sector"
+def test_get_abilities_returns_storm_abilities_dict():
+    abilities = {"ShieldModifier": {"multiplier": 0.5, "scope": "sector"}}
+    src = StormAbilitySource(storm=_make_storm(abilities=abilities))
+    assert src.get_abilities() == abilities
 
 
-def test_get_abilities_translates_legacy_shield_alone():
-    src = StormAbilitySource(storm=_make_storm(shield_capacity_mult=0.5))
-    abilities = src.get_abilities()
-    assert abilities["ShieldModifier"]["multiplier"] == 0.5
-    assert "StrategicSpeedModifier" not in abilities  # neutral default
-
-
-def test_get_abilities_translates_legacy_strategic_speed():
-    src = StormAbilitySource(storm=_make_storm(strategic_mult=0.4))
-    abilities = src.get_abilities()
-    assert abilities["StrategicSpeedModifier"]["multiplier"] == 0.4
-
-
-def test_get_abilities_translates_legacy_thrust():
-    src = StormAbilitySource(storm=_make_storm(thrust_mult=0.6))
-    abilities = src.get_abilities()
-    assert abilities["ThrustModifier"]["multiplier"] == 0.6
-
-
-def test_get_abilities_translates_legacy_damage_per_tick_to_per_turn():
-    """Legacy data was per-tick; framework speaks per-turn (x100)."""
-    src = StormAbilitySource(storm=_make_storm(damage_per_tick=0.005))
-    abilities = src.get_abilities()
-    assert abilities["EnvironmentalDamage"]["rate"] == pytest.approx(0.5)
-    assert abilities["EnvironmentalDamage"]["damage_type"] == "environmental"
-
-
-def test_get_abilities_translates_fuel_drain_per_tick_to_per_turn():
-    src = StormAbilitySource(storm=_make_storm(fuel_drain_per_tick=0.001))
-    abilities = src.get_abilities()
-    assert abilities["FuelDrain"]["rate"] == pytest.approx(0.1)
-
-
-def test_get_abilities_skips_neutral_values():
-    """A storm with default (no-effect) fields produces no abilities."""
-    src = StormAbilitySource(storm=_make_storm())  # all defaults
+def test_get_abilities_empty_when_storm_has_no_abilities():
+    src = StormAbilitySource(storm=_make_storm())
     assert src.get_abilities() == {}
-
-
-def test_get_abilities_uses_new_dict_when_present():
-    """Phase 5 readiness: if storm.abilities exists, use it directly."""
-    @dataclass
-    class _StormWithAbilities:
-        name: str = "Plasma Storm"
-        abilities: Any = None
-        occupied_hexes: FrozenSet = frozenset()
-
-        def __post_init__(self):
-            if self.abilities is None:
-                self.abilities = {
-                    "EnvironmentalDamage": {"rate": 0.5, "damage_type": "plasma", "scope": "sector"},
-                }
-
-    storm = _StormWithAbilities()
-    src = StormAbilitySource(storm=storm)
-    assert src.get_abilities() == storm.abilities
 
 
 def test_affects_hex_true_for_occupied():
