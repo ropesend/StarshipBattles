@@ -1,29 +1,51 @@
-"""System Effects Collector — aggregates system-scope abilities for UI display.
+"""System Effects Collector — aggregates strategic-layer abilities for UI display.
 
-Scans all empire-owned colonies in a star system for system-scope abilities
-(stabilizers, harvest boosters, build rate boosters, quality improvers) and
-returns structured effect data grouped by ability type.
+After PROJ-300 Phase 4, this module is a thin wrapper over the unified
+`ability_iterator`. Walks every `IAbilitySource` adapter the iterator yields,
+filters by scope, groups by `(ability_name, resource_type | damage_type)`,
+and dispatches to either `aggregate_multipliers` (for multiplier-style
+abilities like ShieldModifier) or `aggregate_rates` (for rate-style abilities
+like EnvironmentalDamage). Storms, facilities, and (post-PROJ-301..305)
+planets / stars / warp points / system archetypes / fleets all flow through
+the same pipeline.
 
-Each effect has:
-- ability_name, display_name, status (Active/Inactive/Activating/Deactivating)
-- providers: list of {planet_name, facility_name, component_key, status, value}
-- aggregate_value: stacked value using two-phase aggregation (where applicable)
+Effect dict shape:
+- ability_name: str
+- display_name: str
+- group_key: str (for dedup/grouping)
+- status: str ("Active"/"Inactive"/"Activating (N)"/"Deactivating (N)")
+- resource_type: Optional[str]
+- damage_type: Optional[str]      # NEW (PROJ-300) — for EnvironmentalDamage
+- kind: 'multiplier' | 'rate'     # NEW (PROJ-300) — disambiguates aggregate
+- aggregate_value: float           # 1.0 if multiplier+empty, 0.0 if rate+empty
+- providers: list of provider dicts
+
+Each provider carries both the universal PROJ-300 fields (source_kind,
+source_label, source_id, owner_id) AND legacy back-compat fields
+(planet_name, planet_id, facility_name, facility_id, component_key) so
+existing consumers keep working until Phase 8 retires them.
 """
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from game.core.patterns.layer_iterator import iter_keyed_components
-from game.strategy.services.component_inspector import extract_abilities_from_component
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
 )
-from game.strategy.services.strategic_ability_scanner import aggregate_multipliers
+from game.strategy.services.strategic_ability_scanner import (
+    aggregate_multipliers,
+    aggregate_rates,
+)
+from game.strategy.services.ability_iterator import (
+    iter_ability_sources_at_hex,
+    iter_ability_sources_in_system,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import StarSystem
 
 logger = logging.getLogger(__name__)
+
 
 # Scope sets for filtering effects into the correct UI panel.
 # System = all hexes in a star system (radius 50, diameter 101).
@@ -35,6 +57,7 @@ _SYSTEM_SCOPES = frozenset({
 _SECTOR_SCOPES = frozenset({
     'sector', 'allied_sector', 'player_sector', 'enemy_sector',
 })
+
 
 SYSTEM_EFFECT_ABILITIES = {
     'GeologicStabilizer': 'Geologic Stabilizer',
@@ -53,42 +76,52 @@ SYSTEM_EFFECT_ABILITIES = {
 }
 
 
-def _get_component_status(facility, comp_key: str) -> str:
-    """Get the activation status string for a component."""
-    state = facility.get_activation_state(comp_key)
+# Rate-style abilities (read aggregate_value as additive). Multiplier-style
+# is the default and reads aggregate_value as multiplicative-with-1.0-default.
+_RATE_ABILITIES = frozenset({'EnvironmentalDamage', 'FuelDrain'})
+
+
+def _ability_kind(ability_name: str) -> str:
+    return 'rate' if ability_name in _RATE_ABILITIES else 'multiplier'
+
+
+# ---------------------------------------------------------------------------
+# Status helpers (unchanged from the pre-PROJ-300 collector). These work on
+# any object exposing `get_activation_state(comp_key) -> ComponentActivationState`.
+# ---------------------------------------------------------------------------
+
+
+def _format_status(state: Optional[ComponentActivationState]) -> str:
+    """Render an activation state as a human-readable status string."""
+    if state is None:
+        return "Active"  # Sources without activation tracking are always-on.
     if state.phase == ActivationPhase.ACTIVE:
         return "Active"
-    elif state.phase == ActivationPhase.ACTIVATING:
+    if state.phase == ActivationPhase.ACTIVATING:
         remaining = state.required_ticks - state.progress_ticks
         return f"Activating ({remaining})"
-    elif state.phase == ActivationPhase.DEACTIVATING:
+    if state.phase == ActivationPhase.DEACTIVATING:
         remaining = state.required_ticks - state.progress_ticks
         return f"Deactivating ({remaining})"
     return "Inactive"
 
 
 def _is_activatable(ability_data: dict) -> bool:
-    """Check if an ability is activatable (has activation_time)."""
+    """Activatable abilities have an `activation_time` field."""
     return isinstance(ability_data, dict) and 'activation_time' in ability_data
 
 
-def _is_active_component(facility, comp_key: str, ability_data: dict) -> bool:
-    """Determine if a component is functionally providing its effect.
-
-    Activatable abilities must be in ACTIVE phase.
-    Passive abilities are always active when facility is operational.
-    """
-    if _is_activatable(ability_data):
-        state = facility.get_activation_state(comp_key)
-        return state.phase == ActivationPhase.ACTIVE
-    return True  # Passive: always active when facility is operational
+# ---------------------------------------------------------------------------
+# Grouping + display name (unchanged).
+# ---------------------------------------------------------------------------
 
 
 def _make_group_key(ability_name: str, ability_data) -> str:
-    """Create a grouping key for an ability instance.
+    """Group key for an ability instance.
 
-    ResourceHarvestBooster and QualityImprovement are grouped per resource_type.
-    Other abilities are grouped by ability_name alone.
+    ResourceHarvestBooster + QualityImprovement: per resource_type.
+    EnvironmentalDamage: per damage_type (PROJ-300).
+    Other abilities: by ability_name alone.
     """
     if ability_name == 'ResourceHarvestBooster' and isinstance(ability_data, dict):
         resource = ability_data.get('resource_type', '')
@@ -97,18 +130,28 @@ def _make_group_key(ability_name: str, ability_data) -> str:
         resource = ability_data.get('resource_type', '')
         if resource:
             return f"{ability_name}:{resource}"
+    if ability_name == 'EnvironmentalDamage' and isinstance(ability_data, dict):
+        damage_type = ability_data.get('damage_type', 'environmental')
+        return f"{ability_name}:{damage_type}"
     return ability_name
 
 
 def _make_display_name(ability_name: str, ability_data) -> str:
-    """Create a display name for an ability."""
     if ability_name == 'ResourceHarvestBooster' and isinstance(ability_data, dict):
         resource = ability_data.get('resource_type', 'unknown')
         return f"{resource.capitalize()} Harvest Boost"
+    if ability_name == 'EnvironmentalDamage' and isinstance(ability_data, dict):
+        damage_type = ability_data.get('damage_type', 'environmental')
+        return f"{damage_type.capitalize()} Damage"
     display = SYSTEM_EFFECT_ABILITIES.get(ability_name)
     if display:
         return display
     return ability_name
+
+
+# ---------------------------------------------------------------------------
+# Public API.
+# ---------------------------------------------------------------------------
 
 
 def collect_system_effects(
@@ -116,21 +159,12 @@ def collect_system_effects(
     empire_id: int,
     registries=None,
 ) -> List[Dict[str, Any]]:
-    """Collect system-scope effects from empire colonies in the system.
-
-    Only includes abilities with system-level scopes (system, allied_system,
-    player_system, enemy_system). Sector-scoped abilities are excluded —
-    use collect_sector_effects() for those.
-
-    Args:
-        system: StarSystem to scan.
-        empire_id: Empire ID to filter colonies by ownership.
-        registries: Optional GameRegistries for component lookup.
-
-    Returns:
-        List of effect dicts (see _collect_effects for structure).
-    """
-    return _collect_effects(list(system.planets), empire_id, registries, _SYSTEM_SCOPES)
+    """Collect system-scope effects from sources in the system."""
+    sources = iter_ability_sources_in_system(system, registries=registries)
+    return _aggregate(
+        sources, _SYSTEM_SCOPES, empire_id, registries,
+        hex_coord=None, system=system,
+    )
 
 
 def collect_sector_effects(
@@ -139,119 +173,150 @@ def collect_sector_effects(
     empire_id: int,
     registries=None,
 ) -> List[Dict[str, Any]]:
-    """Collect sector-scope effects from empire colonies at a specific hex.
+    """Collect sector-scope effects from sources at the given hex."""
+    sources = iter_ability_sources_at_hex(
+        system, hex_coord, registries=registries, include_system_sources=False,
+    )
+    return _aggregate(
+        sources, _SECTOR_SCOPES, empire_id, registries,
+        hex_coord=hex_coord, system=system,
+    )
 
-    Only includes abilities with sector-level scopes (sector, allied_sector,
-    player_sector, enemy_sector). System-scoped abilities are excluded —
-    use collect_system_effects() for those.
 
-    Args:
-        system: StarSystem containing the hex.
-        hex_coord: Global hex coordinate to filter planets by location.
-        empire_id: Empire ID to filter colonies by ownership.
-        registries: Optional GameRegistries for component lookup.
+def find_sector_effect(
+    effects: List[Dict[str, Any]],
+    ability_name: str,
+    **filters,
+) -> Optional[Dict[str, Any]]:
+    """Find the first effect matching `ability_name` and any extra filters.
 
-    Returns:
-        List of effect dicts (see _collect_effects for structure).
+    Filters are matched against effect-dict keys (e.g. damage_type='radiation').
     """
-    # Find planets at this specific hex
-    planets_at_hex = []
-    global_loc = getattr(system, 'global_location', None)
-    for planet in system.planets:
-        if global_loc is not None:
-            planet_global = global_loc + planet.location
-            if planet_global == hex_coord:
-                planets_at_hex.append(planet)
-        else:
-            planets_at_hex.append(planet)
-
-    return _collect_effects(planets_at_hex, empire_id, registries, _SECTOR_SCOPES)
+    for e in effects:
+        if e.get('ability_name') != ability_name:
+            continue
+        if all(e.get(k) == v for k, v in filters.items()):
+            return e
+    return None
 
 
-def _collect_effects(
-    planets: List,
-    empire_id: int,
-    registries,
+def aggregate_value_or(
+    effects: List[Dict[str, Any]],
+    ability_name: str,
+    default: float,
+    **filters,
+) -> float:
+    """Read aggregate_value for an effect if present, else `default`."""
+    e = find_sector_effect(effects, ability_name, **filters)
+    return e['aggregate_value'] if e else default
+
+
+# ---------------------------------------------------------------------------
+# Internal aggregation pipeline.
+# ---------------------------------------------------------------------------
+
+
+def _aggregate(
+    sources,
     allowed_scopes: frozenset,
+    empire_id,
+    registries,
+    *,
+    hex_coord,
+    system,
 ) -> List[Dict[str, Any]]:
-    """Shared logic: scan planets for abilities matching allowed_scopes.
-
-    Returns a list of effect dicts, each representing a grouped ability type.
-    Effects are grouped by ability_name (+ resource_type for parameterized abilities).
-
-    Returns:
-        List of effect dicts with keys:
-        - ability_name: str
-        - display_name: str
-        - group_key: str (for dedup/grouping)
-        - status: str ("Active"/"Inactive"/"Activating (N)"/"Deactivating (N)")
-        - resource_type: Optional[str] (for parameterized abilities)
-        - aggregate_value: float (stacked multiplier or rate, 0.0 if N/A)
-        - providers: list of provider dicts
-    """
+    """Walk every source, build per-group provider dicts, aggregate per kind."""
     raw_providers: Dict[str, dict] = {}
 
-    for planet in planets:
-        if getattr(planet, 'owner_id', None) != empire_id:
+    for source in sources:
+        # Owner filter: ownerless sources (storms, planets-themselves, stars,
+        # warp points, system archetypes) apply to ALL empires; owned sources
+        # only contribute to a query for their own owner_id.
+        owner_id = getattr(source, 'owner_id', None)
+        if owner_id is not None and empire_id is not None and owner_id != empire_id:
             continue
 
-        for facility in planet.facilities:
-            if not getattr(facility, 'is_operational', True):
+        # Hex affinity check (if querying a specific hex). Storms enforce this
+        # via `affects_hex`; the iterator pre-filters facilities by-planet-at-hex,
+        # so this is mostly a safety net for adapter implementations.
+        if hex_coord is not None:
+            try:
+                if not source.affects_hex(hex_coord):
+                    continue
+            except Exception:  # Intentional broad catch: source-impl errors must not poison the pipeline
+                logger.warning(
+                    "ability_source affects_hex raised — skipping source", exc_info=True,
+                )
                 continue
 
-            for comp_key, layer_name, comp in iter_keyed_components(facility.design_data):
-                abilities = extract_abilities_from_component(comp, registries)
+        try:
+            abilities = source.get_abilities()
+        except Exception:  # Intentional broad catch: same as above
+            logger.warning(
+                "ability_source get_abilities raised — skipping source", exc_info=True,
+            )
+            continue
 
-                for ability_name in SYSTEM_EFFECT_ABILITIES:
-                    ability_data = abilities.get(ability_name)
-                    if ability_data is None:
-                        continue
+        for ability_name, ability_data in abilities.items():
+            if ability_name not in SYSTEM_EFFECT_ABILITIES:
+                continue
+            entries = ability_data if isinstance(ability_data, list) else [ability_data]
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                entry_scope = entry.get('scope', 'self')
+                if entry_scope not in allowed_scopes:
+                    continue
 
-                    entries = ability_data if isinstance(ability_data, list) else [ability_data]
+                group_key = _make_group_key(ability_name, entry)
+                display_name = _make_display_name(ability_name, entry)
 
-                    for entry in entries:
-                        if not isinstance(entry, dict):
-                            continue
+                # Activation state — None means always-on (storms, planets,
+                # stars, etc.). Activatable abilities on facilities have a
+                # state from their owning facility.
+                state = None
+                if _is_activatable(entry):
+                    state = source.get_activation_state(ability_name)
+                status = _format_status(state)
+                if _is_activatable(entry):
+                    is_active = state is not None and state.phase == ActivationPhase.ACTIVE
+                else:
+                    is_active = True
 
-                        entry_scope = entry.get('scope', 'self')
-                        if entry_scope not in allowed_scopes:
-                            continue
+                # Value pulled from the entry per its kind.
+                if ability_name in _RATE_ABILITIES:
+                    value = float(entry.get('rate', entry.get('improvement_rate', 0.0)))
+                else:
+                    value = float(entry.get('multiplier', entry.get('improvement_rate', 1.0)))
 
-                        group_key = _make_group_key(ability_name, entry)
-                        display_name = _make_display_name(ability_name, entry)
+                provider = {
+                    # Universal PROJ-300 fields.
+                    'source_kind': source.source_kind,
+                    'source_label': source.source_label,
+                    'source_id': source.source_id,
+                    'owner_id': owner_id,
+                    'status': status,
+                    'is_active': is_active,
+                    'value': value,
+                    'ability_data': entry,
+                    # Legacy back-compat fields — populated for facility sources
+                    # so existing UI consumers keep working until Phase 8.
+                    **_legacy_provider_fields(source),
+                }
 
-                        if _is_activatable(entry):
-                            status = _get_component_status(facility, comp_key)
-                            is_active = _is_active_component(facility, comp_key, entry)
-                        else:
-                            status = "Active"
-                            is_active = True
+                if group_key not in raw_providers:
+                    raw_providers[group_key] = {
+                        'ability_name': ability_name,
+                        'display_name': display_name,
+                        'resource_type': entry.get('resource_type'),
+                        'damage_type': entry.get('damage_type'),
+                        'kind': _ability_kind(ability_name),
+                        'providers': [],
+                    }
+                raw_providers[group_key]['providers'].append(provider)
 
-                        value = entry.get('multiplier', entry.get('improvement_rate', 0.0))
-
-                        provider = {
-                            'planet_name': planet.name,
-                            'planet_id': planet.id,
-                            'facility_name': facility.name,
-                            'facility_id': facility.instance_id,
-                            'component_key': comp_key,
-                            'status': status,
-                            'is_active': is_active,
-                            'value': value,
-                            'ability_data': entry,
-                        }
-
-                        if group_key not in raw_providers:
-                            raw_providers[group_key] = {
-                                'ability_name': ability_name,
-                                'display_name': display_name,
-                                'resource_type': entry.get('resource_type'),
-                                'providers': [],
-                            }
-                        raw_providers[group_key]['providers'].append(provider)
-
-    # Build result with aggregate values and status
-    results = []
+    # Build aggregated effect rows.
+    results: List[Dict[str, Any]] = []
     for group_key, group_data in raw_providers.items():
         providers = group_data['providers']
 
@@ -273,11 +338,23 @@ def _collect_effects(
         else:
             aggregate_status = "Inactive"
 
+        # Aggregate from active providers if any are active; otherwise show
+        # the would-be value across all providers (matches pre-PROJ-300
+        # behavior where inactive providers still rendered a stack value).
         active_entries = [p['ability_data'] for p in providers if p['is_active']]
-        if active_entries:
-            aggregate_value = aggregate_multipliers(active_entries)
+        entries_for_agg = active_entries if active_entries else [p['ability_data'] for p in providers]
+
+        kind = group_data['kind']
+        if kind == 'rate':
+            # Adapt entry shape for aggregator: rate field maps to 'rate'.
+            agg_entries = [
+                {'rate': e.get('rate', e.get('improvement_rate', 0.0)),
+                 'stack_group': e.get('stack_group')}
+                for e in entries_for_agg
+            ]
+            aggregate_value = aggregate_rates(agg_entries)
         else:
-            aggregate_value = aggregate_multipliers([p['ability_data'] for p in providers])
+            aggregate_value = aggregate_multipliers(entries_for_agg)
 
         results.append({
             'ability_name': group_data['ability_name'],
@@ -285,8 +362,40 @@ def _collect_effects(
             'group_key': group_key,
             'status': aggregate_status,
             'resource_type': group_data['resource_type'],
+            'damage_type': group_data['damage_type'],
+            'kind': kind,
             'aggregate_value': aggregate_value,
             'providers': providers,
         })
 
     return results
+
+
+def _legacy_provider_fields(source) -> Dict[str, Any]:
+    """Build legacy provider fields (`planet_name`, `facility_name`, etc.).
+
+    Populated for facility sources so existing UI/tests keep working. For
+    other source kinds (storms, future PROJ-301..305), these fields default
+    to None / the source label. Phase 8 will retire the legacy fields.
+    """
+    if getattr(source, 'source_kind', None) != 'facility':
+        # Best-effort fill for non-facility sources so renderers that always
+        # read legacy fields don't crash.
+        label = getattr(source, 'source_label', '')
+        return {
+            'planet_name': None,
+            'planet_id': None,
+            'facility_name': label,
+            'facility_id': getattr(source, 'source_id', None),
+            'component_key': None,
+        }
+
+    facility = getattr(source, 'facility', None)
+    planet = getattr(source, 'planet', None)
+    return {
+        'planet_name': getattr(planet, 'name', None),
+        'planet_id': getattr(planet, 'id', None),
+        'facility_name': getattr(facility, 'name', None),
+        'facility_id': getattr(facility, 'instance_id', None),
+        'component_key': None,  # Adapter no longer tracks per-component key.
+    }

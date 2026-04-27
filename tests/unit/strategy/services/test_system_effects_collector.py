@@ -372,3 +372,181 @@ class TestCollectSectorEffects:
 
         result = collect_sector_effects(system, hex_coord, empire_id=1)
         assert result == []
+
+
+# ---------------------------------------------------------------------------
+# PROJ-300 Phase 4 — kind discriminator, damage_type grouping, helpers,
+# storm-source integration.
+# ---------------------------------------------------------------------------
+
+
+class TestKindDiscriminator:
+    """PROJ-300: each effect carries a `kind` field disambiguating aggregate."""
+
+    def test_multiplier_ability_kind(self):
+        from game.strategy.services.system_effects_collector import collect_system_effects
+
+        fac = _make_facility("f-1", _stabilizer_design("geo", "GeologicStabilizer"),
+                             component_states={"OUTER:0:geo": ComponentActivationState(
+                                 phase=ActivationPhase.ACTIVE,
+                                 ability_name="GeologicStabilizer",
+                                 energy_drain_rate=50.0,
+                             ).to_dict()})
+        planet = _make_planet("P", 1, facilities=[fac])
+        system = _make_system("S", [planet])
+
+        result = collect_system_effects(system, empire_id=1)
+        assert result and result[0]['kind'] == 'multiplier'
+
+    def test_rate_ability_kind_via_storm(self):
+        """Storm-projected EnvironmentalDamage flows through with kind=rate."""
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.storm import Storm, StormEffect
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        storm = Storm(
+            name="Plasma Storm",
+            storm_type="plasma_storm",
+            location=HexCoord(0, 0),
+            hex_offsets=frozenset({HexCoord(0, 0)}),
+            effects=StormEffect(damage_per_tick=0.005),
+        )
+        system = _make_system("S", [])
+        system.storms = [storm]
+        system.global_location = HexCoord(0, 0)
+
+        result = collect_sector_effects(system, HexCoord(0, 0), empire_id=1)
+        env_damage = [e for e in result if e['ability_name'] == 'EnvironmentalDamage']
+        assert env_damage
+        assert env_damage[0]['kind'] == 'rate'
+        assert env_damage[0]['aggregate_value'] == pytest.approx(0.5)
+        assert env_damage[0]['damage_type'] == 'environmental'
+
+
+class TestDamageTypeGrouping:
+    """PROJ-300: EnvironmentalDamage groups per damage_type."""
+
+    def test_plasma_and_radiation_are_separate_groups(self):
+        """Two different damage_types yield two effect rows that SUM."""
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.storm import Storm, StormEffect
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        # We can't get distinct damage_types from the legacy StormEffect path
+        # since it only emits one default damage_type. So construct storms with
+        # the new abilities-dict shape directly (Phase 5 readiness).
+        from dataclasses import dataclass, field
+        from typing import Any, FrozenSet
+
+        @dataclass
+        class _StormWithAbilities:
+            name: str
+            abilities: dict
+            occupied_hexes: FrozenSet = frozenset({HexCoord(0, 0)})
+
+        plasma = _StormWithAbilities(
+            name="Plasma Alpha",
+            abilities={"EnvironmentalDamage": {"rate": 0.5, "damage_type": "plasma", "scope": "sector"}},
+        )
+        radiation = _StormWithAbilities(
+            name="Radiation Belt",
+            abilities={"EnvironmentalDamage": {"rate": 0.8, "damage_type": "radiation", "scope": "sector"}},
+        )
+        system = _make_system("S", [])
+        system.storms = [plasma, radiation]
+        system.global_location = HexCoord(0, 0)
+
+        result = collect_sector_effects(system, HexCoord(0, 0), empire_id=1)
+        env = [e for e in result if e['ability_name'] == 'EnvironmentalDamage']
+        # Two groups (plasma + radiation), aggregate values per-group.
+        damage_types = sorted(e['damage_type'] for e in env)
+        assert damage_types == ['plasma', 'radiation']
+        plasma_row = next(e for e in env if e['damage_type'] == 'plasma')
+        radiation_row = next(e for e in env if e['damage_type'] == 'radiation')
+        assert plasma_row['aggregate_value'] == pytest.approx(0.5)
+        assert radiation_row['aggregate_value'] == pytest.approx(0.8)
+
+
+class TestHelpers:
+    """find_sector_effect + aggregate_value_or."""
+
+    def test_find_sector_effect_by_ability_name(self):
+        from game.strategy.services.system_effects_collector import find_sector_effect
+        effects = [
+            {'ability_name': 'ShieldModifier', 'aggregate_value': 0.5},
+            {'ability_name': 'ThrustModifier', 'aggregate_value': 0.7},
+        ]
+        e = find_sector_effect(effects, 'ThrustModifier')
+        assert e and e['aggregate_value'] == 0.7
+
+    def test_find_sector_effect_returns_none_when_absent(self):
+        from game.strategy.services.system_effects_collector import find_sector_effect
+        assert find_sector_effect([], 'ShieldModifier') is None
+
+    def test_find_sector_effect_with_filter(self):
+        from game.strategy.services.system_effects_collector import find_sector_effect
+        effects = [
+            {'ability_name': 'EnvironmentalDamage', 'damage_type': 'plasma', 'aggregate_value': 0.5},
+            {'ability_name': 'EnvironmentalDamage', 'damage_type': 'radiation', 'aggregate_value': 0.8},
+        ]
+        e = find_sector_effect(effects, 'EnvironmentalDamage', damage_type='radiation')
+        assert e['aggregate_value'] == 0.8
+
+    def test_aggregate_value_or_returns_value(self):
+        from game.strategy.services.system_effects_collector import aggregate_value_or
+        effects = [{'ability_name': 'X', 'aggregate_value': 1.5}]
+        assert aggregate_value_or(effects, 'X', 99.9) == 1.5
+
+    def test_aggregate_value_or_returns_default_when_absent(self):
+        from game.strategy.services.system_effects_collector import aggregate_value_or
+        assert aggregate_value_or([], 'X', 1.0) == 1.0
+
+
+class TestProviderUniversalFields:
+    """PROJ-300: every provider carries source_kind/source_label/source_id/owner_id."""
+
+    def test_facility_provider_has_universal_fields(self):
+        from game.strategy.services.system_effects_collector import collect_system_effects
+
+        fac = _make_facility("f-1", _stabilizer_design("geo", "GeologicStabilizer"),
+                             component_states={"OUTER:0:geo": ComponentActivationState(
+                                 phase=ActivationPhase.ACTIVE,
+                                 ability_name="GeologicStabilizer",
+                                 energy_drain_rate=50.0,
+                             ).to_dict()})
+        planet = _make_planet("Tarsis IV", 1, facilities=[fac])
+        system = _make_system("S", [planet])
+
+        result = collect_system_effects(system, empire_id=1)
+        provider = result[0]['providers'][0]
+        assert provider['source_kind'] == 'facility'
+        assert 'Facility-f-1' in provider['source_label']
+        assert provider['source_id'].startswith('facility:')
+        assert provider['owner_id'] == 1
+        # Legacy fields still present for back-compat.
+        assert provider['planet_name'] == 'Tarsis IV'
+        assert provider['facility_name'] == 'Facility-f-1'
+
+    def test_storm_provider_has_universal_fields(self):
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.storm import Storm, StormEffect
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        storm = Storm(
+            name="Ion Storm Alpha",
+            storm_type="ion_storm",
+            location=HexCoord(0, 0),
+            hex_offsets=frozenset({HexCoord(0, 0)}),
+            effects=StormEffect(shield_capacity_mult=0.5),
+        )
+        system = _make_system("S", [])
+        system.storms = [storm]
+        system.global_location = HexCoord(0, 0)
+
+        result = collect_sector_effects(system, HexCoord(0, 0), empire_id=1)
+        assert result
+        provider = result[0]['providers'][0]
+        assert provider['source_kind'] == 'storm'
+        assert provider['source_label'] == 'Ion Storm Alpha'
+        assert provider['source_id'] == 'storm:Ion Storm Alpha'
+        assert provider['owner_id'] is None  # Storms are ownerless.
