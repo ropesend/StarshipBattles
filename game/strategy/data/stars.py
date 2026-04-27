@@ -1,9 +1,10 @@
+from __future__ import annotations
 
 import random
 import math
 from enum import Enum, auto
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Dict, Any, List
 from typing import FrozenSet
 from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
 from game.core.validation_helpers import (
@@ -477,7 +478,7 @@ class StarGenerator:
         hex_radius = min(_HEX_RADIUS_MAX, max(_HEX_RADIUS_MIN, int(round(hex_radius))))
         return hex_radius
 
-    def _generate_spectrum(self, temp, luminosity):
+    def _generate_spectrum(self, temp, luminosity) -> Spectrum:
         """
         Generate spectrum based on Black Body radiation logic.
         Refined to 9 bands including 3 visible split bands.
@@ -485,7 +486,7 @@ class StarGenerator:
         """
         peak_wavelength = WIEN_DISPLACEMENT_CONSTANT / temp if temp > 0 else 1e99
 
-        def intensity_at(target_wl):
+        def intensity_at(target_wl) -> float:
             if peak_wavelength <= 0:
                 return 0
             dist = math.log10(target_wl) - math.log10(peak_wavelength)
@@ -499,7 +500,7 @@ class StarGenerator:
 
         jitter_min, jitter_max = _SPECTRUM_JITTER_RANGE
 
-        def jitter(val):
+        def jitter(val) -> float:
             return val * scale * random.uniform(jitter_min, jitter_max)
 
         return Spectrum(
@@ -514,7 +515,7 @@ class StarGenerator:
             radio=jitter(intensities['radio']),
         )
 
-    def generate_system_stars(self, system_name, blueprint=None):
+    def generate_system_stars(self, system_name, blueprint=None) -> List[Star]:
         """
         Generate stars for a system.
 
@@ -600,7 +601,7 @@ class StarGenerator:
 
         return companions
 
-    def generate_from_blueprint(self, system_name, blueprint):
+    def generate_from_blueprint(self, system_name, blueprint) -> List[Star]:
         """
         Generate stars based on a system blueprint.
 
@@ -682,7 +683,7 @@ class StarGenerator:
 
         return stars
 
-    def _generate_random_stars(self, system_name):
+    def _generate_random_stars(self, system_name) -> List[Star]:
         """
         Generate stars using default random probabilities.
         """
@@ -734,7 +735,7 @@ class StarGenerator:
 
         return stars
 
-    def _generate_mass_constrained(self, mass_min, mass_max):
+    def _generate_mass_constrained(self, mass_min, mass_max) -> float:
         """
         Generate star mass within specified constraints.
 

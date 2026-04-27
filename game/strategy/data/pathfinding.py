@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import heapq
 import logging
 from typing import List, Union, Optional, Sequence, TypeVar, TYPE_CHECKING
@@ -195,7 +197,7 @@ def find_nearest_system(galaxy: 'Galaxy', hex_c: HexCoord) -> Optional['StarSyst
             best_sys = sys
     return best_sys
 
-def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None, can_warp=None):
+def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None, can_warp=None) -> List[HexCoord]:
     """
     Calculate path combining local hex movement and interstellar warp jumps.
 
@@ -292,7 +294,7 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None, can_warp=None):
     # Fallback: Just direct line (Deep Space logic)
     return find_path_deep_space(start_hex, end_hex)
 
-def project_fleet_path(fleet, galaxy, max_turns=10):
+def project_fleet_path(fleet, galaxy, max_turns=10) -> List[dict]:
     """
     Simulate future fleet movement based on current speed and orders.
 

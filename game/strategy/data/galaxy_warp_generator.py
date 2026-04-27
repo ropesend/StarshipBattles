@@ -180,13 +180,13 @@ class GalaxyWarpGenerator:
         """
         parent = list(range(len(systems)))
 
-        def find(i):
+        def find(i) -> int:
             if parent[i] == i:
                 return i
             parent[i] = find(parent[i])
             return parent[i]
 
-        def union(i, j):
+        def union(i, j) -> bool:
             root_i = find(i)
             root_j = find(j)
             if root_i != root_j:

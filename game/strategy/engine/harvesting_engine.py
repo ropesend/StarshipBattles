@@ -17,6 +17,8 @@ Responsibilities:
 Called by TurnEngine._process_tick() 100 times per turn.
 """
 
+from __future__ import annotations
+
 from typing import Any, List, Optional, TYPE_CHECKING
 import logging
 
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet, PlanetaryFacility
 
 
-def get_harvester_info(comp, registries: Optional[GameRegistries] = None):
+def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> dict | list | None:
     """Extract ResourceHarvester info from a component entry.
 
     Supports:
@@ -62,7 +64,7 @@ def get_harvester_info(comp, registries: Optional[GameRegistries] = None):
     return None
 
 
-def get_harvester_from_registry(comp_id: str, registries: GameRegistries):
+def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> dict | list | None:
     """Get harvester ability from the component registry.
 
     Args:
@@ -223,7 +225,7 @@ class HarvestingEngine(IHarvestingEngine):
                     total += entry.get('capacity_mass', 0.0)
         return total
 
-    def _get_staging_info(self, comp):
+    def _get_staging_info(self, comp) -> dict | list | None:
         """Extract StagingYard info from a component entry."""
         if isinstance(comp, dict):
             abilities = comp.get('abilities', {})
@@ -269,7 +271,7 @@ class HarvestingEngine(IHarvestingEngine):
                         storage_totals.get(resource_type, 0.0) + capacity
                     )
 
-    def _get_storage_info(self, comp):
+    def _get_storage_info(self, comp) -> dict | list | None:
         """Extract LocalStorage info from a component entry.
 
         Supports:
@@ -296,7 +298,7 @@ class HarvestingEngine(IHarvestingEngine):
             return self._get_storage_from_registry(comp)
         return None
 
-    def _get_storage_from_registry(self, comp_id: str):
+    def _get_storage_from_registry(self, comp_id: str) -> dict | list | None:
         """Get storage ability from the component registry.
 
         Args:

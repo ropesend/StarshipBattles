@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import Dict, Any, Optional, Set, TYPE_CHECKING
 
@@ -51,12 +53,12 @@ class Empire:
         self._fleet_resource_pool = {}  # Dict[str, float] - fleet construction resources
         self.max_storage = {}     # Dict[str, float] - aggregate storage capacity (set by HarvestingEngine)
 
-    def add_colony(self, planet):
+    def add_colony(self, planet) -> None:
         if planet not in self.colonies:
             self.colonies.append(planet)
             planet.owner_id = self.id
 
-    def add_fleet(self, fleet):
+    def add_fleet(self, fleet) -> None:
         """Add fleet to empire and auto-register with galaxy for O(1) lookup.
 
         PROJ-219: Automatically registers the fleet with the galaxy entity
@@ -68,7 +70,7 @@ class Empire:
         if self._galaxy:
             self._galaxy.register_fleet(fleet)
 
-    def remove_fleet(self, fleet, event_bus=None):
+    def remove_fleet(self, fleet, event_bus=None) -> None:
         """Remove fleet from empire and auto-unregister from galaxy.
 
         PROJ-219: Automatically unregisters the fleet from the galaxy entity

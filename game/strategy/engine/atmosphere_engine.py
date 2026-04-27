@@ -7,6 +7,8 @@ translates to different pressure changes depending on planet properties.
 
 Atmosphere mass formula: mass_kg = pressure_Pa * surface_area_m2 / gravity_ms2
 """
+from __future__ import annotations
+
 import logging
 from typing import Dict, List, TYPE_CHECKING
 
@@ -135,7 +137,7 @@ class AtmosphereEngine:
         total_pressure = sum(atmosphere.values())
         colony.surface_pressure = total_pressure
 
-    def _extract_atmo_modifier(self, comp):
+    def _extract_atmo_modifier(self, comp) -> dict | list | None:
         """Extract AtmosphereModifier ability data from a component entry."""
         from game.strategy.services.component_inspector import extract_abilities_from_component
         abilities = extract_abilities_from_component(comp, self._registries)

@@ -8,6 +8,8 @@ destroy star, open/close warp points, create Dyson Sphere, or self-destruct).
 Only stellerate_star and self_destruct consume the ship; other superweapons
 preserve the ship for reuse.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 import logging
@@ -733,7 +735,7 @@ class SuperweaponOrderProcessor:
         galaxy,
         empires: List['Empire'],
         component_registry,
-    ):
+    ) -> Optional[Any]:
         """Delegate to StabilizerRegistry for order-blocking lookup.
 
         Centralizes the "what blocks what" mapping in
@@ -751,7 +753,7 @@ class SuperweaponOrderProcessor:
             order_type, reference_planet, galaxy, empires, component_registry
         )
 
-    def _get_reference_planet(self, fleet_location, galaxy):
+    def _get_reference_planet(self, fleet_location, galaxy) -> Optional[Planet]:
         """Find any planet in the system at fleet_location — needed so the
         strategic ability scanner can resolve system/sector scope from a
         concrete planet reference.

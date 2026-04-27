@@ -3,6 +3,8 @@
 Provides a strict facade for UI-to-engine communication using CQRS-lite pattern.
 All state mutations go through Commands, all reads return immutable DTOs.
 """
+from __future__ import annotations
+
 import logging
 from typing import List, Optional, TYPE_CHECKING
 
@@ -25,6 +27,10 @@ from game.strategy.facade.dto import (
 
 if TYPE_CHECKING:
     from game.core.protocols import IRaceRegistry
+    from game.strategy.config.economy_config import EconomyConfig
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.planet import Planet
     from game.strategy.engine.game_session import GameSession
     from game.strategy.engine.commands import Command
 
@@ -252,7 +258,7 @@ class StrategySessionFacade:
 
     # --- Fleet Queries ---
 
-    def _get_fleet_by_id(self, fleet_id: int):
+    def _get_fleet_by_id(self, fleet_id: int) -> Optional['Fleet']:
         """Internal helper to get a fleet by ID across all empires.
 
         Delegates to GameSession._get_fleet_by_id() for O(1) lookup with fallback.
@@ -265,7 +271,7 @@ class StrategySessionFacade:
         """
         return self._session._get_fleet_by_id(fleet_id)
 
-    def _get_empire_by_id(self, empire_id: int):
+    def _get_empire_by_id(self, empire_id: int) -> Optional['Empire']:
         """Internal helper to get an empire by ID.
 
         Args:
@@ -478,7 +484,7 @@ class StrategySessionFacade:
                 index[planet.id] = planet
         return index
 
-    def _get_planet_by_id(self, planet_id: int):
+    def _get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
         """Internal helper to get a planet by ID using index (PROJ-254).
 
         Args:
@@ -737,7 +743,7 @@ class StrategySessionFacade:
             total_upkeep=total_upkeep,
         )
 
-    def _resolve_economy_config(self):
+    def _resolve_economy_config(self) -> 'EconomyConfig':
         """Pull the active EconomyConfig from the session, falling back to
         the module default. The session attribute is optional — older
         sessions may not carry it, in which case `get_default_economy_config`

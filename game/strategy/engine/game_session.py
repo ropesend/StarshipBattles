@@ -43,13 +43,16 @@ Example:
     cmd = IssueMoveCommand(fleet_id=fleet.id, target_hex=destination)
     result = session.handle_command(cmd)
 """
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
     from game.core.protocols import IRaceRegistry
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.empire import Empire
+    from game.strategy.data.planet import Planet
 
 import logging
 
@@ -167,13 +170,13 @@ class GameSession:
             self._race_registry = CachedRaceRegistry(RaceLibrary())
         return self._race_registry
 
-    def _create_event_handler(self):
+    def _create_event_handler(self) -> Callable[..., None]:
         """Create a callback for the global log_event() system.
 
         Returns a closure that captures this session, creating Event objects
         from structured kwargs and appending them to the session's EventLog.
         """
-        def handler(event_type: str, **kwargs):
+        def handler(event_type: str, **kwargs) -> None:
             category = kwargs.pop('category', 'other')
             message = kwargs.pop('message', '')
             empire_id = kwargs.pop('empire_id', -1)
@@ -263,7 +266,7 @@ class GameSession:
             return self._command_registry.dispatch(command.name, self, command)
         return None
 
-    def _get_fleet_by_id(self, fleet_id: int):
+    def _get_fleet_by_id(self, fleet_id: int) -> Optional['Fleet']:
         """
         Find fleet by ID via Galaxy registry (O(1) lookup).
 
@@ -276,7 +279,7 @@ class GameSession:
         # O(1) Galaxy registry lookup
         return self.galaxy.get_fleet_by_id(fleet_id)
 
-    def _get_planet_by_id(self, planet_id: int):
+    def _get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
         """
         Find planet by ID via Galaxy registry (O(1) lookup).
 

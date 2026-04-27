@@ -28,7 +28,7 @@ Phase 1 scope:
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 from game.core.math import Vector2
 from game.simulation.battle_spec import (
@@ -177,7 +177,7 @@ def build_strategy_battle_spec(
 def _build_strategy_post_battle_hook(
     fleets: List["Fleet"],
     empires: Mapping[Any, Any],
-):
+) -> Callable[[Any], None]:
     """Create a post-battle hook closure for a specific set of fleets.
 
     Captures (team_id -> fleet) positionally — the compiler assigns
@@ -201,7 +201,7 @@ def _build_strategy_post_battle_hook(
         if empire is not None:
             empires_by_team_id[team_id] = empire
 
-    def _hook(outcome):
+    def _hook(outcome) -> None:
         apply_outcome_to_fleets(
             outcome,
             fleets_by_team_id=fleets_by_team_id,
