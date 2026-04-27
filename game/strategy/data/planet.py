@@ -133,6 +133,11 @@ class Planet:
     # Order queue (PROJ-238: renamed from planet_orders, unified with Fleet.orders)
     orders: List['Order'] = field(default_factory=list)
 
+    # PROJ-301: planet intrinsic abilities (the planet itself projects these,
+    # distinct from facilities built on it). Populated at galaxy generation
+    # via `roll_intrinsic_abilities` against `data/planet_types.json`.
+    intrinsic_abilities: Dict[str, Any] = field(default_factory=dict)
+
     # PROJ-284: Per-colony per-species sliders (food allocation, etc.).
     # Keyed by race_id. Lazy-created via `get_species_config(race_id)`.
     species_configs: Dict[str, ColonySpeciesConfig] = field(default_factory=dict)
@@ -486,6 +491,8 @@ class Planet:
                 race_id: cfg.to_dict()
                 for race_id, cfg in self.species_configs.items()
             },
+            # PROJ-301: planet intrinsic abilities (rolled at gen).
+            'intrinsic_abilities': dict(self.intrinsic_abilities),
         }
 
     @classmethod
@@ -604,6 +611,8 @@ class Planet:
                 race_id: ColonySpeciesConfig.from_dict(cfg_data)
                 for race_id, cfg_data in (data.get('species_configs') or {}).items()
             },
+            # PROJ-301: planet intrinsic abilities (defaults to empty for old saves).
+            intrinsic_abilities=dict(data.get('intrinsic_abilities') or {}),
         )
 
 

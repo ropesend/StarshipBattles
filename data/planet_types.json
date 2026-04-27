@@ -1,0 +1,78 @@
+{
+    "version": "1.0",
+    "description": "Planet intrinsic ability templates. Registered as IAbilitySource via PlanetIntrinsicAbilitySource (PROJ-301). Keys are PlanetType enum names. Empty `abilities` is fine for benign types. {\"min\": x, \"max\": y} ranges are rolled at galaxy generation via roll_intrinsic_abilities (helper from PROJ-300).",
+    "planet_types": {
+        "CONTINENTAL": {
+            "name": "Continental",
+            "description": "Earth-like world; no significant intrinsic effects.",
+            "abilities": {}
+        },
+        "ARID": {
+            "name": "Arid",
+            "description": "Desert world; thin water vapor reduces sensor accuracy slightly.",
+            "abilities": {}
+        },
+        "PELAGIC": {
+            "name": "Pelagic",
+            "description": "Ocean world; benign sector with no intrinsic hazards.",
+            "abilities": {}
+        },
+        "MAGMA": {
+            "name": "Magma",
+            "description": "Volcanic hellscape; ejected plasma and radiation buffet ships in orbit.",
+            "abilities": {
+                "EnvironmentalDamage": {"rate": {"min": 0.1, "max": 0.5}, "damage_type": "thermal", "scope": "sector"}
+            }
+        },
+        "CRYOPLANET": {
+            "name": "Cryoplanet",
+            "description": "Frozen surface; cold-trapped gases reduce thrust efficiency in low orbit.",
+            "abilities": {
+                "ThrustModifier": {"multiplier": {"min": 0.85, "max": 0.95}, "scope": "sector"}
+            }
+        },
+        "BARREN": {
+            "name": "Barren",
+            "description": "Lifeless rock; no intrinsic effects.",
+            "abilities": {}
+        },
+        "JOVIAN": {
+            "name": "Jovian",
+            "description": "Gas giant; deep gravity well slows strategic transit through this hex.",
+            "abilities": {
+                "StrategicSpeedModifier": {"multiplier": {"min": 0.7, "max": 0.9}, "scope": "sector"}
+            }
+        },
+        "ICE_GIANT": {
+            "name": "Ice Giant",
+            "description": "Distant gas/ice giant; ammonia haze interferes with shields.",
+            "abilities": {
+                "ShieldModifier": {"multiplier": {"min": 0.85, "max": 0.95}, "scope": "sector"}
+            }
+        },
+        "CHTHONIAN": {
+            "name": "Chthonian",
+            "description": "Stripped giant core; radioactive remnants emit constant flux.",
+            "abilities": {
+                "EnvironmentalDamage": {"rate": {"min": 0.05, "max": 0.2}, "damage_type": "radiation", "scope": "sector"}
+            }
+        },
+        "ICE_DWARF": {
+            "name": "Ice Dwarf",
+            "description": "Distant icy body; benign.",
+            "abilities": {}
+        },
+        "PLANETOID": {
+            "name": "Planetoid",
+            "description": "Large asteroid or dwarf planet; benign.",
+            "abilities": {}
+        },
+        "DYSON_SPHERE": {
+            "name": "Dyson Sphere",
+            "description": "Artificial megastructure; intense radiation in operational hexes.",
+            "abilities": {
+                "EnvironmentalDamage": {"rate": {"min": 0.3, "max": 0.6}, "damage_type": "radiation", "scope": "sector"}
+            }
+        }
+    }
+}

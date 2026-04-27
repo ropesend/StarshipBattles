@@ -64,6 +64,9 @@ class GalaxySystemGenerator:
         # Sort by distance, then mass (descending) for consistent ordering
         system.planets.sort(key=lambda p: (p.orbit_distance, -p.mass))
 
+        # PROJ-301: roll planet-intrinsic abilities from data/planet_types.json.
+        _apply_planet_intrinsic_abilities(system.planets)
+
         # Register all planets with the galaxy
         for planet in system.planets:
             galaxy.register_planet(system, planet)
@@ -189,3 +192,48 @@ class GalaxySystemGenerator:
             existing_coords.add(coord)
 
         return generated
+
+
+# PROJ-301 — module-level helper. Loads planet_types.json once on first call
+# and rolls each planet's intrinsic abilities according to its planet_type.
+_PLANET_TYPES_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
+
+
+def _load_planet_types() -> Dict[str, Dict[str, Any]]:
+    global _PLANET_TYPES_CACHE
+    if _PLANET_TYPES_CACHE is None:
+        from pathlib import Path
+        import json
+        from game.core.paths import Paths
+
+        path = Path(Paths.PLANET_TYPES_FILE)
+        if path.exists():
+            with path.open('r', encoding='utf-8') as f:
+                data = json.load(f)
+            _PLANET_TYPES_CACHE = data.get('planet_types', {})
+        else:
+            _PLANET_TYPES_CACHE = {}
+    return _PLANET_TYPES_CACHE
+
+
+def _apply_planet_intrinsic_abilities(planets: List['Planet']) -> None:
+    """Roll intrinsic abilities for each planet from data/planet_types.json (PROJ-301).
+
+    Idempotent: planets with non-empty `intrinsic_abilities` are left alone
+    (e.g. for hand-crafted scenario planets).
+    """
+    from game.strategy.services.ability_sources import roll_intrinsic_abilities
+
+    types_data = _load_planet_types()
+    if not types_data:
+        return
+
+    rng = random.Random()  # Per-planet roll; unseeded for now (gen call already deterministic upstream).
+    for planet in planets:
+        if planet.intrinsic_abilities:  # Idempotent: respect pre-set values.
+            continue
+        type_key = planet.planet_type.name  # Enum value -> registry key.
+        template = types_data.get(type_key, {}).get('abilities', {})
+        if not template:
+            continue
+        planet.intrinsic_abilities = roll_intrinsic_abilities(template, rng)

@@ -15,6 +15,7 @@ from typing import Any, Callable, Iterable, List, Optional
 from game.strategy.services.ability_sources import (
     FacilityAbilitySource,
     StormAbilitySource,
+    PlanetIntrinsicAbilitySource,  # PROJ-301
 )
 
 
@@ -170,9 +171,28 @@ def _planet_global_hex(planet: Any, system: Any) -> Optional[Any]:
         return None
 
 
-# Register the two built-in providers at module load. PROJ-301..305 register
-# their own additional providers from their own modules.
+def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """PROJ-301: yield PlanetIntrinsicAbilitySource for planets with abilities.
+
+    `hex_coord=None` (system-wide query): every planet with intrinsic abilities.
+    `hex_coord=<HexCoord>` (hex query): only planets whose global hex matches.
+    """
+    if system is None:
+        return
+    planets = getattr(system, 'planets', None) or []
+    for planet in planets:
+        if not getattr(planet, 'intrinsic_abilities', None):
+            continue
+        adapter = PlanetIntrinsicAbilitySource(planet=planet, system=system)
+        if hex_coord is None or adapter.affects_hex(hex_coord):
+            yield adapter
+
+
+# Register the built-in providers at module load. PROJ-302..305 register their
+# own additional providers from their own modules.
 register_source_provider_at_hex(_facility_provider)
 register_source_provider_at_hex(_storm_provider)
+register_source_provider_at_hex(_planet_intrinsic_provider)
 register_source_provider_in_system(_facility_provider)
 register_source_provider_in_system(_storm_provider)
+register_source_provider_in_system(_planet_intrinsic_provider)

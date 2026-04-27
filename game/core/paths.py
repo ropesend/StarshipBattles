@@ -112,6 +112,11 @@ class Paths:
     GALAXY_LAYOUTS_FILE: str = os.path.join(DATA_DIR, "galaxy_layouts.json")
     STAR_SYSTEM_NAMES_FILE: str = os.path.join(DATA_DIR, "star_system_names.yaml")
     STORMS_FILE: str = os.path.join(DATA_DIR, "storms.json")
+    # PROJ-301..304 intrinsic-ability registries.
+    PLANET_TYPES_FILE: str = os.path.join(DATA_DIR, "planet_types.json")
+    STAR_TYPES_FILE: str = os.path.join(DATA_DIR, "star_types.json")
+    WARP_POINT_TYPES_FILE: str = os.path.join(DATA_DIR, "warp_point_types.json")
+    SYSTEM_ARCHETYPES_FILE: str = os.path.join(DATA_DIR, "system_archetypes.json")
     STATS_LAYOUT_FILE: str = os.path.join(DATA_DIR, "stats_layout.json")
     STATS_SECTIONS_FILE: str = os.path.join(DATA_DIR, "stats_sections.json")
     HOMEWORLD_PRESETS_FILE: str = os.path.join(DATA_DIR, "homeworld_presets.json")
