@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** First concrete provider. Hardened HTTP client (SSL on, timeouts, custom UA). Retry on 5xx only (not 429). Adds `requests>=2.31.0` to `requirements.txt`. Adds session-scoped autouse fixture preventing real HTTP calls in tests.
 
 ---
@@ -16,8 +16,8 @@
 **File:** `tests/conftest.py`
 **Tests:** Run any one test that imports requests.
 
-- [ ] Write a test that calls `requests.post('http://example.com')` directly. Confirm without the fixture it would attempt a real call.
-- [ ] Add to `tests/conftest.py`:
+- [x] Write a test that calls `requests.post('http://example.com')` directly. Confirm without the fixture it would attempt a real call.
+- [x] Add to `tests/conftest.py`:
   ```python
   @pytest.fixture(autouse=True, scope='session')
   def _block_real_http():
@@ -37,8 +37,8 @@
       requests.post = original_post
       requests.get = original_get
   ```
-- [ ] Add a test: `def test_real_http_is_blocked():` confirming `requests.post(...)` raises `RuntimeError`
-- [ ] Verify **no existing test breaks**. If any does (someone was making a real HTTP call), STOP and investigate.
+- [x] Add a test: `def test_real_http_is_blocked():` confirming `requests.post(...)` raises `RuntimeError`
+- [x] Verify **no existing test breaks**. If any does (someone was making a real HTTP call), STOP and investigate.
 
 **Notes:**
 
@@ -46,9 +46,9 @@
 **File:** `requirements.txt`
 **Tests:** `pip install -r requirements.txt` succeeds
 
-- [ ] Add line: `requests>=2.31.0`
-- [ ] Run `pip install -r requirements.txt` to confirm clean install
-- [ ] Verify `import requests; requests.__version__` reports >= 2.31.0
+- [x] Add line: `requests>=2.31.0`
+- [x] Run `pip install -r requirements.txt` to confirm clean install
+- [x] Verify `import requests; requests.__version__` reports >= 2.31.0
 
 **Notes:**
 
@@ -56,7 +56,7 @@
 **File:** `game/services/llm/deepseek.py` (NEW)
 **Tests:** `pytest tests/unit/services/llm/test_deepseek.py`
 
-- [ ] Write failing tests (TDD — define the behavior first):
+- [x] Write failing tests (TDD — define the behavior first):
   - **Construction:**
     - `DeepSeekProvider()` constructs OK regardless of env (key is read per-call, not at init)
     - `repr(DeepSeekProvider())` does NOT include the API key (use `monkeypatch.setenv` to set a fake key, assert it's not in repr)
@@ -86,7 +86,7 @@
     - Mock returns 200 with JSON missing `choices` key; provider raises `LLMResponseError`
   - **Logging hygiene:**
     - On error, captured log records do NOT contain the API key (use `caplog`)
-- [ ] Implement `DeepSeekProvider`:
+- [x] Implement `DeepSeekProvider`:
   - Endpoint: `https://api.deepseek.com/v1/chat/completions`
   - Read `os.environ.get("DEEPSEEK_API_KEY")` inside `complete()`, raise `LLMConfigError` if missing/empty
   - Build request body from `messages`, falling back to `LLMConfig` defaults for unset kwargs
@@ -96,7 +96,7 @@
   - Parse: extract `text` from `choices[0].message.content`, `finish_reason` from `choices[0].finish_reason` (map to enum), `usage.prompt_tokens/completion_tokens/total_tokens`, `model` from response, `request_id` from `id` field if present
   - Compute `latency_seconds` via `time.monotonic()` around the request
   - Override `__repr__` to return `"DeepSeekProvider(key=<REDACTED>)"`
-- [ ] Run tests, confirm all pass
+- [x] Run tests, confirm all pass
 
 **Notes:**
 
@@ -104,21 +104,21 @@
 **File:** `game/services/llm/__init__.py`, `game/services/llm/deepseek.py`
 **Tests:** `pytest tests/unit/services/llm/test_factory.py`
 
-- [ ] At the bottom of `deepseek.py`, register: `register_provider('deepseek', DeepSeekProvider)`
-- [ ] Update `__init__.py` to import deepseek module (so the registration runs): `from game.services.llm import deepseek  # noqa: F401`
-- [ ] Add a factory test: `LLMProviderFactory.create('deepseek')` returns a `DeepSeekProvider` instance (with mock env var set)
-- [ ] Add a factory test: with env var unset, `create('deepseek')` returns `None`
+- [x] At the bottom of `deepseek.py`, register: `register_provider('deepseek', DeepSeekProvider)`
+- [x] Update `__init__.py` to import deepseek module (so the registration runs): `from game.services.llm import deepseek  # noqa: F401`
+- [x] Add a factory test: `LLMProviderFactory.create('deepseek')` returns a `DeepSeekProvider` instance (with mock env var set)
+- [x] Add a factory test: with env var unset, `create('deepseek')` returns `None`
 
 **Notes:**
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] ~12 new tests in `test_deepseek.py` + the `_block_real_http` test
-- [ ] `pytest tests/unit/services/llm/` — all green
-- [ ] No real HTTP calls escape any test (verified by `_block_real_http`)
-- [ ] No baseline regression
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update `plan.md` phase table row to `Complete`
-- [ ] Update `plan.md` Current State to point to Phase 5
+- [x] All task checkboxes above are checked
+- [x] ~12 new tests in `test_deepseek.py` + the `_block_real_http` test
+- [x] `pytest tests/unit/services/llm/` — all green
+- [x] No real HTTP calls escape any test (verified by `_block_real_http`)
+- [x] No baseline regression
+- [x] Update status at top of this file to `Complete`
+- [x] Update `plan.md` phase table row to `Complete`
+- [x] Update `plan.md` Current State to point to Phase 5

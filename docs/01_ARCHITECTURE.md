@@ -6,7 +6,7 @@ Primary architecture document for the Starship Battles codebase. All claims veri
 
 ## Layer Structure
 
-Six layers with strict downward-only dependency flow:
+Seven layers with strict downward-only dependency flow:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -28,6 +28,10 @@ Six layers with strict downward-only dependency flow:
 │  Engine Layer      game/engine/                               │
 │  Low-level physics, collision detection, spatial indexing     │
 ├──────────────────────────────────────────────────────────────┤
+│  Services Layer    game/services/    [PROJ-296]              │
+│  Cross-cutting infrastructure (LLM provider, future:         │
+│  observability/metrics/cloud sync). Depends on Core only.    │
+├──────────────────────────────────────────────────────────────┤
 │  Core Layer        game/core/                                 │
 │  Math, config, constants, registry, protocols, validation    │
 └──────────────────────────────────────────────────────────────┘
@@ -35,22 +39,42 @@ Six layers with strict downward-only dependency flow:
 
 ### Dependency Rules
 
-| Layer      | Allowed Dependencies                        |
-|------------|---------------------------------------------|
-| UI         | AI, Strategy, Simulation, Engine, Core      |
-| AI         | Simulation, Engine, Core                    |
-| Strategy   | Simulation, Core                            |
-| Research   | Core only                                   |
-| Simulation | Engine, Core                                |
-| Engine     | Core                                        |
-| Core       | Standard library only                       |
+| Layer      | Allowed Dependencies                              |
+|------------|---------------------------------------------------|
+| UI         | AI, Strategy, Simulation, Engine, Services, Core  |
+| AI         | Simulation, Engine, Services, Core                |
+| Strategy   | Simulation, Engine, Services, Core                |
+| Research   | Services, Core                                    |
+| Simulation | Engine, Services, Core                            |
+| Engine     | Services, Core                                    |
+| Services   | Core only                                         |
+| Core       | Standard library only                             |
 
 ### Forbidden Dependencies
 
 - Core must not import any game layer
+- Services must not import any game layer except Core
 - Simulation must not import Strategy, AI, or UI
 - Strategy must not import UI
 - Engine must not import Simulation, Strategy, AI, or UI
+
+### What belongs in `game/services/`? (PROJ-296)
+
+To prevent the new layer becoming a junk drawer, every service must satisfy
+ALL three:
+
+1. **Depends only on `game/core/`** (and stdlib + third-party). Never imports
+   from any domain layer (Engine, Simulation, Strategy, Research, AI, UI).
+2. **Used by 2+ other layers** (or has clear roadmap to be). Otherwise it
+   belongs in the consuming layer's own `services/` subpackage
+   (e.g. `game/ui/services/`, `game/strategy/services/`).
+3. **Has a documented protocol + at least one testable implementation.** No
+   bare functions; no implicit globals.
+
+Current services:
+- `game/services/llm/` — LLM provider abstraction (PROJ-296). Protocol +
+  DeepSeek implementation + threading helper + `LLMProviderFactory`. See
+  `docs/04_SERVICES.md` for the public API.
 
 ---
 
@@ -61,6 +85,18 @@ Six layers with strict downward-only dependency flow:
 | Module                | Description |
 |-----------------------|-------------|
 | `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages the production service graph; additional services (e.g., `ship_materializer` in PROJ-274) follow the same module-level `get_default_*` / `set_default_*` pattern and are consulted on demand rather than wired into the context constructor. |
+
+### `game/services/` -- Cross-cutting infrastructure (PROJ-296)
+
+| Subpackage / Module | Description |
+|---------------------|-------------|
+| `llm/`              | LLM provider abstraction. Protocol + DeepSeek concrete implementation + factory + background-call helper + module-level default-provider accessors |
+| `llm/types.py`      | `Role`, `FinishReason`, `Message`, `TokenUsage`, `CompletionResult` (frozen dataclasses) |
+| `llm/provider.py`   | `LLMProvider` `@runtime_checkable` Protocol |
+| `llm/factory.py`    | `LLMProviderFactory.create()` reading `LLM_PROVIDER` env var; `register_provider()` for dispatch dict |
+| `llm/deepseek.py`   | `DeepSeekProvider` — OpenAI-compatible HTTP client with hardened timeouts, SSL on, custom UA, retry on 5xx (not 429) |
+| `llm/background.py` | `LLMBackgroundCall` (Pattern #28: Background Service Call) + `shutdown_all_calls()` |
+| `llm/defaults.py`   | `get_default_llm_provider()` / `set_default_llm_provider()` accessors |
 
 ### `game/core/` -- Foundation layer, no game-layer dependencies
 

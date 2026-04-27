@@ -16,24 +16,28 @@
 
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Exceptions + Error Codes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. DTOs + Protocol + LLMConfig | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. LLMProviderFactory | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. DeepSeek Implementation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Threading Helper | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. ApplicationContext Wiring | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Documentation Closeout | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 1. Exceptions + Error Codes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. DTOs + Protocol + LLMConfig | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. LLMProviderFactory | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. DeepSeek Implementation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Threading Helper | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. ApplicationContext Wiring | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Documentation Closeout | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ---
 
 ## Current State
 
-**Last Updated:** 2026-04-26 17:30
-**Active Phase:** Planning — awaiting user approval
-**Last Action:** Plan drafted and validated through 3-agent Phase A code review + 7-agent Phase B swarm review. All decisions logged in `decisions.md`. Test baseline 15167/15167 passing confirmed.
-**Next Action:** User approval, then begin Phase 1 implementation in a new "Continue Project" session.
-**Blockers:** None
-**Context for Next Agent:** This is the **foundation** project — no existing consumers. The first consumer (race description generation) lives in a separate triage doc at [Projects/Triage/race_description_generation.md](../../Triage/race_description_generation.md) and will become its own PROJ-XX after this lands. Diplomacy is the second known future consumer. The abstraction must support those without prejudice to either.
+**Last Updated:** 2026-04-26 19:00
+**Active Phase:** Complete — awaiting user verification
+**Last Action:** All 7 phases implemented and tested. Final sharded suite: **15273/15273 passing** (+106 tests over 15167 baseline, 0 regressions). Documentation updated across `docs/01_ARCHITECTURE.md` (new `services/` layer), `docs/02_PATTERNS.md` (Pattern #28 Background Service Call), `docs/04_SERVICES.md` (LLM service entry), `docs/05_ERROR_HANDLING.md` (LLM exception branch + L codes). `tests/regression/test_services_layer_rule.py` enforces the layer rule going forward.
+**Next Action:** **USER VERIFICATION** — run Phase 7 Task 7.7 manual smoke (one item with `DEEPSEEK_API_KEY` UNSET to confirm graceful degradation, then optional end-to-end with a real key). After verification, archive via Protocol 03.
+**Blockers:** None — implementation done.
+**Context for Next Agent:**
+- Pre-existing test failures (NOT from PROJ-296): 3 import errors in `tests/unit/ai/test_ai_protocols.py`, `tests/unit/ai/test_behavior_units.py`, `tests/unit/strategy/engine/test_build_order_command_handler.py` (when run via `pytest tests/unit/`). The sharded runner (which is the canonical CI path) doesn't hit them. Verified pre-existing via `git stash`.
+- This is the **foundation** project — no existing consumers wired. Race description generation triage at [Projects/Triage/race_description_generation.md](../../Triage/race_description_generation.md) becomes its own PROJ-XX once this is verified. Diplomacy is the second known future consumer.
+- Future provider additions: drop `game/services/llm/<name>.py` implementing `LLMProvider`, end with `register_provider("<name>", <Class>)`, add to package `__init__.py` side-effect imports. The dispatch dict `_PROVIDERS` is data-driven — no factory edits needed.
+- Security note: API key is read from `os.environ` per-request (never cached on instance). `__repr__` redacts. Logs and exception context omit the key, request body, response body, and message contents. The `_block_real_http` autouse fixture in `tests/conftest.py` guarantees no test escapes to the real network.
 
 ---
 
@@ -148,36 +152,43 @@ Add an LLM provider abstraction layer to the codebase as a **new top-level `game
 ## Phases
 
 ### Phase 1: Exceptions + Error Codes [Simple]
+**Status:** Complete
 **Objective:** Establish the exception branch and error codes the rest of the project will raise. Pure additive change to `game/core/`. No behavior yet.
 
 Tasks: see [phase_1_checklist.md](phase_1_checklist.md).
 
 ### Phase 2: DTOs + Protocol + LLMConfig [Medium]
+**Status:** Complete
 **Objective:** Define the contract — frozen dataclasses (`Message`, `CompletionResult`, `TokenUsage`), the `LLMProvider` Protocol, the `Role` enum, and the `LLMConfig` config class. Creates the new `game/services/llm/` package with empty `__init__.py`.
 
 Tasks: see [phase_2_checklist.md](phase_2_checklist.md).
 
 ### Phase 3: LLMProviderFactory [Simple]
+**Status:** Complete
 **Objective:** Provider selection by env var. With a stub provider for tests. Returns `None` if no provider can be constructed (deferred validation pattern).
 
 Tasks: see [phase_3_checklist.md](phase_3_checklist.md).
 
 ### Phase 4: DeepSeek Implementation [Medium]
+**Status:** Complete
 **Objective:** First concrete provider. HTTP client with hardened defaults (SSL on, timeouts, custom UA, retry on 5xx). Adds `requests>=2.31.0` to `requirements.txt`. Adds session-scoped autouse fixture preventing real HTTP calls in tests.
 
 Tasks: see [phase_4_checklist.md](phase_4_checklist.md).
 
 ### Phase 5: Threading Helper [Medium]
+**Status:** Complete
 **Objective:** `LLMBackgroundCall` class — spawns worker thread, exposes status / result / error / elapsed_seconds, supports cancel, enforces `MAX_CONCURRENT_CALLS`. Adds shutdown-hook to `game/app.py` joining workers with 5s timeout before `pygame.quit()`.
 
 Tasks: see [phase_5_checklist.md](phase_5_checklist.md).
 
 ### Phase 6: ApplicationContext Wiring [Simple]
+**Status:** Complete
 **Objective:** Wire LLM provider into the DI container following the established pattern. Module-level `_default_llm_provider` slot + `get_default_llm_provider()` / `set_default_llm_provider()` accessors. 5 specific edits to `game/context.py`. Update 1 test file.
 
 Tasks: see [phase_6_checklist.md](phase_6_checklist.md).
 
 ### Phase 7: Documentation Closeout [Simple]
+**Status:** Complete
 **Objective:** Add the new `services/` layer to `docs/01_ARCHITECTURE.md` (diagram + dependency rules + package directory map). Add Pattern #28 "Background Service Call" to `docs/02_PATTERNS.md`. Add LLM service entry to `docs/04_SERVICES.md`. Add LLM exception branch + `L` codes to `docs/05_ERROR_HANDLING.md`. Run full sharded suite, confirm baseline + new tests pass.
 
 Tasks: see [phase_7_checklist.md](phase_7_checklist.md).

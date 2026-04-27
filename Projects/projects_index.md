@@ -4,7 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-296 | LLM Service Foundation | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-299 | Race Description Generator (LLM) | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-298 | FleetOrder Rename Cleanup | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-297 | Code Review Cleanup - Quick Wins | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-296 | LLM Service Foundation | Awaiting Verification | 2026-04-26 | 2026-04-26 |
 | PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Awaiting Verification | 2026-04-26 | 2026-04-26 |
 | PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Planning | 2026-04-26 | 2026-04-26 |

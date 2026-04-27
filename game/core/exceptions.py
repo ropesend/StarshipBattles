@@ -59,6 +59,13 @@ GameException (base)
     SimulationException    - Combat engine errors
         ComponentException     - Component operation errors
         FormulaException       - Formula evaluation errors
+    LLMException           - LLM service errors (PROJ-296)
+        LLMConfigError         - No key / unknown provider
+        LLMNetworkError        - Connection / DNS / SSL / exhausted retries
+        LLMResponseError       - Malformed or non-2xx response (other than rate limit)
+        LLMRateLimited         - Provider returned 429
+        LLMTimeoutError        - Request exceeded timeout
+        LLMCancelled           - Cancelled via cancel_token
 
 Error Codes
 ===========
@@ -238,6 +245,68 @@ class FormulaException(SimulationException):
 
 
 # =============================================================================
+# LLM Service Exceptions (PROJ-296)
+# =============================================================================
+
+class LLMException(GameException):
+    """Base class for LLM service errors.
+
+    Raised by LLM providers, factory, and threading helper. Use the
+    `L001`-`L006` codes from `game.core.error_codes.ErrorCode` and
+    include relevant context (model, endpoint, status_code, error_code,
+    request_duration_ms). NEVER include the API key, request body,
+    response body, headers, or message contents in `context`.
+    """
+    pass
+
+
+class LLMConfigError(LLMException):
+    """LLM provider not configured.
+
+    Raised when no API key is available, an unknown provider is
+    requested via `LLM_PROVIDER`, or the concurrent-call limit is
+    exceeded.
+    """
+    pass
+
+
+class LLMNetworkError(LLMException):
+    """LLM network failure.
+
+    Raised on connection errors, DNS failures, SSL errors, or after
+    exhausting retries on 5xx responses.
+    """
+    pass
+
+
+class LLMResponseError(LLMException):
+    """LLM response was malformed or non-2xx (other than rate-limit)."""
+    pass
+
+
+class LLMRateLimited(LLMException):
+    """LLM provider returned 429 (rate limit exceeded).
+
+    Never auto-retried — consumer surfaces this immediately.
+    """
+    pass
+
+
+class LLMTimeoutError(LLMException):
+    """LLM request exceeded its configured timeout."""
+    pass
+
+
+class LLMCancelled(LLMException):
+    """LLM call was cancelled via cancel_token.
+
+    The underlying HTTP request may still be in flight in the
+    background; its response is discarded.
+    """
+    pass
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -261,4 +330,12 @@ __all__ = [
     'SimulationException',
     'ComponentException',
     'FormulaException',
+    # LLM Service (PROJ-296)
+    'LLMException',
+    'LLMConfigError',
+    'LLMNetworkError',
+    'LLMResponseError',
+    'LLMRateLimited',
+    'LLMTimeoutError',
+    'LLMCancelled',
 ]

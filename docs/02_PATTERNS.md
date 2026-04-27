@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase (27 patterns).
+Agent-optimized reference for every core pattern in the codebase (28 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -34,6 +34,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 25. [Scope-Driven Team Routing](#25-scope-driven-team-routing-proj-271)
 26. [Ability-Stat Registry](#26-ability-stat-registry-proj-273)
 27. [Budget-Aware Randomization](#27-budget-aware-randomization-feat-12)
+28. [Background Service Call](#28-background-service-call-proj-296)
 
 ---
 
@@ -1389,6 +1390,66 @@ different-stack_group entries correctly SUM.
 
 ---
 
+## 28. Background Service Call (PROJ-296)
+
+### Where
+
+- `game/services/llm/background.py` — `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls`
+- Called from `game/app.py` shutdown sequence before `pygame.quit()`
+
+### How It Works
+
+Wraps a synchronous service call (LLM `complete()`) in a worker thread. The
+caller polls `.status` / `.result` / `.error` / `.elapsed_seconds` from the
+pygame `update()` loop each frame instead of blocking. Cancellation via
+`.cancel()` sets a `threading.Event` that the underlying provider checks
+between retries; in-flight HTTP work completes in the background and is
+discarded (logical cancel, not physical).
+
+```python
+call = LLMBackgroundCall(provider, messages, model="deepseek-chat")
+call.start()
+# ... in the screen's update():
+if call.status == CallStatus.DONE:
+    consume(call.result)
+elif call.status == CallStatus.ERROR:
+    show_error(call.error)
+elif call.elapsed_seconds > 30:
+    offer_user_a_cancel_button()
+```
+
+**Concurrency safeguards:**
+
+- All shared state guarded by an instance `threading.Lock`.
+- A module-level counter enforces `LLMConfig.MAX_CONCURRENT_CALLS` (default 3);
+  exceeding it raises `LLMConfigError` so a buggy consumer can't spam costly
+  requests.
+- Workers are non-daemon. `shutdown_all_calls(timeout=5.0)` joins them with
+  a bounded timeout before `pygame.quit()` — a hung remote endpoint can
+  never freeze the game on shutdown.
+- Status reads are lock-protected, so 100 concurrent reads from different
+  threads never see torn state.
+
+### When to Use
+
+- Any service call with unbounded latency (network I/O) that must not block
+  the pygame main loop.
+- Future LLM consumers (race description generation, diplomacy "emails",
+  ad-hoc summaries).
+- Future non-LLM services with the same shape (cloud sync, telemetry
+  uploads, asset downloads).
+
+### Don't
+
+- Use for fast operations (file I/O, in-memory work) — the threading
+  overhead isn't worth it.
+- Skip the concurrent-call limit — it's the only protection against a
+  buggy consumer racking up provider costs.
+- Daemon-thread the workers — daemon threads can die mid-write, corrupting
+  the result. Non-daemon + shutdown hook is the contract.
+
+---
+
 ## Quick Reference
 
 | Pattern | Primary File | Key Class/Function |
@@ -1424,6 +1485,7 @@ different-stack_group entries correctly SUM.
 | External-Stats Bridge | `game/simulation/entities/ship.py` + `fleet_aura_manager.py` | `ship.external_stats`, `FleetAuraManager._apply_bonuses` |
 | Scope-Driven Team Routing | `game/simulation/combat/ability_stat_registry.py` | `OPPONENT_SCOPES`, `emit_entries_for_ability` |
 | Ability-Stat Registry | `game/simulation/combat/ability_stat_registry.py` | `ABILITY_STAT_REGISTRY`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS` |
+| Background Service Call | `game/services/llm/background.py` | `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls` |
 
 ### Critical Naming Reminders
 

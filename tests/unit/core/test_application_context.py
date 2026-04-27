@@ -116,3 +116,44 @@ class TestNotSingleton:
         ctx1 = ApplicationContext.create_test()
         ctx2 = ApplicationContext.create_test()
         assert ctx1.profiler is not ctx2.profiler
+
+
+class TestLLMProviderField:
+    """PROJ-296: ApplicationContext exposes an llm_provider attribute.
+
+    create_production() best-effort constructs a provider from
+    LLMProviderFactory; if no key is configured the attribute is None.
+    create_test() defaults to None and accepts an explicit override.
+    """
+
+    def test_init_accepts_llm_provider(self):
+        services = {name: MagicMock() for name in [
+            'registry_manager', 'profiler',
+            'component_cache', 'policy_manager', 'asset_manager',
+            'sprite_manager', 'ship_theme_manager',
+            'game_settings',
+        ]}
+        services['llm_provider'] = MagicMock(name='llm')
+        ctx = ApplicationContext(**services)
+        assert ctx.llm_provider is services['llm_provider']
+
+    def test_create_production_sets_llm_provider_attribute(self):
+        ctx = ApplicationContext.create_production()
+        assert hasattr(ctx, 'llm_provider')
+        # May be a real provider or None depending on env; both are valid.
+
+    def test_create_production_syncs_module_level_default(self):
+        """ctx.llm_provider must equal get_default_llm_provider()."""
+        from game.services.llm import get_default_llm_provider
+
+        ctx = ApplicationContext.create_production()
+        assert ctx.llm_provider is get_default_llm_provider()
+
+    def test_create_test_defaults_to_none(self):
+        ctx = ApplicationContext.create_test()
+        assert ctx.llm_provider is None
+
+    def test_create_test_override(self):
+        sentinel = MagicMock(name='custom_llm')
+        ctx = ApplicationContext.create_test(llm_provider=sentinel)
+        assert ctx.llm_provider is sentinel

@@ -13,6 +13,7 @@
 | `game/core/config.py` | Production | 2 | Add `LLMConfig` class |
 | `game/services/__init__.py` | Production | 2 | NEW package marker (one-line docstring) |
 | `game/services/llm/__init__.py` | Production | 2, 3, 5, 6 | NEW; populated incrementally across phases |
+| `game/services/llm/defaults.py` | Production | 6 | NEW — `_default_llm_provider` slot + `get/set` accessors (split from `__init__.py` to avoid circular import) |
 | `game/services/llm/types.py` | Production | 2 | NEW — `Role`, `FinishReason`, `Message`, `TokenUsage`, `CompletionResult` |
 | `game/services/llm/provider.py` | Production | 2 | NEW — `LLMProvider` Protocol |
 | `game/services/llm/factory.py` | Production | 3 | NEW — `LLMProviderFactory`, `register_provider`, `_PROVIDERS` registry |

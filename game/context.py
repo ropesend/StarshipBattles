@@ -38,6 +38,7 @@ class ApplicationContext:
         sprite_manager: Any,
         ship_theme_manager: Any,
         game_settings: Any,
+        llm_provider: Any = None,
     ):
         self.registry_manager = registry_manager
         self.profiler = profiler
@@ -47,6 +48,9 @@ class ApplicationContext:
         self.sprite_manager = sprite_manager
         self.ship_theme_manager = ship_theme_manager
         self.game_settings = game_settings
+        # PROJ-296: LLM service. May be None when no provider key is configured;
+        # consumers must check `if ctx.llm_provider is not None:` before use.
+        self.llm_provider = llm_provider
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -64,6 +68,9 @@ class ApplicationContext:
         from game.ui.renderer.sprites import SpriteManager
         from game.ui.assets.ship_theme_manager import ShipThemeManager
         from game.ui.services.game_settings import GameSettings
+        # PROJ-296: LLM service factory.
+        from game.core.exceptions import LLMConfigError
+        from game.services.llm import LLMProviderFactory
 
         # Create all service instances
         registry_mgr = RegistryManager()
@@ -74,6 +81,13 @@ class ApplicationContext:
         sprite_manager = SpriteManager()
         ship_theme_manager = ShipThemeManager()
         game_settings = GameSettings()
+        # PROJ-296: best-effort LLM provider. None when no key configured
+        # OR when the provider's name is unknown — both are tolerated so
+        # the game still launches without DEEPSEEK_API_KEY set.
+        try:
+            llm_provider = LLMProviderFactory.create()
+        except LLMConfigError:
+            llm_provider = None
 
         # PROJ-258: Set ALL module-level references so get_default_xxx()
         # returns the same instances as ctx.xxx (prevents instance divergence)
@@ -84,6 +98,8 @@ class ApplicationContext:
         from game.ui.renderer.sprites import set_default_sprite_manager
         from game.ui.assets.ship_theme_manager import set_default_ship_theme_manager
         from game.ui.services.game_settings import set_default_game_settings
+        # PROJ-296: LLM provider module-level setter.
+        from game.services.llm import set_default_llm_provider
 
         set_default_registry_manager(registry_mgr)
         set_default_profiler(profiler)
@@ -93,6 +109,7 @@ class ApplicationContext:
         set_default_sprite_manager(sprite_manager)
         set_default_ship_theme_manager(ship_theme_manager)
         set_default_game_settings(game_settings)
+        set_default_llm_provider(llm_provider)
 
         # Set module-level refs for services with only _default_xxx (no setter)
         import game.simulation.components.component_loader as _ccm_module
@@ -109,6 +126,7 @@ class ApplicationContext:
             sprite_manager=sprite_manager,
             ship_theme_manager=ship_theme_manager,
             game_settings=game_settings,
+            llm_provider=llm_provider,
         )
 
     @classmethod
@@ -138,6 +156,8 @@ class ApplicationContext:
             'sprite_manager': SpriteManager.__new__(SpriteManager),
             'ship_theme_manager': ShipThemeManager.__new__(ShipThemeManager),
             'game_settings': GameSettings.__new__(GameSettings),
+            # PROJ-296: tests opt-in to an LLM provider via override; default None.
+            'llm_provider': None,
         }
         defaults.update(overrides)
         return cls(**defaults)
