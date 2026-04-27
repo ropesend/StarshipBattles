@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-305 | Fleet Strategic-Layer Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-304 | Star System Archetype Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-303 | Warp Point Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-302 | Star Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-301 | Planet Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-299 | Race Description Generator (LLM) | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-298 | FleetOrder Rename Cleanup | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-297 | Code Review Cleanup - Quick Wins | Planning | 2026-04-26 | 2026-04-26 |
