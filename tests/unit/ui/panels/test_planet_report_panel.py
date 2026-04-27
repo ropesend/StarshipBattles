@@ -817,3 +817,171 @@ class TestProjectionGridAssembly:
         assert len(anchors) == len(set(anchors)), (
             f"Label/image anchors collide — rects overlap: {captured_rects}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Regression: pygame_gui's UILabel emits a UserWarning when the rect is
+# smaller than the rendered text. The default theme font (arial-14) renders
+# at ~20px tall, so every cell rect must be at least 20px tall. This test
+# guards against ~110 startup warnings that appeared when row_h/abbrev_h
+# were 14.
+# ---------------------------------------------------------------------------
+
+
+class TestResourceGridLabelSizing:
+    """Cell rects in the resource grid must fit the default theme font."""
+
+    # Default theme font is arial-14 (data/builder_theme.json). Its rendered
+    # line height under pygame.freetype.get_rect() is ~20px. pygame_gui's
+    # UILabel warns when rect.height < text height.
+    _MIN_CELL_HEIGHT = 20
+
+    def _capture_label_rects(self, n_resources: int):
+        """Run `_build_resource_grid` and return only the UILabel
+        relative_rects as `(x, y, w, h)` tuples. UIImage rects (icons)
+        are excluded so size assertions reason about text-bearing cells
+        only."""
+        from game.strategy.services.planet_economy_projector import ResourceProjection
+
+        view = MagicMock()
+        view.resource_projections = tuple(
+            ResourceProjection(
+                resource_id=f"res{i}",
+                harvest=10.0, upkeep=1.0, yard=0.5, net=8.0,
+            )
+            for i in range(n_resources)
+        )
+        panel = _make_panel_for_projection_grid(
+            view,
+            displayed_resources=tuple(f"res{i}" for i in range(n_resources)),
+        )
+
+        captured = []
+
+        def _capture_label(*args, relative_rect=None, **kwargs):
+            if relative_rect is not None:
+                captured.append((
+                    relative_rect.x, relative_rect.y,
+                    relative_rect.width, relative_rect.height,
+                ))
+            return MagicMock()
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel", side_effect=_capture_label,
+        ), patch(
+            "game.ui.panels.planet_report_panel.UIImage", return_value=MagicMock(),
+        ):
+            panel._build_resource_grid()
+
+        return captured
+
+    def test_all_label_rects_tall_enough_for_default_font(self):
+        """Every cell rect must be >= 20px tall to fit arial-14 text."""
+        rects = self._capture_label_rects(n_resources=8)
+        too_short = [r for r in rects if r[3] < self._MIN_CELL_HEIGHT]
+        assert not too_short, (
+            f"{len(too_short)} cell rect(s) are shorter than "
+            f"{self._MIN_CELL_HEIGHT}px — pygame_gui will emit "
+            f"'Label Rect is too small for text' UserWarnings. "
+            f"Offenders: {too_short}"
+        )
+
+    def test_row_label_column_wide_enough_for_longest_label(self):
+        """Row-label column must fit 'Harvest'/'Upkeep'/'Stored' (~50-55px
+        rendered at arial-14) with reasonable slack."""
+        rects = self._capture_label_rects(n_resources=8)
+        # Row labels are at x=5 (label_col_w left edge after 5px margin).
+        row_label_widths = {w for (x, y, w, h) in rects if x == 5}
+        assert row_label_widths, "expected at least one row-label rect at x=5"
+        assert all(w >= 70 for w in row_label_widths), (
+            f"Row label column width(s) {row_label_widths} too small to "
+            f"fit longest row label 'Harvest' (~55px text) with slack."
+        )
+
+    def test_value_cell_columns_wide_enough_for_typical_numbers(self):
+        """Resource value cells must fit numbers like '+11347.5' (~50px
+        rendered at arial-14) with slack — previous implementation
+        compressed columns to 40-41px, leaving only 1px slack."""
+        rects = self._capture_label_rects(n_resources=8)
+        # Value cells share x positions stepped by col_w; widths are uniform.
+        # Filter out the row-label column (x == 5) and the icon row.
+        value_widths = {w for (x, y, w, h) in rects if x != 5}
+        assert value_widths, "expected non-row-label cells to be captured"
+        assert all(w >= 60 for w in value_widths), (
+            f"Value cell width(s) {value_widths} too small to fit typical "
+            f"signed numeric strings with comfortable slack."
+        )
+
+
+# ---------------------------------------------------------------------------
+# Regression: the resource grid lives in a UIScrollingContainer and must
+# call set_scrollable_area_dimensions so horizontal/vertical scrollbars
+# appear automatically when the resource catalog or grid grows past the
+# viewport.
+# ---------------------------------------------------------------------------
+
+
+class TestResourceGridScrolling:
+    """`_build_resource_grid` must size the scrollable content area."""
+
+    def test_set_scrollable_area_dimensions_called(self):
+        """After building the grid, the scrolling container is told how
+        large its content is so scrollbars appear when needed."""
+        from game.strategy.services.planet_economy_projector import ResourceProjection
+
+        view = MagicMock()
+        view.resource_projections = (
+            ResourceProjection(
+                resource_id="res0", harvest=1.0, upkeep=0.0, yard=0.0, net=1.0,
+            ),
+        )
+        panel = _make_panel_for_projection_grid(
+            view, displayed_resources=("res0",),
+        )
+
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel", return_value=MagicMock(),
+        ), patch(
+            "game.ui.panels.planet_report_panel.UIImage", return_value=MagicMock(),
+        ):
+            panel._build_resource_grid()
+
+        panel.resource_panel.set_scrollable_area_dimensions.assert_called_once()
+        args, _ = panel.resource_panel.set_scrollable_area_dimensions.call_args
+        (content_w, content_h) = args[0]
+        assert content_w > 0 and content_h > 0, (
+            f"scrollable area must be positive; got ({content_w}, {content_h})"
+        )
+
+    def test_content_width_grows_with_resource_count(self):
+        """Adding more resource columns increases scrollable content width
+        — proving the grid uses fixed cell widths rather than compressing
+        to fit the viewport."""
+        from game.strategy.services.planet_economy_projector import ResourceProjection
+
+        def _content_width(n: int) -> int:
+            view = MagicMock()
+            view.resource_projections = tuple(
+                ResourceProjection(
+                    resource_id=f"res{i}", harvest=1.0, upkeep=0.0, yard=0.0, net=1.0,
+                )
+                for i in range(n)
+            )
+            panel = _make_panel_for_projection_grid(
+                view,
+                displayed_resources=tuple(f"res{i}" for i in range(n)),
+            )
+            with patch(
+                "game.ui.panels.planet_report_panel.UILabel", return_value=MagicMock(),
+            ), patch(
+                "game.ui.panels.planet_report_panel.UIImage", return_value=MagicMock(),
+            ):
+                panel._build_resource_grid()
+            args, _ = panel.resource_panel.set_scrollable_area_dimensions.call_args
+            return args[0][0]
+
+        assert _content_width(8) > _content_width(3), (
+            "scrollable content width must grow with resource count "
+            "(fixed col_w design); compression-to-fit re-introduces the "
+            "tight-cell warnings the scrolling container is meant to avoid"
+        )

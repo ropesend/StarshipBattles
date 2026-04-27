@@ -141,8 +141,11 @@ def _net_cell_color(net: float):
     return TEXT_LIGHT
 
 
-# Height reserved for resource grid at bottom of panel
-RESOURCE_PANEL_HEIGHT = 160
+# Height reserved for resource grid at bottom of panel. Sized so the
+# default 8-data-row grid (header + 8 × row_h=20) fits without a vertical
+# scrollbar at default screen sizes; the hosting UIScrollingContainer
+# adds scrollbars only when the panel is shrunk or the catalog grows.
+RESOURCE_PANEL_HEIGHT = 220
 
 
 class PlanetReportPanel:
@@ -295,9 +298,12 @@ class PlanetReportPanel:
         # Strategy screen uses AtmosphereGraph(height, width) then rotates -90 degrees
         self.graph = AtmosphereGraph(int(graph_h), 150)
 
-        # Resource grid panel at bottom (PROJ-82)
+        # Resource grid panel at bottom (PROJ-82). Hosted in a
+        # UIScrollingContainer so horizontal/vertical scrollbars appear
+        # automatically when the resource catalog or grid height grows
+        # past the viewport (the same idiom used by EmpireTreasuryPanel).
         resource_y = rect.height - RESOURCE_PANEL_HEIGHT - 10
-        self.resource_panel = UIPanel(
+        self.resource_panel = UIScrollingContainer(
             relative_rect=pygame.Rect(10, resource_y, rect.width - 20, RESOURCE_PANEL_HEIGHT),
             manager=manager,
             container=self.panel
@@ -518,14 +524,17 @@ class PlanetReportPanel:
         if self.view is not None:
             proj_by_id = {p.resource_id: p for p in self.view.resource_projections}
 
-        grid_width = self.resource_panel.relative_rect.width
+        # Fixed cell dimensions sized for the default theme font
+        # (arial-14, ~20px line height). The hosting UIScrollingContainer
+        # supplies horizontal/vertical scrollbars when content exceeds
+        # the viewport, so cells no longer need to be compressed to fit.
         n = len(self._displayed_resources)
-        label_col_w = 60
-        col_w = max(40, (grid_width - label_col_w - 10) // max(n, 1))
+        label_col_w = 80
+        col_w = 75
 
         icon_size = 20
-        abbrev_h = 14
-        row_h = 14
+        abbrev_h = 20
+        row_h = 20
         header_y = 4
         data_start_y = header_y + icon_size + abbrev_h + 2
 
@@ -585,6 +594,15 @@ class PlanetReportPanel:
                             # bugs surface instead of being swallowed.
                             pass
                 self._resource_grid_items.append(cell)
+
+        # Tell the scrolling container how large the rendered grid is so
+        # horizontal/vertical scrollbars appear when content overflows.
+        # Inputs reuse the cell-layout constants above so this stays
+        # consistent if they change.
+        n_data_rows = len(rows) - 1  # rows[0] is the header tuple
+        content_w = label_col_w + 5 + n * col_w + 10
+        content_h = data_start_y + n_data_rows * row_h + 6
+        self.resource_panel.set_scrollable_area_dimensions((content_w, content_h))
 
     def _update_resource_grid(self) -> None:
         """Refresh resource grid values when planet changes."""
