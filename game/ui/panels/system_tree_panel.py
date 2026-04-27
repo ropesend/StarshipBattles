@@ -5,6 +5,20 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UIImage, UILabel, UIScrollingContainer
 from game.core.protocols import is_star_system, is_star, is_planet, is_warp_point
 
+
+def _legacy_provider_label(provider: dict) -> str:
+    """Fallback provider label when a source omits source_label.
+
+    Pre-PROJ-300 the panel concatenated facility_name + planet_name.
+    Universal sources (storms, future planets/stars/etc.) carry a single
+    `source_label` — preferred. This fallback exists for safety.
+    """
+    facility = provider.get('facility_name')
+    planet = provider.get('planet_name')
+    if facility and planet:
+        return f"{facility} ({planet})"
+    return facility or planet or "(unknown)"
+
 class SystemTreeItem:
     """Base class for items in the tree."""
     def __init__(self, obj, label, icon_surface=None, container=None, manager=None, 
@@ -450,7 +464,10 @@ class SystemTreePanel:
 
             if len(providers) == 1:
                 p = providers[0]
-                location_label = f"{effect_label} ({p['planet_name']})"
+                # PROJ-300: prefer the universal source_label; fall back to
+                # legacy planet_name/facility_name combo only when missing.
+                location_str = p.get('source_label') or _legacy_provider_label(p)
+                location_label = f"{effect_label} ({location_str})"
                 leaf = SystemTreeItem(
                     None, location_label, None,
                     container=self.scrolling_container,
@@ -479,9 +496,10 @@ class SystemTreePanel:
 
                 for p in providers:
                     p_value = self._format_provider_value(effect, p)
-                    p_label = f"{p['facility_name']} ({p['planet_name']}) — {p['status']}"
+                    label = p.get('source_label') or _legacy_provider_label(p)
+                    p_label = f"{label} — {p['status']}"
                     if p_value:
-                        p_label = f"{p['facility_name']} ({p['planet_name']}) {p_value} — {p['status']}"
+                        p_label = f"{label} {p_value} — {p['status']}"
                     child = SystemTreeItem(
                         None, p_label, None,
                         container=self.scrolling_container,
@@ -495,9 +513,24 @@ class SystemTreePanel:
 
     @staticmethod
     def _format_effect_value(effect: dict) -> str:
-        """Format the aggregate value for an effect header."""
+        """Format the aggregate value for an effect header.
+
+        PROJ-300: rate-style abilities (kind=rate, EnvironmentalDamage,
+        FuelDrain) get per-turn formatting; multiplier-style stay as
+        percent / multiplier strings.
+        """
         ability = effect.get('ability_name', '')
         agg = effect.get('aggregate_value', 0.0)
+        kind = effect.get('kind', 'multiplier')
+
+        if kind == 'rate':
+            if not agg:
+                return ""
+            if ability == 'EnvironmentalDamage':
+                return f"-{agg:.2f} hull/turn"
+            if ability == 'FuelDrain':
+                return f"-{agg:.2f} fuel/turn"
+            return f"{agg:+.2f}/turn"
 
         if ability == 'ResourceHarvestBooster' or ability == 'BuildRateBooster':
             if agg and agg != 1.0:
@@ -509,6 +542,9 @@ class SystemTreePanel:
                 # aggregate_multipliers treats it as multiplier, so extract raw rate
                 rate = effect['providers'][0]['value'] if effect['providers'] else 0.0
                 return f"+{rate}/turn"
+        elif ability in ('ShieldModifier', 'DamageModifier', 'ThrustModifier', 'StrategicSpeedModifier'):
+            if agg and agg != 1.0:
+                return f"x{agg:.2f}"
         # Activatable abilities (stabilizers) don't have a value to show
         return ""
 

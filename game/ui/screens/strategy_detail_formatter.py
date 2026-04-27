@@ -408,12 +408,13 @@ class StrategyDetailFormatter:
         return text
 
     def _format_storm(self, obj) -> str:
-        """Format storm details (PROJ-189).
+        """Format storm details (PROJ-189; PROJ-300 D8).
 
-        Displays storm name, type, and environmental effects as
-        percentage reductions and per-turn damage/drain values.
+        After PROJ-300, the storm detail panel shows ONLY lore — name, type,
+        description, and size. The per-effect breakdown moved to the Sector
+        Effects panel (`system_tree_panel._add_sector_effects`) where it
+        joins facility-projected effects under one unified renderer.
         """
-        # Storm type display names
         type_names = {
             'ion_storm': 'Ion Storm',
             'plasma_storm': 'Plasma Storm',
@@ -426,33 +427,12 @@ class StrategyDetailFormatter:
         text = f"<b>Storm:</b> {obj.name}<br>"
         text += f"<b>Type:</b> {type_display}<br>"
         text += f"<b>Size:</b> {len(obj.occupied_hexes)} hexes<br>"
-        text += f"<br><b>Effects:</b><br>"
 
-        effects = obj.effects
+        description = getattr(obj, 'description', '') or ''
+        if description:
+            text += f"<br>{description}<br>"
 
-        # Format multipliers as percentage reductions
-        if effects.shield_capacity_mult < 1.0:
-            reduction = int((1.0 - effects.shield_capacity_mult) * 100)
-            text += f"  Shields: -{reduction}%<br>"
-
-        if effects.strategic_mult < 1.0:
-            reduction = int((1.0 - effects.strategic_mult) * 100)
-            text += f"  Speed: -{reduction}%<br>"
-
-        if effects.thrust_mult < 1.0:
-            reduction = int((1.0 - effects.thrust_mult) * 100)
-            text += f"  Thrust: -{reduction}%<br>"
-
-        # Format damage/drain as per-turn rates
-        if effects.damage_per_tick > 0:
-            # 100 ticks per turn
-            damage_per_turn = effects.damage_per_tick * 100
-            text += f"  Damage: {damage_per_turn:.0f}/turn<br>"
-
-        if effects.fuel_drain_per_tick > 0:
-            drain_per_turn = effects.fuel_drain_per_tick * 100
-            text += f"  Fuel Drain: {drain_per_turn:.0f}/turn<br>"
-
+        text += "<br><i>Effects appear in the Sector Effects panel.</i>"
         return text
 
     # =========================================================================
