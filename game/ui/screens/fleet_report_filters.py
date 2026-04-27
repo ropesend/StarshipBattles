@@ -269,7 +269,7 @@ def sort_ships(
     Returns:
         Sorted list of ships
     """
-    def get_sort_key(ship):
+    def get_sort_key(ship) -> Any:
         if sort_column == 'serial':
             return ship.serial or 0
         elif sort_column == 'design':

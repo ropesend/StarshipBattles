@@ -7,8 +7,10 @@ PROJ-173 Phase 1: Extracted FleetReportSidebar and FleetListRenderer for god cla
 PROJ-188 Phase 2: Migrated to VirtualTable + FleetDataSource + MultiSelect.
 PROJ-208 Phase 1: Refactored to use SplitFleetCommand via command pipeline.
 """
+from __future__ import annotations
+
 import logging
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import pygame
 from pygame_gui.elements import UIWindow, UIPanel
@@ -82,7 +84,7 @@ class FleetReportWindow(UIWindow):
         # Initial data load
         self.refresh_list()
 
-    def _init_layout(self):
+    def _init_layout(self) -> None:
         """Initialize the three-panel layout."""
         window_rect = self.get_container().get_rect()
         content_height = window_rect.height - 50  # Account for title bar
@@ -133,7 +135,7 @@ class FleetReportWindow(UIWindow):
         )
         self._init_detail_panel()
 
-    def _init_detail_panel(self):
+    def _init_detail_panel(self) -> None:
         """Initialize the right detail panel with ShipDetailPanel."""
         panel_rect = self.detail_panel.get_relative_rect()
         detail_rect = pygame.Rect(0, 0, panel_rect.width, panel_rect.height)
@@ -145,7 +147,7 @@ class FleetReportWindow(UIWindow):
             on_remove_ship=self._on_remove_ship
         )
 
-    def _swap_columns(self, col, direction):
+    def _swap_columns(self, col, direction) -> None:
         """Swap a column with its neighbor in the given direction."""
         col_id = col['id']
         if self.column_manager.swap_column(col_id, direction):
@@ -154,7 +156,7 @@ class FleetReportWindow(UIWindow):
             self.virtual_table.rebuild_row_pool()
             self.refresh_list()
 
-    def refresh_list(self):
+    def refresh_list(self) -> None:
         """Refresh the ship list with current fleet data."""
         # Update view model with current fleet ships
         self.view_model.update_ships(self.fleet.ships)
@@ -167,7 +169,7 @@ class FleetReportWindow(UIWindow):
         self.virtual_table.force_update()
         self.virtual_table.update_visible_rows()
 
-    def process_event(self, event):
+    def process_event(self, event) -> Any:
         """Handle UI events."""
         handled = super().process_event(event)
 
@@ -188,7 +190,7 @@ class FleetReportWindow(UIWindow):
 
         return handled
 
-    def _handle_row_click(self, pos):
+    def _handle_row_click(self, pos) -> bool:
         """Handle click on a ship row with Ctrl+click multi-select support."""
         mods = pygame.key.get_mods()
         ctrl_held = bool(mods & pygame.KMOD_CTRL)
@@ -211,7 +213,7 @@ class FleetReportWindow(UIWindow):
         return True
 
 
-    def select_ship(self, ship):
+    def select_ship(self, ship) -> None:
         """Select a single ship to show in the detail panel (API for external callers)."""
         # Find the ship's index in filtered ships
         filtered_ships = self.view_model.get_filtered_ships()
@@ -229,11 +231,11 @@ class FleetReportWindow(UIWindow):
         self.virtual_table.force_update()
         self.virtual_table.update_visible_rows()
 
-    def _update_detail_panel(self):
+    def _update_detail_panel(self) -> None:
         """Update the detail panel with selected ship instance."""
         self.ship_detail_panel.update_ship(self.selected_ship)
 
-    def _on_remove_ship(self, ship):
+    def _on_remove_ship(self, ship) -> None:
         """Handle remove single ship from fleet via ShipDetailPanel callback.
 
         PROJ-208: Routes through SplitFleetCommand via command pipeline.
@@ -248,7 +250,7 @@ class FleetReportWindow(UIWindow):
                 return
             self._post_removal_refresh()
 
-    def _on_remove_selected_ships(self):
+    def _on_remove_selected_ships(self) -> None:
         """Remove all selected ships and create a new fleet with them.
 
         PROJ-208: Routes through SplitFleetCommand via command pipeline.
@@ -275,7 +277,7 @@ class FleetReportWindow(UIWindow):
             return
         self._post_removal_refresh()
 
-    def _post_removal_refresh(self):
+    def _post_removal_refresh(self) -> None:
         """Refresh UI state after ships have been removed."""
         self.selection.clear()
         self.selected_ship = None
@@ -284,7 +286,7 @@ class FleetReportWindow(UIWindow):
         self.refresh_list()
         self.sidebar.update_remove_button(len(self.selection.get_selected_indices()))
 
-    def update(self, time_delta: float):
+    def update(self, time_delta: float) -> None:
         """Update UI elements and handle toggle button clicks."""
         super().update(time_delta)
 
@@ -313,7 +315,7 @@ class FleetReportWindow(UIWindow):
             self.virtual_table.rebuild_headers()
             self.refresh_list()
 
-    def _toggle_filter(self, filter_id: str):
+    def _toggle_filter(self, filter_id: str) -> None:
         """Toggle a filter state and update UI."""
         # Toggle the state via view model
         new_state = self.view_model.toggle_filter(filter_id)
@@ -330,7 +332,7 @@ class FleetReportWindow(UIWindow):
         # Refresh the list with new filters
         self.refresh_list()
 
-    def _apply_tri_state_filter(self, attribute: str, state):
+    def _apply_tri_state_filter(self, attribute: str, state) -> None:
         """Apply a tri-state filter change and refresh UI."""
         self.view_model.set_filter_state(attribute, state)
 
@@ -342,7 +344,7 @@ class FleetReportWindow(UIWindow):
 
         self.refresh_list()
 
-    def _toggle_column(self, col_id: str):
+    def _toggle_column(self, col_id: str) -> None:
         """Toggle a column's visibility and update UI."""
         # Toggle visibility via TableColumnManager
         is_visible = self.column_manager.toggle_column(col_id)
@@ -355,7 +357,7 @@ class FleetReportWindow(UIWindow):
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up when window is closed."""
         # Clean up VirtualTable
         if self.virtual_table:
