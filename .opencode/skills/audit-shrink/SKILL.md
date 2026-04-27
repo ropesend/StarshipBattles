@@ -1,6 +1,7 @@
 ---
 name: audit-shrink
 description: Run a comprehensive code shrinkage audit. Combines deterministic tools (vulture, radon, clone detector, orphans, dependency graph, LOC tracking) with 3 agents for semantic duplication and dead code review. Produces a unified report with shrinkage estimates. Production code only.
+argument-hint: [optional: --skip-phase1 to reuse existing raw results]
 ---
 
 # Code Shrinkage Audit
@@ -22,7 +23,7 @@ pip show vulture || pip install vulture
 pip show radon || pip install radon
 ```
 
-### Phase 1: Deterministic Analysis
+### Step 1: Run Phase 1 — Deterministic Analysis
 
 **Run the orchestrator script yourself** — do NOT ask the user to run it:
 
@@ -30,7 +31,14 @@ pip show radon || pip install radon
 python Tools/audit_shrink/audit_shrink.py
 ```
 
-Capture the last line of stdout which prints the output directory path. This is `REVIEW_DIR`.
+Capture the last few lines of stdout. Look for the line that prints the output directory path:
+```
+Output directory: Reviews/results/2026-04-27_133045_audit_shrink
+```
+
+Store this as `REVIEW_DIR`. The script also prints status for each tool step — note any FAILED steps.
+
+If `$0` is `--skip-phase1`, skip this step and use the most recent review directory from `Reviews/results/`.
 
 The script creates `REVIEW_DIR/raw/` with these outputs against `game/`:
 
@@ -43,27 +51,40 @@ The script creates `REVIEW_DIR/raw/` with these outputs against `game/`:
 7. `clones.json` — AST near-duplicate function clusters
 8. `manifest.json` — file inventory + shard rotation
 
-### Phase 2: Agent-Driven Semantic Review
+### Step 2: Read Phase 1 Outputs
 
-Read the raw outputs into memory:
+Read these files into memory for use in agent prompts:
 
-1. Read `raw/manifest.json` — note the `deep_review_shard` field (UI, SIM, STR, or FND) and the file list for that shard
-2. Read `raw/clones.json` — clone detector clusters to hand to Agent 1
-3. Read `raw/vulture_100.txt` and `raw/vulture_80.txt` — dead code candidates for Agent 3
-4. Read `raw/orphans.txt` and `raw/dead_deps.txt` — orphan/unreachable modules for Agent 3
-5. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
+1. Read `REVIEW_DIR/raw/manifest.json` — note `deep_review_shard` field (UI, SIM, STR, or FND), `deep_review_label`, and the file list for that shard at `shards.{shard_id}.files`
+2. Read `REVIEW_DIR/raw/clones.json` — clone detector clusters (get the full JSON content)
+3. Read `REVIEW_DIR/raw/vulture_100.txt` — dead code candidates for Agent 3 (get the full text)
+4. Read `REVIEW_DIR/raw/vulture_80.txt` — high-likelihood dead code (get the full text)
+5. Read `REVIEW_DIR/raw/orphans.txt` — orphan modules (get the full text)
+6. Read `REVIEW_DIR/raw/dead_deps.txt` — unreachable files (get the full text)
+7. Read `REVIEW_DIR/raw/radon.json` — complexity data (get the full JSON content)
+8. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
 
-Launch **3 agents** in parallel using the Task tool. Each agent uses EXACTLY the prompt template assigned below.
+### Step 3: Launch 3 Agents in Parallel
 
-**Before launching**, replace these placeholders in each template:
-- `{REVIEW_DIR}` → the actual review directory (e.g., `Reviews/results/2026-04-27_093015_audit_shrink`)
-- `{shard_id}` → from manifest.json `deep_review_shard` (UI, SIM, STR, or FND)
+Create the findings directory:
+```bash
+mkdir -p REVIEW_DIR/findings
+```
+
+Launch **3 agents** in parallel using the Task tool with `subagent_type: general`. Each agent receives EXACTLY the prompt template below with placeholder text replaced by actual data.
+
+**Replace these placeholders in each template before sending:**
+- `{REVIEW_DIR}` → the actual review directory (e.g., `Reviews/results/2026-04-27_133045_audit_shrink`)
+- `{shard_id}` → from manifest.json `deep_review_shard`
 - `{shard_label}` → from manifest.json `shards.{shard_id}.label`
-- `{shard_files}` → from manifest.json `shards.{shard_id}.files` (formatted as a list)
+- `{shard_files}` → the files list from manifest.json `shards.{shard_id}.files`, formatted as markdown list
+- `{clones_json}` → the full content of clones.json
+- `{vulture_100}` → the full content of vulture_100.txt
+- `{vulture_80}` → the full content of vulture_80.txt
+- `{orphans}` → the full content of orphans.txt
+- `{dead_deps}` → the full content of dead_deps.txt
 
-Agents MUST use the Write tool to save their report.
-
-#### Agent 1 Prompt: Cross-Shard Duplication
+#### Agent 1: Cross-Shard Duplication
 
 ```
 # Cross-Shard Duplication Hunter
@@ -79,7 +100,8 @@ pattern), escalate severity — it's both duplication AND architectural drift.
 
 ## Clone Detector Results
 The deterministic clone detector found these near-duplicate clusters:
-[Paste contents of raw/clones.json here]
+
+{clones_json}
 
 ## Scope
 All files under game/ (ui/, simulation/, strategy/, core/, engine/, ai/, research/).
@@ -88,38 +110,34 @@ All files under game/ (ui/, simulation/, strategy/, core/, engine/, ai/, researc
 
 ### Phase 1: Validate Clone Detector
 - For each cluster in clones.json, read the implicated files
-- Verify the functions are genuinely similar (not false positives from similar
-  structural fingerprints with different semantics)
-- Assess whether consolidation is feasible or if the similarity is superficial
+- Verify the functions are genuinely similar (not false positives)
+- Assess whether consolidation is feasible
 - For confirmed clusters, estimate LOC savings from consolidation
 
 ### Phase 2: Hunt Cross-Shard Duplication
 Scan for these patterns across shard boundaries:
-- Same concept implemented differently in multiple layers (e.g., "find nearest
-  hex" logic in both strategy/ and simulation/)
+- Same concept implemented differently in multiple layers
 - Utility functions copy-pasted between ui/, strategy/, and simulation/
 - Multiple serialization/deserialization approaches for the same data
 - Multiple validation routines for the same kind of input
 - Multiple distance/position calculations
 - Multiple "find best" or "select by criteria" algorithms
-- Multiple ways to format the same kind of display text
 
 ### Phase 3: Copy-Paste Drift
-Find code that was clearly copy-pasted then diverged:
 - Similar function bodies with slightly different variable names
 - Methods sharing 80%+ structure but with small differences
 - UI rendering functions repeating layout logic with different content
 - Helper functions duplicated across modules with minor variations
 
 ## Severity Guide
-- CRITICAL: Same business logic in 3+ places with active divergence (bugs likely hiding)
+- CRITICAL: Same business logic in 3+ places with active divergence
 - MAJOR: Significant code blocks (>20 lines) duplicated in 2+ places
 - MINOR: Small utility duplication or low-risk copy-paste patterns
-- INFO: Observations about natural similarity that may not warrant consolidation
+- INFO: Observations that may not warrant consolidation
 
 ## Output
 You MUST use the Write tool to save your report to:
-Reviews/results/{REVIEW_DIR}/findings/duplication_cross_shard.md
+{REVIEW_DIR}/findings/duplication_cross_shard.md
 
 Use EXACTLY this structure:
 # Cross-Shard Duplication Report
@@ -135,7 +153,7 @@ Use EXACTLY this structure:
 #### CRITICAL: [Title]
 **ID:** DUP-X-[NUMBER]
 **Location:** file1.py:lines AND file2.py:lines
-**Layer:** [e.g., simulation -> strategy, or ui -> strategy]
+**Layer:** [e.g., simulation -> strategy]
 **Issue:** [description]
 **Impact:** [maintenance risk]
 **Recommendation:** [how to consolidate]
@@ -146,12 +164,12 @@ Use EXACTLY this structure:
 [Ordered by impact/effort ratio]
 ```
 
-#### Agent 2 Prompt: In-Shard Deep Review
+#### Agent 2: In-Shard Deep Review
 
 ```
 # In-Shard Deep Review Agent
 
-You are assigned ONE shard this run: **{shard_label}**.
+You are assigned ONE shard this run: **{shard_label}** ({shard_id}).
 You MUST exhaustively read EVERY file in this shard.
 
 ## Documentation Reference
@@ -162,7 +180,7 @@ All files listed below MUST be read. If you skip any file, the coverage
 guarantee is broken for this cycle.
 
 Shard file list:
-[Paste the files array from raw/manifest.json shards.{shard_id}.files here]
+{shard_files}
 
 ## Methodology
 For EACH file in your shard:
@@ -181,25 +199,25 @@ For EACH file in your shard:
    - Related helper functions spread across unrelated modules
    - Partial implementations that should be consolidated
 5. **Check for code quality issues that bloat LOC:**
-   - Overly verbose patterns (e.g., if/elif chains where a dict lookup would work)
+   - Overly verbose patterns (if/elif chains where a dict lookup would work)
    - Repeated inline constants that should be module-level
-   - Functions that could be simplified with stdlib (e.g., itertools, collections)
+   - Functions that could be simplified with stdlib (itertools, collections)
 
 ## What NOT to Report
 - Unit tests (ignore tests/ completely)
-- Comments/docstrings being too long (those are fine)
+- Comments/docstrings being too long
 - Test fixtures or test-only code
-- Code already marked for deprecation (with clear comments)
+- Code already marked for deprecation
 
 ## Severity Guide
-- CRITICAL: True dead code that is importable and callable but never reached
+- CRITICAL: True dead code that is importable/callable but never reached
 - MAJOR: Significant internal duplication or fragmentation (>30 lines)
 - MINOR: Small dead code (individual imports, short dead functions)
 - INFO: Style suggestions that would reduce LOC without changing behavior
 
 ## Output
 You MUST use the Write tool to save your report to:
-Reviews/results/{REVIEW_DIR}/findings/deep_review_{shard_id}.md
+{REVIEW_DIR}/findings/deep_review_{shard_id}.md
 
 # Deep Review: {shard_label}
 ## Summary
@@ -234,7 +252,7 @@ Reviews/results/{REVIEW_DIR}/findings/deep_review_{shard_id}.md
 | [reproduce the full file list with "Read ✓" for each] |
 ```
 
-#### Agent 3 Prompt: Dead Code Validator
+#### Agent 3: Dead Code Validator
 
 ```
 # Dead Code Validator
@@ -252,35 +270,30 @@ the code should be removed.
 ## Input Data
 
 ### Vulture 100% Confidence (confirmed dead by static analysis):
-[Paste contents of raw/vulture_100.txt here]
+{vulture_100}
 
 ### Vulture 80% Confidence (high-likelihood):
-[Paste contents of raw/vulture_80.txt here]
+{vulture_80}
 
 ### Orphan Modules (no imports from other game/ modules):
-[Paste contents of raw/orphans.txt here]
+{orphans}
 
 ### Unreachable Files (not reachable from launcher.py or game/app.py):
-[Paste contents of raw/dead_deps.txt here]
+{dead_deps}
 
 ## Methodology
 
 For EACH dead code candidate:
 
-1. **Verify with grep**: Search the entire game/ directory for references to
-   the flagged class/function/variable.
-2. **Check dynamic dispatch**: Is the code used via registry lookup, string-based
-   dispatch, or `getattr`? These won't be caught by static analysis.
-3. **Check TYPE_CHECKING blocks**: Is it imported only under `if TYPE_CHECKING`?
-   Flag as low-priority but still noted.
-4. **Check command/ability registries**: Classes may be instantiated via
-   `CommandHandlerRegistry`, component ability registries, or similar patterns.
-5. **Check docs/**: Does any docs/ file reference this code? If yes, flag the
-   documentation discrepancy.
-6. **Check __init__.py re-exports**: Is it re-exported from an __init__.py?
+1. **Verify with grep**: Search the entire game/ directory for references
+2. **Check dynamic dispatch**: Registry lookups, string-based dispatch, getattr
+3. **Check TYPE_CHECKING blocks**: Imported only under `if TYPE_CHECKING`?
+4. **Check command/ability registries**: Classes instantiated via registry
+5. **Check docs/**: Does any docs/ file reference this code?
+6. **Check __init__.py re-exports**: Is it re-exported?
 
 ## False Positive Patterns (do NOT report as dead)
-- Pytest fixtures and test utilities (but we're scanning game/, not tests/)
+- Pytest fixtures and test utilities
 - Protocol/ABC classes used in isinstance() checks or type annotations
 - Command classes instantiated via registry dispatch
 - Factory functions called from tests
@@ -289,13 +302,13 @@ For EACH dead code candidate:
 
 ## Output
 You MUST use the Write tool to save your report to:
-Reviews/results/{REVIEW_DIR}/findings/dead_code_validation.md
+{REVIEW_DIR}/findings/dead_code_validation.md
 
 # Dead Code Validation Report
 ## Summary
 - Total Candidates Reviewed: [N]
 - Confirmed Dead: [N]
-- False Positives: [N] (with explanation)
+- False Positives: [N]
 - Documentation Discrepancies: [N]
 
 ## Confirmed Dead Code
@@ -328,51 +341,43 @@ Reviews/results/{REVIEW_DIR}/findings/dead_code_validation.md
 [Ordered by safety (dead files first) then by LOC savings]
 ```
 
-### Phase 3: Compile Final Report
+### Step 4: Verify Agent Outputs
 
-After all 3 agents complete, verify their output files exist in `findings/`.
+After all 3 agents complete, check that these files exist and are non-empty:
 
-Read all findings and compile `report.md` at the review directory root. The report MUST contain these sections:
+- `REVIEW_DIR/findings/duplication_cross_shard.md`
+- `REVIEW_DIR/findings/deep_review_{shard_id}.md`
+- `REVIEW_DIR/findings/dead_code_validation.md`
+
+If any agent failed, note it in the report but continue with available data.
+
+### Step 5: Compile Final Report
+
+Read all agent reports and raw tool outputs. Write `REVIEW_DIR/report.md` with these sections:
 
 **1. Executive Summary**
-- Date, run type, review directory path
+- Date, review directory
 - Total findings across all sources
 - Trend comparison to previous run (use shrink_tracker.py)
-- Shard rotation status (which shard got deep review, what % of cycle is complete)
+- Shard rotation status
 
 **2. Coverage Status**
-
-Reproduce the 4-shard table from manifest.json:
 | Shard | Files | Last Deep Review | This Run |
 |-------|-------|-----------------|----------|
 
 **3. Dead Code Inventory**
-
-Aggregate Agent 3's confirmed dead code by tier. Include LOC estimates.
-Add a summary table:
-| Tier | Count | Estimated LOC |
-|------|-------|---------------|
+Aggregate Agent 3's confirmed dead code by tier with LOC estimates.
 
 **4. Duplication Clusters**
-
-Aggregate Agent 1's findings. Group by severity. Include cross-shard pairs flagged.
-Add a summary table:
-| Severity | Cluster Count | Total Duplicated LOC |
-|----------|---------------|---------------------|
+Aggregate Agent 1's findings, grouped by severity.
 
 **5. Complexity Hotspots**
-
-From raw/radon.json, list all functions with CC >= 20. Note any that overlap with
-duplication clusters (these are the highest priority — they're complex AND duplicated).
+From raw/radon.json, all functions with CC >= 20.
 
 **6. In-Shard Deep Review Summary**
-
-From Agent 2's report, summarize the top findings by category (dead code, internal
-duplication, fragmentation, quality). Include coverage verification — confirm every
-file in the shard was read.
+From Agent 2's report, summarize findings + coverage verification.
 
 **7. Shrinkage Scorecard**
-
 | Category | Estimated Reclaimable LOC | Effort | Risk |
 |----------|--------------------------|--------|------|
 | Dead files | [N] | Low | Safe |
@@ -383,63 +388,48 @@ file in the shard was read.
 | **Total** | **[N]** | | |
 
 **8. Prioritized Cleanup Plan**
-
-Top 10 highest-impact items, ordered by `impact ÷ effort`, safest first:
-| Rank | Category | Item | LOC | Effort | Risk |
-|------|----------|------|-----|--------|------|
+Top 10 items ordered by impact/effort.
 
 **9. Trend Comparison**
-
-Use shrink_tracker.py compute_trend() to generate:
-- Direction arrow
-- Delta table for key metrics
-- Run history summary
+Use shrink_tracker.py to compare with previous run.
 
 **10. Appendices**
+Paths to raw tool outputs and agent reports.
 
-- Paths to raw tool outputs
-- Paths to agent reports
-- Link to shrink_tracker.json
+### Step 6: Update Shrink Tracker
 
-### Phase 4: Update Shrink Tracker
-
-After the report is written, update the shrink tracker:
+Run this Python code (replace placeholders):
 
 ```python
 from Tools.audit_shrink import shrink_tracker
 import json
 
-# Load manifest
-with open("Reviews/results/{REVIEW_DIR}/raw/manifest.json") as f:
+with open("{REVIEW_DIR}/raw/manifest.json") as f:
     manifest = json.load(f)
 
-# Count dead code from Agent 3 report
-# Count duplication clusters from Agent 1 report
-# Read radon.json for complexity stats
-
 run_data = {
-    "date": "[YYYY-MM-DD]",
+    "date": "{REVIEW_DIR}".split("/")[1].split("_")[0],
     "review_dir": "{REVIEW_DIR}",
     "deep_review_shard": manifest["deep_review_shard"],
     "rotation_index": manifest["rotation_index"],
-    "production_loc": [read from loc_baseline],
-    "dead_code_files": [count from Agent 3 Tier 1],
-    "dead_code_functions": [count from Agent 3 Tier 2+3],
-    "dead_code_imports": [count from Agent 3 Tier 4],
-    "duplication_clusters": [count from Agent 1],
-    "estimated_shrinkable_loc": [sum from scorecard],
-    "top_hotspots": [top 5 files by finding count],
+    "production_loc": ...,  # from loc_baseline.txt
+    "dead_code_files": ...,  # count from Agent 3 Tier 1
+    "dead_code_functions": ...,  # count from Agent 3 Tier 2+3
+    "dead_code_imports": ...,  # count from Agent 3 Tier 4
+    "duplication_clusters": ...,  # count from Agent 1
+    "estimated_shrinkable_loc": ...,  # sum from scorecard
+    "top_hotspots": ...,  # top 5 files by finding count
 }
 
 shrink_tracker.add_run("Reviews/results", run_data)
 ```
 
-### After the Report
+### Step 7: Present to User
 
-Present the user with:
+Show the user:
 1. Executive summary (3-4 sentences)
 2. Shrinkage scorecard totals
-3. Trend arrow
+3. Trend arrow (improving / worsening / stable / first run)
 4. Top 3 priority cleanup items
 5. Path to the full report
 
