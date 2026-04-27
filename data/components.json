@@ -3837,6 +3837,26 @@
                 "exotics": 400,
                 "radioactives": 300
             }
+        },
+        {
+            "id": "flagship_shield_projector",
+            "name": "Flagship Shield Projector",
+            "type": "Defensive",
+            "mass": "=80 * sqrt(ship_class_mass / 1000)",
+            "hp": "=300 * sqrt(ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "description": "Projects a coordinated shield-bonus aura to allied ships sharing this fleet's hex on the strategy map. PROJ-305 sample component demonstrating fleet strategic-layer ability projection.",
+            "abilities": {
+                "ShieldModifier": {"multiplier": 1.25, "scope": "allied_sector"}
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 200,
+                "exotics": 50,
+                "radioactives": 30
+            }
         }
     ]
 }

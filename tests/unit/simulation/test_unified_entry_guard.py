@@ -683,18 +683,19 @@ class TestNoPlaceholderStatKeyInStrategyCompiler:
     """Strategy compiler must not emit `stat_key="placeholder"` for storm or multiplier effects."""
 
     def test_storm_emits_real_stat_key(self):
+        """PROJ-300 Phase 7 renamed _entries_from_environmental_effects to
+        _entries_from_sector_effects. Same anti-placeholder guard applies."""
         path = REPO_ROOT / "game/strategy/combat/spec_compiler.py"
         text = path.read_text(encoding="utf-8")
-        # Find `_entries_from_environmental_effects` function body
         match = re.search(
-            r"def _entries_from_environmental_effects.*?(?=\ndef )",
+            r"def _entries_from_sector_effects.*?(?=\ndef )",
             text,
             flags=re.DOTALL,
         )
-        assert match, "Could not locate _entries_from_environmental_effects in strategy compiler"
+        assert match, "Could not locate _entries_from_sector_effects in strategy compiler"
         body = match.group(0)
         assert "stat_key=\"placeholder\"" not in body and "stat_key='placeholder'" not in body, (
-            "Storm environmental effect is still emitting placeholder stat_key — "
+            "Sector-effect emission is still emitting placeholder stat_key — "
             "PROJ-270 Phase 6.1 requires real stat_key (shield_capacity_mult)."
         )
 

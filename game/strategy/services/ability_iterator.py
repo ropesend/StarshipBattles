@@ -19,6 +19,7 @@ from game.strategy.services.ability_sources import (
     StarAbilitySource,  # PROJ-302
     WarpPointAbilitySource,  # PROJ-303
     SystemAbilitySource,  # PROJ-304
+    FleetAbilitySource,  # PROJ-305
 )
 
 
@@ -226,6 +227,44 @@ def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> 
             yield adapter
 
 
+# PROJ-305 fleet lookup hook — set by the strategy session to provide
+# fleets-at-hex / fleets-in-system queries. When None, the fleet provider
+# yields nothing (safe no-op for tests + non-strategic contexts).
+_FLEETS_AT_HEX_LOOKUP: Optional[Any] = None  # Callable[[system, hex_coord], Iterable[Fleet]]
+_FLEETS_IN_SYSTEM_LOOKUP: Optional[Any] = None  # Callable[[system], Iterable[Fleet]]
+
+
+def set_fleet_lookups(at_hex=None, in_system=None) -> None:
+    """Configure the PROJ-305 fleet-lookup callbacks.
+
+    The strategy session calls this at startup so the iterator can yield
+    FleetAbilitySource for fleets at a queried hex / in a queried system.
+    Without these callbacks, fleets are not surfaced (the rest of the
+    framework keeps working).
+    """
+    global _FLEETS_AT_HEX_LOOKUP, _FLEETS_IN_SYSTEM_LOOKUP
+    _FLEETS_AT_HEX_LOOKUP = at_hex
+    _FLEETS_IN_SYSTEM_LOOKUP = in_system
+
+
+def _fleet_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """PROJ-305: yield FleetAbilitySource for fleets with strategic abilities.
+
+    Requires `set_fleet_lookups` to have been configured by the strategy
+    session. Without lookup callbacks, yields nothing.
+    """
+    if hex_coord is None:
+        lookup = _FLEETS_IN_SYSTEM_LOOKUP
+        fleets = lookup(system) if lookup else []
+    else:
+        lookup = _FLEETS_AT_HEX_LOOKUP
+        fleets = lookup(system, hex_coord) if lookup else []
+    for fleet in fleets:
+        adapter = FleetAbilitySource(fleet=fleet, registries=registries)
+        if adapter.get_abilities():
+            yield adapter
+
+
 def _system_archetype_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
     """PROJ-304: yield SystemAbilitySource if the system has an archetype.
 
@@ -263,9 +302,11 @@ register_source_provider_at_hex(_planet_intrinsic_provider)
 register_source_provider_at_hex(_star_provider)
 register_source_provider_at_hex(_warp_point_provider)
 register_source_provider_at_hex(_system_archetype_provider)
+register_source_provider_at_hex(_fleet_provider)
 register_source_provider_in_system(_facility_provider)
 register_source_provider_in_system(_storm_provider)
 register_source_provider_in_system(_planet_intrinsic_provider)
 register_source_provider_in_system(_star_provider)
 register_source_provider_in_system(_warp_point_provider)
 register_source_provider_in_system(_system_archetype_provider)
+register_source_provider_in_system(_fleet_provider)
