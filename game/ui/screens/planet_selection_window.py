@@ -104,7 +104,7 @@ class PlanetSelectionWindow(UIWindow):
                 container=self
             )
         
-    def update(self, time_delta):
+    def update(self, time_delta: float) -> None:
         super().update(time_delta)
 
         # Check for selection change (PROJ-54)
@@ -171,7 +171,7 @@ class PlanetSelectionWindow(UIWindow):
             self.callback(None)
             self.kill()
 
-    def kill(self):
+    def kill(self) -> None:
         """Clean up resources when window is closed. (PROJ-54)"""
         # Clean up planet detail panel
         if self.planet_detail_panel:

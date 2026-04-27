@@ -5,6 +5,9 @@ Provides comprehensive planet management with filtering, sorting, and presets.
 
 PROJ-188 Phase 3: Migrated to VirtualTable + PlanetDataSource + SingleSelect.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui.windows
 from game.core.resources import ResourceCatalog
@@ -189,36 +192,36 @@ class PlanetListWindow(UIWindow):
     # -----------------------------------------------------------------------
 
     @property
-    def filter_types(self):
+    def filter_types(self) -> Any:
         """Planet type filter dict (mutable reference)."""
         return self._filter_mgr.filter_types
 
     @filter_types.setter
-    def filter_types(self, value):
+    def filter_types(self, value) -> None:
         """Set planet type filter dict."""
         self._filter_mgr.filter_types = value
 
     @property
-    def filter_owner(self):
+    def filter_owner(self) -> Any:
         """Owner category filter dict (mutable reference)."""
         return self._filter_mgr.filter_owner
 
     @filter_owner.setter
-    def filter_owner(self, value):
+    def filter_owner(self, value) -> None:
         """Set owner category filter dict."""
         self._filter_mgr.filter_owner = value
 
     @property
-    def filter_ranges(self):
+    def filter_ranges(self) -> Any:
         """Range filter dict (mutable reference)."""
         return self._filter_mgr.filter_ranges
 
     @filter_ranges.setter
-    def filter_ranges(self, value):
+    def filter_ranges(self, value) -> None:
         """Set range filter dict."""
         self._filter_mgr.filter_ranges = value
 
-    def refresh_list(self):
+    def refresh_list(self) -> None:
         """Filter and update scrollbar."""
         # 1. Update Filter State from UI (lazy sync)
         search = self.txt_name_filter.get_text()
@@ -251,7 +254,7 @@ class PlanetListWindow(UIWindow):
         self.virtual_table.force_update()
         self.virtual_table.update_visible_rows()
 
-    def process_event(self, event):
+    def process_event(self, event) -> bool:
         handled = super().process_event(event)
 
         # Handle all button presses in event-driven path (not polled per-frame)
@@ -359,7 +362,7 @@ class PlanetListWindow(UIWindow):
 
         return handled
 
-    def update(self, time_delta):
+    def update(self, time_delta) -> None:
         super().update(time_delta)
 
         # Scrollbar movement (cheap — only updates rows when position changed)
@@ -406,7 +409,7 @@ class PlanetListWindow(UIWindow):
     # Event-driven button handlers (called from process_event, not polled)
     # -----------------------------------------------------------------------
 
-    def _set_all_filters(self, filter_dict, ui_key, enabled):
+    def _set_all_filters(self, filter_dict, ui_key, enabled) -> None:
         """Set all filters in a category to enabled/disabled."""
         for key, btn in self.ui_filters.get(ui_key, {}).items():
             filter_dict[key] = enabled
@@ -418,7 +421,7 @@ class PlanetListWindow(UIWindow):
                 btn.set_text(f"{key}")
         self.refresh_list()
 
-    def _toggle_filter(self, filter_dict, key, btn):
+    def _toggle_filter(self, filter_dict, key, btn) -> None:
         """Toggle a single filter in a category."""
         state = not filter_dict[key]
         filter_dict[key] = state
@@ -426,7 +429,7 @@ class PlanetListWindow(UIWindow):
         btn.set_text(f"[{key}]" if state else f"{key}")
         self.refresh_list()
 
-    def _toggle_column(self, btn):
+    def _toggle_column(self, btn) -> None:
         """Toggle column visibility from a sidebar button."""
         col = btn.col_ref
         new_visible = self.column_manager.toggle_column(col['id'])
@@ -438,7 +441,7 @@ class PlanetListWindow(UIWindow):
             self.virtual_table.rebuild_row_pool()
             self.refresh_list()
 
-    def _save_preset(self):
+    def _save_preset(self) -> None:
         """Save the current state as a preset."""
         name = self.txt_preset_name.get_text()
         if name:
@@ -456,14 +459,14 @@ class PlanetListWindow(UIWindow):
             )
             self.last_preset_selection = name
 
-    def _capture_current_state(self):
+    def _capture_current_state(self) -> Any:
         """Serialize current filters and column config."""
         return capture_planet_list_state(
             self.columns, self.txt_name_filter, self.filter_types,
             self.filter_owner, self.ui_filters
         )
 
-    def _apply_state(self, state):
+    def _apply_state(self, state) -> None:
         """Restore state."""
         self.columns = apply_planet_list_state(
             state, self.columns, self.txt_name_filter,
@@ -480,14 +483,14 @@ class PlanetListWindow(UIWindow):
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
 
-    def _navigate_to_selected(self):
+    def _navigate_to_selected(self) -> None:
         """Navigate camera to the selected planet's system."""
         if self.selected_planet and self.on_navigate_callback:
             loc = getattr(self.selected_planet, '_cached_system_global_location', None)
             if loc:
                 self.on_navigate_callback(loc)
 
-    def _on_planet_selected(self, planet):
+    def _on_planet_selected(self, planet) -> None:
         """Handle planet selection - create/update detail panel."""
         # Kill old panel if exists
         if self.planet_detail_panel:
@@ -549,7 +552,7 @@ class PlanetListWindow(UIWindow):
         # Update selection tracking
         self.selected_planet = planet
 
-    def _detail_panel_geometry(self):
+    def _detail_panel_geometry(self) -> tuple:
         """Calculate detail panel position and size relative to window.
 
         Returns:
@@ -563,14 +566,14 @@ class PlanetListWindow(UIWindow):
         panel_height = max(450, window_height - panel_y - 80)
         return panel_x, panel_y, panel_height
 
-    def set_dimensions(self, dimensions, clamp_to_container=False):
+    def set_dimensions(self, dimensions, clamp_to_container=False) -> None:
         """Handle window resize - reposition detail panel."""
         super().set_dimensions(dimensions, clamp_to_container)
         # Recreate the detail panel at new position if one is showing
         if self.selected_planet is not None:
             self._on_planet_selected(self.selected_planet)
 
-    def kill(self):
+    def kill(self) -> None:
         # Clean up VirtualTable
         if self.virtual_table:
             self.virtual_table.kill()
