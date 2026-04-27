@@ -164,6 +164,77 @@ class TestGasFactorWeights:
 
 
 # ---------------------------------------------------------------------------
+# Display fields (PROJ-293)
+# ---------------------------------------------------------------------------
+
+
+class TestDisplayFields:
+    """Every factor must declare its UI display contract — display_unit
+    (string suffix; '' for bare number) and display_precision (decimals).
+    Catches new factors that fall back to verbose formatting."""
+
+    def test_every_factor_has_display_unit(self):
+        for factor in FACTOR_REGISTRY.values():
+            assert hasattr(factor, "display_unit"), (
+                f"{factor.id} missing display_unit"
+            )
+            assert isinstance(factor.display_unit, str), (
+                f"{factor.id}.display_unit must be str, got {type(factor.display_unit)}"
+            )
+
+    def test_every_factor_has_display_precision(self):
+        for factor in FACTOR_REGISTRY.values():
+            assert hasattr(factor, "display_precision"), (
+                f"{factor.id} missing display_precision"
+            )
+            assert isinstance(factor.display_precision, int), (
+                f"{factor.id}.display_precision must be int, "
+                f"got {type(factor.display_precision)}"
+            )
+            assert factor.display_precision >= 0, (
+                f"{factor.id}.display_precision must be >= 0, "
+                f"got {factor.display_precision}"
+            )
+
+    def test_scalar_factor_display_units(self):
+        """Lock in the per-factor display contract from PROJ-293."""
+        expected = {
+            "gravity":     ("g",   1),
+            "temperature": ("K",   0),
+            "water":       ("%",   0),
+            "pressure":    ("kPa", 1),
+            "tectonic":    ("",    2),  # bare number — no verbose unit
+            "magnetic":    ("EE",  2),
+            "radiation":   ("",    0),  # bare number — no verbose unit
+        }
+        for fid, (unit, precision) in expected.items():
+            factor = FACTOR_REGISTRY[fid]
+            assert factor.display_unit == unit, (
+                f"{fid}: expected display_unit={unit!r}, got {factor.display_unit!r}"
+            )
+            assert factor.display_precision == precision, (
+                f"{fid}: expected display_precision={precision}, "
+                f"got {factor.display_precision}"
+            )
+
+    def test_gas_factors_use_kpa(self):
+        """All 10 gases share the same display contract: kPa with 1 decimal."""
+        gas_ids = [
+            "gas.O2", "gas.N2", "gas.CO2", "gas.H2O", "gas.CH4",
+            "gas.H2", "gas.He", "gas.Ar", "gas.NH3", "gas.SO2",
+        ]
+        for fid in gas_ids:
+            factor = FACTOR_REGISTRY[fid]
+            assert factor.display_unit == "kPa", (
+                f"{fid}: expected display_unit='kPa', got {factor.display_unit!r}"
+            )
+            assert factor.display_precision == 1, (
+                f"{fid}: expected display_precision=1, "
+                f"got {factor.display_precision}"
+            )
+
+
+# ---------------------------------------------------------------------------
 # Extractor behavior — gas "absent" is 0.0, not None
 # ---------------------------------------------------------------------------
 
@@ -298,5 +369,7 @@ class TestHabitabilityFactorDataclass:
             "id", "display_name", "unit", "display_scale", "weight",
             "default_setpoint", "default_tolerance", "min_value", "max_value",
             "step", "extractor", "scorer",
+            # PROJ-293: declarative display contract.
+            "display_unit", "display_precision",
         }
         assert required.issubset(names), f"Missing fields: {required - names}"

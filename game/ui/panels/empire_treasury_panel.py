@@ -18,6 +18,7 @@ from game.core.paths import Paths
 _PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 from game.strategy.services.empire_economy_service import EmpireEconomySnapshot  # PROJ-292 M1
 from game.ui.utils import create_section_header
+from game.ui.utils.resource_display import get_resource_abbreviation
 
 
 # Layout constants
@@ -29,15 +30,6 @@ SECTION_GAP = 15
 HEADER_HEIGHT = 35
 LEFT_MARGIN = 10
 TOP_MARGIN = 10
-
-# Abbreviated resource names for column headers
-RESOURCE_ABBREVIATIONS = {
-    "metals": "Met",
-    "organics": "Org",
-    "vapors": "Vap",
-    "radioactives": "Rad",
-    "exotics": "Exo",
-}
 
 
 class EmpireTreasuryPanel:
@@ -140,7 +132,7 @@ class EmpireTreasuryPanel:
                 self._elements.append(icon_img)
 
             # Abbreviated label
-            abbrev = RESOURCE_ABBREVIATIONS.get(resource, resource[:3])
+            abbrev = get_resource_abbreviation(resource)
             label = UILabel(
                 relative_rect=pygame.Rect(x, y + ICON_SIZE + 2, RESOURCE_COL_WIDTH, 22),
                 text=abbrev,

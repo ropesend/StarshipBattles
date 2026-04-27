@@ -7,8 +7,23 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# PROJ-294: Make the project root importable so the post-session log-copy step
+# (line ~232: `from game.core.paths import Paths`) works regardless of the
+# launcher's cwd. qa_launcher.py:32 spawns this script with `cwd=observer_dir`
+# so that observer's local `.env` loads correctly — but that means the project
+# root isn't on `sys.path` and `game.*` imports would crash. Mirrors the pattern
+# used by other Tools/ scripts that import from game.* (e.g.
+# Tools/visual_test_galaxy/visual_test_galaxy.py:17,
+# Tools/analyze_dependency_graph/analyze_dependency_graph.py:26).
+# `parents[2]` assumes the file lives at `<root>/Tools/qa_observer/observer.py`;
+# update if the script ever moves.
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from dotenv import load_dotenv
-import pyaudio
+import sounddevice as sd  # PROJ-295: replaced pyaudio for Python 3.13 wheel availability.
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import argparse
@@ -27,7 +42,8 @@ SILENCE_TIMEOUT = float(os.getenv('SILENCE_TIMEOUT', '2.0'))
 
 # Audio configuration
 CHUNK = 1024
-FORMAT = pyaudio.paInt16
+SAMPLE_WIDTH = 2  # bytes per sample for int16 (PROJ-295: was pyaudio.paInt16 = 2)
+DTYPE = 'int16'
 CHANNELS = 1
 RATE = 16000
 RECORD_SECONDS = 45 # Google cloud direct upload limit is ~1 minute
@@ -60,20 +76,23 @@ class ScreenshotHandler(FileSystemEventHandler):
                 print(f"[Screenshot] Error copying file {filepath}: {e}")
 
 def record_audio_loop(audio_output_dir):
-    p = pyaudio.PyAudio()
-    
+    # PROJ-295: sounddevice replaces pyaudio. Same PortAudio backend, different API.
+    # `RawInputStream.read(N)` returns (cffi_buffer, overflow_flag); we convert
+    # the buffer to plain bytes for audioop / wave compatibility.
     try:
-        stream = p.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        input=True,
-                        frames_per_buffer=CHUNK)
+        stream = sd.RawInputStream(
+            samplerate=RATE,
+            channels=CHANNELS,
+            dtype=DTYPE,
+            blocksize=CHUNK,
+        )
+        stream.start()
     except Exception as e:
         print(f"Failed to open audio stream. Do you have a microphone connected? Error: {e}")
         return
 
     print(f"[Audio] Started continuous recording (chunking every {RECORD_SECONDS} seconds)")
-    
+
     exit_event = threading.Event()
 
     def stdin_listener():
@@ -94,22 +113,23 @@ def record_audio_loop(audio_output_dir):
     listener_thread.start()
 
     try:
-        sample_width = p.get_sample_size(FORMAT)
-        
+        sample_width = SAMPLE_WIDTH
+
         while not exit_event.is_set():
             print("\nListening for voice...")
             is_recording = False
             frames = []
             silence_start_time = None
             chunk_start_time = None
-            
+
             while not exit_event.is_set():
                 try:
-                    data = stream.read(CHUNK, exception_on_overflow=False)
+                    raw, _overflow = stream.read(CHUNK)
+                    data = bytes(raw)
                 except Exception as e:
                     print(f"Audio read error: {e}")
                     break
-                    
+
                 rms = audioop.rms(data, sample_width)
                 
                 if not is_recording:
@@ -161,10 +181,10 @@ def record_audio_loop(audio_output_dir):
         if 'frames' in locals() and frames and is_recording:
             timestamp_str = datetime.now().strftime('%H%M%S')
             filename = audio_output_dir / f"audio_{timestamp_str}.wav"
-            
+
             wf = wave.open(str(filename), 'wb')
             wf.setnchannels(CHANNELS)
-            wf.setsampwidth(p.get_sample_size(FORMAT))
+            wf.setsampwidth(SAMPLE_WIDTH)
             wf.setframerate(RATE)
             wf.writeframes(b''.join(frames))
             wf.close()
@@ -172,9 +192,8 @@ def record_audio_loop(audio_output_dir):
                 f.write(str(chunk_start_time))
             print(f"[Audio] Saved partial chunk: {filename.name}")
     finally:
-        stream.stop_stream()
+        stream.stop()
         stream.close()
-        p.terminate()
 
 def main():
     parser = argparse.ArgumentParser(description="QA Observer.")

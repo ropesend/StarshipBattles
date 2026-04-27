@@ -638,7 +638,7 @@ Starship Battles/
 
 ## System Requirements
 
-- Python 3.10+
+- Python 3.13+ (PROJ-295: project baseline bumped from 3.10 on 2026-04-26)
 - pygame-ce 2.5+
 - scipy (for TOST calculations)
 

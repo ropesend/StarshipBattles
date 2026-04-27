@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-Agent-optimized reference for every core pattern in the codebase (25 patterns).
+Agent-optimized reference for every core pattern in the codebase (27 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -32,6 +32,8 @@ Each section: **Where**, **How It Works**, **When to Use**.
 23. [Tick Phase Registry](#23-tick-phase-registry-proj-259)
 24. [External-Stats Bridge](#24-external-stats-bridge-proj-270-phase-9--proj-271)
 25. [Scope-Driven Team Routing](#25-scope-driven-team-routing-proj-271)
+26. [Ability-Stat Registry](#26-ability-stat-registry-proj-273)
+27. [Budget-Aware Randomization](#27-budget-aware-randomization-feat-12)
 
 ---
 
@@ -1362,6 +1364,28 @@ different-stack_group entries correctly SUM.
 **When to Use:**
 - Adding a new combat-affecting ability (class ending in `Modifier` / `Projection`): add one entry to `ABILITY_STAT_REGISTRY`; the glob test picks up coverage automatically. Also add the `stat_key` to `KNOWN_EXTERNAL_STAT_KEYS` so the runtime warning doesn't false-positive.
 - Any future caller (beyond Battle Setup + Strategy) that walks design JSONs and emits `ModifierEntry` objects should use `emit_entries_for_ability` rather than constructing `ModifierEffect` + `ModifierEntry` by hand.
+
+---
+
+## 27. Budget-Aware Randomization (FEAT-12)
+
+**Where:** `game/strategy/systems/race_randomizer.py` — `RaceRandomizer.randomize_aptitudes`, `randomize_environment`, `randomize_all`. Cost authority is `game/strategy/data/race_point_budget.py::RacePointBudget`.
+
+**How It Works:**
+- Roll candidate values for each axis being randomized (aptitudes from a 2-3-high / 2-3-low / rest-at-50 shape; environmental preferences seeded from a random `homeworld_presets.json` preset, then jittered per-factor).
+- Compute total cost via the same `RacePointBudget` API the UI's `_validate_for_save` uses — single source of truth for the cost contract.
+- If total cost exceeds the supplied `budget`, deterministically pull the most-expensive value one step toward its free-baseline (50 for aptitudes, `factor.default_tolerance` for preferences). Repeat until under budget. Setpoints are free, so they're never rebalanced.
+- Master orchestrator (`randomize_all`) apportions a 100-point budget between aptitudes and environment using a per-run random fraction in `[0.3, 0.7]`. Each sub-randomizer receives its slice independently and rebalances within it.
+- All methods accept `rng: Optional[random.Random] = None` per the Per-Battle RNG pattern (#18) for deterministic testing. Module-level `random` is the default for production callers.
+
+**Why:**
+- Prevents the randomizer from emitting configurations the validator would reject on save. The randomizer doesn't reimplement cost math — it delegates to the same `RacePointBudget` the validator uses, so they cannot drift apart.
+- The two-phase "roll then rebalance" structure preserves the desired distribution shape for in-budget cases while degrading gracefully when the rolled values overshoot. Random values still drive the result; the rebalance step only kicks in for the 5–10% of seeds that overshoot at low budgets.
+- Preset-seeded environment generation produces biologically coherent races (an "Arid" world race naturally wants low water + high CO₂, not random gas mixtures).
+
+**When to Use:**
+- Any randomization where a global resource limit must hold over the result. Examples: race generation here; future ship-randomizer with mass / power budget; campaign-start fleet generation with ship-point budget.
+- Skip if the constraint is purely per-axis (e.g. `value in [min, max]`) — straightforward `random.uniform` clamping is sufficient and doesn't need a rebalance pass.
 
 ---
 

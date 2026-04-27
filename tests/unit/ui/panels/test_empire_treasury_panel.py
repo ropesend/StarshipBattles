@@ -11,12 +11,12 @@ from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
 PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.ui.panels.empire_treasury_panel import (
     EmpireTreasuryPanel,
-    RESOURCE_ABBREVIATIONS,
     LABEL_COL_WIDTH,
     RESOURCE_COL_WIDTH,
     ICON_SIZE,
     ROW_HEIGHT,
 )
+from game.ui.utils.resource_display import RESOURCE_ABBREVIATIONS
 
 
 # =============================================================================

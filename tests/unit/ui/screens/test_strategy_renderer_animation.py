@@ -30,20 +30,31 @@ class TestWarpPointRotationAngle:
     """Tests for rotation angle calculation during rendering."""
 
     def test_different_warp_points_get_different_offsets(self):
-        """Different warp points should have different rotation offsets based on hash."""
+        """Different warp points should produce a wide spread of rotation offsets.
+
+        Production uses `hash(wp) % 360` for visual variety. The hash is
+        randomized per process (PYTHONHASHSEED), so any specific pair *can*
+        collide mod 360 by chance — testing one pair is fragile (PROJ-295
+        hit such a collision on Python 3.13). Test statistically instead:
+        across 100 distinct warp points, the offset distribution should be
+        wide (not collapsed to a single value).
+        """
         from game.strategy.data.galaxy import WarpPoint
         from game.core.hex_math import HexCoord
 
-        wp1 = WarpPoint("sys1", HexCoord(1, 0))
-        wp2 = WarpPoint("sys2", HexCoord(2, 0))
+        warp_points = [
+            WarpPoint(f"sys{i}", HexCoord(i, 0)) for i in range(100)
+        ]
+        offsets = {hash(wp) % 360 for wp in warp_points}
 
-        offset1 = hash(wp1) % 360
-        offset2 = hash(wp2) % 360
-
-        # Different warp points should (almost certainly) get different offsets
-        # This could theoretically fail if hash collision mod 360 occurs,
-        # but it's astronomically unlikely with different destination_ids
-        assert offset1 != offset2
+        # 100 distinct inputs against 360 buckets: by birthday-paradox, we'd
+        # expect ~50+ unique buckets even with a perfect random hash. Anything
+        # less than 30 indicates the hash isn't producing variety.
+        assert len(offsets) > 30, (
+            f"Expected wide rotation-offset distribution across 100 warp "
+            f"points; got only {len(offsets)} unique offsets out of 360 "
+            f"buckets (offsets: {sorted(offsets)[:10]}...)"
+        )
 
     def test_rotation_offset_is_deterministic(self):
         """Same warp point should always get the same rotation offset."""

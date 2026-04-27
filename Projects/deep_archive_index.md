@@ -258,3 +258,15 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-257 | Foundation - Layer Violations, Formula Extraction, AST Parser | 2026-04-09 | PROJ-251-300 |
 | PROJ-258 | Dependency Injection - ApplicationContext and Singleton Migration | 2026-04-09 | PROJ-251-300 |
 | PROJ-259 | Infrastructure - Screen State Machine, TurnEngine Config, Battle Engine Phases | 2026-04-09 | PROJ-251-300 |
+| PROJ-260 | Ship Further Decomposition - LayerManager and ResourceManager Extraction | 2026-04-09 | PROJ-251-300 |
+| PROJ-261 | Fix Test Suite Production Bugs | 2026-04-10 | PROJ-251-300 |
+| PROJ-262 | Delete Dead and Reimplemented Tests | 2026-04-10 | PROJ-251-300 |
+| PROJ-263 | Delete Duplicate Test Files | 2026-04-10 | PROJ-251-300 |
+| PROJ-264 | Strategy Engine Test Coverage | 2026-04-10 | PROJ-251-300 |
+| PROJ-265 | Simulation Domain Test Coverage | 2026-04-10 | PROJ-251-300 |
+| PROJ-266 | Critical UI Screen Test Coverage | 2026-04-10 | PROJ-251-300 |
+| PROJ-267 | Test Infrastructure Consolidation | 2026-04-10 | PROJ-251-300 |
+| PROJ-269 | Unified Battle Simulator Entry/Exit | 2026-04-16 | PROJ-251-300 |
+| PROJ-270 | Unified Battle Simulator Entry/Exit - Closure | 2026-04-13 | PROJ-251-300 |
+| PROJ-271 | Strategic Modifier Battle-Math Track B | 2026-04-13 | PROJ-251-300 |
+| PROJ-272 | Strategic Modifier System Cleanup + Round-2 Audit Fixes | 2026-04-16 | PROJ-251-300 |

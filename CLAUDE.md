@@ -140,10 +140,10 @@ All code changes MUST remain consistent with the documentation. This is a two-wa
 - AI opponents with various difficulty levels
 
 **Tech Stack:**
-- Python 3.x
-- Pygame for rendering
-- Pytest for testing (14420 tests baseline)
-- Test parallelization with pytest-xdist
+- Python **3.13+** (upgraded from 3.10 in PROJ-295 on 2026-04-26; 3.10 EOL was 2026-10-04). Repo declares `requires-python = ">=3.13"` in `pyproject.toml`. Activate the local venv via `.\.venv\Scripts\Activate.ps1` (PowerShell) or `source .venv/Scripts/activate` (bash).
+- Pygame for rendering (pygame-ce 2.5.7)
+- Pytest for testing (15112 tests baseline)
+- Test parallelization with pytest-xdist; sharded runner at `Tools/test_sharded/test_sharded.py`
 
 **Display Target:**
 - Minimum resolution: 2560x1600

@@ -15,10 +15,10 @@ Voidforged is a sixth independent ship theme for Starship Battles. It should sit
 ## Asset Targets
 
 - Skins: `2048x2048` PNG with alpha, centered ship, generous padding.
-- Portraits: `1024x1024` JPG, three-quarter concept-art style for UI thumbnails.
+- Portraits: `1024x1024` JPG, three-quarter off-axis view of the ship sailing through space for UI thumbnails.
 - Required class coverage: 19 assets, matching `theme.json`.
 
-## Prompt Template
+## Skin Prompt Template
 
 Use case: stylized-concept
 Asset type: top-down 2D game ship sprite
@@ -31,6 +31,19 @@ Color palette: matte black, dark gunmetal, violet plasma, small cyan accents.
 Materials/textures: layered armored plating, obsidian ceramic panels, exposed reactor channels, subtle battle wear.
 Constraints: transparent or perfectly flat removable chroma-key background, no cast shadow, no text, no watermark.
 Avoid: existing Star Trek faction shapes, cream Federation hulls, green Klingon glow, red Romulan glow, cyan-only Thoralian look.
+
+## Portrait Prompt Template
+
+Use case: stylized-concept
+Asset type: ship portrait for Starship Battles UI
+Primary request: Create a Voidforged `<SHIP_CLASS>` portrait.
+Subject: A Voidforged `<SHIP_CLASS>` sailing through space, with class-appropriate silhouette and scale.
+Style/medium: polished sci-fi concept art, high-production game portrait, detailed hard-surface spaceship illustration.
+Composition/framing: three-quarter off-axis view from above and slightly in front, ship angled diagonally across the frame, single ship only.
+Scene/backdrop: deep space with subtle stars and faint violet nebula haze.
+Lighting/mood: cinematic rim light, violet engine glow, readable silhouette.
+Color palette: matte black, dark gunmetal, obsidian ceramic armor, violet plasma, sparse cyan accents.
+Constraints: no text, no watermark, no UI frame, no top-down orthographic view, no green screen, no multiple ships.
 
 ## Class Shape Notes
 

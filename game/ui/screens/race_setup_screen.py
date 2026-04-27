@@ -596,10 +596,13 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             manager=self.ui_manager,
             race_config=self.race_config,
             asset_loader=self._asset_loader,
-            on_load_race_callback=self._on_load_race
+            on_load_race_callback=self._on_load_race,
+            on_randomize_all_callback=self._randomize_all,
         )
-        # Keep btn_load reference for event handling
+        # Keep button references for event handling
         self.btn_load = self._summary_panel.btn_load
+        # FEAT-12: master Randomize All button reference.
+        self.btn_randomize_all = self._summary_panel.btn_randomize_all
 
     def _refresh_summary(self):
         """Refresh summary panel with current race_config data.
@@ -703,8 +706,16 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         else:
             self.btn_save.hide()
 
-        # Generate Random button shown on Identity, Visuals, and Ships tabs
-        if self.current_step in (self.TAB_IDENTITY, self.TAB_VISUALS, self.TAB_SHIPS):
+        # FEAT-12: Generate Random shown on every randomizable tab except
+        # Summary (where the master "Randomize All" button on the panel
+        # supersedes it) and Descriptions (LLM-generated).
+        if self.current_step in (
+            self.TAB_IDENTITY,
+            self.TAB_VISUALS,
+            self.TAB_SHIPS,
+            self.TAB_ENVIRONMENT,
+            self.TAB_APTITUDES,
+        ):
             self.btn_randomize.show()
         else:
             self.btn_randomize.hide()
@@ -850,6 +861,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self._randomize_visuals()
         elif self.current_step == self.TAB_SHIPS:
             self._randomize_ships()
+        elif self.current_step == self.TAB_ENVIRONMENT:
+            self._randomize_environment()
+        elif self.current_step == self.TAB_APTITUDES:
+            self._randomize_aptitudes()
 
     def _randomize_identity(self):
         """Randomize all identity fields using portrait-aware names."""
@@ -900,6 +915,137 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 self._refresh_ship_preview(new_theme)
 
         logger.info(f"Randomized ships: theme={self.race_config.theme_id}")
+
+    # =========================================================================
+    # FEAT-12: Environment, Aptitudes, and Randomize All
+    # =========================================================================
+
+    def _randomize_environment(self):
+        """Randomize environmental preferences within the available budget.
+
+        Available budget = 100 - cost(other categories). If the user has
+        already configured aptitudes / reproduction such that no headroom
+        remains, the randomizer will rebalance toward registry defaults.
+        """
+        from game.strategy.data.race_point_budget import RacePointBudget
+
+        budget_calc = RacePointBudget()
+        # Other-category cost = aptitudes only — env owns repro + happiness.
+        env_budget = (
+            budget_calc.total_budget
+            - budget_calc.calculate_aptitude_cost(self.race_config)
+        )
+        env_budget = max(0, env_budget)
+
+        result = RaceRandomizer.randomize_environment(budget=env_budget)
+        self.race_config.preferences = dict(result["preferences"])
+        self.race_config.homeworld_type = result["homeworld_type"]
+        self.race_config.base_reproduction_rate = result["base_reproduction_rate"]
+        self.race_config.base_happiness = result["base_happiness"]
+
+        if self._environment_panel is not None:
+            self._environment_panel.set_from_config()
+        # Aptitudes panel reads preferences-cost via RacePointBudget — refresh
+        # its budget display so the user sees the new total cost immediately.
+        if self._aptitudes_panel is not None:
+            self._aptitudes_panel.update_budget_display()
+
+        logger.info(
+            f"Randomized environment: homeworld={result['homeworld_type']} "
+            f"repro={result['base_reproduction_rate']:.4f} "
+            f"happiness={result['base_happiness']:.2f}"
+        )
+
+    def _randomize_aptitudes(self):
+        """Randomize the 7 paid aptitudes within the available budget."""
+        from game.strategy.data.race_point_budget import RacePointBudget
+
+        budget_calc = RacePointBudget()
+        # Other-category cost = preferences + reproduction.
+        apt_budget = (
+            budget_calc.total_budget
+            - budget_calc.calculate_preferences_cost(self.race_config)
+            - budget_calc.calculate_reproduction_cost(
+                self.race_config.base_reproduction_rate
+            )
+        )
+        apt_budget = max(0, apt_budget)
+
+        aptitudes = RaceRandomizer.randomize_aptitudes(budget=apt_budget)
+        for name, value in aptitudes.items():
+            setattr(self.race_config, f"aptitude_{name}", value)
+
+        if self._aptitudes_panel is not None:
+            self._aptitudes_panel.set_from_config()
+
+        logger.info(f"Randomized aptitudes: {aptitudes}")
+
+    def _randomize_all(self):
+        """Master "Randomize All" — fills every category except Description.
+
+        Delegates to `RaceRandomizer.randomize_all` for the heavy lifting,
+        then applies the result to `race_config` and refreshes the entire
+        UI via `_populate_ui_from_config`.
+        """
+        flag_ids = (
+            [a[0] for a in self._flag_gallery._discover_assets()]
+            if self._flag_gallery
+            else []
+        )
+        portrait_ids = (
+            [a[0] for a in self._portrait_gallery._discover_assets()]
+            if self._portrait_gallery
+            else []
+        )
+        theme_ids = (
+            [a[0] for a in self._theme_gallery._discover_assets()]
+            if self._theme_gallery
+            else []
+        )
+
+        result = RaceRandomizer.randomize_all(
+            available_flags=flag_ids,
+            available_portraits=portrait_ids,
+            available_themes=theme_ids,
+        )
+
+        # Identity
+        self.race_config.race_name = result["race_name"]
+        self.race_config.race_name_plural = result["race_name_plural"]
+        self.race_config.leader_name = result["leader_name"]
+        self.race_config.physical_type = result["physical_type"]
+        self.race_config.government_type = result["government_type"]
+        self.race_config.government_organization = result["government_organization"]
+        self.race_config.leader_title = result["leader_title"]
+        self.race_config.society_type = result["society_type"]
+        self.race_config.faction_name = result["faction_name"]
+        # `name` is the primary display name; mirror race_name (matches the
+        # contract enforced in `_validate_for_save`).
+        self.race_config.name = result["race_name"]
+
+        # Visuals
+        self.race_config.flag_id = result["flag_id"]
+        self.race_config.portrait_id = result["portrait_id"]
+        self.race_config.theme_id = result["theme_id"]
+
+        # Environment
+        self.race_config.preferences = dict(result["preferences"])
+        self.race_config.homeworld_type = result["homeworld_type"]
+        self.race_config.base_reproduction_rate = result["base_reproduction_rate"]
+        self.race_config.base_happiness = result["base_happiness"]
+
+        # Aptitudes
+        for name, value in result["aptitudes"].items():
+            setattr(self.race_config, f"aptitude_{name}", value)
+
+        # Refresh every panel + ship preview.
+        self._populate_ui_from_config()
+        if self.race_config.theme_id:
+            self._refresh_ship_preview(self.race_config.theme_id)
+
+        logger.info(
+            f"Randomized all: {result['race_name']} on {result['homeworld_type']}"
+        )
 
     def _on_cancel(self):
         """Handle Cancel button click."""
@@ -1075,6 +1221,12 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                     handled = True
                 elif event.ui_element == self.btn_randomize:
                     self._on_randomize()
+                    handled = True
+                elif (
+                    getattr(self, "btn_randomize_all", None) is not None
+                    and event.ui_element == self.btn_randomize_all
+                ):
+                    self._randomize_all()
                     handled = True
                 else:
                     # Check flag buttons (PROJ-12 Phase 4: Delegate to RaceFlagGallery)

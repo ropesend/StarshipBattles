@@ -42,8 +42,11 @@ if TYPE_CHECKING:
 
 # Layout constants (in px). Single row of 30 px height by default.
 _NAME_WIDTH = 140
-_SETPOINT_LABEL_WIDTH = 60
-_TOLERANCE_LABEL_WIDTH = 60
+# PROJ-293: 60 → 90 to give breathing room for "101.3 kPa" (which previously
+# overflowed by 3 px) and any future factor with a slightly longer
+# display_unit + 2 decimals (e.g. "±50.00 abcde").
+_SETPOINT_LABEL_WIDTH = 90
+_TOLERANCE_LABEL_WIDTH = 90
 _COST_WIDTH = 50
 _SLIDER_HEIGHT = 22
 _LABEL_HEIGHT = 22
@@ -74,28 +77,21 @@ class PreferenceRow:
     def format_value(factor: "HabitabilityFactor", raw_value: float) -> str:
         """Render a raw factor value in its display unit.
 
-        Pulls the formatting convention from the factor itself (unit +
-        display_scale) so adding a new factor doesn't require touching
-        any UI code.
+        PROJ-293: Display formatting is data-driven via `factor.display_unit`
+        and `factor.display_precision`. To add a new factor with a custom
+        display, set those fields in the registry — no UI code change required.
+
+        Convention: percent unit is glued to the number ("50%"); all other
+        non-empty units take a separating space ("1.0 g"); empty unit
+        produces a bare number ("0.30").
         """
         scaled = raw_value * factor.display_scale
-
-        # Pick a display label per unit family. The unit string is part
-        # of the registry contract — see `habitability_factors.py`.
-        unit = factor.unit
-        if unit == "Pa":
-            return f"{scaled:.1f} kPa"
-        if unit == "K":
-            return f"{scaled:.0f} K"
-        if unit == "m/s^2":
-            return f"{scaled:.1f} g"
-        if unit == "fraction" and factor.display_scale == 100.0:
-            # water-style display
-            return f"{scaled:.0f}%"
-        if unit == "earth_equiv":
-            return f"{scaled:.2f} EE"
-        # Generic fallback: scaled value with the unit as-is.
-        return f"{scaled:.2f} {unit}"
+        text = f"{scaled:.{factor.display_precision}f}"
+        if factor.display_unit == "%":
+            return f"{text}%"
+        if factor.display_unit:
+            return f"{text} {factor.display_unit}"
+        return text
 
     @staticmethod
     def calculate_factor_cost(

@@ -18,8 +18,10 @@ from game.ui.utils.formatters import format_compact_number, format_signed_float
 
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
-# All resource types displayed in the planet report panel
-ALL_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics", "fuel", "energy", "ammo"]
+from game.ui.utils.resource_display import (
+    get_displayed_resource_ids,
+    get_resource_abbreviation,
+)
 from game.ui.colors import (
     PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
     TEXT_DIM, WHITE, TEXT_LIGHT, HP_HEALTHY, HP_CRITICAL,
@@ -27,39 +29,105 @@ from game.ui.colors import (
 from collections import Counter
 
 
-# PROJ-289 Phase 2: 4-column projection-grid header. Module-level so the
-# pure helper below can return a stable header tuple for tests.
-_PROJECTION_GRID_HEADER = ("Resource", "Harvest", "Upkeep", "Yard", "Net")
+# Catalog-driven resource list. Adding a resource to data/resources.json
+# (with a `display_group` of "planetary" or "operational") adds a column
+# to this grid with no code change.
+_DISPLAYED_RESOURCES: List[str] = get_displayed_resource_ids()
 
 
-def _projection_grid_rows(view) -> List[tuple]:
-    """Return the header + per-resource cell-text rows for the 4-column
-    projection grid (PROJ-289 Phase 2).
+# Row labels for the transposed grid, in render order. The header row is
+# index 0 (icons + abbreviations) and is constructed by the build method;
+# only the data-row labels appear in this list.
+_DATA_ROW_LABELS = ("Qty", "Qual", "Harvest", "Upkeep", "Yard", "Net", "Stored", "Cap")
+
+
+def _projection_grid_rows(planet, view, displayed_ids: List[str]) -> List[tuple]:
+    """Return the header + per-metric cell-text rows for the transposed
+    icon-column grid.
 
     Pure data-shape function — no UI side effects, testable without pygame.
-    Display sign convention:
 
-      * harvest cell = ``proj.harvest`` (income, signed)
-      * upkeep cell  = ``-proj.upkeep`` (drain, displayed negative)
-      * yard cell    = ``-proj.yard``   (drain, displayed negative)
-      * net cell     = ``proj.net``     (already harvest - upkeep - yard)
+    Layout: each row is ``(row_label, *resource_cells)``. The header row's
+    label is `""` and the per-resource cells are the resource ids (the
+    build method renders them as icon + abbreviation). The 8 data rows
+    are Qty, Qual, Harvest, Upkeep, Yard, Net, Stored, Cap.
 
-    When ``view`` is ``None`` (legacy call site without a facade), only
-    the header row is returned — the panel uses the header as a stub and
-    falls back to its legacy stockpile grid.
+    Cell rules:
+      * Qty / Qual — from ``planet.deposits[res]``; ``"-"`` if absent.
+      * Harvest / Upkeep / Yard / Net — from ``view.resource_projections``
+        keyed by ``resource_id``. Sign convention: harvest as-is, upkeep
+        and yard rendered as drains (negated), net as-is. Resources
+        missing from projections (or ``view is None``) render ``"-"``.
+      * Stored / Cap — from ``planet.stockpile`` / ``planet.max_stockpile``;
+        ``"-"`` if the key is absent.
     """
-    rows: List[tuple] = [_PROJECTION_GRID_HEADER]
-    if view is None:
-        return rows
-    for proj in view.resource_projections:
-        rows.append((
-            proj.resource_id,
-            format_signed_float(proj.harvest, decimals=1),
-            format_signed_float(-proj.upkeep, decimals=1),
-            format_signed_float(-proj.yard, decimals=1),
-            format_signed_float(proj.net, decimals=1),
-        ))
+    deposits = getattr(planet, "deposits", None) or {}
+    stockpile = getattr(planet, "stockpile", None) or {}
+    max_stockpile = getattr(planet, "max_stockpile", None) or {}
+
+    proj_by_id = {}
+    if view is not None:
+        proj_by_id = {p.resource_id: p for p in view.resource_projections}
+
+    rows: List[tuple] = [("",) + tuple(displayed_ids)]
+
+    qty_cells = [_qty_cell(deposits.get(rid)) for rid in displayed_ids]
+    qual_cells = [_qual_cell(deposits.get(rid)) for rid in displayed_ids]
+    harvest_cells = [_flow_cell(proj_by_id.get(rid), "harvest") for rid in displayed_ids]
+    upkeep_cells = [_flow_cell(proj_by_id.get(rid), "upkeep") for rid in displayed_ids]
+    yard_cells = [_flow_cell(proj_by_id.get(rid), "yard") for rid in displayed_ids]
+    net_cells = [_flow_cell(proj_by_id.get(rid), "net") for rid in displayed_ids]
+    stored_cells = [_stockpile_cell(stockpile, rid) for rid in displayed_ids]
+    cap_cells = [_stockpile_cell(max_stockpile, rid) for rid in displayed_ids]
+
+    rows.append(("Qty", *qty_cells))
+    rows.append(("Qual", *qual_cells))
+    rows.append(("Harvest", *harvest_cells))
+    rows.append(("Upkeep", *upkeep_cells))
+    rows.append(("Yard", *yard_cells))
+    rows.append(("Net", *net_cells))
+    rows.append(("Stored", *stored_cells))
+    rows.append(("Cap", *cap_cells))
+
     return rows
+
+
+def _qty_cell(deposit) -> str:
+    if not isinstance(deposit, dict):
+        return "-"
+    quantity = deposit.get("quantity", 0)
+    if not quantity:
+        return "-"
+    return format_compact_number(quantity)
+
+
+def _qual_cell(deposit) -> str:
+    if not isinstance(deposit, dict):
+        return "-"
+    quality = deposit.get("quality", 0)
+    if not quality:
+        return "-"
+    return f"{quality:.1f}"
+
+
+def _flow_cell(proj, field: str) -> str:
+    """One Harvest/Upkeep/Yard/Net cell. ``proj`` is None when the
+    resource has no projection signal (operational resources, unowned
+    planets) — render `-` so the column reads as "no data" rather than
+    a misleading projected zero."""
+    if proj is None:
+        return "-"
+    if field == "upkeep":
+        return format_signed_float(-proj.upkeep, decimals=1)
+    if field == "yard":
+        return format_signed_float(-proj.yard, decimals=1)
+    return format_signed_float(getattr(proj, field), decimals=1)
+
+
+def _stockpile_cell(store: dict, rid: str) -> str:
+    if rid not in store:
+        return "-"
+    return format_compact_number(store[rid])
 
 
 def _net_cell_color(net: float):
@@ -136,6 +204,9 @@ class PlanetReportPanel:
         self.view = view
         self._resource_icons: Dict[str, pygame.Surface] = {}
         self._resource_grid_items: List = []
+        # Catalog-driven column set for the resource grid. Stored on the
+        # instance so tests can pin it explicitly.
+        self._displayed_resources: List[str] = list(_DISPLAYED_RESOURCES)
         # PROJ-290 — stored so `update_planet` can default to the
         # construction-time values when it's called without new deps.
         self._empire = empire
@@ -414,224 +485,106 @@ class PlanetReportPanel:
 
             y_offset += 30  # Gap between items
 
-    def _build_projection_grid(self) -> None:
-        """PROJ-289 Phase 2: render the 4-column projection grid into
-        ``self.resource_panel`` from ``self.view.resource_projections``.
-
-        Layout: header row at top, one data row per resource, plus a
-        compact stockpile summary line at the bottom so per-turn current/max
-        signal isn't lost (design.md decision 2026-04-18). Net cells are
-        coloured via ``_net_cell_color``.
-
-        Cell text comes from the pure helper ``_projection_grid_rows``
-        which is exercised directly by the unit tests; this method only
-        wires those tuples into ``UILabel`` widgets.
-        """
-        rows = _projection_grid_rows(self.view)
-
-        grid_width = self.resource_panel.relative_rect.width
-        # Resource label column wider; 4 numeric columns share the rest.
-        label_col_w = 80
-        num_cols = grid_width - label_col_w - 10
-        col_w = max(40, num_cols // 4)
-        row_h = 22
-
-        for row_idx, cells in enumerate(rows):
-            y = 4 + row_idx * row_h
-            # Resource label (left column).
-            label = UILabel(
-                relative_rect=pygame.Rect(5, y, label_col_w, row_h - 2),
-                text=cells[0],
-                manager=self.manager,
-                container=self.resource_panel,
-            )
-            self._resource_grid_items.append(label)
-
-            # 4 numeric columns: Harvest, Upkeep, Yard, Net.
-            for col_idx in range(1, 5):
-                x = label_col_w + 5 + (col_idx - 1) * col_w
-                cell = UILabel(
-                    relative_rect=pygame.Rect(x, y, col_w, row_h - 2),
-                    text=cells[col_idx],
-                    manager=self.manager,
-                    container=self.resource_panel,
-                )
-                # Net column gets sign-coloured tinting on data rows.
-                if row_idx > 0 and col_idx == 4:
-                    proj = self.view.resource_projections[row_idx - 1]
-                    color = _net_cell_color(proj.net)
-                    try:
-                        cell.text_colour = color
-                        cell.rebuild()
-                    except AttributeError:
-                        # PROJ-292 H3: pygame_gui versions vary on
-                        # `text_colour` setter support; the colour is
-                        # non-essential to correctness, so a silent
-                        # fallback for this specific missing-setter
-                        # failure is acceptable. Other exceptions
-                        # (RuntimeError, TypeError, programming errors)
-                        # propagate so real bugs surface instead of
-                        # being silently swallowed by a catch-all.
-                        pass
-                self._resource_grid_items.append(cell)
-
-        # Compact stockpile summary line below the grid (design.md keeps
-        # current/max visible without doubling the grid's vertical real
-        # estate). Skipped if the planet exposes no stockpile data.
-        stockpile = getattr(self.planet, "stockpile", {}) or {}
-        max_stockpile = getattr(self.planet, "max_stockpile", {}) or {}
-        if stockpile or max_stockpile:
-            parts = []
-            for res in stockpile:
-                cur = stockpile.get(res, 0.0)
-                cap = max_stockpile.get(res, 0.0)
-                parts.append(
-                    f"{res} {format_compact_number(cur)}/{format_compact_number(cap)}"
-                )
-            if parts:
-                summary_y = 4 + (len(rows) + 1) * row_h
-                summary = UILabel(
-                    relative_rect=pygame.Rect(
-                        5, summary_y, grid_width - 10, row_h - 2,
-                    ),
-                    text="Stockpile: " + "  ".join(parts),
-                    manager=self.manager,
-                    container=self.resource_panel,
-                )
-                self._resource_grid_items.append(summary)
+    # Net row index within the 8 data rows returned by `_projection_grid_rows`
+    # (Qty, Qual, Harvest, Upkeep, Yard, Net, Stored, Cap). Used to scope
+    # the green/red sign-tint to the Net row only.
+    _NET_DATA_ROW_INDEX = 5
 
     def _build_resource_grid(self) -> None:
-        """
-        Build the resource grid panel.
+        """Render the transposed icon-column resource grid into
+        ``self.resource_panel``.
 
-        PROJ-289 Phase 2: when ``self.view`` is supplied (modern callers
-        with facade access), renders the 4-column projection grid
-        (Resource / Harvest / Upkeep / Yard / Net) driven by
-        ``view.resource_projections``. Net cells are tinted green/red.
+        Layout:
+          * Header row — per resource, an icon (UIImage) above a 3-letter
+            abbreviation (UILabel). Resource set comes from
+            ``self._displayed_resources`` (catalog-driven).
+          * 8 data rows — Qty / Qual / Harvest / Upkeep / Yard / Net /
+            Stored / Cap, each row with a row-label cell on the left
+            followed by one value cell per resource.
 
-        Otherwise (legacy callers), renders the existing stockpile grid:
-        Qty (deposit quantity), Qual (deposit quality), Prod (harvest
-        rate), Stored (current stockpile), Cap (max stockpile capacity).
+        Cell text is computed by the pure helper
+        ``_projection_grid_rows(planet, view, displayed_ids)`` so the
+        cell-text contract is testable without pygame. This method only
+        wires those tuples into UI widgets and applies the Net row's
+        green/red sign tint.
         """
-        # Clear any existing grid items
+        # Clear any existing grid items (refresh path).
         for item in self._resource_grid_items:
             item.kill()
         self._resource_grid_items = []
 
-        if getattr(self, "view", None) is not None:
-            self._build_projection_grid()
-            return
+        rows = _projection_grid_rows(self.planet, self.view, self._displayed_resources)
+        proj_by_id = {}
+        if self.view is not None:
+            proj_by_id = {p.resource_id: p for p in self.view.resource_projections}
 
-        num_resources = len(ALL_RESOURCE_NAMES)
         grid_width = self.resource_panel.relative_rect.width
-        label_col_width = 40  # Width for row labels
-        col_w = (grid_width - label_col_width - 20) // num_resources
+        n = len(self._displayed_resources)
+        label_col_w = 60
+        col_w = max(40, (grid_width - label_col_w - 10) // max(n, 1))
 
-        # Row labels column (left side)
-        row_labels = ["Qty", "Qual", "Prod", "Stor", "Cap"]
-        row_y_offsets = [28, 48, 68, 88, 108]
+        icon_size = 20
+        abbrev_h = 14
+        row_h = 14
+        header_y = 4
+        data_start_y = header_y + icon_size + abbrev_h + 2
 
-        for label_text, y_offset in zip(row_labels, row_y_offsets):
-            label = UILabel(
-                relative_rect=pygame.Rect(5, y_offset, label_col_width, 20),
-                text=label_text,
-                manager=self.manager,
-                container=self.resource_panel
-            )
-            self._resource_grid_items.append(label)
-
-        # Resource columns
-        planet_deposits = self.planet.deposits or {}
-        planet_stockpile = getattr(self.planet, 'stockpile', {}) or {}
-        planet_max_stockpile = getattr(self.planet, 'max_stockpile', {}) or {}
-
-        for i, resource_name in enumerate(ALL_RESOURCE_NAMES):
-            col_x = label_col_width + 10 + i * col_w
-
-            # Icon header (centered within column)
-            icon_surf = self._resource_icons.get(resource_name)
-            if icon_surf:
-                icon_x = col_x + (col_w - 20) // 2
+        # Header row: per-resource icon + abbreviation column header.
+        for col_idx, rid in enumerate(self._displayed_resources):
+            x = label_col_w + 5 + col_idx * col_w
+            icon_surf = self._resource_icons.get(rid)
+            if icon_surf is not None:
+                icon_x = x + (col_w - icon_size) // 2
                 icon_image = UIImage(
-                    relative_rect=pygame.Rect(icon_x, 2, 20, 20),
+                    relative_rect=pygame.Rect(icon_x, header_y, icon_size, icon_size),
                     image_surface=icon_surf,
                     manager=self.manager,
-                    container=self.resource_panel
+                    container=self.resource_panel,
                 )
                 self._resource_grid_items.append(icon_image)
-
-            # Get deposit data (quantity/quality)
-            r_data = planet_deposits.get(resource_name, {})
-            quantity = r_data.get('quantity', 0) if isinstance(r_data, dict) else 0
-            quality = r_data.get('quality', 0) if isinstance(r_data, dict) else 0
-            production = self.production_rates.get(resource_name, 0.0)
-            stored = planet_stockpile.get(resource_name, 0.0)
-            capacity = planet_max_stockpile.get(resource_name, 0.0)
-
-            # Quantity label (deposit)
-            qty_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 28, col_w, 20),
-                text=format_compact_number(quantity) if quantity else "-",
+            abbrev_label = UILabel(
+                relative_rect=pygame.Rect(x, header_y + icon_size, col_w, abbrev_h),
+                text=get_resource_abbreviation(rid),
                 manager=self.manager,
-                container=self.resource_panel
+                container=self.resource_panel,
             )
-            self._resource_grid_items.append(qty_label)
+            self._resource_grid_items.append(abbrev_label)
 
-            # Quality label (deposit)
-            qual_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 48, col_w, 20),
-                text=f"{quality:.1f}" if quality else "-",
+        # Data rows: rows[1:] are the 8 metric rows from the helper.
+        for data_idx, row_cells in enumerate(rows[1:]):
+            y = data_start_y + data_idx * row_h
+            row_label = UILabel(
+                relative_rect=pygame.Rect(5, y, label_col_w, row_h),
+                text=row_cells[0],
                 manager=self.manager,
-                container=self.resource_panel
+                container=self.resource_panel,
             )
-            self._resource_grid_items.append(qual_label)
+            self._resource_grid_items.append(row_label)
 
-            # Production label (harvest rate)
-            prod_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 68, col_w, 20),
-                text=format_compact_number(production) if production else "0",
-                manager=self.manager,
-                container=self.resource_panel
-            )
-            self._resource_grid_items.append(prod_label)
-
-            # Stored label (current stockpile)
-            stored_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 88, col_w, 20),
-                text=format_compact_number(stored) if stored else "0",
-                manager=self.manager,
-                container=self.resource_panel
-            )
-            self._resource_grid_items.append(stored_label)
-
-            # Capacity label (max stockpile)
-            cap_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 108, col_w, 20),
-                text=format_compact_number(capacity) if capacity else "0",
-                manager=self.manager,
-                container=self.resource_panel
-            )
-            self._resource_grid_items.append(cap_label)
-
-        # Staging yard items row (below resource grid)
-        staging_yard = getattr(self.planet, 'staging_yard', None)
-        if isinstance(staging_yard, list) and staging_yard:
-            # Aggregate by name
-            counts: dict = {}
-            for item in staging_yard:
-                name = item.get('name', 'Unknown')
-                counts[name] = counts.get(name, 0) + 1
-            parts = [f"{name} x{count}" if count > 1 else name
-                     for name, count in counts.items()]
-            staging_text = "Staging: " + ", ".join(parts)
-
-            staging_label = UILabel(
-                relative_rect=pygame.Rect(5, 132, self.resource_panel.relative_rect.width - 10, 20),
-                text=staging_text,
-                manager=self.manager,
-                container=self.resource_panel
-            )
-            self._resource_grid_items.append(staging_label)
+            for col_idx, rid in enumerate(self._displayed_resources):
+                x = label_col_w + 5 + col_idx * col_w
+                cell = UILabel(
+                    relative_rect=pygame.Rect(x, y, col_w, row_h),
+                    text=row_cells[1 + col_idx],
+                    manager=self.manager,
+                    container=self.resource_panel,
+                )
+                # Sign-tint the Net row cells where a real projection exists.
+                if data_idx == self._NET_DATA_ROW_INDEX:
+                    proj = proj_by_id.get(rid)
+                    if proj is not None:
+                        color = _net_cell_color(proj.net)
+                        try:
+                            cell.text_colour = color
+                            cell.rebuild()
+                        except AttributeError:
+                            # pygame_gui versions vary on `text_colour`
+                            # setter support; the colour is non-essential
+                            # to correctness, so silently skip the missing
+                            # setter. Other exceptions propagate so real
+                            # bugs surface instead of being swallowed.
+                            pass
+                self._resource_grid_items.append(cell)
 
     def _update_resource_grid(self) -> None:
         """Refresh resource grid values when planet changes."""
@@ -646,7 +599,7 @@ class PlanetReportPanel:
         """
         base_path = Paths.RESOURCE_PORTRAITS_DIR
 
-        for resource in ALL_RESOURCE_NAMES:
+        for resource in self._displayed_resources:
             filename = RESOURCE_PORTRAIT_FILES.get(resource)
             if filename:
                 path = os.path.join(base_path, filename)
