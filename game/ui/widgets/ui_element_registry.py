@@ -2,6 +2,8 @@
 
 PROJ-204 Phase 5: Centralized element cleanup pattern.
 """
+from __future__ import annotations
+
 
 
 class UIElementRegistry:
@@ -24,7 +26,7 @@ class UIElementRegistry:
         """Initialize empty element registry."""
         self._elements = []
 
-    def register(self, element):
+    def register(self, element) -> object:
         """Register a UI element for tracking.
 
         Args:
@@ -36,13 +38,13 @@ class UIElementRegistry:
         self._elements.append(element)
         return element
 
-    def kill_all(self):
+    def kill_all(self) -> None:
         """Destroy all registered elements and clear the registry."""
         for el in self._elements:
             el.kill()
         self._elements = []
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear the registry without destroying elements.
 
         Use this when elements are destroyed by other means

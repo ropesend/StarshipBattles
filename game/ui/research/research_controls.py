@@ -11,6 +11,8 @@ Contains:
 PROJ-147: Moved from game/research/ui/ to game/ui/research/ to fix architecture
 layer violation. This module now correctly lives under the UI layer.
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
@@ -61,7 +63,7 @@ class ResearchControlPanel:
 
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create all UI elements."""
         x = self.rect.left + 10
         width = self.rect.width - 20
@@ -286,7 +288,7 @@ class ResearchControlPanel:
 
         return False
 
-    def update_selected_node(self, node: TechNode, tracker: ResearchTracker):
+    def update_selected_node(self, node: TechNode, tracker: ResearchTracker) -> None:
         """
         Update the UI to show details for a selected node.
 
@@ -326,7 +328,7 @@ class ResearchControlPanel:
             self.slider_allocation.set_current_value(0)
             self.lbl_allocation_value.set_text("-")
 
-    def clear_selection(self):
+    def clear_selection(self) -> None:
         """Clear the node selection display."""
         self._selected_node = None
         self.lbl_node_name.set_text("(None)")
@@ -340,14 +342,14 @@ class ResearchControlPanel:
         self.slider_allocation.set_current_value(0)
         self.lbl_allocation_value.set_text("-")
 
-    def update_budget_display(self):
+    def update_budget_display(self) -> None:
         """Update the allocated/remaining display."""
         allocated = self.tracker.get_total_allocated()
         budget = self.tracker.rp_budget
         self.lbl_allocated.set_text(f"Allocated: {allocated} / {budget}")
         self.lbl_budget_value.set_text(str(budget))
 
-    def _toggle_auto_spread(self):
+    def _toggle_auto_spread(self) -> None:
         """Toggle auto-spread mode and apply if enabled."""
         self.tracker.auto_spread_enabled = not self.tracker.auto_spread_enabled
         self._update_auto_spread_button()
@@ -361,14 +363,14 @@ class ResearchControlPanel:
         if self.on_auto_spread_changed:
             self.on_auto_spread_changed(self.tracker.auto_spread_enabled)
 
-    def _update_auto_spread_button(self):
+    def _update_auto_spread_button(self) -> None:
         """Update auto-spread button text based on current state."""
         if self.tracker.auto_spread_enabled:
             self.btn_auto_spread.set_text("Auto-Spread: ON")
         else:
             self.btn_auto_spread.set_text("Auto-Spread: OFF")
 
-    def _update_allocation_slider_range(self):
+    def _update_allocation_slider_range(self) -> None:
         """Update allocation slider max based on available RP.
 
         PROJ-40/NEW-RES-009: This method assumes _selected_node is valid and
@@ -385,7 +387,7 @@ class ResearchControlPanel:
             # Update slider range
             self.slider_allocation.value_range = (0, max(1, max_allocation))
 
-    def update_turn_log(self, events: List[Dict[str, Any]], turn_number: int):
+    def update_turn_log(self, events: List[Dict[str, Any]], turn_number: int) -> None:
         """
         Update the event log with turn results.
 
@@ -446,13 +448,13 @@ class ResearchControlPanel:
         self.log_box.html_text = new_html
         self.log_box.rebuild()
 
-    def clear_log(self):
+    def clear_log(self) -> None:
         """Clear the event log."""
         self.lbl_turn.set_text(f"Turn: {self.tracker.turn_number}")
         self.log_box.html_text = "<i>No events yet. Click 'Next Turn' to simulate.</i>"
         self.log_box.rebuild()
 
-    def reset(self, tracker: ResearchTracker, tech_tree: TechTree):
+    def reset(self, tracker: ResearchTracker, tech_tree: TechTree) -> None:
         """
         Reset the control panel with new tracker and tech tree instances.
 

@@ -9,6 +9,8 @@ A standalone, reusable panel component that renders JSON data with:
 
 This widget is designed to be composed into larger screens like BattleStateViewer.
 """
+from __future__ import annotations
+
 import pygame
 import json
 from typing import Optional, Tuple, Dict
@@ -100,7 +102,7 @@ class ScrollableJsonPanel:
         self.scrollbar_dragging = False
         self.drag_start_offset = 0
 
-    def set_json_with_diff(self, json_str: Optional[str], diff_paths: Dict[str, str]):
+    def set_json_with_diff(self, json_str: Optional[str], diff_paths: Dict[str, str]) -> None:
         """
         Set JSON content with diff information.
 
@@ -162,7 +164,7 @@ class ScrollableJsonPanel:
                 return True
         return False
 
-    def _format_json_with_diff(self, data, indent: int, path: str, key_prefix: str = ""):
+    def _format_json_with_diff(self, data, indent: int, path: str, key_prefix: str = "") -> None:
         """Recursively format JSON data with diff highlighting."""
         text_override, bg_color = self._get_diff_colors(path)
 
@@ -213,7 +215,7 @@ class ScrollableJsonPanel:
             # Primitive at root level
             self._add_value_line_with_diff(indent, data, '', path)
 
-    def _add_key_value_line_with_diff(self, indent: int, key: str, value, comma: str, path: str):
+    def _add_key_value_line_with_diff(self, indent: int, key: str, value, comma: str, path: str) -> None:
         """Add a line with key: value format, with diff highlighting."""
         text_override, bg_color = self._get_diff_colors(path)
 
@@ -227,7 +229,7 @@ class ScrollableJsonPanel:
         # Create line with mixed colors (color is None since colors are in the text tuple)
         self.json_lines.append((indent, (key_str, value_str + comma, self.key_color, value_color), None, bg_color))
 
-    def _add_value_line_with_diff(self, indent: int, value, comma: str, path: str):
+    def _add_value_line_with_diff(self, indent: int, value, comma: str, path: str) -> None:
         """Add a line with just a value, with diff highlighting."""
         text_override, bg_color = self._get_diff_colors(path)
 
@@ -318,7 +320,7 @@ class ScrollableJsonPanel:
 
         return pygame.Rect(scrollbar_x, thumb_y, self.scrollbar_width, thumb_height)
 
-    def _handle_scrollbar_drag(self, my: int):
+    def _handle_scrollbar_drag(self, my: int) -> None:
         """Handle scrollbar drag motion."""
         scrollbar_y = self.y + 35
         scrollbar_height = self.height - 40
@@ -331,7 +333,7 @@ class ScrollableJsonPanel:
             ratio = (drag_y - scrollbar_y) / available_range
             self.scroll.set_from_ratio(ratio)
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """
         Draw the scrollable JSON panel with diff highlighting.
 
@@ -393,7 +395,7 @@ class ScrollableJsonPanel:
         if self.scroll.can_scroll:
             self._draw_scrollbar(surface)
 
-    def _draw_scrollbar(self, surface):
+    def _draw_scrollbar(self, surface) -> None:
         """Draw the scrollbar."""
         scrollbar_x = self.x + self.width - self.scrollbar_width - 5
         scrollbar_y = self.y + 35

@@ -2,6 +2,8 @@
 
 PROJ-204 Phase 5: Consolidates duplicated panel+title creation pattern.
 """
+from __future__ import annotations
+
 import pygame
 from pygame_gui.elements import UIPanel, UILabel
 
@@ -14,7 +16,7 @@ class PanelFactory:
     """
 
     @staticmethod
-    def create_titled_panel(rect, manager, title, object_id):
+    def create_titled_panel(rect, manager, title, object_id) -> tuple[UIPanel, UILabel | None]:
         """Create a panel with an optional title label.
 
         Args:

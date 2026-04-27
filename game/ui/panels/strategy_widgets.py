@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pygame
 import math
 
@@ -20,7 +22,7 @@ class DataGraph:
         self.bg_color = bg_color
         self.surface = pygame.Surface((width, height))
 
-    def clear(self):
+    def clear(self) -> None:
         self.surface.fill(self.bg_color)
         pygame.draw.rect(self.surface, BORDER_DARK, (0, 0, self.width, self.height), 1)
 
@@ -39,7 +41,7 @@ class SpectrumGraph(DataGraph):
         ('radio', SPECTRUM_RADIO, "Radio")
     ]
     
-    def render(self, star, vertical=False):
+    def render(self, star, vertical=False) -> pygame.Surface:
         self.clear()
         if not is_star(star):
             return self.surface
@@ -120,7 +122,7 @@ class AtmosphereGraph(DataGraph):
         'SO2': GAS_SO2,
     }
     
-    def render(self, planet, vertical=False):
+    def render(self, planet, vertical=False) -> pygame.Surface:
         self.clear()
         # atmosphere is always present via IPlanet protocol
         if not planet.atmosphere:

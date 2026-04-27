@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import pygame
@@ -45,7 +47,7 @@ class ShipThemeManager:
         self._init_lock = threading.Lock()
         self._io_lock = threading.Lock() # For on-demand loading
 
-    def clear(self):
+    def clear(self) -> None:
         """Reset all caches and state. Used for test isolation."""
         with self._init_lock:
             with self._io_lock:
@@ -56,7 +58,7 @@ class ShipThemeManager:
                 self.discovery_complete = False
                 logger.info("ShipThemeManager caches cleared.")
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Discover all themes from assets/ShipThemes without loading images."""
         with self._init_lock:
             if self.discovery_complete and self.theme_data:
@@ -79,7 +81,7 @@ class ShipThemeManager:
             self.discovery_complete = True
             logger.info(f"Discovered {len(self.theme_data)} ship themes: {list(self.theme_data.keys())}")
 
-    def _discover_theme(self, theme_dir):
+    def _discover_theme(self, theme_dir) -> None:
         """Read theme.json and store paths/metadata."""
         json_path = os.path.join(theme_dir, "theme.json")
         data = load_json(json_path)
@@ -117,7 +119,7 @@ class ShipThemeManager:
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Failed to discover theme {theme_dir}: {e}")
 
-    def load_image(self, theme_name, ship_class):
+    def load_image(self, theme_name, ship_class) -> pygame.Surface:
         """Load the image surface for a specific theme and class. Returns cached copy if available."""
         if not self.discovery_complete:
             return self._create_fallback_image(ship_class)
@@ -141,7 +143,7 @@ class ShipThemeManager:
             
         return self._create_fallback_image(ship_class)
 
-    def _load_single_image(self, theme_name, ship_class):
+    def _load_single_image(self, theme_name, ship_class) -> pygame.Surface:
         """Load a single image from disk and cache it."""
         with self._io_lock:
             # Double-check cache after acquiring lock
@@ -172,7 +174,7 @@ class ShipThemeManager:
                 logger.error(f"Lazy load failed for {path} (pygame error): {e}")
                 return self._create_fallback_image(ship_class)
 
-    def get_image_metrics(self, theme_name, ship_class):
+    def get_image_metrics(self, theme_name, ship_class) -> pygame.Rect | None:
         """Get the visible bounding rect for the image."""
         if not self.discovery_complete: return None
         
@@ -202,7 +204,7 @@ class ShipThemeManager:
         
         return None
 
-    def get_manual_scale(self, theme_name, ship_class):
+    def get_manual_scale(self, theme_name, ship_class) -> float:
         """Get manual scale factor for a ship (default 1.0)."""
         if not self.discovery_complete: return 1.0
         if theme_name not in self.theme_data: theme_name = self.default_theme
@@ -211,7 +213,7 @@ class ShipThemeManager:
             return self.theme_data[theme_name][ship_class].get('scale', 1.0)
         return 1.0
 
-    def _create_fallback_image(self, ship_class):
+    def _create_fallback_image(self, ship_class) -> pygame.Surface:
         """Generate a placeholder image."""
         # Simple colored rectangle with text
         surf = pygame.Surface((100, 100), pygame.SRCALPHA)
@@ -220,11 +222,11 @@ class ShipThemeManager:
         pygame.draw.line(surf, OVERLAY_FALLBACK, (20, 50), (80, 50), 2)
         return surf
 
-    def get_available_themes(self):
+    def get_available_themes(self) -> list[str]:
         """Return list of available theme names."""
         return list(self.theme_data.keys())
 
-    def get_portrait_image(self, theme_name, ship_class):
+    def get_portrait_image(self, theme_name, ship_class) -> pygame.Surface | None:
         """
         Get the portrait image for a specific theme and ship class.
 
@@ -257,7 +259,7 @@ class ShipThemeManager:
         # Load on demand
         return self._load_portrait_image(theme_name, ship_class)
 
-    def _load_portrait_image(self, theme_name, ship_class):
+    def _load_portrait_image(self, theme_name, ship_class) -> pygame.Surface | None:
         """Load a portrait image from disk and cache it."""
         with self._io_lock:
             # Double-check cache after acquiring lock
@@ -303,7 +305,7 @@ class ShipThemeManager:
 
             return None
 
-    def _ship_class_to_portrait_name(self, ship_class):
+    def _ship_class_to_portrait_name(self, ship_class) -> str:
         """
         Convert ship class name to portrait filename format.
 

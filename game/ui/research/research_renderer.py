@@ -9,6 +9,8 @@ Draws:
 PROJ-147: Moved from game/research/ui/ to game/ui/research/ to fix architecture
 layer violation. This module now correctly lives under the UI layer.
 """
+from __future__ import annotations
+
 import pygame
 from typing import Dict, Tuple, Optional, TYPE_CHECKING
 
@@ -81,7 +83,7 @@ class ResearchRenderer:
         return get_font(quantized_size)
 
     def draw(self, screen: pygame.Surface, selected_node_id: Optional[str],
-             canvas_rect: pygame.Rect):
+             canvas_rect: pygame.Rect) -> None:
         """
         Draw the tech tree.
 
@@ -106,7 +108,7 @@ class ResearchRenderer:
         screen.set_clip(None)
 
     def _draw_dependency_lines(self, screen: pygame.Surface,
-                               tech_levels: Dict[str, int]):
+                               tech_levels: Dict[str, int]) -> None:
         """Draw dependency lines between nodes.
 
         PROJ-40/NEW-RES-007: Negated requirements (NOT dependencies) are drawn
@@ -160,7 +162,7 @@ class ResearchRenderer:
 
     def _draw_dashed_line(self, screen: pygame.Surface, color: Tuple[int, int, int],
                           start: Tuple[int, int], end: Tuple[int, int],
-                          width: int = 2, dash_length: int = 8):
+                          width: int = 2, dash_length: int = 8) -> None:
         """Draw a dashed line between two points.
 
         PROJ-40/NEW-RES-007: Used to visually distinguish negated requirements.
@@ -193,7 +195,7 @@ class ResearchRenderer:
             pygame.draw.line(screen, color, dash_start, dash_end, width)
 
     def _draw_nodes(self, screen: pygame.Surface, selected_node_id: Optional[str],
-                    tech_levels: Dict[str, int]):
+                    tech_levels: Dict[str, int]) -> None:
         """Draw all visible nodes."""
         for node in self.tech_tree.nodes.values():
             if node.id not in self.node_positions:

@@ -13,6 +13,8 @@ Usage:
     diff_paths = compute_json_diff(old_data, new_data)
     # Returns dict mapping paths to DiffResult status strings
 """
+from __future__ import annotations
+
 from typing import Any, Dict
 
 
@@ -87,7 +89,7 @@ def compute_json_diff(initial: Any, final: Any, path: str = "") -> Dict[str, str
     return diffs
 
 
-def _mark_all_paths(data: Any, path: str, status: str, diffs: Dict[str, str]):
+def _mark_all_paths(data: Any, path: str, status: str, diffs: Dict[str, str]) -> None:
     """
     Mark all paths in a data structure with the given status.
 

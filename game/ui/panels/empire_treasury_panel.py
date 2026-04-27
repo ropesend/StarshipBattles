@@ -5,6 +5,8 @@ PROJ-99 Phase 2: Treasury tab panel for the Empire Panel Window.
 Shows per-turn production and expenses broken down by category,
 plus current treasury and storage capacity.
 """
+from __future__ import annotations
+
 import os
 from typing import Dict, List, Tuple, Optional
 
@@ -71,7 +73,7 @@ class EmpireTreasuryPanel:
 
         self._build_ui()
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         """Build the complete treasury panel UI."""
         # Get panel dimensions
         panel_rect = self.panel.get_relative_rect()
@@ -284,7 +286,7 @@ class EmpireTreasuryPanel:
             ("Maximum Storage", self.snapshot.max_storage, False),
         ]
 
-    def refresh(self, snapshot: EmpireEconomySnapshot):
+    def refresh(self, snapshot: EmpireEconomySnapshot) -> None:
         """
         Refresh panel with new snapshot data.
 

@@ -10,6 +10,8 @@ Provides common functionality for:
 - Button click handling
 - Selection highlighting
 """
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
@@ -128,7 +130,7 @@ class BaseGallery(ABC):
     def _update_preview(self, asset_id: str) -> None:
         """Update preview area for selected asset."""
 
-    def _create_content(self, x: int, y: int, width: int, height: int):
+    def _create_content(self, x: int, y: int, width: int, height: int) -> None:
         """Create all gallery content."""
         # Label
         pygame_gui.elements.UILabel(
@@ -167,7 +169,7 @@ class BaseGallery(ABC):
         if current:
             self.on_asset_selected(current)
 
-    def _populate_gallery(self, width: int):
+    def _populate_gallery(self, width: int) -> None:
         """Populate gallery with asset buttons."""
         assets = self._discover_assets()
         thumb_size = self._get_thumb_size()
@@ -216,7 +218,7 @@ class BaseGallery(ABC):
         """Sanitize text for use in pygame_gui object_id."""
         return text.replace(".", "_").replace(" ", "_")
 
-    def on_asset_selected(self, asset_id: str):
+    def on_asset_selected(self, asset_id: str) -> None:
         """
         Handle asset selection.
 
@@ -240,7 +242,7 @@ class BaseGallery(ABC):
         if self.on_select_callback:
             self.on_select_callback(asset_id)
 
-    def set_from_config(self):
+    def set_from_config(self) -> None:
         """Set gallery selection from race_config (for loading saved races)."""
         current = self._get_current_selection()
         if current:
