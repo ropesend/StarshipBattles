@@ -5,7 +5,7 @@ Handles opening, closing, and tracking of all modal windows in the strategy laye
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 import pygame
 import pygame_gui
@@ -477,7 +477,7 @@ class StrategyWindowManager:
         # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
         fleet_owner_id = fleet.owner_id
 
-        def split_fleet_callback(fleet_id: int, ship_instance_ids: list):
+        def split_fleet_callback(fleet_id: int, ship_instance_ids: list) -> Any:
             """Dispatch SplitFleetCommand through facade command pipeline."""
             from game.strategy.engine.commands import SplitFleetCommand
             cmd = SplitFleetCommand(fleet_id=fleet_id, ship_instance_ids=ship_instance_ids, empire_id=fleet_owner_id)

@@ -12,7 +12,7 @@ PROJ-86: Decomposed into helper modules:
 from __future__ import annotations
 
 import os
-from typing import Optional
+from typing import Optional, Any
 
 import pygame
 import pygame_gui
@@ -132,26 +132,26 @@ class StrategyUI:
     # Menu Panel Management (PROJ-72)
     # =========================================================================
 
-    def toggle_menu_panel(self):
+    def toggle_menu_panel(self) -> None:
         """Toggle the strategy menu dropdown panel open/closed."""
         if self.menu_panel:
             self.close_menu_panel()
         else:
             self.open_menu_panel()
 
-    def open_menu_panel(self):
+    def open_menu_panel(self) -> None:
         """Open the strategy menu dropdown panel below the Menu button."""
         btn_rect = self.btn_menu.get_abs_rect()
         panel_rect = pygame.Rect(btn_rect.x, btn_rect.bottom + 2, PANEL_WIDTH, PANEL_HEIGHT)
         self.menu_panel = StrategyMenuPanel(panel_rect, self.manager, self._on_menu_option_selected)
 
-    def close_menu_panel(self):
+    def close_menu_panel(self) -> None:
         """Close and destroy the strategy menu dropdown panel."""
         if self.menu_panel:
             self.menu_panel.kill()
             self.menu_panel = None
 
-    def _on_menu_option_selected(self, option):
+    def _on_menu_option_selected(self, option) -> None:
         """Handle a menu option selection from the dropdown panel.
 
         Args:
@@ -164,12 +164,12 @@ class StrategyUI:
     # Visibility
     # =========================================================================
 
-    def hide_ui(self):
+    def hide_ui(self) -> None:
         """Hide all main strategy UI panels."""
         for panel in self.panels:
             panel.hide()
 
-    def show_ui(self):
+    def show_ui(self) -> None:
         """Show all main strategy UI panels."""
         for panel in self.panels:
             panel.show()
@@ -182,7 +182,7 @@ class StrategyUI:
 
 
         
-    def handle_resize(self, width, height):
+    def handle_resize(self, width, height) -> None:
         """Update UI elements for new resolution."""
         self.width = width
         self.height = height
@@ -199,7 +199,7 @@ class StrategyUI:
         # PROJ-86: Update window manager with new dimensions
         self.window_manager.handle_resize(width, height)
 
-    def show_system_info(self, system_obj, contents):
+    def show_system_info(self, system_obj, contents) -> None:
         """Populate Top List (System) using Tree View."""
         if system_obj:
             self.system_header.set_text(f"System: {system_obj.name}")
@@ -208,7 +208,7 @@ class StrategyUI:
 
         self.system_tree.set_items(contents, self, system_obj=system_obj)
 
-    def show_sector_info(self, hex_coord, contents, system_obj=None):
+    def show_sector_info(self, hex_coord, contents, system_obj=None) -> None:
         """Populate Middle List (Sector/Hex)."""
         self.sector_header.set_text(f"Sector: [{hex_coord.q}, {hex_coord.r}]")
 
@@ -216,25 +216,25 @@ class StrategyUI:
         self.sector_tree.set_items(contents, self, flat_view=True,
                                    system_obj=system_obj, hex_coord=hex_coord)
         
-    def _get_label_for_obj(self, obj):
+    def _get_label_for_obj(self, obj) -> Any:
         return self._detail_formatter._get_label_for_obj(obj)
 
-    def _get_object_asset(self, obj):
+    def _get_object_asset(self, obj) -> Any:
         """Proxy to scene for asset resolution."""
         return self.scene._get_object_asset(obj)
         
-    def _format_spectrum(self, star):
+    def _format_spectrum(self, star) -> Any:
         return self._detail_formatter._format_spectrum(star)
 
     def _compute_planet_production(self, planet) -> dict:
         """Compute per-resource production rates for a colony planet."""
         return self._detail_formatter.compute_planet_production(planet)
 
-    def show_raw_data_popup(self):
+    def show_raw_data_popup(self) -> None:
         """Show raw data in a message window."""
         self._detail_formatter.show_raw_data_popup()
 
-    def show_detailed_report(self, obj, portrait_surface=None):
+    def show_detailed_report(self, obj, portrait_surface=None) -> None:
         """Update the detail report for the selected object."""
         self._detail_formatter.show_detailed_report(obj, portrait_surface)
         # Sync state back from formatter for event handlers that access it
@@ -242,11 +242,11 @@ class StrategyUI:
         self.current_selection = self._detail_formatter.current_selection
         self.current_raw_data = self._detail_formatter.current_raw_data
 
-    def _format_atmosphere_raw(self, planet):
+    def _format_atmosphere_raw(self, planet) -> Any:
         return self._detail_formatter._format_atmosphere_raw(planet)
 
         
-    def _update_resource_display(self):
+    def _update_resource_display(self) -> None:
         """Update the empire resource bar with current pool values."""
         # Guard: current_player_index may not be set during init
         if not hasattr(self.scene, 'current_player_index'):
@@ -270,12 +270,12 @@ class StrategyUI:
         else:
             self.lbl_resources.set_text("No resources")
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         """Update UI logic."""
         self.manager.update(dt)
         self._update_resource_display()
  
-    def draw(self, screen):
+    def draw(self, screen) -> None:
         """Draw the strategy scene UI elements."""
         self.manager.draw_ui(screen)
 
@@ -289,15 +289,15 @@ class StrategyUI:
         """Check if any modal sub-panel is currently open."""
         return self._event_router.has_modal_open()
 
-    def on_ui_selection(self, obj):
+    def on_ui_selection(self, obj) -> None:
         """Handle selection of an object from any UI panel."""
         self._event_router.on_ui_selection(obj)
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Pass events to pygame_gui and handle custom UI logic."""
         self._event_router.route_event(event)
 
-    def handle_click(self, mx, my, button):
+    def handle_click(self, mx, my, button) -> Any:
         """Handle mouse clicks. Returns True if click was handled by UI."""
         return self._event_router.handle_click(mx, my, button)
 
@@ -307,80 +307,80 @@ class StrategyUI:
     # Window Management Delegation (PROJ-86)
     # =========================================================================
 
-    def prompt_planet_selection(self, planets, on_select):
+    def prompt_planet_selection(self, planets, on_select) -> None:
         """Open a modal window to select a planet."""
         self.window_manager.prompt_planet_selection(planets, on_select)
 
-    def prompt_fleet_selection(self, fleets, on_select):
+    def prompt_fleet_selection(self, fleets, on_select) -> None:
         """Open a modal window to select a fleet to join."""
         self.window_manager.prompt_fleet_selection(fleets, on_select)
 
-    def show_system_picker(self, systems, current_system, on_selected):
+    def show_system_picker(self, systems, current_system, on_selected) -> None:
         """Open a modal window to select a star system for warp point creation."""
         self.window_manager.open_system_selection(systems, current_system, on_selected)
 
-    def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
+    def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet) -> None:
         """Dialog to choose between moving to the sector or intercepting the fleet."""
         self.window_manager.prompt_move_choice(fleet, target_hex, on_move_sector, on_intercept_fleet)
 
-    def open_planet_list(self):
+    def open_planet_list(self) -> None:
         """Open the Planet List Window."""
         self.window_manager.open_planet_list()
 
-    def open_star_list(self):
+    def open_star_list(self) -> None:
         """Open the Star List Window."""
         self.window_manager.open_star_list()
 
-    def open_build_queue_list(self):
+    def open_build_queue_list(self) -> None:
         """Open the Build Queue List Window (BUG-67)."""
         self.window_manager.open_build_queue_list()
 
-    def open_empire_build_queue_window(self):
+    def open_empire_build_queue_window(self) -> None:
         """Open the Empire-Wide Build Queue Window (PROJ-76)."""
         self.window_manager.open_empire_build_queue_window()
 
-    def close_empire_build_queue_window(self):
+    def close_empire_build_queue_window(self) -> None:
         """Close the Empire-Wide Build Queue Window if open."""
         self.window_manager.close_empire_build_queue_window()
 
-    def open_event_log(self):
+    def open_event_log(self) -> None:
         """Open the Event Log Window showing all events (PROJ-77)."""
         self.window_manager.open_event_log()
 
-    def open_event_log_with_events(self, events: list):
+    def open_event_log_with_events(self, events: list) -> None:
         """Open the Event Log Window with a specific event list."""
         self.window_manager.open_event_log_with_events(events)
 
-    def open_orders_window(self, entity, entity_type: str = "fleet"):
+    def open_orders_window(self, entity, entity_type: str = "fleet") -> None:
         """Open the Orders Window for a fleet or planet.
 
         PROJ-238: Generalized to support any IOrderable entity.
         """
         self.window_manager.open_orders_window(entity, entity_type=entity_type)
 
-    def open_fleet_report_window(self, fleet):
+    def open_fleet_report_window(self, fleet) -> None:
         """Open the Fleet Report Window."""
         self.window_manager.open_fleet_report_window(fleet)
 
-    def open_transfer_dialog(self, source_fleet, hex_coord):
+    def open_transfer_dialog(self, source_fleet, hex_coord) -> None:
         """Open the cargo/population transfer dialog."""
         self.window_manager.open_transfer_dialog(source_fleet, hex_coord)
 
-    def open_cargo_quick_dialog(self, fleet, hex_coord, direction: str):
+    def open_cargo_quick_dialog(self, fleet, hex_coord, direction: str) -> None:
         """Open the quick cargo drop/load dialog (PROJ-100)."""
         self.window_manager.open_cargo_quick_dialog(fleet, hex_coord, direction)
 
-    def open_planet_abilities_window(self, planet):
+    def open_planet_abilities_window(self, planet) -> None:
         """Open the planet abilities management window."""
         self.window_manager.open_planet_abilities_window(planet)
 
-    def open_empire_panel(self):
+    def open_empire_panel(self) -> None:
         """Open the Empire Panel Window."""
         self.window_manager.open_empire_panel()
 
     def show_confirmation_dialog(
         self, title: str, message: str, on_confirm, is_warning: bool = False
-    ):
+    ) -> None:
         """Show a confirmation dialog for dangerous actions.
 
         PROJ-198: Used by superweapons for planet/star destruction confirmation.
@@ -393,7 +393,7 @@ class StrategyUI:
         """
         self.window_manager.show_confirmation_dialog(title, message, on_confirm, is_warning)
 
-    def show_ship_picker(self, ships, ability_name: str, on_selected):
+    def show_ship_picker(self, ships, ability_name: str, on_selected) -> None:
         """Show ship picker dialog for multi-select.
 
         PROJ-198: Used by superweapons for self-destruct ship selection.

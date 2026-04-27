@@ -9,7 +9,9 @@ Cross-layer imports (acceptable for UI):
 - IssueColonizeCommand, QueueColonizeMissionCommand: Runtime - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
-from typing import TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,18 +38,18 @@ class ColonizationSystem:
         self.facade = facade
 
     @property
-    def systems(self):
+    def systems(self) -> Any:
         return self.scene.systems
 
     @property
-    def camera(self):
+    def camera(self) -> Any:
         return self.scene.camera
 
     @property
-    def hex_size(self):
+    def hex_size(self) -> Any:
         return self.scene.hex_size
 
-    def on_colonize_click(self, fleet):
+    def on_colonize_click(self, fleet) -> dict | None:
         """
         Handle colonize button/key action.
 
@@ -113,7 +115,7 @@ class ColonizationSystem:
             'fleet': fleet,
         }
 
-    def issue_colonize_order(self, fleet, planet, population_amount=None, cargo_amounts=None):
+    def issue_colonize_order(self, fleet, planet, population_amount=None, cargo_amounts=None) -> dict:
         """
         Issue colonize command via facade.
 
@@ -141,7 +143,7 @@ class ColonizationSystem:
 
         return {'type': 'success', 'fleet': fleet}
 
-    def handle_colonize_designation(self, mx, my, fleet):
+    def handle_colonize_designation(self, mx, my, fleet) -> dict | None:
         """
         Handle selecting a planet for colonization with movement.
 
@@ -190,7 +192,7 @@ class ColonizationSystem:
         }
 
     def queue_colonize_mission(self, target_hex, planet, fleet,
-                               population_amount=None, cargo_amounts=None):
+                               population_amount=None, cargo_amounts=None) -> dict | None:
         """
         Queue MOVE + COLONIZE orders for a colonization mission via facade.
 
@@ -223,7 +225,7 @@ class ColonizationSystem:
             logger.warning(f"Colonize mission failed: {result.message}")
             return {'type': 'error', 'message': result.message}
 
-    def request_colonize_order(self, fleet, planet):
+    def request_colonize_order(self, fleet, planet) -> Any:
         """
         Request colonization order from UI (e.g. detailed panel button).
 
@@ -245,7 +247,7 @@ class ColonizationSystem:
         else:
             return self.on_colonize_click(fleet)
 
-    def _get_system_at_hex(self, hex_coord):
+    def _get_system_at_hex(self, hex_coord) -> Any:
         """
         Find system at hex coordinate.
 
@@ -259,7 +261,7 @@ class ColonizationSystem:
         # Access galaxy through scene (read-only for internal lookups)
         return get_system_at_hex(self.scene.galaxy, hex_coord)
 
-    def _resolve_planet_global_hex(self, planet):
+    def _resolve_planet_global_hex(self, planet) -> Any:
         """
         Resolve a planet's global hex coordinate.
 

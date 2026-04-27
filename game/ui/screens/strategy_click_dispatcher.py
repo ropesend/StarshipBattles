@@ -7,7 +7,7 @@ Extracted from StrategyInputHandler for router decomposition (PROJ-173 Phase 3).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 
 import pygame
 
@@ -52,7 +52,7 @@ class ClickModeDispatcher:
         }
 
     @property
-    def scene(self):
+    def scene(self) -> Any:
         """Access scene through handler."""
         return self._handler.scene
 
@@ -97,14 +97,14 @@ class ClickModeDispatcher:
                 target_hex = result['target_hex']
                 target_fleet = result['target_fleet']
 
-                def on_move():
+                def on_move() -> None:
                     res = self.scene._fleet_ops.execute_move(
                         self.scene.selected_fleet, target_hex
                     )
                     if res and res.get('type') == 'success':
                         self._handler._fleet_router.finish_move_action(res['fleet'])
 
-                def on_intercept():
+                def on_intercept() -> None:
                     res = self.scene._fleet_ops.execute_intercept(
                         self.scene.selected_fleet, target_fleet
                     )
@@ -140,7 +140,7 @@ class ClickModeDispatcher:
                 fleets = result['fleets']
                 fleet_ref = self.scene.selected_fleet
 
-                def on_fleet_selected(target_fleet):
+                def on_fleet_selected(target_fleet) -> None:
                     res = self.scene._fleet_ops.execute_join(fleet_ref, target_fleet)
                     if res and res.get('type') == 'success':
                         self.input_mode = 'SELECT'
@@ -172,7 +172,7 @@ class ClickModeDispatcher:
                 fleet_ref = self.scene.selected_fleet
                 target_hex = result.get('target_hex')
 
-                def on_planet_selected(planet):
+                def on_planet_selected(planet) -> None:
                     """Issue colonize mission, then open transfer dialog for cargo amounts."""
                     mission_result = self.scene._colonization.queue_colonize_mission(
                         target_hex, planet, fleet_ref
@@ -370,14 +370,14 @@ class ClickModeDispatcher:
                     target_hex = result['target_hex']
                     target_fleet = result['target_fleet']
 
-                    def on_move():
+                    def on_move() -> None:
                         res = self.scene._fleet_ops.execute_move(
                             self.scene.selected_fleet, target_hex
                         )
                         if res and res.get('type') == 'success':
                             self._handler._fleet_router.finish_move_action(res['fleet'])
 
-                    def on_intercept():
+                    def on_intercept() -> None:
                         res = self.scene._fleet_ops.execute_intercept(
                             self.scene.selected_fleet, target_fleet
                         )
@@ -506,7 +506,7 @@ class ClickModeDispatcher:
 
         return None
 
-    def _resolve_click_target(self, mx: int, my: int):
+    def _resolve_click_target(self, mx: int, my: int) -> Any:
         """Smartly resolve the hex coordinate from a mouse click.
 
         Handles visual offsets of planets when zoomed in, ensuring we return

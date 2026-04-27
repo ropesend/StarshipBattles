@@ -8,7 +8,7 @@ PROJ-86: God Class Decomposition - UI Tier
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pygame
 import pygame_gui
@@ -215,7 +215,7 @@ class StrategyEventRouter:
         except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; editor opens without race-specific UI
             pass
 
-        def on_apply(planet_id, target):
+        def on_apply(planet_id, target) -> None:
             cmd = SetAtmosphereTargetCommand(planet_id=planet_id, atmosphere_target=target)
             scene.facade.handle_command(cmd)
 
@@ -238,7 +238,7 @@ class StrategyEventRouter:
         scene = ui.scene
         race_config = self._get_race_config(planet)
 
-        def on_apply(planet_id, gravity_target):
+        def on_apply(planet_id, gravity_target) -> None:
             cmd = SetGravityTargetCommand(planet_id=planet_id, gravity_target=gravity_target)
             scene.facade.handle_command(cmd)
 
@@ -258,7 +258,7 @@ class StrategyEventRouter:
         scene = ui.scene
         race_config = self._get_race_config(planet)
 
-        def on_apply(planet_id, water_target):
+        def on_apply(planet_id, water_target) -> None:
             cmd = SetWaterTargetCommand(planet_id=planet_id, water_target=water_target)
             scene.facade.handle_command(cmd)
 
@@ -278,7 +278,7 @@ class StrategyEventRouter:
         scene = ui.scene
         race_config = self._get_race_config(planet)
 
-        def on_apply(planet_id, shielding_target):
+        def on_apply(planet_id, shielding_target) -> None:
             cmd = SetRadiationShieldTargetCommand(planet_id=planet_id, shielding_target=shielding_target)
             scene.facade.handle_command(cmd)
 
@@ -317,7 +317,7 @@ class StrategyEventRouter:
         except Exception:  # Intentional broad catch: registry provider may be uninitialized; food editor opens without resource catalog
             pass
 
-        def resolve_race(race_id):
+        def resolve_race(race_id) -> Any:
             # Prefer empire's own race_config when race_ids match.
             empire_race = self._get_race_config(planet)
             if empire_race is not None and getattr(empire_race, "race_id", None) == race_id:
@@ -329,7 +329,7 @@ class StrategyEventRouter:
             except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; resolver returns None on failure
                 return None
 
-        def on_apply(planet_id, allocations):
+        def on_apply(planet_id, allocations) -> None:
             apply_allocations(planet, allocations)
 
         rect = create_centered_rect(640, 420, ui.width, ui.height)
@@ -343,7 +343,7 @@ class StrategyEventRouter:
             on_apply_callback=on_apply,
         )
 
-    def _get_race_config(self, planet):
+    def _get_race_config(self, planet) -> Any:
         """Get the race config for the planet's owning empire."""
         ui = self.ui
         scene = ui.scene
@@ -402,7 +402,7 @@ class StrategyEventRouter:
             ui.scene.request_colonize_order(obj, candidates[0])
         else:
             # Multiple -> Dialog
-            def on_planet_selected(planet):
+            def on_planet_selected(planet) -> None:
                 ui.scene.request_colonize_order(obj, planet)
 
             ui.prompt_planet_selection(candidates, on_planet_selected)
