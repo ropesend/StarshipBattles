@@ -1434,10 +1434,22 @@ elif call.elapsed_seconds > 30:
 
 - Any service call with unbounded latency (network I/O) that must not block
   the pygame main loop.
-- Future LLM consumers (race description generation, diplomacy "emails",
-  ad-hoc summaries).
+- Future LLM consumers (diplomacy "emails", ad-hoc summaries).
 - Future non-LLM services with the same shape (cloud sync, telemetry
   uploads, asset downloads).
+
+### Reference consumer (PROJ-299)
+
+`game/strategy/services/race_description_llm_controller.py` —
+`RaceDescriptionLLMController` is the canonical first consumer. It
+owns two `LLMBackgroundCall` instances (one for the bio description,
+one for socio), translates their `CallStatus` into a domain-specific
+`FieldStatus` enum, and drives the Race Setup UI via an `on_change`
+callback. The screen polls `controller.update()` each frame and reads
+`bio_elapsed_seconds` / `socio_elapsed_seconds` to drive a 30s/90s
+"still working" modal dialog. New consumers should follow the same
+shape: a thin pygame-free Controller that owns the call lifecycle,
+exposes per-domain status, and is polled by the UI.
 
 ### Don't
 

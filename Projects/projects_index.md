@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-299 | Race Description Generator (LLM) | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-299 | Race Description Generator (LLM) | Awaiting Verification | 2026-04-26 | 2026-04-26 |
 | PROJ-298 | FleetOrder Rename Cleanup | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-297 | Code Review Cleanup - Quick Wins | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-296 | LLM Service Foundation | Awaiting Verification | 2026-04-26 | 2026-04-26 |

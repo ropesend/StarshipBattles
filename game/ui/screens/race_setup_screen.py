@@ -137,6 +137,25 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._environment_panel = None
         self._aptitudes_panel = None
         self._description_panel = None
+        # PROJ-299: LLM controller for description generation. Constructed
+        # in `_create_descriptions_panel_content()` after the panel exists.
+        self._description_controller = None
+        # PROJ-299: 30s/90s "still working" dialog state. Per-field
+        # threshold tracking — None when dialog hasn't fired for the
+        # current call, otherwise records the last threshold (30 or 90)
+        # at which it fired.
+        self._llm_dialog_window = None
+        self._llm_dialog_btn_keep = None
+        self._llm_dialog_btn_stop = None
+        self._llm_dialog_field: str = ""  # "bio" or "socio"
+        self._bio_dialog_fired_at: int = 0  # 0 = not fired; 30 or 90
+        self._socio_dialog_fired_at: int = 0
+        # PROJ-299: error-popup state. We display one popup per ERROR
+        # transition; track the last-seen error per field so we don't
+        # spam.
+        self._llm_error_popup = None
+        self._bio_error_seen: bool = False
+        self._socio_error_seen: bool = False
         self._flag_gallery = None
         self._portrait_gallery = None
         self._theme_gallery = None
@@ -568,6 +587,212 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             manager=self.ui_manager,
             race_config=self.race_config
         )
+        # PROJ-299: wire LLM-generation controller. Best-effort; if no
+        # provider is configured (no DEEPSEEK_API_KEY), skip wiring so the
+        # tab continues to work as plain text-entry.
+        from game.services.llm import get_default_llm_provider
+        from game.strategy.data.race_caption_loader import RaceCaptionLoader
+        from game.strategy.services.race_description_llm_controller import (
+            RaceDescriptionLLMController,
+        )
+
+        provider = get_default_llm_provider()
+        if provider is not None:
+            self._description_controller = RaceDescriptionLLMController(
+                race_config=self.race_config,
+                provider=provider,
+                caption_loader=RaceCaptionLoader(),
+                on_change=self._on_description_controller_change,
+            )
+            self._description_panel.attach_controller(self._description_controller)
+            self._description_panel.set_state(self._description_controller)
+
+    def _on_description_controller_change(self) -> None:
+        """Re-sync the description panel with the controller's state.
+
+        PROJ-299: invoked from the controller whenever its state
+        transitions (IDLE→RUNNING→DONE etc.). Called from the worker
+        thread, so this method must be cheap and side-effect free
+        beyond panel widget mutations.
+        """
+        if self._description_panel is not None and self._description_controller is not None:
+            self._description_panel.set_state(self._description_controller)
+
+    # =========================================================================
+    # PROJ-299: 30s / 90s "still working" dialog
+    # =========================================================================
+
+    def _check_llm_dialog_thresholds(self) -> None:
+        """Per-frame check: should the dialog appear for either field?
+
+        Logic per design.md:
+        - First dialog at elapsed >= 30s; if "Keep Waiting" clicked, re-arm
+          for 90s. Tracked per-field via `_bio_dialog_fired_at` /
+          `_socio_dialog_fired_at` (0 / 30 / 90).
+        - Only ONE dialog visible at a time. If both fields qualify
+          simultaneously, bio wins (arbitrary tie-break).
+        - Dialog state resets when the field leaves RUNNING.
+        """
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        ctrl = self._description_controller
+        if ctrl is None:
+            return
+
+        # Reset thresholds when fields leave RUNNING.
+        if ctrl.bio_status != FieldStatus.RUNNING:
+            self._bio_dialog_fired_at = 0
+        if ctrl.socio_status != FieldStatus.RUNNING:
+            self._socio_dialog_fired_at = 0
+
+        # Don't fire while a dialog is already up.
+        if self._llm_dialog_window is not None:
+            return
+
+        # Bio gets first crack.
+        for field, status, elapsed, fired_at_attr in (
+            ("bio", ctrl.bio_status, ctrl.bio_elapsed_seconds, "_bio_dialog_fired_at"),
+            ("socio", ctrl.socio_status, ctrl.socio_elapsed_seconds, "_socio_dialog_fired_at"),
+        ):
+            if status != FieldStatus.RUNNING:
+                continue
+            fired_at = getattr(self, fired_at_attr)
+            if fired_at == 0 and elapsed >= 30:
+                self._show_llm_dialog(field, threshold=30)
+                setattr(self, fired_at_attr, 30)
+                return
+            if fired_at == 30 and elapsed >= 90:
+                self._show_llm_dialog(field, threshold=90)
+                setattr(self, fired_at_attr, 90)
+                return
+
+    def _show_llm_dialog(self, field: str, *, threshold: int) -> None:
+        """Construct the still-working modal. Pattern mirrors `_show_save_update_dialog`."""
+        self._llm_dialog_field = field
+        screen_w, screen_h = self.window_display_size
+        dialog_w, dialog_h = 480, 180
+        x = (screen_w - dialog_w) // 2
+        y = (screen_h - dialog_h) // 2
+
+        self._llm_dialog_window = pygame_gui.elements.UIWindow(
+            rect=pygame.Rect(x, y, dialog_w, dialog_h),
+            manager=self.ui_manager,
+            window_display_title="Still working…",
+            object_id="#llm_dialog",
+        )
+        container = self._llm_dialog_window.get_container()
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(15, 15, dialog_w - 60, 60),
+            text=f"Generating {field} after {threshold} seconds. Keep waiting or stop?",
+            manager=self.ui_manager,
+            container=container,
+        )
+        self._llm_dialog_btn_keep = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(15, 90, 200, 36),
+            text="Keep Waiting",
+            manager=self.ui_manager,
+            container=container,
+        )
+        self._llm_dialog_btn_stop = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(225, 90, 200, 36),
+            text="Stop",
+            manager=self.ui_manager,
+            container=container,
+        )
+
+    def _close_llm_dialog(self) -> None:
+        if self._llm_dialog_window is not None:
+            self._llm_dialog_window.kill()
+        self._llm_dialog_window = None
+        self._llm_dialog_btn_keep = None
+        self._llm_dialog_btn_stop = None
+        self._llm_dialog_field = ""
+
+    # =========================================================================
+    # PROJ-299: per-error-type popups
+    # =========================================================================
+
+    @staticmethod
+    def _llm_error_message(error) -> str:
+        """Map an LLMException type → user-facing message."""
+        # Late imports to avoid pulling LLM types when no controller exists.
+        from game.core.exceptions import (
+            LLMConfigError, LLMNetworkError, LLMRateLimited,
+            LLMResponseError, LLMTimeoutError,
+        )
+        if isinstance(error, LLMRateLimited):
+            return "Rate limited by the LLM service. Please wait a moment and try again."
+        if isinstance(error, LLMTimeoutError):
+            return "LLM request timed out after 90 seconds."
+        if isinstance(error, LLMNetworkError):
+            return "Network error: could not reach the LLM service."
+        if isinstance(error, LLMConfigError):
+            return "LLM is not configured (DEEPSEEK_API_KEY may be unset)."
+        if isinstance(error, LLMResponseError):
+            return "The LLM returned an unexpected response."
+        return f"LLM error: {type(error).__name__}"
+
+    def _check_llm_error_popups(self) -> None:
+        """If a field transitioned to ERROR since last frame, surface a popup."""
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        ctrl = self._description_controller
+        if ctrl is None:
+            return
+
+        # Reset seen-flag when state leaves ERROR.
+        if ctrl.bio_status != FieldStatus.ERROR:
+            self._bio_error_seen = False
+        if ctrl.socio_status != FieldStatus.ERROR:
+            self._socio_error_seen = False
+
+        # Show popups for newly-seen errors. Bio first.
+        if (
+            ctrl.bio_status == FieldStatus.ERROR
+            and not self._bio_error_seen
+            and self._llm_error_popup is None
+        ):
+            self._show_llm_error_popup(self._llm_error_message(ctrl.bio_error))
+            self._bio_error_seen = True
+            return
+        if (
+            ctrl.socio_status == FieldStatus.ERROR
+            and not self._socio_error_seen
+            and self._llm_error_popup is None
+        ):
+            self._show_llm_error_popup(self._llm_error_message(ctrl.socio_error))
+            self._socio_error_seen = True
+
+    def _show_llm_error_popup(self, message: str) -> None:
+        screen_w, screen_h = self.window_display_size
+        dialog_w, dialog_h = 480, 160
+        x = (screen_w - dialog_w) // 2
+        y = (screen_h - dialog_h) // 2
+        self._llm_error_popup = pygame_gui.elements.UIWindow(
+            rect=pygame.Rect(x, y, dialog_w, dialog_h),
+            manager=self.ui_manager,
+            window_display_title="Generation failed",
+            object_id="#llm_error_popup",
+        )
+        container = self._llm_error_popup.get_container()
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(15, 15, dialog_w - 60, 60),
+            text=message,
+            manager=self.ui_manager,
+            container=container,
+        )
+        self._llm_error_popup_btn_ok = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(180, 90, 120, 36),
+            text="OK",
+            manager=self.ui_manager,
+            container=container,
+        )
+
+    def _close_llm_error_popup(self) -> None:
+        if self._llm_error_popup is not None:
+            self._llm_error_popup.kill()
+        self._llm_error_popup = None
+        self._llm_error_popup_btn_ok = None
 
     def _update_description_char_counts(self):
         """Update character count labels for description text boxes.
@@ -1182,12 +1407,76 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self._save_update_dialog.kill()
             self._save_update_dialog = None
 
+    def update(self, time_delta: float) -> None:
+        """Per-frame update.
+
+        PROJ-299: polls the description LLM controller so its background
+        worker results land in the UI on the same frame they complete.
+        Also drives the 30s/90s "still working" dialog and error popups.
+        """
+        super().update(time_delta)
+        if self._description_controller is not None:
+            self._description_controller.update()
+            self._check_llm_dialog_thresholds()
+            self._check_llm_error_popups()
+
+    def kill(self) -> None:
+        """PROJ-299: cancel any in-flight LLM calls so worker threads
+        don't try to populate dead text-box widgets after teardown."""
+        if self._description_controller is not None:
+            self._description_controller.cancel_all()
+        super().kill()
+
     def process_event(self, event: pygame.event.Event) -> bool:
         """Process pygame events.
 
         PROJ-66 Phase 6: Added handling for identity panel dropdowns and aptitudes sliders.
+        PROJ-299: routes Generate/Cancel/Re-roll Bio/Socio button clicks to the
+        description controller.
         """
         handled = super().process_event(event)
+
+        # PROJ-299: 30s/90s "still working" dialog buttons.
+        if event.type == pygame_gui.UI_BUTTON_PRESSED and self._llm_dialog_window is not None:
+            if event.ui_element == self._llm_dialog_btn_keep:
+                self._close_llm_dialog()
+                return True
+            if event.ui_element == self._llm_dialog_btn_stop:
+                if self._description_controller is not None:
+                    self._description_controller.cancel_all()
+                self._close_llm_dialog()
+                return True
+
+        # PROJ-299: error-popup OK button.
+        if event.type == pygame_gui.UI_BUTTON_PRESSED and self._llm_error_popup is not None:
+            if event.ui_element == self._llm_error_popup_btn_ok:
+                self._close_llm_error_popup()
+                return True
+
+        # PROJ-299: description-tab LLM buttons. Routed early so they take
+        # precedence over the catch-all gallery/randomize handlers below.
+        if event.type == pygame_gui.UI_BUTTON_PRESSED \
+                and self._description_controller is not None \
+                and self._description_panel is not None:
+            d = self._description_panel
+            if event.ui_element == d.btn_generate_bio:
+                self._description_controller.generate_bio()
+                return True
+            if event.ui_element == d.btn_cancel_bio:
+                self._description_controller.cancel_bio()
+                return True
+            if event.ui_element == d.btn_re_roll_bio:
+                self._description_controller.re_roll_bio()
+                return True
+            if event.ui_element == d.btn_generate_socio:
+                self._description_controller.generate_socio()
+                return True
+            if event.ui_element == d.btn_cancel_socio:
+                self._description_controller.cancel_socio()
+                return True
+            if event.ui_element == d.btn_re_roll_socio:
+                self._description_controller.re_roll_socio()
+                return True
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             # Check tab buttons first

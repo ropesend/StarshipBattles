@@ -46,3 +46,18 @@
 - **Docs modified:** 2
 
 **Total: ~30 files touched.**
+
+## Final landed shape (post-implementation)
+
+All files above were touched as planned. No additional files were
+discovered during implementation.
+
+The single design subtlety worth noting: in `RaceDescriptionPanel`,
+the new LLM widgets (Generate / Cancel / Re-roll buttons + status
+labels) are constructed inside `attach_controller(controller)` rather
+than in `_create_content()`. This keeps the widget-creation
+conditional on a provider being available — when `DEEPSEEK_API_KEY`
+is unset, `get_default_llm_provider()` returns None and the screen
+skips `attach_controller()` entirely, so the panel renders as plain
+text-entry boxes (graceful degradation per the deferred-validation
+pattern from PROJ-296).

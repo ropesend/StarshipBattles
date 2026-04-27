@@ -1357,6 +1357,19 @@ The legacy `gravity_ideal`, `gravity_tolerance`, `temperature_ideal`, `temperatu
 
 The four planet-modifier editor windows (`gravity_target_editor.py`, `water_target_editor.py`, `radiation_shield_editor.py`, `atmosphere_target_editor.py`) read `race_config.preferences[<id>].setpoint` for their "Species Ideal" / "Auto" buttons.
 
+### 7.x — LLM Race Description Generator (PROJ-299)
+
+**Files:** `game/strategy/data/race_caption_loader.py`, `game/strategy/services/race_description_prompt_builder.py`, `game/strategy/services/race_description_llm_controller.py`. Tools at `Tools/captioning/`.
+
+The Description tab on `RaceSetupScreen` can populate `race_config.bio_description` and `race_config.socio_description` from the player's prior race choices via DeepSeek (or any provider registered with PROJ-296's `LLMProviderFactory`).
+
+- **Captions** are pre-baked externally: the user runs `Tools/captioning/prompts/{flag,portrait,theme}_prompt.md` against Gemini's vision model and saves the JSON output to `<image>.caption.json` sidecars. `Tools/captioning/validate_captions.py` reports missing/malformed sidecars.
+- **`RaceCaptionLoader`** reads sidecars at runtime; returns `None` on missing/malformed (graceful degradation — the prompt substitutes a `{"note": "no visual reference"}` marker so the LLM doesn't invent visual details).
+- **`build_bio_prompt(race_config, captions)` / `build_socio_prompt(...)`** are pure module-level functions that assemble the chat-completion `list[Message]`. Both system prompts include one few-shot example (cached on the provider side).
+- **`RaceDescriptionLLMController`** is a pygame-free state machine (PROJ-299 reference consumer of Pattern #28 — see `docs/02_PATTERNS.md`). Owns one `LLMBackgroundCall` per field (bio + socio), translates `CallStatus` → `FieldStatus`, exposes `on_change` callback for UI rebuild, and supports `cancel_all()` from `RaceSetupScreen.kill()`.
+
+The runtime LLM (DeepSeek by default, `MAX_CONCURRENT_CALLS=3`) is text-only; vision-model cost is paid once during caption authoring rather than per-generation.
+
 ## 8. Colony Demographics Loop (PROJ-284 + PROJ-286)
 
 Per-turn pipeline that converts a colony's multi-resource upkeep stockpile + per-species sliders into population growth. Runs AFTER the 100-tick loop in `TurnEngine.process_turn`, BEFORE `QualityEngine`:

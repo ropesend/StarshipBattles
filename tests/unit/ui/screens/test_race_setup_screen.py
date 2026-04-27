@@ -1108,3 +1108,61 @@ class TestFeat12RandomizeAllHandler:
         assert screen.race_config.aptitude_strength == 60
         # Full UI repopulation triggered
         screen._populate_ui_from_config.assert_called_once()
+
+
+# =============================================================================
+# PROJ-299: kill hook + error popup message mapping
+# =============================================================================
+
+
+class TestProj299KillHookAndErrorMessages:
+    def test_kill_cancels_description_controller(self):
+        """RaceSetupScreen.kill() must call controller.cancel_all() so
+        worker threads don't try to populate dead UI widgets."""
+        from unittest.mock import MagicMock, patch
+
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **k: None):
+            screen = RaceSetupScreen.__new__(RaceSetupScreen)
+            controller = MagicMock()
+            screen._description_controller = controller
+            # Mock super().kill() — patch the bound super by patching the parent class.
+            with patch('pygame_gui.elements.UIWindow.kill') as super_kill:
+                screen.kill()
+            controller.cancel_all.assert_called_once()
+            super_kill.assert_called_once()
+
+    def test_kill_when_no_controller_does_not_raise(self):
+        from unittest.mock import patch
+
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **k: None):
+            screen = RaceSetupScreen.__new__(RaceSetupScreen)
+            screen._description_controller = None
+            with patch('pygame_gui.elements.UIWindow.kill'):
+                screen.kill()  # MUST NOT raise
+
+    def test_llm_error_message_for_each_exception_type(self):
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import (
+            LLMConfigError, LLMNetworkError, LLMRateLimited,
+            LLMResponseError, LLMTimeoutError,
+        )
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        msg = RaceSetupScreen._llm_error_message(LLMRateLimited("x"))
+        assert "rate limit" in msg.lower()
+
+        msg = RaceSetupScreen._llm_error_message(LLMTimeoutError("x"))
+        assert "timed out" in msg.lower() or "timeout" in msg.lower()
+
+        msg = RaceSetupScreen._llm_error_message(LLMNetworkError("x"))
+        assert "network" in msg.lower()
+
+        msg = RaceSetupScreen._llm_error_message(LLMConfigError("x"))
+        assert "configured" in msg.lower() or "config" in msg.lower()
+
+        msg = RaceSetupScreen._llm_error_message(LLMResponseError("x"))
+        assert "response" in msg.lower() or "unexpected" in msg.lower()

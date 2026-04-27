@@ -16,28 +16,29 @@
 
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Caption schemas + Gemini prompts + validation tool | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Caption loader | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Prompt assembly layer | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. RaceDescriptionLLMController (MVVM extract) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Description tab UI integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Dialogs + cancel hook + error popups | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Polish, MAX_LENGTH bump, docs | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 1. Caption schemas + Gemini prompts + validation tool | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Caption loader | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Prompt assembly layer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. RaceDescriptionLLMController (MVVM extract) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Description tab UI integration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Dialogs + cancel hook + error popups | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Polish, MAX_LENGTH bump, docs | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ---
 
 ## Current State
 
-**Last Updated:** 2026-04-26 19:50
-**Active Phase:** Planning — awaiting user approval
-**Last Action:** Plan drafted and validated through 3-agent Phase A code review + 6-agent Phase B swarm review. All decisions logged in `decisions.md`. Test baseline 15273/15273 passing confirmed (post-PROJ-296).
-**Next Action:** User approval, then begin Phase 1 implementation in a new "Continue Project" session.
-**Blockers:** None
+**Last Updated:** 2026-04-26 21:00
+**Active Phase:** Complete — awaiting user verification
+**Last Action:** All 7 phases implemented and tested. Final sharded suite: **15328/15328 passing** (+55 tests over PROJ-296's 15273 baseline; 0 regressions). Documentation updated: `docs/02_PATTERNS.md` Pattern #28 gets a "Reference consumer (PROJ-299)" section; `docs/systems/strategy_layer.md` §7.x mentions the new caption loader / prompt builder / LLM controller. `MAX_LENGTH` bumped 500 → 5000 with the char-label widened to fit 4-digit values.
+**Next Action:** **USER VERIFICATION** — run Phase 7 Task 7.6 manual smoke. The user needs to: (a) run the Gemini capture prompts in `Tools/captioning/prompts/` against each of the 37 visual assets and save the JSON sidecars, then (b) launch the game with `DEEPSEEK_API_KEY` set and try Generate Bio / Generate Socio / Re-roll / Cancel.
+**Blockers:** None — implementation done.
 **Context for Next Agent:**
-- Foundation is PROJ-296 (LLM Service Foundation, just landed). This project is the **first consumer**. The patterns set here become the reference example for diplomacy and any other future LLM consumer.
-- Visual asset captions are pre-baked **externally** by the user via Gemini — this project ships the prompts + a validation tool, not the captioning code itself.
-- The `RaceSetupScreen` is already 1294 lines (per Phase A). Per Pattern Scout finding, LLM orchestration MUST live in a separate pygame-free `RaceDescriptionLLMController` (Phase 4); the screen's role is reduced to event routing + UI rebuild on controller state change.
-- DeepSeek is the configured provider (PROJ-296 default). Calls are `MAX_CONCURRENT_CALLS=3`, with 90s timeout on this consumer (overrides default 60s) so the second 30s dialog can show before the network timeout fires.
+- Foundation is PROJ-296 (LLM Service Foundation, landed in the same dev day). This project is the **canonical first consumer** of Pattern #28 (Background Service Call). Future LLM consumers (diplomacy, ad-hoc summaries) should follow the same `Controller + on_change + screen.update()` shape.
+- Visual asset captions are pre-baked **externally** by the user via Gemini — this project ships the 3 prompts (`Tools/captioning/prompts/{flag,portrait,theme}_prompt.md`) and a validator (`Tools/captioning/validate_captions.py`), not the captioning code itself. The validator currently reports 37 MISSING (expected — that's the user's task).
+- LLM orchestration lives in pygame-free `RaceDescriptionLLMController` (Phase 4). `RaceSetupScreen` only routes button events + polls per-frame + renders. This kept the screen growth manageable despite its existing 1294 lines.
+- The 30s/90s dialog uses `LLMConfig.DEFAULT_TIMEOUT_SECONDS` override of `timeout_seconds=90` on the `LLMBackgroundCall`, so the network timeout fires shortly after the second dialog rather than mid-wait.
+- The `_block_real_http` autouse fixture in `tests/conftest.py` (from PROJ-296) guarantees no test hits the real DeepSeek API; all controller tests use `_StubProvider` / `_BlockingProvider` / `_RaisingProvider` doubles.
 
 ---
 
@@ -147,43 +148,43 @@ Image consistency is achieved without a vision model: the user runs Gemini exter
 ## Phases
 
 ### Phase 1: Caption schemas + Gemini prompts + validation tool [Medium]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Three asset-specific JSON schemas. Three Gemini capture prompts the user can copy/paste. A `Tools/` script that scans `assets/` and reports which sidecars are missing or malformed. NO captions generated by code.
 
 Tasks: see [phase_1_checklist.md](phase_1_checklist.md).
 
 ### Phase 2: Caption loader [Simple]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** `RaceCaptionLoader.load_flag(flag_id) / load_portrait(portrait_id) / load_theme(theme_id)` — returns parsed sidecar dict or None. Graceful degradation on missing/malformed.
 
 Tasks: see [phase_2_checklist.md](phase_2_checklist.md).
 
 ### Phase 3: Prompt assembly layer [Medium]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Pure module-level functions `build_bio_prompt(race_config, captions) -> list[Message]` and `build_socio_prompt(...) -> list[Message]`. Includes few-shot examples in system prompt. Handles missing-caption gracefully via `{"note": "no visual reference"}` in the prompt.
 
 Tasks: see [phase_3_checklist.md](phase_3_checklist.md).
 
 ### Phase 4: RaceDescriptionLLMController (MVVM extract) [Complex]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Pygame-free controller owning the LLM call lifecycle. Holds two `LLMBackgroundCall`s (bio + socio), tracks status per-field, dispatches calls in parallel, handles cancel + re-roll cancel-and-restart, exposes `on_change` callback for UI rebuild.
 
 Tasks: see [phase_4_checklist.md](phase_4_checklist.md).
 
 ### Phase 5: Description tab UI integration [Medium]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Two Generate buttons + two Re-roll buttons (initially hidden) + two status labels (below text boxes) + dual-button cancel UI. Wire `RaceSetupScreen.update()` to poll the controller. Lock text boxes during generation. Inject controller state changes into the panel via the on_change callback.
 
 Tasks: see [phase_5_checklist.md](phase_5_checklist.md).
 
 ### Phase 6: Dialogs + cancel hook + error popups [Medium]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** 30s "still working" modal (re-armed at 60s). Per-error-type popups. `RaceSetupScreen.kill()` cancel hook for all in-flight calls.
 
 Tasks: see [phase_6_checklist.md](phase_6_checklist.md).
 
 ### Phase 7: Polish, MAX_LENGTH bump, docs, full sharded suite [Simple]
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Bump `MAX_LENGTH` from 500 to 5000. Widen char-count label to fit 4-digit values. Update `docs/systems/strategy_layer.md` (add prompt builder mention) and `docs/02_PATTERNS.md` (add this project as canonical Pattern #28 consumer). Final sharded suite verification.
 
 Tasks: see [phase_7_checklist.md](phase_7_checklist.md).
