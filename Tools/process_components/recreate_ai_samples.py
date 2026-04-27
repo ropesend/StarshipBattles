@@ -226,13 +226,30 @@ def main() -> None:
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     files = files_from_names(args.names) if args.names else eligible_files(args.limit)
-    manifest = {
-        "source_dir": str(SOURCE_DIR),
-        "staging_root": str(output_root),
-        "method": f"gpt-image-2 chroma-key recreation {args.mode}",
-        "images": {},
-    }
-    rows = []
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            manifest = {}
+    else:
+        manifest = {}
+    manifest.update(
+        {
+            "source_dir": str(SOURCE_DIR),
+            "staging_root": str(output_root),
+            "method": f"gpt-image-2 chroma-key recreation {args.mode}",
+        }
+    )
+    manifest.setdefault("images", {})
+
+    report_path = reports_dir / "ai_recreate_report.json"
+    if report_path.exists():
+        try:
+            rows = json.loads(report_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            rows = []
+    else:
+        rows = []
 
     for index, source in enumerate(files, start=1):
         chroma_out = chroma_dir / source.name
@@ -290,10 +307,10 @@ def main() -> None:
         )
         rows.append(add_manifest_entry(manifest, source, chroma_out, final_out, args.mode))
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        (reports_dir / "ai_recreate_report.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        report_path.write_text(json.dumps(rows, indent=2), encoding="utf-8")
 
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    (reports_dir / "ai_recreate_report.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    report_path.write_text(json.dumps(rows, indent=2), encoding="utf-8")
     print(f"Wrote {len(files)} recreated samples to {output_dir}")
 
 
