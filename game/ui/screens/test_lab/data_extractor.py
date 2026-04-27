@@ -7,6 +7,9 @@ This module contains pure data loading operations with no UI dependencies:
 
 Extracted from screen.py to reduce file size and improve testability.
 """
+from __future__ import annotations
+
+from typing import Any
 import os
 
 from game.core.json_utils import load_json
@@ -15,7 +18,7 @@ from combat_lab.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def get_test_data_dir():
+def get_test_data_dir() -> Any:
     """
     Get the path to combat_lab/data directory.
 
@@ -49,7 +52,7 @@ class TestLabDataExtractor:
         self.registry = registry
         self._components_cache = None
 
-    def extract_ships(self, test_id):
+    def extract_ships(self, test_id) -> Any:
         """
         Extract ship information from test scenario metadata.
 
@@ -162,7 +165,7 @@ class TestLabDataExtractor:
 
         return ships
 
-    def _extract_component_ids(self, ship_data):
+    def _extract_component_ids(self, ship_data) -> Any:
         """
         Extract component IDs from ship layer data.
 
@@ -181,7 +184,7 @@ class TestLabDataExtractor:
                     component_ids.append(comp_id)
         return component_ids
 
-    def load_component(self, component_id):
+    def load_component(self, component_id) -> Any:
         """
         Load component JSON from components.json by ID.
 
@@ -209,7 +212,7 @@ class TestLabDataExtractor:
 
         return self._components_cache.get(component_id)
 
-    def get_components_cache(self):
+    def get_components_cache(self) -> bool:
         """Get the components cache dictionary.
 
         Ensures the cache is populated before returning. This provides

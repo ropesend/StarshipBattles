@@ -6,6 +6,8 @@ and controller, but does NOT mutate any state.
 
 PROJ-172: Extracted from screen.py as part of MVVM decomposition.
 """
+from __future__ import annotations
+
 import pygame
 import re
 from typing import Tuple, List, Dict, Any, Optional
@@ -1092,7 +1094,7 @@ class TestLabRenderer:
         return y
 
     @staticmethod
-    def _format_check_pair(expected, actual):
+    def _format_check_pair(expected, actual) -> tuple:
         """Format expected and actual values with identical precision.
 
         Both values get the same number of decimal places so they

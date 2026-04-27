@@ -2,6 +2,9 @@
 
 Displays a single test run in collapsed card form.
 """
+from __future__ import annotations
+
+from typing import Any
 
 import pygame
 
@@ -55,23 +58,23 @@ class TestRunCard:
 
         self.is_hovered = False
 
-    def get_height(self):
+    def get_height(self) -> Any:
         """Get card height (always collapsed)."""
         return self.card_height
 
-    def handle_click(self, mx, my):
+    def handle_click(self, mx, my) -> bool:
         """Check if card was clicked."""
         rect = pygame.Rect(self.x, self.y, self.width, self.card_height)
         if rect.collidepoint(mx, my):
             return True
         return False
 
-    def handle_hover(self, mx, my):
+    def handle_hover(self, mx, my) -> None:
         """Update hover state."""
         rect = pygame.Rect(self.x, self.y, self.width, self.card_height)
         self.is_hovered = rect.collidepoint(mx, my)
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the test run card."""
         height = self.card_height
 
@@ -97,7 +100,7 @@ class TestRunCard:
         # Header (compact view)
         self._draw_header(surface)
 
-    def _draw_header(self, surface):
+    def _draw_header(self, surface) -> None:
         """Draw collapsed header with key metrics."""
         # Run number and timestamp
         timestamp_str = self.run_record.get_formatted_timestamp()
@@ -213,7 +216,7 @@ class TestRunCard:
             p_surf = self.small_font.render(p_text, True, p_color)
             surface.blit(p_surf, (self.x + 10, self.y + 57))
 
-    def _draw_propulsion_metrics(self, surface, metrics):
+    def _draw_propulsion_metrics(self, surface, metrics) -> None:
         """Draw propulsion-specific metrics on the card."""
         # Determine if this is a motion test or turn test
         is_turn_test = (
@@ -286,7 +289,7 @@ class TestRunCard:
             summary_x = self.x + self.width - summary_surf.get_width() - 10
             surface.blit(summary_surf, (summary_x, self.y + 57))
 
-    def _draw_resource_metrics(self, surface, metrics):
+    def _draw_resource_metrics(self, surface, metrics) -> None:
         """Draw resource-specific metrics on the card (brief display)."""
         test_id = metrics.get('test_id', '')
 
