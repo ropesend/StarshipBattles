@@ -125,6 +125,14 @@ class Game:
         # but we keep the attribute on Game for backward compatibility.
         self.running = True
 
+        # NOTE (2026-04-27 merge resolution): the `ensure_component_derivatives()`
+        # call and `sprite_mgr.load_sprites(...)` from branch 8ec8eafe9 were
+        # MOVED into `app_bootstrap.bootstrap()`, where sprite loading already
+        # lives (Invariant 5). Asset-derivative generation must precede sprite
+        # loading because the sprite manager reads files this step generates;
+        # both are deterministic init work and belong in the single linear
+        # bootstrap rather than `Game.__init__`.
+
     # ------------------------------------------------------------------
     # Menu-button wiring
     # ------------------------------------------------------------------

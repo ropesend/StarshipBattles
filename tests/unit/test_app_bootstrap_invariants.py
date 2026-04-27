@@ -99,6 +99,13 @@ def _patched_bootstrap(call_order: list[str]):
         call_order.append("SpriteManager.load_sprites")
         return real_load_sprites(self, *args, **kwargs)
 
+    # `ensure_component_derivatives` is asset-side-effect code (writes to
+    # `assets/Images/Components/.component_derivatives_manifest.json`). Real
+    # invocation under pytest-xdist races on the manifest tempfile across
+    # workers. These tests assert ORDERING, not asset generation — stub it.
+    def record_ensure_derivatives():
+        call_order.append("ensure_component_derivatives")
+
     with patch.object(pygame, "init", record_pygame_init), \
          patch.object(pygame.font, "init", record_font_init), \
          patch.object(ApplicationContext, "create_production",
@@ -109,7 +116,9 @@ def _patched_bootstrap(call_order: list[str]):
          patch.object(boot, "load_modifiers", record_load_modifiers), \
          patch.object(boot, "initialize_ship_data", record_init_ship), \
          patch.object(sprites_mod.SpriteManager, "load_sprites",
-                      record_load_sprites):
+                      record_load_sprites), \
+         patch.object(boot, "ensure_component_derivatives",
+                      record_ensure_derivatives):
         # Ensure a display surface exists so set_mode-bypass branch is taken.
         if not pygame.display.get_surface():
             pygame.display.set_mode((1440, 900), pygame.NOFRAME)
@@ -171,6 +180,18 @@ def test_load_sprites_after_initialize_ship_data(call_order: list[str]) -> None:
     """
     _patched_bootstrap(call_order)
     assert call_order.index("initialize_ship_data") < \
+           call_order.index("SpriteManager.load_sprites")
+
+
+def test_ensure_derivatives_before_load_sprites(call_order: list[str]) -> None:
+    """Invariant 5b: `ensure_component_derivatives()` MUST run before
+    `SpriteManager.load_sprites` because the latter reads the PNGs the
+    former generates. Added during the 2026-04-27 merge that brought the
+    asset-derivative system in alongside the PROJ-309 sub-phase 3.9
+    decomposition.
+    """
+    _patched_bootstrap(call_order)
+    assert call_order.index("ensure_component_derivatives") < \
            call_order.index("SpriteManager.load_sprites")
 
 

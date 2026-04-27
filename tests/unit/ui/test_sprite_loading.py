@@ -30,8 +30,7 @@ class TestSpriteLoading:
 
         # Mock image loading
         mock_surface = MagicMock(spec=pygame.Surface)
-        mock_surface.convert.return_value = mock_surface
-        mock_surface.set_colorkey = MagicMock()  # Mock set_colorkey to prevent errors
+        mock_surface.convert_alpha.return_value = mock_surface
         mock_load.return_value = mock_surface
 
         # Execute

@@ -5,7 +5,6 @@ import re
 import pygame
 from typing import Optional
 from game.core.paths import Paths
-from game.ui.colors import BLACK
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +84,7 @@ class SpriteManager:
                 if index < 0: continue
 
                 full_path = os.path.join(directory, f)
-                image = pygame.image.load(full_path).convert()
-                image.set_colorkey(BLACK)
+                image = pygame.image.load(full_path).convert_alpha()
 
                 loaded_sprites[index] = image
                 if index > max_index:

@@ -287,6 +287,8 @@ def load_data(file_path=None):
 
 The filename prefix matches the actual resolution of the images in that directory. Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR` for path constants.
 
+`Components 1024/` is the tracked source-of-truth set. The `2048`, `512`, `256`, `128`, and `64` directories are generated derivatives and must not be committed. Runtime startup calls `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load; it creates missing derivatives and refreshes stale derivatives when a 1024 source hash changes. The hash manifest lives at `assets/Images/Components/.component_derivatives_manifest.json` and is intentionally ignored.
+
 ---
 
 ## 4. Test Conventions
