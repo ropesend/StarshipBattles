@@ -119,7 +119,6 @@ Current services:
 | `roles.py`            | Role frozen dataclass + RoleRegistry (PROJ-278). Shared schema/machinery for both gameplay design_role and Combat Lab scenario_role. Two registry instances live in the running app — one with `allow_runtime_add=True` for design_role (layered base + mods + user overlay, fires invalidation callbacks), one with `allow_runtime_add=False` for Combat Lab (static, file-driven). |
 | `input_actions.py`    | InputAction enum for key bindings |
 | `json_utils.py`       | JSON serialization helpers |
-| `singleton.py`        | SingletonMeta metaclass (deprecated — no production users, kept for reference) |
 | `profiling.py`        | Profiler, profile_action for performance |
 | `string_utils.py`     | String utility functions |
 | `validation_helpers.py`| Validation helper utilities |
@@ -146,7 +145,7 @@ Current services:
 | `managers/`      | BattleStateManager, RetreatManager |
 | `interfaces/`    | Simulation-internal protocols: IAIController, IAbility, IWeaponAbility, IComponent, ICombatShip, etc. |
 | `validation/`    | ShipDesignValidator |
-| (root modules)  | BattleState, BattleTuning, BattleConfig (visual-mode operational options), BattleController (visual-mode wrapper only), BattleSpec / BattleOutcome (PROJ-269), battle_runner.run_battle (PROJ-269 unified entry), formula_system.py (re-export shim → game.core.formula_evaluator), ProjectileManager |
+| (root modules)  | BattleState, BattleTuning, BattleConfig (visual-mode operational options), BattleController (visual-mode wrapper only), BattleSpec / BattleOutcome (PROJ-269), battle_runner.run_battle (PROJ-269 unified entry), ProjectileManager |
 
 ### `game/strategy/` -- 4X strategy layer
 

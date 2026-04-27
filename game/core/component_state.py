@@ -9,6 +9,11 @@ Authoritative source for per-component HP persistence between battles —
 `ShipInstance.components → ShipSpec.components → engine → ShipOutcome.components
 → ShipInstance.components`. PROJ-276 closed the transition and removed
 the legacy `component_damage` dict.
+
+PROJ-297 moved this module from `game/strategy/data/component_state.py` to
+`game/core/`. The module is layer-neutral (a dataclass + a 2-line key
+formatter) and was being imported by both Strategy and Simulation; living
+in Strategy violated the Simulation→Strategy dependency rule.
 """
 from __future__ import annotations
 

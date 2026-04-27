@@ -356,7 +356,7 @@ class TestFleetOrdersWindow:
 
     @patch('game.ui.screens.orders_window.OrdersWindow')
     def test_open_orders_window_creates_window(self, mock_window_class, window_manager):
-        """Test open_orders_window creates FleetOrdersWindow."""
+        """Test open_orders_window creates OrdersWindow."""
         fleet = Mock()
 
         window_manager.open_orders_window(fleet)

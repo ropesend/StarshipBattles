@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from game.ui.screens.strategy_ui import StrategyUI
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -126,7 +126,7 @@ class TestBuildOrderDisplay:
         fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0, 0))
         ship = make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id, registries=fresh_registries)
         fleet.ships = [ship]
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
         fleet.construction_queue = [{'design_id': 'scout', 'turns_remaining': 3}]
 
         # Act
@@ -158,7 +158,7 @@ class TestMoveBlockingWhileBuilding:
 
         # Create building fleet
         fleet = Fleet(1, 0, HexCoord(0, 0))
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
 
         # Act
         result = fleet_ops.handle_move_designation(100, 100, fleet)
@@ -200,17 +200,17 @@ class TestMoveBlockingWhileBuilding:
 
 
 class TestFleetOrdersWindowBuildDisplay:
-    """Tests for BUILD order display in FleetOrdersWindow."""
+    """Tests for BUILD order display in OrdersWindow."""
 
     def test_build_order_description(self, ui_manager):
         """Test that BUILD order shows correct description."""
-        from game.ui.screens.fleet_orders_window import FleetOrdersWindow
+        from game.ui.screens.orders_window import OrdersWindow
         from game.core.hex_math import HexCoord
         import pygame
 
         # Create fleet with BUILD order and queue items
         fleet = Fleet(1, 0, HexCoord(0, 0))
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
         fleet.construction_queue = [
             {'design_id': 'scout', 'turns_remaining': 3},
             {'design_id': 'frigate', 'turns_remaining': 5}
@@ -219,7 +219,7 @@ class TestFleetOrdersWindowBuildDisplay:
         rect = pygame.Rect(100, 100, 400, 300)
 
         # Create window
-        window = FleetOrdersWindow(rect, ui_manager, fleet)
+        window = OrdersWindow(rect, ui_manager, fleet)
 
         # Get order description
         desc = window._get_order_description(fleet.orders[0])

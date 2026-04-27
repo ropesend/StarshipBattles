@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship QA"
+  short_description: "Triage Starship QA sessions."
+  default_prompt: "Use $codex-starship-qa-observer to triage or review a Starship Battles QA observer session."

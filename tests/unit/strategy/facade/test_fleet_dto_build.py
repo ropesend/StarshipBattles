@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.facade.dto.fleet_dto import FleetInfo
 
@@ -74,7 +74,7 @@ class TestFleetInfoBuildFields:
         """Test is_building is True when fleet has BUILD order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         fleet.ships.append(make_ship_with_yard())
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [{'design_id': 'frigate', 'turns_remaining': 5}]
 
         info = FleetInfo.from_fleet(fleet)
@@ -94,7 +94,7 @@ class TestFleetInfoBuildFields:
         """Test is_building is False when MOVE order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         fleet.ships.append(make_regular_ship())
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))
 
         info = FleetInfo.from_fleet(fleet)
 
@@ -161,7 +161,7 @@ class TestFleetInfoBuildFields:
         """Test FleetInfo DTO is frozen (immutable)."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         fleet.ships.append(make_ship_with_yard())
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [{'design_id': 'frigate', 'turns_remaining': 5}]
 
         info = FleetInfo.from_fleet(fleet)

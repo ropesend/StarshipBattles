@@ -11,10 +11,10 @@ from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from game.core.registry import GameRegistries
 from game.simulation.entities.ship import Ship
-from game.strategy.data.component_state import component_state_key
+from game.core.component_state import component_state_key
 
 if TYPE_CHECKING:
-    from game.strategy.data.component_state import ComponentState
+    from game.core.component_state import ComponentState
 
 
 def calculate_design_stats(

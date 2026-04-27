@@ -3,36 +3,36 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
 class TestFleetOrder:
-    """Test cases for FleetOrder class."""
+    """Test cases for Order class."""
 
     def test_creation_move_order(self):
         """Test creating a MOVE order."""
         target = HexCoord(5, 3)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         assert order.type == OrderType.MOVE
         assert order.target == target
 
     def test_creation_no_target(self):
         """Test creating order without target."""
-        order = FleetOrder(OrderType.COLONIZE)
+        order = Order(OrderType.COLONIZE)
         assert order.type == OrderType.COLONIZE
         assert order.target is None
 
     def test_repr(self):
         """Test string representation."""
-        order = FleetOrder(OrderType.JOIN_FLEET, "target_fleet")
+        order = Order(OrderType.JOIN_FLEET, "target_fleet")
         assert "JOIN_FLEET" in repr(order)
 
     def test_to_dict_with_coord_target(self):
         """Test serializing order with coordinate target."""
         # Use real HexCoord for isinstance check
         coord = HexCoord(2, 4)
-        order = FleetOrder(OrderType.MOVE, coord)
+        order = Order(OrderType.MOVE, coord)
         d = order.to_dict()
         assert d['type'] == 'MOVE'
         assert d['target'] == {'q': 2, 'r': 4}
@@ -42,7 +42,7 @@ class TestFleetOrder:
         # Use MagicMock with spec=Fleet for isinstance check
         mock_fleet = MagicMock(spec=Fleet)
         mock_fleet.id = "fleet_123"
-        order = FleetOrder(OrderType.JOIN_FLEET, mock_fleet)
+        order = Order(OrderType.JOIN_FLEET, mock_fleet)
         d = order.to_dict()
         assert d['target']['type'] == 'fleet_ref'
         assert d['target']['id'] == 'fleet_123'
@@ -120,16 +120,16 @@ class TestFleetOrders:
 
     def test_add_order(self, fleet):
         """Test adding an order to queue."""
-        order = FleetOrder(OrderType.MOVE, HexCoord(5, 0))
+        order = Order(OrderType.MOVE, HexCoord(5, 0))
         fleet.add_order(order)
         assert len(fleet.orders) == 1
         assert fleet.orders[0] == order
 
     def test_add_order_at_index(self, fleet):
         """Test adding order at specific index."""
-        order1 = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
-        order2 = FleetOrder(OrderType.MOVE, HexCoord(2, 0))
-        order3 = FleetOrder(OrderType.MOVE, HexCoord(3, 0))
+        order1 = Order(OrderType.MOVE, HexCoord(1, 0))
+        order2 = Order(OrderType.MOVE, HexCoord(2, 0))
+        order3 = Order(OrderType.MOVE, HexCoord(3, 0))
 
         fleet.add_order(order1)
         fleet.add_order(order3)
@@ -141,7 +141,7 @@ class TestFleetOrders:
 
     def test_get_current_order(self, fleet):
         """Test getting current (first) order."""
-        order = FleetOrder(OrderType.MOVE, HexCoord(5, 0))
+        order = Order(OrderType.MOVE, HexCoord(5, 0))
         fleet.add_order(order)
         assert fleet.get_current_order() == order
 
@@ -151,8 +151,8 @@ class TestFleetOrders:
 
     def test_pop_order(self, fleet):
         """Test popping an order from queue."""
-        order1 = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
-        order2 = FleetOrder(OrderType.MOVE, HexCoord(2, 0))
+        order1 = Order(OrderType.MOVE, HexCoord(1, 0))
+        order2 = Order(OrderType.MOVE, HexCoord(2, 0))
         fleet.add_order(order1)
         fleet.add_order(order2)
         fleet.path = [HexCoord(0, 0), HexCoord(1, 0)]
@@ -170,8 +170,8 @@ class TestFleetOrders:
 
     def test_clear_orders(self, fleet):
         """Test clearing all orders."""
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(2, 0)))
         fleet.path = [HexCoord(0, 0), HexCoord(1, 0)]
 
         fleet.clear_orders()
@@ -187,8 +187,8 @@ class TestFleetRemoveOrderAt:
         return Fleet("f1", 0, HexCoord(0, 0))
 
     def test_remove_order_at_valid_index(self, fleet):
-        order1 = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
-        order2 = FleetOrder(OrderType.MOVE, HexCoord(2, 0))
+        order1 = Order(OrderType.MOVE, HexCoord(1, 0))
+        order2 = Order(OrderType.MOVE, HexCoord(2, 0))
         fleet.add_order(order1)
         fleet.add_order(order2)
 
@@ -198,22 +198,22 @@ class TestFleetRemoveOrderAt:
         assert fleet.orders[0] is order2
 
     def test_remove_order_at_index_zero_clears_path(self, fleet):
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
         fleet.path = [HexCoord(0, 0), HexCoord(1, 0)]
 
         fleet.remove_order_at(0)
         assert fleet.path == []
 
     def test_remove_order_at_invalid_index_returns_none(self, fleet):
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
         assert fleet.remove_order_at(5) is None
         assert fleet.remove_order_at(-1) is None
         assert len(fleet.orders) == 1  # Unchanged
 
     def test_remove_order_at_middle_preserves_path(self, fleet):
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 0)))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(3, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(2, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(3, 0)))
         fleet.path = [HexCoord(0, 0)]
 
         removed = fleet.remove_order_at(1)
@@ -230,9 +230,9 @@ class TestFleetRemoveOrdersByType:
         return Fleet("f1", 0, HexCoord(0, 0))
 
     def test_remove_orders_by_type_removes_matching(self, fleet):
-        fleet.add_order(FleetOrder(OrderType.BUILD))
-        fleet.add_order(FleetOrder(OrderType.BUILD))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
 
         removed = fleet.remove_orders_by_type(OrderType.BUILD)
         assert len(removed) == 2
@@ -240,10 +240,10 @@ class TestFleetRemoveOrdersByType:
         assert len(fleet.orders) == 1
 
     def test_remove_orders_by_type_preserves_others(self, fleet):
-        move_order = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
-        join_order = FleetOrder(OrderType.JOIN_FLEET, target="some_fleet")
+        move_order = Order(OrderType.MOVE, HexCoord(1, 0))
+        join_order = Order(OrderType.JOIN_FLEET, target="some_fleet")
         fleet.add_order(move_order)
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.add_order(join_order)
 
         fleet.remove_orders_by_type(OrderType.BUILD)
@@ -252,7 +252,7 @@ class TestFleetRemoveOrdersByType:
         assert fleet.orders[1] is join_order
 
     def test_remove_orders_by_type_no_matches(self, fleet):
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
         removed = fleet.remove_orders_by_type(OrderType.BUILD)
         assert removed == []
         assert len(fleet.orders) == 1
@@ -287,7 +287,7 @@ class TestFleetMerge:
         fleet1 = Fleet("f1", 0, HexCoord(0, 0))
         fleet2 = Fleet("f2", 0, HexCoord(0, 0))
 
-        fleet1.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 0)))
+        fleet1.add_order(Order(OrderType.MOVE, HexCoord(5, 0)))
         fleet1.merge_with(fleet2)
 
         assert fleet1.orders == []

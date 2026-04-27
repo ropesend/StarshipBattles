@@ -4,7 +4,7 @@ PROJ-102 Phase 2: Order Types & Command Definitions
 """
 import pytest
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import OrderType, FleetOrder
+from game.strategy.data.order_types import OrderType, Order
 from game.strategy.engine.commands import (
     CommandType,
     IssueImplodePlanetCommand,
@@ -57,7 +57,7 @@ class TestSuperweaponOrderTypes:
 
 
 class TestFleetOrderSerialization:
-    """Test FleetOrder to_dict/from_dict for superweapon order types."""
+    """Test Order to_dict/from_dict for superweapon order types."""
 
     def test_implode_planet_order_round_trip(self):
         """IMPLODE_PLANET order serializes with planet_ref target."""
@@ -67,7 +67,7 @@ class TestFleetOrderSerialization:
         # Use MagicMock with spec=Planet to pass isinstance check
         planet = MagicMock(spec=Planet)
         planet.id = 42
-        order = FleetOrder(OrderType.IMPLODE_PLANET, planet)
+        order = Order(OrderType.IMPLODE_PLANET, planet)
         data = order.to_dict()
 
         assert data['type'] == 'IMPLODE_PLANET'
@@ -77,7 +77,7 @@ class TestFleetOrderSerialization:
     def test_self_destruct_order_round_trip(self):
         """SELF_DESTRUCT order serializes with ship_id_list target."""
         ship_ids = [101, 102, 103]
-        order = FleetOrder(OrderType.SELF_DESTRUCT, ship_ids)
+        order = Order(OrderType.SELF_DESTRUCT, ship_ids)
         data = order.to_dict()
 
         assert data['type'] == 'SELF_DESTRUCT'
@@ -87,7 +87,7 @@ class TestFleetOrderSerialization:
     def test_open_warp_point_order_round_trip(self):
         """OPEN_WARP_POINT order serializes with warp_params target."""
         params = {'target_hex': (5, 3), 'target_system_name': 'Alpha Centauri'}
-        order = FleetOrder(OrderType.OPEN_WARP_POINT, params)
+        order = Order(OrderType.OPEN_WARP_POINT, params)
         data = order.to_dict()
 
         assert data['type'] == 'OPEN_WARP_POINT'
@@ -96,7 +96,7 @@ class TestFleetOrderSerialization:
 
     def test_stellerate_star_order_round_trip_no_target(self):
         """STELLERATE_STAR order serializes with None target."""
-        order = FleetOrder(OrderType.STELLERATE_STAR, None)
+        order = Order(OrderType.STELLERATE_STAR, None)
         data = order.to_dict()
 
         assert data['type'] == 'STELLERATE_STAR'
@@ -104,7 +104,7 @@ class TestFleetOrderSerialization:
 
     def test_create_dyson_sphere_order_round_trip_no_target(self):
         """CREATE_DYSON_SPHERE order serializes with None target."""
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, None)
+        order = Order(OrderType.CREATE_DYSON_SPHERE, None)
         data = order.to_dict()
 
         assert data['type'] == 'CREATE_DYSON_SPHERE'
@@ -113,7 +113,7 @@ class TestFleetOrderSerialization:
     def test_close_warp_point_order_round_trip(self):
         """CLOSE_WARP_POINT order serializes with warp_params target."""
         target = {'destination_id': 'warp_point_dest_42', 'target_hex': {'q': 10, 'r': 5}}
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target)
+        order = Order(OrderType.CLOSE_WARP_POINT, target)
         data = order.to_dict()
 
         assert data['type'] == 'CLOSE_WARP_POINT'

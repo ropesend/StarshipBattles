@@ -7,7 +7,7 @@ fleet registration, and galaxy back-references survive save/load.
 import pytest
 
 from game.strategy.engine.game_session import GameSession
-from game.strategy.data.order_types import OrderType, FleetOrder
+from game.strategy.data.order_types import OrderType, Order
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 
@@ -90,7 +90,7 @@ class TestFleetOrderReferenceResolution:
         empire1 = session.empires[1]
         if empire0.fleets and empire1.fleets:
             target_fleet = empire1.fleets[0]
-            order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+            order = Order(OrderType.MOVE_TO_FLEET, target_fleet)
             empire0.fleets[0].orders.append(order)
 
             d = session.to_dict()
@@ -111,7 +111,7 @@ class TestFleetOrderReferenceResolution:
             system = list(session.galaxy.systems.values())[0]
             if system.planets:
                 planet = system.planets[0]
-                order = FleetOrder(OrderType.COLONIZE, planet)
+                order = Order(OrderType.COLONIZE, planet)
                 session.empires[0].fleets[0].orders.append(order)
 
                 d = session.to_dict()
@@ -128,7 +128,7 @@ class TestFleetOrderReferenceResolution:
         session = game_session_with_state
         if session.empires[0].fleets:
             # Create order targeting a non-existent fleet ID
-            order = FleetOrder(OrderType.MOVE_TO_FLEET, None)
+            order = Order(OrderType.MOVE_TO_FLEET, None)
             order.target = Fleet(fleet_id=99999, owner_id=99, location=HexCoord(0, 0))
             session.empires[0].fleets[0].orders.append(order)
 
@@ -151,7 +151,7 @@ class TestPursuerTrackerRebuild:
         empire1 = session.empires[1]
         if empire0.fleets and empire1.fleets:
             target_fleet = empire1.fleets[0]
-            order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+            order = Order(OrderType.MOVE_TO_FLEET, target_fleet)
             empire0.fleets[0].orders.append(order)
 
             d = session.to_dict()

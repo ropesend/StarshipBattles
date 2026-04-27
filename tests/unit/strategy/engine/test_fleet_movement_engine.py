@@ -330,14 +330,14 @@ class TestFleetMovementEngineErrorHandling:
         remain in the queue for manual handling.
         """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         engine = FleetMovementEngine()
 
         # Use a real fleet-like object with order queue
         orders = [
-            FleetOrder(OrderType.WARP, HexCoord(10, 10)),
-            FleetOrder(OrderType.COLONIZE, MagicMock()),  # Planet mock
+            Order(OrderType.WARP, HexCoord(10, 10)),
+            Order(OrderType.COLONIZE, MagicMock()),  # Planet mock
         ]
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
@@ -370,11 +370,11 @@ class TestFleetMovementEngineErrorHandling:
         the queue should end up empty.
         """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         engine = FleetMovementEngine()
 
-        orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 0))]
+        orders = [Order(OrderType.MOVE, HexCoord(1, 0))]
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
         fleet.resources.has_resources_for_movement.return_value = False  # Stranded

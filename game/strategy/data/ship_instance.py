@@ -26,7 +26,7 @@ from game.strategy.data.ship_consumable_manager import ShipConsumableManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.core.component_state import ComponentState, component_state_key
 
 logger = logging.getLogger(__name__)
 

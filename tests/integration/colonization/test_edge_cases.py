@@ -9,7 +9,7 @@ import pytest
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance, make_colony_ship_for_planet
 
@@ -59,12 +59,12 @@ class TestColonizationEdgeCases:
         # PROJ-211: Pass registries for DI compliance
         fleet1 = Fleet(1, empire1.id, target_loc, speed=10.0)
         fleet1.ships = [make_colony_ship_for_planet(target_planet, empire1.id, registries=fresh_registries)]
-        fleet1.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
+        fleet1.add_order(Order(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, target_loc, speed=10.0)
         fleet2.ships = [make_colony_ship_for_planet(target_planet, empire2.id, registries=fresh_registries)]
-        fleet2.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
+        fleet2.add_order(Order(OrderType.COLONIZE, target=target_planet))
         empire2.add_fleet(fleet2)
 
         # Process turn - combat may happen, or colonization
@@ -102,7 +102,7 @@ class TestColonizationEdgeCases:
         ship1 = make_mock_ship_instance("Colony Ship", empire1.id)
         ship1.set_registries(fresh_registries)
         fleet1.ships = [ship1]
-        fleet1.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
+        fleet1.add_order(Order(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet1)
 
         # Empire 2 has combat fleet at same location
@@ -139,7 +139,7 @@ class TestColonizationStateIntegrity:
         empire, fleet, planet, galaxy = empire_with_fleet
         # PROJ-40: Deterministic fixture guarantees setup
 
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         turn_engine.process_turn([empire], galaxy)
 
         # Planet in empire.colonies should be same object
@@ -153,7 +153,7 @@ class TestColonizationStateIntegrity:
 
         planet_id = planet.id
 
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         turn_engine.process_turn([empire], galaxy)
 
         # Find planet in galaxy again
@@ -185,7 +185,7 @@ class TestColonizationStateIntegrity:
         # PROJ-140: Use proper colony ship that matches planet type
         # PROJ-211: Pass registries for DI compliance
         fleet.ships = [make_colony_ship_for_planet(target_planet, empire.id, registries=fresh_registries)]
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=target_planet))
         empire.add_fleet(fleet)
 
         initial_colonies = len(empire.colonies)

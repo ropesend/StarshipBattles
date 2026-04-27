@@ -91,7 +91,7 @@ def count_files(scope_path: Path, extensions: list = None) -> dict:
             for f in sample_files:
                 try:
                     stats['total_lines'] += len(f.read_text(encoding='utf-8', errors='ignore').splitlines())
-                except:
+                except OSError:
                     pass
 
             # Extrapolate if sampled

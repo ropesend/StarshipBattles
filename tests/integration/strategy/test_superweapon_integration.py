@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, PropertyMock
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.stars import Star, StarType, Spectrum
@@ -173,7 +173,7 @@ class TestImplodePlanetIntegration:
         fleet.ships.append(escort_ship)
 
         # Issue IMPLODE_PLANET order
-        fleet.orders.append(FleetOrder(OrderType.IMPLODE_PLANET, planet))
+        fleet.orders.append(Order(OrderType.IMPLODE_PLANET, planet))
 
         # Create empire
         empire = Empire(1, "Player", (255, 0, 0))
@@ -239,7 +239,7 @@ class TestStellerateStarIntegration:
         all_empires = [player_empire, enemy_empire]
 
         # Issue STELLERATE_STAR order
-        actor_fleet.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        actor_fleet.orders.append(Order(OrderType.STELLERATE_STAR, None))
 
         # Verify initial state
         assert len(system.stars) == 1
@@ -308,7 +308,7 @@ class TestOpenWarpPointIntegration:
 
         # Issue OPEN_WARP_POINT order
         warp_params = {'target_system_name': 'Delta'}
-        fleet.orders.append(FleetOrder(OrderType.OPEN_WARP_POINT, warp_params))
+        fleet.orders.append(Order(OrderType.OPEN_WARP_POINT, warp_params))
 
         # Create empire
         empire = Empire(1, "Player", (255, 0, 0))
@@ -380,7 +380,7 @@ class TestCloseWarpPointIntegration:
         fleet.ships.append(qtd_ship)
 
         # Issue CLOSE_WARP_POINT order
-        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, {'destination_id': 'Zeta', 'target_hex': {'q': warp_global_hex.q, 'r': warp_global_hex.r}}))
+        fleet.orders.append(Order(OrderType.CLOSE_WARP_POINT, {'destination_id': 'Zeta', 'target_hex': {'q': warp_global_hex.q, 'r': warp_global_hex.r}}))
 
         # Create empire
         empire = Empire(1, "Player", (255, 0, 0))
@@ -433,7 +433,7 @@ class TestCreateDysonSphereIntegration:
         fleet.ships.append(dsc_ship)
 
         # Issue CREATE_DYSON_SPHERE order
-        fleet.orders.append(FleetOrder(OrderType.CREATE_DYSON_SPHERE, None))
+        fleet.orders.append(Order(OrderType.CREATE_DYSON_SPHERE, None))
 
         # Create empire
         empire = Empire(1, "Player", (255, 0, 0))
@@ -492,7 +492,7 @@ class TestSelfDestructIntegration:
 
         # Issue SELF_DESTRUCT order for the 2 SDD ships
         ship_ids = [sdd_ship_1.id, sdd_ship_2.id]
-        fleet.orders.append(FleetOrder(OrderType.SELF_DESTRUCT, ship_ids))
+        fleet.orders.append(Order(OrderType.SELF_DESTRUCT, ship_ids))
 
         # Create empire
         empire = Empire(1, "Player", (255, 0, 0))
@@ -539,7 +539,7 @@ class TestSuperweaponOrderSerialization:
 
         # Create fleet with order
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.IMPLODE_PLANET, planet))
+        fleet.orders.append(Order(OrderType.IMPLODE_PLANET, planet))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()
@@ -554,7 +554,7 @@ class TestSuperweaponOrderSerialization:
         # Create fleet with self-destruct order
         ship_ids = [101, 102, 103]
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.SELF_DESTRUCT, ship_ids))
+        fleet.orders.append(Order(OrderType.SELF_DESTRUCT, ship_ids))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()
@@ -569,7 +569,7 @@ class TestSuperweaponOrderSerialization:
         # Create fleet with open warp point order
         warp_params = {'target_system_name': 'Alpha Centauri'}
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.OPEN_WARP_POINT, warp_params))
+        fleet.orders.append(Order(OrderType.OPEN_WARP_POINT, warp_params))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()
@@ -583,7 +583,7 @@ class TestSuperweaponOrderSerialization:
         """Test Fleet with STELLERATE_STAR order: round-trip."""
         # Create fleet with stellerate order
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        fleet.orders.append(Order(OrderType.STELLERATE_STAR, None))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()
@@ -596,7 +596,7 @@ class TestSuperweaponOrderSerialization:
         """Test Fleet with CREATE_DYSON_SPHERE order: round-trip."""
         # Create fleet with create dyson sphere order
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.CREATE_DYSON_SPHERE, None))
+        fleet.orders.append(Order(OrderType.CREATE_DYSON_SPHERE, None))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()
@@ -609,7 +609,7 @@ class TestSuperweaponOrderSerialization:
         """Test Fleet with CLOSE_WARP_POINT order: round-trip."""
         # Create fleet with close warp point order
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, {'destination_id': 'Target System', 'target_hex': {'q': 5, 'r': 5}}))
+        fleet.orders.append(Order(OrderType.CLOSE_WARP_POINT, {'destination_id': 'Target System', 'target_hex': {'q': 5, 'r': 5}}))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()

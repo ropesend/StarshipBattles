@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestProjectPathActionTiming:
@@ -39,9 +39,9 @@ class TestProjectPathActionTiming:
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
         target_planet = MagicMock()
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, HexCoord(2, 0)),
-            FleetOrder(OrderType.COLONIZE, target_planet),
-            FleetOrder(OrderType.MOVE, HexCoord(4, 0)),  # Continue after colonize
+            Order(OrderType.MOVE, HexCoord(2, 0)),
+            Order(OrderType.COLONIZE, target_planet),
+            Order(OrderType.MOVE, HexCoord(4, 0)),  # Continue after colonize
         ]
         fleet.can_use_warp = MagicMock(return_value=False)
 
@@ -101,9 +101,9 @@ class TestProjectPathActionTiming:
 
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, HexCoord(2, 0)),
-            FleetOrder(OrderType.STELLERATE_STAR, None),
-            FleetOrder(OrderType.MOVE, HexCoord(4, 0)),
+            Order(OrderType.MOVE, HexCoord(2, 0)),
+            Order(OrderType.STELLERATE_STAR, None),
+            Order(OrderType.MOVE, HexCoord(4, 0)),
         ]
         fleet.can_use_warp = MagicMock(return_value=False)
 
@@ -155,13 +155,13 @@ class TestProjectPathActionTiming:
         )
 
         # Action already in progress with 2 ticks done
-        colonize_order = FleetOrder(OrderType.COLONIZE, MagicMock())
+        colonize_order = Order(OrderType.COLONIZE, MagicMock())
         colonize_order.execution_progress = 2
 
         fleet.path = []
         fleet.orders = [
             colonize_order,
-            FleetOrder(OrderType.MOVE, HexCoord(7, 5)),
+            Order(OrderType.MOVE, HexCoord(7, 5)),
         ]
         fleet.can_use_warp = MagicMock(return_value=False)
 
@@ -206,7 +206,7 @@ class TestProjectPathActionTiming:
 
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, HexCoord(2, 0)),
+            Order(OrderType.MOVE, HexCoord(2, 0)),
         ]
         fleet.can_use_warp = MagicMock(return_value=False)
 
@@ -235,9 +235,9 @@ class TestProjectPathActionTimingEdgeCases:
         # Two action orders before movement
         fleet.path = []
         fleet.orders = [
-            FleetOrder(OrderType.TRANSFER, {'direction': 'load'}),  # 1 tick
-            FleetOrder(OrderType.COLONIZE, MagicMock()),  # 1 tick
-            FleetOrder(OrderType.MOVE, HexCoord(2, 0)),
+            Order(OrderType.TRANSFER, {'direction': 'load'}),  # 1 tick
+            Order(OrderType.COLONIZE, MagicMock()),  # 1 tick
+            Order(OrderType.MOVE, HexCoord(2, 0)),
         ]
         fleet.can_use_warp = MagicMock(return_value=False)
 
@@ -279,8 +279,8 @@ class TestProjectPathActionTimingEdgeCases:
 
         fleet.path = []
         fleet.orders = [
-            FleetOrder(OrderType.STELLERATE_STAR, None),  # Very long action
-            FleetOrder(OrderType.MOVE, HexCoord(2, 0)),
+            Order(OrderType.STELLERATE_STAR, None),  # Very long action
+            Order(OrderType.MOVE, HexCoord(2, 0)),
         ]
         fleet.can_use_warp = MagicMock(return_value=False)
 
@@ -332,7 +332,7 @@ class TestProjectPathWarpOrders:
         warp_point_hex = HexCoord(3, 0)
         exit_hex = HexCoord(100, 0)  # Exit on other side of warp
 
-        fleet.orders = [FleetOrder(OrderType.WARP, warp_point_hex)]
+        fleet.orders = [Order(OrderType.WARP, warp_point_hex)]
         fleet.path = []
         fleet.can_use_warp = MagicMock(return_value=True)
 
@@ -387,7 +387,7 @@ class TestProjectPathWarpOrders:
             location=warp_point_hex,  # Already at warp point
             speed=5.0
         )
-        fleet.orders = [FleetOrder(OrderType.WARP, warp_point_hex)]
+        fleet.orders = [Order(OrderType.WARP, warp_point_hex)]
         fleet.path = []
         fleet.can_use_warp = MagicMock(return_value=True)
 
@@ -442,8 +442,8 @@ class TestProjectPathPathfindingFailure:
         second_dest = HexCoord(10, 0)  # Unreachable
 
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, first_dest),
-            FleetOrder(OrderType.MOVE, second_dest),
+            Order(OrderType.MOVE, first_dest),
+            Order(OrderType.MOVE, second_dest),
         ]
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]  # Pre-computed for first order
         fleet.can_use_warp = MagicMock(return_value=False)
@@ -484,7 +484,7 @@ class TestProjectPathPathfindingFailure:
         )
 
         unreachable = HexCoord(100, 100)
-        fleet.orders = [FleetOrder(OrderType.MOVE, unreachable)]
+        fleet.orders = [Order(OrderType.MOVE, unreachable)]
         fleet.path = []  # No pre-computed path
         fleet.can_use_warp = MagicMock(return_value=False)
 

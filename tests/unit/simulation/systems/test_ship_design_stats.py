@@ -111,7 +111,7 @@ class TestCalculateDesignStatsWithDamage:
 
     def test_damage_does_not_affect_mass(self, fresh_registries):
         """Mass is dead weight — damage shouldn't change it."""
-        from game.strategy.data.component_state import (
+        from game.core.component_state import (
             ComponentState, component_state_key,
         )
         data = load_json(str(FIXTURES_DIR / "qs_escort.json"))
@@ -136,7 +136,7 @@ class TestCalculateDesignStatsWithDamage:
         Uses `warp_drive`, which contributes zero `warp_max_tonnage`
         when inactive — an observable downstream effect.
         """
-        from game.strategy.data.component_state import (
+        from game.core.component_state import (
             ComponentState, component_state_key,
         )
         data = load_json(str(FIXTURES_DIR / "qs_escort.json"))
@@ -165,7 +165,7 @@ class TestCalculateDesignStatsWithDamage:
         self, fresh_registries
     ):
         """Components without a `ComponentState` entry keep full HP."""
-        from game.strategy.data.component_state import (
+        from game.core.component_state import (
             ComponentState, component_state_key,
         )
         data = load_json(str(FIXTURES_DIR / "qs_escort.json"))

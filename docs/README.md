@@ -14,7 +14,7 @@
 | # | Document | What you learn |
 |---|----------|---------------|
 | 1 | [01_ARCHITECTURE.md](01_ARCHITECTURE.md) | Layer structure, package APIs, protocols, data flow |
-| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 25 design patterns with file locations and code examples |
+| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 27 design patterns with file locations and code examples |
 | 3 | [03_CONVENTIONS.md](03_CONVENTIONS.md) | Naming, file organization, imports, testing conventions |
 
 ### Step 2: Task-specific (read based on what you're doing)
@@ -42,6 +42,7 @@
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
 | Orders | [orders_system.md](systems/orders_system.md) | Order lifecycle, types, execution engines |
 | Production | [production_system.md](systems/production_system.md) | Build queues, tick-based production, spawning, rate resolution |
+| Resources | [resource_system.md](systems/resource_system.md) | Unified resource catalog (materials + consumables), resource definitions, component-driven behavior |
 
 ### Step 4: How-to guides (read when performing specific tasks)
 
@@ -63,7 +64,7 @@
 docs/
 ├── README.md                    <- You are here
 ├── 01_ARCHITECTURE.md           # Layers, packages, APIs, protocols, data flow
-├── 02_PATTERNS.md               # 25 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
+├── 02_PATTERNS.md               # 27 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
 ├── 03_CONVENTIONS.md            # Naming, file org, imports, test conventions
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging
@@ -87,7 +88,8 @@ docs/
     ├── ai_system.md               AI behaviors, targeting, adapters
     ├── research_system.md         Tech tree, research tracker
     ├── orders_system.md           Order lifecycle and execution
-    └── production_system.md       Build queues, production model, spawning
+    ├── production_system.md       Build queues, production model, spawning
+    └── resource_system.md         Unified resource catalog (materials + consumables)
 ```
 
 ## Quick Reference

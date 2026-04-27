@@ -12,7 +12,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
@@ -197,7 +197,7 @@ class TestJoinFleetUnregistersMergedFleet:
         _assert_registered(galaxy, source_fleet)
 
         # Give source fleet a JOIN_FLEET order targeting the target
-        source_fleet.orders.append(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
+        source_fleet.orders.append(Order(OrderType.JOIN_FLEET, target=target_fleet))
 
         # Process via OrderProcessor.process_join_fleet
         processor = OrderProcessor()
@@ -229,7 +229,7 @@ class TestJoinFleetUnregistersMergedFleet:
         _assert_registered(galaxy, source_fleet)
 
         # Give source fleet a JOIN_FLEET order
-        source_fleet.orders.append(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
+        source_fleet.orders.append(Order(OrderType.JOIN_FLEET, target=target_fleet))
 
         # Process via instant orders (tick-based code path at line 663)
         processor = OrderProcessor()
@@ -310,7 +310,7 @@ class TestSuperweaponConsumedFleetUnregistered:
         _assert_registered(galaxy, fleet)
 
         # Add a dummy order so pop_order works
-        fleet.orders.append(FleetOrder(OrderType.SELF_DESTRUCT, target=[]))
+        fleet.orders.append(Order(OrderType.SELF_DESTRUCT, target=[]))
 
         # Process via _finalize_superweapon (the shared finalization path)
         from game.strategy.events.event_types import EventType
@@ -346,7 +346,7 @@ class TestSuperweaponConsumedFleetUnregistered:
         emp1.add_fleet(fleet)
         _assert_registered(galaxy, fleet)
 
-        fleet.orders.append(FleetOrder(OrderType.SELF_DESTRUCT, target=[]))
+        fleet.orders.append(Order(OrderType.SELF_DESTRUCT, target=[]))
 
         from game.strategy.events.event_types import EventType
         processor = SuperweaponOrderProcessor()
@@ -379,7 +379,7 @@ class TestSuperweaponConsumedFleetUnregistered:
         fleet.ships.append(ship)
         emp1.add_fleet(fleet)
         # Add a dummy order so pop_order works
-        fleet.orders.append(FleetOrder(OrderType.SELF_DESTRUCT, target=[]))
+        fleet.orders.append(Order(OrderType.SELF_DESTRUCT, target=[]))
         _assert_registered(galaxy, fleet)
 
         # Call _finalize_superweapon directly (the shared finalization path)

@@ -1,4 +1,4 @@
-"""Round-trip tests for FleetOrder serialization (PROJ-223 Phase 2).
+"""Round-trip tests for Order serialization (PROJ-223 Phase 2).
 
 Tests all 7 target formats at the serialization level.
 Fleet/planet reference RESOLUTION is tested in Phase 4.
@@ -7,27 +7,27 @@ Fleet/planet reference RESOLUTION is tested in Phase 4.
 import pytest
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.order_types import OrderType, FleetOrder
-from game.strategy.data.order_serializer import FleetOrderSerializer
+from game.strategy.data.order_types import OrderType, Order
+from game.strategy.data.order_serializer import OrderSerializer
 
 
 class TestFleetOrderHexCoordTarget:
     """MOVE/WARP orders with HexCoord target."""
 
     def test_move_hex_coord_round_trip(self):
-        order = FleetOrder(OrderType.MOVE, HexCoord(5, -3))
+        order = Order(OrderType.MOVE, HexCoord(5, -3))
         d = order.to_dict()
         assert d['target'] == {'q': 5, 'r': -3}
 
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert len(orders) == 1
         assert orders[0].type == OrderType.MOVE
         assert orders[0].target == HexCoord(5, -3)
 
     def test_warp_hex_coord_round_trip(self):
-        order = FleetOrder(OrderType.WARP, HexCoord(-2, 7))
+        order = Order(OrderType.WARP, HexCoord(-2, 7))
         d = order.to_dict()
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert orders[0].type == OrderType.WARP
         assert orders[0].target == HexCoord(-2, 7)
 
@@ -46,14 +46,14 @@ class TestFleetOrderFleetRefTarget:
         target_fleet = Fleet.__new__(Fleet)
         target_fleet.id = 42
 
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+        order = Order(OrderType.MOVE_TO_FLEET, target_fleet)
         d = order.to_dict()
         assert d['target'] == {'type': 'fleet_ref', 'id': 42}
 
     def test_fleet_ref_deserialization(self):
         """Fleet ref is deserialized as a marker dict (not resolved yet)."""
         d = {'type': 'MOVE_TO_FLEET', 'target': {'type': 'fleet_ref', 'id': 42}}
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert len(orders) == 1
         assert orders[0].type == OrderType.MOVE_TO_FLEET
         assert orders[0].target == {'_fleet_ref': 42}  # Marker dict
@@ -65,7 +65,7 @@ class TestFleetOrderPlanetRefTarget:
     def test_planet_ref_deserialization(self):
         """Planet ref is deserialized as a marker dict."""
         d = {'type': 'COLONIZE', 'target': {'type': 'planet_ref', 'id': 7}}
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert len(orders) == 1
         assert orders[0].type == OrderType.COLONIZE
         assert orders[0].target == {'_planet_ref': 7}  # Marker dict
@@ -81,11 +81,11 @@ class TestFleetOrderTransferTarget:
             "amount": 100,
             "planet_id": 5,
         }
-        order = FleetOrder(OrderType.TRANSFER, transfer_params)
+        order = Order(OrderType.TRANSFER, transfer_params)
         d = order.to_dict()
         assert d['target'] == {'type': 'transfer', 'value': transfer_params}
 
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert orders[0].target == transfer_params
 
 
@@ -97,11 +97,11 @@ class TestFleetOrderWarpParamsTarget:
             "destination_system": "Alpha Centauri",
             "energy_cost": 500,
         }
-        order = FleetOrder(OrderType.OPEN_WARP_POINT, warp_params)
+        order = Order(OrderType.OPEN_WARP_POINT, warp_params)
         d = order.to_dict()
         assert d['target'] == {'type': 'warp_params', 'value': warp_params}
 
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert orders[0].target == warp_params
 
 
@@ -110,11 +110,11 @@ class TestFleetOrderShipIdListTarget:
 
     def test_ship_id_list_round_trip(self):
         ship_ids = ["ship_001", "ship_003", "ship_005"]
-        order = FleetOrder(OrderType.SELF_DESTRUCT, ship_ids)
+        order = Order(OrderType.SELF_DESTRUCT, ship_ids)
         d = order.to_dict()
         assert d['target'] == {'type': 'ship_id_list', 'value': ship_ids}
 
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert orders[0].target == ship_ids
 
 
@@ -122,21 +122,21 @@ class TestFleetOrderExecutionProgress:
     """Execution progress preservation."""
 
     def test_progress_greater_than_zero_serialized(self):
-        order = FleetOrder(OrderType.COLONIZE, HexCoord(0, 0))
+        order = Order(OrderType.COLONIZE, HexCoord(0, 0))
         order.execution_progress = 5
         d = order.to_dict()
         assert d['execution_progress'] == 5
 
     def test_progress_zero_omitted(self):
-        order = FleetOrder(OrderType.MOVE, HexCoord(0, 0))
+        order = Order(OrderType.MOVE, HexCoord(0, 0))
         d = order.to_dict()
         assert 'execution_progress' not in d
 
     def test_progress_preserved_round_trip(self):
-        order = FleetOrder(OrderType.MOVE, HexCoord(3, -1))
+        order = Order(OrderType.MOVE, HexCoord(3, -1))
         order.execution_progress = 12
         d = order.to_dict()
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert orders[0].execution_progress == 12
 
 
@@ -147,7 +147,7 @@ class TestFleetOrderAllOrderTypes:
     def test_order_type_round_trip(self, order_type):
         """Every OrderType enum serializes to its name and back."""
         d = {'type': order_type.name, 'target': None}
-        orders = FleetOrderSerializer.deserialize_orders([d], fleet_id="test")
+        orders = OrderSerializer.deserialize_orders([d], fleet_id="test")
         assert len(orders) == 1
         assert orders[0].type == order_type
 

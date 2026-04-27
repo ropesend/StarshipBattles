@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -75,7 +75,7 @@ class TestJoinFleetProcessing:
         target_fleet.location = HexCoord(5, 5)
 
         mock_fleet.location = HexCoord(5, 5)  # Same location
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
@@ -95,7 +95,7 @@ class TestJoinFleetProcessing:
         target_fleet.location = HexCoord(100, 100)  # Different
 
         mock_fleet.location = HexCoord(0, 0)
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
@@ -109,7 +109,7 @@ class TestJoinFleetProcessing:
 
         processor = OrderProcessor()
 
-        order = FleetOrder(OrderType.JOIN_FLEET, None)  # Invalid target
+        order = Order(OrderType.JOIN_FLEET, None)  # Invalid target
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
@@ -184,7 +184,7 @@ class TestColonizeProcessing:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet_continental)
+        order = Order(OrderType.COLONIZE, mock_planet_continental)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
@@ -212,7 +212,7 @@ class TestColonizeProcessing:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
-        order = FleetOrder(OrderType.COLONIZE, None)  # Any planet
+        order = Order(OrderType.COLONIZE, None)  # Any planet
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
@@ -235,7 +235,7 @@ class TestColonizeProcessing:
 
         mock_galaxy.get_planets_at_global_hex.return_value = []  # No planets
 
-        order = FleetOrder(OrderType.COLONIZE, None)
+        order = Order(OrderType.COLONIZE, None)
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_colonize(
@@ -259,7 +259,7 @@ class TestColonizeProcessing:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet_continental)
+        order = Order(OrderType.COLONIZE, mock_planet_continental)
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_colonize(
@@ -303,7 +303,7 @@ class TestEndTurnOrderProcessing:
 
         component_registry = {}
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet)
+        order = Order(OrderType.COLONIZE, mock_planet)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
@@ -356,7 +356,7 @@ class TestInstantOrderProcessing:
         joining_fleet.location = HexCoord(5, 5)  # Same location
         joining_fleet.merge_with = MagicMock()
 
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         joining_fleet.get_current_order = MagicMock(return_value=order)
 
         mock_empire.fleets = [joining_fleet, target_fleet]
@@ -383,7 +383,7 @@ class TestInstantOrderProcessing:
         joining_fleet.location = HexCoord(0, 0)
         joining_fleet.merge_with = MagicMock()
 
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         joining_fleet.get_current_order = MagicMock(return_value=order)
 
         mock_empire.fleets = [joining_fleet, target_fleet]
@@ -416,7 +416,7 @@ class TestInstantOrderProcessing:
         joining_fleet.pop_order = MagicMock()
         joining_fleet.clear_orders = MagicMock()
 
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         joining_fleet.get_current_order = MagicMock(return_value=order)
 
         mock_empire.fleets = [joining_fleet, target_fleet]
@@ -497,7 +497,7 @@ class TestColonizeDropPodDeployment:
 
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        order = Order(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
@@ -526,7 +526,7 @@ class TestColonizeDropPodDeployment:
 
         mock_fleet.ships = [mock_ship_with_pod]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        order = Order(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
@@ -554,7 +554,7 @@ class TestColonizeDropPodDeployment:
 
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        order = Order(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 

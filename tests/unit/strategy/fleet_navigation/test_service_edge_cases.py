@@ -23,7 +23,7 @@ from game.strategy.services.fleet_navigation_service import (
     NavigationStep,
     PathSegment,
 )
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestNavigationStateImmutability:
@@ -66,7 +66,7 @@ class TestNavigationStateImmutability:
 
     def test_orders_is_tuple(self):
         """Orders should be stored as tuple for immutability."""
-        order = FleetOrder(order_type=OrderType.MOVE, target=HexCoord(5, 5))
+        order = Order(order_type=OrderType.MOVE, target=HexCoord(5, 5))
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -107,7 +107,7 @@ class TestNavigationStateFromFleet:
 
     def test_from_fleet_converts_orders_to_tuple(self):
         """from_fleet should convert orders list to tuple."""
-        order = FleetOrder(order_type=OrderType.MOVE, target=HexCoord(5, 5))
+        order = Order(order_type=OrderType.MOVE, target=HexCoord(5, 5))
         fleet = MagicMock()
         fleet.location = HexCoord(0, 0)
         fleet.path = []
@@ -278,7 +278,7 @@ class TestFleetNavigationServiceEdgeCases:
 
     def test_compute_next_step_non_movement_order(self, service, mock_galaxy):
         """compute_next_step with COLONIZE order should return no movement."""
-        order = FleetOrder(order_type=OrderType.COLONIZE, target=None)
+        order = Order(order_type=OrderType.COLONIZE, target=None)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -328,7 +328,7 @@ class TestFleetNavigationServiceEdgeCases:
     def test_get_destination_move_order(self, service, mock_galaxy):
         """MOVE order should return target as destination."""
         target = HexCoord(10, 10)
-        order = FleetOrder(order_type=OrderType.MOVE, target=target)
+        order = Order(order_type=OrderType.MOVE, target=target)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -341,7 +341,7 @@ class TestFleetNavigationServiceEdgeCases:
 
     def test_get_destination_non_movement_order(self, service, mock_galaxy):
         """COLONIZE order should return None destination."""
-        order = FleetOrder(order_type=OrderType.COLONIZE, target=None)
+        order = Order(order_type=OrderType.COLONIZE, target=None)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -354,7 +354,7 @@ class TestFleetNavigationServiceEdgeCases:
 
     def test_get_destination_move_to_fleet_no_target(self, service, mock_galaxy):
         """MOVE_TO_FLEET with None target should return None."""
-        order = FleetOrder(order_type=OrderType.MOVE_TO_FLEET, target=None)
+        order = Order(order_type=OrderType.MOVE_TO_FLEET, target=None)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),

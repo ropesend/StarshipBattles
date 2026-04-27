@@ -13,7 +13,7 @@ from game.strategy.engine.action_execution_engine import (
     ActionTickResult,
 )
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
 
@@ -58,7 +58,7 @@ class TestActionTickInterval:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -80,7 +80,7 @@ class TestActionTickInterval:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=1.0)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -102,7 +102,7 @@ class TestActionTickInterval:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=0.0)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -124,7 +124,7 @@ class TestProgressAccumulation:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)  # Acts every 20 ticks
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -159,7 +159,7 @@ class TestActionCompletion:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.TRANSFER, None))
+        fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -179,7 +179,7 @@ class TestActionCompletion:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)  # Acts every 20 ticks
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -210,7 +210,7 @@ class TestActionCompletion:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.TRANSFER, None))
+        fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -227,7 +227,7 @@ class TestActionCompletion:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=1.0)
-        fleet.add_order(FleetOrder(OrderType.TRANSFER, None))
+        fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -258,7 +258,7 @@ class TestOrderTypeFiltering:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(order_type, HexCoord(1, 1)))
+        fleet.add_order(Order(order_type, HexCoord(1, 1)))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -274,7 +274,7 @@ class TestOrderTypeFiltering:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD, None))
+        fleet.add_order(Order(OrderType.BUILD, None))
         fleet.construction_queue = [{"design_id": "test"}]  # Non-empty queue
         empire.fleets.append(fleet)
 
@@ -291,7 +291,7 @@ class TestOrderTypeFiltering:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD, None))
+        fleet.add_order(Order(OrderType.BUILD, None))
         fleet.construction_queue = []  # Empty queue
         empire.fleets.append(fleet)
 
@@ -313,7 +313,7 @@ class TestFleetConsumption:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.STELLERATE_STAR, None))
+        fleet.add_order(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -336,9 +336,9 @@ class TestFleetConsumption:
 
         empire = _make_empire()
         fleet1 = _make_fleet(fleet_id=101, speed=5.0)
-        fleet1.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet1.add_order(Order(OrderType.COLONIZE, None))
         fleet2 = _make_fleet(fleet_id=102, speed=5.0)
-        fleet2.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet2.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.extend([fleet1, fleet2])
 
         galaxy = _make_mock_galaxy()
@@ -359,7 +359,7 @@ class TestOrderPopping:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        order = FleetOrder(OrderType.TRANSFER, None)
+        order = Order(OrderType.TRANSFER, None)
         fleet.add_order(order)
         empire.fleets.append(fleet)
 
@@ -388,8 +388,8 @@ class TestOrderPopping:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.TRANSFER, None))
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.TRANSFER, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -422,7 +422,7 @@ class TestActionTickResult:
 
         empire = _make_empire()
         fleet = _make_fleet(fleet_id=999, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, None))
+        fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
@@ -474,11 +474,11 @@ class TestMultipleEmpires:
         empire2 = _make_empire(empire_id=1)
 
         fleet1 = _make_fleet(fleet_id=101, owner_id=0, speed=5.0)
-        fleet1.add_order(FleetOrder(OrderType.TRANSFER, None))
+        fleet1.add_order(Order(OrderType.TRANSFER, None))
         empire1.fleets.append(fleet1)
 
         fleet2 = _make_fleet(fleet_id=102, owner_id=1, speed=5.0)
-        fleet2.add_order(FleetOrder(OrderType.TRANSFER, None))
+        fleet2.add_order(Order(OrderType.TRANSFER, None))
         empire2.fleets.append(fleet2)
 
         galaxy = _make_mock_galaxy()
@@ -510,7 +510,7 @@ class TestAllActionOrderTypes:
 
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
-        fleet.add_order(FleetOrder(order_type, None))
+        fleet.add_order(Order(order_type, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()

@@ -9,7 +9,7 @@ import pytest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance
@@ -36,11 +36,11 @@ class TestTurnExecutionCycle:
 
         # Add fleets with orders to both empires
         fleet1 = Fleet(1, empire1.id, HexCoord(0, 0), speed=10.0)
-        fleet1.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(1, 0)))
+        fleet1.add_order(Order(OrderType.MOVE, target=HexCoord(1, 0)))
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, HexCoord(5, 5), speed=10.0)
-        fleet2.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(6, 5)))
+        fleet2.add_order(Order(OrderType.MOVE, target=HexCoord(6, 5)))
         empire2.add_fleet(fleet2)
 
         # Process turn
@@ -60,7 +60,7 @@ class TestTurnExecutionCycle:
 
         # Create a long path to measure movement
         path_length = 50
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(path_length, 0)))
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(path_length, 0)))
         empire1.add_fleet(fleet)
 
         initial_loc = fleet.location
@@ -91,7 +91,7 @@ class TestTurnExecutionCycle:
         if planet:
             # Create fleet at planet location and give colonize order
             fleet = Fleet(1, empire1.id, planet.location, speed=10.0)
-            fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+            fleet.add_order(Order(OrderType.COLONIZE, target=planet))
             empire1.add_fleet(fleet)
 
             initial_colonies = len(empire1.colonies)
@@ -127,7 +127,7 @@ class TestMultipleTurns:
         destination = HexCoord(25, 0)  # ~3 turns away at speed 10
 
         fleet = Fleet(1, empire1.id, start, speed=10.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=destination))
+        fleet.add_order(Order(OrderType.MOVE, target=destination))
         empire1.add_fleet(fleet)
 
         # Process turns until fleet arrives or max 10 turns

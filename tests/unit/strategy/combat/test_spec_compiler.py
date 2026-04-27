@@ -185,7 +185,7 @@ def test_compiler_populates_ship_spec_components_from_instance(
     Previously Phase 1 always emitted an empty tuple."""
     from game.core.hex_math import HexCoord
     from game.simulation.battle_spec import ComponentStateSpec
-    from game.strategy.data.component_state import (
+    from game.core.component_state import (
         ComponentState,
         component_state_key,
     )

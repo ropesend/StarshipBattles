@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Combat Lab"
+  short_description: "Author Combat Lab scenarios."
+  default_prompt: "Use $codex-starship-combat-lab to add or revise Combat Lab scenarios and simulation tests."

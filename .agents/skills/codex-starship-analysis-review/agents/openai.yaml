@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship Review"
+  short_description: "Run Starship analysis reviews."
+  default_prompt: "Use $codex-starship-analysis-review to run a Starship Battles analysis, sweep, audit, or code review."

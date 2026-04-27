@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.commands import IssueWarpCommand
 from game.strategy.engine.command_handlers import WarpCommandHandler
 from game.core.validation import ValidationResult
@@ -185,7 +185,7 @@ class TestWarpOrderNavigation:
         state = NavigationState(
             location=warp_point_hex,
             path=(),
-            orders=(FleetOrder(OrderType.WARP, target=warp_point_hex),),
+            orders=(Order(OrderType.WARP, target=warp_point_hex),),
             speed=10.0,
             can_warp=True
         )
@@ -208,7 +208,7 @@ class TestWarpOrderNavigation:
         state = NavigationState(
             location=HexCoord(8, 3),  # Not at warp point
             path=(),
-            orders=(FleetOrder(OrderType.WARP, target=warp_point_hex),),
+            orders=(Order(OrderType.WARP, target=warp_point_hex),),
             speed=10.0,
             can_warp=True
         )
@@ -226,7 +226,7 @@ class TestWarpOrderSerialization:
         """WARP order should serialize and deserialize correctly."""
         warp_target = HexCoord(15, 8)
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
-        fleet.orders.append(FleetOrder(OrderType.WARP, target=warp_target))
+        fleet.orders.append(Order(OrderType.WARP, target=warp_target))
 
         # Serialize
         data = fleet.to_dict()
@@ -241,7 +241,7 @@ class TestWarpOrderSerialization:
     def test_warp_order_with_execution_progress(self):
         """WARP order with execution progress should preserve it."""
         warp_target = HexCoord(20, 10)
-        order = FleetOrder(OrderType.WARP, target=warp_target)
+        order = Order(OrderType.WARP, target=warp_target)
         order.execution_progress = 5  # Shouldn't normally happen, but test it
 
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)

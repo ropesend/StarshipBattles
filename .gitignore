@@ -57,7 +57,10 @@ combat_lab/test_history.json.migrated
 
 # Runtime logs
 combat_lab/battle.log
-.codex/
+
+# Codex repo config is tracked; local Codex artifacts stay ignored.
+.codex/*
+!.codex/config.toml
 assets/ShipThemes/Ossivine/Production/*
 assets/ShipThemes/Prismsteel/Production/*
 assets/Images/Components/_ai_recreate_enhanced_preview/*

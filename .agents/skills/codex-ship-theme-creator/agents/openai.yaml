@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Ship Theme Creator"
+  short_description: "Create Starship ship themes."
+  default_prompt: "Use $codex-ship-theme-creator to create a complete Starship Battles ship theme."

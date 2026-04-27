@@ -1,7 +1,7 @@
 import pytest
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.pathfinding import project_fleet_path
 
 # Mocks
@@ -57,13 +57,13 @@ def test_project_chained_orders():
     fleet = Fleet(1, 1, HexCoord(0,0), speed=2.0)
     
     # Active Order: Move to (1,0)
-    fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1,0)))
+    fleet.add_order(Order(OrderType.MOVE, HexCoord(1,0)))
     fleet.path = [HexCoord(1,0)] # 1 hex left
     
     # Queued Order: Move to (4,0)
     # Path pathfinding: 2,0 -> 3,0 -> 4,0
     p2 = HexCoord(4,0)
-    order = FleetOrder(OrderType.MOVE, p2)
+    order = Order(OrderType.MOVE, p2)
     fleet.add_order(order)
     
     galaxy = MockGalaxy()

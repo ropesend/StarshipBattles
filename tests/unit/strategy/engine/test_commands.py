@@ -18,7 +18,7 @@ from game.strategy.engine.commands import (
     IssueInterceptCommand,
     IssueJoinFleetCommand,
     QueueColonizeMissionCommand,
-    ClearFleetOrdersCommand,
+    ClearOrdersCommand,
     IssueTransferCommand,
     IssueImplodePlanetCommand,
     IssueStellerateStarCommand,
@@ -133,11 +133,11 @@ class TestQueueColonizeMissionCommand:
 
 
 class TestClearFleetOrdersCommand:
-    """Tests for ClearFleetOrdersCommand."""
+    """Tests for ClearOrdersCommand."""
 
     def test_create_clear_orders_command(self):
-        """ClearFleetOrdersCommand should store fleet_id."""
-        cmd = ClearFleetOrdersCommand(fleet_id=11)
+        """ClearOrdersCommand should store fleet_id."""
+        cmd = ClearOrdersCommand(fleet_id=11)
         assert cmd.fleet_id == 11
         assert cmd.type == CommandType.ISSUE_ORDER
 

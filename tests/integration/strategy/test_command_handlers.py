@@ -4,7 +4,7 @@ from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.commands import IssueMoveCommand, CommandType
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import OrderType, FleetOrder
+from game.strategy.data.order_types import OrderType, Order
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
@@ -399,7 +399,7 @@ class TestColonizeMissionCommandHandler:
         # Use JOVIAN which has jovian_colony_pod in components.json
         fleet = Fleet(101, 0, HexCoord(0, 0))
         fleet.ships = [make_colony_ship("JOVIAN", owner_id=0)]
-        existing_order = FleetOrder(OrderType.MOVE, HexCoord(5, 5))
+        existing_order = Order(OrderType.MOVE, HexCoord(5, 5))
         fleet.add_order(existing_order)
         session.player_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
@@ -434,11 +434,11 @@ class TestColonizeMissionCommandHandler:
 # =============================================================================
 
 class TestClearFleetOrdersCommandHandler:
-    """Tests for ClearFleetOrdersCommand handling."""
+    """Tests for ClearOrdersCommand handling."""
 
     def test_clear_orders_success(self):
         """Clear orders command removes all orders and path from fleet."""
-        from game.strategy.engine.commands import ClearFleetOrdersCommand
+        from game.strategy.engine.commands import ClearOrdersCommand
 
         config = GameConfig(system_count=0)
         session = GameSession(config=config)
@@ -447,14 +447,14 @@ class TestClearFleetOrdersCommandHandler:
         # Fleet with existing orders and path
         fleet = Fleet(101, 0, HexCoord(0, 0))
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, HexCoord(5, 5)),
-            FleetOrder(OrderType.COLONIZE, MagicMock())
+            Order(OrderType.MOVE, HexCoord(5, 5)),
+            Order(OrderType.COLONIZE, MagicMock())
         ]
         fleet.path = [HexCoord(1, 1), HexCoord(2, 2), HexCoord(5, 5)]
         session.player_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
-        cmd = ClearFleetOrdersCommand(fleet_id=101)
+        cmd = ClearOrdersCommand(fleet_id=101)
         result = session.handle_command(cmd)
 
         assert result.is_valid is True
@@ -463,7 +463,7 @@ class TestClearFleetOrdersCommandHandler:
 
     def test_clear_orders_empty_fleet(self):
         """Clear orders succeeds even if fleet has no orders."""
-        from game.strategy.engine.commands import ClearFleetOrdersCommand
+        from game.strategy.engine.commands import ClearOrdersCommand
 
         config = GameConfig(system_count=0)
         session = GameSession(config=config)
@@ -474,7 +474,7 @@ class TestClearFleetOrdersCommandHandler:
         session.player_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
-        cmd = ClearFleetOrdersCommand(fleet_id=101)
+        cmd = ClearOrdersCommand(fleet_id=101)
         result = session.handle_command(cmd)
 
         assert result.is_valid is True
@@ -483,26 +483,26 @@ class TestClearFleetOrdersCommandHandler:
 
     def test_clear_orders_invalid_fleet(self):
         """Clear orders fails if fleet doesn't exist."""
-        from game.strategy.engine.commands import ClearFleetOrdersCommand
+        from game.strategy.engine.commands import ClearOrdersCommand
 
         config = GameConfig(system_count=0)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
-        cmd = ClearFleetOrdersCommand(fleet_id=9999)
+        cmd = ClearOrdersCommand(fleet_id=9999)
         result = session.handle_command(cmd)
 
         assert result.is_valid is False
         assert "Fleet not found" in result.message
 
     def test_clear_orders_discards_execution_progress(self):
-        """Clear orders discards FleetOrder execution_progress (PROJ-187).
+        """Clear orders discards Order execution_progress (PROJ-187).
 
-        Multi-tick actions accumulate execution_progress on the FleetOrder.
-        When orders are cleared, the entire FleetOrder object is removed,
+        Multi-tick actions accumulate execution_progress on the Order.
+        When orders are cleared, the entire Order object is removed,
         so execution_progress is naturally discarded.
         """
-        from game.strategy.engine.commands import ClearFleetOrdersCommand
+        from game.strategy.engine.commands import ClearOrdersCommand
 
         config = GameConfig(system_count=0)
         session = GameSession(config=config)
@@ -510,7 +510,7 @@ class TestClearFleetOrdersCommandHandler:
 
         # Fleet with an order that has accumulated execution_progress
         fleet = Fleet(101, 0, HexCoord(0, 0))
-        colonize_order = FleetOrder(OrderType.COLONIZE, MagicMock())
+        colonize_order = Order(OrderType.COLONIZE, MagicMock())
         colonize_order.execution_progress = 3  # Simulating partial progress
         fleet.orders = [colonize_order]
         session.player_empire.fleets = [fleet]
@@ -519,7 +519,7 @@ class TestClearFleetOrdersCommandHandler:
         # Verify progress exists before clear
         assert fleet.orders[0].execution_progress == 3
 
-        cmd = ClearFleetOrdersCommand(fleet_id=101)
+        cmd = ClearOrdersCommand(fleet_id=101)
         result = session.handle_command(cmd)
 
         assert result.is_valid is True

@@ -10,7 +10,7 @@ Use safe_evaluate_math_formula for backwards-compatible behavior that returns de
 """
 
 import pytest
-from game.simulation.formula_system import evaluate_math_formula, safe_evaluate_math_formula
+from game.core.formula_evaluator import evaluate_math_formula, safe_evaluate_math_formula
 from game.core.exceptions import FormulaException
 
 
@@ -174,7 +174,7 @@ class TestFormulaSystemValidation:
 
     def test_validate_formula_syntax_valid(self):
         """Valid formula syntax should pass validation."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         valid_formulas = [
             'x + 1',
@@ -189,7 +189,7 @@ class TestFormulaSystemValidation:
 
     def test_validate_formula_syntax_error(self):
         """Formula with syntax error should be detected."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         invalid_formulas = [
             '((( malformed',
@@ -203,7 +203,7 @@ class TestFormulaSystemValidation:
 
     def test_validate_formula_undefined_variable(self):
         """Formula with undefined variable should be detected."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         errors = validate_formula('undefined_var + x', ['x'])
         assert len(errors) > 0, "Formula with undefined variable should have errors"
@@ -211,7 +211,7 @@ class TestFormulaSystemValidation:
 
     def test_validate_formula_allows_math_functions(self):
         """Math functions should be allowed."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         formulas = [
             'sqrt(x)',
@@ -228,7 +228,7 @@ class TestFormulaSystemValidation:
 
     def test_validate_formula_blocks_dangerous_functions(self):
         """Dangerous functions should be blocked."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         dangerous = [
             'eval("1+1")',
@@ -244,7 +244,7 @@ class TestFormulaSystemValidation:
     def test_validate_logs_on_dangerous_attempt(self, caplog):
         """Attempting to use dangerous functions should log a warning."""
         import logging
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         with caplog.at_level(logging.WARNING):
             errors = validate_formula('__import__("os")', [])

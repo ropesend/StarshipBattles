@@ -18,7 +18,9 @@
 | File | Type | Notes |
 |------|------|-------|
 | `game/strategy/data/order_types.py` | Production | EDIT — delete lines 169-171 (`FleetOrder` and `PlanetOrder` aliases + comment) |
-| `game/strategy/engine/commands.py` | Production | EDIT — delete 3 alias declarations (~lines 99-100, ~289, ~305) + comments |
+| `game/strategy/engine/commands.py` | Production | EDIT — delete 3 alias declarations (lines 99-100, 288-289, 304-305) + comments |
+| `game/strategy/data/order_serializer.py` | Production | EDIT — delete lines 234-235 (`FleetOrderSerializer = OrderSerializer` + comment). Phase 1 discovery |
+| `game/strategy/__init__.py` | Production | EDIT — remove `FleetOrder` from import (line 34), `__all__` (line 64), docstring (line 13). Phase 1 discovery |
 
 ### EDIT (production renames)
 
@@ -31,6 +33,9 @@
 | `game/ui/screens/strategy_fleet_command_router.py` | Production | RENAME `PlanetOrder` → `Order` |
 | `game/ui/screens/planet_abilities_window.py` | Production | RENAME `PlanetOrder` → `Order` |
 | `game/strategy/engine/command_handlers.py` | Production | RENAME `PlanetOrder` → `Order` (and any command-name old uses) |
+| `game/strategy/engine/order_processor.py` | Production | RENAME log message at line 770 (`FleetOrderProcessor` → `OrderProcessor`). Module docstring at line 4 is historical, KEEP |
+| `game/strategy/data/order_serializer.py` | Production | RENAME 2 internal class self-references (`FleetOrderSerializer._deserialize_*` → `OrderSerializer._deserialize_*`). Phase 1 discovery |
+| `game/strategy/data/fleet.py` | Production | RENAME 7 `FleetOrderSerializer` usages (imports + calls) and 1 `FleetOrder` mention in module docstring |
 | `game/strategy/engine/planet_action_engine.py` | Production | RENAME `PlanetOrder` → `Order` |
 | `game/strategy/engine/planet_command_handlers.py` | Production | RENAME `PlanetOrder` → `Order` |
 | `game/strategy/facade/strategy_session_facade.py` | Production | RENAME `PlanetOrder` → `Order` |
@@ -53,7 +58,9 @@
 | `tests/unit/ui/screens/test_event_log_window.py` | Test | RENAME |
 | `tests/unit/ui/screens/test_click_gate_integration.py` | Test | RENAME |
 | `tests/integration/ui/test_fleet_build_button.py` | Test | RENAME |
-| Additional test files | Test | Per Phase 1 inventory |
+| `tests/integration/save_load/test_roundtrip_orders.py` | Test | RENAME — includes 9 `FleetOrderSerializer` usages plus 11 `FleetOrder`. Phase 1 scope addition |
+| `tests/repro_warp_bug.py`, `tests/repro_issues/test_bug_27_ordertype.py` | Test (repro) | RENAME class symbols. Ad-hoc reproducers; low effort |
+| Additional test files | Test | Per `findings/rename_plan.md` (phase 1 deliverable). 76 files match `\bFleetOrder\b` alone |
 
 ### EDIT (docs)
 

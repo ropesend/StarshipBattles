@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -100,7 +100,7 @@ class TestProcessTransfer:
 
     def test_transfer_wrong_order_type_returns_failure(self, processor, mock_fleet, mock_empire, mock_galaxy):
         """Returns failure when current order is not TRANSFER."""
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 10))
+        order = Order(OrderType.MOVE, HexCoord(10, 10))
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_transfer(mock_fleet, mock_empire, mock_galaxy)
@@ -109,7 +109,7 @@ class TestProcessTransfer:
 
     def test_transfer_invalid_params_returns_failure(self, processor, mock_fleet, mock_empire, mock_galaxy):
         """Returns failure when transfer params are invalid."""
-        order = FleetOrder(OrderType.TRANSFER, "not_a_dict")
+        order = Order(OrderType.TRANSFER, "not_a_dict")
         mock_fleet.get_current_order.return_value = order
 
         result = processor.process_transfer(mock_fleet, mock_empire, mock_galaxy)

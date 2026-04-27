@@ -1,7 +1,7 @@
 """Tests for BuildOrderCommandHandler, IssueBuildOrderCommand, and helper functions.
 
 PROJ-207 Phase 4: Tests for routing BUILD orders through command pipeline.
-CP-002 - Build orders should use command pipeline instead of direct FleetOrder creation.
+CP-002 - Build orders should use command pipeline instead of direct Order creation.
 CP-003 - Shared auto-load population helper.
 """
 import pytest
@@ -10,9 +10,8 @@ from unittest.mock import Mock, MagicMock
 from game.strategy.engine.commands import IssueBuildOrderCommand, CommandType
 from game.strategy.engine.command_handlers import (
     BuildOrderCommandHandler,
-    create_auto_load_population_order
 )
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestIssueBuildOrderCommand:
@@ -71,7 +70,7 @@ class TestBuildOrderCommandHandler:
         session = Mock()
 
         # Fleet already has a MOVE order
-        existing_order = FleetOrder(OrderType.MOVE, target=Mock())
+        existing_order = Order(OrderType.MOVE, target=Mock())
         mock_fleet = Mock()
         mock_fleet.orders = [existing_order]
         session._get_fleet_by_id.return_value = mock_fleet
@@ -152,7 +151,7 @@ class TestRemoveBuildOrderCommand:
         session = Mock()
 
         # Fleet with only MOVE order
-        move_order = FleetOrder(OrderType.MOVE, target=Mock())
+        move_order = Order(OrderType.MOVE, target=Mock())
         mock_fleet = Mock()
         mock_fleet.orders = [move_order]
         session._get_fleet_by_id.return_value = mock_fleet
@@ -192,22 +191,3 @@ class TestBuildOrderHandlerRegistration:
         assert isinstance(registry._handlers['RemoveBuildOrderCommand'], RemoveBuildOrderCommandHandler)
 
 
-class TestCreateAutoLoadPopulationOrder:
-    """Tests for create_auto_load_population_order helper (BUG-70 rework)."""
-
-    def test_creates_generic_load_order(self):
-        """Should create a generic LOAD_POPULATION order with no planet_id."""
-        order = create_auto_load_population_order()
-
-        assert order is not None
-        assert order.type == OrderType.LOAD_POPULATION
-        assert order.target['direction'] == 'load'
-        assert order.target['cargo_type'] == 'passengers'
-        assert order.target['amount'] == 0
-        assert 'planet_id' not in order.target
-        assert 'species_id' not in order.target
-
-    def test_always_returns_order(self):
-        """Should always return an order (never None). Colony resolved at execution time."""
-        order = create_auto_load_population_order()
-        assert order is not None

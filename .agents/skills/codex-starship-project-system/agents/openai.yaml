@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship Projects"
+  short_description: "Manage Starship PROJ workflows."
+  default_prompt: "Use $codex-starship-project-system to start, continue, review, audit, revise, or close a Starship Battles project."

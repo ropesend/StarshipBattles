@@ -96,10 +96,6 @@ class ClearOrdersCommand(Command):
     entity_type: str = "fleet"  # "fleet" or "planet"
 
 
-# PROJ-238: Backward compatibility alias
-ClearFleetOrdersCommand = ClearOrdersCommand
-
-
 @dataclass
 class IssueTransferCommand(Command):
     """
@@ -285,10 +281,6 @@ class DeleteOrderCommand(Command):
     entity_type: str = "fleet"
 
 
-# PROJ-238: Backward compatibility alias
-DeleteFleetOrderCommand = DeleteOrderCommand
-
-
 @dataclass
 class ReorderOrderCommand(Command):
     """Command to move an order up or down in the queue.
@@ -299,10 +291,6 @@ class ReorderOrderCommand(Command):
     order_index: int
     direction: int
     entity_type: str = "fleet"
-
-
-# PROJ-238: Backward compatibility alias
-ReorderFleetOrderCommand = ReorderOrderCommand
 
 
 # =============================================================================

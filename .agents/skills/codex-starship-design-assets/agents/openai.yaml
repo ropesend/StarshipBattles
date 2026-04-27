@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship Assets"
+  short_description: "Validate designs and assets."
+  default_prompt: "Use $codex-starship-design-assets to validate Starship Battles designs or work on visual asset tools."

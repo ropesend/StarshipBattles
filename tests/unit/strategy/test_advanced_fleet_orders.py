@@ -8,7 +8,7 @@ action orders moved to tick-based processing).
 import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.order_processor import OrderProcessor
@@ -105,7 +105,7 @@ class TestAdvancedFleetOrders:
         test_empire.add_fleet(f2)
 
         # Setup Order
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, f2)
+        order = Order(OrderType.MOVE_TO_FLEET, f2)
         f1.add_order(order)
 
         # Scenario: F2 is moving.
@@ -163,7 +163,7 @@ class TestAdvancedFleetOrders:
         test_empire.add_fleet(f2)
 
         # Setup Order
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, f2)
+        order = Order(OrderType.MOVE_TO_FLEET, f2)
         f1.add_order(order)
 
         # Mock Intercept Result
@@ -257,7 +257,7 @@ class TestAdvancedFleetOrders:
         f1.ships = [ship_a]
         f2.ships = [ship_b]
 
-        order = FleetOrder(OrderType.JOIN_FLEET, f2)
+        order = Order(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)
 
         # Execute via instant path (PROJ-207)
@@ -288,7 +288,7 @@ class TestAdvancedFleetOrders:
         f1.location = HexCoord(0, 0)
         f2.location = HexCoord(10, 0)  # Different location
 
-        order = FleetOrder(OrderType.JOIN_FLEET, f2)
+        order = Order(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)
 
         # Execute via instant path (PROJ-207)

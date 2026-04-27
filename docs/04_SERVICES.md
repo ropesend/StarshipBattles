@@ -52,7 +52,6 @@ game/strategy/services/
     fleet_navigation_service.py # Fleet pathfinding and movement
     fleet_speed_calculator.py   # Strategic movement speed calculation
     modifier_resolver.py        # Resolve size_mount modifiers from design_data
-    ship_stats_calculator.py    # DEPRECATED — stat calculation moved to simulation layer
     strategic_ability_scanner.py # Find strategic abilities across spatial scopes
     system_effects_collector.py  # Aggregate system-scope effects for UI display
 
@@ -490,7 +489,7 @@ class NavigationState:
     """Immutable snapshot of fleet state for pure-function navigation."""
     location: HexCoord
     path: tuple           # tuple[HexCoord, ...]
-    orders: tuple         # tuple[FleetOrder, ...]
+    orders: tuple         # tuple[Order, ...]
     speed: float
     can_warp: bool
 
@@ -519,7 +518,7 @@ class NavigationStep:
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `get_destination` | `(state: NavigationState, order: FleetOrder, galaxy) -> Optional[HexCoord]` | Determine target hex for a given order (MOVE, MOVE_TO_FLEET, etc.) |
+| `get_destination` | `(state: NavigationState, order: Order, galaxy) -> Optional[HexCoord]` | Determine target hex for a given order (MOVE, MOVE_TO_FLEET, etc.) |
 | `compute_path` | `(state: NavigationState, destination: HexCoord, galaxy) -> list` | Calculate path from current location to destination |
 | `compute_next_step` | `(state: NavigationState, galaxy) -> NavigationStep` | Pure function: compute next hex and new state without mutation |
 | `project_path` | `(fleet: Fleet, galaxy, max_turns: int = 10, component_registry=None) -> list[PathSegment]` | Project fleet movement over multiple turns (for UI visualization) |
@@ -660,7 +659,7 @@ reallocation, etc.). PROJ-276 replaced the old
 **Usage:**
 ```python
 from game.simulation.entities.ship_design_stats import calculate_design_stats
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.core.component_state import ComponentState, component_state_key
 
 # Calculate stats for undamaged ship
 stats = calculate_design_stats(design_data, registries)
@@ -688,8 +687,6 @@ if has_warp_capability(ship_instance):
 - `ProductionSpawner._spawn_to_staging_yard()` — mass calculation for staging
 - `Tools/validate_designs/validate_designs.py` — mass consistency checks
 - `Tools/fix_designs/fix_designs.py` — expected_stats recalculation
-
-> **Note:** The strategy layer previously contained a duplicate `ShipStatsCalculator` at `game/strategy/services/ship_stats_calculator.py`. It was deleted in PROJ-276 after an audit confirmed zero production importers. Its utility methods `has_warp_capability()` and `get_ability_list()` live in `component_inspector`. Stat calculation now has a single source of truth: `calculate_design_stats()` above.
 
 ---
 

@@ -27,10 +27,10 @@ if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
     from game.strategy.engine.commands import (
         Command, IssueColonizeCommand, IssueMoveCommand, IssueInterceptCommand,
-        IssueJoinFleetCommand, QueueColonizeMissionCommand, ClearFleetOrdersCommand,
+        IssueJoinFleetCommand, QueueColonizeMissionCommand, ClearOrdersCommand,
         IssueTransferCommand, IssueBuildOrderCommand, RemoveBuildOrderCommand,
-        IssueWarpCommand, SplitFleetCommand, DeleteFleetOrderCommand,
-        ReorderFleetOrderCommand, AddToConstructionQueueCommand,
+        IssueWarpCommand, SplitFleetCommand, DeleteOrderCommand,
+        ReorderOrderCommand, AddToConstructionQueueCommand,
         RemoveFromConstructionQueueCommand, ReorderConstructionQueueCommand,
     )
 
@@ -490,10 +490,10 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
 
 
 class ClearOrdersCommandHandler(BaseCommandHandler):
-    """Handler for ClearFleetOrdersCommand."""
+    """Handler for ClearOrdersCommand."""
 
-    def execute(self, session: 'GameSession', cmd: 'ClearFleetOrdersCommand') -> ValidationResult:
-        """Handle ClearFleetOrdersCommand - clears all orders from fleet."""
+    def execute(self, session: 'GameSession', cmd: 'ClearOrdersCommand') -> ValidationResult:
+        """Handle ClearOrdersCommand - clears all orders from fleet."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
         if error:
@@ -727,11 +727,11 @@ class SplitFleetCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
-class DeleteFleetOrderCommandHandler(BaseCommandHandler):
-    """Handler for DeleteFleetOrderCommand (PROJ-208 Phase 1)."""
+class DeleteOrderCommandHandler(BaseCommandHandler):
+    """Handler for DeleteOrderCommand (PROJ-208 Phase 1)."""
 
-    def execute(self, session: 'GameSession', cmd: 'DeleteFleetOrderCommand') -> ValidationResult:
-        """Handle DeleteFleetOrderCommand - remove an order from the queue.
+    def execute(self, session: 'GameSession', cmd: 'DeleteOrderCommand') -> ValidationResult:
+        """Handle DeleteOrderCommand - remove an order from the queue.
 
         If the active order (index 0) is deleted, the fleet's path is invalidated.
         """
@@ -751,11 +751,11 @@ class DeleteFleetOrderCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
-class ReorderFleetOrderCommandHandler(BaseCommandHandler):
-    """Handler for ReorderFleetOrderCommand (PROJ-208 Phase 1)."""
+class ReorderOrderCommandHandler(BaseCommandHandler):
+    """Handler for ReorderOrderCommand (PROJ-208 Phase 1)."""
 
-    def execute(self, session: 'GameSession', cmd: 'ReorderFleetOrderCommand') -> ValidationResult:
-        """Handle ReorderFleetOrderCommand - swap order positions.
+    def execute(self, session: 'GameSession', cmd: 'ReorderOrderCommand') -> ValidationResult:
+        """Handle ReorderOrderCommand - swap order positions.
 
         If the active order (index 0) is affected, the fleet's path is invalidated.
         """
@@ -1019,7 +1019,6 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('IssueJoinFleetCommand', JoinCommandHandler())
     registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())
     registry.register('ClearOrdersCommand', ClearOrdersCommandHandler())
-    registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())  # PROJ-238: compat alias
     registry.register('IssueTransferCommand', TransferCommandHandler())
     registry.register('IssueWarpCommand', WarpCommandHandler())  # PROJ-187
 
@@ -1029,10 +1028,8 @@ def create_default_registry() -> CommandHandlerRegistry:
 
     # Fleet management handlers (PROJ-208 Phase 1)
     registry.register('SplitFleetCommand', SplitFleetCommandHandler())
-    registry.register('DeleteOrderCommand', DeleteFleetOrderCommandHandler())
-    registry.register('DeleteFleetOrderCommand', DeleteFleetOrderCommandHandler())  # PROJ-238: compat
-    registry.register('ReorderOrderCommand', ReorderFleetOrderCommandHandler())
-    registry.register('ReorderFleetOrderCommand', ReorderFleetOrderCommandHandler())  # PROJ-238: compat
+    registry.register('DeleteOrderCommand', DeleteOrderCommandHandler())
+    registry.register('ReorderOrderCommand', ReorderOrderCommandHandler())
 
     # Construction queue handlers (PROJ-208 Phase 2)
     registry.register('AddToConstructionQueueCommand', AddToConstructionQueueCommandHandler())

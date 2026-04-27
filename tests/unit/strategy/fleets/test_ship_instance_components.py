@@ -10,7 +10,7 @@ Covers:
 """
 import pytest
 
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.core.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 
 

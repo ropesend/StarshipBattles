@@ -19,7 +19,7 @@ from unittest.mock import Mock, MagicMock
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.engine.order_processor import OrderProcessor
@@ -273,7 +273,7 @@ class TestColonizeWithMatchingPod:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
         fleet.ships.append(combat_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -366,8 +366,8 @@ class TestChainColonization:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship1)
         fleet.ships.append(colony_ship2)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, continental1))
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, continental2))
+        fleet.orders.append(Order(OrderType.COLONIZE, continental1))
+        fleet.orders.append(Order(OrderType.COLONIZE, continental2))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -417,8 +417,8 @@ class TestChainColonization:
         fleet.ships.append(colony_ship2)
 
         # Queue 2 colonizations (should succeed)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice1))
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice2))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice1))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice2))
 
         # Validate 3rd colonization - pod check deferred to execution
         result = ColonizeValidator.validate(
@@ -459,8 +459,8 @@ class TestMixedFleetColonization:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(ice_colony_ship)
         fleet.ships.append(continental_colony_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, continental_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, continental_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -509,7 +509,7 @@ class TestFleetRemovalBehavior:
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -539,7 +539,7 @@ class TestFleetRemovalBehavior:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
         fleet.ships.append(combat_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -629,7 +629,7 @@ class TestUIFiltering:
         assert committed == 0
 
         # Queue 1 colonization
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice1))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice1))
 
         # After 1 order
         committed_after = ColonizeValidator.count_committed_colonize_orders(fleet)

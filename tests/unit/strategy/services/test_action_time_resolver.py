@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 
 
@@ -109,7 +109,7 @@ class TestActionTimeResolverColonize:
         """COLONIZE uses action_time from ColonizePlanet ability."""
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [mock_ship_with_colonize]
-        order = FleetOrder(OrderType.COLONIZE, target=None)
+        order = Order(OrderType.COLONIZE, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -123,7 +123,7 @@ class TestActionTimeResolverColonize:
         """COLONIZE with string shorthand ability defaults action_time to 1."""
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [mock_ship_with_default_colonize]
-        order = FleetOrder(OrderType.COLONIZE, target=None)
+        order = Order(OrderType.COLONIZE, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -137,7 +137,7 @@ class TestActionTimeResolverColonize:
         ship.design_data = {'layers': {'core': []}}  # No abilities
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [ship]
-        order = FleetOrder(OrderType.COLONIZE, target=None)
+        order = Order(OrderType.COLONIZE, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -155,7 +155,7 @@ class TestActionTimeResolverSuperweapons:
         """IMPLODE_PLANET uses action_time from DestroyPlanet ability."""
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [mock_ship_with_destroy_planet]
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=None)
+        order = Order(OrderType.IMPLODE_PLANET, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -169,7 +169,7 @@ class TestActionTimeResolverSuperweapons:
         """STELLERATE_STAR uses action_time from DestroyStar ability."""
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [mock_ship_with_destroy_star]
-        order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
+        order = Order(OrderType.STELLERATE_STAR, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -183,7 +183,7 @@ class TestActionTimeResolverSuperweapons:
         """SELF_DESTRUCT with boolean marker defaults action_time to 1."""
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [mock_ship_with_self_destruct]
-        order = FleetOrder(OrderType.SELF_DESTRUCT, target=['ship_id'])
+        order = Order(OrderType.SELF_DESTRUCT, target=['ship_id'])
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -208,7 +208,7 @@ class TestActionTimeResolverDefaults:
         ship.design_data = {'layers': {'core': []}}
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [ship]
-        order = FleetOrder(order_type, target=None)
+        order = Order(order_type, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -222,7 +222,7 @@ class TestActionTimeResolverDefaults:
         ship.design_data = {'layers': {'core': []}}
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [ship]
-        order = FleetOrder(OrderType.MOVE, target=None)
+        order = Order(OrderType.MOVE, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
@@ -272,7 +272,7 @@ class TestActionTimeResolverMultipleShips:
         }
         fleet = MagicMock(spec=Fleet)
         fleet.ships = [ship1, ship2]
-        order = FleetOrder(OrderType.COLONIZE, target=None)
+        order = Order(OrderType.COLONIZE, target=None)
 
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry

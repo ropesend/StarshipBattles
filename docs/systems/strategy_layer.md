@@ -110,12 +110,12 @@ Factory: `create_default_registry()` registers all handlers.
 | `IssueJoinFleetCommand` | `JoinCommandHandler` | MOVE_TO_FLEET + JOIN_FLEET |
 | `IssueTransferCommand` | `TransferCommandHandler` | Cargo transfer with auto-MOVE |
 | `IssueWarpCommand` | `WarpCommandHandler` | Warp transit with auto-MOVE to warp point |
-| `ClearFleetOrdersCommand` | `ClearOrdersCommandHandler` | Clear all orders and path |
+| `ClearOrdersCommand` | `ClearOrdersCommandHandler` | Clear all orders and path |
 | `IssueBuildOrderCommand` | `BuildOrderCommandHandler` | INSERT BUILD order at front |
 | `RemoveBuildOrderCommand` | `RemoveBuildOrderCommandHandler` | Remove BUILD orders |
 | `SplitFleetCommand` | `SplitFleetCommandHandler` | Split ships into new fleet |
-| `DeleteFleetOrderCommand` | `DeleteFleetOrderCommandHandler` | Remove specific order by index |
-| `ReorderFleetOrderCommand` | `ReorderFleetOrderCommandHandler` | Swap order positions |
+| `DeleteOrderCommand` | `DeleteOrderCommandHandler` | Remove specific order by index |
+| `ReorderOrderCommand` | `ReorderOrderCommandHandler` | Swap order positions |
 | `AddToConstructionQueueCommand` | `AddToConstructionQueueCommandHandler` | Add item to build queue |
 | `RemoveFromConstructionQueueCommand` | `RemoveFromConstructionQueueCommandHandler` | Remove queue item |
 | `ReorderConstructionQueueCommand` | `ReorderConstructionQueueCommandHandler` | Move queue item |
@@ -224,7 +224,7 @@ Core state:
 - `composition_summary` property -- ship composition string for tooltips
 - `owner_id`, `location: HexCoord`
 - `ships: List[ShipInstance]` -- canonical flat list of all ships
-- `orders: List[FleetOrder]`, `path: List[HexCoord]`
+- `orders: List[Order]`, `path: List[HexCoord]`
 - `speed: float` -- minimum of all combat-capable ships' speeds
 - `construction_queue: List[Dict]` -- for fleets with space yards
 

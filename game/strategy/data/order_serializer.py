@@ -57,7 +57,7 @@ class OrderSerializer:
         orders = []
         for i, order_data in enumerate(orders_data):
             try:
-                order = FleetOrderSerializer._deserialize_single_order(order_data, i)
+                order = OrderSerializer._deserialize_single_order(order_data, i)
                 orders.append(order)
             except (PersistenceException, KeyError, TypeError, ValueError) as e:
                 raise PersistenceException(
@@ -88,7 +88,7 @@ class OrderSerializer:
             'type',
             f'Fleet order[{index}]'
         )
-        target = FleetOrderSerializer._deserialize_target(order_data.get('target'))
+        target = OrderSerializer._deserialize_target(order_data.get('target'))
 
         order = Order(order_type, target)
         # PROJ-187: Restore execution_progress (default 0 for backward compat)
@@ -229,7 +229,3 @@ class OrderSerializer:
         # Remove invalid orders in reverse order to maintain indices
         for i in reversed(orders_to_remove):
             fleet.orders.pop(i)
-
-
-# PROJ-238: Backward compatibility alias
-FleetOrderSerializer = OrderSerializer

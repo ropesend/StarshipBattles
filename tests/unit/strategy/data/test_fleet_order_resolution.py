@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
 
@@ -315,11 +315,11 @@ class TestMixedOrderResolution:
 # =============================================================================
 
 # =============================================================================
-# Test: FleetOrder Serialization Round-Trip (Task 1.2)
+# Test: Order Serialization Round-Trip (Task 1.2)
 # =============================================================================
 
 class TestFleetOrderSerialization:
-    """Tests for FleetOrder to_dict serialization with Planet targets."""
+    """Tests for Order to_dict serialization with Planet targets."""
 
     def test_colonize_order_serializes_planet_as_planet_ref(self):
         """COLONIZE order serializes Planet target as _planet_ref, not full dict."""
@@ -328,7 +328,7 @@ class TestFleetOrderSerialization:
         planet.id = 42
         planet.name = "Colonize Target"
 
-        order = FleetOrder(OrderType.COLONIZE, planet)
+        order = Order(OrderType.COLONIZE, planet)
         data = order.to_dict()
 
         # Should serialize as planet_ref, not full planet dict
@@ -342,7 +342,7 @@ class TestFleetOrderSerialization:
         planet.id = 42
 
         # Serialize
-        order = FleetOrder(OrderType.COLONIZE, planet)
+        order = Order(OrderType.COLONIZE, planet)
         data = order.to_dict()
 
         # Deserialize via Fleet.from_dict

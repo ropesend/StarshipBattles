@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -16,14 +16,14 @@ class TestOrderTypeBuild:
         assert OrderType.BUILD is not None
 
     def test_build_order_creates_successfully(self):
-        """Test FleetOrder with BUILD type creates successfully."""
-        order = FleetOrder(OrderType.BUILD)
+        """Test Order with BUILD type creates successfully."""
+        order = Order(OrderType.BUILD)
         assert order.type == OrderType.BUILD
         assert order.target is None
 
     def test_build_order_serializes_correctly(self):
         """Test BUILD order serializes without target."""
-        order = FleetOrder(OrderType.BUILD)
+        order = Order(OrderType.BUILD)
         d = order.to_dict()
 
         assert d['type'] == 'BUILD'
@@ -51,7 +51,7 @@ class TestOrderTypeBuild:
     def test_build_order_roundtrip(self):
         """Test BUILD order survives serialization roundtrip."""
         fleet = Fleet("f1", 0, HexCoord(5, 3))
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [{'design_id': 'destroyer', 'turns_remaining': 5}]
 
         d = fleet.to_dict()
@@ -69,7 +69,7 @@ class TestFleetIsBuilding:
     def test_is_building_true_when_build_order_active(self):
         """Test is_building returns True when BUILD is current order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
 
         assert fleet.is_building is True
 
@@ -82,7 +82,7 @@ class TestFleetIsBuilding:
     def test_is_building_false_when_move_order(self):
         """Test is_building returns False when MOVE is current order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))
 
         assert fleet.is_building is False
 
@@ -90,14 +90,14 @@ class TestFleetIsBuilding:
         """Test is_building returns False when COLONIZE is current order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         mock_planet = MagicMock()
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, mock_planet))
+        fleet.add_order(Order(OrderType.COLONIZE, mock_planet))
 
         assert fleet.is_building is False
 
     def test_is_building_checks_only_current_order(self):
         """Test is_building only checks current (first) order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))  # Current
-        fleet.add_order(FleetOrder(OrderType.BUILD))  # Queued
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))  # Current
+        fleet.add_order(Order(OrderType.BUILD))  # Queued
 
         assert fleet.is_building is False  # MOVE is current, not BUILD

@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -65,7 +65,7 @@ class TestCollectMovements:
         fleet.speed = 100.0  # High speed = moves every tick
         fleet.location = HexCoord(0, 0)
         fleet.path = [HexCoord(1, 0)]
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        order = Order(OrderType.MOVE, HexCoord(10, 0))
         fleet.get_current_order.return_value = order
         fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         fleet.can_use_warp = MagicMock(return_value=True)
@@ -86,7 +86,7 @@ class TestCollectMovements:
         slow_fleet.speed = 10.0  # Moves every 10 ticks
         slow_fleet.location = HexCoord(0, 0)
         slow_fleet.path = [HexCoord(1, 0)]
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        order = Order(OrderType.MOVE, HexCoord(10, 0))
         slow_fleet.get_current_order.return_value = order
         slow_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         slow_fleet.can_use_warp = MagicMock(return_value=True)
@@ -111,7 +111,7 @@ class TestCollectMovements:
         stationary_fleet = MagicMock()
         stationary_fleet.speed = 0.0
         stationary_fleet.location = HexCoord(0, 0)
-        stationary_fleet.get_current_order.return_value = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        stationary_fleet.get_current_order.return_value = Order(OrderType.MOVE, HexCoord(10, 0))
         mock_empire.fleets = [stationary_fleet]
 
         moves = engine.collect_movements([mock_empire], mock_galaxy, tick=1)
@@ -170,7 +170,7 @@ class TestUnhandledOrderTypes:
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
         engine = FleetMovementEngine()
-        order = FleetOrder(OrderType.COLONIZE, None)
+        order = Order(OrderType.COLONIZE, None)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
 
@@ -185,7 +185,7 @@ class TestUnhandledOrderTypes:
         engine = FleetMovementEngine()
         target_fleet = MagicMock()
         target_fleet.location = HexCoord(10, 0)
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
 

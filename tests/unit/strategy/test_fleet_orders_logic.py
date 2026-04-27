@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 # Mock the window to avoid full pygame init
@@ -54,9 +54,9 @@ class TestFleetOrdersLogic:
     def test_reorder_down(self):
         fleet = Fleet(1, 0, (0, 0))
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, target=(10, 10)),
-            FleetOrder(OrderType.COLONIZE, target="PlanetA"),
-            FleetOrder(OrderType.MOVE, target=(20, 20))
+            Order(OrderType.MOVE, target=(10, 10)),
+            Order(OrderType.COLONIZE, target="PlanetA"),
+            Order(OrderType.MOVE, target=(20, 20))
         ]
         window = MockFleetOrdersWindow(fleet)
 
@@ -71,9 +71,9 @@ class TestFleetOrdersLogic:
     def test_reorder_up(self):
         fleet = Fleet(1, 0, (0, 0))
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, target=(10, 10)),
-            FleetOrder(OrderType.COLONIZE, target="PlanetA"),
-            FleetOrder(OrderType.MOVE, target=(20, 20))
+            Order(OrderType.MOVE, target=(10, 10)),
+            Order(OrderType.COLONIZE, target="PlanetA"),
+            Order(OrderType.MOVE, target=(20, 20))
         ]
         window = MockFleetOrdersWindow(fleet)
 
@@ -87,9 +87,9 @@ class TestFleetOrdersLogic:
     def test_delete_and_undo(self):
         fleet = Fleet(1, 0, (0, 0))
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, target=(10, 10)),
-            FleetOrder(OrderType.COLONIZE, target="PlanetA"),
-            FleetOrder(OrderType.MOVE, target=(20, 20))
+            Order(OrderType.MOVE, target=(10, 10)),
+            Order(OrderType.COLONIZE, target="PlanetA"),
+            Order(OrderType.MOVE, target=(20, 20))
         ]
         window = MockFleetOrdersWindow(fleet)
 
@@ -113,9 +113,9 @@ class TestFleetOrdersLogic:
     def test_undo_index_handling(self):
         fleet = Fleet(1, 0, (0, 0))
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, target=(10, 10)),
-            FleetOrder(OrderType.COLONIZE, target="PlanetA"),
-            FleetOrder(OrderType.MOVE, target=(20, 20))
+            Order(OrderType.MOVE, target=(10, 10)),
+            Order(OrderType.COLONIZE, target="PlanetA"),
+            Order(OrderType.MOVE, target=(20, 20))
         ]
         window = MockFleetOrdersWindow(fleet)
 

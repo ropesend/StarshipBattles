@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional
 
-from game.strategy.data.component_state import (
+from game.core.component_state import (
     ComponentState,
     component_state_key,
 )

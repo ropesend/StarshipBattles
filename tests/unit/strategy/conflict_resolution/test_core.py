@@ -235,7 +235,7 @@ class TestBuildingFleetsCombat:
         """Building fleet can still be attacked (no special protection)."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
@@ -244,7 +244,7 @@ class TestBuildingFleetsCombat:
         building_fleet.location = HexCoord(5, 5)
         building_fleet.owner_id = 0
         building_fleet.id = 1
-        building_fleet.orders = [FleetOrder(OrderType.BUILD)]
+        building_fleet.orders = [Order(OrderType.BUILD)]
         building_fleet.construction_queue = [{"design_id": "ship", "turns_remaining": 5}]
 
         # Attacker fleet

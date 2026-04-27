@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.engine.planet_action_engine import PlanetActionEngine
-from game.strategy.data.order_types import Order as PlanetOrder
+from game.strategy.data.order_types import Order as Order
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
@@ -112,7 +112,7 @@ class TestPlanetActionEngine:
         """ACTIVATE_ABILITY order is popped immediately (no tick progress)."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order = Order(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
         planet = _make_planet(facilities=[facility], orders=[order])
         empire = _make_empire(colonies=[planet])
@@ -127,7 +127,7 @@ class TestPlanetActionEngine:
         """ACTIVATE_ABILITY sets ComponentActivationState to ACTIVATING."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order = Order(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
         planet = _make_planet(facilities=[facility], orders=[order])
         empire = _make_empire(colonies=[planet])
@@ -158,7 +158,7 @@ class TestPlanetActionEngine:
             energy_drain_rate=25.0,
         ).to_dict()
 
-        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+        order = Order(OrderType.DEACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1",
                                    "ability_name": "PlanetaryShield",
                                    "component_key": "OUTER:0:geologic_stabilizer_sector"})
@@ -185,7 +185,7 @@ class TestPlanetActionEngine:
             energy_drain_rate=25.0,
         ).to_dict()
 
-        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+        order = Order(OrderType.DEACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1",
                                    "ability_name": "PlanetaryShield",
                                    "component_key": "OUTER:0:geologic_stabilizer_sector"})
@@ -201,7 +201,7 @@ class TestPlanetActionEngine:
     def test_destroyed_facility_cancels_order(self):
         """Order is canceled if target facility no longer exists."""
         engine = PlanetActionEngine()
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order = Order(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1", "ability_name": "PlanetaryShield"})
         planet = _make_planet(facilities=[], orders=[order])
         empire = _make_empire(colonies=[planet])
@@ -223,9 +223,9 @@ class TestPlanetActionEngine:
             }
         }
         facility = _make_facility("fac-1", design)
-        order1 = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order1 = Order(OrderType.ACTIVATE_ABILITY,
                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
-        order2 = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order2 = Order(OrderType.ACTIVATE_ABILITY,
                             target={"facility_instance_id": "fac-1", "ability_name": "AbilityB"})
         planet = _make_planet(facilities=[facility], orders=[order1, order2])
         empire = _make_empire(colonies=[planet])
@@ -256,9 +256,9 @@ class TestPlanetActionEngine:
         }
         facility = _make_facility("fac-1", design)
         orders = [
-            PlanetOrder(OrderType.ACTIVATE_ABILITY, target={"facility_instance_id": "fac-1", "ability_name": "GeologicStabilizer"}),
-            PlanetOrder(OrderType.ACTIVATE_ABILITY, target={"facility_instance_id": "fac-1", "ability_name": "StellarStabilizer"}),
-            PlanetOrder(OrderType.ACTIVATE_ABILITY, target={"facility_instance_id": "fac-1", "ability_name": "WarpFieldStabilizer"}),
+            Order(OrderType.ACTIVATE_ABILITY, target={"facility_instance_id": "fac-1", "ability_name": "GeologicStabilizer"}),
+            Order(OrderType.ACTIVATE_ABILITY, target={"facility_instance_id": "fac-1", "ability_name": "StellarStabilizer"}),
+            Order(OrderType.ACTIVATE_ABILITY, target={"facility_instance_id": "fac-1", "ability_name": "WarpFieldStabilizer"}),
         ]
         planet = _make_planet(facilities=[facility], orders=orders)
         empire = _make_empire(colonies=[planet])
@@ -285,11 +285,11 @@ class TestPlanetActionEngine:
             }
         }
         facility = _make_facility("fac-1", design)
-        activate_order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        activate_order = Order(OrderType.ACTIVATE_ABILITY,
                                     target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
         # A non-planet-action order blocks further processing
-        move_order = PlanetOrder(OrderType.MOVE, target=None)
-        deactivate_order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+        move_order = Order(OrderType.MOVE, target=None)
+        deactivate_order = Order(OrderType.DEACTIVATE_ABILITY,
                                       target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
         planet = _make_planet(facilities=[facility], orders=[activate_order, move_order, deactivate_order])
         empire = _make_empire(colonies=[planet])
@@ -319,9 +319,9 @@ class TestPlanetActionEngine:
             energy_drain_rate=20.0,
         ).to_dict()
 
-        activate_a = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        activate_a = Order(OrderType.ACTIVATE_ABILITY,
                                 target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
-        deactivate_b = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+        deactivate_b = Order(OrderType.DEACTIVATE_ABILITY,
                                   target={"facility_instance_id": "fac-1", "ability_name": "AbilityB",
                                           "component_key": "OUTER:1:comp_b"})
         planet = _make_planet(facilities=[facility], orders=[activate_a, deactivate_b])
@@ -352,7 +352,7 @@ class TestPlanetActionEngineEvents:
         event_bus = self._make_event_bus()
         engine = PlanetActionEngine(event_bus=event_bus)
         facility = _make_facility("fac-1", _shield_design())
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order = Order(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1",
                                    "ability_name": "PlanetaryShield"})
         planet = _make_planet(facilities=[facility], orders=[order])
@@ -379,7 +379,7 @@ class TestPlanetActionEngineEvents:
             energy_drain_rate=25.0,
         ).to_dict()
 
-        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+        order = Order(OrderType.DEACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1",
                                    "ability_name": "PlanetaryShield",
                                    "component_key": "OUTER:0:geologic_stabilizer_sector"})
@@ -409,7 +409,7 @@ class TestPlanetActionEngineEvents:
             energy_drain_rate=25.0,
         ).to_dict()
 
-        order = PlanetOrder(OrderType.DEACTIVATE_ABILITY,
+        order = Order(OrderType.DEACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1",
                                    "ability_name": "PlanetaryShield",
                                    "component_key": "OUTER:0:geologic_stabilizer_sector"})
@@ -427,7 +427,7 @@ class TestPlanetActionEngineEvents:
         """No crash when event_bus is not provided."""
         engine = PlanetActionEngine()
         facility = _make_facility("fac-1", _shield_design())
-        order = PlanetOrder(OrderType.ACTIVATE_ABILITY,
+        order = Order(OrderType.ACTIVATE_ABILITY,
                            target={"facility_instance_id": "fac-1",
                                    "ability_name": "PlanetaryShield"})
         planet = _make_planet(facilities=[facility], orders=[order])

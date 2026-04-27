@@ -34,7 +34,7 @@ from game.strategy.data.component_activation_state import (
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.stars import Spectrum, Star, StarType
@@ -281,7 +281,7 @@ class TestStabilizerBlocksSuperweaponExecution:
 
         victim_hex = system.global_location + victim.location
         fleet = Fleet(1, empire.id, victim_hex)
-        fleet.orders.append(FleetOrder(OrderType.IMPLODE_PLANET, victim))
+        fleet.orders.append(Order(OrderType.IMPLODE_PLANET, victim))
         empire.fleets.append(fleet)
 
         registry = _make_component_registry(
@@ -299,7 +299,7 @@ class TestStabilizerBlocksSuperweaponExecution:
             "StellarStabilizer", "stellar_stabilizer"
         )
         fleet = Fleet(1, empire.id, system.global_location)
-        fleet.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        fleet.orders.append(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(fleet)
 
         assert len(system.stars) == 1
@@ -326,7 +326,7 @@ class TestStabilizerBlocksSuperweaponExecution:
 
         wp_hex = system.global_location + wp1.location
         fleet = Fleet(1, empire.id, wp_hex)
-        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, wp1))
+        fleet.orders.append(Order(OrderType.CLOSE_WARP_POINT, wp1))
         empire.fleets.append(fleet)
 
         registry = _make_component_registry(

@@ -429,18 +429,18 @@ class StrategyWindowManager:
             owner_id = entity.owner_id
 
             def clear_orders_callback(entity_id: int) -> None:
-                from game.strategy.engine.commands import ClearFleetOrdersCommand
-                cmd = ClearFleetOrdersCommand(fleet_id=entity_id, empire_id=owner_id)
+                from game.strategy.engine.commands import ClearOrdersCommand
+                cmd = ClearOrdersCommand(fleet_id=entity_id, empire_id=owner_id)
                 self.scene.facade.handle_command(cmd)
 
             def delete_order_callback(entity_id: int, order_index: int) -> None:
-                from game.strategy.engine.commands import DeleteFleetOrderCommand
-                cmd = DeleteFleetOrderCommand(fleet_id=entity_id, order_index=order_index, empire_id=owner_id)
+                from game.strategy.engine.commands import DeleteOrderCommand
+                cmd = DeleteOrderCommand(fleet_id=entity_id, order_index=order_index, empire_id=owner_id)
                 self.scene.facade.handle_command(cmd)
 
             def reorder_order_callback(entity_id: int, order_index: int, direction: int) -> None:
-                from game.strategy.engine.commands import ReorderFleetOrderCommand
-                cmd = ReorderFleetOrderCommand(fleet_id=entity_id, order_index=order_index, direction=direction, empire_id=owner_id)
+                from game.strategy.engine.commands import ReorderOrderCommand
+                cmd = ReorderOrderCommand(fleet_id=entity_id, order_index=order_index, direction=direction, empire_id=owner_id)
                 self.scene.facade.handle_command(cmd)
 
         def edit_order_callback(entity_id: int, order_index: int, order) -> None:

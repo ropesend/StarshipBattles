@@ -18,7 +18,7 @@ from unittest.mock import Mock
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.planet import Planet, PlanetType
@@ -188,7 +188,7 @@ class TestProcessColonizeValidation:
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -221,7 +221,7 @@ class TestProcessColonizeValidation:
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -256,7 +256,7 @@ class TestProcessColonizeValidation:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(combat_ship1)
         fleet.ships.append(combat_ship2)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -292,7 +292,7 @@ class TestProcessColonizeValidation:
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(combat_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -373,7 +373,7 @@ class TestProcessColonizeAnyPlanet:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
         # "Any Planet" = target is None
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
+        fleet.orders.append(Order(OrderType.COLONIZE, None))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -407,7 +407,7 @@ class TestProcessColonizeAnyPlanet:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(combat_ship)
         # "Any Planet" = target is None
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
+        fleet.orders.append(Order(OrderType.COLONIZE, None))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)

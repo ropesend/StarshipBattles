@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
-    from game.strategy.data.order_types import Order as PlanetOrder
+    from game.strategy.data.order_types import Order
     from game.strategy.data.empire import Empire
 
 
@@ -148,7 +148,7 @@ class PlanetActionEngine(IPlanetActionEngine):
     def _execute_order(
         self,
         planet: 'Planet',
-        order: 'PlanetOrder',
+        order: 'Order',
         empire: 'Empire',
         component_registry: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -168,7 +168,7 @@ class PlanetActionEngine(IPlanetActionEngine):
     def _initiate_activation(
         self,
         planet: 'Planet',
-        order: 'PlanetOrder',
+        order: 'Order',
         empire: 'Empire',
         ability_name: str,
         component_registry: Optional[Dict[str, Any]] = None,
@@ -225,7 +225,7 @@ class PlanetActionEngine(IPlanetActionEngine):
     def _initiate_deactivation(
         self,
         planet: 'Planet',
-        order: 'PlanetOrder',
+        order: 'Order',
         empire: 'Empire',
         ability_name: str,
         component_registry: Optional[Dict[str, Any]] = None,
@@ -338,7 +338,7 @@ class PlanetActionEngine(IPlanetActionEngine):
                     return int(ability_data.get('deactivation_time', 1))
         return 1
 
-    def _target_facility_exists(self, planet: 'Planet', order: 'PlanetOrder') -> bool:
+    def _target_facility_exists(self, planet: 'Planet', order: 'Order') -> bool:
         """Check if the target facility still exists on the planet."""
         target = order.target
         if not isinstance(target, dict):
@@ -350,7 +350,7 @@ class PlanetActionEngine(IPlanetActionEngine):
 
         return any(f.instance_id == facility_id for f in planet.facilities)
 
-    def _find_target_facility(self, planet: 'Planet', order: 'PlanetOrder'):
+    def _find_target_facility(self, planet: 'Planet', order: 'Order'):
         """Find the target facility for an order."""
         target = order.target
         if isinstance(target, dict):

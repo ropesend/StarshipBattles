@@ -7,7 +7,7 @@ cancel, order lifecycle, and validation.
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 def make_empire_with_fleets(*fleet_ids, empire_id=0):
@@ -33,8 +33,8 @@ class TestJoinRedirectOnMerge:
         f["c"].location = HexCoord(50, 0)
 
         # A pursues B
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["b"]))
-        f["a"].add_order(FleetOrder(OrderType.JOIN_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.JOIN_FLEET, target=f["b"]))
         f["b"].pursuer_tracker.add_pursuer(f["a"])
 
         # B merges into C
@@ -53,7 +53,7 @@ class TestJoinRedirectOnMerge:
         f["c"].location = HexCoord(50, 0)
 
         # A intercepts B (only MOVE_TO_FLEET, no JOIN_FLEET)
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["b"]))
         f["b"].pursuer_tracker.add_pursuer(f["a"])
 
         # B merges into C
@@ -73,8 +73,8 @@ class TestJoinRedirectOnMerge:
 
         # Chain: A→B, B→C, C→D
         for src, tgt in [("a", "b"), ("b", "c"), ("c", "d")]:
-            f[src].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f[tgt]))
-            f[src].add_order(FleetOrder(OrderType.JOIN_FLEET, target=f[tgt]))
+            f[src].add_order(Order(OrderType.MOVE_TO_FLEET, target=f[tgt]))
+            f[src].add_order(Order(OrderType.JOIN_FLEET, target=f[tgt]))
             f[tgt].pursuer_tracker.add_pursuer(f[src])
 
         # D merges into E → C redirected to E
@@ -104,7 +104,7 @@ class TestJoinRedirectOnMerge:
         f["e"].location = HexCoord(50, 0)
 
         for src in ["a", "b", "c"]:
-            f[src].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["d"]))
+            f[src].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["d"]))
             f["d"].pursuer_tracker.add_pursuer(f[src])
 
         f["d"].merge_with(f["e"])
@@ -123,8 +123,8 @@ class TestJoinCancelOnDestruction:
         """Fleet A joins B. B destroyed. A's orders cancelled."""
         empire, f = make_empire_with_fleets("a", "b")
 
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["b"]))
-        f["a"].add_order(FleetOrder(OrderType.JOIN_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.JOIN_FLEET, target=f["b"]))
         f["b"].pursuer_tracker.add_pursuer(f["a"])
 
         # B destroyed
@@ -137,9 +137,9 @@ class TestJoinCancelOnDestruction:
         """Only orders targeting destroyed fleet are removed."""
         empire, f = make_empire_with_fleets("a", "b", "c")
 
-        f["a"].add_order(FleetOrder(OrderType.MOVE, target=HexCoord(5, 5)))
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["b"]))
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["c"]))
+        f["a"].add_order(Order(OrderType.MOVE, target=HexCoord(5, 5)))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["c"]))
         f["b"].pursuer_tracker.add_pursuer(f["a"])
 
         empire.remove_fleet(f["b"])
@@ -156,7 +156,7 @@ class TestOrderLifecycleEdgeCases:
         """Fleet A pursues B. User clears A's orders. A removed from B's pursuers."""
         empire, f = make_empire_with_fleets("a", "b")
 
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["b"]))
         f["b"].pursuer_tracker.add_pursuer(f["a"])
 
         f["a"].clear_orders()
@@ -166,9 +166,9 @@ class TestOrderLifecycleEdgeCases:
         """Fleet A has [MOVE, MOVE_TO_FLEET→B, JOIN_FLEET→B]. Delete MOVE_TO_FLEET. Pursuer still registered (JOIN_FLEET remains)."""
         empire, f = make_empire_with_fleets("a", "b")
 
-        f["a"].add_order(FleetOrder(OrderType.MOVE, target=HexCoord(1, 0)))
-        f["a"].add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=f["b"]))
-        f["a"].add_order(FleetOrder(OrderType.JOIN_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.MOVE, target=HexCoord(1, 0)))
+        f["a"].add_order(Order(OrderType.MOVE_TO_FLEET, target=f["b"]))
+        f["a"].add_order(Order(OrderType.JOIN_FLEET, target=f["b"]))
         f["b"].pursuer_tracker.add_pursuer(f["a"])
 
         # Delete the MOVE_TO_FLEET order (index 1)

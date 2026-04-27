@@ -3,7 +3,7 @@ import pytest
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from unittest.mock import MagicMock, patch
 
@@ -19,12 +19,12 @@ def test_movement_timing(mock_path, fresh_registries):
     f5 = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
     # Mock path: 5 steps linear
     f5.path = [HexCoord(1,0), HexCoord(2,0), HexCoord(3,0), HexCoord(4,0), HexCoord(5,0)]
-    f5.add_order(FleetOrder(OrderType.MOVE, HexCoord(5,0)))
+    f5.add_order(Order(OrderType.MOVE, HexCoord(5,0)))
 
     # Speed 10: 100 // 10 = 10. Moves at 10, 20... 100.
     f10 = Fleet(2, 0, HexCoord(0, 0), speed=10.0)
     f10.path = [HexCoord(i,0) for i in range(1, 11)] # 10 step path
-    f10.add_order(FleetOrder(OrderType.MOVE, HexCoord(10,0)))
+    f10.add_order(Order(OrderType.MOVE, HexCoord(10,0)))
 
     # Mock pathfinding to return paths that match our expectations
     # This prevents path recalculation from changing our test conditions
@@ -55,11 +55,11 @@ def test_full_turn_distance(mock_path, fresh_registries):
     f2 = Fleet(1, 0, HexCoord(0,0), speed=2.0) # Should move 2 steps
     # Path must end at destination (10,0) to avoid path recalculation
     f2.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1..10
-    f2.add_order(FleetOrder(OrderType.MOVE, HexCoord(10,0)))
+    f2.add_order(Order(OrderType.MOVE, HexCoord(10,0)))
 
     f5 = Fleet(2, 0, HexCoord(0,0), speed=5.0) # Should move 5 steps
     f5.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1..10
-    f5.add_order(FleetOrder(OrderType.MOVE, HexCoord(10,0)))
+    f5.add_order(Order(OrderType.MOVE, HexCoord(10,0)))
 
     # Mock pathfinding - return None to use pre-set paths
     mock_path.return_value = None
@@ -81,12 +81,12 @@ def test_combat_interception(fresh_registries):
     # P1 at (0,0) moving Right -> Speed 5
     f1 = Fleet(1, 0, HexCoord(0,0), speed=5.0)
     f1.path = [HexCoord(1,0), HexCoord(2,0), HexCoord(3,0)]
-    f1.add_order(FleetOrder(OrderType.MOVE, HexCoord(3,0)))
+    f1.add_order(Order(OrderType.MOVE, HexCoord(3,0)))
 
     # P2 at (2,0) moving Left <- Speed 5
     f2 = Fleet(2, 1, HexCoord(2,0), speed=5.0)
     f2.path = [HexCoord(1,0), HexCoord(0,0)]
-    f2.add_order(FleetOrder(OrderType.MOVE, HexCoord(0,0)))
+    f2.add_order(Order(OrderType.MOVE, HexCoord(0,0)))
 
     e1 = Empire(0, "P1", (0,0,0))
     e1.add_fleet(f1)
@@ -137,8 +137,8 @@ def test_order_chaining(fresh_registries):
     # PROJ-211: Pass registries for DI compliance
     f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
     f1.path = [HexCoord(1,0)]
-    f1.add_order(FleetOrder(OrderType.MOVE, HexCoord(1,0)))
-    f1.add_order(FleetOrder(OrderType.COLONIZE, planet))
+    f1.add_order(Order(OrderType.MOVE, HexCoord(1,0)))
+    f1.add_order(Order(OrderType.COLONIZE, planet))
 
     e1 = Empire(0, "P1", (0,0,0))
     e1.add_fleet(f1)
@@ -147,7 +147,7 @@ def test_order_chaining(fresh_registries):
     f1.location = HexCoord(1,0)
     f1.path = []
     # Clear move order, just leave Colonize
-    f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
+    f1.orders = [Order(OrderType.COLONIZE, planet)]
 
     engine.process_turn([e1], galaxy)
 
@@ -181,7 +181,7 @@ def test_colonize_deletes_fleet(fresh_registries):
     f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
     # PROJ-211: Pass registries for DI compliance
     f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
-    f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
+    f1.orders = [Order(OrderType.COLONIZE, planet)]
 
     e1 = Empire(0, "P1", (0, 0, 0))
     e1.add_fleet(f1)

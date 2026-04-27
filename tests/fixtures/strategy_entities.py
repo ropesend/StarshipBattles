@@ -20,8 +20,8 @@ from game.strategy.data.galaxy import WarpPoint, StarSystem
 from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.order_types import OrderType, FleetOrder
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.strategy.data.order_types import OrderType, Order
+from game.core.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
@@ -281,11 +281,11 @@ def create_test_fleet_order(
     order_type: OrderType = OrderType.MOVE,
     target: Any = None,
     **overrides,
-) -> FleetOrder:
-    """Create a FleetOrder with default MOVE type."""
+) -> Order:
+    """Create a Order with default MOVE type."""
     if target is None:
         target = HexCoord(5, -3)
-    order = FleetOrder(order_type=order_type, target=target)
+    order = Order(order_type=order_type, target=target)
     for key, value in overrides.items():
         setattr(order, key, value)
     return order

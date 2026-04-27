@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestProjectPath:
@@ -32,7 +32,7 @@ class TestProjectPath:
             speed=2.0  # 2 moves per turn
         )
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(3, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(3, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         segments = service.project_path(fleet, galaxy=MagicMock(), max_turns=5)
@@ -63,7 +63,7 @@ class TestProjectPath:
             speed=1.0  # 1 move per turn
         )
         fleet.path = [HexCoord(i, 0) for i in range(1, 20)]  # 19 steps
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(19, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(19, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         segments = service.project_path(fleet, galaxy=MagicMock(), max_turns=3)
@@ -86,7 +86,7 @@ class TestProjectPath:
         )
         # Path with a warp jump: (0,0) -> (1,0) -> (5,0) which is distance > 1
         fleet.path = [HexCoord(1, 0), HexCoord(5, 0)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(5, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(5, 0))]
         fleet.can_use_warp = MagicMock(return_value=True)
 
         segments = service.project_path(fleet, galaxy=MagicMock(), max_turns=5)
@@ -131,7 +131,7 @@ class TestProjectPath:
             speed=2.0
         )
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(4, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(4, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         segments = service.project_path(fleet, galaxy=MagicMock(), max_turns=5)
@@ -159,7 +159,7 @@ class TestProjectPathAsDicts:
             speed=5.0
         )
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(2, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(2, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         result = service.project_path_as_dicts(fleet, galaxy=MagicMock(), max_turns=5)
@@ -192,7 +192,7 @@ class TestCalculateFleetNextHex:
             speed=5.0
         )
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(3, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(3, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         result = service.calculate_fleet_next_hex(fleet, galaxy=MagicMock())
@@ -212,7 +212,7 @@ class TestCalculateFleetNextHex:
             speed=5.0
         )
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(3, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(3, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         service.calculate_fleet_next_hex(fleet, galaxy=MagicMock())
@@ -233,7 +233,7 @@ class TestCalculateFleetNextHex:
             speed=5.0
         )
         fleet.path = [HexCoord(1, 0)]  # Only one step - order will complete
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 0))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(1, 0))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         # Store original order count
@@ -278,7 +278,7 @@ class TestCalculateFleetNextHex:
             speed=5.0
         )
         fleet.path = []
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(5, 5))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(5, 5))]
         fleet.can_use_warp = MagicMock(return_value=False)
 
         result = service.calculate_fleet_next_hex(fleet, galaxy=MagicMock())

@@ -246,14 +246,14 @@ class TestFleetSummaryFactory:
         """from_fleet detects orders."""
         from game.strategy.facade.dto.empire_dto import FleetSummary
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         fleet = Fleet(
             fleet_id=100,
             owner_id=0,
             location=HexCoord(5, 5),
         )
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(10, 10)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(10, 10)))
 
         summary = FleetSummary.from_fleet(fleet)
 

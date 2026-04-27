@@ -3,7 +3,7 @@
 import json
 import pytest
 
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.core.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
 from tests.fixtures.strategy_entities import create_test_ship_instance
 from tests.integration.save_load.conftest import assert_round_trip_fidelity, assert_field_preserved

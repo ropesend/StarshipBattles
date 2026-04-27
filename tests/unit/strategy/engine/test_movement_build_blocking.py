@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
@@ -32,7 +32,7 @@ class TestMovementBlockingForBuildOrder:
     def fleet_with_build_order(self):
         """Create a fleet with BUILD order."""
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [{'design_id': 'frigate', 'turns_remaining': 5}]
         return fleet
 
@@ -40,7 +40,7 @@ class TestMovementBlockingForBuildOrder:
     def fleet_with_move_order(self):
         """Create a fleet with MOVE order."""
         fleet = Fleet("f2", 0, HexCoord(0, 0), speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]  # Pre-calculated path
         return fleet
 
@@ -78,8 +78,8 @@ class TestMovementBlockingForBuildOrder:
     ):
         """Test fleet with BUILD order followed by MOVE doesn't move until BUILD is popped."""
         fleet = Fleet("f3", 0, HexCoord(0, 0), speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD))  # Current order
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(10, 10)))  # Queued after
+        fleet.add_order(Order(OrderType.BUILD))  # Current order
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(10, 10)))  # Queued after
         fleet.construction_queue = [{'design_id': 'cruiser', 'turns_remaining': 10}]
         mock_empire.fleets = [fleet]
 

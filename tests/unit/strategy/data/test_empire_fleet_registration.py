@@ -103,7 +103,7 @@ class TestRemoveFleetPursuerCancel:
 
     def test_remove_fleet_cancels_pursuer_orders(self):
         """When Fleet B is removed, Fleet A (pursuing B) should have its orders cancelled."""
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         empire = Empire(0, "Test", (255, 0, 0))
         fleet_a = Fleet(1, 0, HexCoord(0, 0))
@@ -113,8 +113,8 @@ class TestRemoveFleetPursuerCancel:
         empire.add_fleet(fleet_b)
 
         # A pursues B
-        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_b))
-        fleet_a.add_order(FleetOrder(OrderType.JOIN_FLEET, target=fleet_b))
+        fleet_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=fleet_b))
+        fleet_a.add_order(Order(OrderType.JOIN_FLEET, target=fleet_b))
         fleet_b.pursuer_tracker.add_pursuer(fleet_a)
 
         # B is destroyed
@@ -136,7 +136,7 @@ class TestRemoveFleetPursuerCancel:
 
     def test_remove_fleet_preserves_non_targeting_orders(self):
         """Only orders targeting the removed fleet are cancelled."""
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         empire = Empire(0, "Test", (255, 0, 0))
         fleet_a = Fleet(1, 0, HexCoord(0, 0))
@@ -148,9 +148,9 @@ class TestRemoveFleetPursuerCancel:
         empire.add_fleet(fleet_c)
 
         # A has orders targeting both B and C
-        fleet_a.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(3, 3)))
-        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_b))
-        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_c))
+        fleet_a.add_order(Order(OrderType.MOVE, target=HexCoord(3, 3)))
+        fleet_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=fleet_b))
+        fleet_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=fleet_c))
         fleet_b.pursuer_tracker.add_pursuer(fleet_a)
 
         # B is destroyed

@@ -9,7 +9,7 @@ from game.strategy.engine.commands import IssueColonizeCommand, CommandType
 from game.strategy.engine.turn_engine import TurnEngine
 from game.core.validation import ValidationResult
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy, StarSystem, Planet
 
@@ -267,21 +267,21 @@ class TestQueueColonizeMissionCommand:
 
 
 class TestClearFleetOrdersCommand:
-    """Tests for ClearFleetOrdersCommand class."""
+    """Tests for ClearOrdersCommand class."""
 
     def test_create_clear_orders_command(self):
-        """ClearFleetOrdersCommand can be created with fleet ID."""
-        from game.strategy.engine.commands import ClearFleetOrdersCommand, CommandType
+        """ClearOrdersCommand can be created with fleet ID."""
+        from game.strategy.engine.commands import ClearOrdersCommand, CommandType
 
-        cmd = ClearFleetOrdersCommand(fleet_id=5)
+        cmd = ClearOrdersCommand(fleet_id=5)
 
         assert cmd.fleet_id == 5
         assert cmd.type == CommandType.ISSUE_ORDER
 
     def test_clear_orders_command_has_name(self):
         """ClearOrdersCommand has correct name property (PROJ-238 renamed)."""
-        from game.strategy.engine.commands import ClearFleetOrdersCommand
+        from game.strategy.engine.commands import ClearOrdersCommand
 
-        cmd = ClearFleetOrdersCommand(fleet_id=5)
+        cmd = ClearOrdersCommand(fleet_id=5)
 
         assert cmd.name == "ClearOrdersCommand"

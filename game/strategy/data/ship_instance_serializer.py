@@ -127,7 +127,7 @@ class ShipInstanceSerializer:
         # PROJ-269 Phase 2: restore per-component persistent state.
         # Missing key defaults to empty — legacy saves without
         # `components` gracefully degrade (CLAUDE.md "saves are disposable").
-        from game.strategy.data.component_state import ComponentState as _ComponentState
+        from game.core.component_state import ComponentState as _ComponentState
         raw_components = data.get('components', {})
         if raw_components:
             instance.components = {

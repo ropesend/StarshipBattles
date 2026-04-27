@@ -12,7 +12,7 @@ class TestFormulaExceptionRaising:
 
     def test_syntax_error_raises_formula_exception(self):
         """Syntax errors should raise FormulaException."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("1 +* 2", {})
@@ -22,7 +22,7 @@ class TestFormulaExceptionRaising:
 
     def test_undefined_variable_raises_formula_exception(self):
         """Undefined variable should raise FormulaException."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("undefined_var * 2", {"x": 1})
@@ -32,7 +32,7 @@ class TestFormulaExceptionRaising:
 
     def test_division_by_zero_raises_formula_exception(self):
         """Division by zero should raise FormulaException."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("1 / 0", {})
@@ -41,7 +41,7 @@ class TestFormulaExceptionRaising:
 
     def test_dangerous_function_raises_formula_exception(self):
         """Dangerous functions should raise FormulaException."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("__import__('os')", {})
@@ -51,7 +51,7 @@ class TestFormulaExceptionRaising:
 
     def test_exception_includes_context_variables(self):
         """FormulaException should include available context variables."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         context = {"x": 10, "y": 5}
         with pytest.raises(FormulaException) as exc_info:
@@ -62,7 +62,7 @@ class TestFormulaExceptionRaising:
 
     def test_exception_preserves_original_error(self):
         """FormulaException should chain from the original error."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("1 / 0", {})
@@ -72,7 +72,7 @@ class TestFormulaExceptionRaising:
 
     def test_valid_formula_does_not_raise(self):
         """Valid formulas should not raise exceptions."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         # These should all succeed
         assert evaluate_math_formula("1 + 1", {}) == 2
@@ -86,7 +86,7 @@ class TestFormulaExceptionErrorCodes:
 
     def test_syntax_error_has_code(self):
         """Syntax errors should have error code."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("((( malformed", {})
@@ -96,7 +96,7 @@ class TestFormulaExceptionErrorCodes:
 
     def test_undefined_variable_has_code(self):
         """Undefined variable errors should have error code."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("missing_var", {})
@@ -105,7 +105,7 @@ class TestFormulaExceptionErrorCodes:
 
     def test_runtime_error_has_code(self):
         """Runtime errors should have error code."""
-        from game.simulation.formula_system import evaluate_math_formula
+        from game.core.formula_evaluator import evaluate_math_formula
 
         with pytest.raises(FormulaException) as exc_info:
             evaluate_math_formula("1 / 0", {})
@@ -118,7 +118,7 @@ class TestValidateFormulaDetailedErrors:
 
     def test_validate_returns_error_details(self):
         """validate_formula should return detailed error info."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         errors = validate_formula("undefined_var + x", ["x"])
 
@@ -128,7 +128,7 @@ class TestValidateFormulaDetailedErrors:
 
     def test_validate_multiple_errors(self):
         """validate_formula should catch multiple undefined variables."""
-        from game.simulation.formula_system import validate_formula
+        from game.core.formula_evaluator import validate_formula
 
         errors = validate_formula("a + b + c", ["c"])
 
@@ -143,21 +143,21 @@ class TestSafeEvaluate:
 
     def test_safe_evaluate_returns_default_on_error(self):
         """safe_evaluate_math_formula should return default on error."""
-        from game.simulation.formula_system import safe_evaluate_math_formula
+        from game.core.formula_evaluator import safe_evaluate_math_formula
 
         result = safe_evaluate_math_formula("1 / 0", {}, default=0)
         assert result == 0
 
     def test_safe_evaluate_returns_custom_default(self):
         """safe_evaluate_math_formula should return specified default."""
-        from game.simulation.formula_system import safe_evaluate_math_formula
+        from game.core.formula_evaluator import safe_evaluate_math_formula
 
         result = safe_evaluate_math_formula("undefined", {}, default=-1)
         assert result == -1
 
     def test_safe_evaluate_success_returns_value(self):
         """safe_evaluate_math_formula should return computed value on success."""
-        from game.simulation.formula_system import safe_evaluate_math_formula
+        from game.core.formula_evaluator import safe_evaluate_math_formula
 
         result = safe_evaluate_math_formula("2 + 3", {}, default=0)
         assert result == 5
@@ -165,7 +165,7 @@ class TestSafeEvaluate:
     def test_safe_evaluate_logs_warning(self, caplog):
         """safe_evaluate_math_formula should log warning on error."""
         import logging
-        from game.simulation.formula_system import safe_evaluate_math_formula
+        from game.core.formula_evaluator import safe_evaluate_math_formula
 
         with caplog.at_level(logging.WARNING):
             safe_evaluate_math_formula("bad syntax ??", {}, default=0)

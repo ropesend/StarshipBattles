@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -36,7 +36,7 @@ class TestMovementCalculation:
 
         engine = FleetMovementEngine()
         target = HexCoord(10, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -58,7 +58,7 @@ class TestMovementCalculation:
 
         engine = FleetMovementEngine()
         target = HexCoord(0, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -75,7 +75,7 @@ class TestMovementCalculation:
 
         engine = FleetMovementEngine()
         target = HexCoord(10, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = [HexCoord(5, 0), HexCoord(10, 0)]  # Pre-existing path
@@ -92,7 +92,7 @@ class TestMovementCalculation:
 
         engine = FleetMovementEngine()
         new_target = HexCoord(20, 0)  # Different destination
-        order = FleetOrder(OrderType.MOVE, new_target)
+        order = Order(OrderType.MOVE, new_target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = [HexCoord(5, 0), HexCoord(10, 0)]  # Old path to (10,0)

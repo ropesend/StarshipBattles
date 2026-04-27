@@ -2,7 +2,7 @@
 import pytest
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -151,7 +151,7 @@ class TestFleetSerialization:
         """Test that WARP orders are properly serialized and restored (PROJ-187)."""
         warp_target = HexCoord(10, 5)
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
-        fleet.orders.append(FleetOrder(OrderType.WARP, target=warp_target))
+        fleet.orders.append(Order(OrderType.WARP, target=warp_target))
 
         # Serialize
         d = fleet.to_dict()
@@ -172,7 +172,7 @@ class TestFleetSerialization:
     def test_roundtrip_orders_preserved(self):
         """Test that orders survive serialization roundtrip."""
         original = Fleet("test", 0, HexCoord(0, 0))
-        original.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 2)))
+        original.add_order(Order(OrderType.MOVE, HexCoord(2, 2)))
 
         d = original.to_dict()
 
@@ -183,42 +183,42 @@ class TestFleetSerialization:
 
 
 class TestFleetOrderExecutionProgress:
-    """Test cases for FleetOrder execution_progress tracking (PROJ-187 Phase 1)."""
+    """Test cases for Order execution_progress tracking (PROJ-187 Phase 1)."""
 
     def test_fleet_order_execution_progress_default_zero(self):
-        """Test that FleetOrder.execution_progress defaults to 0."""
-        order = FleetOrder(OrderType.MOVE, HexCoord(1, 2))
+        """Test that Order.execution_progress defaults to 0."""
+        order = Order(OrderType.MOVE, HexCoord(1, 2))
         assert order.execution_progress == 0
 
     def test_fleet_order_execution_progress_settable(self):
         """Test that execution_progress can be set."""
-        order = FleetOrder(OrderType.COLONIZE, None)
+        order = Order(OrderType.COLONIZE, None)
         order.execution_progress = 5
         assert order.execution_progress == 5
 
     def test_fleet_order_repr_excludes_zero_progress(self):
         """Test that repr excludes execution_progress when it's 0."""
-        order = FleetOrder(OrderType.MOVE, HexCoord(1, 2))
+        order = Order(OrderType.MOVE, HexCoord(1, 2))
         r = repr(order)
         assert "execution_progress" not in r
         assert "MOVE" in r
 
     def test_fleet_order_repr_includes_nonzero_progress(self):
         """Test that repr includes execution_progress when > 0."""
-        order = FleetOrder(OrderType.COLONIZE, None)
+        order = Order(OrderType.COLONIZE, None)
         order.execution_progress = 3
         r = repr(order)
         assert "progress=3" in r
 
     def test_fleet_order_to_dict_excludes_zero_progress(self):
         """Test that to_dict excludes execution_progress when it's 0."""
-        order = FleetOrder(OrderType.MOVE, HexCoord(1, 2))
+        order = Order(OrderType.MOVE, HexCoord(1, 2))
         d = order.to_dict()
         assert 'execution_progress' not in d
 
     def test_fleet_order_to_dict_includes_nonzero_progress(self):
         """Test that to_dict includes execution_progress when > 0."""
-        order = FleetOrder(OrderType.COLONIZE, None)
+        order = Order(OrderType.COLONIZE, None)
         order.execution_progress = 7
         d = order.to_dict()
         assert d['execution_progress'] == 7
@@ -226,7 +226,7 @@ class TestFleetOrderExecutionProgress:
     def test_fleet_order_roundtrip_with_progress(self):
         """Test that execution_progress survives Fleet serialization roundtrip."""
         fleet = Fleet("test", 0, HexCoord(0, 0))
-        order = FleetOrder(OrderType.COLONIZE, None)
+        order = Order(OrderType.COLONIZE, None)
         order.execution_progress = 3
         fleet.add_order(order)
 
@@ -239,7 +239,7 @@ class TestFleetOrderExecutionProgress:
     def test_fleet_order_roundtrip_zero_progress(self):
         """Test that zero progress (default) survives roundtrip."""
         fleet = Fleet("test", 0, HexCoord(0, 0))
-        order = FleetOrder(OrderType.MOVE, HexCoord(5, 5))
+        order = Order(OrderType.MOVE, HexCoord(5, 5))
         fleet.add_order(order)
 
         d = fleet.to_dict()
@@ -278,16 +278,16 @@ class TestWarpOrderType:
         assert OrderType.WARP.name == 'WARP'
 
     def test_warp_order_creation(self):
-        """Test creating a FleetOrder with WARP type."""
+        """Test creating a Order with WARP type."""
         target = HexCoord(3, 4)
-        order = FleetOrder(OrderType.WARP, target)
+        order = Order(OrderType.WARP, target)
         assert order.type == OrderType.WARP
         assert order.target == target
 
     def test_warp_order_serialization(self):
         """Test that WARP orders serialize correctly."""
         target = HexCoord(5, 6)
-        order = FleetOrder(OrderType.WARP, target)
+        order = Order(OrderType.WARP, target)
         d = order.to_dict()
         assert d['type'] == 'WARP'
         assert d['target'] == {'q': 5, 'r': 6}
@@ -295,7 +295,7 @@ class TestWarpOrderType:
     def test_warp_order_roundtrip(self):
         """Test that WARP orders survive Fleet serialization roundtrip."""
         fleet = Fleet("test", 0, HexCoord(0, 0))
-        fleet.add_order(FleetOrder(OrderType.WARP, HexCoord(7, 8)))
+        fleet.add_order(Order(OrderType.WARP, HexCoord(7, 8)))
 
         d = fleet.to_dict()
         restored = Fleet.from_dict(d)

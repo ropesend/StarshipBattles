@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -37,7 +37,7 @@ class TestMovementCalculation:
     def test_move_order_calculates_path(self, turn_engine, mock_fleet, mock_galaxy):
         """MOVE order triggers path calculation."""
         target = HexCoord(10, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -54,7 +54,7 @@ class TestMovementCalculation:
     def test_at_destination_pops_order(self, turn_engine, mock_fleet, mock_galaxy):
         """Fleet at destination pops the MOVE order."""
         target = HexCoord(0, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -69,7 +69,7 @@ class TestMovementCalculation:
         """MOVE_TO_FLEET order uses intercept calculation."""
         target_fleet = MagicMock()
         target_fleet.location = HexCoord(50, 0)
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+        order = Order(OrderType.MOVE_TO_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -88,7 +88,7 @@ class TestMovementCalculation:
 
     def test_invalid_target_fleet_cancels_order(self, turn_engine, mock_fleet, mock_galaxy):
         """MOVE_TO_FLEET with invalid target cancels order."""
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, None)  # Invalid target
+        order = Order(OrderType.MOVE_TO_FLEET, None)  # Invalid target
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -187,7 +187,7 @@ class TestTickProcessing:
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
         fleet.speed = 100.0  # Move every tick
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        order = Order(OrderType.MOVE, HexCoord(10, 0))
         fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]  # Pre-computed path
         fleet.get_current_order = MagicMock(return_value=order)
@@ -217,7 +217,7 @@ class TestTickProcessing:
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
         fleet.speed = 100.0
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        order = Order(OrderType.MOVE, HexCoord(10, 0))
         fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         fleet.path = [HexCoord(1, 0)]  # Has path
         fleet.get_current_order = MagicMock(return_value=order)
@@ -264,7 +264,7 @@ class TestJoinFleetDuringTick:
         joining_fleet.speed = 10.0
         joining_fleet.get_ship_instances = MagicMock(return_value=[])
 
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         joining_fleet.get_current_order = MagicMock(return_value=order)
         joining_fleet.merge_with = MagicMock()
 
@@ -296,7 +296,7 @@ class TestJoinFleetDuringTick:
         joining_fleet.speed = 10.0
         joining_fleet.get_ship_instances = MagicMock(return_value=[])
 
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         joining_fleet.get_current_order = MagicMock(return_value=order)
         joining_fleet.merge_with = MagicMock()
 

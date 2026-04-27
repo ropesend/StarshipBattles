@@ -767,7 +767,7 @@ class OrderProcessor(IOrderProcessor):
                 if order and order.type == OrderType.JOIN_FLEET:
                     target_fleet = order.target
                     if target_fleet is not None and fleet.location == target_fleet.location:
-                        logger.debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
+                        logger.debug(f"OrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
                         fleets_to_merge.append((empire, fleet, target_fleet))
 
         # Execute merges (deferred to avoid modifying lists during iteration)

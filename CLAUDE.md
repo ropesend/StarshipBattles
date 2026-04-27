@@ -116,7 +116,7 @@ The `docs/` directory is the authoritative source of truth for architecture, pat
 
 **Mandatory reading before any work:**
 1. [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md) — Layer structure, package APIs, protocols
-2. [`docs/02_PATTERNS.md`](docs/02_PATTERNS.md) — 14 design patterns with file locations
+2. [`docs/02_PATTERNS.md`](docs/02_PATTERNS.md) — 27 design patterns with file locations
 3. [`docs/03_CONVENTIONS.md`](docs/03_CONVENTIONS.md) — Naming, file organization, imports
 
 **Then read task-specific docs** (services, error handling, UI styling, combat, strategy, AI, etc.) as listed in the README.
@@ -309,7 +309,7 @@ When faced with choices, prefer:
 - **CLI parallel workers:** 12 (`-n 12`)
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 14420 passed, 0 skipped
+- **Baseline:** 15112 passed, 0 skipped
 
 ---
 

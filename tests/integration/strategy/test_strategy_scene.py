@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -43,8 +43,8 @@ def test_colonize_command_queues_move_and_colonize():
     # 3. Queue COLONIZE order
     
     # This is the expected behavior after the C key command
-    move_order = FleetOrder(OrderType.MOVE, target_hex)
-    colonize_order = FleetOrder(OrderType.COLONIZE, planet)
+    move_order = Order(OrderType.MOVE, target_hex)
+    colonize_order = Order(OrderType.COLONIZE, planet)
     
     fleet.add_order(move_order)
     fleet.add_order(colonize_order)
@@ -62,8 +62,8 @@ def test_colonize_command_respects_order_sequence():
     planet = MockPlanet(location=HexCoord(0, 0))
     
     fleet = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
-    move_order = FleetOrder(OrderType.MOVE, HexCoord(3, 3))
-    colonize_order = FleetOrder(OrderType.COLONIZE, planet)
+    move_order = Order(OrderType.MOVE, HexCoord(3, 3))
+    colonize_order = Order(OrderType.COLONIZE, planet)
     
     fleet.add_order(move_order)
     fleet.add_order(colonize_order)

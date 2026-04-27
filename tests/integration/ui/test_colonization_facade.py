@@ -371,7 +371,7 @@ class TestFacadeColonyPodMethods:
     def test_get_fleet_remaining_pods_accounts_for_committed(self):
         """Remaining pods = available - committed."""
         from game.strategy.facade.strategy_session_facade import StrategySessionFacade
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from enum import Enum
 
         class MockPlanetType(Enum):

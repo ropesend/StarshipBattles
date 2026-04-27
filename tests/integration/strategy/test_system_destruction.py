@@ -22,7 +22,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy, StarSystem
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.stars import Spectrum, Star, StarType
 from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
@@ -114,7 +114,7 @@ class TestStellerateStarDestroysAllFleetsInSystem:
         galaxy, system, planet, empire = _build_scenario()
         actor = Fleet(1, empire.id, system.global_location)
         _add_actor_ship(actor)
-        actor.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        actor.orders.append(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(actor)
         galaxy.register_fleet(actor)
 
@@ -141,7 +141,7 @@ class TestStellerateStarDestroysAllFleetsInSystem:
         galaxy, system, planet, empire = _build_scenario()
         actor = Fleet(1, empire.id, system.global_location)
         _add_actor_ship(actor)
-        actor.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        actor.orders.append(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(actor)
         galaxy.register_fleet(actor)
 
@@ -166,7 +166,7 @@ class TestStellerateStarDestroysAllFleetsInSystem:
         galaxy, system, planet, empire = _build_scenario()
         actor = Fleet(1, empire.id, system.global_location)
         _add_actor_ship(actor)
-        actor.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        actor.orders.append(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(actor)
         galaxy.register_fleet(actor)
 
@@ -191,7 +191,7 @@ class TestStellerateStarDestroysAllFleetsInSystem:
         galaxy, system, planet, empire = _build_scenario()
         actor = Fleet(1, empire.id, system.global_location)
         _add_actor_ship(actor)
-        actor.orders.append(FleetOrder(OrderType.STELLERATE_STAR, None))
+        actor.orders.append(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(actor)
         galaxy.register_fleet(actor)
 

@@ -10,7 +10,7 @@ Public API
 Data (game.strategy.data):
     Fleet - Fleet of ships on strategy map
     ShipInstance - Individual ship in a fleet
-    OrderType, FleetOrder - Fleet movement orders
+    OrderType, Order - Fleet/Planet orders
     HexCoord - Hexagonal coordinate system
 
 Engine (game.strategy.engine):
@@ -31,7 +31,7 @@ Interfaces (game.strategy.interfaces):
 
 # Data
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import OrderType, Order, FleetOrder  # FleetOrder alias for compat
+from game.strategy.data.order_types import OrderType, Order
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 
@@ -61,7 +61,6 @@ __all__ = [
     'ShipInstance',
     'OrderType',
     'Order',
-    'FleetOrder',  # PROJ-238: backward compat alias
     'HexCoord',
     # Engine
     'TurnEngine',

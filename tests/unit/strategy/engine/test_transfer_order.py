@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
@@ -32,7 +32,7 @@ class TestTransferOrderType:
             'amount': 50,
             'planet_id': 123
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
 
         # Serialize
         order_dict = order.to_dict()
@@ -51,7 +51,7 @@ class TestTransferOrderType:
             'amount': 0,  # All
             'planet_id': 456
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Serialize and deserialize
@@ -178,7 +178,7 @@ class TestOrderProcessorTransfer:
             'amount': 50,
             'planet_id': planet.id
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment
@@ -211,7 +211,7 @@ class TestOrderProcessorTransfer:
             'amount': 30,
             'planet_id': planet.id
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment
@@ -244,7 +244,7 @@ class TestOrderProcessorTransfer:
             'amount': 50,  # Want 50 but only 20 available
             'planet_id': planet.id
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment
@@ -274,7 +274,7 @@ class TestOrderProcessorTransfer:
             'amount': 0,  # All
             'planet_id': planet.id
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment
@@ -307,7 +307,7 @@ class TestOrderProcessorTransfer:
             'amount': 25,
             'planet_id': planet.id
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment
@@ -353,7 +353,7 @@ class TestOrderProcessorTransfer:
             'planet_id': planet.id,
             'species_id': 'vulcan'
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment
@@ -395,7 +395,7 @@ class TestOrderProcessorTransfer:
             'planet_id': planet.id,
             'species_id': 'vulcan'
         }
-        order = FleetOrder(OrderType.TRANSFER, target=params)
+        order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
         # Mock galaxy with proper system containment

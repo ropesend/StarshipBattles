@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.order_processor import OrderProcessor
 
@@ -32,7 +32,7 @@ class TestBuildOrderProcessing:
     def fleet_with_build_order(self):
         """Create a fleet with BUILD order and items in queue."""
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [
             {'design_id': 'frigate', 'type': 'ship', 'turns_remaining': 5}
         ]
@@ -66,7 +66,7 @@ class TestBuildOrderProcessing:
         from game.strategy.engine.action_execution_engine import ActionExecutionEngine
 
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = []  # Empty queue
         mock_empire.fleets = [fleet]
 
@@ -115,7 +115,7 @@ class TestBuildOrderProcessing:
     ):
         """Test process_end_turn_orders keeps BUILD order when queue has items."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [{'design_id': 'destroyer', 'turns_remaining': 3}]
 
         result = order_processor.execute_action_order(fleet, mock_empire, mock_galaxy)
@@ -134,8 +134,8 @@ class TestBuildOrderProcessing:
         from game.strategy.engine.action_execution_engine import ActionExecutionEngine
 
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.BUILD))
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))  # Queued after
+        fleet.add_order(Order(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))  # Queued after
         fleet.construction_queue = []  # Empty, BUILD will complete
         mock_empire.fleets = [fleet]
 

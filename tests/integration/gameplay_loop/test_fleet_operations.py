@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from tests.conftest import make_mock_ship_instance
@@ -28,12 +28,12 @@ class TestFleetMovement:
 
         # Fast fleet (speed 50 = moves every 2 ticks = 50 hexes per turn)
         fast_fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=50.0)
-        fast_fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(100, 0)))
+        fast_fleet.add_order(Order(OrderType.MOVE, target=HexCoord(100, 0)))
         empire1.add_fleet(fast_fleet)
 
         # Slow fleet (speed 10 = moves every 10 ticks = 10 hexes per turn)
         slow_fleet = Fleet(2, empire1.id, HexCoord(0, 5), speed=10.0)
-        slow_fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(100, 5)))
+        slow_fleet.add_order(Order(OrderType.MOVE, target=HexCoord(100, 5)))
         empire1.add_fleet(slow_fleet)
 
         turn_engine.process_turn(empires, galaxy)
@@ -53,7 +53,7 @@ class TestFleetMovement:
 
         destination = HexCoord(5, 0)
         fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=100.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=destination))
+        fleet.add_order(Order(OrderType.MOVE, target=destination))
         empire1.add_fleet(fleet)
 
         # Process turns until arrival
@@ -79,7 +79,7 @@ class TestFleetMovement:
         preview_path = game_session.preview_fleet_path(fleet, target)
 
         # Give fleet move order
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=target))
+        fleet.add_order(Order(OrderType.MOVE, target=target))
 
         # The path calculated should be similar to preview
         # (May differ slightly due to dynamic recalculation)
@@ -115,7 +115,7 @@ class TestFleetMerge:
 
         joining_fleet = Fleet(2, empire1.id, loc, speed=10.0)
         joining_fleet.ships = [make_ship("Destroyer", empire1.id)]
-        joining_fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
+        joining_fleet.add_order(Order(OrderType.JOIN_FLEET, target=target_fleet))
         empire1.add_fleet(joining_fleet)
 
         initial_fleets = len(empire1.fleets)
@@ -147,7 +147,7 @@ class TestFleetMerge:
 
         joining_fleet = Fleet(2, empire1.id, HexCoord(10, 10), speed=10.0)  # Different location
         joining_fleet.ships = [make_ship("Destroyer", empire1.id)]
-        joining_fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
+        joining_fleet.add_order(Order(OrderType.JOIN_FLEET, target=target_fleet))
         empire1.add_fleet(joining_fleet)
 
         initial_target_ships = len(target_fleet.ships)
@@ -192,7 +192,7 @@ class TestResourceAccumulation:
         mock_ship.get_all_resource_costs_per_turn.return_value = {}
 
         fleet.ships = [mock_ship]
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(10, 0)))
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(10, 0)))
         empire1.add_fleet(fleet)
 
         # Process a turn
@@ -253,7 +253,7 @@ class TestResourceAccumulation:
         mock_ship.get_all_resource_costs_per_turn.return_value = {}
 
         fleet.ships = [mock_ship]
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(10, 0)))
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(10, 0)))
         empire1.add_fleet(fleet)
 
         initial_orders = len(fleet.orders)

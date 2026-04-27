@@ -1,0 +1,29 @@
+# Repo-local Codex configuration for Starship Battles.
+# User secrets and login state must stay outside the repo.
+
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+personality = "pragmatic"
+project_doc_max_bytes = 65536
+
+# CLAUDE.md remains available as a fallback only if AGENTS.md is absent in a
+# directory. AGENTS.md is the neutral shared entry point for this repo.
+project_doc_fallback_filenames = ["CLAUDE.md"]
+
+[windows]
+sandbox = "unelevated"
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[plugins."browser-use@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true

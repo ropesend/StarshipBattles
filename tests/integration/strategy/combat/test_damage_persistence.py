@@ -18,7 +18,7 @@ from game.core.math import Vector2
 from game.simulation.battle_outcome import ShipStatus
 from game.simulation.battle_runner import run_battle
 from game.strategy.combat.spec_compiler import build_strategy_battle_spec
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.core.component_state import ComponentState, component_state_key
 from game.strategy.data.fleet import Fleet
 
 

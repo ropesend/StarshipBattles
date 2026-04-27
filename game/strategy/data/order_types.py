@@ -148,7 +148,7 @@ class Order:
         """Deserialize from save game data (simple format for planet-style orders).
 
         PROJ-238: Added for planet order compatibility. Fleet orders use
-        FleetOrderSerializer for complex reference resolution.
+        OrderSerializer for complex reference resolution.
 
         Args:
             data: Dict with 'type', optional 'target', optional 'execution_progress'.
@@ -164,8 +164,3 @@ class Order:
         order = cls(order_type=order_type, target=target)
         order.execution_progress = data.get('execution_progress', 0)
         return order
-
-
-# PROJ-238: Backward compatibility aliases (will be removed after full migration)
-FleetOrder = Order
-PlanetOrder = Order

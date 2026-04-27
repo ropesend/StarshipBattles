@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.command_handlers import ColonizeCommandHandler, ColonizeMissionCommandHandler
 from game.strategy.engine.order_processor import OrderProcessor
 from game.core.hex_math import HexCoord
@@ -52,7 +52,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
 
     def test_processor_handles_load_population_as_transfer(self):
         """OrderProcessor should recognize LOAD_POPULATION as a valid transfer order."""
-        self.fleet.add_order(FleetOrder(OrderType.LOAD_POPULATION, {'direction': 'load', 'cargo_type': 'passengers', 'amount': 100, 'planet_id': 10}))
+        self.fleet.add_order(Order(OrderType.LOAD_POPULATION, {'direction': 'load', 'cargo_type': 'passengers', 'amount': 100, 'planet_id': 10}))
 
         from game.core.validation import ValidationResult
         with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
@@ -70,7 +70,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         colony.total_population = 5000
 
         # Generic order — no planet_id
-        self.fleet.add_order(FleetOrder(OrderType.LOAD_POPULATION, {
+        self.fleet.add_order(Order(OrderType.LOAD_POPULATION, {
             'direction': 'load', 'cargo_type': 'passengers', 'amount': 0
         }))
 
@@ -87,7 +87,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
     def test_generic_load_population_skips_when_no_colony(self):
         """Generic LOAD_POPULATION is a no-op when fleet is not at an owned colony (BUG-70)."""
         # Generic order — no planet_id
-        self.fleet.add_order(FleetOrder(OrderType.LOAD_POPULATION, {
+        self.fleet.add_order(Order(OrderType.LOAD_POPULATION, {
             'direction': 'load', 'cargo_type': 'passengers', 'amount': 0
         }))
 

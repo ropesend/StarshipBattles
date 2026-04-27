@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestNavigationState:
@@ -29,7 +29,7 @@ class TestNavigationState:
             speed=7.0
         )
         fleet.path = [HexCoord(6, 3), HexCoord(7, 3)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(7, 3))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(7, 3))]
 
         # PROJ-210: Mock can_use_warp via capabilities property
         fleet._capabilities = MagicMock()

@@ -8,7 +8,7 @@ import math
 import sys
 import pytest
 
-from game.simulation.formula_system import (
+from game.core.formula_evaluator import (
     evaluate_math_formula,
     safe_evaluate_math_formula,
 )

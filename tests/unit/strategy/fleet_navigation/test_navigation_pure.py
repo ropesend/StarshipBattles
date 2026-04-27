@@ -49,11 +49,11 @@ class TestWarpOrderNavigation:
         from game.strategy.services.fleet_navigation_service import (
             FleetNavigationService, NavigationState
         )
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         service = FleetNavigationService()
         warp_point_hex = HexCoord(10, 5)
-        order = FleetOrder(OrderType.WARP, target=warp_point_hex)
+        order = Order(OrderType.WARP, target=warp_point_hex)
 
         state = NavigationState(
             location=HexCoord(0, 0),
@@ -74,7 +74,7 @@ class TestWarpOrderNavigation:
         from game.strategy.services.fleet_navigation_service import (
             FleetNavigationService, NavigationState
         )
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         service = FleetNavigationService()
 
@@ -83,7 +83,7 @@ class TestWarpOrderNavigation:
         warp_point_hex = HexCoord(10, 5)
         exit_hex = HexCoord(52, 2)
 
-        order = FleetOrder(OrderType.WARP, target=warp_point_hex)
+        order = Order(OrderType.WARP, target=warp_point_hex)
 
         state = NavigationState(
             location=HexCoord(5, 3),  # Fleet is a few hexes away
@@ -128,11 +128,11 @@ class TestWarpOrderNavigation:
         from game.strategy.services.fleet_navigation_service import (
             FleetNavigationService, NavigationState
         )
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
 
         service = FleetNavigationService()
         warp_point_hex = HexCoord(10, 5)
-        order = FleetOrder(OrderType.WARP, target=warp_point_hex)
+        order = Order(OrderType.WARP, target=warp_point_hex)
 
         state = NavigationState(
             location=warp_point_hex,  # Already at warp point

@@ -4,7 +4,7 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.fleet_pursuer_tracker import FleetPursuerTracker
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 def make_fleet(fleet_id, location=None):
@@ -63,9 +63,9 @@ class TestRedirectPursuers:
         pursuer_b = make_fleet("pursuer_b")
 
         # Give pursuers orders targeting old_target
-        pursuer_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=old_target))
-        pursuer_a.add_order(FleetOrder(OrderType.JOIN_FLEET, target=old_target))
-        pursuer_b.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=old_target))
+        pursuer_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
+        pursuer_a.add_order(Order(OrderType.JOIN_FLEET, target=old_target))
+        pursuer_b.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
 
         tracker = FleetPursuerTracker(old_target)
         tracker.add_pursuer(pursuer_a)
@@ -82,7 +82,7 @@ class TestRedirectPursuers:
         old_target = make_fleet("old_target")
         new_target = make_fleet("new_target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=old_target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
 
         tracker = FleetPursuerTracker(old_target)
         tracker.add_pursuer(pursuer)
@@ -100,7 +100,7 @@ class TestRedirectPursuers:
         old_target = make_fleet("old_target")
         new_target = make_fleet("new_target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=old_target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
 
         tracker = FleetPursuerTracker(old_target)
         tracker.add_pursuer(pursuer)
@@ -113,7 +113,7 @@ class TestRedirectPursuers:
         old_target = make_fleet("old_target")
         new_target = make_fleet("new_target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=old_target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
 
         tracker = FleetPursuerTracker(old_target)
         tracker.add_pursuer(pursuer)
@@ -129,9 +129,9 @@ class TestRedirectPursuers:
         pursuer = make_fleet("pursuer")
 
         # Mix of orders — some targeting old_target, some targeting other
-        pursuer.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(5, 5)))
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=old_target))
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=other_fleet))
+        pursuer.add_order(Order(OrderType.MOVE, target=HexCoord(5, 5)))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=other_fleet))
 
         tracker = FleetPursuerTracker(old_target)
         tracker.add_pursuer(pursuer)
@@ -160,7 +160,7 @@ class TestUnregisterOnOrderRemoval:
     def test_clear_orders_unregisters_pursuers(self):
         target = make_fleet("target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
         target.pursuer_tracker.add_pursuer(pursuer)
 
         pursuer.clear_orders()
@@ -169,7 +169,7 @@ class TestUnregisterOnOrderRemoval:
     def test_pop_order_unregisters_pursuer(self):
         target = make_fleet("target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
         target.pursuer_tracker.add_pursuer(pursuer)
 
         pursuer.pop_order()
@@ -178,8 +178,8 @@ class TestUnregisterOnOrderRemoval:
     def test_remove_order_at_unregisters_pursuer(self):
         target = make_fleet("target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(1, 0)))
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE, target=HexCoord(1, 0)))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
         target.pursuer_tracker.add_pursuer(pursuer)
 
         pursuer.remove_order_at(1)
@@ -188,7 +188,7 @@ class TestUnregisterOnOrderRemoval:
     def test_unregister_handles_non_fleet_target_gracefully(self):
         """Order with HexCoord target should not crash on unregister."""
         fleet = make_fleet("f1")
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(5, 5)))
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(5, 5)))
 
         # Should not raise
         fleet.pop_order()
@@ -197,8 +197,8 @@ class TestUnregisterOnOrderRemoval:
     def test_remove_orders_by_type_unregisters_pursuers(self):
         target = make_fleet("target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
-        pursuer.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.JOIN_FLEET, target=target))
         target.pursuer_tracker.add_pursuer(pursuer)
 
         pursuer.remove_orders_by_type(OrderType.MOVE_TO_FLEET)
@@ -219,8 +219,8 @@ class TestMergeWithRedirect:
         fleet_c = make_fleet("c")
 
         # A has orders targeting B
-        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_b))
-        fleet_a.add_order(FleetOrder(OrderType.JOIN_FLEET, target=fleet_b))
+        fleet_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=fleet_b))
+        fleet_a.add_order(Order(OrderType.JOIN_FLEET, target=fleet_b))
         fleet_b.pursuer_tracker.add_pursuer(fleet_a)
 
         # B merges into C
@@ -242,12 +242,12 @@ class TestMergeWithRedirect:
         fleet_d = make_fleet("d")
 
         # A pursues B
-        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_b))
+        fleet_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=fleet_b))
         fleet_b.pursuer_tracker.add_pursuer(fleet_a)
 
         # B pursues C
-        fleet_b.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_c))
-        fleet_b.add_order(FleetOrder(OrderType.JOIN_FLEET, target=fleet_c))
+        fleet_b.add_order(Order(OrderType.MOVE_TO_FLEET, target=fleet_c))
+        fleet_b.add_order(Order(OrderType.JOIN_FLEET, target=fleet_c))
         fleet_c.pursuer_tracker.add_pursuer(fleet_b)
 
         # C merges into D → B's orders redirect to D
@@ -275,7 +275,7 @@ class TestMergeWithRedirect:
         pursuers = [make_fleet(f"p{i}") for i in range(3)]
 
         for p in pursuers:
-            p.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
+            p.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
             target.pursuer_tracker.add_pursuer(p)
 
         target.merge_with(new_target)
@@ -292,8 +292,8 @@ class TestNotifyTargetDestroyed:
         target = make_fleet("target")
         pursuer = make_fleet("pursuer")
 
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
-        pursuer.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.JOIN_FLEET, target=target))
 
         tracker = FleetPursuerTracker(target)
         tracker.add_pursuer(pursuer)
@@ -308,8 +308,8 @@ class TestNotifyTargetDestroyed:
         pursuer_a = make_fleet("pursuer_a")
         pursuer_b = make_fleet("pursuer_b")
 
-        pursuer_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
-        pursuer_b.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target))
+        pursuer_a.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer_b.add_order(Order(OrderType.JOIN_FLEET, target=target))
 
         tracker = FleetPursuerTracker(target)
         tracker.add_pursuer(pursuer_a)
@@ -325,9 +325,9 @@ class TestNotifyTargetDestroyed:
         other = make_fleet("other")
         pursuer = make_fleet("pursuer")
 
-        pursuer.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(3, 3)))
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=other))
+        pursuer.add_order(Order(OrderType.MOVE, target=HexCoord(3, 3)))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=other))
 
         tracker = FleetPursuerTracker(target)
         tracker.add_pursuer(pursuer)
@@ -342,7 +342,7 @@ class TestNotifyTargetDestroyed:
     def test_notify_target_destroyed_clears_pursuers(self):
         target = make_fleet("target")
         pursuer = make_fleet("pursuer")
-        pursuer.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=target))
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=target))
 
         tracker = FleetPursuerTracker(target)
         tracker.add_pursuer(pursuer)

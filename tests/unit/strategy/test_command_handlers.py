@@ -18,8 +18,8 @@ from game.strategy.engine.command_handlers import (
     ClearOrdersCommandHandler,
     TransferCommandHandler,
     SplitFleetCommandHandler,
-    DeleteFleetOrderCommandHandler,
-    ReorderFleetOrderCommandHandler,
+    DeleteOrderCommandHandler,
+    ReorderOrderCommandHandler,
     AddToConstructionQueueCommandHandler,
     RemoveFromConstructionQueueCommandHandler,
     ReorderConstructionQueueCommandHandler,
@@ -69,12 +69,12 @@ class TestCommandHandlerRegistry:
             'IssueInterceptCommand',
             'IssueJoinFleetCommand',
             'QueueColonizeMissionCommand',
-            'ClearFleetOrdersCommand',
+            'ClearOrdersCommand',
             'IssueTransferCommand',
             # PROJ-208 Fleet Management Commands
             'SplitFleetCommand',
-            'DeleteFleetOrderCommand',
-            'ReorderFleetOrderCommand',
+            'DeleteOrderCommand',
+            'ReorderOrderCommand',
             # PROJ-208 Phase 2: Construction Queue Commands
             'AddToConstructionQueueCommand',
             'RemoveFromConstructionQueueCommand',
@@ -823,12 +823,12 @@ class TestSplitFleetCommandHandler:
         mock_empire.add_fleet.assert_called_once_with(mock_new_fleet)
 
 
-class TestDeleteFleetOrderCommandHandler:
-    """Tests for DeleteFleetOrderCommandHandler (PROJ-208 Phase 1)."""
+class TestDeleteOrderCommandHandler:
+    """Tests for DeleteOrderCommandHandler (PROJ-208 Phase 1)."""
 
     def test_fleet_not_found(self):
         """Returns failure when fleet not found."""
-        handler = DeleteFleetOrderCommandHandler()
+        handler = DeleteOrderCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
         mock_cmd = Mock(empire_id=-1, fleet_id=999, order_index=0)
@@ -840,7 +840,7 @@ class TestDeleteFleetOrderCommandHandler:
 
     def test_invalid_order_index_negative(self):
         """Returns failure for negative order index."""
-        handler = DeleteFleetOrderCommandHandler()
+        handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -858,7 +858,7 @@ class TestDeleteFleetOrderCommandHandler:
 
     def test_invalid_order_index_too_high(self):
         """Returns failure when order index exceeds queue length."""
-        handler = DeleteFleetOrderCommandHandler()
+        handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -876,7 +876,7 @@ class TestDeleteFleetOrderCommandHandler:
 
     def test_delete_active_order_clears_path(self):
         """Deleting order calls fleet.remove_order_at() (PROJ-222: uses Fleet API)."""
-        handler = DeleteFleetOrderCommandHandler()
+        handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -894,7 +894,7 @@ class TestDeleteFleetOrderCommandHandler:
 
     def test_delete_non_active_order_preserves_path(self):
         """Deleting non-active order calls fleet.remove_order_at() with correct index."""
-        handler = DeleteFleetOrderCommandHandler()
+        handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -911,12 +911,12 @@ class TestDeleteFleetOrderCommandHandler:
         mock_fleet.remove_order_at.assert_called_once_with(1)
 
 
-class TestReorderFleetOrderCommandHandler:
-    """Tests for ReorderFleetOrderCommandHandler (PROJ-208 Phase 1)."""
+class TestReorderOrderCommandHandler:
+    """Tests for ReorderOrderCommandHandler (PROJ-208 Phase 1)."""
 
     def test_fleet_not_found(self):
         """Returns failure when fleet not found."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
         mock_cmd = Mock(empire_id=-1, fleet_id=999, order_index=0, direction=1)
@@ -928,7 +928,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_invalid_order_index(self):
         """Returns failure for invalid order index."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -946,7 +946,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_invalid_direction(self):
         """Returns failure for invalid direction."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -964,7 +964,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_cannot_move_first_order_up(self):
         """Returns failure when trying to move first order up."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -982,7 +982,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_cannot_move_last_order_down(self):
         """Returns failure when trying to move last order down."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
@@ -1000,7 +1000,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_move_order_down_swaps_positions(self):
         """Moving order down swaps with next order."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_order1 = Mock(name='order1')
         mock_order2 = Mock(name='order2')
@@ -1023,7 +1023,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_move_order_up_swaps_positions(self):
         """Moving order up swaps with previous order."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_order1 = Mock(name='order1')
         mock_order2 = Mock(name='order2')
@@ -1046,7 +1046,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_reorder_affecting_active_order_clears_path(self):
         """Reordering that affects active order (index 0) clears path."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_order1 = Mock(name='order1')
         mock_order2 = Mock(name='order2')
@@ -1070,7 +1070,7 @@ class TestReorderFleetOrderCommandHandler:
 
     def test_reorder_not_affecting_active_order_preserves_path(self):
         """Reordering not affecting active order preserves path."""
-        handler = ReorderFleetOrderCommandHandler()
+        handler = ReorderOrderCommandHandler()
 
         mock_order1 = Mock(name='order1')
         mock_order2 = Mock(name='order2')

@@ -9,7 +9,7 @@ import math
 import logging
 import pytest
 
-from game.simulation.formula_system import FormulaContext, FormulaEvaluator
+from game.core.formula_evaluator import FormulaContext, FormulaEvaluator
 from game.core.exceptions import FormulaException
 from game.core.error_codes import ErrorCode
 

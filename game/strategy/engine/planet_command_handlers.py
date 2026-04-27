@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
-from game.strategy.data.order_types import OrderType, Order as PlanetOrder
+from game.strategy.data.order_types import OrderType, Order
 from game.strategy.validation.planet_order_validator import PlanetOrderValidator
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ class IssuePlanetOrderCommandHandler:
         if cmd.component_key:
             target['component_key'] = cmd.component_key
 
-        order = PlanetOrder(order_type, target=target)
+        order = Order(order_type, target=target)
         planet.add_order(order)
 
         logger.info(

@@ -63,7 +63,7 @@ class ShipInstanceBridge:
         # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
         # See docs/01_ARCHITECTURE.md "Intentional Late Imports" section
         from game.simulation.entities.ship_serialization import ShipSerializer
-        from game.strategy.data.component_state import component_state_key
+        from game.core.component_state import component_state_key
 
         # Create ship from design data
         ship = ShipSerializer.from_dict(self._ship.design_data, registries=registries)
@@ -118,7 +118,7 @@ class ShipInstanceBridge:
 
         Called after strategy battle resolution to persist damage/resource changes.
         """
-        from game.strategy.data.component_state import ComponentState, component_state_key
+        from game.core.component_state import ComponentState, component_state_key
 
         # Update HP state
         if ship.is_alive:

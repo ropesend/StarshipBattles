@@ -13,7 +13,7 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 # =============================================================================
@@ -89,7 +89,7 @@ class TestSetupMissionMove:
         from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
 
         # Fleet has existing MOVE order to (8, 8)
-        existing_move = FleetOrder(OrderType.MOVE, target=HexCoord(8, 8))
+        existing_move = Order(OrderType.MOVE, target=HexCoord(8, 8))
         mock_fleet.orders = [existing_move]
 
         target_hex = HexCoord(12, 12)
@@ -134,7 +134,7 @@ class TestSetupMissionMove:
         from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
 
         # Last order is not a MOVE order
-        existing_order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        existing_order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.orders = [existing_order]
 
         target_hex = HexCoord(10, 10)
@@ -157,7 +157,7 @@ class TestSetupMissionMove:
         from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
 
         # Fleet already has an order
-        existing_order = FleetOrder(OrderType.MOVE, target=HexCoord(8, 8))
+        existing_order = Order(OrderType.MOVE, target=HexCoord(8, 8))
         mock_fleet.orders = [existing_order]
 
         target_hex = HexCoord(12, 12)
@@ -297,7 +297,7 @@ class TestOrderProcessorErrorCases:
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = FleetOrder(OrderType.MOVE, target=HexCoord(10, 10))
+        fleet.get_current_order.return_value = Order(OrderType.MOVE, target=HexCoord(10, 10))
 
         empire = Mock()
         processor = SuperweaponOrderProcessor()
@@ -311,7 +311,7 @@ class TestOrderProcessorErrorCases:
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = FleetOrder(OrderType.IMPLODE_PLANET, target=None)
+        fleet.get_current_order.return_value = Order(OrderType.IMPLODE_PLANET, target=None)
         fleet.pop_order = Mock()
 
         empire = Mock()
@@ -341,7 +341,7 @@ class TestOrderProcessorErrorCases:
 
         fleet = Mock()
         fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = FleetOrder(OrderType.STELLERATE_STAR)
+        fleet.get_current_order.return_value = Order(OrderType.STELLERATE_STAR)
         fleet.pop_order = Mock()
 
         galaxy = Mock()
@@ -359,7 +359,7 @@ class TestOrderProcessorErrorCases:
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = FleetOrder(OrderType.OPEN_WARP_POINT, target="invalid")
+        fleet.get_current_order.return_value = Order(OrderType.OPEN_WARP_POINT, target="invalid")
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()
@@ -375,7 +375,7 @@ class TestOrderProcessorErrorCases:
 
         fleet = Mock()
         fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = FleetOrder(
+        fleet.get_current_order.return_value = Order(
             OrderType.OPEN_WARP_POINT, target={'target_system_name': 'Beta'}
         )
         fleet.pop_order = Mock()
@@ -396,7 +396,7 @@ class TestOrderProcessorErrorCases:
 
         fleet = Mock()
         fleet.location = HexCoord(10, 10)
-        fleet.get_current_order.return_value = FleetOrder(
+        fleet.get_current_order.return_value = Order(
             OrderType.OPEN_WARP_POINT, target={'target_system_name': 'Nonexistent'}
         )
         fleet.pop_order = Mock()
@@ -421,7 +421,7 @@ class TestOrderProcessorErrorCases:
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = FleetOrder(OrderType.CLOSE_WARP_POINT, target=None)
+        fleet.get_current_order.return_value = Order(OrderType.CLOSE_WARP_POINT, target=None)
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()
@@ -437,7 +437,7 @@ class TestOrderProcessorErrorCases:
 
         fleet = Mock()
         fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = FleetOrder(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 100, 'r': 100}})
+        fleet.get_current_order.return_value = Order(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 100, 'r': 100}})
         fleet.pop_order = Mock()
 
         galaxy = Mock()
@@ -456,7 +456,7 @@ class TestOrderProcessorErrorCases:
 
         fleet = Mock()
         fleet.location = HexCoord(10, 10)
-        fleet.get_current_order.return_value = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        fleet.get_current_order.return_value = Order(OrderType.CREATE_DYSON_SPHERE)
         fleet.pop_order = Mock()
 
         system = Mock()
@@ -479,7 +479,7 @@ class TestOrderProcessorErrorCases:
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = FleetOrder(OrderType.SELF_DESTRUCT, target=[])
+        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target=[])
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()
@@ -494,7 +494,7 @@ class TestOrderProcessorErrorCases:
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = FleetOrder(OrderType.SELF_DESTRUCT, target="invalid")
+        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target="invalid")
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()
@@ -523,7 +523,7 @@ class TestOrderProcessorNoAbility:
 
         fleet = Mock()
         fleet.ships = [ship]
-        fleet.get_current_order.return_value = FleetOrder(OrderType.IMPLODE_PLANET, target=Mock(name="Planet"))
+        fleet.get_current_order.return_value = Order(OrderType.IMPLODE_PLANET, target=Mock(name="Planet"))
         fleet.pop_order = Mock()
 
         galaxy = Mock()
@@ -564,7 +564,7 @@ class TestOrderProcessorColonyRemoval:
         fleet = Mock()
         fleet.id = 1
         fleet.ships = [ship]
-        fleet.get_current_order.return_value = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
+        fleet.get_current_order.return_value = Order(OrderType.IMPLODE_PLANET, target=planet)
         fleet.pop_order = Mock()
         fleet.remove_ship = Mock()
 
@@ -604,7 +604,7 @@ class TestOrderProcessorColonyRemoval:
         fleet.id = 1
         fleet.location = HexCoord(10, 10)
         fleet.ships = [ship]
-        fleet.get_current_order.return_value = FleetOrder(OrderType.STELLERATE_STAR)
+        fleet.get_current_order.return_value = Order(OrderType.STELLERATE_STAR)
         fleet.pop_order = Mock()
 
         empire1 = Mock()
@@ -661,7 +661,7 @@ class TestSelfDestructShipNames:
         fleet = Mock()
         fleet.id = 1
         fleet.ships = [ship]
-        fleet.get_current_order.return_value = FleetOrder(OrderType.SELF_DESTRUCT, target=["ship-1"])
+        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target=["ship-1"])
         fleet.pop_order = Mock()
         fleet.remove_ship = Mock()
 
@@ -687,7 +687,7 @@ class TestSelfDestructShipNames:
         fleet = Mock()
         fleet.id = 1
         fleet.ships = [ship]
-        fleet.get_current_order.return_value = FleetOrder(OrderType.SELF_DESTRUCT, target=["ship-1"])
+        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target=["ship-1"])
         fleet.pop_order = Mock()
         fleet.remove_ship = Mock()
 
@@ -712,7 +712,7 @@ class TestSelfDestructShipNames:
         fleet.id = 1
         fleet.ships = [ship]
         # Request to destroy both existing and nonexistent ship
-        fleet.get_current_order.return_value = FleetOrder(
+        fleet.get_current_order.return_value = Order(
             OrderType.SELF_DESTRUCT, target=["ship-1", "nonexistent"]
         )
         fleet.pop_order = Mock()

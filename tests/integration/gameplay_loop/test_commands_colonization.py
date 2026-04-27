@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from game.strategy.engine.commands import CommandType
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from tests.conftest import make_mock_ship_instance
@@ -109,8 +109,8 @@ class TestCommandExecution:
         fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=100.0)  # Very fast
 
         # Add two move orders
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(2, 0)))
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(4, 0)))
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(2, 0)))
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(4, 0)))
 
         empire1.add_fleet(fleet)
 
@@ -126,7 +126,7 @@ class TestCommandExecution:
         empires = [empire1, empire2]
 
         fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=100.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(1, 0)))  # Very short move
+        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(1, 0)))  # Very short move
 
         empire1.add_fleet(fleet)
 
@@ -245,7 +245,7 @@ class TestColonizationWorkflow:
         # PROJ-211: Pass registries for DI compliance
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
         fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id, registries=fresh_registries)]
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 
         initial_colonies = len(empire1.colonies)
@@ -281,7 +281,7 @@ class TestColonizationWorkflow:
         # PROJ-211: Pass registries for DI compliance
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
         fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id, registries=fresh_registries)]
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 
         initial_fleets = len(empire1.fleets)

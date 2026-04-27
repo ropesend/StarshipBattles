@@ -12,7 +12,7 @@ import shutil
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
@@ -105,7 +105,7 @@ class TestFleetConstructionQueueSaveLoad:
         # Create fleet with BUILD order
         fleet = Fleet("f1", 0, HexCoord(5, 3))
         fleet.ships.append(make_mock_ship(name="Yard Ship"))
-        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(Order(OrderType.BUILD))
         fleet.construction_queue = [
             {"design_id": "battleship", "type": "ship", "turns_remaining": 15}
         ]
@@ -133,7 +133,7 @@ class TestFleetConstructionQueueSaveLoad:
         original = Fleet("test_fleet", 0, HexCoord(10, -5))
         original.ships.append(make_mock_ship(name="Construction Ship"))
         original.ships.append(make_mock_ship(name="Escort"))
-        original.add_order(FleetOrder(OrderType.BUILD))
+        original.add_order(Order(OrderType.BUILD))
         original.construction_queue = [
             {"design_id": "destroyer", "type": "ship", "turns_remaining": 5},
             {"design_id": "frigate", "type": "ship", "turns_remaining": 3},
@@ -164,7 +164,7 @@ class TestFleetConstructionQueueSaveLoad:
         # Create fleet in building state
         original = Fleet("f1", 0, HexCoord(0, 0))
         original.ships.append(make_mock_ship(name="Yard Ship"))
-        original.add_order(FleetOrder(OrderType.BUILD))
+        original.add_order(Order(OrderType.BUILD))
         original.construction_queue = [
             {"design_id": "ship", "type": "ship", "turns_remaining": 3}
         ]

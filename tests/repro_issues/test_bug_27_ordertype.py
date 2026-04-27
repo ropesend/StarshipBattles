@@ -37,7 +37,7 @@ class TestBug27OrderTypeImport:
         """Verify that OrderType is importable from strategy_ui module."""
         from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import OrderType, FleetOrder
+        from game.strategy.data.order_types import OrderType, Order
         # If we get here without ImportError, the module loads correctly
         assert OrderType.MOVE is not None
         assert OrderType.COLONIZE is not None
@@ -48,7 +48,7 @@ class TestBug27OrderTypeImport:
 
         from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from game.strategy.data.empire import Empire
         from game.core.hex_math import HexCoord
 
@@ -66,7 +66,7 @@ class TestBug27OrderTypeImport:
         # PROJ-211: Pass registries for DI compliance (ship assignment triggers speed calc)
         fleet = Fleet(1, 1, HexCoord(0, 0))
         fleet.ships = [make_mock_ship_instance("TestShip", 1, registries=fresh_registries)]
-        fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 1))]
+        fleet.orders = [Order(OrderType.MOVE, HexCoord(1, 1))]
 
         # This should not raise NameError anymore
         ui.show_detailed_report(fleet)
@@ -81,7 +81,7 @@ class TestBug27OrderTypeImport:
 
         from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from game.strategy.data.empire import Empire
         from game.core.hex_math import HexCoord
         from game.strategy.data.planet import Planet, PlanetType
@@ -103,7 +103,7 @@ class TestBug27OrderTypeImport:
         # PROJ-211: Pass registries for DI compliance (ship assignment triggers speed calc)
         fleet = Fleet(1, 1, HexCoord(0, 0))
         fleet.ships = [make_mock_ship_instance("ColonyShip", 1, registries=fresh_registries)]
-        fleet.orders = [FleetOrder(OrderType.COLONIZE, mock_planet)]
+        fleet.orders = [Order(OrderType.COLONIZE, mock_planet)]
 
         # This should not raise NameError anymore
         ui.show_detailed_report(fleet)

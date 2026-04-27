@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.galaxy import Galaxy, StarSystem
 from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 from game.ui.screens.strategy_detail_fmt import _format_orders
@@ -28,7 +28,7 @@ def test_repro_warp_point_creation_failure():
         'target_hex': HexCoord(1, 0),
         'target_system_name': 'Beta'
     }
-    order = FleetOrder(OrderType.OPEN_WARP_POINT, target=order_target)
+    order = Order(OrderType.OPEN_WARP_POINT, target=order_target)
     fleet.add_order(order)
     
     processor = SuperweaponOrderProcessor()
@@ -56,7 +56,7 @@ def test_repro_warp_point_ui_order_display():
         'target_hex': HexCoord(1, 0),
         'target_system_name': 'Beta'
     }
-    order = FleetOrder(OrderType.OPEN_WARP_POINT, target=order_target)
+    order = Order(OrderType.OPEN_WARP_POINT, target=order_target)
     fleet.add_order(order)
     
     # Act

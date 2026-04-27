@@ -3,7 +3,7 @@ import pytest
 from dataclasses import FrozenInstanceError
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestFleetOrderInfo:
@@ -250,7 +250,7 @@ class TestFleetInfo:
         fleet.ships.append(ship)
 
         # Add an order and path
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))
         fleet.path = [HexCoord(0, 0), HexCoord(2, 2), HexCoord(5, 5)]
 
         # Convert via factory method
@@ -375,7 +375,7 @@ class TestFleetInfoFactory:
             location=HexCoord(0, 0),
             speed=5.0,
         )
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 5)))
         fleet.path = [HexCoord(0, 0), HexCoord(2, 2), HexCoord(5, 5)]
 
         info = FleetInfo.from_fleet(fleet)
@@ -402,7 +402,7 @@ class TestFleetInfoFactory:
             location=HexCoord(0, 0),
             speed=5.0,
         )
-        fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target_fleet))
+        fleet.add_order(Order(OrderType.JOIN_FLEET, target_fleet))
 
         info = FleetInfo.from_fleet(fleet)
 

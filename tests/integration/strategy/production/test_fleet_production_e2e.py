@@ -14,7 +14,7 @@ import shutil
 from unittest.mock import MagicMock, patch, PropertyMock
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.engine.production_engine import ProductionEngine
@@ -137,7 +137,7 @@ class TestFleetProductionE2E:
                 "resources_consumed": {"metals": 0.0}
             }
         ]
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
 
         # Add a cargo ship carrying construction resources
         fleet.ships.append(_make_cargo_ship({"metals": 100000}))
@@ -183,7 +183,7 @@ class TestFleetProductionE2E:
                 "resources_consumed": {"metals": 0.0}
             }
         ]
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
 
         # Add a cargo ship carrying construction resources
         fleet.ships.append(_make_cargo_ship({"metals": 100000}))
@@ -225,7 +225,7 @@ class TestFleetProductionE2E:
                 "resources_consumed": {"metals": 0.0}
             }
         ]
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
 
         # Add a cargo ship carrying construction resources
         fleet.ships.append(_make_cargo_ship({"metals": 100000}))
@@ -321,7 +321,7 @@ class TestFleetProductionMultiQueue:
                 "resources_consumed": {"metals": 0.0}
             },
         ]
-        fleet.orders = [FleetOrder(OrderType.BUILD)]
+        fleet.orders = [Order(OrderType.BUILD)]
 
         # Add a cargo ship carrying construction resources
         fleet.ships.append(_make_cargo_ship({"metals": 1000000}))

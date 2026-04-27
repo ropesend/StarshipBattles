@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -26,7 +26,7 @@ class TestMoveToFleetIntercept:
         engine = FleetMovementEngine()
         target_fleet = MagicMock()
         target_fleet.location = HexCoord(50, 0)
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+        order = Order(OrderType.MOVE_TO_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -47,7 +47,7 @@ class TestMoveToFleetIntercept:
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
         engine = FleetMovementEngine()
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, None)  # Invalid target
+        order = Order(OrderType.MOVE_TO_FLEET, None)  # Invalid target
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
@@ -145,7 +145,7 @@ class TestPathManagement:
 
         engine = FleetMovementEngine()
         target = HexCoord(10, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []  # Empty, will calculate
@@ -167,7 +167,7 @@ class TestPathManagement:
 
         engine = FleetMovementEngine()
         target = HexCoord(10, 0)
-        order = FleetOrder(OrderType.MOVE, target)
+        order = Order(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []

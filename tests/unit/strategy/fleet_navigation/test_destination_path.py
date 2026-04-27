@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 
 
 class TestGetDestination:
@@ -23,7 +23,7 @@ class TestGetDestination:
         )
 
         service = FleetNavigationService()
-        order = FleetOrder(OrderType.MOVE, HexCoord(5, 5))
+        order = Order(OrderType.MOVE, HexCoord(5, 5))
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -43,7 +43,7 @@ class TestGetDestination:
         )
 
         service = FleetNavigationService()
-        order = FleetOrder(OrderType.COLONIZE, MagicMock())
+        order = Order(OrderType.COLONIZE, MagicMock())
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -64,7 +64,7 @@ class TestGetDestination:
 
         service = FleetNavigationService()
         target_fleet = MagicMock()
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        order = Order(OrderType.JOIN_FLEET, target_fleet)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -89,7 +89,7 @@ class TestGetDestination:
         target_fleet = MagicMock()
         target_fleet.location = HexCoord(10, 10)
 
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+        order = Order(OrderType.MOVE_TO_FLEET, target_fleet)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -117,7 +117,7 @@ class TestGetDestination:
         service = FleetNavigationService()
 
         # Target without location attribute
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, None)
+        order = Order(OrderType.MOVE_TO_FLEET, None)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
@@ -215,7 +215,7 @@ class TestComputeNextStep:
         )
 
         service = FleetNavigationService()
-        order = FleetOrder(OrderType.MOVE, HexCoord(2, 0))
+        order = Order(OrderType.MOVE, HexCoord(2, 0))
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(HexCoord(1, 0), HexCoord(2, 0)),
@@ -243,7 +243,7 @@ class TestComputeNextStep:
         )
 
         service = FleetNavigationService()
-        order = FleetOrder(OrderType.MOVE, HexCoord(3, 0))
+        order = Order(OrderType.MOVE, HexCoord(3, 0))
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)),
@@ -285,7 +285,7 @@ class TestComputeNextStep:
         )
 
         service = FleetNavigationService()
-        order = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
+        order = Order(OrderType.MOVE, HexCoord(1, 0))
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(HexCoord(1, 0),),  # Only one step left
@@ -308,7 +308,7 @@ class TestComputeNextStep:
 
         service = FleetNavigationService()
         # Order target changed to a different location than path endpoint
-        order = FleetOrder(OrderType.MOVE, HexCoord(5, 0))  # Target is (5, 0)
+        order = Order(OrderType.MOVE, HexCoord(5, 0))  # Target is (5, 0)
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(HexCoord(1, 0), HexCoord(2, 0)),  # But path leads to (2, 0)

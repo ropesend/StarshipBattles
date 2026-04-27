@@ -13,11 +13,9 @@ from game.core.constants import AttackType
 from game.ai.protocols import (
     IGridEntity,
     IProjectile,
-    IFormationMaster,
     IComponentHealth,
     is_grid_entity,
     is_projectile,
-    is_formation_master,
     is_component_health,
 )
 from game.simulation.entities.ship import Ship, LayerType
@@ -131,37 +129,6 @@ class TestIProjectileProtocol:
         assert not isinstance(ship, IProjectile)
 
 
-class TestIFormationMasterProtocol:
-    """Tests for IFormationMaster protocol compliance."""
-
-    def test_ship_satisfies_iformationmaster(self, create_test_ship):
-        """Ship should satisfy IFormationMaster protocol."""
-        ship = create_test_ship()
-
-        assert isinstance(ship, IFormationMaster)
-
-        # Verify all formation-related attributes
-        assert hasattr(ship, 'position')
-        assert hasattr(ship, 'angle')
-        assert hasattr(ship, 'is_alive')
-        assert hasattr(ship, 'is_derelict')
-        assert hasattr(ship, 'is_thrusting')
-        assert hasattr(ship, 'max_speed')
-        assert hasattr(ship, 'engine_throttle')
-        assert hasattr(ship, 'current_speed')
-        assert hasattr(ship, 'formation')
-        assert hasattr(ship, 'current_target')
-
-        # Verify types
-        assert isinstance(ship.angle, (int, float))
-        assert isinstance(ship.is_alive, bool)
-        assert isinstance(ship.is_derelict, bool)
-        assert isinstance(ship.is_thrusting, bool)
-        assert isinstance(ship.max_speed, (int, float))
-        assert isinstance(ship.engine_throttle, (int, float))
-        assert isinstance(ship.current_speed, (int, float))
-
-
 class TestIComponentHealthProtocol:
     """Tests for IComponentHealth protocol compliance."""
 
@@ -225,22 +192,6 @@ class TestTypeGuardFunctions:
         assert is_projectile(42) is False
         assert is_projectile({}) is False
 
-    def test_is_formation_master_with_ship(self, create_test_ship):
-        """is_formation_master should return True for Ship."""
-        ship = create_test_ship()
-        assert is_formation_master(ship) is True
-
-    def test_is_formation_master_with_projectile(self, create_test_projectile):
-        """is_formation_master should return False for Projectile."""
-        projectile = create_test_projectile()
-        assert is_formation_master(projectile) is False
-
-    def test_is_formation_master_with_non_entity(self):
-        """is_formation_master should return False for non-matching objects."""
-        assert is_formation_master(None) is False
-        assert is_formation_master(42) is False
-        assert is_formation_master({}) is False
-
     def test_is_component_health_with_component(self, create_test_ship):
         """is_component_health should return True for Component."""
         ship = create_test_ship()
@@ -293,4 +244,3 @@ class TestProtocolEdgeCases:
         ship.is_alive = False
 
         assert is_grid_entity(ship) is True
-        assert is_formation_master(ship) is True

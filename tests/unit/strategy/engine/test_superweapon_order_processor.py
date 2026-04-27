@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.stars import Star, StarType
@@ -103,7 +103,7 @@ class TestProcessImplodePlanet:
         mock_fleet.ships = [mock_ship_with_ability]
         mock_fleet.location = mock_system.global_location + mock_planet.location
 
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -140,7 +140,7 @@ class TestProcessImplodePlanet:
         mock_fleet.ships = [mock_ship_with_ability, other_ship]
         mock_fleet.location = mock_system.global_location + mock_planet.location
 
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -169,7 +169,7 @@ class TestProcessImplodePlanet:
         mock_fleet.ships = [mock_ship_with_ability]
         mock_fleet.location = mock_system.global_location
 
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -217,7 +217,7 @@ class TestProcessStellerateStar:
         mock_system.stars = [MagicMock(), MagicMock()]  # 2 stars
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.STELLERATE_STAR)
+        order = Order(OrderType.STELLERATE_STAR)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -253,7 +253,7 @@ class TestProcessStellerateStar:
 
         mock_system.planets = [mock_planet]
 
-        order = FleetOrder(OrderType.STELLERATE_STAR)
+        order = Order(OrderType.STELLERATE_STAR)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -295,7 +295,7 @@ class TestProcessStellerateStar:
         other_fleet.location = mock_system.global_location
         other_fleet.ships = []
 
-        order = FleetOrder(OrderType.STELLERATE_STAR)
+        order = Order(OrderType.STELLERATE_STAR)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -340,7 +340,7 @@ class TestProcessStellerateStar:
         mock_system.warp_points = [warp_point]
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.STELLERATE_STAR)
+        order = Order(OrderType.STELLERATE_STAR)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -390,7 +390,7 @@ class TestProcessOpenWarpPoint:
         mock_fleet.location = current_system.global_location
 
         order_target = {'target_system_name': 'Beta'}
-        order = FleetOrder(OrderType.OPEN_WARP_POINT, target=order_target)
+        order = Order(OrderType.OPEN_WARP_POINT, target=order_target)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -439,7 +439,7 @@ class TestProcessOpenWarpPoint:
         mock_fleet.ships = [ship]
         mock_fleet.location = current_system.global_location
 
-        order = FleetOrder(OrderType.OPEN_WARP_POINT, target={'target_system_name': 'Beta'})
+        order = Order(OrderType.OPEN_WARP_POINT, target={'target_system_name': 'Beta'})
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -479,7 +479,7 @@ class TestProcessCloseWarpPoint:
         mock_fleet.ships = [ship]
         mock_fleet.location = current_system.global_location + wp.location
 
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 15, 'r': 10}})
+        order = Order(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 15, 'r': 10}})
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -514,7 +514,7 @@ class TestProcessCloseWarpPoint:
         mock_fleet.ships = [ship]
         mock_fleet.location = current_system.global_location + wp.location
 
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 15, 'r': 10}})
+        order = Order(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 15, 'r': 10}})
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -548,7 +548,7 @@ class TestProcessCloseWarpPoint:
         mock_fleet.ships = [ship]
         mock_fleet.location = HexCoord(50, 50)
 
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target={
+        order = Order(OrderType.CLOSE_WARP_POINT, target={
             'destination_id': 'Beta',
             'target_hex': {'q': 15, 'r': 10}
         })
@@ -589,7 +589,7 @@ class TestProcessCreateDysonSphere:
         mock_system.stars = [MagicMock()]
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -636,7 +636,7 @@ class TestProcessCreateDysonSphere:
 
         mock_system.planets = [close_planet, far_planet]
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -675,7 +675,7 @@ class TestProcessCreateDysonSphere:
         mock_system.stars = [star]
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -716,7 +716,7 @@ class TestProcessCreateDysonSphere:
         mock_system.stars = [star]
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -753,7 +753,7 @@ class TestProcessCreateDysonSphere:
         mock_system.stars = [star]
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -793,7 +793,7 @@ class TestProcessCreateDysonSphere:
         mock_system.stars = [star]
         mock_system.planets = []
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -877,7 +877,7 @@ class TestProcessCreateDysonSphere:
 
         mock_system.planets = [edge_planet, outside_planet]
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        order = Order(OrderType.CREATE_DYSON_SPHERE)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -918,7 +918,7 @@ class TestProcessSelfDestruct:
         mock_fleet.ships = [ship1, ship2, ship3]
 
         # Only destruct ship1 and ship3
-        order = FleetOrder(OrderType.SELF_DESTRUCT, target=["ship-1", "ship-3"])
+        order = Order(OrderType.SELF_DESTRUCT, target=["ship-1", "ship-3"])
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -943,7 +943,7 @@ class TestProcessSelfDestruct:
         ship.name = "Exploder"
         mock_fleet.ships = [ship]
 
-        order = FleetOrder(OrderType.SELF_DESTRUCT, target=["ship-1"])
+        order = Order(OrderType.SELF_DESTRUCT, target=["ship-1"])
         mock_fleet.get_current_order.return_value = order
 
         from game.core.event_logging import EventBus
@@ -977,7 +977,7 @@ class TestComponentConsumption:
         mock_fleet.ships = [mock_ship_with_ability]
         mock_fleet.location = mock_system.global_location
 
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -1018,7 +1018,7 @@ class TestNoShipFallback:
         mock_fleet.ships = [MagicMock(id="ship-1")]
         mock_fleet.location = mock_system.global_location + mock_planet.location
 
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -1059,7 +1059,7 @@ class TestNoShipFallback:
 
         mock_system.warp_points = []
 
-        order = FleetOrder(OrderType.OPEN_WARP_POINT, target={
+        order = Order(OrderType.OPEN_WARP_POINT, target={
             'target_hex': HexCoord(20, 20),
             'target_system_name': "Target System"
         })
@@ -1100,7 +1100,7 @@ class TestNoShipFallback:
         mock_fleet.ships = [MagicMock(id="ship-1")]
         mock_fleet.location = mock_system.global_location
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
+        order = Order(OrderType.CREATE_DYSON_SPHERE, target=None)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -1140,7 +1140,7 @@ class TestEnemyColonyCleanup:
         mock_fleet.ships = [mock_ship_with_ability]
         mock_fleet.location = mock_system.global_location + mock_planet.location
 
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        order = Order(OrderType.IMPLODE_PLANET, target=mock_planet)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -1195,7 +1195,7 @@ class TestEnemyColonyCleanup:
         mock_fleet.ships = [ship]
         mock_fleet.location = mock_system.global_location
 
-        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
+        order = Order(OrderType.CREATE_DYSON_SPHERE, target=None)
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()

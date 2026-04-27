@@ -132,7 +132,7 @@ class TestGetWarpResourceCosts:
         """Damaged warp drive should affect warp costs through stats."""
         # This tests the integration with stats service
         # When warp drive is damaged, stats service should return 0 for warp costs
-        from game.strategy.data.component_state import (
+        from game.core.component_state import (
             ComponentState, component_state_key,
         )
         ship = make_ship_with_stats(expected_stats={

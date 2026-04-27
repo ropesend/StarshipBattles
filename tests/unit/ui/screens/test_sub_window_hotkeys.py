@@ -1,6 +1,6 @@
 """Tests for sub-window hotkey integration (PROJ-71 Phase 3).
 
-Verifies that FleetOrdersWindow, BuildQueueScreen, TransferDialog,
+Verifies that OrdersWindow, BuildQueueScreen, TransferDialog,
 and BuildQueueListWindow accept input_mapper and dispatch hotkey actions.
 """
 import pytest
@@ -34,12 +34,12 @@ def _keydown(key, mod=0):
 # =======================================================================
 
 class TestFleetOrdersWindowHotkeys:
-    """FleetOrdersWindow should accept input_mapper and dispatch hotkey actions."""
+    """OrdersWindow should accept input_mapper and dispatch hotkey actions."""
 
-    @patch('game.ui.screens.fleet_orders_window.pygame_gui')
+    @patch('game.ui.screens.orders_window.pygame_gui')
     def _make_window(self, mapper, mock_pgui):
-        """Create a FleetOrdersWindow with mocks."""
-        from game.ui.screens.fleet_orders_window import FleetOrdersWindow
+        """Create a OrdersWindow with mocks."""
+        from game.ui.screens.orders_window import OrdersWindow
 
         mock_fleet = MagicMock()
         mock_fleet.id = 1
@@ -47,8 +47,8 @@ class TestFleetOrdersWindowHotkeys:
         mock_fleet.construction_queue = []
 
         # Patch UIWindow.__init__ to avoid real pygame_gui
-        with patch.object(FleetOrdersWindow, '__init__', lambda self, *a, **kw: None):
-            win = FleetOrdersWindow.__new__(FleetOrdersWindow)
+        with patch.object(OrdersWindow, '__init__', lambda self, *a, **kw: None):
+            win = OrdersWindow.__new__(OrdersWindow)
 
         # Set up minimal state
         win.fleet = mock_fleet
@@ -61,7 +61,7 @@ class TestFleetOrdersWindowHotkeys:
         return win
 
     def test_accepts_input_mapper_param(self, mapper):
-        """FleetOrdersWindow stores the mapper."""
+        """OrdersWindow stores the mapper."""
         win = self._make_window(mapper)
         assert win._mapper is mapper
 

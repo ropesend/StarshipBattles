@@ -5,6 +5,10 @@ pytest>=8.0.0
 pytest-testmon
 pytest-xdist
 
+# Code quality scanning (PROJ-297)
+radon>=6.0.0   # Complexity / maintainability metrics
+vulture>=2.10  # Dead code detection
+
 # Image processing (Tools/)
 Pillow>=10.0.0
 numpy>=1.24.0

@@ -60,7 +60,7 @@ for module_name, py_file in all_modules.items():
             if imp_norm in all_modules or any(m.startswith(imp_norm + ".") for m in all_modules):
                 if imp_norm in all_modules:
                     imported_by[imp_norm].append(module_name)
-    except:
+    except Exception:
         pass
 
 # Find orphaned modules (not imported, excluding special cases)

@@ -418,7 +418,7 @@ class TestColonyFoundedEvent:
     def _make_colonize_fleet(self):
         """Create a fleet with a COLONIZE order."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from enum import Enum
 
         class MockPlanetType(Enum):
@@ -440,7 +440,7 @@ class TestColonyFoundedEvent:
         target_planet.populations = []
         target_planet.planet_type = MockPlanetType.CONTINENTAL
 
-        order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+        order = Order(OrderType.COLONIZE, target=target_planet)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
 
@@ -518,7 +518,7 @@ class TestColonyFoundedEvent:
         """Colonizing 'any planet' emits event with the resolved planet name."""
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from game.strategy.data.planet import Planet
         from enum import Enum
 
@@ -542,7 +542,7 @@ class TestColonyFoundedEvent:
         mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         fleet.ships = [mock_ship]
 
-        order = FleetOrder(OrderType.COLONIZE, target=None)
+        order = Order(OrderType.COLONIZE, target=None)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
         from game.core.hex_math import HexCoord
@@ -902,7 +902,7 @@ class TestColonizationEventLocationEnrichment:
         """colony_founded event includes system_name and local_hex."""
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from game.core.hex_math import HexCoord
         from enum import Enum
 
@@ -936,7 +936,7 @@ class TestColonizationEventLocationEnrichment:
         target_planet.planet_type = MockPlanetType.CONTINENTAL
         target_planet.location = HexCoord(3, -1)
 
-        order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+        order = Order(OrderType.COLONIZE, target=target_planet)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
 
@@ -960,7 +960,7 @@ class TestColonizationEventLocationEnrichment:
         """colony_founded event has empty system_name when no parent system."""
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.strategy.data.order_types import Order, OrderType
         from game.core.hex_math import HexCoord
         from enum import Enum
 
@@ -989,7 +989,7 @@ class TestColonizationEventLocationEnrichment:
         target_planet.planet_type = MockPlanetType.CONTINENTAL
         target_planet.location = HexCoord(2, 0)
 
-        order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+        order = Order(OrderType.COLONIZE, target=target_planet)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
 

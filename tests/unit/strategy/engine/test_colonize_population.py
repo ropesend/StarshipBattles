@@ -14,7 +14,7 @@ import pytest
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
 from game.strategy.data.ship_instance import ShipInstance
@@ -165,7 +165,7 @@ class TestColonizeDoesNotTransfer:
         fleet = Fleet(1, empire.id, location)
         ship = _make_ship_with_cargo("Colony Ship", cargo_capacity=100, current_cargo=50, registries=fresh_registries)
         fleet.ships.append(ship)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         # Process colonization
@@ -195,7 +195,7 @@ class TestColonizeDoesNotTransfer:
         fleet = Fleet(1, empire.id, location)
         ship = _make_ship_with_cargo("Colony Ship", cargo_capacity=100, current_cargo=75, registries=fresh_registries)
         fleet.ships.append(ship)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
@@ -231,7 +231,7 @@ class TestColonizeWithoutPassengers:
         fleet = Fleet(1, empire.id, location)
         ship = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         fleet.ships.append(ship)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         processor = OrderProcessor()
@@ -264,7 +264,7 @@ class TestColonizeMultipleShips:
         ship2 = _make_ship_with_cargo("Transport 2", cargo_capacity=100, current_cargo=45, registries=fresh_registries)
         ship3 = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         fleet.ships.extend([ship1, ship2, ship3])
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
@@ -296,7 +296,7 @@ class TestExistingColonizationBehavior:
         fleet = Fleet(1, empire.id, location)
         ship = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         fleet.ships.append(ship)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         processor = OrderProcessor()
@@ -327,7 +327,7 @@ class TestExistingColonizationBehavior:
             "layers": {}
         }, owner_id=0, name="Escort", registries=fresh_registries)
         fleet.ships.extend([colony_ship, escort])
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
+        fleet.add_order(Order(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         processor = OrderProcessor()

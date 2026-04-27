@@ -3,7 +3,7 @@ import pytest
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from unittest.mock import MagicMock, patch
 
@@ -291,7 +291,7 @@ class TestFullTurnIntegration:
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
         fleet.ships = [ship]
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0), HexCoord(5, 0)]
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(5, 0)))
 
         # Mock movement resources
         fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
@@ -320,7 +320,7 @@ class TestMovementGating:
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
         fleet.path = [HexCoord(1, 0)]
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(1, 0)))
 
         # No resources for movement
         fleet.resources.has_resources_for_movement = MagicMock(return_value=False)
@@ -347,7 +347,7 @@ class TestMovementGating:
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         fleet.path = [HexCoord(i, 0) for i in range(1, 11)]
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(10, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(10, 0)))
 
         fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
         fleet.resources.consume_movement_resources = MagicMock(return_value=True)
@@ -373,7 +373,7 @@ class TestMovementGating:
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
         # Warp jump = distance > 1 hex
         fleet.path = [HexCoord(10, 0)]  # Far destination = warp
-        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(10, 0)))
+        fleet.add_order(Order(OrderType.MOVE, HexCoord(10, 0)))
 
         fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
         fleet.capabilities.can_use_warp = MagicMock(return_value=True)

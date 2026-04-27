@@ -347,7 +347,3 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                     self.rebuild_list()
                     return True
         return False
-
-
-# PROJ-238: Backward compatibility alias
-FleetOrdersWindow = OrdersWindow

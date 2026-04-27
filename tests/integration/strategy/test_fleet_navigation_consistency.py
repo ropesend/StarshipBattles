@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.services.fleet_navigation_service import (
     FleetNavigationService,
@@ -103,7 +103,7 @@ class TestProjectionMatchesExecution:
         destination = HexCoord(5, 0)
 
         fleet = create_fleet(1, empire.id, start, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, destination))
+        fleet.add_order(Order(OrderType.MOVE, destination))
         # Pre-compute path so projection is deterministic
         fleet.path = [HexCoord(i, 0) for i in range(1, 6)]  # 1,0 -> 5,0
 
@@ -115,7 +115,7 @@ class TestProjectionMatchesExecution:
 
         # EXECUTE: Reset fleet and run turn engine
         fleet.location = start
-        fleet.orders = [FleetOrder(OrderType.MOVE, destination)]
+        fleet.orders = [Order(OrderType.MOVE, destination)]
         fleet.path = [HexCoord(i, 0) for i in range(1, 6)]
 
         # Run one turn (100 ticks)
@@ -138,7 +138,7 @@ class TestProjectionMatchesExecution:
         destination = HexCoord(10, 0)
 
         fleet = create_fleet(1, empire.id, start, speed=2.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, destination))
+        fleet.add_order(Order(OrderType.MOVE, destination))
         fleet.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1,0 -> 10,0
 
         empire.add_fleet(fleet)
@@ -155,7 +155,7 @@ class TestProjectionMatchesExecution:
 
         # EXECUTE: Reset and run turn-by-turn
         fleet.location = start
-        fleet.orders = [FleetOrder(OrderType.MOVE, destination)]
+        fleet.orders = [Order(OrderType.MOVE, destination)]
         fleet.path = [HexCoord(i, 0) for i in range(1, 11)]
 
         # Speed 2 = 2 hexes per turn, need 5 turns for 10 hexes
@@ -181,7 +181,7 @@ class TestProjectionMatchesExecution:
         warp_dest = HexCoord(100, 0)  # Far destination = warp
 
         fleet = create_fleet(1, empire.id, start, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, warp_dest))
+        fleet.add_order(Order(OrderType.MOVE, warp_dest))
         # Path with a warp segment (distance > 1)
         fleet.path = [HexCoord(50, 0), HexCoord(100, 0)]  # Warp to 50, then to 100
 
@@ -199,7 +199,7 @@ class TestProjectionMatchesExecution:
 
         # EXECUTE: Reset and run
         fleet.location = start
-        fleet.orders = [FleetOrder(OrderType.MOVE, warp_dest)]
+        fleet.orders = [Order(OrderType.MOVE, warp_dest)]
         fleet.path = [HexCoord(50, 0), HexCoord(100, 0)]
 
         turn_engine.process_turn([empire], mock_galaxy)
@@ -225,7 +225,7 @@ class TestProjectionMatchesExecution:
 
         # Create chaser fleet with MOVE_TO_FLEET order
         chaser = create_fleet(1, empire.id, start, speed=5.0)
-        chaser.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet))
+        chaser.add_order(Order(OrderType.MOVE_TO_FLEET, target_fleet))
         # Pre-set path to target
         chaser.path = [HexCoord(i, 0) for i in range(1, 11)]
 
@@ -241,7 +241,7 @@ class TestProjectionMatchesExecution:
 
         # EXECUTE: Run turns until chaser reaches target
         chaser.location = start
-        chaser.orders = [FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)]
+        chaser.orders = [Order(OrderType.MOVE_TO_FLEET, target_fleet)]
         chaser.path = [HexCoord(i, 0) for i in range(1, 11)]
 
         for _ in range(3):
@@ -262,8 +262,8 @@ class TestProjectionMatchesExecution:
         destination = HexCoord(5, 0)
 
         fleet = create_fleet(1, empire.id, start, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, waypoint))
-        fleet.add_order(FleetOrder(OrderType.MOVE, destination))
+        fleet.add_order(Order(OrderType.MOVE, waypoint))
+        fleet.add_order(Order(OrderType.MOVE, destination))
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]  # First order path
 
         empire.add_fleet(fleet)
@@ -281,8 +281,8 @@ class TestProjectionMatchesExecution:
         # EXECUTE: Reset and run
         fleet.location = start
         fleet.orders = [
-            FleetOrder(OrderType.MOVE, waypoint),
-            FleetOrder(OrderType.MOVE, destination)
+            Order(OrderType.MOVE, waypoint),
+            Order(OrderType.MOVE, destination)
         ]
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
 
@@ -302,7 +302,7 @@ class TestEdgeCases:
         loc = HexCoord(5, 5)
 
         fleet = create_fleet(1, empire.id, loc, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, loc))
+        fleet.add_order(Order(OrderType.MOVE, loc))
         fleet.path = []  # Empty path - already there
 
         empire.add_fleet(fleet)
@@ -323,7 +323,7 @@ class TestEdgeCases:
         destination = HexCoord(5, 0)
 
         fleet = create_fleet(1, empire.id, start, speed=0.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, destination))
+        fleet.add_order(Order(OrderType.MOVE, destination))
         fleet.path = [HexCoord(i, 0) for i in range(1, 6)]
 
         empire.add_fleet(fleet)
@@ -347,7 +347,7 @@ class TestEdgeCases:
         # Actually: interval = 100 // 0.5 is undefined for speed < 1
         # Let's use speed 1.5 instead - moves every 66 ticks
         fleet = create_fleet(1, empire.id, start, speed=1.5)
-        fleet.add_order(FleetOrder(OrderType.MOVE, destination))
+        fleet.add_order(Order(OrderType.MOVE, destination))
         fleet.path = [HexCoord(i, 0) for i in range(1, 11)]
 
         empire.add_fleet(fleet)
@@ -391,7 +391,7 @@ class TestNonMovementOrderHandling:
         mock_galaxy.systems[loc] = mock_system
 
         fleet = create_fleet(1, empire.id, loc, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, planet))
+        fleet.add_order(Order(OrderType.COLONIZE, planet))
         fleet.path = []
 
         empire.add_fleet(fleet)
@@ -424,8 +424,8 @@ class TestNonMovementOrderHandling:
         mock_galaxy.systems[colony_loc] = mock_system
 
         fleet = create_fleet(1, empire.id, start, speed=5.0)
-        fleet.add_order(FleetOrder(OrderType.MOVE, colony_loc))
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, planet))
+        fleet.add_order(Order(OrderType.MOVE, colony_loc))
+        fleet.add_order(Order(OrderType.COLONIZE, planet))
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
 
         empire.add_fleet(fleet)

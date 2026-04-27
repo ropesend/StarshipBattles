@@ -24,7 +24,7 @@ from game.simulation.battle_outcome import (
 )
 from game.simulation.battle_spec import ComponentStateSpec
 from game.strategy.combat.post_battle_hook import apply_outcome_to_fleets
-from game.strategy.data.component_state import ComponentState, component_state_key
+from game.core.component_state import ComponentState, component_state_key
 from game.strategy.data.fleet import Fleet
 
 
