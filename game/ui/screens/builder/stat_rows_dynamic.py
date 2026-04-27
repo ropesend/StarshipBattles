@@ -4,6 +4,9 @@ These functions inspect a ship's actual state to generate stat rows on the fly,
 rather than using the static JSON-defined layout. This allows the UI to adapt
 to different ship configurations (e.g., only showing fuel rows if fuel exists).
 """
+from __future__ import annotations
+
+from typing import Any
 from .stat_definitions import StatDefinition
 from .stat_getters import (
     fmt_time,
@@ -12,7 +15,7 @@ from .stat_getters import (
 )
 
 
-def _get_constant_consumption(ship, res_name):
+def _get_constant_consumption(ship, res_name) -> Any:
     """Get constant consumption rate for a resource (excludes activation-based)."""
     from game.simulation.components.abilities.resources import ResourceConsumption
     total = 0
@@ -28,7 +31,7 @@ def _get_constant_consumption(ship, res_name):
     return total
 
 
-def _get_max_endurance(ship, res_name):
+def _get_max_endurance(ship, res_name) -> Any:
     """Calculate endurance at max usage rate (constant + all weapons firing)."""
     try:
         capacity = get_resource_storage(ship, res_name)
@@ -42,7 +45,7 @@ def _get_max_endurance(ship, res_name):
         return float('inf')
 
 
-def _discover_resources(ship):
+def _discover_resources(ship) -> Any:
     """Discover all resource names present on a ship and return sorted.
 
     Sources: resource registry, consumption attributes, generation attributes.
@@ -59,7 +62,7 @@ def _discover_resources(ship):
 
     res_names = list(res_names)
 
-    def sort_key(name):
+    def sort_key(name) -> Any:
         if name in resource_order:
             return resource_order.index(name)
         return 999
@@ -68,7 +71,7 @@ def _discover_resources(ship):
     return res_names
 
 
-def _build_resource_rows(ship, resource_name):
+def _build_resource_rows(ship, resource_name) -> Any:
     """Build conditional stat rows (1-7) for a single resource."""
     try:
         r = ship.resources.get_resource(resource_name)
@@ -152,7 +155,7 @@ def _build_resource_rows(ship, resource_name):
     return rows
 
 
-def get_logistics_rows(ship):
+def get_logistics_rows(ship) -> Any:
     """Generate stat rows for the Logistics section (dynamic resource rows)."""
     res_names = _discover_resources(ship)
     dynamic_rows = []
@@ -161,7 +164,7 @@ def get_logistics_rows(ship):
     return dynamic_rows
 
 
-def get_construction_rows(ship):
+def get_construction_rows(ship) -> Any:
     """Generate stat rows for the Construction section."""
     from game.core.resources import ResourceCatalog
 
@@ -173,7 +176,7 @@ def get_construction_rows(ship):
 
     rows = []
     for res in PLANET_RESOURCE_NAMES:
-        def res_getter(ship, r=res):
+        def res_getter(ship, r=res) -> Any:
             return ship.construction_cost.get(r, 0)
 
         rows.append(StatDefinition(
@@ -185,7 +188,7 @@ def get_construction_rows(ship):
 
 # --- Strategic Ability Helpers ---
 
-def _get_strategic_abilities(ship):
+def _get_strategic_abilities(ship) -> dict:
     """Collect strategic ability data from all components on a ship."""
     harvesters = {}
     storage = {}
@@ -229,7 +232,7 @@ def _get_strategic_abilities(ship):
     }
 
 
-def get_strategic_rows(ship):
+def get_strategic_rows(ship) -> Any:
     """Generate stat rows for the Strategic/Colony section."""
     info = _get_strategic_abilities(ship)
     rows = []
@@ -241,7 +244,7 @@ def get_strategic_rows(ship):
 
     if info['harvesters']:
         for res, rate in sorted(info['harvesters'].items()):
-            def rate_getter(ship, r=res):
+            def rate_getter(ship, r=res) -> Any:
                 data = _get_strategic_abilities(ship)
                 return data['harvesters'].get(r, 0.0)
             rows.append(StatDefinition(
@@ -251,7 +254,7 @@ def get_strategic_rows(ship):
 
     if info['storage']:
         for res, cap in sorted(info['storage'].items()):
-            def cap_getter(ship, r=res):
+            def cap_getter(ship, r=res) -> Any:
                 data = _get_strategic_abilities(ship)
                 return data['storage'].get(r, 0.0)
             rows.append(StatDefinition(
@@ -260,7 +263,7 @@ def get_strategic_rows(ship):
             ))
 
     if info['has_planetary_yard']:
-        def yard_getter(ship):
+        def yard_getter(ship) -> Any:
             data = _get_strategic_abilities(ship)
             return 1.0 if data['has_planetary_yard'] else 0.0
         rows.append(StatDefinition(
@@ -269,7 +272,7 @@ def get_strategic_rows(ship):
         ))
 
     if info['has_space_shipyard']:
-        def shipyard_getter(ship):
+        def shipyard_getter(ship) -> Any:
             data = _get_strategic_abilities(ship)
             si = data['shipyard_info']
             return si.get('bonus', 1.0) if si else 0.0
@@ -278,7 +281,7 @@ def get_strategic_rows(ship):
             getter=shipyard_getter, formatter=lambda v: f"{v:.1f}x" if v > 0 else "No", unit=""
         ))
 
-        def max_mass_getter(ship):
+        def max_mass_getter(ship) -> Any:
             data = _get_strategic_abilities(ship)
             si = data['shipyard_info']
             return si.get('max_mass', 0) if si else 0
@@ -288,7 +291,7 @@ def get_strategic_rows(ship):
         ))
 
     if info['staging_capacity'] > 0:
-        def staging_getter(ship):
+        def staging_getter(ship) -> Any:
             data = _get_strategic_abilities(ship)
             return data['staging_capacity']
         rows.append(StatDefinition(
@@ -311,14 +314,14 @@ def has_strategic_abilities(ship) -> bool:
 
 # --- Cargo & Transport Dynamic Rows ---
 
-def get_cargo_rows(ship):
+def get_cargo_rows(ship) -> Any:
     """Generate stat rows for cargo, pod storage, and colonization."""
     rows = []
 
     # Cargo by type
     for cargo_type, capacity in sorted(ship.cargo_storage.items()):
         if capacity > 0:
-            def cap_getter(s, ct=cargo_type):
+            def cap_getter(s, ct=cargo_type) -> Any:
                 return s.cargo_storage.get(ct, 0)
             label = cargo_type.replace('_', ' ').title()
             rows.append(StatDefinition(
@@ -373,7 +376,7 @@ _ACTIVATABLE_ABILITIES = {
     'WarpFieldStabilizer': 'Warp Stabilizer',
 }
 
-def get_planetary_engineering_rows(ship):
+def get_planetary_engineering_rows(ship) -> Any:
     """Generate rows for planetary modification abilities."""
     rows = []
 
@@ -383,7 +386,7 @@ def get_planetary_engineering_rows(ship):
                 ab = comp.get_ability(ab_name)
                 rate = getattr(ab, rate_attr, 0)
                 if rate != 0:
-                    def rate_getter(s, an=ab_name, ra=rate_attr):
+                    def rate_getter(s, an=ab_name, ra=rate_attr) -> Any:
                         total = 0
                         for c in s.get_all_components():
                             if c.has_ability(an):
@@ -399,7 +402,7 @@ def get_planetary_engineering_rows(ship):
     return rows
 
 
-def get_planetary_defense_rows(ship):
+def get_planetary_defense_rows(ship) -> Any:
     """Generate rows for planetary defense/stabilizer abilities."""
     rows = []
 
@@ -411,7 +414,7 @@ def get_planetary_defense_rows(ship):
                 scope = getattr(ab, 'scope', 'self')
                 scope_text = f" ({scope})" if scope != 'self' else ""
 
-                def drain_getter(s, an=ab_name):
+                def drain_getter(s, an=ab_name) -> Any:
                     total = 0
                     for c in s.get_all_components():
                         if c.has_ability(an):
@@ -437,7 +440,7 @@ def get_planetary_defense_rows(ship):
 
 # --- Strategic Modifiers Dynamic Rows ---
 
-def get_strategic_modifier_rows(ship):
+def get_strategic_modifier_rows(ship) -> Any:
     """Generate rows for shield/damage modifiers with scope."""
     rows = []
 
@@ -455,7 +458,7 @@ def get_strategic_modifier_rows(ship):
                 scope = getattr(ab, 'scope', 'self')
                 scope_text = f" ({scope})" if scope != 'self' else ""
 
-                def mult_getter(s, an=ab_name, ma=mult_attr):
+                def mult_getter(s, an=ab_name, ma=mult_attr) -> Any:
                     # Aggregate: multiply across components
                     total = 1.0
                     for c in s.get_all_components():
@@ -475,7 +478,7 @@ def get_strategic_modifier_rows(ship):
 
 # --- Superweapon Dynamic Rows ---
 
-def get_superweapon_rows(ship):
+def get_superweapon_rows(ship) -> Any:
     """Generate rows for each superweapon type with activation count."""
     from .stat_getters import _SUPERWEAPON_ABILITIES, _SUPERWEAPON_LABELS
     rows = []
@@ -487,7 +490,7 @@ def get_superweapon_rows(ship):
                 count += 1
         if count > 0:
             label = _SUPERWEAPON_LABELS.get(ab_name, ab_name)
-            def count_getter(s, an=ab_name):
+            def count_getter(s, an=ab_name) -> Any:
                 c = 0
                 for comp in s.get_all_components():
                     if comp.has_ability(an):

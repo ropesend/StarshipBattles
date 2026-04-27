@@ -200,7 +200,7 @@ def _load_topdown_thumbnail_uncached(design: DesignMetadata, target_height: int)
     return final_surface
 
 
-def clear_thumbnail_cache():
+def clear_thumbnail_cache() -> None:
     """Clear the in-memory thumbnail caches.
 
     Call this when designs are modified or when starting a new game

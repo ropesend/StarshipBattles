@@ -10,6 +10,8 @@ This is a thin coordinator that:
 - Handles layout and close button
 - Draws the legend
 """
+from __future__ import annotations
+
 import pygame
 import json
 from typing import Optional
@@ -97,7 +99,7 @@ class BattleStateViewer:
         self.diff_stats = {'changed': 0, 'added': 0, 'removed': 0}
 
     def show(self, initial_json: Optional[str], final_json: Optional[str],
-             test_id: str = None, run_number: int = None):
+             test_id: str = None, run_number: int = None) -> None:
         """
         Show the viewer with diff highlighting.
 
@@ -137,11 +139,11 @@ class BattleStateViewer:
         self.initial_panel.set_json_with_diff(initial_json, diff_paths)
         self.final_panel.set_json_with_diff(final_json, diff_paths)
 
-    def hide(self):
+    def hide(self) -> None:
         """Hide the viewer."""
         self.visible = False
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         """Handle window resize."""
         self.screen_width = width
         self.screen_height = height
@@ -191,7 +193,7 @@ class BattleStateViewer:
 
         return True
 
-    def draw(self, surface):
+    def draw(self, surface) -> None:
         """Draw the battle state viewer with legend."""
         if not self.visible:
             return
@@ -232,7 +234,7 @@ class BattleStateViewer:
         text_y = self.close_button_rect.y + (self.close_button_rect.height - button_text.get_height()) // 2
         surface.blit(button_text, (text_x, text_y))
 
-    def _draw_legend(self, surface):
+    def _draw_legend(self, surface) -> None:
         """Draw the diff legend at the bottom."""
         legend_y = self.screen_height - self.margin - 70
 

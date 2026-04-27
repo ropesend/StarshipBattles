@@ -3,6 +3,8 @@
 Handles mouse interactions, component selection, and drag-drop operations
 between the component palette and ship view.
 """
+from __future__ import annotations
+
 import pygame
 from game.core.profiling import profile_action
 
@@ -45,7 +47,7 @@ class InteractionController:
         self.hovered_component = None
         self.drop_targets = []
 
-    def register_drop_target(self, target):
+    def register_drop_target(self, target) -> None:
         """Register a drop target that can accept component drops.
 
         Args:
@@ -56,7 +58,7 @@ class InteractionController:
         """
         self.drop_targets.append(target)
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> None:
         """Process mouse events for drag-drop and selection.
 
         Handles MOUSEBUTTONDOWN and MOUSEBUTTONUP events for left-click:
@@ -106,7 +108,7 @@ class InteractionController:
                       self.dragged_item = None
                       self.builder.left_panel.deselect_all()  # Clear selection when no longer carrying
 
-    def update(self):
+    def update(self) -> None:
         """Update hover state based on current mouse position.
 
         Called each frame to track which component (if any) is under the
@@ -115,7 +117,7 @@ class InteractionController:
         self.hovered_component = None
 
     @profile_action("Builder: Drop Component")
-    def _handle_drop(self, pos):
+    def _handle_drop(self, pos) -> None:
         comp = self.dragged_item
         
         # Check bulk add count

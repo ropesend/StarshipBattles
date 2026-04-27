@@ -332,7 +332,7 @@ class WeaponsRenderer:
         drawn_positions = []
         MIN_LABEL_SPACING = 40
 
-        def can_draw_at(x, priority):
+        def can_draw_at(x, priority) -> bool:
             for pos, pri in drawn_positions:
                 if abs(x - pos) < MIN_LABEL_SPACING:
                     if priority >= pri:

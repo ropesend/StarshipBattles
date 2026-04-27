@@ -12,8 +12,10 @@ Public API (all re-exported for backward compatibility):
 - get_strategic_rows, has_strategic_abilities: Strategic section
 - get_crew_required: Crew requirement getter
 """
+from __future__ import annotations
+
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from game.core.json_utils import load_json
 
 logger = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ from .stat_rows_dynamic import (  # noqa: F401
 )
 
 
-def load_stats_config():
+def load_stats_config() -> Any:
     """Load stats configuration from data/stats_layout.json."""
     from game.core.paths import Paths
 

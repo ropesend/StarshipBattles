@@ -5,6 +5,8 @@ Provides two modes:
 1. Galaxy Layout - Test galaxy generation (system positions + warp lanes only)
 2. System Inspector - Test single system generation with detailed physics inspection
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
@@ -83,13 +85,13 @@ class GalaxyTestScreen:
 
         logger.info("GalaxyTestScreen: Initialized")
 
-    def _clear_ui(self):
+    def _clear_ui(self) -> None:
         """Clear all UI elements."""
         for element in self._ui_elements:
             element.kill()
         self._ui_elements.clear()
 
-    def _create_menu_ui(self):
+    def _create_menu_ui(self) -> None:
         """Create the main menu UI with mode selection buttons."""
         self._clear_ui()
 
@@ -128,17 +130,17 @@ class GalaxyTestScreen:
         )
         self._ui_elements.append(self.btn_close)
 
-    def _create_galaxy_ui(self):
+    def _create_galaxy_ui(self) -> None:
         """Create UI for galaxy layout testing mode."""
         self._clear_ui()
         self._ui_elements = self.galaxy_helper.create_ui()
 
-    def _create_system_ui(self):
+    def _create_system_ui(self) -> None:
         """Create UI for System Inspector mode."""
         self._clear_ui()
         self._ui_elements = self.system_helper.create_ui()
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         """Update the screen."""
         self.camera.update(dt)
         self.ui_manager.update(dt)
@@ -152,7 +154,7 @@ class GalaxyTestScreen:
         if self.mode == self.MODE_GALAXY:
             self.galaxy_helper.update_slider_displays()
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         """Draw the screen."""
         # Track FPS
         self.fps_clock.tick()
@@ -176,7 +178,7 @@ class GalaxyTestScreen:
         # Draw UI
         self.ui_manager.draw_ui(screen)
 
-    def handle_event(self, event: pygame.event):
+    def handle_event(self, event: pygame.event) -> None:
         """Handle pygame events."""
         # Let pygame_gui process ALL events first (needed for dropdowns, sliders, etc.)
         self.ui_manager.process_events(event)
@@ -210,7 +212,7 @@ class GalaxyTestScreen:
                     if mx < self.canvas_width:  # Only in canvas area
                         self.system_helper.handle_click(mx, my)
 
-    def _handle_button_click(self, button):
+    def _handle_button_click(self, button) -> None:
         """Handle UI button clicks."""
         if button == self.btn_galaxy:
             self._go_to_galaxy_mode()
@@ -225,19 +227,19 @@ class GalaxyTestScreen:
         elif button == self.system_helper.btn_generate_system:
             self.system_helper.generate()
 
-    def _go_to_menu(self):
+    def _go_to_menu(self) -> None:
         """Return to the mode selection menu."""
         self.mode = self.MODE_MENU
         self.canvas_width = self.screen_width
         self.camera.width = self.canvas_width
         self._create_menu_ui()
 
-    def _go_to_galaxy_mode(self):
+    def _go_to_galaxy_mode(self) -> None:
         """Enter galaxy layout testing mode."""
         self.mode = self.MODE_GALAXY
         self._create_galaxy_ui()
 
-    def _go_to_system_mode(self):
+    def _go_to_system_mode(self) -> None:
         """Enter star system testing mode."""
         self.mode = self.MODE_SYSTEM
         self._create_system_ui()
@@ -246,13 +248,13 @@ class GalaxyTestScreen:
         self.camera.zoom = 1.0
         self.camera.target_zoom = 1.0
 
-    def _on_close(self):
+    def _on_close(self) -> None:
         """Close the screen and return to main menu."""
         logger.info("GalaxyTestScreen: Closing")
         if self.on_close_callback:
             self.on_close_callback()
 
-    def handle_resize(self, width: int, height: int):
+    def handle_resize(self, width: int, height: int) -> None:
         """Handle window resize."""
         self.screen_width = width
         self.screen_height = height
@@ -276,7 +278,7 @@ class GalaxyTestScreen:
         elif self.mode == self.MODE_SYSTEM:
             self._create_system_ui()
 
-    def handle_input(self, dt: float, events: list):
+    def handle_input(self, dt: float, events: list) -> None:
         """Handle continuous input for camera control."""
         if self.mode != self.MODE_MENU:
             mx, my = pygame.mouse.get_pos()

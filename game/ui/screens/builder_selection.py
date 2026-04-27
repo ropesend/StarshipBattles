@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Any
 """Selection management for the ship builder.
 
 This module handles component selection logic including multi-select,
@@ -15,7 +18,7 @@ def _is_component_like(item) -> bool:
     return hasattr(item, 'id')
 
 
-def normalize_selection(new_selection, ship):
+def normalize_selection(new_selection, ship) -> Any:
     """Normalize selection items to (layer, index, component) tuples.
 
     Args:
@@ -46,7 +49,7 @@ def normalize_selection(new_selection, ship):
     return norm_selection
 
 
-def process_selection_change(current_selection, new_selection, ship, append=False, toggle=False):
+def process_selection_change(current_selection, new_selection, ship, append=False, toggle=False) -> tuple:
     """Process a selection change and return the new selection list.
 
     Args:
@@ -108,7 +111,7 @@ def process_selection_change(current_selection, new_selection, ship, append=Fals
         return norm_selection, False
 
 
-def get_primary_selection(selected_components):
+def get_primary_selection(selected_components) -> Any:
     """Get the primary (last) selected component.
 
     Args:

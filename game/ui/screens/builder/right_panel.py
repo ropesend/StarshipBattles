@@ -5,6 +5,8 @@ Displays ship statistics and configuration options.
 PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 PROJ-80: Stats display delegated to shared DesignStatsPanel.
 """
+from __future__ import annotations
+
 import logging
 import pygame
 import pygame_gui
@@ -63,11 +65,11 @@ class BuilderRightPanel:
         self.setup_controls()
         self.setup_stats()
 
-    def on_registry_reloaded(self, data):
+    def on_registry_reloaded(self, data) -> None:
         """Handle registry reload event - refresh all controls with new data."""
         self.refresh_controls()
 
-    def on_ship_updated(self, ship):
+    def on_ship_updated(self, ship) -> None:
         """Handle ship update event - rebuild if needed, then update stats."""
         if self.stats_panel.needs_rebuild(ship):
             self.stats_panel.rebuild(ship)
@@ -76,7 +78,7 @@ class BuilderRightPanel:
         # even after rebuild (which only creates empty rows with "--" placeholders)
         self.update_stats_display(ship)
 
-    def setup_controls(self):
+    def setup_controls(self) -> None:
         y = 10
         width = self.rect.width
         col_w = width - 20
@@ -164,7 +166,7 @@ class BuilderRightPanel:
         y += 40
         self.last_y = max(y, 10 + img_size) + 10
 
-    def refresh_controls(self):
+    def refresh_controls(self) -> None:
         """Update all UI controls to match the current ship state."""
         import pygame
         from pygame_gui.elements import UIDropDownMenu
@@ -255,7 +257,7 @@ class BuilderRightPanel:
         self.rebuild_stats()
 
 
-    def update_portrait_image(self):
+    def update_portrait_image(self) -> None:
         """Update the ship portrait based on current theme and class."""
         import os
         import re
@@ -329,7 +331,7 @@ class BuilderRightPanel:
         except (FileNotFoundError, OSError, pygame.error) as e:
             logger.warning(f"Failed to load portrait {full_path}: {e}")
 
-    def setup_stats(self):
+    def setup_stats(self) -> None:
         """Set up the stats panel using shared DesignStatsPanel."""
         y = self.last_y
         total_h = self.rect.height - y - 10
@@ -346,16 +348,16 @@ class BuilderRightPanel:
         # Expose rows_map for tests and update methods
         self._sync_from_stats_panel()
 
-    def _sync_from_stats_panel(self):
+    def _sync_from_stats_panel(self) -> None:
         """Sync rows_map from DesignStatsPanel for convenient access by tests."""
         self.rows_map = self.stats_panel.rows_map
 
-    def rebuild_stats(self):
+    def rebuild_stats(self) -> None:
         """Completely rebuild the stats scroll container (e.g. after ship load)."""
         self.stats_panel.rebuild(self.builder.ship)
         self._sync_from_stats_panel()
 
-    def update_class_dropdown(self, new_class: str, valid_classes: list):
+    def update_class_dropdown(self, new_class: str, valid_classes: list) -> None:
         """Kill existing class dropdown and recreate with new options.
 
         Args:
@@ -366,7 +368,7 @@ class BuilderRightPanel:
             self.class_dropdown, valid_classes, new_class, self.manager, container=self.panel
         )
 
-    def update_vehicle_type_dropdown(self, new_type: str, valid_types: list):
+    def update_vehicle_type_dropdown(self, new_type: str, valid_types: list) -> None:
         """Kill existing vehicle type dropdown and recreate with new options.
 
         Args:
@@ -377,7 +379,7 @@ class BuilderRightPanel:
             self.vehicle_type_dropdown, valid_types, new_type, self.manager, container=self.panel
         )
 
-    def update_role_dropdown(self, vehicle_type: str):
+    def update_role_dropdown(self, vehicle_type: str) -> None:
         """Recreate role dropdown filtered for a new vehicle type.
 
         Args:
@@ -388,7 +390,7 @@ class BuilderRightPanel:
             self.role_dropdown, role_options, curr_role_display, self.manager, container=self.panel
         )
 
-    def _get_role_dropdown_data(self, vehicle_type: str):
+    def _get_role_dropdown_data(self, vehicle_type: str) -> tuple:
         """Get role dropdown options and current selection for a vehicle type.
 
         Returns:
@@ -416,7 +418,7 @@ class BuilderRightPanel:
 
         return role_options, curr_display
 
-    def update_dropdowns_for_data_reload(self, default_class: str, vehicle_classes: dict):
+    def update_dropdowns_for_data_reload(self, default_class: str, vehicle_classes: dict) -> None:
         """Update dropdowns after a data reload with new vehicle class data.
 
         Args:
@@ -442,6 +444,6 @@ class BuilderRightPanel:
         # Update type dropdown
         self.update_vehicle_type_dropdown(default_type, types)
 
-    def update_stats_display(self, s):
+    def update_stats_display(self, s) -> None:
         """Update ship stats labels using shared DesignStatsPanel."""
         self.stats_panel.update_stats(s)

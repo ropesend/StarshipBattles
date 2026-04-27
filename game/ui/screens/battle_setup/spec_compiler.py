@@ -416,7 +416,7 @@ def _load_complex_design(design_id: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def _iter_components(design_data: Dict[str, Any]):
+def _iter_components(design_data: Dict[str, Any]) -> Any:
     """Yield every `{id: ..., modifiers: ...}` component dict across all layers."""
     layers = design_data.get("layers") or {}
     for layer_components in layers.values():

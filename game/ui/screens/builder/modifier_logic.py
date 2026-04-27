@@ -5,7 +5,9 @@ Handles validation, mandatory checks, and default value calculations.
 ModifierLogicService is the instance-based service following the codebase's
 constructor injection pattern (like VehicleClassService, ComponentService).
 """
-from typing import Optional, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import Any, Optional, TYPE_CHECKING
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -145,7 +147,7 @@ class ModifierLogicService:
         return None
 
     @staticmethod
-    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False):
+    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False) -> Any:
         """Calculates value for snap buttons. Pure function — no dependencies."""
 
         # Smart floor logic (Size Mount special behavior)
@@ -197,36 +199,36 @@ class ModifierLogic:
         return cls._service_instance
 
     @classmethod
-    def set_service(cls, service):
+    def set_service(cls, service) -> None:
         """Set the service instance (for testing)."""
         cls._service_instance = service
 
     @staticmethod
-    def is_modifier_allowed(mod_id, component):
+    def is_modifier_allowed(mod_id, component) -> Any:
         return ModifierLogic._get_service().is_modifier_allowed(mod_id, component)
 
     @staticmethod
-    def get_mandatory_modifiers(component):
+    def get_mandatory_modifiers(component) -> Any:
         return ModifierLogic._get_service().get_mandatory_modifiers(component)
 
     @staticmethod
-    def is_modifier_mandatory(mod_id, component):
+    def is_modifier_mandatory(mod_id, component) -> Any:
         return ModifierLogic._get_service().is_modifier_mandatory(mod_id, component)
 
     @staticmethod
-    def get_initial_value(mod_id, component):
+    def get_initial_value(mod_id, component) -> Any:
         return ModifierLogic._get_service().get_initial_value(mod_id, component)
 
     @staticmethod
-    def ensure_mandatory_modifiers(component):
+    def ensure_mandatory_modifiers(component) -> Any:
         return ModifierLogic._get_service().ensure_mandatory_modifiers(component)
 
     @staticmethod
-    def get_local_min_max(mod_id, component):
+    def get_local_min_max(mod_id, component) -> Any:
         return ModifierLogic._get_service().get_local_min_max(mod_id, component)
 
     @staticmethod
-    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False):
+    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False) -> Any:
         return ModifierLogicService.calculate_snap_value(
             current, step, direction, min_val, max_val, smart_floor
         )

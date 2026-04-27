@@ -3,6 +3,9 @@
 Provides interactive controls (toggle, slider, buttons, text entry) for
 adjusting modifier values in the ship builder's modifier panel.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel
@@ -84,7 +87,7 @@ class ModifierControlRow:
         # Wait, if we use container, we need to know Y position.
         # So we likely need a `layout(y)` method.
 
-    def _get_local_bounds(self):
+    def _get_local_bounds(self) -> tuple:
         """Get modifier bounds and clamp current value.
 
         Returns:
@@ -101,7 +104,7 @@ class ModifierControlRow:
         clamped = max(min_v, min(max_v, self.current_value))
         return min_v, max_v, clamped
 
-    def _set_controls_enabled(self, enabled):
+    def _set_controls_enabled(self, enabled) -> None:
         """Enable or disable all value controls (entry, slider, buttons).
 
         Args:
@@ -123,7 +126,7 @@ class ModifierControlRow:
             else:
                 btn.disable()
 
-    def build_ui(self, y):
+    def build_ui(self, y) -> Any:
         """Constructs the UI elements at the given y position."""
         self._clear_ui()
         self.y = y
@@ -148,7 +151,7 @@ class ModifierControlRow:
             
         return self.height
 
-    def _build_linear_controls(self, y, start_x, safe_id):
+    def _build_linear_controls(self, y, start_x, safe_id) -> None:
         """Build controls for linear/stepped modifier types.
 
         Creates a horizontal layout with:
@@ -222,7 +225,7 @@ class ModifierControlRow:
         self.ui_elements.append(self.slider)
         current_x += available_slider_width + 5
 
-    def _clear_ui(self):
+    def _clear_ui(self) -> None:
         """Destroy all pygame_gui elements and reset internal references.
 
         Called during rebuild (build_ui) and final cleanup (kill).
@@ -235,7 +238,7 @@ class ModifierControlRow:
         self.slider = None
         self.entry = None
 
-    def update(self, component, template_modifiers):
+    def update(self, component, template_modifiers) -> None:
         """Updates the row state based on the current component or template."""
         self.component_context = component
         
@@ -278,7 +281,7 @@ class ModifierControlRow:
         else:
              self.toggle_btn.enable()
 
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         """Handle internal events. Returns True if a change occurred."""
         # Only process events that have a UI element (pygame_gui events)
         if not hasattr(event, 'ui_element'):
@@ -348,5 +351,5 @@ class ModifierControlRow:
         
         return False
 
-    def kill(self):
+    def kill(self) -> None:
         self._clear_ui()

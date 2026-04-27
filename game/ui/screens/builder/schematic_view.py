@@ -4,6 +4,9 @@ Displays ship schematic with layers, components, and firing arcs.
 
 PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 """
+from __future__ import annotations
+
+from typing import Any
 import pygame
 import math
 from game.core.constants import LayerType  # Canonical location for LayerType
@@ -34,7 +37,7 @@ class SchematicView:
         # Vehicle class service is now required - no fallback
         self._vehicle_class_service = vehicle_class_service
 
-    def update_rect(self, rect):
+    def update_rect(self, rect) -> None:
         self.rect = rect
         self.cx = rect.centerx
         self.cy = rect.centery
@@ -43,10 +46,10 @@ class SchematicView:
         # But if screen size changes, surface size might need to change.
         self.invalidate_cache()
 
-    def invalidate_cache(self):
+    def invalidate_cache(self) -> None:
         self.arc_cache = {}
 
-    def _calculate_max_r(self, ship):
+    def _calculate_max_r(self, ship) -> int:
         # PROJ-43: Use VehicleClassService
         class_def = self._vehicle_class_service.get_class_definition(ship.ship_class) or {}
         ref_mass = class_def.get('max_mass', 1000)
@@ -54,7 +57,7 @@ class SchematicView:
         PIXELS_PER_MASS_ROOT = 7.0 
         return int((ref_mass ** (1/3.0)) * PIXELS_PER_MASS_ROOT)
 
-    def draw(self, screen, ship, show_firing_arcs, selected_component, hovered_component):
+    def draw(self, screen, ship, show_firing_arcs, selected_component, hovered_component) -> None:
         # Draw Background
         pygame.draw.rect(screen, SHIP_VIEW_BG, self.rect)
         
@@ -115,17 +118,17 @@ class SchematicView:
         elif hovered_component and hovered_component.has_ability('WeaponAbility'):
             self.draw_component_firing_arc(screen, hovered_component)
 
-    def draw_all_firing_arcs(self, screen, ship):
+    def draw_all_firing_arcs(self, screen, ship) -> None:
         for ltype, data in ship.layers.items():
             for comp in data.components:
                 if comp.has_ability('WeaponAbility'):
                     self.draw_weapon_arc(screen, comp)
 
-    def draw_component_firing_arc(self, screen, comp):
+    def draw_component_firing_arc(self, screen, comp) -> None:
         if comp.has_ability('WeaponAbility'):
             self.draw_weapon_arc(screen, comp)
 
-    def _get_cached_arc(self, screen_size, weapon):
+    def _get_cached_arc(self, screen_size, weapon) -> Any | None:
         cx, cy = self.cx, self.cy
         # Phase 7: Use ability-based access for weapon properties
         weapon_ab = weapon.get_ability('WeaponAbility')
@@ -180,7 +183,7 @@ class SchematicView:
         self.arc_cache[cache_key] = None
         return None
 
-    def draw_weapon_arc(self, screen, weapon):
+    def draw_weapon_arc(self, screen, weapon) -> None:
         surface = self._get_cached_arc(screen.get_size(), weapon)
         if surface:
             screen.blit(surface, (0, 0))

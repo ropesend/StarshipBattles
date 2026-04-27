@@ -3,6 +3,9 @@ Galaxy Mode Helper - Handles galaxy layout testing functionality.
 
 Extracts galaxy generation, rendering, and UI management from the main screen.
 """
+from __future__ import annotations
+
+from typing import Any
 import random
 import time
 import pygame
@@ -57,7 +60,7 @@ class GalaxyModeHelper:
         self.fps_label = None
         self.btn_back = None
 
-    def create_ui(self):
+    def create_ui(self) -> Any:
         """
         Create UI for galaxy layout testing mode.
 
@@ -220,7 +223,7 @@ class GalaxyModeHelper:
 
         return elements
 
-    def generate(self):
+    def generate(self) -> None:
         """Generate a new galaxy for testing."""
         # Get seed
         seed_text = self.seed_input.get_text().strip()
@@ -308,7 +311,7 @@ class GalaxyModeHelper:
 
         logger.info(f"Galaxy generated: {len(self.galaxy.systems)} systems, {warp_count} warp lanes in {self.generation_time:.2f}s")
 
-    def _center_camera(self):
+    def _center_camera(self) -> None:
         """Center the camera on the generated galaxy."""
         if not self.galaxy or not self.galaxy.systems:
             return
@@ -340,7 +343,7 @@ class GalaxyModeHelper:
         self.screen.camera.target_zoom = self.screen.camera.zoom
         self.screen.camera.zoom = max(self.screen.camera.min_zoom, min(self.screen.camera.max_zoom, self.screen.camera.zoom))
 
-    def update_slider_displays(self):
+    def update_slider_displays(self) -> None:
         """Update slider value display labels."""
         if self.system_count_slider:
             current_val = int(self.system_count_slider.get_current_value())
@@ -349,7 +352,7 @@ class GalaxyModeHelper:
             current_val = int(self.galaxy_radius_slider.get_current_value())
             self.galaxy_radius_value.set_text(str(current_val))
 
-    def draw(self, screen_surface: pygame.Surface):
+    def draw(self, screen_surface: pygame.Surface) -> None:
         """
         Draw the galaxy layout (dots and warp lanes only).
 
@@ -383,7 +386,7 @@ class GalaxyModeHelper:
         # Remove clip
         screen_surface.set_clip(None)
 
-    def _draw_warp_lanes(self, screen_surface: pygame.Surface):
+    def _draw_warp_lanes(self, screen_surface: pygame.Surface) -> None:
         """Draw warp lane connections."""
         if not self.galaxy:
             return

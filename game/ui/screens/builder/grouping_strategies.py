@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Protocol, List, Any, Tuple
 from collections import defaultdict
 
@@ -31,7 +33,7 @@ class DefaultGroupingStrategy:
             
         return result
 
-def get_component_group_key(component):
+def get_component_group_key(component) -> tuple:
     """
     Returns a hashable key for grouping identical components.
     Key: (component_id, tuple(sorted((mod_id, mod_value))))
