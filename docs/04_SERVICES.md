@@ -183,7 +183,7 @@ set_default_ship_materializer(
 
 **run_battle integration:**
 
-Both `run_battle(spec, ai_factory=..., ship_builder=None)` and `BattleController.start_from_spec(spec, ..., ship_builder=None)` fall back to the context materializer when no explicit `ship_builder` is supplied (PROJ-274 Phase 5). Internally `_default_ship_builder_from_context()` in `game/simulation/battle_runner.py` assembles a `(ship_spec, team_id) -> Ship` closure using the default materializer + default registry provider. Test code keeps the kwarg for isolation.
+Both `run_battle(spec, ai_factory=..., ship_builder=None)` and `BattleController.start_from_spec(spec, ..., ship_builder=None)` use the context materializer when no explicit `ship_builder` is supplied. PROJ-306 closure: when `ship_builder is None`, the caller MUST also supply `registry_provider: IRegistryProvider`. The public helper `build_context_ship_builder(registry_provider=...)` in `game/simulation/battle_runner.py` assembles a `(ship_spec, team_id) -> Ship` closure using the default materializer + the explicit provider. Per PROJ-252, Simulation-layer code never resolves the registry provider via global lookup — non-Simulation callers (Strategy adapter, app.py, Combat Lab services) supply it via `get_default_registry_provider()`. Test code keeps the `ship_builder` kwarg for isolation.
 
 **ShipSpec extension:**
 
@@ -191,14 +191,15 @@ Both `run_battle(spec, ai_factory=..., ship_builder=None)` and `BattleController
 
 **Call sites (after migration):**
 
-| Caller | Ship builder supplied? | Materializer used |
-|--------|------------------------|-------------------|
-| `game/app.py::start_battle` | No | InstanceBackedMaterializer (default) |
-| `combat_lab/services/test_execution_service.py` | No | DesignOnlyMaterializer (installed by TestRunner) |
-| `combat_lab/services/scenario_run_helper.py` | Yes (role-tagging wrapper) | Wraps context builder |
-| `game/ui/screens/test_lab/screen.py` | No | DesignOnlyMaterializer |
-| `combat_lab/scenarios/templates.py::ComparisonScenario` | Yes (role-tagging wrapper) | Wraps context builder |
-| Tests (test_three_team_battle, test_boundary_retreat, etc.) | Yes (explicit stub) | Override takes priority |
+| Caller | Ship builder supplied? | `registry_provider` supplied? | Materializer used |
+|--------|------------------------|-------------------------------|-------------------|
+| `game/app.py::start_battle` | No | Yes (via `get_default_registry_provider()`) | InstanceBackedMaterializer (default) |
+| `game/strategy/adapters/simulation_adapter.py` | No | Yes | InstanceBackedMaterializer (default) |
+| `combat_lab/services/test_execution_service.py` | Yes (`build_context_ship_builder` wrapper) | Yes | DesignOnlyMaterializer (installed by TestRunner) |
+| `combat_lab/services/scenario_run_helper.py` | Yes (role-tagging wrapper around `build_context_ship_builder`) | Yes | Wraps context builder |
+| `game/ui/screens/test_lab/screen.py` | Yes (pre-snapshot via `build_context_ship_builder`) | Yes | DesignOnlyMaterializer |
+| `combat_lab/scenarios/templates.py::ComparisonScenario` | Yes (role-tagging wrapper) | Yes | Wraps context builder |
+| Tests (test_three_team_battle, test_boundary_retreat, etc.) | Yes (explicit stub) | N/A | Override takes priority |
 
 ---
 
@@ -471,7 +472,9 @@ else:
 ```python
 def reload_registries_from_directory(
     registry_manager: RegistryManager,
-    data_dir: Union[str, Path]
+    data_dir: Union[str, Path],
+    *,
+    registry_provider: IRegistryProvider,  # PROJ-306: required keyword arg
 ) -> bool
 ```
 
@@ -481,11 +484,19 @@ def reload_registries_from_directory(
 - Returns `True` if directory exists, `False` if directory is invalid
 - Raises `FrozenStateException` if registry is frozen
 
+**PROJ-306:** `registry_provider` is REQUIRED. Per PROJ-252, Simulation-layer code does not resolve the registry provider via global lookup — callers (today: tests only; no production callers) supply it explicitly.
+
 **Usage:**
 ```python
 from game.simulation.services.registry_loader import reload_registries_from_directory
+from game.core.registry import get_default_registry_provider
 
-success = reload_registries_from_directory(registry_manager, "data/")
+# Test code (test layer is outside game/simulation/, so global lookup is fine here):
+success = reload_registries_from_directory(
+    registry_manager,
+    "data/",
+    registry_provider=get_default_registry_provider(),
+)
 ```
 
 ---

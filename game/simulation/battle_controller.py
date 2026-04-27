@@ -32,6 +32,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from game.core.protocols import IRegistryProvider
     from game.core.registry import GameRegistries
     from game.simulation.battle_outcome import BattleOutcome
     from game.simulation.battle_spec import BattleSpec
@@ -244,6 +245,7 @@ class BattleController:
         *,
         ai_factory: "IAIControllerFactory",
         ship_builder: Optional["Callable"] = None,
+        registry_provider: Optional["IRegistryProvider"] = None,
         config: Optional[BattleConfig] = None,
     ) -> "tuple[BattleServiceResult, Dict[str, 'Ship']]":
         """Configure + start a battle directly from a `BattleSpec`.
@@ -260,10 +262,13 @@ class BattleController:
             spec: The `BattleSpec` describing the battle.
             ai_factory: AI controller factory (UI/strategy-owned).
             ship_builder: Optional callable that builds a `Ship` from a
-                `ShipSpec`. When `None` (PROJ-274 default), the
-                materializer is pulled from ApplicationContext — same
-                fallback path as `run_battle`. Production drops this
-                kwarg; tests keep it for isolation.
+                `ShipSpec`. When `None`, `registry_provider` MUST be
+                supplied; the context materializer is then used. Tests
+                pass an explicit stub for isolation.
+            registry_provider: REQUIRED when `ship_builder is None`. Per
+                PROJ-252, the Simulation layer cannot fetch the registry
+                provider via global lookup — non-Simulation callers must
+                pass it explicitly.
             config: Optional `BattleConfig` for operational concerns
                 (`headless`, `start_paused`, `return_destination`). If
                 None, a default `BattleConfig` is constructed using
@@ -275,13 +280,30 @@ class BattleController:
             BattleServiceResult; `ships_by_role` is the role-tagged
             ship lookup from `materialize_spec_ships` for callers that
             need it (Combat Lab scenarios).
+
+        Raises:
+            RuntimeError: When neither `ship_builder` nor `registry_provider`
+                is supplied (PROJ-306).
         """
         from game.simulation.battle_runner import (  # noqa: PLC0415
-            _default_ship_builder_from_context,
+            build_context_ship_builder,
             start_engine_from_spec,
         )
         if ship_builder is None:
-            ship_builder = _default_ship_builder_from_context()
+            if registry_provider is None:
+                raise RuntimeError(
+                    "BattleController.start_from_spec requires either an "
+                    "explicit `ship_builder` callable or a "
+                    "`registry_provider` (so the context materializer "
+                    "can build one). Per PROJ-252, Simulation code "
+                    "cannot resolve the registry provider via global "
+                    "lookup. Non-Simulation callers (Strategy adapter, "
+                    "app.py, Combat Lab services) should pass "
+                    "`registry_provider=get_default_registry_provider()`."
+                )
+            ship_builder = build_context_ship_builder(
+                registry_provider=registry_provider,
+            )
 
         # Build / merge the operational config.
         if config is None:

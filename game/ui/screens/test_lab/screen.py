@@ -442,12 +442,20 @@ class TestLabScreen:
         # PROJ-274: use the context materializer (DesignOnlyMaterializer
         # installed by Combat Lab's TestRunner) instead of a per-call
         # closure.
+        # PROJ-306: pass `registry_provider` explicitly — UI is outside
+        # the Simulation layer and is allowed to call
+        # `get_default_registry_provider()`.
+        from game.core.registry import get_default_registry_provider
         from game.simulation.battle_runner import (
-            _default_ship_builder_from_context,
+            build_context_ship_builder,
             materialize_spec_ships,
         )
+        registry_provider = get_default_registry_provider()
         _pre_teams, pre_ships_by_role = materialize_spec_ships(
-            spec, ship_builder=_default_ship_builder_from_context(),
+            spec,
+            ship_builder=build_context_ship_builder(
+                registry_provider=registry_provider,
+            ),
         )
         initial_state = {
             role: _snapshot_ship_state(ship)
@@ -462,6 +470,7 @@ class TestLabScreen:
         _result, ships_by_role = controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
+            registry_provider=registry_provider,
             config=config,
         )
         engine = controller.service.get_engine()
