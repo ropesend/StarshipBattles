@@ -3,6 +3,8 @@ System Mode Helper - Handles star system inspector functionality.
 
 Extracts system generation, inspection, rendering, and UI management from the main screen.
 """
+from __future__ import annotations
+
 import json
 import random
 import pygame
@@ -201,7 +203,7 @@ class SystemModeHelper:
             logger.warning(f"Failed to load blueprints: {e}")
             return ["random"]
 
-    def generate(self):
+    def generate(self) -> None:
         """Generate a new star system using selected blueprint and seed."""
         from game.strategy.data.galaxy import StarSystem
         from game.strategy.data.stars import StarGenerator
@@ -283,7 +285,7 @@ class SystemModeHelper:
 
         logger.info(f"Generated system: {self.test_system.name}, blueprint={blueprint_name}, stars={len(self.test_system.stars)}, planets={len(self.test_system.planets)}")
 
-    def _center_camera(self):
+    def _center_camera(self) -> None:
         """Center the camera on the generated star system."""
         if not self.test_system:
             return
@@ -319,7 +321,7 @@ class SystemModeHelper:
         self.screen.camera.zoom = max(0.1, self.screen.camera.zoom)  # Floor at 0.1x
         self.screen.camera.target_zoom = self.screen.camera.zoom
 
-    def handle_click(self, mx: int, my: int):
+    def handle_click(self, mx: int, my: int) -> None:
         """Handle click in system view to select objects for inspection."""
         if not self.test_system:
             return
@@ -358,7 +360,7 @@ class SystemModeHelper:
         self.selected_object = best_match
         self._update_inspector_panel()
 
-    def _update_inspector_panel(self):
+    def _update_inspector_panel(self) -> None:
         """Update the inspector panel with selected object's physics data."""
         if self.inspector_label is None:
             return
@@ -479,7 +481,7 @@ class SystemModeHelper:
 
         return reasons.get(ptype, "Unknown classification")
 
-    def draw(self, screen_surface: pygame.Surface):
+    def draw(self, screen_surface: pygame.Surface) -> None:
         """Draw the star system with orbital rings, stars, and planets."""
         if not self.test_system:
             return
@@ -568,7 +570,7 @@ class SystemModeHelper:
         # Remove clip
         screen_surface.set_clip(None)
 
-    def update_fps_display(self, fps: float):
+    def update_fps_display(self, fps: float) -> None:
         """Update the FPS display label."""
         if self.fps_label:
             self.fps_label.set_text(f"FPS: {fps:.1f}")
