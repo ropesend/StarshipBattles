@@ -60,4 +60,8 @@ combat_lab/battle.log
 .codex/
 assets/ShipThemes/Ossivine/Production/*
 assets/ShipThemes/Prismsteel/Production/*
-
+assets/Images/Components/_ai_recreate_enhanced_preview/*
+assets/Images/Components/_ai_recreate_preview/*
+assets/Images/Components/_processed_preview/*
+assets/Images/Components/_processed_preview_v2/*
+assets/Images/Components/_processed_preview_v3/*

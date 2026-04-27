@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Component Transparency QA</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Transparency QA</h1>
+        <div id="counter" class="counter">0 / 0</div>
+      </div>
+      <div class="filters" id="filters">
+        <button data-filter="all" class="active">All</button>
+        <button data-filter="unreviewed">Unreviewed</button>
+        <button data-filter="accepted">Accepted</button>
+        <button data-filter="rejected">Rejected</button>
+        <button data-filter="manual_cleanup">Manual</button>
+        <button data-filter="recreate">Recreate</button>
+      </div>
+      <div id="imageList" class="image-list"></div>
+    </aside>
+
+    <section class="workspace">
+      <header class="toolbar">
+        <div>
+          <div id="filename" class="filename">No image loaded</div>
+          <div id="stats" class="stats"></div>
+        </div>
+        <div class="toolbar-actions">
+          <button id="prevBtn" title="Previous image">Prev</button>
+          <button id="nextBtn" title="Next image">Next</button>
+          <button id="exportBtn" title="Export recreate queue">Export Recreate</button>
+        </div>
+      </header>
+
+      <section class="comparison-grid">
+        <article class="preview-panel">
+          <h2>Original</h2>
+          <div class="image-frame checker">
+            <img id="originalImage" alt="">
+          </div>
+        </article>
+        <article class="preview-panel">
+          <h2>Processed on Checker</h2>
+          <div class="image-frame checker">
+            <img id="processedChecker" alt="">
+          </div>
+        </article>
+        <article class="preview-panel">
+          <h2>Processed on Black</h2>
+          <div class="image-frame black-bg">
+            <img id="processedBlack" alt="">
+          </div>
+        </article>
+        <article class="preview-panel">
+          <h2>Processed on White</h2>
+          <div class="image-frame white-bg">
+            <img id="processedWhite" alt="">
+          </div>
+        </article>
+      </section>
+
+      <footer class="review-bar">
+        <div class="status-buttons">
+          <button data-status="accepted" class="accept" title="Hotkey: A">Accept <span>A</span></button>
+          <button data-status="rejected" class="reject" title="Hotkey: R">Reject <span>R</span></button>
+          <button data-status="manual_cleanup" title="Hotkey: M">Manual Cleanup <span>M</span></button>
+          <button data-status="recreate" class="recreate" title="Hotkey: C">Recreate <span>C</span></button>
+          <button data-status="unreviewed">Clear</button>
+        </div>
+        <input id="notes" type="text" placeholder="Notes">
+      </footer>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
