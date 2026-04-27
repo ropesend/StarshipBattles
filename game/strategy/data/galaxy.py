@@ -80,7 +80,8 @@ class WarpPoint:
         )
 
 class StarSystem:
-    def __init__(self, name, global_location, stars=None, region_id=None):
+    def __init__(self, name, global_location, stars=None, region_id=None,
+                 archetype=None, intrinsic_abilities=None):
         self.name = name
         self.global_location = global_location # HexCoord
         self.stars = stars if stars else []
@@ -88,6 +89,12 @@ class StarSystem:
         self.planets = [] # List[Planet]
         self.storms = []  # List[Storm] - environmental hazards (PROJ-189)
         self.region_id = region_id  # Optional[int] - which arm/cluster this belongs to
+        # PROJ-304: system archetype (nebula, ancient_battlefield, etc.) +
+        # intrinsic_abilities rolled from data/system_archetypes.json. Most
+        # systems have archetype=None. Roll percentage configurable in
+        # galaxy generation config (default 15%).
+        self.archetype: Optional[str] = archetype
+        self.intrinsic_abilities: Dict[str, Any] = dict(intrinsic_abilities) if intrinsic_abilities else {}
 
     @property
     def primary_star(self) -> Optional[Star]:
@@ -113,6 +120,11 @@ class StarSystem:
         }
         if self.region_id is not None:
             result['region_id'] = self.region_id
+        # PROJ-304: archetype + intrinsic abilities (most systems have None).
+        if self.archetype is not None:
+            result['archetype'] = self.archetype
+        if self.intrinsic_abilities:
+            result['intrinsic_abilities'] = dict(self.intrinsic_abilities)
         return result
 
     @classmethod
@@ -140,7 +152,10 @@ class StarSystem:
             name=data['name'],
             global_location=hex_from_dict(data['global_location']),
             stars=stars,
-            region_id=data.get('region_id')
+            region_id=data.get('region_id'),
+            # PROJ-304: archetype + intrinsic_abilities (None / empty for old saves).
+            archetype=data.get('archetype'),
+            intrinsic_abilities=data.get('intrinsic_abilities') or {},
         )
 
         system.warp_points = deserialize_list(

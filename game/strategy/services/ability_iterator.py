@@ -18,6 +18,7 @@ from game.strategy.services.ability_sources import (
     PlanetIntrinsicAbilitySource,  # PROJ-301
     StarAbilitySource,  # PROJ-302
     WarpPointAbilitySource,  # PROJ-303
+    SystemAbilitySource,  # PROJ-304
 )
 
 
@@ -225,6 +226,22 @@ def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> 
             yield adapter
 
 
+def _system_archetype_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
+    """PROJ-304: yield SystemAbilitySource if the system has an archetype.
+
+    Archetype abilities are all scope: system, so the source is yielded for
+    every query (hex or system-wide); the collector's _SYSTEM_SCOPES filter
+    ensures sector queries don't accidentally pick up system-scope abilities.
+    """
+    if system is None:
+        return
+    if not getattr(system, 'archetype', None):
+        return
+    if not getattr(system, 'intrinsic_abilities', None):
+        return
+    yield SystemAbilitySource(system=system)
+
+
 def _warp_point_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
     """PROJ-303: yield WarpPointAbilitySource for warp points with abilities."""
     if system is None:
@@ -245,8 +262,10 @@ register_source_provider_at_hex(_storm_provider)
 register_source_provider_at_hex(_planet_intrinsic_provider)
 register_source_provider_at_hex(_star_provider)
 register_source_provider_at_hex(_warp_point_provider)
+register_source_provider_at_hex(_system_archetype_provider)
 register_source_provider_in_system(_facility_provider)
 register_source_provider_in_system(_storm_provider)
 register_source_provider_in_system(_planet_intrinsic_provider)
 register_source_provider_in_system(_star_provider)
 register_source_provider_in_system(_warp_point_provider)
+register_source_provider_in_system(_system_archetype_provider)

@@ -186,6 +186,9 @@ class GalaxySystemGenerator:
             if storm_blueprint_config is not None:
                 self.generate_storms(sys, storm_blueprint_config, storm_rng)
 
+            # PROJ-304: roll system archetype + intrinsic abilities (~15% by default).
+            _apply_system_archetype(sys, storm_rng)
+
             galaxy.add_system(sys)
             generated.append(sys)
 
@@ -279,3 +282,53 @@ def _apply_star_intrinsic_abilities(stars: List[Any]) -> None:
         if not template:
             continue
         star.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
+
+
+# PROJ-304 — module-level system archetype helper.
+_SYSTEM_ARCHETYPES_CACHE: Optional[Dict[str, Any]] = None
+
+
+def _load_system_archetypes() -> Dict[str, Any]:
+    global _SYSTEM_ARCHETYPES_CACHE
+    if _SYSTEM_ARCHETYPES_CACHE is None:
+        from pathlib import Path
+        import json
+        from game.core.paths import Paths
+
+        path = Path(Paths.SYSTEM_ARCHETYPES_FILE)
+        if path.exists():
+            with path.open('r', encoding='utf-8') as f:
+                _SYSTEM_ARCHETYPES_CACHE = json.load(f)
+        else:
+            _SYSTEM_ARCHETYPES_CACHE = {}
+    return _SYSTEM_ARCHETYPES_CACHE
+
+
+def _apply_system_archetype(system: Any, rng: random.Random) -> None:
+    """PROJ-304: roll a system archetype with ~15% probability."""
+    from game.strategy.services.ability_sources import roll_intrinsic_abilities
+
+    data = _load_system_archetypes()
+    if not data:
+        return
+
+    chance = float(data.get('archetype_chance', 0.15))
+    archetypes = data.get('archetypes', {})
+    if not archetypes:
+        return
+
+    # Idempotent: respect pre-set archetype from scenarios.
+    if system.archetype is not None:
+        return
+    if rng.random() > chance:
+        return
+
+    # Uniform random pick (no weighting). Skip 'void' which is intentionally empty.
+    keys = [k for k in archetypes.keys() if k != 'void']
+    if not keys:
+        return
+    pick = rng.choice(keys)
+    system.archetype = pick
+    template = archetypes[pick].get('abilities', {})
+    if template:
+        system.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
