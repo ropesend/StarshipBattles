@@ -256,7 +256,7 @@ class FleetCommandRouter:
         try:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
-        except Exception:
+        except Exception:  # Intentional broad catch: registry provider may be uninitialized; ability-button handler falls back to no registry
             pass
 
         target_facility_id = None

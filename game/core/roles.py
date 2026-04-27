@@ -230,7 +230,7 @@ class RoleRegistry:
             for cb in self._invalidation_callbacks:
                 try:
                     cb()
-                except Exception:
+                except Exception:  # Intentional broad catch: subscriber callbacks may raise anything; one bad subscriber must not abort the rest of the invalidation fan-out
                     logger.exception(
                         "RoleRegistry: invalidation callback %r raised; "
                         "continuing to fire remaining callbacks",

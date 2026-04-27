@@ -53,7 +53,7 @@ def _get_registries():
             resources=provider.get_resources(),
             resource_catalog=provider.get_resource_catalog(),
         )
-    except Exception:
+    except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals "no registries" to callers
         return None
 
 

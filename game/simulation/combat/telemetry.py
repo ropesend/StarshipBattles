@@ -309,7 +309,7 @@ class HitLogRecorder:
                         if isinstance(ab, WeaponAbility):
                             weapon_ability_class = ab.__class__.__name__
                             break
-                except Exception:
+                except (ImportError, AttributeError):
                     weapon_ability_class = getattr(ctx, "damage_type", "") or ""
 
         record = HitRecord(

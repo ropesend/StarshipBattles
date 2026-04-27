@@ -121,6 +121,6 @@ def load_race_config(race_id: Optional[str]):
         from game.strategy.systems.race_library import RaceLibrary
         race_lib = RaceLibrary()
         return race_lib.get_race(race_id)
-    except Exception:
+    except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; UI mixin must not crash species selection on bad data
         logger.warning("Failed to load race config for %s", race_id)
         return None

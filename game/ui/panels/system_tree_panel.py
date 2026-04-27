@@ -390,7 +390,7 @@ class SystemTreePanel:
 
             effects = collect_system_effects(system_obj, empire_id, registries)
             self._add_effects_group(effects, "System Effects", "system_effects")
-        except Exception:
+        except Exception:  # Intentional broad catch: effect collection traverses empire/registry/save data — many drift-failure modes; tree panel must not crash on display
             import logging
             logging.getLogger(__name__).debug("Could not load system effects", exc_info=True)
 
@@ -405,7 +405,7 @@ class SystemTreePanel:
 
             effects = collect_sector_effects(system_obj, hex_coord, empire_id, registries)
             self._add_effects_group(effects, "Sector Effects", "sector_effects")
-        except Exception:
+        except Exception:  # Intentional broad catch: effect collection traverses empire/registry/save data — many drift-failure modes; tree panel must not crash on display
             import logging
             logging.getLogger(__name__).debug("Could not load sector effects", exc_info=True)
 

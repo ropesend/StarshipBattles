@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Read each of the 24 broad-except sites and decide per-site: narrow / justify / delete. Output a triage table at `findings/triage.md`.
 
 ---

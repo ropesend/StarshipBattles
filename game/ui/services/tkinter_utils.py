@@ -97,7 +97,7 @@ def reset_tk_root() -> None:
     if _tk_root is not None:
         try:
             _tk_root.destroy()
-        except Exception:  # Intentional: destroy may fail if already destroyed
+        except Exception:  # Intentional broad catch: Tk widget .destroy() raises various TclError subclasses if already destroyed or interpreter is gone
             pass
 
     _tk_root = None

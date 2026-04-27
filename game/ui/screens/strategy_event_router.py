@@ -212,7 +212,7 @@ class StrategyEventRouter:
                 race_id = getattr(empire, 'race_id', None)
                 if race_id:
                     race_config = race_lib.get_race(race_id)
-        except Exception:
+        except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; editor opens without race-specific UI
             pass
 
         def on_apply(planet_id, target):
@@ -314,7 +314,7 @@ class StrategyEventRouter:
         try:
             from game.core.registry import get_default_registry_provider
             resource_catalog = get_default_registry_provider().get_resource_catalog()
-        except Exception:
+        except Exception:  # Intentional broad catch: registry provider may be uninitialized; food editor opens without resource catalog
             pass
 
         def resolve_race(race_id):
@@ -326,7 +326,7 @@ class StrategyEventRouter:
             try:
                 from game.strategy.systems.race_library import RaceLibrary
                 return RaceLibrary().get_race(race_id)
-            except Exception:
+            except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; resolver returns None on failure
                 return None
 
         def on_apply(planet_id, allocations):
@@ -357,7 +357,7 @@ class StrategyEventRouter:
                 race_id = getattr(empire, 'race_id', None)
                 if race_id:
                     return race_lib.get_race(race_id)
-        except Exception:
+        except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; caller falls back to None
             pass
         return None
 

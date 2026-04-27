@@ -589,7 +589,7 @@ class StrategyWindowManager:
         try:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
-        except Exception:
+        except Exception:  # Intentional broad catch: registry provider may be uninitialized; abilities window opens without registry-backed lookups
             pass
 
         width = 540
