@@ -159,3 +159,36 @@ class TestGetFilterState:
         assert state['types']['Arid'] is False
         assert state['owner']['Enemy'] is False
         assert state['search_text'] == "test"
+
+
+# ---------------------------------------------------------------------------
+# FEAT-16: filter_effects state — dynamically populated from effect-keys
+# computed against the current galaxy. Different from `filter_types`/
+# `filter_owner` in that there is no fixed key-set; the manager initializes
+# with an empty dict and the window populates it after `gather_planets`.
+# ---------------------------------------------------------------------------
+
+
+class TestFilterEffects:
+    """`filter_effects: Dict[str, bool]` — keys are effect group-keys
+    (e.g. 'EnvironmentalDamage:thermal', 'ThrustModifier')."""
+
+    def test_filter_effects_empty_initially(self):
+        """No effect keys until the window populates them."""
+        mgr = PlanetListFilterManager()
+        assert mgr.filter_effects == {}
+
+    def test_set_all_effects_toggles_all(self):
+        mgr = PlanetListFilterManager()
+        mgr.filter_effects = {'ThrustModifier': True, 'FuelDrain': True}
+        mgr.set_all_effects(False)
+        assert mgr.filter_effects == {'ThrustModifier': False, 'FuelDrain': False}
+        mgr.set_all_effects(True)
+        assert mgr.filter_effects == {'ThrustModifier': True, 'FuelDrain': True}
+
+    def test_get_filter_state_includes_effects(self):
+        mgr = PlanetListFilterManager()
+        mgr.filter_effects = {'ThrustModifier': True, 'EnvironmentalDamage:thermal': False}
+        state = mgr.get_filter_state()
+        assert 'effects' in state
+        assert state['effects'] == {'ThrustModifier': True, 'EnvironmentalDamage:thermal': False}

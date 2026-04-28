@@ -51,6 +51,13 @@ class PlanetListFilterManager:
         # Multi-select owner filters (all enabled by default)
         self.filter_owner: Dict[str, bool] = {o: True for o in OWNER_CATEGORIES}
 
+        # FEAT-16: Multi-select Effects filter. Keys are effect group-keys
+        # (e.g. 'EnvironmentalDamage:thermal', 'ThrustModifier'). Unlike
+        # filter_types/filter_owner, the key set is NOT fixed — it's
+        # populated dynamically from `compute_planet_effect_keys` once the
+        # galaxy is loaded. Starts empty.
+        self.filter_effects: Dict[str, bool] = {}
+
         # Range filters (min/max pairs)
         self.filter_ranges: Dict[str, List[float]] = {
             k: list(v) for k, v in DEFAULT_RANGES.items()
@@ -113,15 +120,37 @@ class PlanetListFilterManager:
         for key in self.filter_owner:
             self.filter_owner[key] = enabled
 
+    def toggle_effect(self, group_key: str) -> bool:
+        """Toggle an Effects-group filter (FEAT-16).
+
+        Args:
+            group_key: Effect group-key to toggle (e.g. 'ThrustModifier').
+
+        Returns:
+            New state, or False if the key is not currently registered
+            (the window populates `filter_effects` dynamically from the
+            galaxy's planets, so unknown keys are a no-op).
+        """
+        if group_key not in self.filter_effects:
+            return False
+        self.filter_effects[group_key] = not self.filter_effects[group_key]
+        return self.filter_effects[group_key]
+
+    def set_all_effects(self, enabled: bool) -> None:
+        """Set all Effects-group filters to the same state (FEAT-16)."""
+        for key in self.filter_effects:
+            self.filter_effects[key] = enabled
+
     def get_filter_state(self) -> Dict[str, Any]:
         """Return complete filter state as a dict.
 
         Returns:
-            Dict with 'types', 'owner', 'search_text', 'ranges' keys.
+            Dict with 'types', 'owner', 'effects', 'search_text', 'ranges' keys.
         """
         return {
             'types': dict(self.filter_types),
             'owner': dict(self.filter_owner),
+            'effects': dict(self.filter_effects),
             'search_text': self.search_text,
             'ranges': {k: list(v) for k, v in self.filter_ranges.items()},
         }

@@ -13,7 +13,7 @@
 | FEAT-13 | 2026-04-27 | Generate visual asset captions for race images (LLM description metadata) | Awaiting Confirmation | [FEAT-13.md](features/active/FEAT-13.md) |
 | FEAT-14 | 2026-04-27 | Race Setup Summary tab — show all environmental factors and aptitudes | Awaiting Confirmation | [FEAT-14.md](features/active/FEAT-14.md) |
 | FEAT-15 | 2026-04-27 | Per-planet probability roll for intrinsic abilities (make planet effects rare) | Awaiting Confirmation | [FEAT-15.md](features/active/FEAT-15.md) |
-| FEAT-16 | 2026-04-27 | Planet List — filter and column support for planet effects/abilities | Pending | [FEAT-16.md](features/active/FEAT-16.md) |
+| FEAT-16 | 2026-04-27 | Planet List — filter and column support for planet effects/abilities | Awaiting Confirmation | [FEAT-16.md](features/active/FEAT-16.md) |
 | FEAT-17 | 2026-04-27 | Build queue pause/unpause toggle button | Pending | [FEAT-17.md](features/active/FEAT-17.md) |
 | FEAT-18 | 2026-04-27 | Build queue — add reorder-down arrow button | Pending | [FEAT-18.md](features/active/FEAT-18.md) |
 | FEAT-19 | 2026-04-27 | Surplus-food happiness bonus (allocation > 1.0× rewards happiness) | Pending | [FEAT-19.md](features/active/FEAT-19.md) |

@@ -125,12 +125,15 @@ def _is_activatable(ability_data: dict) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _make_group_key(ability_name: str, ability_data) -> str:
+def make_group_key(ability_name: str, ability_data) -> str:
     """Group key for an ability instance.
 
     ResourceHarvestBooster + QualityImprovement: per resource_type.
     EnvironmentalDamage: per damage_type (PROJ-300).
     Other abilities: by ability_name alone.
+
+    Public since FEAT-16 — also consumed by the Planet List effects filter
+    and per-effect column generators.
     """
     if ability_name == 'ResourceHarvestBooster' and isinstance(ability_data, dict):
         resource = ability_data.get('resource_type', '')
@@ -145,7 +148,12 @@ def _make_group_key(ability_name: str, ability_data) -> str:
     return ability_name
 
 
-def _make_display_name(ability_name: str, ability_data) -> str:
+def make_display_name(ability_name: str, ability_data) -> str:
+    """Human-readable label for an ability instance.
+
+    Public since FEAT-16 — used as Planet List per-effect column titles and
+    Effects filter chip labels.
+    """
     if ability_name == 'ResourceHarvestBooster' and isinstance(ability_data, dict):
         resource = ability_data.get('resource_type', 'unknown')
         return f"{resource.capitalize()} Harvest Boost"
@@ -156,6 +164,51 @@ def _make_display_name(ability_name: str, ability_data) -> str:
     if display:
         return display
     return ability_name
+
+
+def format_intrinsic_ability_magnitude(ability_name: str, ability_data) -> str:
+    """Render the magnitude of a single ability instance for UI display.
+
+    Used by the Planet List per-effect columns (FEAT-16) and by the System
+    Tree panel's per-effect rendering. The aggregate-effect formatter in
+    `system_tree_panel._format_effect_value` delegates to this for the
+    shared multiplier/rate paths.
+
+    Returns "" when the value is the additive/multiplicative identity (so
+    cells stay blank rather than rendering noise like "x1.00").
+    """
+    if not isinstance(ability_data, dict):
+        return ""
+
+    if ability_name in _RATE_ABILITIES:
+        rate = ability_data.get('rate')
+        if not rate:
+            return ""
+        try:
+            r = float(rate)
+        except (TypeError, ValueError):
+            return ""
+        if ability_name == 'EnvironmentalDamage':
+            return f"-{r:.2f} hull/turn"
+        if ability_name == 'FuelDrain':
+            return f"-{r:.2f} fuel/turn"
+        return f"{r:+.2f}/turn"
+
+    # Multiplier-style. Gate on SYSTEM_EFFECT_ABILITIES so unknown names
+    # (no registry entry, no rate kind) fall through to the empty string
+    # rather than fabricating "x..." for arbitrary input.
+    if ability_name not in SYSTEM_EFFECT_ABILITIES:
+        return ""
+    mult = ability_data.get('multiplier')
+    if mult is None:
+        return ""
+    try:
+        m = float(mult)
+    except (TypeError, ValueError):
+        return ""
+    if m == 1.0:
+        return ""
+    return f"x{m:.2f}"
 
 
 # ---------------------------------------------------------------------------
@@ -292,8 +345,8 @@ def _aggregate(
                     )
                     continue
 
-                group_key = _make_group_key(ability_name, entry)
-                display_name = _make_display_name(ability_name, entry)
+                group_key = make_group_key(ability_name, entry)
+                display_name = make_display_name(ability_name, entry)
 
                 # Activation state — None means always-on (storms, planets,
                 # stars, etc.). Activatable abilities on facilities have a

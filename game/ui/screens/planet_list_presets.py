@@ -65,7 +65,7 @@ class PresetManager:
         return False
 
 
-def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters) -> dict:
+def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters, filter_effects=None) -> dict:
     """Capture current planet list state for saving as a preset.
 
     Args:
@@ -74,6 +74,8 @@ def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_own
         filter_types: Dict of planet type filter states
         filter_owner: Dict of owner filter states
         ui_filters: Dict containing slider UI elements
+        filter_effects: FEAT-16 — Dict of effect group-key filter states.
+            Optional for backward-compat with callers that pre-date FEAT-16.
 
     Returns:
         Dict containing serialized state
@@ -88,6 +90,7 @@ def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_own
         'name': txt_name_filter.get_text(),
         'types': filter_types.copy(),
         'owner': filter_owner.copy(),
+        'effects': dict(filter_effects) if filter_effects else {},
         'ranges': {
             'gravity': [
                 ui_filters['gravity']['min'].get_current_value(),
@@ -110,7 +113,7 @@ def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_own
     }
 
 
-def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters, filter_owner=None) -> Any:
+def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters, filter_owner=None, filter_effects=None) -> Any:
     """Apply a saved state to the planet list.
 
     Args:
@@ -120,6 +123,10 @@ def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_fi
         filter_types: Dict of planet type filter states (will be modified)
         ui_filters: Dict containing slider and button UI elements
         filter_owner: Dict of owner filter states (will be modified). PROJ-220 fix.
+        filter_effects: FEAT-16 — Dict of effect filter states (will be
+            modified). Optional. Keys absent from the current galaxy's
+            effect set are silently dropped — saved presets that reference
+            an old galaxy's abilities won't crash.
 
     Returns:
         The reordered columns list
@@ -188,6 +195,27 @@ def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_fi
                     else:
                         btn.unselect()
                         btn.set_text(f"{o}")
+
+        # FEAT-16: Restore Effects Filters. Saved presets may reference
+        # group-keys not present in the current galaxy (different save) —
+        # those are silently dropped to keep filter_effects in sync with
+        # the live key set populated by the window.
+        if 'effects' in f and filter_effects is not None:
+            saved_effects = f['effects']
+            for key in list(filter_effects.keys()):
+                if key in saved_effects:
+                    filter_effects[key] = bool(saved_effects[key])
+
+            # Update Effects Toggles UI
+            for k, btn in ui_filters.get('effects', {}).items():
+                if k in filter_effects:
+                    label = getattr(btn, '_display_label', k)
+                    if filter_effects[k]:
+                        btn.select()
+                        btn.set_text(f"[{label}]")
+                    else:
+                        btn.unselect()
+                        btn.set_text(f"{label}")
 
         if 'ranges' in f:
             r = f['ranges']

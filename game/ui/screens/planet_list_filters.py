@@ -2,12 +2,28 @@
 
 This module contains the filtering and sorting logic for the planet list,
 separated from the UI rendering code.
+
+FEAT-16 — Effects filter semantics
+==================================
+The Effects filter category (`filter_effects`) follows OR-within-Effects
+just like the Type and Owner categories. **Special case:** when the
+`filter_effects` dict is empty or has no `True` entries, the filter is a
+no-op (every planet passes). This is **different** from `filter_types` /
+`filter_owner`, where zero selected = "show none". Reasoning: a player
+who unticks every effect chip means "I no longer care about effects" not
+"hide every planet". Tests in `test_planet_list_filters.py::TestEffectsPredicate`
+pin this contract.
+
+Internally `filter_planets` is implemented as a predicate-list pipeline
+(FEAT-16) so each category gates planets independently and new categories
+compose without growing the function signature.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable, Dict, List
 from game.core.constants import EARTH_MASS
 from game.ui.utils.formatters import format_compact_number
+from game.strategy.services.system_effects_collector import make_group_key
 
 
 def gather_planets(galaxy, empire) -> Any:
@@ -43,60 +59,126 @@ def gather_planets(galaxy, empire) -> Any:
     return planets
 
 
-def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max_t, min_m, max_m, filter_owner=None, empire=None) -> Any:
-    """Filter planets based on search criteria.
+# ---------------------------------------------------------------------------
+# FEAT-16: Predicate-list pipeline. Each category contributes a predicate;
+# `filter_planets` ANDs them. Public function signature preserved for
+# backward-compat with existing call sites and tests; the predicate
+# builders below are internal helpers.
+# ---------------------------------------------------------------------------
 
-    Args:
-        planets: List of all planets with cached values
-        search_lower: Lowercase search string for name matching
-        filter_types: Dict of type -> bool for type filtering
-        min_g, max_g: Gravity range in g
-        min_t, max_t: Temperature range in K
-        min_m, max_m: Mass range in Earth masses
-        filter_owner: Dict of owner category -> bool for owner filtering (BUG-27)
-        empire: Current player's empire for determining ownership
 
-    Returns:
-        List of filtered planets
-    """
+def _name_predicate(search_lower: str) -> Callable[[Any], bool]:
+    if not search_lower:
+        return lambda p: True
+    return lambda p: search_lower in p._cached_name_lower
+
+
+def _type_predicate(filter_types: Dict[str, bool]) -> Callable[[Any], bool]:
+    return lambda p: filter_types.get(p._cached_type_category, True)
+
+
+def _owner_predicate(filter_owner: Dict[str, bool] | None, empire) -> Callable[[Any], bool]:
+    if filter_owner is None:
+        return lambda p: True
     empire_id = empire.id if empire else -1
 
-    def matches_filter(p) -> bool:
-        # Name (use cached lowercase)
-        if search_lower and search_lower not in p._cached_name_lower:
-            return False
+    def predicate(p) -> bool:
+        owner_id = p.owner_id
+        if owner_id is None:
+            owner_cat = 'Unowned'
+        elif owner_id == empire_id:
+            owner_cat = 'Player'
+        else:
+            owner_cat = 'Enemy'
+        return filter_owner.get(owner_cat, True)
 
-        # Type (use cached category)
-        if not filter_types.get(p._cached_type_category, True):
-            return False
+    return predicate
 
-        # Owner filtering (BUG-27)
-        if filter_owner is not None:
-            owner_id = p.owner_id
 
-            if owner_id is None:
-                owner_cat = 'Unowned'
-            elif owner_id == empire_id:
-                owner_cat = 'Player'
-            else:
-                owner_cat = 'Enemy'
+def _range_predicate(attr_name: str, min_v: float, max_v: float) -> Callable[[Any], bool]:
+    return lambda p: min_v <= getattr(p, attr_name) <= max_v
 
-            if not filter_owner.get(owner_cat, True):
-                return False
 
-        # Ranges (use cached gravity_g and mass_earth)
-        if p._cached_gravity_g < min_g or p._cached_gravity_g > max_g:
-            return False
+def effects_predicate(filter_effects: Dict[str, bool] | None) -> Callable[[Any], bool]:
+    """Predicate for the FEAT-16 Effects filter category.
 
-        if p.surface_temperature < min_t or p.surface_temperature > max_t:
-            return False
+    OR-within-Effects: a planet passes if it has at least one of the
+    selected (True) effect group-keys.
 
-        if p._cached_mass_earth < min_m or p._cached_mass_earth > max_m:
-            return False
+    **Special case** — empty dict OR no True entries → no-op (every planet
+    passes). Different from Type/Owner; documented in module docstring.
+    """
+    if not filter_effects:
+        return lambda p: True
+    selected = {k for k, v in filter_effects.items() if v}
+    if not selected:
+        return lambda p: True
 
-        return True
+    def predicate(p) -> bool:
+        abilities = getattr(p, 'intrinsic_abilities', None) or {}
+        for ability_name, ability_data in abilities.items():
+            if make_group_key(ability_name, ability_data) in selected:
+                return True
+        return False
 
-    return [p for p in planets if matches_filter(p)]
+    return predicate
+
+
+def compute_planet_effect_keys(all_planets) -> List[str]:
+    """Return sorted, de-duplicated list of effect group-keys present on any
+    planet in the supplied list.
+
+    FEAT-16: drives the Effects sidebar chips and per-effect column set.
+    Group-keys are produced via `make_group_key` so EnvironmentalDamage is
+    discriminated by `damage_type` (e.g. `EnvironmentalDamage:thermal`).
+    """
+    keys: set[str] = set()
+    for p in all_planets:
+        abilities = getattr(p, 'intrinsic_abilities', None) or {}
+        for ability_name, ability_data in abilities.items():
+            keys.add(make_group_key(ability_name, ability_data))
+    return sorted(keys)
+
+
+def filter_planets(
+    planets,
+    search_lower,
+    filter_types,
+    min_g, max_g,
+    min_t, max_t,
+    min_m, max_m,
+    filter_owner=None,
+    empire=None,
+    *,
+    filter_effects: Dict[str, bool] | None = None,
+) -> Any:
+    """Filter planets via the FEAT-16 predicate-list pipeline.
+
+    Args:
+        planets: List of all planets with cached values.
+        search_lower: Lowercase search string for name matching.
+        filter_types: Dict of type -> bool for type filtering.
+        min_g, max_g: Gravity range in g.
+        min_t, max_t: Temperature range in K.
+        min_m, max_m: Mass range in Earth masses.
+        filter_owner: Dict of owner category -> bool (BUG-27).
+        empire: Current player's empire for ownership categorization.
+        filter_effects: Dict of effect group-key -> bool (FEAT-16). Empty
+            or all-False → no-op (see module docstring).
+
+    Returns:
+        List of filtered planets.
+    """
+    predicates: List[Callable[[Any], bool]] = [
+        _name_predicate(search_lower),
+        _type_predicate(filter_types),
+        _owner_predicate(filter_owner, empire),
+        _range_predicate('_cached_gravity_g', min_g, max_g),
+        _range_predicate('surface_temperature', min_t, max_t),
+        _range_predicate('_cached_mass_earth', min_m, max_m),
+        effects_predicate(filter_effects),
+    ]
+    return [p for p in planets if all(pred(p) for pred in predicates)]
 
 
 def sort_planets(planets, sort_column_id, sort_descending, columns) -> Any:

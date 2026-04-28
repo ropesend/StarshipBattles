@@ -788,3 +788,90 @@ class TestPlanetListColumnSwap:
         col_dict = {"id": "mass", "title": "Mass", "width": 100, "visible": True}
         self._run_update_with_swap(stub, col_dict, 1)
         stub.refresh_list.assert_called_once()
+
+
+# =============================================================================
+# FEAT-16: Effects sidebar section.
+#
+# `build_sidebar` accepts an `effect_keys` parameter. When non-empty, an
+# Effects filter group is rendered (one chip per group-key, plus All/None
+# buttons) and the toggle buttons are exposed via ui_filters['effects'].
+# When empty, the entire Effects section is omitted (label not even
+# rendered) and `ui_filters['effects']` is `{}`.
+# =============================================================================
+
+
+class TestSidebarEffectsSection:
+    """Verify sidebar conditionally renders the Effects filter group based
+    on `effect_keys`. Patches pygame_gui widget classes to keep the test
+    Pygame-free."""
+
+    def _patch_widgets(self):
+        """Patch every pygame_gui widget the sidebar instantiates.
+        Returns the mock-patcher context manager list (use enter/exit)."""
+        return [
+            patch('game.ui.screens.planet_list_sidebar.UIScrollingContainer'),
+            patch('game.ui.screens.planet_list_sidebar.UILabel'),
+            patch('game.ui.screens.planet_list_sidebar.UIButton'),
+            patch('game.ui.screens.planet_list_sidebar.UITextEntryLine'),
+            patch('game.ui.screens.planet_list_sidebar.UIHorizontalSlider'),
+            patch('game.ui.screens.planet_list_sidebar.UIDropDownMenu'),
+        ]
+
+    def _call_build_sidebar(self, effect_keys):
+        """Invoke build_sidebar with mocked widgets and the given effect_keys."""
+        from game.ui.screens.planet_list_sidebar import build_sidebar
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        manager = MagicMock()
+        sidebar_panel = MagicMock()
+        planet_ranges = {
+            'gravity': (0.0, 10.0),
+            'temp': (0, 2000),
+            'mass': (0.0, 500.0),
+        }
+        columns = [{'id': 'name', 'title': 'Name', 'visible': True}]
+
+        with patch.object(PresetManager, '_load_from_disk', return_value={}):
+            preset_manager = PresetManager()
+
+        patches = self._patch_widgets()
+        for p in patches:
+            p.start()
+        try:
+            return build_sidebar(
+                manager=manager,
+                sidebar_panel=sidebar_panel,
+                sidebar_width=300,
+                rect_height=800,
+                planet_ranges=planet_ranges,
+                columns=columns,
+                preset_manager=preset_manager,
+                effect_keys=effect_keys,
+            )
+        finally:
+            for p in patches:
+                p.stop()
+
+    def test_no_effects_section_when_empty_galaxy(self):
+        """effect_keys=[] → ui_filters['effects'] is empty (or absent)."""
+        widgets = self._call_build_sidebar(effect_keys=[])
+        ui_filters = widgets['ui_filters']
+        # Either key missing or empty dict — both signal no chips rendered
+        effects = ui_filters.get('effects', {})
+        assert effects == {}
+
+    def test_effects_section_chips_match_keys(self):
+        """Each group-key gets one toggle button entry in ui_filters['effects']."""
+        widgets = self._call_build_sidebar(
+            effect_keys=['ThrustModifier', 'EnvironmentalDamage:thermal', 'FuelDrain']
+        )
+        ui_filters = widgets['ui_filters']
+        assert set(ui_filters['effects'].keys()) == {
+            'ThrustModifier',
+            'EnvironmentalDamage:thermal',
+            'FuelDrain',
+        }
+        # All/None buttons exposed for the effects category
+        assert 'btn_all_effects' in widgets
+        assert 'btn_none_effects' in widgets

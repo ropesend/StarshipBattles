@@ -670,3 +670,90 @@ class TestBug119StormGlobalCoordinateFrame:
         ability_names = {e['ability_name'] for e in effects}
         assert 'ShieldModifier' in ability_names
         assert 'EnvironmentalDamage' in ability_names
+
+
+# ---------------------------------------------------------------------------
+# FEAT-16: public helpers (promoted from underscore-private) and shared
+# magnitude formatter, used by the Planet List effects filter/columns and by
+# the System Tree panel.
+# ---------------------------------------------------------------------------
+
+class TestPublicGroupKey:
+    """`make_group_key` is the public name for what was `_make_group_key`."""
+
+    def test_environmental_damage_includes_damage_type(self):
+        from game.strategy.services.system_effects_collector import make_group_key
+        key = make_group_key('EnvironmentalDamage', {'rate': 0.27, 'damage_type': 'thermal'})
+        assert key == 'EnvironmentalDamage:thermal'
+
+    def test_environmental_damage_radiation(self):
+        from game.strategy.services.system_effects_collector import make_group_key
+        key = make_group_key('EnvironmentalDamage', {'rate': 0.05, 'damage_type': 'radiation'})
+        assert key == 'EnvironmentalDamage:radiation'
+
+    def test_plain_ability_returns_name_only(self):
+        from game.strategy.services.system_effects_collector import make_group_key
+        assert make_group_key('ThrustModifier', {'multiplier': 0.9}) == 'ThrustModifier'
+        assert make_group_key('ShieldModifier', {'multiplier': 0.85}) == 'ShieldModifier'
+        assert make_group_key('FuelDrain', {'rate': 0.5}) == 'FuelDrain'
+
+
+class TestPublicDisplayName:
+    """`make_display_name` is the public name for what was `_make_display_name`."""
+
+    def test_environmental_damage_thermal(self):
+        from game.strategy.services.system_effects_collector import make_display_name
+        assert make_display_name('EnvironmentalDamage', {'damage_type': 'thermal'}) == 'Thermal Damage'
+
+    def test_environmental_damage_radiation(self):
+        from game.strategy.services.system_effects_collector import make_display_name
+        assert make_display_name('EnvironmentalDamage', {'damage_type': 'radiation'}) == 'Radiation Damage'
+
+    def test_plain_ability_uses_registry(self):
+        from game.strategy.services.system_effects_collector import make_display_name
+        assert make_display_name('ShieldModifier', {'multiplier': 0.85}) == 'Shield Modifier'
+        assert make_display_name('ThrustModifier', {'multiplier': 0.9}) == 'Thrust Modifier'
+        assert make_display_name('FuelDrain', {'rate': 0.5}) == 'Fuel Drain'
+
+
+class TestFormatIntrinsicAbilityMagnitude:
+    """`format_intrinsic_ability_magnitude(ability_name, ability_data)` renders
+    the per-planet magnitude string used by both the Planet List columns and
+    the system tree (which delegates).
+
+    Per FEAT-16: rate-style abilities use per-turn formatting; multiplier-style
+    use `xN.NN`. Returns "" when the value is the additive/multiplicative
+    identity (so empty cells stay empty)."""
+
+    def test_thermal_environmental_damage(self):
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        out = format_intrinsic_ability_magnitude('EnvironmentalDamage', {'rate': 0.27, 'damage_type': 'thermal'})
+        assert out == "-0.27 hull/turn"
+
+    def test_radiation_environmental_damage(self):
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        out = format_intrinsic_ability_magnitude('EnvironmentalDamage', {'rate': 0.05, 'damage_type': 'radiation'})
+        assert out == "-0.05 hull/turn"
+
+    def test_thrust_modifier_multiplier(self):
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        out = format_intrinsic_ability_magnitude('ThrustModifier', {'multiplier': 0.91})
+        assert out == "x0.91"
+
+    def test_fuel_drain_rate(self):
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        out = format_intrinsic_ability_magnitude('FuelDrain', {'rate': 0.5})
+        assert out == "-0.50 fuel/turn"
+
+    def test_unity_multiplier_returns_empty(self):
+        """A multiplier of exactly 1.0 is a no-op — render nothing."""
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        assert format_intrinsic_ability_magnitude('ShieldModifier', {'multiplier': 1.0}) == ""
+
+    def test_zero_rate_returns_empty(self):
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        assert format_intrinsic_ability_magnitude('EnvironmentalDamage', {'rate': 0.0, 'damage_type': 'thermal'}) == ""
+
+    def test_unknown_ability_returns_empty(self):
+        from game.strategy.services.system_effects_collector import format_intrinsic_ability_magnitude
+        assert format_intrinsic_ability_magnitude('NotARealAbility', {'foo': 1}) == ""

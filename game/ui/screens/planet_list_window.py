@@ -22,7 +22,12 @@ import logging
 logger = logging.getLogger(__name__)
 from game.ui.screens.planet_list_filters import (
     gather_planets, filter_planets, sort_planets,
-    compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str
+    compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str,
+    compute_planet_effect_keys,
+)
+from game.strategy.services.system_effects_collector import (
+    make_display_name as _effect_display_name,
+    format_intrinsic_ability_magnitude,
 )
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 from game.ui.screens.planet_list_filter_manager import PlanetListFilterManager
@@ -41,6 +46,60 @@ def _format_population(planet) -> str:
         return "—"
     total = sum(getattr(p, 'count', 0) for p in pops)
     return format_compact_number(total) if total > 0 else "—"
+
+
+def _render_effect_cell(planet, group_key: str) -> str:
+    """Render a planet's magnitude for one effect group-key, or '—' if absent.
+
+    FEAT-16: used as the `func` for per-effect columns. Discriminates by
+    damage_type for EnvironmentalDamage so a thermal-damage planet renders
+    blank in the :radiation column and vice versa.
+    """
+    abilities = getattr(planet, 'intrinsic_abilities', None) or {}
+    if ':' in group_key:
+        ability_name, _discriminator = group_key.split(':', 1)
+    else:
+        ability_name = group_key
+    data = abilities.get(ability_name)
+    if data is None:
+        return "—"
+    # Confirm the planet's instance matches the same group-key (so a
+    # radiation-damage planet doesn't render in the thermal-damage column).
+    from game.strategy.services.system_effects_collector import make_group_key
+    if make_group_key(ability_name, data) != group_key:
+        return "—"
+    rendered = format_intrinsic_ability_magnitude(ability_name, data)
+    return rendered if rendered else "—"
+
+
+def build_effect_columns(effect_keys: list[str]) -> list[dict]:
+    """Build per-effect column definitions for the Planet List (FEAT-16).
+
+    Args:
+        effect_keys: Sorted group-keys produced by `compute_planet_effect_keys`.
+
+    Returns:
+        List of column dicts (id='effect_<group_key>', title=display name,
+        func=cell renderer, visible=False). One column per key. When the
+        list is empty (no planet has any effect) the result is empty.
+    """
+    columns: list[dict] = []
+    for group_key in effect_keys:
+        if ':' in group_key:
+            ability_name, discriminator = group_key.split(':', 1)
+            data = {'damage_type': discriminator, 'resource_type': discriminator}
+        else:
+            ability_name = group_key
+            data = {}
+        title = _effect_display_name(ability_name, data)
+        columns.append({
+            'id': f'effect_{group_key}',
+            'width': 130,
+            'title': title,
+            'func': lambda p, gk=group_key: _render_effect_cell(p, gk),
+            'visible': False,
+        })
+    return columns
 
 class PlanetListWindow(UIWindow):
     def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None, race_registry=None, facade=None):
@@ -118,6 +177,17 @@ class PlanetListWindow(UIWindow):
                 'visible': False # hidden by default
             })
 
+        # FEAT-16: per-effect columns (one per intrinsic-ability group-key
+        # present in the loaded galaxy). Hidden by default. Empty galaxy →
+        # zero columns added.
+        self._effect_keys = compute_planet_effect_keys(self.all_planets)
+        self.columns.extend(build_effect_columns(self._effect_keys))
+
+        # FEAT-16: seed the manager's filter_effects with one True entry
+        # per discovered effect group-key. All True initially so the
+        # filter is a no-op until the user unticks something.
+        self._filter_mgr.filter_effects = {k: True for k in self._effect_keys}
+
         # UI Containers - Sidebar
         self.sidebar_panel = UIPanel(
             relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
@@ -134,7 +204,8 @@ class PlanetListWindow(UIWindow):
             rect_height=rect.height,
             planet_ranges=self._planet_ranges,
             columns=self.columns,
-            preset_manager=self.preset_manager
+            preset_manager=self.preset_manager,
+            effect_keys=self._effect_keys,
         )
         # Unpack widget references needed by main window
         self.sidebar_scroller = sidebar_widgets['sidebar_scroller']
@@ -143,11 +214,18 @@ class PlanetListWindow(UIWindow):
         self.btn_none_types = sidebar_widgets['btn_none_types']
         self.btn_all_owners = sidebar_widgets['btn_all_owners']
         self.btn_none_owners = sidebar_widgets['btn_none_owners']
+        self.btn_all_effects = sidebar_widgets['btn_all_effects']
+        self.btn_none_effects = sidebar_widgets['btn_none_effects']
         self.btn_apply = sidebar_widgets['btn_apply']
         self.btn_save_preset = sidebar_widgets['btn_save_preset']
         self.txt_preset_name = sidebar_widgets['txt_preset_name']
         self.dd_presets = sidebar_widgets['dd_presets']
         self.ui_filters = sidebar_widgets['ui_filters']
+
+        # FEAT-16: initialize Effects toggle button visual states to match
+        # the seeded filter_effects dict (all True = all selected).
+        for key, btn in self.ui_filters.get('effects', {}).items():
+            btn.select()
 
         # Main Content Area - Panel for VirtualTable
         main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
@@ -212,6 +290,16 @@ class PlanetListWindow(UIWindow):
         self._filter_mgr.filter_owner = value
 
     @property
+    def filter_effects(self) -> Any:
+        """FEAT-16: Effects filter dict (mutable reference)."""
+        return self._filter_mgr.filter_effects
+
+    @filter_effects.setter
+    def filter_effects(self, value) -> None:
+        """Set Effects filter dict."""
+        self._filter_mgr.filter_effects = value
+
+    @property
     def filter_ranges(self) -> Any:
         """Range filter dict (mutable reference)."""
         return self._filter_mgr.filter_ranges
@@ -236,11 +324,12 @@ class PlanetListWindow(UIWindow):
         min_m = self.ui_filters['mass']['min'].get_current_value()
         max_m = self.ui_filters['mass']['max'].get_current_value()
 
-        # Use extracted filter function (BUG-27: added owner filter)
+        # Use extracted filter function (BUG-27: added owner filter; FEAT-16: Effects)
         self.filtered_planets = filter_planets(
             self.all_planets, search_lower, self.filter_types,
             min_g, max_g, min_t, max_t, min_m, max_m,
-            filter_owner=self.filter_owner, empire=self.empire
+            filter_owner=self.filter_owner, empire=self.empire,
+            filter_effects=self.filter_effects,
         )
 
         # 1b. Sort using extracted function (use TableColumnManager state)
@@ -281,6 +370,13 @@ class PlanetListWindow(UIWindow):
             if event.ui_element == self.btn_none_owners:
                 self._set_all_filters(self.filter_owner, 'owners', False)
                 return True
+            # FEAT-16: Effects All/None batch buttons (None when section omitted)
+            if self.btn_all_effects is not None and event.ui_element == self.btn_all_effects:
+                self._set_all_filters(self.filter_effects, 'effects', True)
+                return True
+            if self.btn_none_effects is not None and event.ui_element == self.btn_none_effects:
+                self._set_all_filters(self.filter_effects, 'effects', False)
+                return True
             if event.ui_element == self.btn_save_preset:
                 self._save_preset()
                 return True
@@ -293,6 +389,11 @@ class PlanetListWindow(UIWindow):
             for key, btn in self.ui_filters.get('owners', {}).items():
                 if event.ui_element == btn:
                     self._toggle_filter(self.filter_owner, key, btn)
+                    return True
+            # FEAT-16: Effects toggle buttons
+            for key, btn in self.ui_filters.get('effects', {}).items():
+                if event.ui_element == btn:
+                    self._toggle_filter(self.filter_effects, key, btn)
                     return True
             # Check column toggle buttons
             for col_id, btn in self.ui_filters.get('columns', {}).items():
@@ -413,12 +514,13 @@ class PlanetListWindow(UIWindow):
         """Set all filters in a category to enabled/disabled."""
         for key, btn in self.ui_filters.get(ui_key, {}).items():
             filter_dict[key] = enabled
+            label = getattr(btn, '_display_label', key)
             if enabled:
                 btn.select()
-                btn.set_text(f"[{key}]")
+                btn.set_text(f"[{label}]")
             else:
                 btn.unselect()
-                btn.set_text(f"{key}")
+                btn.set_text(f"{label}")
         self.refresh_list()
 
     def _toggle_filter(self, filter_dict, key, btn) -> None:
@@ -426,7 +528,8 @@ class PlanetListWindow(UIWindow):
         state = not filter_dict[key]
         filter_dict[key] = state
         btn.select() if state else btn.unselect()
-        btn.set_text(f"[{key}]" if state else f"{key}")
+        label = getattr(btn, '_display_label', key)
+        btn.set_text(f"[{label}]" if state else f"{label}")
         self.refresh_list()
 
     def _toggle_column(self, btn) -> None:
@@ -463,7 +566,8 @@ class PlanetListWindow(UIWindow):
         """Serialize current filters and column config."""
         return capture_planet_list_state(
             self.columns, self.txt_name_filter, self.filter_types,
-            self.filter_owner, self.ui_filters
+            self.filter_owner, self.ui_filters,
+            filter_effects=self.filter_effects,
         )
 
     def _apply_state(self, state) -> None:
@@ -472,6 +576,7 @@ class PlanetListWindow(UIWindow):
             state, self.columns, self.txt_name_filter,
             self.filter_types, self.ui_filters,
             filter_owner=self.filter_owner,
+            filter_effects=self.filter_effects,
         )
         # Re-sync TableColumnManager with updated columns
         self.column_manager = TableColumnManager(self.columns)

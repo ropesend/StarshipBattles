@@ -133,3 +133,81 @@ class TestViewThreading:
         mock_panel_cls.assert_called_once()
         kwargs = mock_panel_cls.call_args.kwargs
         assert kwargs.get("view") is None
+
+
+# ---------------------------------------------------------------------------
+# FEAT-16: per-effect column generation.
+#
+# `build_effect_columns(effect_keys)` (module-level helper, no Pygame deps)
+# returns column dicts ready to be appended to `self.columns`. Each column:
+#   - id = f"effect_{group_key}"
+#   - title = make_display_name() of the ability
+#   - func = lambda rendering the magnitude string via shared formatter,
+#            or '—' when the planet doesn't carry that effect
+#   - visible = False (default hidden — matches per-resource columns)
+# ---------------------------------------------------------------------------
+
+
+def _planet_with_abilities(abilities):
+    p = MagicMock()
+    p.intrinsic_abilities = abilities
+    return p
+
+
+class TestPerEffectColumns:
+    """Per FEAT-16: build a column per effect group-key, hidden by default,
+    rendering magnitude via the shared formatter."""
+
+    def test_no_columns_for_empty_galaxy(self):
+        from game.ui.screens.planet_list_window import build_effect_columns
+        assert build_effect_columns([]) == []
+
+    def test_one_column_per_effect_key_hidden_by_default(self):
+        from game.ui.screens.planet_list_window import build_effect_columns
+        cols = build_effect_columns(['ThrustModifier', 'EnvironmentalDamage:thermal'])
+        assert len(cols) == 2
+        ids = {c['id'] for c in cols}
+        assert ids == {'effect_ThrustModifier', 'effect_EnvironmentalDamage:thermal'}
+        for c in cols:
+            assert c['visible'] is False
+
+    def test_column_titles_use_display_names(self):
+        from game.ui.screens.planet_list_window import build_effect_columns
+        cols = build_effect_columns(['EnvironmentalDamage:thermal', 'ThrustModifier', 'FuelDrain'])
+        title_by_id = {c['id']: c['title'] for c in cols}
+        assert title_by_id['effect_EnvironmentalDamage:thermal'] == 'Thermal Damage'
+        assert title_by_id['effect_ThrustModifier'] == 'Thrust Modifier'
+        assert title_by_id['effect_FuelDrain'] == 'Fuel Drain'
+
+    def test_column_func_renders_magnitude_via_shared_formatter(self):
+        from game.ui.screens.planet_list_window import build_effect_columns
+        cols = build_effect_columns(['ThrustModifier', 'EnvironmentalDamage:thermal'])
+
+        col_thrust = next(c for c in cols if c['id'] == 'effect_ThrustModifier')
+        col_thermal = next(c for c in cols if c['id'] == 'effect_EnvironmentalDamage:thermal')
+
+        # Planet with ThrustModifier multiplier=0.91 → "x0.91"
+        cryo = _planet_with_abilities({'ThrustModifier': {'multiplier': 0.91, 'scope': 'sector'}})
+        assert col_thrust['func'](cryo) == 'x0.91'
+
+        # Same planet has no thermal damage → blank cell
+        assert col_thermal['func'](cryo) == '—'
+
+        # Magma planet → thermal cell renders rate
+        magma = _planet_with_abilities({
+            'EnvironmentalDamage': {'rate': 0.27, 'damage_type': 'thermal', 'scope': 'sector'},
+        })
+        assert col_thermal['func'](magma) == '-0.27 hull/turn'
+        # Same magma planet has no ThrustModifier
+        assert col_thrust['func'](magma) == '—'
+
+    def test_column_func_distinguishes_damage_types(self):
+        """A radiation EnvironmentalDamage planet must render blank in the
+        :thermal column (different group_key)."""
+        from game.ui.screens.planet_list_window import build_effect_columns
+        cols = build_effect_columns(['EnvironmentalDamage:thermal'])
+        col = cols[0]
+        chthonian = _planet_with_abilities({
+            'EnvironmentalDamage': {'rate': 0.1, 'damage_type': 'radiation', 'scope': 'sector'},
+        })
+        assert col['func'](chthonian) == '—'

@@ -598,22 +598,24 @@ class SystemTreePanel:
     def _format_effect_value(effect: dict) -> str:
         """Format the aggregate value for an effect header.
 
-        PROJ-300: rate-style abilities (kind=rate, EnvironmentalDamage,
-        FuelDrain) get per-turn formatting; multiplier-style stay as
-        percent / multiplier strings.
+        FEAT-16: shared multiplier/rate paths delegate to
+        `format_intrinsic_ability_magnitude`. The +percent renderings for
+        ResourceHarvestBooster / BuildRateBooster / QualityImprovement
+        remain here — they're aggregate-only renderings (no per-planet
+        equivalent for the Planet List, since planets don't carry these).
         """
+        from game.strategy.services.system_effects_collector import (
+            format_intrinsic_ability_magnitude,
+        )
+
         ability = effect.get('ability_name', '')
         agg = effect.get('aggregate_value', 0.0)
         kind = effect.get('kind', 'multiplier')
 
         if kind == 'rate':
-            if not agg:
-                return ""
-            if ability == 'EnvironmentalDamage':
-                return f"-{agg:.2f} hull/turn"
-            if ability == 'FuelDrain':
-                return f"-{agg:.2f} fuel/turn"
-            return f"{agg:+.2f}/turn"
+            # Reconstruct a synthetic per-instance shape so the shared
+            # formatter handles all rate-style ability names uniformly.
+            return format_intrinsic_ability_magnitude(ability, {'rate': agg})
 
         if ability == 'ResourceHarvestBooster' or ability == 'BuildRateBooster':
             if agg and agg != 1.0:
@@ -626,8 +628,7 @@ class SystemTreePanel:
                 rate = effect['providers'][0]['value'] if effect['providers'] else 0.0
                 return f"+{rate}/turn"
         elif ability in ('ShieldModifier', 'DamageModifier', 'ThrustModifier', 'StrategicSpeedModifier'):
-            if agg and agg != 1.0:
-                return f"x{agg:.2f}"
+            return format_intrinsic_ability_magnitude(ability, {'multiplier': agg})
         # Activatable abilities (stabilizers) don't have a value to show
         return ""
 

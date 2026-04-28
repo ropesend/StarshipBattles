@@ -15,7 +15,8 @@ from pygame_gui.elements import (
 
 
 def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
-                  planet_ranges, columns, preset_manager) -> dict[str, Any]:
+                  planet_ranges, columns, preset_manager,
+                  effect_keys: list[str] | None = None) -> dict[str, Any]:
     """Build sidebar UI controls for planet list filtering.
 
     Args:
@@ -26,6 +27,14 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
         planet_ranges: Dict with 'gravity', 'temp', 'mass' min/max tuples
         columns: List of column definition dicts
         preset_manager: PresetManager instance for presets
+        effect_keys: FEAT-16. Sorted list of effect group-keys present on
+            planets in the current galaxy. When empty/None, the Effects
+            filter section is omitted entirely (no label, no chips,
+            ui_filters['effects'] = {}, btn_all_effects/btn_none_effects = None).
+            When non-empty, renders one toggle button per key plus
+            All/None batch controls. Group-keys come from
+            `compute_planet_effect_keys` (e.g. 'ThrustModifier',
+            'EnvironmentalDamage:thermal').
 
     Returns:
         Dict containing all widget references needed by main window:
@@ -33,11 +42,14 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
         - txt_name_filter: UITextEntryLine for name search
         - btn_all_types, btn_none_types: Type filter buttons
         - btn_all_owners, btn_none_owners: Owner filter buttons
+        - btn_all_effects, btn_none_effects: Effect filter buttons
+          (None when effect_keys is empty)
         - btn_apply: Apply filters button
         - btn_save_preset: Save preset button
         - txt_preset_name: UITextEntryLine for preset name
         - dd_presets: UIDropDownMenu for preset selection
-        - ui_filters: Dict containing filter widget references
+        - ui_filters: Dict containing filter widget references; when
+          effect_keys is empty, ui_filters['effects'] = {}.
     """
     # Use a scrolling container for the sidebar because filters are tall
     sidebar_scroller = UIScrollingContainer(
@@ -130,6 +142,63 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
             y_off += 35
     if x != x_start:
         y_off += 35
+
+    # --- Effects Filter (FEAT-16) ---
+    # Conditionally rendered: only when at least one planet in the galaxy
+    # carries an intrinsic ability. When omitted, ui_filters['effects'] is
+    # an empty dict so window event-handling iterations are no-ops.
+    ui_filters['effects'] = {}
+    btn_all_effects = None
+    btn_none_effects = None
+    effect_keys_list = effect_keys or []
+    if effect_keys_list:
+        from game.strategy.services.system_effects_collector import (
+            make_display_name as _effect_display_name,
+        )
+
+        UILabel(pygame.Rect(10, y_off, width, 20), "Effects:", manager,
+                container=content_container)
+        y_off += 25
+
+        btn_all_effects = UIButton(pygame.Rect(10, y_off, 60, 25), "All",
+                                   manager, container=content_container)
+        btn_none_effects = UIButton(pygame.Rect(80, y_off, 60, 25), "None",
+                                    manager, container=content_container)
+        y_off += 30
+
+        x = x_start
+        for group_key in effect_keys_list:
+            # Resolve display name from group_key. Group-keys like
+            # 'EnvironmentalDamage:thermal' split into ('EnvironmentalDamage',
+            # {'damage_type':'thermal'}); plain keys ('ThrustModifier') get
+            # an empty data dict — make_display_name handles both.
+            if ':' in group_key:
+                ability_name, discriminator = group_key.split(':', 1)
+                data = {'damage_type': discriminator,
+                        'resource_type': discriminator}
+            else:
+                ability_name = group_key
+                data = {}
+            label = _effect_display_name(ability_name, data)
+
+            btn = UIButton(
+                relative_rect=pygame.Rect(x, y_off, 160, 30),
+                text=label,
+                manager=manager,
+                container=content_container,
+                object_id='@filter_toggle_on',
+            )
+            # Store the display label so toggle handlers (which work in
+            # terms of group_key) can render `[Thermal Damage]` rather
+            # than `[EnvironmentalDamage:thermal]`.
+            btn._display_label = label
+            ui_filters['effects'][group_key] = btn
+            x += 170
+            if x > width - 160:
+                x = x_start
+                y_off += 35
+        if x != x_start:
+            y_off += 35
 
     # --- Range Sliders ---
     def add_range(label, key, min_limit, max_limit) -> None:
@@ -251,6 +320,8 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
         'btn_none_types': btn_none_types,
         'btn_all_owners': btn_all_owners,
         'btn_none_owners': btn_none_owners,
+        'btn_all_effects': btn_all_effects,
+        'btn_none_effects': btn_none_effects,
         'btn_apply': btn_apply,
         'btn_save_preset': btn_save_preset,
         'txt_preset_name': txt_preset_name,
