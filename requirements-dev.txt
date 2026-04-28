@@ -8,6 +8,7 @@ pytest-xdist
 # Code quality scanning (PROJ-297)
 radon>=6.0.0   # Complexity / maintainability metrics
 vulture>=2.10  # Dead code detection
+scalene>=2.2.1 # CPU/memory/copy profiling for performance investigations
 
 # Image processing (Tools/)
 Pillow>=10.0.0

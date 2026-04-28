@@ -1,0 +1,23 @@
+# PROJ-317: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-04-28 | Project initialized | Starting point for PROJ-315 Remediation: Damage Display Correctness and Audit Readiness |
+| 2026-04-28 | Spawn as new project (PROJ-317) rather than fold into PROJ-315 as Phase 4-6 | User-explicit. Keeps PROJ-315's shipped state immutable; PROJ-317's audit log preserves the "this is what we missed and how we fixed it" trail without rewriting PROJ-315's history. |
+| 2026-04-28 | All five P1/P2 claims accepted as valid; eight items total (R1–R8) | Each claim re-verified against `main` HEAD `348bceef0` by reading the cited line ranges directly. R7 added (test seam strengthen) and R8 added (LOC ceiling, deferred) by the planner. |
+| 2026-04-28 | Phase grouping: 1 = correctness (R1+R2+R3+R4); 2 = hygiene (R5+R6); 3 = optional test-seam (R7) | Phase 1 fixes are user-visible defects. Phase 2 unblocks the audit-readiness gate. Phase 3 is test-strength work that can ship later if pygame_gui's text-element API proves brittle. |
+| 2026-04-28 | R8 (LOC ceiling) explicitly deferred to a future PROJ-309 sweep | Already logged in PROJ-315 `decisions.md` row 32. Refactoring `ship_detail_panel.py` during remediation would cascade into every widget test. Out of scope. |
+| 2026-04-28 | R1 fix is "lift `per_id_index` out of the layer loop" — match the authoritative scheme in `_build_full_hp_components_from_design` | The authoritative path declares the counter ship-wide (line 77 of `ship_instance.py`). Mirroring the same shape avoids any chance of further drift. |
+| 2026-04-28 | R1 ordering pinned with a regression test that compares `iter_all_components_by_layer` keys against `_build_full_hp_components_from_design` keys for a shared-component design | Both paths rely on dict insertion order (Python 3.7+). The test catches any future drift in layer iteration order between the two callers. |
+| 2026-04-28 | R2 fix prefers pygame_gui rich-text `<font color>` wrap over `set_text_colour()` or `UITextBox` swap | Rich text wrap is a one-line text formatting change with no widget swap. Spike during Phase 1 to confirm the version supports it; fall back to `set_text_colour()` if not. |
+| 2026-04-28 | R2 strike overlay tinted to match the chosen damage-tier colour | Cosmetic upgrade. Hard-coded `(220, 220, 220)` was a placeholder; matching the tier reads better and ships with the colour-application fix at zero extra cost. |
+| 2026-04-28 | R3 fix narrows broad-catch to `(ImportError, AttributeError, RuntimeError)` if feasible; else keeps the broad catch with the existing justification comment | Per `docs/05_ERROR_HANDLING.md`. The narrowed form catches the realistic failure modes (missing module, missing method, ApplicationContext absent in tests). |
+| 2026-04-28 | R4 missing-state policy: registry-derived `max_hp` if available, else **skip the instance** rather than emit `0/0` | The Phase 1 checklist required "registry lookup if available, else `0`" — but `0/0` renders as a misleading "100% of 0 HP" instance. Skipping is honest; the player sees only components the system can describe. |
+| 2026-04-28 | R5 fix edits `Projects/active_projects/PROJ-315/plan.md` directly rather than spawning a closeout commit on PROJ-315 | The audit gate cares about the markdown content. Fixing the markdown directly is the smallest correct change. The narrative now in the `Blockers:` field moves nowhere — it's already in PROJ-315 `decisions.md` rows 12 and 13. |
+| 2026-04-28 | Phase 3 (R7) scoped as "retire `_proj315_*` private attrs and assert against rendered output" | The seam was honest at PROJ-315 plan time but let R2 ship undetected. Replacement strategies in priority order: (1) read pygame_gui text-element internals; (2) pixel-sample at a known cell; (3) hybrid intent + minimal pixel-sample. Fall back order documented in `design.md`. |
+| 2026-04-28 | Test fixtures: prefer materialising a real ship via `ShipSerializer.from_dict` for cross-layer R1 regression | Avoids hand-built design data drifting from the live JSON contract. The fixture should reuse `ship_factory` from `tests/conftest.py` against a real design (`qs_battleship` or similar with shared-component layers). |
+| 2026-04-28 | No new files in this remediation | All fixes are local to existing files. No new module, no new dataclass, no facade DTO. Keeps the diff focused and reviewable. |

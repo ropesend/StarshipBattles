@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship Profiling"
+  short_description: "Run Scalene performance profiles."
+  default_prompt: "Use $codex-starship-performance-profiling to run an evidence-driven Scalene profiling pass."

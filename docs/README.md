@@ -55,6 +55,7 @@
 | Create/modify QS complexes | [qs_complex_design.md](guides/qs_complex_design.md) |
 | Write simulation tests | [simulation_testing.md](guides/simulation_testing.md) |
 | Understand test infrastructure | [testing_infrastructure.md](guides/testing_infrastructure.md) |
+| Profile performance | [performance_profiling.md](guides/performance_profiling.md) |
 
 ---
 
@@ -96,6 +97,7 @@ docs/
 
 - **Test command (pytest):** `python Tools/test_sharded/test_sharded.py`
 - **Test command (simulation):** `python -m combat_lab.run_tests`
+- **Profiling:** `python Tools/profiling/run_scalene.py pytest --mode cpu --pytest-target tests/performance`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist
 - **Historical/archived docs:** `Projects/deep_archive/` and `Projects/archived_projects/` (not in docs/ — do not read for current info)

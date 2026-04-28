@@ -23,6 +23,7 @@
 | [inspect_galaxy](inspect_galaxy/) | Galaxy generation stats inspector (JSON + console) | Visualization |
 | [loc](loc/) | Lines of code counter with section breakdowns | Analysis |
 | [nebula_to_alpha](nebula_to_alpha/) | Convert nebula/background images to transparent PNGs | Asset Processing |
+| [profiling](profiling/) | Repeatable Scalene CPU/memory profiling workflow | Diagnostics |
 | [process_cursors](process_cursors/) | Process cursor sprite sheets into individual files | Asset Processing |
 | [process_flags](process_flags/) | Process flag images into multi-resolution variants | Asset Processing |
 | [process_planet_spheres](process_planet_spheres/) | Detect and mask planet spheres (OpenCV) | Asset Processing |
@@ -66,6 +67,7 @@
 - **[diagnose_blueprints](diagnose_blueprints/)** -- Generates star systems from each blueprint and verifies they match expected characteristics.
 - **[analyze_dependency_graph](analyze_dependency_graph/)** -- Parses Python imports from entry points to build a dependency graph. Identifies unreachable modules.
 - **[loc](loc/)** -- Counts lines of code by section (production, tests, simulation tests, extras). Supports JSON output for tracking.
+- **[profiling](profiling/)** -- Runs repeatable Scalene profiling passes and writes generated profiles under `output/profiles/scalene/`.
 
 ### Visualization
 
