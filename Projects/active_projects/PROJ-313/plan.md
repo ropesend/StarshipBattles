@@ -25,13 +25,13 @@
 ## Current State
 **Last Updated:** 2026-04-28
 **Active Phase:** All 8 phases complete — ready for user smoke verification
-**Last Action:** Phase 8 closeout. `docs/02_PATTERNS.md` Pattern #30 marked superseded, new Pattern #31 added; `docs/01_ARCHITECTURE.md` and `docs/06_UI_STYLE_GUIDE.md` updated; `Last verified:` blockquotes bumped on all three.
+**Last Action:** PROJ-316 remediation updated this execution record, corrected Pattern #31, replaced the weak Phase 7 editor regression test, and tightened strategy-screen-only modal constructors so `window_manager` is explicit.
 **Next Action:** User smoke-test — open and close every modal window on the strategy screen, confirm clicks no longer leak through (Phase 7 fix for the QA-reported food allocation bug), confirm BUG-121 mouse-wheel zoom still works after closing planet abilities window.
-**Blockers:** None.
-**Scope deviation:** Plan called for full demolition of the legacy slot fields and `_handle_window_close` in Phase 8. Implementer kept these as caller-convenience pointers because they are still used by `strategy_screen.rebuild_list()`, `strategy_event_router.handle_global_event()` forwarding, and the registrars' "kill before re-open" idioms. Removing them would have required refactoring every caller site. The structural fix (BUG-121-class eradicated) is complete via `iter_live_modals()`; the slot fields no longer participate in modal scans. Pattern #31 documents this explicitly under "Migration notes (legacy slot fields)".
-**Test baseline:** 15893 passed, 0 failed, 0 errors via `python Tools/test_sharded/test_sharded.py` (52.9 s wall, 16 shards). Recorded 2026-04-28.
+**Blockers:** None
+**Scope deviation:** Plan called for full demolition of the legacy slot fields, `_handle_window_close`, and `TestModalSlotCleanupContract` in Phase 8. These remain as caller-convenience slot cleanup infrastructure because they are still used by `strategy_screen.rebuild_list()`, `strategy_event_router.handle_global_event()` forwarding, and the registrars' "kill before re-open" idioms. Removing them would require a separate caller refactor. The structural modal-tracking fix is complete via `StrategyModalWindow` and `iter_live_modals()`; Pattern #31 documents this explicitly under "Migration notes (legacy slot fields)".
+**Test baseline:** 15998 passed, 0 failed, 0 errors via `python Tools/test_sharded/test_sharded.py` at PROJ-316 kickoff. Recorded 2026-04-28.
 **Context for next agent:**
-- 21 strategy modal windows now subclass `StrategyModalWindow` (auto-registered/deregistered via `iter_live_modals()`).
+- 20 strategy modal windows now subclass `StrategyModalWindow` (auto-registered/deregistered via `iter_live_modals()`).
 - Pattern #31 in `docs/02_PATTERNS.md` documents the new contract; Pattern #30 is marked superseded.
 - pygame_gui's `UIWindow.kill()` is the universal funnel — every kill path (programmatic, `[X]` button, parent kill) routes through it. The new base class deregisters in `kill()` *before* `super().kill()`.
 
@@ -39,20 +39,20 @@
 Replace the manual 6-step modal-tracking contract on the strategy screen
 with a structural one via a `StrategyModalWindow(UIWindow)` base class.
 Auto-register on `__init__`, auto-deregister on `kill()`. The 16 manual
-slot fields on `StrategyWindowManager` collapse to a single live-list
-walk; both `has_modal_open()` and `_is_blocking_ui_element_at()` become
-one-liners. New modal windows can no longer forget the dance because
-the dance is in the base class.
+slot fields on `StrategyWindowManager` no longer provide the modal-tracking
+contract. Strategy modal tracking now walks a single live list, while
+legacy slots remain for caller-convenience cleanup. New modal windows can
+no longer forget the dance because the dance is in the base class.
 
 ## Goals
 - Eradicate the recurring click-through / stale-flag-leak bug class
   (BUG-22, BUG-69, BUG-121, BUG-122-foodallocation) structurally.
-- Migrate all 21 strategy-modal windows (16 already-tracked + 5 untracked
+- Migrate all 20 strategy-modal windows (15 already-tracked + 5 untracked
   editors) to subclass `StrategyModalWindow`.
 - Delete `_handle_window_close` event listener and the asymmetric
-  `is not None` vs `.alive()` check.
+  `is not None` vs `.alive()` check. [deferred — see Current State scope deviation]
 - Replace the false-negative-prone `TestModalSlotCleanupContract` test
-  with a structural-invariant behavioural test.
+  with a structural-invariant behavioural test. [partially deferred — new structural tests added at tests/unit/ui/screens/test_strategy_modal_window.py and tests/integration/ui/test_editor_click_blocking.py; legacy test retained as regression for the still-active slot-cleanup pathway]
 - Update `docs/02_PATTERNS.md` to retire Pattern #30 and document the
   new contract; update `docs/06_UI_STYLE_GUIDE.md` and
   `docs/01_ARCHITECTURE.md`.
@@ -62,10 +62,10 @@ the dance is in the base class.
 **In:**
 - New `StrategyModalWindow` base class.
 - `StrategyWindowManager` API: `register_modal`, `unregister_modal`,
-  `iter_live_modals`. Drop 16 slot fields.
+  `iter_live_modals`. Legacy slot fields retained as caller-convenience cleanup pointers.
 - `StrategyEventRouter`: collapse `has_modal_open` and
-  `_is_blocking_ui_element_at` to one-liners; delete
-  `_handle_window_close`.
+  `_is_blocking_ui_element_at` to modal-list checks for strategy modals;
+  retain non-modal checks and `_handle_window_close` for slot cleanup.
 - All 16 currently-tracked strategy modal windows.
 - All 5 currently-untracked editor windows that cause click-through.
 - `move_choice_window` inline construction promoted to a named subclass.
@@ -87,10 +87,10 @@ the dance is in the base class.
 | Component | File Path | Notes |
 |-----------|-----------|-------|
 | Base class (NEW) | `game/ui/screens/strategy_modal_window.py` | `StrategyModalWindow(UIWindow)` |
-| Window manager | `game/ui/screens/strategy_window_manager.py` | Drop 16 slots, add modal list + 3 methods |
-| Event router | `game/ui/screens/strategy_event_router.py` | Collapse 2 scans, delete `_handle_window_close` |
-| Migrating windows (16 tracked + 5 untracked + 1 inline = 21 total) | various | See [findings/strategy_modal_window_base_class.md](findings/strategy_modal_window_base_class.md) for the inventory table |
-| Contract test | `tests/unit/ui/screens/test_strategy_window_manager_public_api.py` | Replace `TestModalSlotCleanupContract` with structural invariant |
+| Window manager | `game/ui/screens/strategy_window_manager.py` | Add modal list + 3 methods; legacy slots retained for cleanup |
+| Event router | `game/ui/screens/strategy_event_router.py` | Modal tracking via `iter_live_modals`; legacy close listener retained |
+| Migrating windows (15 tracked + 5 untracked = 20 total) | various | See [findings/strategy_modal_window_base_class.md](findings/strategy_modal_window_base_class.md) for the inventory table |
+| Contract tests | `tests/unit/ui/screens/test_strategy_window_manager_public_api.py`, `tests/unit/ui/screens/test_strategy_modal_window.py`, `tests/integration/ui/test_editor_click_blocking.py` | Legacy slot cleanup test retained; structural/modal editor tests added |
 | Pattern doc | `docs/02_PATTERNS.md` | §30 retired, replaced by structural base class pattern |
 | UI style guide | `docs/06_UI_STYLE_GUIDE.md` | New "Window Management" section |
 | Architecture doc | `docs/01_ARCHITECTURE.md` | UI layer note |

@@ -87,7 +87,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         empire: Empire,
         galaxy: Any,
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable] = None,
         on_navigate_to_hex: Optional[Callable] = None,
         session: Any = None,

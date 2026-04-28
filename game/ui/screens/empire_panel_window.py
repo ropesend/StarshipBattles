@@ -59,7 +59,7 @@ class EmpirePanelWindow(StrategyModalWindow):
         manager: pygame_gui.UIManager,
         empire: 'IEmpire',
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable[[], None]] = None,
         registries: 'GameRegistries' = None,
         race_registry: Optional[Any] = None,

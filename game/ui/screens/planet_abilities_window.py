@@ -69,7 +69,7 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
         facade,
         component_registry=None,
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         on_open_editor: Optional[Callable[[str, Any], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
     ):

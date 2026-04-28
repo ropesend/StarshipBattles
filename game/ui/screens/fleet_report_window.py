@@ -46,7 +46,7 @@ class FleetReportWindow(StrategyModalWindow):
         fleet,
         empire=None,
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         on_close_callback=None,
         split_fleet_callback: Optional[Callable[[int, list], None]] = None
     ):

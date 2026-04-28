@@ -87,7 +87,11 @@ class TestFleetReportWindowInit:
                             rect = pygame.Rect(0, 0, 1600, 900)
                             manager = Mock()
 
-                            window = FleetReportWindow(rect, manager, mock_fleet, empire=mock_empire)
+                            window = FleetReportWindow(
+                                rect, manager, mock_fleet,
+                                window_manager=None,
+                                empire=mock_empire,
+                            )
 
                             assert window.empire is mock_empire
 
@@ -105,7 +109,10 @@ class TestFleetReportWindowInit:
                             rect = pygame.Rect(0, 0, 1600, 900)
                             manager = Mock()
 
-                            window = FleetReportWindow(rect, manager, mock_fleet)
+                            window = FleetReportWindow(
+                                rect, manager, mock_fleet,
+                                window_manager=None,
+                            )
 
                             assert window.empire is None
 
@@ -124,7 +131,11 @@ class TestFleetReportWindowInit:
                             rect = pygame.Rect(0, 0, 1600, 900)
                             manager = Mock()
 
-                            window = FleetReportWindow(rect, manager, mock_fleet, empire=mock_empire)
+                            window = FleetReportWindow(
+                                rect, manager, mock_fleet,
+                                window_manager=None,
+                                empire=mock_empire,
+                            )
 
                             assert isinstance(window.selection, MultiSelect)
                             assert len(window.selection.get_selected_indices()) == 0
@@ -152,7 +163,11 @@ class TestMultiSelectBehavior:
                             rect = pygame.Rect(0, 0, 1600, 900)
                             manager = Mock()
 
-                            window = FleetReportWindow(rect, manager, fleet, empire=empire)
+                            window = FleetReportWindow(
+                                rect, manager, fleet,
+                                window_manager=None,
+                                empire=empire,
+                            )
                             # Mock the UI methods we need
                             window._update_detail_panel = Mock()
                             window._update_remove_button = Mock()
@@ -236,7 +251,9 @@ class TestShipRemoval:
                             manager = Mock()
 
                             window = FleetReportWindow(
-                                rect, manager, fleet, empire=empire,
+                                rect, manager, fleet,
+                                window_manager=None,
+                                empire=empire,
                                 split_fleet_callback=split_fleet_callback
                             )
                             window._update_detail_panel = Mock()

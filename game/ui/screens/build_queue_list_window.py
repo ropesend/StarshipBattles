@@ -24,7 +24,7 @@ class BuildQueueListWindow(StrategyModalWindow):
     ROW_HEIGHT = 30
 
     def __init__(self, rect, manager, empire, *,
-                 window_manager: "StrategyWindowManager | None" = None,
+                 window_manager: "StrategyWindowManager",
                  on_close_callback=None,
                  input_mapper: Optional['InputMapper'] = None):
         super().__init__(

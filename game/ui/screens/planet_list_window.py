@@ -108,7 +108,7 @@ def build_effect_columns(effect_keys: list[str]) -> list[dict]:
 
 class PlanetListWindow(StrategyModalWindow):
     def __init__(self, rect, manager, galaxy, empire, *,
-                 window_manager: "StrategyWindowManager | None" = None,
+                 window_manager: "StrategyWindowManager",
                  on_close_callback=None, asset_resolver=None, empires=None,
                  registries=None, on_navigate_callback=None,
                  race_registry=None, facade=None):

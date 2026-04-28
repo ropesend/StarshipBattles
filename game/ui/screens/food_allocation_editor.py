@@ -172,7 +172,7 @@ class FoodAllocationEditor(StrategyModalWindow):
         resource_catalog: Any = None,
         race_resolver: Optional[Callable[[str], Optional[Any]]] = None,
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         on_apply_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
     ) -> None:

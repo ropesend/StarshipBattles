@@ -64,7 +64,7 @@ class EventLogWindow(StrategyModalWindow):
         manager: Any,
         events: list[dict],
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable] = None,
         on_navigate_callback: Optional[Callable] = None,
     ) -> None:

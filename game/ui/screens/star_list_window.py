@@ -48,7 +48,7 @@ class StarListWindow(StrategyModalWindow):
     """
 
     def __init__(self, rect, manager, galaxy, *,
-                 window_manager: "StrategyWindowManager | None" = None,
+                 window_manager: "StrategyWindowManager",
                  on_close_callback=None, on_navigate_callback=None):
         """Initialize the Star List Window.
 

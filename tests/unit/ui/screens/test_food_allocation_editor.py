@@ -208,6 +208,7 @@ class TestMultiResourcePreview:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
         )
 
         preview = editor._preview_text(1000, 1.0)
@@ -278,6 +279,7 @@ class TestFoodAllocationEditorConstruction:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
         )
         assert len(editor._rows) == 1
         assert editor._rows[0].race_id == "human"
@@ -295,6 +297,7 @@ class TestFoodAllocationEditorConstruction:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
         )
         assert len(editor._rows) == 2
 
@@ -314,6 +317,7 @@ class TestFoodAllocationEditorConstruction:
             planet=planet,
             economy_config=economy,
             resource_catalog=catalog,
+            window_manager=None,
         )
         assert editor._resource_display_name == "Organics"
 
@@ -334,6 +338,7 @@ class TestFoodAllocationEditorConstruction:
             planet=planet,
             economy_config=economy,
             resource_catalog=catalog,
+            window_manager=None,
         )
         assert editor._resource_display_name == "Metals"
 
@@ -350,6 +355,7 @@ class TestFoodAllocationEditorCollectAndApply:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
         )
 
         slider = MagicMock(); slider.get_current_value.return_value = 1.0
@@ -371,6 +377,7 @@ class TestFoodAllocationEditorCollectAndApply:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
         )
         slider = MagicMock(); slider.get_current_value.return_value = 5.0
         entry = MagicMock(); entry.get_text.return_value = "12.0"
@@ -389,6 +396,7 @@ class TestFoodAllocationEditorCollectAndApply:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
         )
         slider = MagicMock(); slider.get_current_value.return_value = 3.0
         entry = MagicMock(); entry.get_text.return_value = "not-a-number"
@@ -411,6 +419,7 @@ class TestFoodAllocationEditorCollectAndApply:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
             on_apply_callback=on_apply,
         )
         # Seed widget mocks.
@@ -439,6 +448,7 @@ class TestFoodAllocationEditorCollectAndApply:
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            window_manager=None,
             on_apply_callback=on_apply,
         )
         with patch.object(editor, 'kill'):

@@ -39,10 +39,10 @@ class StrategyModalWindow(UIWindow):
 
     The class-level ``_registered_subclasses`` set is populated by
     ``__init_subclass__`` at class definition time. The
-    ``test_strategy_modal_window`` test suite asserts that every
-    registered subclass auto-registers on construction and auto-deregisters
-    on kill, replacing the source-string-matching contract test that was
-    removed in Phase 8.
+    ``test_strategy_modal_window`` test suite asserts the base invariants
+    and required strategy-only constructor signatures. The legacy
+    source-string slot cleanup contract remains as a regression for the
+    retained caller-convenience slot pathway.
     """
 
     # Populated by __init_subclass__ at class definition time. Using a

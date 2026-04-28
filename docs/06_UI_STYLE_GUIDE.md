@@ -1,6 +1,6 @@
 # UI Style Guide
 
-> **Last verified:** 2026-04-28 — Added Read-only component grouping section (PROJ-315) documenting the COMPONENT STATUS panel pattern.
+> **Last verified:** 2026-04-28 — Added Read-only component grouping section (PROJ-315) documenting the COMPONENT STATUS panel pattern; PROJ-316 tightened strategy-modal `window_manager` guidance to require explicit manager wiring.
 
 Comprehensive reference for all color constants, theming systems, and usage patterns
 in the Starship Battles UI. The visual identity is a dark blue-gray palette with cyan
@@ -23,7 +23,7 @@ class MyNewWindow(StrategyModalWindow):
         manager,
         # ... your domain args ...
         *,
-        window_manager: "StrategyWindowManager | None" = None,
+        window_manager: "StrategyWindowManager",
         # ... other kwargs ...
     ):
         super().__init__(
@@ -39,10 +39,21 @@ The base class auto-registers the instance with the window manager on
 construction and auto-deregisters in `kill()`. The strategy event router
 walks `window_manager.iter_live_modals()` for click-blocking and modal
 detection — no manual slot field, no `has_modal_open()` clause, no
-`_is_blocking_ui_element_at()` clause required.
+`_is_blocking_ui_element_at()` clause required. Strategy-screen-only
+windows must require the keyword and must not default it to `None`.
 
-For windows opened **outside** the strategy screen (e.g., from
-`BuildQueueScreen`), pass `window_manager=None`.
+### Cross-screen reuse
+
+Windows that are also opened **outside** the strategy screen may type the
+argument as optional, but callers must still pass it explicitly:
+
+```python
+window_manager: "StrategyWindowManager | None"
+```
+
+Use `window_manager=None` only from the non-strategy caller (for example,
+`BuildQueueScreen` opening `PlanetSelectionWindow`). Strategy-screen
+callers pass `window_manager=ui.window_manager`.
 
 See `docs/02_PATTERNS.md` Pattern #31 for the full rationale and
 historical context (Pattern #30 documents the superseded manual contract).

@@ -7,6 +7,7 @@ matching ``TestModalSlotCleanupContract``.
 """
 from __future__ import annotations
 
+import inspect
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -145,6 +146,118 @@ class TestSubclassRegistry:
             assert _ProbeWindow in StrategyModalWindow._registered_subclasses
         finally:
             StrategyModalWindow._registered_subclasses.discard(_ProbeWindow)
+
+
+class TestWindowManagerSignature:
+    """Strategy-screen-only modals must require explicit manager wiring."""
+
+    @pytest.mark.parametrize(
+        "cls",
+        [
+            pytest.param(
+                __import__(
+                    "game.ui.screens.planet_list_window",
+                    fromlist=["PlanetListWindow"],
+                ).PlanetListWindow,
+                id="PlanetListWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.star_list_window",
+                    fromlist=["StarListWindow"],
+                ).StarListWindow,
+                id="StarListWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.build_queue_list_window",
+                    fromlist=["BuildQueueListWindow"],
+                ).BuildQueueListWindow,
+                id="BuildQueueListWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.empire_build_queue_window",
+                    fromlist=["EmpireBuildQueueWindow"],
+                ).EmpireBuildQueueWindow,
+                id="EmpireBuildQueueWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.event_log_window",
+                    fromlist=["EventLogWindow"],
+                ).EventLogWindow,
+                id="EventLogWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.empire_panel_window",
+                    fromlist=["EmpirePanelWindow"],
+                ).EmpirePanelWindow,
+                id="EmpirePanelWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.fleet_report_window",
+                    fromlist=["FleetReportWindow"],
+                ).FleetReportWindow,
+                id="FleetReportWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.planet_abilities_window",
+                    fromlist=["PlanetAbilitiesWindow"],
+                ).PlanetAbilitiesWindow,
+                id="PlanetAbilitiesWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.strategy_windows.move_choice_dialog",
+                    fromlist=["MoveChoiceWindow"],
+                ).MoveChoiceWindow,
+                id="MoveChoiceWindow",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.food_allocation_editor",
+                    fromlist=["FoodAllocationEditor"],
+                ).FoodAllocationEditor,
+                id="FoodAllocationEditor",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.atmosphere_target_editor",
+                    fromlist=["AtmosphereTargetEditor"],
+                ).AtmosphereTargetEditor,
+                id="AtmosphereTargetEditor",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.gravity_target_editor",
+                    fromlist=["GravityTargetEditor"],
+                ).GravityTargetEditor,
+                id="GravityTargetEditor",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.water_target_editor",
+                    fromlist=["WaterTargetEditor"],
+                ).WaterTargetEditor,
+                id="WaterTargetEditor",
+            ),
+            pytest.param(
+                __import__(
+                    "game.ui.screens.radiation_shield_editor",
+                    fromlist=["RadiationShieldEditor"],
+                ).RadiationShieldEditor,
+                id="RadiationShieldEditor",
+            ),
+        ],
+    )
+    def test_strategy_only_windows_require_explicit_window_manager(self, cls) -> None:
+        param = inspect.signature(cls.__init__).parameters["window_manager"]
+
+        assert param.default is inspect.Parameter.empty
 
 
 class TestMultipleManagersIsolated:

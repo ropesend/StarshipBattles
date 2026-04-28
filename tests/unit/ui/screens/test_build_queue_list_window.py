@@ -29,7 +29,8 @@ class TestBuildQueueListWindowInit:
                 window = BuildQueueListWindow(
                     pygame.Rect(0, 0, 400, 300),
                     manager,
-                    empire
+                    empire,
+                    window_manager=None,
                 )
 
             mock_init.assert_called_once()
@@ -45,7 +46,8 @@ class TestBuildQueueListWindowInit:
         window = BuildQueueListWindow(
             pygame.Rect(0, 0, 400, 300),
             MagicMock(),
-            empire
+            empire,
+            window_manager=None,
         )
 
         assert window.empire is empire
@@ -61,6 +63,7 @@ class TestBuildQueueListWindowInit:
             pygame.Rect(0, 0, 400, 300),
             MagicMock(),
             empire,
+            window_manager=None,
             on_close_callback=callback
         )
 
@@ -77,6 +80,7 @@ class TestBuildQueueListWindowInit:
             pygame.Rect(0, 0, 400, 300),
             MagicMock(),
             empire,
+            window_manager=None,
             input_mapper=mapper
         )
 
@@ -109,7 +113,8 @@ class TestBuildList:
                 window = BuildQueueListWindow(
                     pygame.Rect(0, 0, 400, 300),
                     MagicMock(),
-                    empire
+                    empire,
+                    window_manager=None,
                 )
 
         # Check that UILabel was called with text containing planet name and design
@@ -139,7 +144,8 @@ class TestBuildList:
                 window = BuildQueueListWindow(
                     pygame.Rect(0, 0, 400, 300),
                     MagicMock(),
-                    empire
+                    empire,
+                    window_manager=None,
                 )
 
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
@@ -170,7 +176,8 @@ class TestBuildList:
                 window = BuildQueueListWindow(
                     pygame.Rect(0, 0, 400, 300),
                     MagicMock(),
-                    empire
+                    empire,
+                    window_manager=None,
                 )
 
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
@@ -194,7 +201,8 @@ class TestBuildList:
                 window = BuildQueueListWindow(
                     pygame.Rect(0, 0, 400, 300),
                     MagicMock(),
-                    empire
+                    empire,
+                    window_manager=None,
                 )
 
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
@@ -221,7 +229,8 @@ class TestBuildList:
                 window = BuildQueueListWindow(
                     pygame.Rect(0, 0, 400, 300),
                     MagicMock(),
-                    empire
+                    empire,
+                    window_manager=None,
                 )
 
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
@@ -242,6 +251,7 @@ class TestKeyboardHandling:
             pygame.Rect(0, 0, 400, 300),
             MagicMock(),
             empire,
+            window_manager=None,
             input_mapper=None
         )
 
@@ -262,6 +272,7 @@ class TestKeyboardHandling:
             pygame.Rect(0, 0, 400, 300),
             MagicMock(),
             empire,
+            window_manager=None,
             input_mapper=mapper
         )
         window.row_labels = []
@@ -287,6 +298,7 @@ class TestKeyboardHandling:
             pygame.Rect(0, 0, 400, 300),
             MagicMock(),
             empire,
+            window_manager=None,
             input_mapper=mapper
         )
 
@@ -319,7 +331,8 @@ class TestKill:
                     window = BuildQueueListWindow(
                         pygame.Rect(0, 0, 400, 300),
                         MagicMock(),
-                        empire
+                        empire,
+                        window_manager=None,
                     )
 
         window.kill()
@@ -348,6 +361,7 @@ class TestKill:
                         pygame.Rect(0, 0, 400, 300),
                         MagicMock(),
                         empire,
+                        window_manager=None,
                         on_close_callback=callback
                     )
 
