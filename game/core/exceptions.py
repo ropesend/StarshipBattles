@@ -307,6 +307,68 @@ class LLMCancelled(LLMException):
 
 
 # =============================================================================
+# Image Service Exceptions (PROJ-314)
+# =============================================================================
+
+class ImageException(GameException):
+    """Base class for image-generation service errors.
+
+    Raised by image providers, factory, and threading helper. Use the
+    `I001`-`I006` codes from `game.core.error_codes.ErrorCode` and
+    include relevant context (model, endpoint, status_code,
+    request_duration_ms). NEVER include the API key, request body,
+    response body, or headers in `context`.
+    """
+    pass
+
+
+class ImageConfigError(ImageException):
+    """Image provider not configured.
+
+    Raised when no API key is available, an unknown provider is
+    requested via `IMAGE_PROVIDER`, or the concurrent-call limit is
+    exceeded.
+    """
+    pass
+
+
+class ImageNetworkError(ImageException):
+    """Image-service network failure.
+
+    Raised on connection errors, DNS failures, SSL errors, or after
+    exhausting retries on 5xx responses.
+    """
+    pass
+
+
+class ImageResponseError(ImageException):
+    """Image-service response was malformed or non-2xx (other than rate-limit)."""
+    pass
+
+
+class ImageRateLimited(ImageException):
+    """Image provider returned 429 (rate limit exceeded).
+
+    Never auto-retried — consumer surfaces this immediately.
+    """
+    pass
+
+
+class ImageTimeoutError(ImageException):
+    """Image request exceeded its configured timeout."""
+    pass
+
+
+class ImageCancelled(ImageException):
+    """Image call was cancelled via cancel_token.
+
+    The underlying HTTP request may still be in flight in the
+    background; its response is discarded.
+    """
+    pass
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -338,4 +400,12 @@ __all__ = [
     'LLMRateLimited',
     'LLMTimeoutError',
     'LLMCancelled',
+    # Image Service (PROJ-314)
+    'ImageException',
+    'ImageConfigError',
+    'ImageNetworkError',
+    'ImageResponseError',
+    'ImageRateLimited',
+    'ImageTimeoutError',
+    'ImageCancelled',
 ]

@@ -17,6 +17,7 @@ Categories
 - C: Component (C001-C099)
 - T: Turn Processing (T001-T099)
 - L: LLM Service (L001-L099)
+- I: Image Service (I001-I099)
 
 Usage
 =====
@@ -184,6 +185,28 @@ class ErrorCode(Enum):
 
     LLM_CANCELLED = "L006"
     """LLM call was cancelled via cancel_token."""
+
+    # =========================================================================
+    # Image Service Codes (I001-I099) - PROJ-314
+    # =========================================================================
+
+    IMAGE_CONFIG_MISSING = "I001"
+    """Image provider not configured (no API key, unknown provider)."""
+
+    IMAGE_NETWORK_ERROR = "I002"
+    """Image network failure (connection, DNS, SSL, exhausted retries)."""
+
+    IMAGE_BAD_RESPONSE = "I003"
+    """Image response was malformed or non-2xx (other than rate-limit)."""
+
+    IMAGE_RATE_LIMITED = "I004"
+    """Image provider returned 429 - rate limit exceeded."""
+
+    IMAGE_TIMEOUT = "I005"
+    """Image request exceeded its timeout."""
+
+    IMAGE_CANCELLED = "I006"
+    """Image call was cancelled via cancel_token."""
 
 
 # =============================================================================

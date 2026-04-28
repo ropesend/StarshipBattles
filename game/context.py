@@ -39,6 +39,7 @@ class ApplicationContext:
         ship_theme_manager: Any,
         game_settings: Any,
         llm_provider: Any = None,
+        image_provider: Any = None,
     ):
         self.registry_manager = registry_manager
         self.profiler = profiler
@@ -51,6 +52,10 @@ class ApplicationContext:
         # PROJ-296: LLM service. May be None when no provider key is configured;
         # consumers must check `if ctx.llm_provider is not None:` before use.
         self.llm_provider = llm_provider
+        # PROJ-314: image-generation service. May be None or the
+        # NullImageProvider when no key is configured. Consumers must
+        # treat both as "unavailable" rather than crashing.
+        self.image_provider = image_provider
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -71,6 +76,12 @@ class ApplicationContext:
         # PROJ-296: LLM service factory.
         from game.core.exceptions import LLMConfigError
         from game.services.llm import LLMProviderFactory
+        # PROJ-314: image service factory.
+        from game.core.exceptions import ImageConfigError
+        from game.ui.services.image import (
+            ImageProviderFactory,
+            NullImageProvider,
+        )
 
         # Create all service instances
         registry_mgr = RegistryManager()
@@ -88,6 +99,15 @@ class ApplicationContext:
             llm_provider = LLMProviderFactory.create()
         except LLMConfigError:
             llm_provider = None
+        # PROJ-314: best-effort image provider. Falls back to
+        # NullImageProvider when no OPENAI_API_KEY is configured so the
+        # game still launches and consumers can detect "unavailable".
+        try:
+            image_provider = ImageProviderFactory.create()
+        except ImageConfigError:
+            image_provider = None
+        if image_provider is None:
+            image_provider = NullImageProvider()
 
         # PROJ-258: Set ALL module-level references so get_default_xxx()
         # returns the same instances as ctx.xxx (prevents instance divergence)
@@ -100,6 +120,8 @@ class ApplicationContext:
         from game.ui.services.game_settings import set_default_game_settings
         # PROJ-296: LLM provider module-level setter.
         from game.services.llm import set_default_llm_provider
+        # PROJ-314: image provider module-level setter.
+        from game.ui.services.image import set_default_image_provider
 
         set_default_registry_manager(registry_mgr)
         set_default_profiler(profiler)
@@ -110,6 +132,7 @@ class ApplicationContext:
         set_default_ship_theme_manager(ship_theme_manager)
         set_default_game_settings(game_settings)
         set_default_llm_provider(llm_provider)
+        set_default_image_provider(image_provider)
 
         # Set module-level refs for services with only _default_xxx (no setter)
         import game.simulation.components.component_loader as _ccm_module
@@ -127,6 +150,7 @@ class ApplicationContext:
             ship_theme_manager=ship_theme_manager,
             game_settings=game_settings,
             llm_provider=llm_provider,
+            image_provider=image_provider,
         )
 
     @classmethod
@@ -146,6 +170,9 @@ class ApplicationContext:
         from game.ui.renderer.sprites import SpriteManager
         from game.ui.assets.ship_theme_manager import ShipThemeManager
         from game.ui.services.game_settings import GameSettings
+        # PROJ-314: tests get NullImageProvider by default — raises on
+        # generate_image() so accidental real-network calls are caught loudly.
+        from game.ui.services.image import NullImageProvider
 
         defaults = {
             'registry_manager': RegistryManager(),
@@ -158,6 +185,8 @@ class ApplicationContext:
             'game_settings': GameSettings.__new__(GameSettings),
             # PROJ-296: tests opt-in to an LLM provider via override; default None.
             'llm_provider': None,
+            # PROJ-314: tests get NullImageProvider by default.
+            'image_provider': NullImageProvider(),
         }
         defaults.update(overrides)
         return cls(**defaults)

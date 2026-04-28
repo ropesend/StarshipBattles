@@ -71,6 +71,39 @@ def _block_real_http():
 
 
 # =============================================================================
+# Image Provider Default (PROJ-314)
+# =============================================================================
+#
+# The default image provider for tests is NullImageProvider, which raises
+# on every generate_image() call. This makes accidental real-network image
+# generation impossible. Tests that need to exercise image-generation code
+# must explicitly inject a mock provider via set_default_image_provider().
+# Between tests, the singleton is reset back to NullImageProvider so a
+# previous test's mock cannot leak into the next.
+
+@pytest.fixture(autouse=True)
+def _reset_image_provider():
+    """Reset the module-level image provider singleton between tests.
+
+    PROJ-314: keeps the default at NullImageProvider so accidental
+    real-network calls fail loudly rather than burning OpenAI tokens.
+    """
+    from game.ui.services.image import (
+        NullImageProvider,
+        get_default_image_provider,
+        set_default_image_provider,
+    )
+    null = NullImageProvider()
+    set_default_image_provider(null)
+    assert isinstance(get_default_image_provider(), NullImageProvider), (
+        "PROJ-314: default image provider must be NullImageProvider at test "
+        "start. A previous test left a different provider installed."
+    )
+    yield
+    set_default_image_provider(null)
+
+
+# =============================================================================
 # Session-Scoped Data Loading Fixtures
 # =============================================================================
 

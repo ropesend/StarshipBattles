@@ -170,6 +170,37 @@ class LLMConfig:
     USER_AGENT: str = "starship-battles-llm/1.0"
 
 
+class ImageConfig:
+    """Tunable defaults for the image-generation service (PROJ-314).
+
+    Plain class with class-level attributes (NOT @dataclass) per
+    docs/02_PATTERNS.md Pattern 12. Mirrors `LLMConfig`.
+
+    All fields can be overridden per-call via
+    `ImageProvider.generate_image()`. Override these at the class level
+    for application-wide tuning; do not mutate per-instance.
+    """
+
+    # Timeouts (seconds). Image generation is slower than chat, so the
+    # default read timeout is generous.
+    DEFAULT_TIMEOUT_SECONDS: float = 120.0
+    CONNECT_TIMEOUT_SECONDS: float = 10.0
+
+    # Defaults
+    DEFAULT_MODEL: str = "gpt-image-2"
+    DEFAULT_SIZE: str = "2048x2048"
+
+    # Retry policy. Exponential backoff on 5xx only; never retry 429.
+    MAX_RETRIES_5XX: int = 2
+    RETRY_BACKOFF_BASE_SECONDS: float = 1.0
+
+    # Concurrency safeguard. Enforced by ImageBackgroundCall.start().
+    MAX_CONCURRENT_CALLS: int = 2
+
+    # API citizenship
+    USER_AGENT: str = "starship-battles-image/1.0"
+
+
 # UIConfig has been moved to game.ui.config (PROJ-113)
 # Import from game.ui.config directly
 
