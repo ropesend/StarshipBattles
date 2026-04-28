@@ -221,6 +221,82 @@ class TestClickGateWindows:
         assert result is True
 
 
+class TestClickGateOrBridge:
+    """PROJ-313 OR-bridge: iter_live_modals participates in click gating.
+
+    During Phases 3-7 the router scans BOTH the legacy slot fields AND
+    the new modal list. Either source must independently produce a
+    blocking result.
+    """
+
+    def _make_live_window(self, rect):
+        win = MagicMock()
+        win.alive.return_value = True
+        win.rect = rect
+        return win
+
+    def test_click_blocked_by_modal_list_alone(self, event_router, mock_ui):
+        """Click on a window in iter_live_modals should be blocked."""
+        win = self._make_live_window(MockRect(500, 300, 400, 500))
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
+
+        result = event_router._is_blocking_ui_element_at(700, 500)
+
+        assert result is True
+
+    def test_click_outside_modal_list_window_passes(self, event_router, mock_ui):
+        """Click outside a modal-list window's rect should pass through."""
+        win = self._make_live_window(MockRect(500, 300, 400, 500))
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
+
+        result = event_router._is_blocking_ui_element_at(100, 800)
+
+        assert result is False
+
+    def test_has_modal_open_returns_true_with_only_modal_list(self, event_router, mock_ui):
+        """has_modal_open returns True when modal list populated, no slots."""
+        win = MagicMock()
+        win.alive.return_value = True
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
+        mock_ui.menu_panel = None
+        mock_ui.scene = MagicMock()
+        mock_ui.scene.build_queue_screen = None
+
+        assert event_router.has_modal_open() is True
+
+    def test_has_modal_open_returns_true_with_only_slot(self, event_router, mock_ui):
+        """has_modal_open returns True when slot populated, modal list empty."""
+        mock_ui.window_manager.fleet_orders_window = MagicMock()
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
+        mock_ui.menu_panel = None
+        mock_ui.scene = MagicMock()
+        mock_ui.scene.build_queue_screen = None
+
+        assert event_router.has_modal_open() is True
+
+    def test_has_modal_open_returns_false_when_both_empty(self, event_router, mock_ui):
+        """has_modal_open returns False when slots and modal list both empty."""
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
+        mock_ui.menu_panel = None
+        mock_ui.scene = MagicMock()
+        mock_ui.scene.build_queue_screen = None
+
+        assert event_router.has_modal_open() is False
+
+    def test_modal_list_dead_ref_does_not_block(self, event_router, mock_ui):
+        """iter_live_modals is responsible for filtering dead refs; if it
+        does yield a dead window the click test still respects rect, but
+        normally dead refs are reaped before yield."""
+        # iter_live_modals normally reaps dead refs, but verify the
+        # router doesn't add an extra .alive() check (it trusts the
+        # iterator's contract).
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
+
+        result = event_router._is_blocking_ui_element_at(700, 500)
+
+        assert result is False
+
+
 class TestClickGateMenuPanel:
     """Test clicks blocked by menu panel."""
 

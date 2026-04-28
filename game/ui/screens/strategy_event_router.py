@@ -92,6 +92,13 @@ class StrategyEventRouter:
         if wm.planet_abilities_window is not None:
             return True
 
+        # PROJ-313: Live-list of StrategyModalWindow subclasses. Phases
+        # 3-7 migrate the slot-based windows above into this list; Phase
+        # 8 deletes the slot scans entirely. During the migration this
+        # OR-bridge keeps both tracks active so each commit stays green.
+        for _ in wm.iter_live_modals():
+            return True
+
         return False
 
     def on_ui_selection(self, obj) -> None:
@@ -520,6 +527,12 @@ class StrategyEventRouter:
                 is_alive = window.alive()
                 if is_alive and window.rect.collidepoint((mx, my)):
                     return True
+
+        # PROJ-313: OR-bridge with the live-list of StrategyModalWindow
+        # subclasses. iter_live_modals already filters dead refs.
+        for window in wm.iter_live_modals():
+            if window.rect.collidepoint((mx, my)):
+                return True
 
         # Check menu panel
         if self.ui.menu_panel is not None:
