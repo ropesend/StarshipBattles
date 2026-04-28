@@ -59,21 +59,72 @@ def _ion_storm_at(*hexes):
 
 
 def test_iter_at_hex_yields_storm_for_storm_at_hex():
+    # Non-zero system origin so local-vs-global frame distinction is meaningful.
     storm = _ion_storm_at(HexCoord(3, 3))
-    system = _MockSystem(storms=[storm])
-    sources = list(iter_ability_sources_at_hex(system, HexCoord(3, 3)))
+    system = _MockSystem(global_location=HexCoord(1969, 817), storms=[storm])
+    global_hex = HexCoord(1969 + 3, 817 + 3)
+    # include_system_sources=False so the hex-filter path is what's tested,
+    # not the system-wide passthrough.
+    sources = list(iter_ability_sources_at_hex(
+        system, global_hex, include_system_sources=False,
+    ))
     storm_sources = [s for s in sources if s.source_kind == 'storm']
     assert len(storm_sources) == 1
 
 
 def test_iter_at_hex_excludes_storm_outside_hex():
     storm = _ion_storm_at(HexCoord(3, 3))
-    system = _MockSystem(storms=[storm])
+    system = _MockSystem(global_location=HexCoord(1969, 817), storms=[storm])
     sources = list(iter_ability_sources_at_hex(
-        system, HexCoord(99, 99), include_system_sources=False,
+        system, HexCoord(9999, 9999), include_system_sources=False,
     ))
     storm_sources = [s for s in sources if s.source_kind == 'storm']
     assert storm_sources == []
+
+
+def test_iter_at_hex_yields_storm_when_system_has_nonzero_global_origin():
+    """BUG-119 regression: storm.location is local, query hex is global.
+
+    Pre-fix: StormAbilitySource.affects_hex compared the global query hex
+    against local-frame occupied_hexes, so any storm in a system whose
+    `global_location != HexCoord(0, 0)` was invisible to sector queries.
+    """
+    storm = Storm(
+        name="Plasma Storm Beta",
+        storm_type="plasma_storm",
+        location=HexCoord(3, 3),
+        hex_offsets=frozenset({HexCoord(0, 0)}),
+        abilities={"ShieldModifier": {"multiplier": 0.7, "scope": "sector"}},
+    )
+    system = _MockSystem(global_location=HexCoord(1969, 817), storms=[storm])
+    global_hex = HexCoord(1969 + 3, 817 + 3)
+
+    sources = list(iter_ability_sources_at_hex(
+        system, global_hex, include_system_sources=False,
+    ))
+    storm_sources = [s for s in sources if s.source_kind == 'storm']
+    assert len(storm_sources) == 1
+
+
+def test_iter_at_hex_storm_does_not_match_local_hex_when_system_origin_nonzero():
+    """BUG-119 regression: querying with the LOCAL hex against a system whose
+    origin is non-zero should NOT match — only the GLOBAL hex should.
+    """
+    storm = Storm(
+        name="Plasma Storm Beta",
+        storm_type="plasma_storm",
+        location=HexCoord(3, 3),
+        hex_offsets=frozenset({HexCoord(0, 0)}),
+        abilities={"ShieldModifier": {"multiplier": 0.7, "scope": "sector"}},
+    )
+    system = _MockSystem(global_location=HexCoord(1969, 817), storms=[storm])
+
+    # The LOCAL coord (3, 3) must not match any sector when the system origin
+    # is far from (0, 0) — that hex is out in the void.
+    sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(3, 3), include_system_sources=False,
+    ))
+    assert [s for s in sources if s.source_kind == 'storm'] == []
 
 
 def test_iter_at_hex_yields_facility_for_planet_at_hex():
@@ -110,10 +161,16 @@ def test_iter_in_system_yields_all_facilities():
 
 
 def test_iter_at_hex_dedupes_sources():
-    """If the same storm is yielded by multiple providers, only emit once."""
+    """If the same storm is yielded by multiple providers, only emit once.
+
+    The iterator dedupes across hex + system providers via `source_id`. With
+    `include_system_sources=True` (default), the storm is yielded by both
+    the hex-providers list (hex match) and the system-providers list
+    (system-wide passthrough); the iterator must collapse the duplicate.
+    """
     storm = _ion_storm_at(HexCoord(0, 0))
-    system = _MockSystem(storms=[storm])
-    sources = list(iter_ability_sources_at_hex(system, HexCoord(0, 0)))
+    system = _MockSystem(global_location=HexCoord(1969, 817), storms=[storm])
+    sources = list(iter_ability_sources_at_hex(system, HexCoord(1969, 817)))
     storm_sources = [s for s in sources if s.source_kind == 'storm']
     assert len(storm_sources) == 1
 

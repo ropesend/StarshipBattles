@@ -148,13 +148,17 @@ def _storm_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[An
     """Yield StormAbilitySource for every storm in the system that affects the hex.
 
     `hex_coord=None` (system-wide): yields all storms in the system.
-    `hex_coord=<HexCoord>`: yields only storms whose `occupied_hexes` covers it.
+    `hex_coord=<HexCoord>`: yields only storms covering it. The adapter
+    translates local `storm.location + hex_offsets` into global coords via
+    `system.global_location` so the GLOBAL hex passed by callers (UI sector
+    panel) matches correctly. (BUG-119 regression — pre-fix the storm
+    adapter compared frames naively and never matched.)
     """
     if system is None:
         return
     storms = getattr(system, 'storms', None) or []
     for storm in storms:
-        adapter = StormAbilitySource(storm=storm)
+        adapter = StormAbilitySource(storm=storm, system=system)
         if hex_coord is None or adapter.affects_hex(hex_coord):
             yield adapter
 

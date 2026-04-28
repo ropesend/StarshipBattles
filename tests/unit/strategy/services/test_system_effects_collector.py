@@ -633,3 +633,40 @@ class TestD16MixedKindValidation:
         assert provider['source_label'] == 'Ion Storm Alpha'
         assert provider['source_id'] == 'storm:Ion Storm Alpha'
         assert provider['owner_id'] is None  # Storms are ownerless.
+
+
+class TestBug119StormGlobalCoordinateFrame:
+    """BUG-119 regression: storm.location is local-system coords, but the UI
+    queries the Sector panel with the GLOBAL galaxy-map hex. Pre-fix, every
+    storm in a system whose `global_location != HexCoord(0, 0)` was invisible
+    to sector queries because StormAbilitySource.affects_hex compared frames
+    naively.
+    """
+
+    def test_collect_sector_effects_returns_storm_abilities_with_nonzero_system_origin(self):
+        """End-to-end: query a global hex inside a storm sitting in a system
+        far from the galaxy origin, expect both storm abilities to render.
+        """
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.storm import Storm
+        from game.strategy.services.system_effects_collector import collect_sector_effects
+
+        storm = Storm(
+            name="Plasma Storm Beta",
+            storm_type="plasma_storm",
+            location=HexCoord(3, 3),
+            hex_offsets=frozenset({HexCoord(0, 0)}),
+            abilities={
+                "ShieldModifier": {"multiplier": 0.7, "scope": "sector"},
+                "EnvironmentalDamage": {"rate": 0.5, "damage_type": "plasma", "scope": "sector"},
+            },
+        )
+        system = _make_system("S", [])
+        system.storms = [storm]
+        system.global_location = HexCoord(1969, 817)
+        global_hex = HexCoord(1969 + 3, 817 + 3)
+
+        effects = collect_sector_effects(system, global_hex, empire_id=1)
+        ability_names = {e['ability_name'] for e in effects}
+        assert 'ShieldModifier' in ability_names
+        assert 'EnvironmentalDamage' in ability_names

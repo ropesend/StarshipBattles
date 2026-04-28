@@ -1,9 +1,12 @@
 """StormAbilitySource adapter — wraps a Storm entity (PROJ-300).
 
-Storms are sector-scope ability sources with no owner. Phase 3 supports both
-the legacy `Storm.effects: StormEffect` shape (translates to abilities dict
-on-the-fly) AND the new `Storm.abilities: Dict[str, Any]` shape introduced in
-Phase 5. After Phase 5 lands, the legacy translation path is removed.
+Storms are sector-scope ability sources with no owner. The adapter accepts
+an optional `system` reference so `affects_hex` can translate the storm's
+local-frame `location + hex_offsets` into global galaxy-map coordinates,
+matching the `PlanetIntrinsicAbilitySource` / `StarAbilitySource` /
+`WarpPointAbilitySource` convention. When `system` is None (legacy mock
+fixtures with an `occupied_hexes` attribute and no parent system), the
+adapter falls back to a local-frame `in occupied_hexes` check.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
@@ -13,6 +16,7 @@ from typing import Any, Dict, Optional
 class StormAbilitySource:
     """IAbilitySource adapter for Storm entities."""
     storm: Any  # game.strategy.data.storm.Storm
+    system: Any = None  # parent StarSystem (for global-frame hex match)
 
     @property
     def source_kind(self) -> str:
@@ -38,15 +42,30 @@ class StormAbilitySource:
         return abilities_attr if isinstance(abilities_attr, dict) else {}
 
     def affects_hex(self, hex_coord) -> bool:
-        # Storm.occupied_hexes is in local-system coordinates; the iterator
-        # passes the GLOBAL hex it's queried for. Caller-specified hex match
-        # logic; for symmetry with the legacy AreaEffectManager check, we
-        # delegate to the storm's `occupied_hexes` property.
+        """True if the storm covers `hex_coord` in the GLOBAL galaxy-map frame.
+
+        Operates in the GLOBAL galaxy-map frame; local entity coordinates are
+        translated via `system.global_location`. When `self.system` is None
+        (unparented adapter, e.g. mock fixtures that supply `occupied_hexes`
+        directly), falls back to a local-frame match against `occupied_hexes`.
+        """
+        sys_loc = (
+            getattr(self.system, 'global_location', None)
+            or getattr(self.system, 'location', None)
+        )
+        storm_loc = getattr(self.storm, 'location', None)
+        offsets = getattr(self.storm, 'hex_offsets', None)
+        if sys_loc is None or storm_loc is None or offsets is None:
+            # Fallback for unparented / mock storms with `occupied_hexes` only.
+            try:
+                occupied = self.storm.occupied_hexes
+            except AttributeError:
+                return False
+            return hex_coord in occupied
         try:
-            occupied = self.storm.occupied_hexes
-        except AttributeError:
+            return any(hex_coord == sys_loc + storm_loc + off for off in offsets)
+        except TypeError:
             return False
-        return hex_coord in occupied
 
     def affects_system(self, system) -> bool:
         # A storm belongs to exactly one system. The iterator is responsible

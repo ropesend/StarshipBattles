@@ -45,6 +45,9 @@ class StarAbilitySource:
     def affects_hex(self, hex_coord) -> bool:
         """Stars project sector-scope abilities at the star's own hex.
 
+        Operates in the GLOBAL galaxy-map frame; local entity coordinates are
+        translated via `system.global_location`.
+
         System-scope abilities are picked up by the system iterator (iterator
         passes hex_coord=None for system-wide queries). This method only
         guards sector-scope filtering at the collector level.

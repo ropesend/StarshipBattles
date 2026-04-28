@@ -52,6 +52,9 @@ class PlanetIntrinsicAbilitySource:
     def affects_hex(self, hex_coord) -> bool:
         """True if the queried hex is anywhere within the planet's footprint.
 
+        Operates in the GLOBAL galaxy-map frame; local entity coordinates are
+        translated via `system.global_location`.
+
         PROJ-301 D8: multi-hex bodies (Dyson sphere with `radius_hexes > 0`)
         project intrinsic abilities from EVERY occupied hex, not just the
         center. Standard single-hex planets reduce to the center match.

@@ -43,6 +43,11 @@ class WarpPointAbilitySource:
         return dict(getattr(self.warp_point, 'intrinsic_abilities', None) or {})
 
     def affects_hex(self, hex_coord) -> bool:
+        """True if the queried hex is the warp point's hex.
+
+        Operates in the GLOBAL galaxy-map frame; local entity coordinates are
+        translated via `system.global_location`.
+        """
         wp_loc = getattr(self.warp_point, 'location', None)
         sys_loc = getattr(self.system, 'global_location', None) or getattr(self.system, 'location', None)
         if wp_loc is None or sys_loc is None:
