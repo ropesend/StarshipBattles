@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import pygame
 import pygame_gui
@@ -446,16 +446,18 @@ class ShipDetailPanel:
         try:
             # Late import to keep module import cheap and to avoid pulling
             # the simulation registry into UI-only test fixtures.
-            from game.context import get_default_registry_provider
+            from game.core.registry import get_default_registry_provider
             provider = get_default_registry_provider()
-            registry = provider.get_component_registry()
+            components: Dict[str, Any] = provider.get_components()
         except Exception:  # Intentional broad catch: UI tests run without ApplicationContext
             return lambda _comp_id: default
 
         def lookup(comp_id: str) -> float:
-            comp = registry.get_component(comp_id)
+            comp = components.get(comp_id)
             if comp is None:
                 return default
+            if isinstance(comp, dict):
+                return float(comp.get('damage_threshold', default))
             return float(getattr(comp, 'damage_threshold', default))
 
         return lookup
@@ -583,19 +585,21 @@ class ShipDetailPanel:
             manager=self.manager,
             container=self.scroll_container,
         )
-        # Apply colour via the label's text colour where possible; pygame_gui
-        # wraps the text in a styled HTML span for non-default colours.
+        # UILabel does not support HTML styling in this pygame_gui version,
+        # so apply the chosen tier directly and rebuild the drawable shape.
+        label.text_colour = pygame.Color(*color)
+        label.rebuild()
         # Tag the label with the chosen tier so tests can introspect.
         label._proj315_color = color  # type: ignore[attr-defined]
         label._proj315_strike = strike  # type: ignore[attr-defined]
         self.ui_elements.append(label)
 
         if strike:
-            self._apply_strikethrough(label)
+            self._apply_strikethrough(label, color)
 
         return y + 24
 
-    def _apply_strikethrough(self, label: UILabel) -> None:
+    def _apply_strikethrough(self, label: UILabel, color: Tuple[int, int, int]) -> None:
         """Overlay a horizontal line across `label` to convey strike.
 
         pygame_gui has no native ``<s>`` rich-text. Pattern mirrors
@@ -611,7 +615,7 @@ class ShipDetailPanel:
         line_y = rect.height // 2
         pygame.draw.line(
             surf,
-            (220, 220, 220),
+            color,
             (4, line_y),
             (rect.width - 4, line_y),
             1,

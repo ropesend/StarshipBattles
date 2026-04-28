@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Deferred
 **Objective:** Retire `_proj315_color` / `_proj315_strike` private
 test attributes; replace with assertions that read pygame_gui's
 rendered output. Prevents future "test passes but visual feature
@@ -112,10 +112,10 @@ When all tasks above are done:
 - [ ] Run `python Projects/scripts/validate_phase.py PROJ-317 3`.
 
 ## If this phase is deferred
-- [ ] Update plan.md phase table row to `Deferred`.
-- [ ] Add a row to PROJ-317 `decisions.md` documenting the deferral
+- [x] Update plan.md phase table row to `Deferred`.
+- [x] Add a row to PROJ-317 `decisions.md` documenting the deferral
   (with reason — e.g., "pygame_gui text-element API too brittle for
   reliable assertion in this version; revisit when upgrading
   pygame_gui").
-- [ ] Update plan.md Current State to "Project Complete (Phase 3
+- [x] Update plan.md Current State to "Project Complete (Phase 3
   deferred)".

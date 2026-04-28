@@ -552,16 +552,47 @@ class ShipInstance:
         layers = self.design_data.get('layers', {})
         return {layer_name: list(comps) for layer_name, comps in layers.items()}
 
+    def _lookup_design_max_hp(self, comp_id: str) -> Optional[int]:
+        """Look up a component's design max HP from available registries.
+
+        Returns None when the registry is unavailable, the component is
+        unknown, or the registry stores a formula instead of a concrete
+        numeric value. This is only a legacy/missing-state fallback; normal
+        ship creation persists computed per-instance `ComponentState.max_hp`.
+        """
+        components = None
+        if self._registries is not None:
+            components = self._registries.get_components()
+        else:
+            try:
+                from game.core.registry import get_default_registry_provider
+                components = get_default_registry_provider().get_components()
+            except Exception:  # Intentional broad catch: registry may be absent in legacy save context
+                return None
+
+        comp = components.get(comp_id)
+        if comp is None:
+            return None
+        if isinstance(comp, dict):
+            raw = comp.get('max_hp', comp.get('hp'))
+        else:
+            raw = getattr(comp, 'max_hp', None) or getattr(comp, 'hp', None)
+        if raw is None:
+            return None
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
+
     def iter_all_components_by_layer(self) -> Dict[str, List[ComponentInstanceView]]:
         """Return every component on this ship grouped by layer.
 
         Walks `design_data['layers']` in source order; joins each entry
         with `self.components` via `component_state_key(component_id,
-        instance_index)`. Falls back to a default
-        `ComponentInstanceView(current_hp=max_hp, is_active=True)` when
-        the key is missing (legacy saves, freshly materialised ships,
-        or component_id renamed across saves — per CLAUDE.md "saves are
-        disposable" policy, never crashes).
+        instance_index)`. When the key is missing, looks up max HP from
+        the component registry and emits a full-HP active view. If the
+        registry is unavailable or the component is unknown, the instance
+        is skipped instead of emitting a meaningless 0/0 HP view.
 
         The HULL layer is filtered out — the Fleet Report panel does
         not display it. Other unrecognised layer names pass through.
@@ -571,10 +602,10 @@ class ShipInstance:
         to the UI.
         """
         result: Dict[str, List[ComponentInstanceView]] = {}
+        per_id_index: Dict[str, int] = {}
         for layer_name, components in self.design_data.get('layers', {}).items():
             if layer_name == 'HULL':
                 continue
-            per_id_index: Dict[str, int] = {}
             views: List[ComponentInstanceView] = []
             for entry in components:
                 comp_id = entry.get('id') if isinstance(entry, dict) else entry
@@ -589,8 +620,11 @@ class ShipInstance:
                     current_hp = int(state.current_hp)
                     is_active = bool(state.is_active)
                 else:
-                    max_hp = 0
-                    current_hp = 0
+                    fallback_max_hp = self._lookup_design_max_hp(comp_id)
+                    if fallback_max_hp is None:
+                        continue
+                    max_hp = fallback_max_hp
+                    current_hp = fallback_max_hp
                     is_active = True
                 views.append(
                     ComponentInstanceView(

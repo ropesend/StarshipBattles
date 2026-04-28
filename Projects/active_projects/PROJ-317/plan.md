@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Correctness fixes (R1, R2, R3, R4) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Hygiene (R5, R6) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Test seam strengthen (R7) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Correctness fixes (R1, R2, R3, R4) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Hygiene (R5, R6) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Test seam strengthen (R7) | Deferred | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-28
-**Active Phase:** Plan complete, awaiting user approval before implementation
-**Last Action:** Project created from PROJ-315 post-merge audit findings.
-**Next Action:** User approval → begin Phase 1 with R1 (cross-layer instance index).
-**Blockers:** None.
+**Active Phase:** Complete - awaiting user verification (Phase 3 deferred)
+**Last Action:** Implemented R1-R4 correctness fixes, R5-R6 hygiene fixes, and verified full sharded suite: 16004 passed / 0 failed.
+**Next Action:** User to review PROJ-317 remediation and manually smoke Fleet Report component status on a shared-component ship.
+**Blockers:** None
 
 ## Overview
 
@@ -200,18 +200,18 @@ Each claim was re-checked against source HEAD `348bceef0`:
 **Objective:** Eliminate the four functional defects. Each defect
 ships with a regression test that fails pre-fix and passes post-fix.
 Block on full sharded suite green before flipping to Phase 2.
-**Status:** Not Started — see [phase_1_checklist.md](phase_1_checklist.md).
+**Status:** Complete
 
 ### Phase 2: Hygiene (R5 + R6) [Simple]
 **Objective:** Make `validate_audit_ready.py PROJ-315` and
 `validate_audit_ready.py PROJ-317` pass. Trim EOF whitespace.
-**Status:** Not Started — see [phase_2_checklist.md](phase_2_checklist.md).
+**Status:** Complete
 
 ### Phase 3: Test seam strengthen (R7) [Medium] (optional)
 **Objective:** Retire `_proj315_color` / `_proj315_strike` private
 test attributes; assert against rendered output. Optional — can ship
 later as its own follow-up if Phase 1+2 are green.
-**Status:** Not Started — see [phase_3_checklist.md](phase_3_checklist.md).
+**Status:** Deferred
 
 ---
 
@@ -223,24 +223,24 @@ later as its own follow-up if Phase 1+2 are green.
 - [x] Establish current sharded baseline: 15994 / 15994 passing.
 
 ### After Each Phase
-- [ ] Run `pytest tests/ --testmon` — all affected tests pass.
-- [ ] Phase 1 specifically: full sharded run green.
-- [ ] Update Current State block.
+- [x] Run affected pytest suites - all affected tests pass.
+- [x] Phase 1 specifically: full sharded run green.
+- [x] Update Current State block.
 
 ### Final Verification
-- [ ] R1 regression: cross-layer iterator key set equals
+- [x] R1 regression: cross-layer iterator key set equals
   `_build_full_hp_components_from_design` key set on a
   shared-component design fixture (e.g. `qs_battleship`).
-- [ ] R2 regression: damage-tier colour visible in rendered output;
+- [x] R2 regression: damage-tier colour visible in rendered output;
   test does NOT rely on `_proj315_color`.
-- [ ] R3 regression: threshold lookup returns registry-stored value
+- [x] R3 regression: threshold lookup returns registry-stored value
   for a known component, default for unknown, default for the
   no-registry path.
-- [ ] R4 regression: missing-state instance gets registry-derived
+- [x] R4 regression: missing-state instance gets registry-derived
   full HP; dual-miss skips the instance entirely.
-- [ ] R5: `python Projects/scripts/validate_audit_ready.py PROJ-315`
+- [x] R5: `python Projects/scripts/validate_audit_ready.py PROJ-315`
   exits 0.
-- [ ] R6: `git diff --check <pre-PROJ-317>..HEAD` clean.
+- [x] R6: `git diff --check <pre-PROJ-317>..HEAD` clean.
 - [ ] (R7 if shipped) Widget tests no longer reference
   `_proj315_color` or `_proj315_strike`.
 - [ ] Manual smoke: open Fleet Report on a ship with a shared
@@ -248,7 +248,7 @@ later as its own follow-up if Phase 1+2 are green.
   CORE+INNER); damage one battery in the inner layer via save edit;
   confirm the panel shows damage on the correct layer's instance —
   not aliased to the first-layer battery.
-- [ ] Run `python Tools/test_sharded/test_sharded.py` — full suite
+- [x] Run `python Tools/test_sharded/test_sharded.py` - full suite
   green; baseline 15994 + new R1–R4 (and R7 if shipped) tests, 0
   failed.
 
@@ -258,11 +258,11 @@ later as its own follow-up if Phase 1+2 are green.
 | Cycle | Date | Findings | Resolution |
 |-------|------|----------|------------|
 | 0 | 2026-04-28 | Independent agent flagged R1–R8 against PROJ-315 post-merge | Verified all five P1/P2 claims; spawned PROJ-317 |
-| 1 | | | |
+| 1 | 2026-04-28 | R1-R6 implemented and verified; Phase 3 deferred | Full sharded suite green: 16004 passed / 0 failed. PROJ-315 and PROJ-317 audit-readiness scripts exit 0. |
 
 ## Completion Checklist
-- [ ] Phase 1 complete.
-- [ ] Phase 2 complete.
-- [ ] Phase 3 complete (or explicitly deferred).
-- [ ] All new regression tests passing.
+- [x] Phase 1 complete.
+- [x] Phase 2 complete.
+- [x] Phase 3 complete (or explicitly deferred).
+- [x] All new regression tests passing.
 - [ ] User verified.

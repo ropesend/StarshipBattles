@@ -979,3 +979,72 @@ class TestComponentStatusSection:
         assert len(actual_buttons) == button_count
 
 
+class TestComponentStatusRemediations:
+    """PROJ-317 regressions for rendered colour and threshold lookup wiring."""
+
+    def test_instance_row_label_applies_chosen_text_colour(self, ui_manager):
+        """R2: colour tier must reach the rendered label, not only a test attr."""
+        from game.ui.colors import HP_DESTROYED
+
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 0, 100, is_active=False),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_group('CORE', 'reactor_standard')
+
+        instance_labels = [
+            el for el in panel.ui_elements
+            if 'Reactor Standard #1' in getattr(el, 'text', '')
+        ]
+
+        assert len(instance_labels) == 1
+        assert tuple(instance_labels[0].text_colour)[:3] == HP_DESTROYED
+
+    def test_resolve_threshold_lookup_uses_per_component_value(self, monkeypatch):
+        """R3: production lookup must use registry component thresholds."""
+        from types import SimpleNamespace
+
+        from game.core.constants import CombatConstants
+        from game.ui.panels.ship_detail_panel import ShipDetailPanel
+
+        class Provider:
+            def get_components(self):
+                return {
+                    'fragile_component': SimpleNamespace(damage_threshold=0.7),
+                }
+
+        monkeypatch.setattr(
+            'game.core.registry.get_default_registry_provider',
+            lambda: Provider(),
+        )
+        panel = ShipDetailPanel.__new__(ShipDetailPanel)
+
+        lookup = panel._resolve_threshold_lookup()
+
+        assert lookup('fragile_component') == pytest.approx(0.7)
+        assert lookup('unknown_component') == pytest.approx(
+            CombatConstants.DEFAULT_DAMAGE_THRESHOLD
+        )
+
+    def test_resolve_threshold_lookup_falls_back_without_registry(self, monkeypatch):
+        """R3: UI-only contexts still fall back to the default threshold."""
+        from game.core.constants import CombatConstants
+        from game.ui.panels.ship_detail_panel import ShipDetailPanel
+
+        def raise_no_registry():
+            raise RuntimeError('registry not available')
+
+        monkeypatch.setattr(
+            'game.core.registry.get_default_registry_provider',
+            raise_no_registry,
+        )
+        panel = ShipDetailPanel.__new__(ShipDetailPanel)
+
+        lookup = panel._resolve_threshold_lookup()
+
+        assert lookup('anything') == pytest.approx(
+            CombatConstants.DEFAULT_DAMAGE_THRESHOLD
+        )

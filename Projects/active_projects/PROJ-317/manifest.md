@@ -8,11 +8,15 @@
 | File | Type | Notes |
 |------|------|-------|
 | `game/strategy/data/ship_instance.py` | Production | R1: lift `per_id_index` out of the layer loop in `iter_all_components_by_layer`. R4: registry-derived `max_hp` fallback + new `_lookup_design_max_hp` helper; skip instance on dual-miss. |
-| `game/ui/panels/ship_detail_panel.py` | Production | R2: apply chosen damage-tier colour to the rendered label via pygame_gui rich-text wrap; tint strike overlay to match. R3: fix `_resolve_threshold_lookup` import path (`game.core.registry`) and method (`get_components()`); optionally narrow broad-catch. |
+| `game/ui/panels/ship_detail_panel.py` | Production | R2: apply chosen damage-tier colour to the rendered label via `UILabel.text_colour` + `rebuild()`; tint strike overlay to match. R3: fix `_resolve_threshold_lookup` import path (`game.core.registry`) and method (`get_components()`); keep justified broad-catch for UI-only registry startup failures. |
 | `Projects/active_projects/PROJ-315/plan.md` | Tracking | R5: edit lines 25 (`Blockers:` field), 241, 248, 254 (`## Phases` section bodies). |
 | `tests/unit/strategy/test_ship_instance_damage.py` | Test | R1 regression test (cross-layer iterator key set equals `_build_full_hp_components_from_design`). R4 regression tests (registry-derived fallback; dual-miss skip). |
 | `tests/unit/ui/panels/test_ship_detail_panel.py` | Test | R2 regression (damage-tier colour visible in rendered output, NOT via `_proj315_color`). R3 regression (threshold lookup uses registry). R6: trim two trailing CRLF blank lines at EOF. Phase 3 only: retire `_proj315_color` / `_proj315_strike` reads. |
 | `Projects/active_projects/PROJ-317/plan.md` | Tracking | Updated Current State + Work Log on completion. |
+| `Projects/active_projects/PROJ-317/phase_1_checklist.md` | Tracking | Phase 1 task completion and verification notes. |
+| `Projects/active_projects/PROJ-317/phase_2_checklist.md` | Tracking | Phase 2 task completion and verification notes. |
+| `Projects/active_projects/PROJ-317/phase_3_checklist.md` | Tracking | Phase 3 deferral record. |
+| `Projects/active_projects/PROJ-317/decisions.md` | Tracking | Actual R2 implementation decision and Phase 3 deferral. |
 | `Projects/projects_index.md` | Tracking | Status flip to "Awaiting User Verification" on completion. |
 
 ## Maybe-touched (decide during implementation)
