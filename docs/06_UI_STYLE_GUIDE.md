@@ -1,6 +1,6 @@
 # UI Style Guide
 
-> **Last verified:** 2026-04-28 — Added Window Management section (PROJ-313) describing `StrategyModalWindow` as the canonical base class for new strategy-modal windows.
+> **Last verified:** 2026-04-28 — Added Read-only component grouping section (PROJ-315) documenting the COMPONENT STATUS panel pattern.
 
 Comprehensive reference for all color constants, theming systems, and usage patterns
 in the Starship Battles UI. The visual identity is a dark blue-gray palette with cyan
@@ -670,7 +670,101 @@ from game.ui.colors import DESIGN_MISSING_REQ, DESIGN_REQS_MET, DESIGN_WARNING
 
 ---
 
-## 7. Adding New Colors
+## 7. Read-only component grouping (PROJ-315)
+
+**When to use:** any panel that displays per-component damage state in a
+read-only context — Fleet Report's `ShipDetailPanel`, future Battle
+After-Action Report, etc. The pattern is documented here so new
+read-only ship-component views stay visually consistent.
+
+### Section structure
+
+A "COMPONENT STATUS" section always renders, independent of damage. It
+lists every component grouped by layer in the canonical Workshop order:
+
+```python
+LAYER_ORDER = ('CORE', 'INNER', 'OUTER', 'ARMOR')
+```
+
+`HULL` is excluded — Fleet Report doesn't display hull layer entries.
+
+Each layer is a collapsible block. Inside an expanded layer, identical
+`component_id`s collapse into one **group row** showing
+`<DisplayName> × <count>`, `<functional>/<total>`, and `<avg>%` average
+damage. Expanding the group reveals one **instance row** per component,
+each with its own colour and (when relevant) strikethrough overlay.
+
+### Auto-expand semantics
+
+Layer expand state recomputes on every `update_ship` call — there is no
+per-(ship, layer) state persistence. Layers auto-expand iff they contain
+at least one destroyed instance (`current_hp == 0`). All groups start
+collapsed; the user must click the chevron to drill in. This is
+deterministic — switching back to a previously-viewed ship always shows
+the same expand pattern.
+
+### Colour-tier rules
+
+| State                                                       | Colour           | Strikethrough |
+|-------------------------------------------------------------|------------------|---------------|
+| Healthy (`current_hp == max_hp`, `is_active`)               | `HP_HEALTHY`     | No            |
+| Damaged (0 < damage_pct ≤ 0.5 × threshold, `is_active`)     | `HP_DAMAGED`     | No            |
+| Critical (damage_pct > 0.5 × threshold, `is_active`)        | `HP_CRITICAL`    | No            |
+| Destroyed (`current_hp == 0`)                               | `HP_DESTROYED`   | Yes           |
+| Damage-induced inactive (HP > 0, below threshold, !active)  | `HP_CRITICAL`    | Yes           |
+| Manually disabled (HP intact, !active)                      | `MUTED_GREY`     | No            |
+
+`MUTED_GREY = (130, 130, 150)` distinguishes "intentionally off" from
+`HP_DESTROYED` grey for "broken".
+
+### Strikethrough convention
+
+pygame_gui has no native `<s>` rich-text. The pattern is a manual
+`pygame.draw.line()` overlay rendered as a `UIImage` pinned to the
+label's rect, mirroring `game/ui/screens/test_lab/dialogs.py`. The panel
+encapsulates this as `_apply_strikethrough(label)` and tracks the
+overlay in `ui_elements` so cleanup happens via `_clear_elements()`.
+
+If pygame_gui adds `<s>` support in a future release, prefer that and
+remove the helper.
+
+### Module-level pure-function colocation
+
+`group_components_by_id()`, `ComponentGroup`, and `InstanceDamage` live
+at module scope **above** the panel class in `ship_detail_panel.py` —
+the same pattern as `planet_report_panel.py`'s `_projection_grid_rows`,
+`_qty_cell` etc. A separate `ship_component_grouping.py` module would
+be premature over-modularisation for ~80 LOC of pure logic.
+
+The damage-threshold lookup is dependency-injected into
+`group_components_by_id` so unit tests can stub it without instantiating
+the registry. Production wires through
+`get_default_registry_provider().get_component_registry()` and falls
+back to `CombatConstants.DEFAULT_DAMAGE_THRESHOLD` (0.5) if the lookup
+misses.
+
+### Read-only contract
+
+Group rows and instance rows are `UILabel`s. The only `UIButton`
+instances inside the section are the layer-header chevron buttons and
+the group-header chevron buttons (toggle input only). The pre-existing
+`Remove from Fleet` button below the section is unaffected.
+
+A regression test asserts that
+`len(layer_buttons) + len(group_buttons) == count(UIButton in section)`.
+
+### When extending
+
+- **New view in another panel** — use the same `LAYER_ORDER`, the same
+  colour tier table, and the same `group_components_by_id` import. Do
+  not invent a parallel rule set.
+- **Repair / mutation actions** — out of scope for this pattern. Add
+  them in a separate row group below the read-only block, not by
+  swapping instance labels for buttons.
+
+---
+
+## 8. Adding New Colors
 
 ### Where to add
 

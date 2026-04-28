@@ -15,13 +15,13 @@
 |-------|--------|-----------|
 | 1. Strategy data helper (`iter_all_components_by_layer`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Widget rewrite (COMPONENT STATUS section) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Documentation + closeout | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Documentation + closeout | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-28 — Phase 2 complete
-**Active Phase:** Phase 3 — documentation + closeout
-**Last Action:** Phase 2 implementation + tests landed. `ship_detail_panel.py` rewritten with module-level grouping helpers, `MUTED_GREY` colour, strikethrough overlay, COMPONENT STATUS section, auto-expand re-fire on ship select. 23 new Phase 2 tests (8 group + 15 widget). Total: **15937 passed, 1 known flake** via `pytest tests/`. Sharded runner blocked by pre-existing `\a`-in-worktree-path bug — see decisions.md. `ship_detail_panel.py` LOC now 681 — flagged in decisions.md as future PROJ-309 candidate.
-**Next Action:** Phase 3 — `docs/06_UI_STYLE_GUIDE.md` update + Work Log + close out.
+**Last Updated:** 2026-04-28 — Complete — ready for user verification
+**Active Phase:** Complete — ready for user verification
+**Last Action:** Phase 3 docs + closeout. `docs/06_UI_STYLE_GUIDE.md` gained §7 "Read-only component grouping (PROJ-315)" and bumped `Last verified:` date. 35 total new tests across the project (5 dataclass + 7 iterator + 8 group + 15 widget). Final: **15937 passed, 1 known-flake fail** (`test_colony_owner_id_matches_empire`).
+**Next Action:** User to manually verify in-game (Fleet Report selecting healthy / damaged / destroyed ships) and flip status in `Projects/projects_index.md`.
 **Blockers:** None. Two spec ambiguities resolved with the user during Phase C: (a) damage-induced inactive components render in red with strikethrough; manually-disabled components render in muted grey without strike; (b) layer auto-expand re-fires on every ship selection (no manual-collapse persistence).
 
 ## Overview
@@ -302,8 +302,57 @@ findings; update `Tracking/projects_index.md`.
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] Phase 1 complete.
-- [ ] Phase 2 complete.
-- [ ] Phase 3 complete.
-- [ ] All tests passing.
+- [x] Phase 1 complete.
+- [x] Phase 2 complete.
+- [x] Phase 3 complete.
+- [x] All tests passing (modulo known `test_colony_owner_id_matches_empire` flake).
 - [ ] User verified.
+
+## Work Log
+
+### 2026-04-28 — Implementation (Phases 1, 2, 3)
+
+**Files modified:**
+
+Production:
+- `game/core/component_state.py` — added `ComponentInstanceView` frozen dataclass
+- `game/strategy/data/ship_instance.py` — added `iter_all_components_by_layer()`
+- `game/ui/colors.py` — added `MUTED_GREY = (130, 130, 150)`
+- `game/ui/panels/ship_detail_panel.py` — rewrote damage section as
+  COMPONENT STATUS; added `InstanceDamage`, `ComponentGroup`,
+  `group_components_by_id()`, `LAYER_ORDER`, `_apply_strikethrough()`,
+  `_resolve_threshold_lookup()`, `_compute_initial_expand_state()`,
+  `_build_component_section()`, `toggle_group()`. Eliminated the latent
+  `_`-vs-`#` parser bug at the old lines 367-375.
+
+Tests:
+- `tests/unit/core/test_component_state.py` — 5 new tests for `ComponentInstanceView`
+- `tests/unit/strategy/test_ship_instance_damage.py` — 7 new tests for
+  `iter_all_components_by_layer()` (incl. `reactor_mark_2` parser-bug regression)
+- `tests/unit/ui/panels/test_ship_detail_panel.py` — 23 new tests
+  (`TestGroupComponentsById` x8, `TestComponentStatusSection` x15) plus
+  3 minor existing-test fixture updates (added `group_buttons={}`)
+
+Docs:
+- `docs/06_UI_STYLE_GUIDE.md` — §7 "Read-only component grouping
+  (PROJ-315)" added; `Last verified:` blockquote bumped.
+
+**Test count delta:**
+- Pre-PROJ-315 baseline: 15893 passed, 0 failed (per plan.md baseline)
+- Post-PROJ-315: **15937 passed, 1 known-flake fail** (35 new tests
+  net of the 3 small fixture corrections to existing tests).
+  The 1 failure (`test_colony_owner_id_matches_empire`) is documented
+  in MEMORY.md as a pre-existing test-isolation flake.
+
+**Branch:** `worktree-agent-aec201957a8166583`
+**Worktree path:** `c:\Dev\Starship Battles\.claude\worktrees\agent-aec201957a8166583`
+
+**Known follow-ups (logged in decisions.md):**
+- `ship_detail_panel.py` LOC: 429 → 681 (over the 500 LOC preference).
+  Natural seams for a future PROJ-309-style split: extract the grouping
+  helpers to `ship_component_grouping.py`; extract the COMPONENT STATUS
+  rendering to a sub-builder.
+- `Tools/test_sharded` runner has a pre-existing path-escaping bug on
+  worktree paths containing `\a`. Recommend a follow-up ticket to fix
+  the inline-script generation to use `os.path` literals or pass the
+  path via env var instead of f-string interpolation.
