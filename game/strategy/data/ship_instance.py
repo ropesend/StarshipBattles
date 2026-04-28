@@ -26,7 +26,11 @@ from game.strategy.data.ship_consumable_manager import ShipConsumableManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
-from game.core.component_state import ComponentState, component_state_key
+from game.core.component_state import (
+    ComponentInstanceView,
+    ComponentState,
+    component_state_key,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -547,6 +551,58 @@ class ShipInstance:
         """
         layers = self.design_data.get('layers', {})
         return {layer_name: list(comps) for layer_name, comps in layers.items()}
+
+    def iter_all_components_by_layer(self) -> Dict[str, List[ComponentInstanceView]]:
+        """Return every component on this ship grouped by layer.
+
+        Walks `design_data['layers']` in source order; joins each entry
+        with `self.components` via `component_state_key(component_id,
+        instance_index)`. Falls back to a default
+        `ComponentInstanceView(current_hp=max_hp, is_active=True)` when
+        the key is missing (legacy saves, freshly materialised ships,
+        or component_id renamed across saves — per CLAUDE.md "saves are
+        disposable" policy, never crashes).
+
+        The HULL layer is filtered out — the Fleet Report panel does
+        not display it. Other unrecognised layer names pass through.
+
+        Introduced by PROJ-315 to back the Fleet Report's COMPONENT
+        STATUS panel without exposing mutable `ComponentState` instances
+        to the UI.
+        """
+        result: Dict[str, List[ComponentInstanceView]] = {}
+        for layer_name, components in self.design_data.get('layers', {}).items():
+            if layer_name == 'HULL':
+                continue
+            per_id_index: Dict[str, int] = {}
+            views: List[ComponentInstanceView] = []
+            for entry in components:
+                comp_id = entry.get('id') if isinstance(entry, dict) else entry
+                if not comp_id:
+                    continue
+                idx = per_id_index.get(comp_id, 0)
+                per_id_index[comp_id] = idx + 1
+                key = component_state_key(comp_id, idx)
+                state = self.components.get(key)
+                if state is not None:
+                    max_hp = int(state.max_hp)
+                    current_hp = int(state.current_hp)
+                    is_active = bool(state.is_active)
+                else:
+                    max_hp = 0
+                    current_hp = 0
+                    is_active = True
+                views.append(
+                    ComponentInstanceView(
+                        component_id=comp_id,
+                        instance_index=idx,
+                        current_hp=current_hp,
+                        max_hp=max_hp,
+                        is_active=is_active,
+                    )
+                )
+            result[layer_name] = views
+        return result
 
     def get_damaged_components_by_layer(self) -> Dict[str, List[Tuple[str, int]]]:
         """

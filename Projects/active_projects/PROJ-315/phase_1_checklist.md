@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Add `ComponentInstanceView` frozen dataclass and
 `ShipInstance.iter_all_components_by_layer()` helper. Cover with
 unit tests including the regression cases that resurrect the
@@ -19,7 +19,7 @@ existing latent parser bug.
 **File:** `game/core/component_state.py`
 **Tests:** `pytest tests/unit/core/test_component_state.py`
 
-- [ ] Add a frozen dataclass `ComponentInstanceView` directly below
+- [x] Add a frozen dataclass `ComponentInstanceView` directly below
   the existing `ComponentState` definition. Fields:
   ```python
   @dataclass(frozen=True)
@@ -30,11 +30,11 @@ existing latent parser bug.
       max_hp: int
       is_active: bool
   ```
-- [ ] Export it via the module's `__all__` if present.
-- [ ] Add a class docstring explaining: "Read-only snapshot for UI
+- [x] Export it via the module's `__all__` if present.
+- [x] Add a class docstring explaining: "Read-only snapshot for UI
   display. When backing `ComponentState` is missing for a key,
   callers should default to `current_hp == max_hp`, `is_active = True`."
-- [ ] Add basic unit tests in
+- [x] Add basic unit tests in
   `tests/unit/core/test_component_state.py`:
   - Construction sets all five fields.
   - Frozen — assignment raises `FrozenInstanceError`.
@@ -48,10 +48,10 @@ existing latent parser bug.
 **File:** `game/strategy/data/ship_instance.py`
 **Tests:** `pytest tests/unit/strategy/test_ship_instance_damage.py tests/unit/strategy/test_ship_instance.py`
 
-- [ ] Place the new method directly after the existing
+- [x] Place the new method directly after the existing
   `get_components_by_layer()` (~line 549) so the read-helpers cluster
   is grouped together.
-- [ ] Signature:
+- [x] Signature:
   ```python
   def iter_all_components_by_layer(self) -> Dict[str, List[ComponentInstanceView]]:
       """Return every component on this ship grouped by layer.
@@ -65,14 +65,14 @@ existing latent parser bug.
       display it. Other unrecognised layer names pass through.
       """
   ```
-- [ ] Use `from game.core.component_state import ComponentInstanceView, component_state_key`.
-- [ ] Walk `design_data.get('layers', {}).items()`; for each layer,
+- [x] Use `from game.core.component_state import ComponentInstanceView, component_state_key`.
+- [x] Walk `design_data.get('layers', {}).items()`; for each layer,
   for each component entry, build a counter to assign
   `instance_index = 0, 1, 2, ...` per `component_id` within that
   layer. Look up `self.components.get(key)` and either build the
   view from the state or use the default.
-- [ ] Skip the HULL layer at the iteration step (`if layer_name == 'HULL': continue`).
-- [ ] Determine `max_hp` for the default-view fallback. The
+- [x] Skip the HULL layer at the iteration step (`if layer_name == 'HULL': continue`).
+- [x] Determine `max_hp` for the default-view fallback. The
   triage notes that `ComponentState` already records `max_hp`. For
   the default-view path (state missing entirely), fall back to a
   registry lookup if available, else `0` with a `# Intentional broad
@@ -80,7 +80,7 @@ existing latent parser bug.
   Confirm the established pattern by reading
   `_build_full_hp_components_from_design()` in
   `ship_instance.py:82` (referenced by Risk Assessor).
-- [ ] Tests in
+- [x] Tests in
   `tests/unit/strategy/test_ship_instance_damage.py` (or new
   `test_ship_instance_iter_components.py` if file size warrants):
   1. Pristine ship: every layer in design_data appears (except
@@ -99,7 +99,7 @@ existing latent parser bug.
   5. Empty `design_data['layers']`: returns `{}` (no crash).
   6. `instance_index` numbering: 4 identical engines yield
      indices `0, 1, 2, 3`.
-- [ ] Verify: `pytest tests/unit/strategy/test_ship_instance_damage.py tests/unit/strategy/test_ship_instance.py` green.
+- [x] Verify: `pytest tests/unit/strategy/test_ship_instance_damage.py tests/unit/strategy/test_ship_instance.py` green.
 
 **Notes:**
 
@@ -109,9 +109,9 @@ existing latent parser bug.
 **File:** N/A
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Run the full sharded suite. Baseline: 15893 passed.
-- [ ] After Phase 1: expected 15893 + (Task 1.1 + 1.2 new tests, ~10–13 new) → ~15903–15906 passed, 0 failed.
-- [ ] If any unrelated tests fail, investigate and document — do not
+- [x] Run the full sharded suite. Baseline: 15893 passed.
+- [x] After Phase 1: expected 15893 + (Task 1.1 + 1.2 new tests, ~10–13 new) → ~15903–15906 passed, 0 failed.
+- [x] If any unrelated tests fail, investigate and document — do not
   proceed to Phase 2 with a broken baseline.
 
 **Notes:**
@@ -120,8 +120,8 @@ existing latent parser bug.
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to point to Phase 2.
-- [ ] Run `python Projects/scripts/validate_phase.py PROJ-315 1`.
+- [x] All task checkboxes above are checked.
+- [x] Update status at top of this file to `Complete`.
+- [x] Update plan.md phase table row to `Complete`.
+- [x] Update plan.md Current State to point to Phase 2.
+- [x] Run `python Projects/scripts/validate_phase.py PROJ-315 1`.

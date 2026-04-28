@@ -2,7 +2,11 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.core.component_state import ComponentState, component_state_key
+from game.core.component_state import (
+    ComponentInstanceView,
+    ComponentState,
+    component_state_key,
+)
 from game.strategy.data.ship_instance import ShipInstance
 
 
@@ -297,6 +301,157 @@ class TestShipInstanceLayerInfo:
         assert damaged_by_layer['OUTER'][0] == ('weapon_laser#0', 25)
         assert 'INNER' not in damaged_by_layer  # No damaged components
         assert 'ARMOR' not in damaged_by_layer
+
+
+class TestIterAllComponentsByLayer:
+    """PROJ-315 Phase 1 Task 1.2: Test iter_all_components_by_layer()."""
+
+    @pytest.fixture
+    def design_data_with_layers(self):
+        return {
+            'name': 'TestShip',
+            'expected_stats': {'max_hp': 100},
+            'layers': {
+                'CORE': [
+                    {'id': 'reactor_standard'},
+                    {'id': 'engine_basic'},
+                    {'id': 'engine_basic'},
+                ],
+                'INNER': [
+                    {'id': 'bridge_standard'},
+                ],
+                'OUTER': [
+                    {'id': 'weapon_laser'},
+                ],
+                'ARMOR': [
+                    {'id': 'armor_plate'},
+                ],
+            },
+        }
+
+    def test_pristine_ship_yields_every_layer_at_full_hp(
+        self, design_data_with_layers, ship_factory
+    ):
+        instance = ship_factory(design_data_with_layers, owner_id=0)
+
+        result = instance.iter_all_components_by_layer()
+
+        assert set(result.keys()) == {'CORE', 'INNER', 'OUTER', 'ARMOR'}
+        for views in result.values():
+            for view in views:
+                assert isinstance(view, ComponentInstanceView)
+                assert view.is_active is True
+                assert view.current_hp == view.max_hp
+
+    def test_partially_damaged_views_match_component_state(
+        self, design_data_with_layers, ship_factory
+    ):
+        instance = ship_factory(design_data_with_layers, owner_id=0)
+        instance.components[component_state_key('reactor_standard', 0)] = ComponentState(
+            component_id='reactor_standard',
+            instance_index=0,
+            current_hp=30.0,
+            max_hp=100.0,
+            is_active=False,
+        )
+
+        result = instance.iter_all_components_by_layer()
+
+        core_views = result['CORE']
+        reactor_view = next(v for v in core_views if v.component_id == 'reactor_standard')
+        assert reactor_view.current_hp == 30
+        assert reactor_view.max_hp == 100
+        assert reactor_view.is_active is False
+
+    def test_hull_layer_filtered_out(self, ship_factory):
+        design = {
+            'name': 'WithHull',
+            'expected_stats': {'max_hp': 100},
+            'layers': {
+                'HULL': [{'id': 'hull_plating'}],
+                'CORE': [{'id': 'reactor_standard'}],
+            },
+        }
+        instance = ship_factory(design, owner_id=0)
+
+        result = instance.iter_all_components_by_layer()
+
+        assert 'HULL' not in result
+        assert 'CORE' in result
+
+    def test_component_id_with_underscores_preserved(self, ship_factory):
+        """Regression: the old `_`-split parser at ship_detail_panel.py:367-375
+        broke ids like `reactor_mark_2`. The new view uses
+        `ComponentInstanceView.component_id` directly — never re-parsed.
+        """
+        design = {
+            'name': 'MarkTwo',
+            'expected_stats': {'max_hp': 100},
+            'layers': {
+                'CORE': [
+                    {'id': 'reactor_mark_2'},
+                ],
+            },
+        }
+        instance = ship_factory(design, owner_id=0)
+
+        result = instance.iter_all_components_by_layer()
+
+        core_views = result['CORE']
+        assert len(core_views) == 1
+        assert core_views[0].component_id == 'reactor_mark_2'
+        assert core_views[0].instance_index == 0
+
+    def test_empty_layers_returns_empty_dict(self, ship_factory):
+        design = {
+            'name': 'NoLayers',
+            'expected_stats': {'max_hp': 100},
+        }
+        instance = ship_factory(design, owner_id=0)
+
+        result = instance.iter_all_components_by_layer()
+
+        assert result == {}
+
+    def test_instance_index_numbering_per_component_id(self, ship_factory):
+        design = {
+            'name': 'FourEngines',
+            'expected_stats': {'max_hp': 100},
+            'layers': {
+                'CORE': [
+                    {'id': 'engine_basic'},
+                    {'id': 'engine_basic'},
+                    {'id': 'engine_basic'},
+                    {'id': 'engine_basic'},
+                ],
+            },
+        }
+        instance = ship_factory(design, owner_id=0)
+
+        result = instance.iter_all_components_by_layer()
+
+        engine_views = [v for v in result['CORE'] if v.component_id == 'engine_basic']
+        assert len(engine_views) == 4
+        assert [v.instance_index for v in engine_views] == [0, 1, 2, 3]
+
+    def test_default_view_when_state_missing(self, ship_factory):
+        """When ComponentState is absent for a key, view defaults to full HP / active."""
+        design = {
+            'name': 'Defaulty',
+            'expected_stats': {'max_hp': 100},
+            'layers': {
+                'CORE': [{'id': 'reactor_standard'}],
+            },
+        }
+        instance = ship_factory(design, owner_id=0)
+        # Wipe components to simulate a freshly materialised legacy ship.
+        instance.components = {}
+
+        result = instance.iter_all_components_by_layer()
+
+        view = result['CORE'][0]
+        assert view.is_active is True
+        assert view.current_hp == view.max_hp
 
 
 if __name__ == '__main__':

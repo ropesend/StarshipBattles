@@ -13,6 +13,7 @@ import dataclasses
 import pytest
 
 from game.core.component_state import (
+    ComponentInstanceView,
     ComponentState,
     component_state_key,
 )
@@ -94,3 +95,75 @@ def test_component_state_from_dict_handles_missing_optional_fields():
     cs = ComponentState.from_dict(minimal)
     assert cs.max_hp == 0.0
     assert cs.is_active is True
+
+
+# --- ComponentInstanceView (PROJ-315 Phase 1 Task 1.1) ----------------------
+
+
+def test_component_instance_view_is_frozen_dataclass():
+    assert dataclasses.is_dataclass(ComponentInstanceView)
+    fields = {f.name for f in dataclasses.fields(ComponentInstanceView)}
+    assert fields == {
+        "component_id",
+        "instance_index",
+        "current_hp",
+        "max_hp",
+        "is_active",
+    }
+
+
+def test_component_instance_view_constructs_with_all_fields():
+    view = ComponentInstanceView(
+        component_id="reactor_mark_2",
+        instance_index=3,
+        current_hp=80,
+        max_hp=100,
+        is_active=True,
+    )
+    assert view.component_id == "reactor_mark_2"
+    assert view.instance_index == 3
+    assert view.current_hp == 80
+    assert view.max_hp == 100
+    assert view.is_active is True
+
+
+def test_component_instance_view_is_frozen_assignment_raises():
+    view = ComponentInstanceView(
+        component_id="bridge",
+        instance_index=0,
+        current_hp=100,
+        max_hp=100,
+        is_active=True,
+    )
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        view.current_hp = 50  # type: ignore[misc]
+
+
+def test_component_instance_view_equality_on_identical_fields():
+    view_a = ComponentInstanceView(
+        component_id="engine",
+        instance_index=1,
+        current_hp=50,
+        max_hp=100,
+        is_active=False,
+    )
+    view_b = ComponentInstanceView(
+        component_id="engine",
+        instance_index=1,
+        current_hp=50,
+        max_hp=100,
+        is_active=False,
+    )
+    assert view_a == view_b
+
+
+def test_component_instance_view_unequal_when_field_differs():
+    view_a = ComponentInstanceView(
+        component_id="engine",
+        instance_index=1,
+        current_hp=50,
+        max_hp=100,
+        is_active=True,
+    )
+    view_b = dataclasses.replace(view_a, current_hp=51)
+    assert view_a != view_b

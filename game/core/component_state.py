@@ -30,6 +30,26 @@ def component_state_key(component_id: str, instance_index: int) -> str:
     return f"{component_id}#{instance_index}"
 
 
+@dataclass(frozen=True)
+class ComponentInstanceView:
+    """Read-only snapshot of one component instance for UI display.
+
+    Joins design-data presence with persisted ComponentState. When a
+    backing `ComponentState` is missing for a key (legacy saves, freshly
+    materialised ships), callers should default to
+    `current_hp == max_hp` and `is_active = True`.
+
+    Introduced by PROJ-315 to power the Fleet Report's COMPONENT STATUS
+    panel without exposing mutable `ComponentState` instances to the UI.
+    """
+
+    component_id: str
+    instance_index: int
+    current_hp: int
+    max_hp: int
+    is_active: bool
+
+
 @dataclass
 class ComponentState:
     """Per-component persistent state — HP + active flag.
@@ -79,4 +99,4 @@ class ComponentState:
         )
 
 
-__all__ = ["ComponentState", "component_state_key"]
+__all__ = ["ComponentInstanceView", "ComponentState", "component_state_key"]
