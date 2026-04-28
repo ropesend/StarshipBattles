@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-318 | PROJ-314 Closeout Remediations | In Progress | 2026-04-28 | 2026-04-28 |
+| PROJ-318 | PROJ-314 Closeout Remediations | Complete | 2026-04-28 | 2026-04-28 |
 | PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Planning | 2026-04-28 | 2026-04-28 |
 | PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Planning | 2026-04-28 | 2026-04-28 |
 | PROJ-315 | Fleet Report Component Damage Panel | Awaiting User Verification | 2026-04-28 | 2026-04-28 |

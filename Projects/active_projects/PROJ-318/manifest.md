@@ -31,5 +31,6 @@
 | `.agents/skills/codex-ship-theme-creator/scripts/create_manifest.py` | Skill (external) | Phase 6 — rewrite `theme.json` writer to emit new `assets:` schema with `schema_version: 1`, display-form keys, top-level `image_sizes`, optional `description`. Mirror `assets/ShipThemes/Federation/theme.json` shape. |
 | `.agents/skills/codex-ship-theme-creator/scripts/validate_theme.py` | Skill (external) | Phase 6 — update validator: read `assets:` (not `images:`), accept `.png` 2048×2048 (not `.jpg` 1024×1024), use `SHIP_CLASSES_WITH_VISUAL_THEMES` from `game.core.ship_classes` as the canonical key set. |
 | `.agents/skills/codex-ship-theme-creator/scripts/theme_common.py` | Skill (external; READ-ONLY) | Phase 6 — already updated by PROJ-314 commit `0bbf9c36d`. Use as reference for the migrated shape. |
+| `tests/unit/tools/test_codex_ship_theme_creator_skill.py` | Test (NEW) | Phase 6 - TDD coverage for the repo-local skill scripts: manifest schema generation, validator acceptance of new schema, and validator rejection of legacy `images:` schema. |
 | `Projects/active_projects/PROJ-318/plan.md` | Tracking | Phase 6 closeout — flip Current State to `Complete`. |
 | `Projects/projects_index.md` | Tracking | Phase 6 closeout — bump status to `Complete`. |

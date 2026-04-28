@@ -19,14 +19,14 @@
 | 3. R3 — Delete legacy `<Class>_Portrait.jpg` helper | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. R5 — `Tools/regenerate_ship_portraits/` conventions | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. R2 — Make audit + smoke test a real release gate | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. R4 — Migrate codex-ship-theme-creator skill to new schema | In Progress | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. R4 — Migrate codex-ship-theme-creator skill to new schema | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-04-28
-**Active Phase:** Phase 6 - R4 migrate codex-ship-theme-creator skill to new schema
-**Last Action:** Phase 5 complete. `Tools/regenerate_ship_portraits.audit` now exits non-zero on missing portraits or size mismatches, and Race Setup smoke tests enforce exact portrait/skin dimensions plus fallback allowlists.
-**Next Action:** Phase 6 migrates `.agents/skills/codex-ship-theme-creator/scripts/create_manifest.py` and `validate_theme.py` to emit and validate the `assets:` schema.
+**Active Phase:** Complete
+**Last Action:** All 6 phases complete. Phase 6 migrated the repo-local codex-ship-theme-creator scripts to the `assets:` schema and added tests plus smoke validation.
+**Next Action:** Project ready for archive after review.
 **Blockers:** None
 **Test baseline at plan time:** 15959 / 15959 passing (post-PROJ-314 baseline).
 
