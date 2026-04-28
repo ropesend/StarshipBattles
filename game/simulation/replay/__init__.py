@@ -22,10 +22,19 @@ The package is import-free at the simulation hot path: nothing in
 """
 from __future__ import annotations
 
+from game.simulation.replay.replay_capture import (
+    IReplayCaptureSink,
+    NullCaptureSink,
+    ReplayCaptureContext,
+    get_default_capture_sink,
+    reset_default_capture_sink,
+    set_default_capture_sink,
+)
 from game.simulation.replay.replay_serialization import (
     REPLAY_SCHEMA_VERSION,
     boundary_to_dict,
     boundary_from_dict,
+    compute_components_registry_hash,
     modifier_entry_to_dict,
     modifier_entry_from_dict,
     modifier_stack_to_dict,
@@ -38,15 +47,24 @@ from game.simulation.replay.replay_serialization import (
 from game.simulation.replay.replay_spec import ReplaySpec, ReplayShipSpec
 from game.simulation.replay.replay_outcome import ReplayOutcome
 from game.simulation.replay.replay_record import ReplayRecord
+from game.simulation.replay.replay_player import (
+    build_replay_ship_builder,
+    replay_record_to_spec,
+    run_replay_headless,
+)
 
 __all__ = [
     "REPLAY_SCHEMA_VERSION",
+    "IReplayCaptureSink",
+    "NullCaptureSink",
+    "ReplayCaptureContext",
     "ReplaySpec",
     "ReplayShipSpec",
     "ReplayOutcome",
     "ReplayRecord",
     "boundary_to_dict",
     "boundary_from_dict",
+    "compute_components_registry_hash",
     "modifier_entry_to_dict",
     "modifier_entry_from_dict",
     "modifier_stack_to_dict",
@@ -55,4 +73,10 @@ __all__ = [
     "battle_spec_from_dict",
     "battle_outcome_to_dict",
     "battle_outcome_from_dict",
+    "get_default_capture_sink",
+    "set_default_capture_sink",
+    "reset_default_capture_sink",
+    "build_replay_ship_builder",
+    "replay_record_to_spec",
+    "run_replay_headless",
 ]

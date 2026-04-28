@@ -56,3 +56,15 @@ class BattleConfig:
     # Battle features (visual-mode toggles).
     allow_retreat: bool = False
     allow_reinforcements: bool = False
+
+    # PROJ-312 — Replay playback flags.
+    # When `replay_mode` is True the BattleScreen renders a "REPLAY MODE"
+    # badge, suppresses the post-battle outcome flow (returns to the Event
+    # Log on exit), and capture is skipped (Phase 3 honors this via the
+    # spec compiler passing `capture_context=None`). Production wiring sets
+    # `replay_id` and `captured_telemetry_level` so the screen can display
+    # provenance + emit a divergence warning when the runtime telemetry
+    # level differs from what was captured.
+    replay_mode: bool = False
+    replay_id: Optional[str] = None
+    captured_telemetry_level: Optional[Any] = None

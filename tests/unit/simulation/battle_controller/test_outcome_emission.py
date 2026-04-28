@@ -207,7 +207,7 @@ class TestBattleControllerStartFromSpec:
         fake_engine.tick_counter = 0
         fake_engine.is_battle_over.return_value = False
 
-        def _fake_start(spec, *, ai_factory, ship_builder):
+        def _fake_start(spec, *, ai_factory, ship_builder, capture_context=None):
             return fake_engine, {}
 
         monkeypatch.setattr(

@@ -574,6 +574,56 @@ def battle_outcome_from_dict(data: Dict[str, Any]) -> BattleOutcome:
     )
 
 
+# ---------------------------------------------------------------------------
+# Components-registry hash (Task 3.6 — drift detection)
+# ---------------------------------------------------------------------------
+
+
+def compute_components_registry_hash(registries: Any) -> str:
+    """Stable SHA-256 of the loaded component registry contents.
+
+    Used by Phase 3's capture context so each replay record carries the
+    components-registry hash it was captured under. Phase 6 surfaces a
+    drift warning on load when the captured hash differs from the running
+    hash (component definitions changed between capture and replay).
+
+    Implementation: walk ``registries.get_components()``, sort by id,
+    serialize each component's stable fields with ``sort_keys=True``, hash.
+    Returns a hex SHA-256 string prefixed with ``"sha256:"``.
+
+    The function is forgiving: if the registry shape is unexpected, returns
+    a sentinel hash ``"sha256:unknown"`` rather than raising — capture
+    must never crash a battle.
+    """
+    import hashlib
+    import json
+
+    try:
+        components = registries.get_components()
+    except Exception:  # Intentional broad catch: capture must not crash a battle on registry shape drift
+        return "sha256:unknown"
+
+    if not isinstance(components, dict):
+        return "sha256:unknown"
+
+    canonical_entries = []
+    for component_id in sorted(components.keys()):
+        entry = components[component_id]
+        # Try several shapes — components may be dicts (raw JSON) or objects.
+        if isinstance(entry, dict):
+            canonical_entries.append((component_id, entry))
+        elif hasattr(entry, "to_dict"):
+            try:
+                canonical_entries.append((component_id, entry.to_dict()))
+            except Exception:  # Intentional broad catch: tolerate odd to_dict implementations
+                canonical_entries.append((component_id, str(entry)))
+        else:
+            canonical_entries.append((component_id, str(entry)))
+
+    canonical = json.dumps(canonical_entries, sort_keys=True, default=str)
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 __all__ = [
     "REPLAY_SCHEMA_VERSION",
     "boundary_to_dict",
@@ -586,4 +636,5 @@ __all__ = [
     "battle_spec_from_dict",
     "battle_outcome_to_dict",
     "battle_outcome_from_dict",
+    "compute_components_registry_hash",
 ]

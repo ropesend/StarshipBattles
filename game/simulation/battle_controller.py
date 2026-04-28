@@ -247,6 +247,7 @@ class BattleController:
         ship_builder: Optional["Callable"] = None,
         registry_provider: Optional["IRegistryProvider"] = None,
         config: Optional[BattleConfig] = None,
+        capture_context: "Optional[Any]" = None,
     ) -> "tuple[BattleServiceResult, Dict[str, 'Ship']]":
         """Configure + start a battle directly from a `BattleSpec`.
 
@@ -330,8 +331,11 @@ class BattleController:
         self._ai_factory = ai_factory
 
         # Drive the shared spec-in engine constructor (same as run_battle).
+        # PROJ-312: forward capture_context so visual-mode battles capture
+        # via the same hook as headless run_battle.
         engine, ships_by_role = start_engine_from_spec(
             spec, ai_factory=ai_factory, ship_builder=ship_builder,
+            capture_context=capture_context,
         )
 
         # Adopt the running engine into the service so per-frame update() works.
@@ -417,12 +421,32 @@ class BattleController:
 
         Called once by `update()` the first tick after `is_battle_over()`
         becomes True.
+
+        PROJ-312: fires the matching ``on_battle_ended`` hand-off if the
+        engine carries a non-empty ``replay_id`` (set by capture's
+        on_battle_started call in ``start_engine_from_spec``). Same
+        contract as ``run_battle`` for headless battles.
         """
         from game.simulation.battle_runner import extract_outcome  # noqa: PLC0415
         engine = self._service.get_engine()
         if engine is None or self._spec is None:
             return
         self._outcome = extract_outcome(engine, self._spec)
+
+        replay_id = getattr(engine, "replay_id", None)
+        if replay_id and self._outcome is not None:
+            from game.simulation.replay import (  # noqa: PLC0415
+                ReplayOutcome,
+                get_default_capture_sink,
+            )
+            try:
+                replay_outcome = ReplayOutcome.from_battle_outcome(self._outcome)
+                get_default_capture_sink().on_battle_ended(replay_id, replay_outcome)
+            except Exception:  # Intentional broad catch: capture must not crash visual-mode battle end
+                import logging
+                logging.getLogger(__name__).exception(
+                    "PROJ-312 replay capture: visual-mode on_battle_ended failed"
+                )
 
     def run_ticks(self, count: int) -> BattleServiceResult:
         """

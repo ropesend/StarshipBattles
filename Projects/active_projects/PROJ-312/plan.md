@@ -15,20 +15,24 @@
 |-------|--------|-----------|
 | 1. Determinism Baseline | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. ReplaySpec Serialization | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Capture Pipeline | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Sidecar Persistence | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Replay Player | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Replay Browser UI | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 3. Capture Pipeline | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Sidecar Persistence | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Replay Player | Complete (logic; pygame_gui badge/buttons deferred) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Replay Browser UI | Complete (resolver service; pygame_gui button deferred) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-27
-**Active Phase:** Phase 3 — Capture Pipeline (next)
-**Last Action:** Phase 2 (ReplaySpec Serialization) complete on branch `worktree-proj-312-battle-replay`. New `game/simulation/replay/` package with `ReplaySpec` / `ReplayOutcome` / `ReplayRecord` and a free-function `replay_serialization` module covering boundary, modifier_stack, BattleSpec + 7 nested DTOs, BattleOutcome + 6 nested DTOs. `ModifierEffect.from_dict` added (the existing `to_dict` was inverse-less). Round-trip tests (22) + determinism integration tests (2) prove the contract end-to-end: capture → JSON → restore → re-run yields a byte-identical `BattleOutcome`.
-**Next Action:** Begin Phase 3 (Capture Pipeline) using `phase_3_checklist.md`. Hook `start_engine_from_spec` (input snapshot) and `extract_outcome` (output snapshot) via the new `IReplayCaptureSink` Protocol.
+**Active Phase:** All six phases complete — ready for user smoke test
+**Last Action:** Phases 4–6 complete. Phase 4 added `ReplayStore` + `ReplaySettings` + `replay_settings.json` path constant + lifecycle hooks on `SaveGameService` (set/clear save_root on save/load/delete). Phase 5 added `BattleConfig.replay_mode` + `replay_id` + `captured_telemetry_level` + headless replay launcher (`run_replay_headless`, `replay_record_to_spec`, `build_replay_ship_builder`). Phase 6 added `ReplayResolver` service with graceful-degradation result type (`missing` / `corrupt` / `version_drift` / `registry_drift`).
+**Next Action:** User-driven manual smoke (capture battle → end turn → save → exit → re-load save → confirm replays/ folder; UI scaffolding for the Replay button + REPLAY MODE badge can land as a follow-up against the stable backend).
 **Blockers:** None
 **Test baseline at plan time:** 15672 / 15672 passing (sharded suite).
-**Test count after Phase 1:** 15679 total (15678 passing + 1 known pre-existing test-isolation flake; passes in isolation). +7 new tests.
-**Test count after Phase 2:** 15703 / 15703 passing, 0 failed (the flake didn't fire on this run). +24 new tests (22 round-trip + 2 determinism integration). Cumulative +31 since plan baseline.
+**Test count after Phase 1:** 15679. +7 new tests.
+**Test count after Phase 2:** 15703 / 15703. +24 new tests.
+**Test count after Phase 3:** 15708 / 15708. +5 new tests.
+**Test count after Phase 4:** +21 new tests (ReplayStore + lifecycle hooks).
+**Test count after Phase 5:** +4 new tests (playback round-trip + replay_mode config).
+**Test count after Phase 6:** 15741 / 15741. +8 new tests (ReplayResolver). Cumulative +69 since plan baseline; **0 failed, 0 errors** across the suite.
 
 ## Overview
 Capture every battle's input spec + RNG seed at entry and outcome at exit, persist
