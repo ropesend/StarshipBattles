@@ -22,7 +22,7 @@
 **Active Phase:** Complete — ready for user verification
 **Last Action:** Phase 3 docs + closeout. `docs/06_UI_STYLE_GUIDE.md` gained §7 "Read-only component grouping (PROJ-315)" and bumped `Last verified:` date. 35 total new tests across the project (5 dataclass + 7 iterator + 8 group + 15 widget). Final: **15937 passed, 1 known-flake fail** (`test_colony_owner_id_matches_empire`).
 **Next Action:** User to manually verify in-game (Fleet Report selecting healthy / damaged / destroyed ships) and flip status in `Projects/projects_index.md`.
-**Blockers:** None. Two spec ambiguities resolved with the user during Phase C: (a) damage-induced inactive components render in red with strikethrough; manually-disabled components render in muted grey without strike; (b) layer auto-expand re-fires on every ship selection (no manual-collapse persistence).
+**Blockers:** None
 
 ## Overview
 
@@ -238,20 +238,20 @@ Adding a facade DTO + FleetSlice query would be unrelated churn.
 ### Phase 1: Strategy data helper [Simple]
 **Objective:** Add `ShipInstance.iter_all_components_by_layer()` and
 the `ComponentInstanceView` dataclass; cover with unit tests.
-**Status:** Not Started — see [phase_1_checklist.md](phase_1_checklist.md).
+**Status:** Complete
 
 ### Phase 2: Widget rewrite [Medium]
 **Objective:** Replace `_build_damage_section` with
 `_build_component_section`. Add module-level dataclasses + grouping
 function. Implement strikethrough overlay helper. Cover with widget
 tests.
-**Status:** Not Started — see [phase_2_checklist.md](phase_2_checklist.md).
+**Status:** Complete
 
 ### Phase 3: Documentation + closeout [Simple]
 **Objective:** Update `docs/06_UI_STYLE_GUIDE.md` with the new
 read-only-component-grouping pattern. Update Work Log; archive triage
 findings; update `Tracking/projects_index.md`.
-**Status:** Not Started — see [phase_3_checklist.md](phase_3_checklist.md).
+**Status:** Complete
 
 ---
 

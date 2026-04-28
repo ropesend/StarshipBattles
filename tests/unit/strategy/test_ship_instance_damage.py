@@ -1,4 +1,8 @@
 """Tests for ship detail panel functionality - PROJ-03 Phase 4."""
+import json
+from pathlib import Path
+from types import SimpleNamespace
+
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -7,7 +11,10 @@ from game.core.component_state import (
     ComponentState,
     component_state_key,
 )
-from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.data.ship_instance import (
+    ShipInstance,
+    _build_full_hp_components_from_design,
+)
 
 
 class TestShipInstanceDamageInfo:
@@ -379,7 +386,7 @@ class TestIterAllComponentsByLayer:
         assert 'HULL' not in result
         assert 'CORE' in result
 
-    def test_component_id_with_underscores_preserved(self, ship_factory):
+    def test_component_id_with_underscores_preserved(self):
         """Regression: the old `_`-split parser at ship_detail_panel.py:367-375
         broke ids like `reactor_mark_2`. The new view uses
         `ComponentInstanceView.component_id` directly — never re-parsed.
@@ -393,7 +400,21 @@ class TestIterAllComponentsByLayer:
                 ],
             },
         }
-        instance = ship_factory(design, owner_id=0)
+        instance = ShipInstance(
+            instance_id='ship_mark_two',
+            design_id='mark_two',
+            name='Mark Two',
+            owner_id=0,
+            design_data=design,
+            components={
+                component_state_key('reactor_mark_2', 0): ComponentState(
+                    component_id='reactor_mark_2',
+                    instance_index=0,
+                    current_hp=100.0,
+                    max_hp=100.0,
+                ),
+            },
+        )
 
         result = instance.iter_all_components_by_layer()
 
@@ -413,7 +434,7 @@ class TestIterAllComponentsByLayer:
 
         assert result == {}
 
-    def test_instance_index_numbering_per_component_id(self, ship_factory):
+    def test_instance_index_numbering_per_component_id(self):
         design = {
             'name': 'FourEngines',
             'expected_stats': {'max_hp': 100},
@@ -426,7 +447,22 @@ class TestIterAllComponentsByLayer:
                 ],
             },
         }
-        instance = ship_factory(design, owner_id=0)
+        instance = ShipInstance(
+            instance_id='ship_four_engines',
+            design_id='four_engines',
+            name='Four Engines',
+            owner_id=0,
+            design_data=design,
+            components={
+                component_state_key('engine_basic', idx): ComponentState(
+                    component_id='engine_basic',
+                    instance_index=idx,
+                    current_hp=100.0,
+                    max_hp=100.0,
+                )
+                for idx in range(4)
+            },
+        )
 
         result = instance.iter_all_components_by_layer()
 
@@ -434,7 +470,7 @@ class TestIterAllComponentsByLayer:
         assert len(engine_views) == 4
         assert [v.instance_index for v in engine_views] == [0, 1, 2, 3]
 
-    def test_default_view_when_state_missing(self, ship_factory):
+    def test_default_view_when_state_missing(self, monkeypatch):
         """When ComponentState is absent for a key, view defaults to full HP / active."""
         design = {
             'name': 'Defaulty',
@@ -443,15 +479,215 @@ class TestIterAllComponentsByLayer:
                 'CORE': [{'id': 'reactor_standard'}],
             },
         }
-        instance = ship_factory(design, owner_id=0)
-        # Wipe components to simulate a freshly materialised legacy ship.
-        instance.components = {}
+        instance = ShipInstance(
+            instance_id='ship_defaulty',
+            design_id='defaulty',
+            name='Defaulty',
+            owner_id=0,
+            design_data=design,
+            components={},
+        )
+
+        class Provider:
+            def get_components(self):
+                return {'reactor_standard': SimpleNamespace(max_hp=100)}
+
+        monkeypatch.setattr(
+            'game.core.registry.get_default_registry_provider',
+            lambda: Provider(),
+        )
 
         result = instance.iter_all_components_by_layer()
 
         view = result['CORE'][0]
         assert view.is_active is True
-        assert view.current_hp == view.max_hp
+        assert view.current_hp == 100
+        assert view.max_hp == 100
+
+
+class TestIterAllComponentsByLayerRemediations:
+    """PROJ-317 regressions for PROJ-315 audit findings R1 and R4."""
+
+    def test_iter_keys_match_full_hp_builder_for_cross_layer_design(
+        self, fresh_registries
+    ):
+        """R1: iterator indices must match the canonical seeding helper."""
+        design_path = (
+            Path(__file__).resolve().parents[3]
+            / 'data'
+            / 'designs'
+            / 'qs_battleship.json'
+        )
+        design = json.loads(design_path.read_text(encoding='utf-8'))
+        seeded_components = _build_full_hp_components_from_design(
+            design, fresh_registries
+        )
+        instance = ShipInstance(
+            instance_id='ship_qs_battleship',
+            design_id='qs_battleship',
+            name='QS Battleship',
+            owner_id=0,
+            design_data=design,
+            components=seeded_components,
+        )
+
+        result = instance.iter_all_components_by_layer()
+
+        design_component_ids = {
+            entry['id']
+            for entries in design['layers'].values()
+            for entry in entries
+        }
+        iter_keys = {
+            (view.component_id, view.instance_index)
+            for layer_views in result.values()
+            for view in layer_views
+        }
+        seeded_keys = {
+            (state.component_id, state.instance_index)
+            for state in seeded_components.values()
+            if state.component_id in design_component_ids
+        }
+        assert ('battery', 1) in seeded_keys
+        assert ('fuel_tank', 1) in seeded_keys
+        assert iter_keys == seeded_keys
+
+    def test_cross_layer_component_ids_use_ship_wide_instance_index(self):
+        """R1: shared component ids across layers must not alias to index 0."""
+        design = {
+            'name': 'CrossLayerBattery',
+            'layers': {
+                'CORE': [{'id': 'battery'}],
+                'INNER': [{'id': 'battery'}],
+            },
+        }
+        instance = ShipInstance(
+            instance_id='ship_cross_layer',
+            design_id='cross_layer',
+            name='Cross Layer',
+            owner_id=0,
+            design_data=design,
+            components={
+                component_state_key('battery', 0): ComponentState(
+                    component_id='battery',
+                    instance_index=0,
+                    current_hp=10.0,
+                    max_hp=100.0,
+                    is_active=False,
+                ),
+                component_state_key('battery', 1): ComponentState(
+                    component_id='battery',
+                    instance_index=1,
+                    current_hp=90.0,
+                    max_hp=100.0,
+                    is_active=True,
+                ),
+            },
+        )
+
+        result = instance.iter_all_components_by_layer()
+
+        assert [(v.instance_index, v.current_hp) for v in result['CORE']] == [(0, 10)]
+        assert [(v.instance_index, v.current_hp) for v in result['INNER']] == [(1, 90)]
+
+    def test_missing_state_uses_registry_max_hp_for_full_hp_view(self, monkeypatch):
+        """R4: missing ComponentState should not render as 0/0."""
+        design = {
+            'name': 'MissingState',
+            'layers': {
+                'CORE': [{'id': 'fallback_component'}],
+            },
+        }
+        instance = ShipInstance(
+            instance_id='ship_missing_state',
+            design_id='missing_state',
+            name='Missing State',
+            owner_id=0,
+            design_data=design,
+            components={},
+        )
+
+        class Provider:
+            def get_components(self):
+                return {'fallback_component': SimpleNamespace(max_hp=42)}
+
+        monkeypatch.setattr(
+            'game.core.registry.get_default_registry_provider',
+            lambda: Provider(),
+        )
+
+        result = instance.iter_all_components_by_layer()
+
+        view = result['CORE'][0]
+        assert view.current_hp == 42
+        assert view.max_hp == 42
+        assert view.is_active is True
+
+    def test_missing_state_prefers_injected_registries(
+        self, monkeypatch, minimal_registries
+    ):
+        """R4: prefer the instance DI registry before global fallback."""
+        design = {
+            'name': 'InjectedRegistryMissingState',
+            'layers': {
+                'CORE': [{'id': 'local_component'}],
+            },
+        }
+        instance = ShipInstance(
+            instance_id='ship_injected_registry_missing_state',
+            design_id='injected_registry_missing_state',
+            name='Injected Registry Missing State',
+            owner_id=0,
+            design_data=design,
+            components={},
+        )
+        minimal_registries.components['local_component'] = SimpleNamespace(max_hp=64)
+        instance.set_registries(minimal_registries)
+
+        def unexpected_global_provider():
+            raise AssertionError('global registry should not be used')
+
+        monkeypatch.setattr(
+            'game.core.registry.get_default_registry_provider',
+            unexpected_global_provider,
+        )
+
+        result = instance.iter_all_components_by_layer()
+
+        view = result['CORE'][0]
+        assert view.current_hp == 64
+        assert view.max_hp == 64
+        assert view.is_active is True
+
+    def test_missing_state_and_unknown_registry_component_skips_instance(self, monkeypatch):
+        """R4 dual-miss: skip rather than emit a meaningless zero-HP view."""
+        design = {
+            'name': 'UnknownMissingState',
+            'layers': {
+                'CORE': [{'id': 'unknown_component'}],
+            },
+        }
+        instance = ShipInstance(
+            instance_id='ship_unknown_missing_state',
+            design_id='unknown_missing_state',
+            name='Unknown Missing State',
+            owner_id=0,
+            design_data=design,
+            components={},
+        )
+
+        class Provider:
+            def get_components(self):
+                return {}
+
+        monkeypatch.setattr(
+            'game.core.registry.get_default_registry_provider',
+            lambda: Provider(),
+        )
+
+        result = instance.iter_all_components_by_layer()
+
+        assert result['CORE'] == []
 
 
 if __name__ == '__main__':
