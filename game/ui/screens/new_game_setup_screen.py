@@ -147,11 +147,11 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         y_offset += 25
 
-        self.system_count = 50  # Default
+        self.system_count = 5  # Default
         self.system_count_slider = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect(10, y_offset, content_width - 60, 30),
             start_value=self.system_count,
-            value_range=(25, 150),
+            value_range=(5, 150),
             manager=self.ui_manager,
             container=container,
             click_increment=5
@@ -579,7 +579,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                           empire_names: List[str],
                           race_configs: Optional[List[Optional[RaceConfig]]] = None,
                           galaxy_type: str = "spiral",
-                          system_count: int = 50) -> GameConfig:
+                          system_count: int = 5) -> GameConfig:
         """
         Build a GameConfig from setup screen values.
 
@@ -589,7 +589,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             empire_names: List of empire names (may include empty strings)
             race_configs: Optional list of RaceConfig for each player (None = use defaults)
             galaxy_type: Galaxy layout type (default: "spiral")
-            system_count: Number of star systems (25-150, default: 50)
+            system_count: Number of star systems (5-150, default: 5)
 
         Returns:
             Configured GameConfig

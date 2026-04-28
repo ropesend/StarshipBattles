@@ -85,6 +85,30 @@ class TestNewGameSetupValidationUniqueness:
         assert "exists" in error.lower()
 
 
+class TestNewGameSetupSystemCountDefault:
+    """FEAT-24: Default system_count is 5 for fast iteration."""
+
+    def test_build_game_config_default_system_count_is_5(self):
+        """build_game_config uses 5 as the default system_count."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        config = NewGameSetupScreen.build_game_config(
+            save_name="DefaultSysCount",
+            player_count=1,
+            empire_names=["Solo"]
+        )
+
+        assert config.system_count == 5
+
+    def test_build_game_config_signature_default_is_5(self):
+        """The system_count parameter's default value is 5 (introspection)."""
+        import inspect
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        sig = inspect.signature(NewGameSetupScreen.build_game_config)
+        assert sig.parameters["system_count"].default == 5
+
+
 class TestNewGameSetupConfigBuilding:
     """Tests for GameConfig construction from setup screen."""
 
