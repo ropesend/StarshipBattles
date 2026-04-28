@@ -78,6 +78,7 @@ class StrategyWidgets:
     btn_menu: Any = None
     btn_events: Any = None
     btn_next_turn: Any = None
+    btn_run_10_turns: Any = None  # FEAT-20: dev-mode only; None when dev_mode=False
     lbl_current_player: Any = None
 
     # Resource bar widgets
@@ -96,7 +97,8 @@ def create_strategy_panels(
     width: int,
     height: int,
     sidebar_width: int,
-    on_ui_selection_callback: callable
+    on_ui_selection_callback: callable,
+    dev_mode: bool = False,
 ) -> StrategyWidgets:
     """Create all StrategyUI panels and widgets.
 
@@ -106,6 +108,8 @@ def create_strategy_panels(
         height: Screen height.
         sidebar_width: Width of the right sidebar.
         on_ui_selection_callback: Callback for tree panel selection events.
+        dev_mode: When True, also create dev-mode-only widgets such as the
+            top-bar "Run 10 Turns" button (FEAT-20). Default False.
 
     Returns:
         StrategyWidgets dataclass containing all widget references.
@@ -307,6 +311,15 @@ def create_strategy_panels(
         relative_rect=pygame.Rect(main_start_x + 9*(btn_w+gap), 5, 150, 40), text="End Turn",
         manager=manager, container=widgets.top_bar
     )
+
+    # FEAT-20: Dev-only "Run 10 Turns" button at slot 10 (immediately right of End Turn).
+    # Only created when dev_mode=True so production builds keep the top bar clean.
+    if dev_mode:
+        widgets.btn_run_10_turns = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(main_start_x + 9*(btn_w+gap) + 150 + gap, 5, 150, 40),
+            text="Run 10 Turns",
+            manager=manager, container=widgets.top_bar
+        )
 
     # Player indicator label (far left of top bar)
     widgets.lbl_current_player = pygame_gui.elements.UILabel(

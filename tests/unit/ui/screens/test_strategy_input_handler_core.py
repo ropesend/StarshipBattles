@@ -496,6 +496,35 @@ class TestButtonPressHandling:
 
         mock_scene.advance_turn.assert_called_once()
 
+    def test_btn_run_10_turns_calls_run_n_turns(self, mock_scene, mapper):
+        """FEAT-20: dev `btn_run_10_turns` press should call scene.run_n_turns(10)."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        # Distinct sentinel for the new button so the identity check matches it
+        # rather than the spurious chain of MagicMock attributes.
+        sentinel_button = MagicMock(name="btn_run_10_turns")
+        mock_scene.ui.btn_run_10_turns = sentinel_button
+
+        event = MagicMock()
+        event.ui_element = sentinel_button
+
+        handler._handle_button_press(event)
+
+        mock_scene.run_n_turns.assert_called_once_with(10)
+
+    def test_btn_run_10_turns_skipped_when_button_not_present(self, mock_scene, mapper):
+        """When dev_mode is off, `btn_run_10_turns` is None on the widgets and
+        a press event whose ui_element is unrelated must NOT route to run_n_turns."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        # Simulate dev_mode=False: button is None on the widgets dataclass.
+        mock_scene.ui.btn_run_10_turns = None
+
+        event = MagicMock()
+        event.ui_element = MagicMock(name="some_unrelated_button")
+
+        handler._handle_button_press(event)
+
+        mock_scene.run_n_turns.assert_not_called()
+
     def test_btn_colonize_calls_on_colonize_click(self, mock_scene, mapper):
         """btn_colonize press should call on_colonize_click."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)

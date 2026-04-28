@@ -39,7 +39,34 @@ Reproduced layout in QA Session 20260427_151244 at 15:52:
 Low
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Work Log
 - 2026-04-27: Created from QA Session 20260427_151244.
+- 2026-04-27: Investigation complete (`.agent_reports/deep-dive-session/investigations/FEAT-20_investigation.md`). Pipeline confirmed fully synchronous; no threading required.
+- 2026-04-27: Implemented (TDD). Added `--dev` CLI flag → `BootstrapResult.dev_mode` → `ScreenRouter` → `StrategyScreen` → `StrategyUI` → `create_strategy_panels(..., dev_mode=)`. New `btn_run_10_turns` rendered at top-bar slot 10 immediately right of "End Turn" only when `dev_mode=True`. Click handler routes to `StrategyScreen.run_n_turns(10)` → `StrategyGameStateManager.run_n_turns(n)`, which loops `process_full_turn()` (renamed public from `_process_full_turn`) n times. Esc-cancellation between iterations via new `_pump_cancel_events()` (consumes only `KEYDOWN`/`QUIT`, leaves other events for the main loop). Auto-save runs at end of each turn (atomic-per-turn → cancel never corrupts saves). Per-turn event-log auto-open is suppressed during the loop via a `_suppress_event_log` flag and a single combined log opens at the end if any events occurred. Overlay text parametrised: dev runs see "PROCESSING TURN 3 / 10... (Esc to cancel)" via new `turn_processing_message` field on `StrategyScreen`.
+
+### Files modified
+- `game/app_bootstrap.py` — `--dev` CLI flag, `BootstrapResult.dev_mode: bool = False`, propagation in `bootstrap()`.
+- `game/screen_router.py` — store `boot.dev_mode`, pass into all 4 `StrategyScreen(...)` construction sites.
+- `game/ui/screens/strategy_screen.py` — `dev_mode` kwarg, `dev_run_cancel_requested` + `turn_processing_message` state, `run_n_turns()` delegate, draw-overlay message-arg plumbing.
+- `game/ui/screens/strategy_ui.py` — `dev_mode` kwarg forwarded to panel manager.
+- `game/ui/screens/strategy_panel_manager.py` — `btn_run_10_turns` field on `StrategyWidgets`, `dev_mode` kwarg on `create_strategy_panels`, conditional button at top-bar slot 10.
+- `game/ui/screens/strategy_input_handler.py` — click-handler branch with `is not None` guard.
+- `game/ui/screens/strategy_game_state_manager.py` — renamed `_process_full_turn` → public `process_full_turn` (returns `list` of events), added `run_n_turns()` and `_pump_cancel_events()`, `_suppress_event_log` flag.
+- `game/ui/screens/strategy_renderer.py` — `draw_processing_overlay(screen, message)` accepts custom message.
+- `game/ui/screens/strategy_render/overlay.py` — `draw_processing_overlay(..., message=...)` parameter.
+- `docs/03_CONVENTIONS.md` — new §10 "Dev-Mode CLI Flag" documenting the convention.
+- Tests: `tests/unit/test_app_bootstrap_invariants.py` (+2 dev-flag tests), `tests/unit/ui/screens/test_strategy_panel_manager.py` (NEW: 4 tests), `tests/unit/ui/screens/test_strategy_game_state_manager.py` (+7 tests for `run_n_turns` and renaming), `tests/unit/ui/screens/test_strategy_input_handler_core.py` (+2 tests for button routing), `tests/unit/ui/screens/test_strategy_screen.py` (updated 1 test for new draw-overlay signature).
+
+### Decisions
+- Dev-only widgets are absent in production (not greyed-out) to keep the top bar clean.
+- Esc-only cancellation; no Cancel modal (overlay text reads "(Esc to cancel)").
+- Cancellation is between-iteration only — never mid-turn — because each `process_full_turn()` ends with auto-save.
+- Per-turn event-log auto-open is suppressed during the loop; a single combined log surfaces at the end. Avoids 10x modal popup on every dev run.
+- `process_full_turn()` now returns `list[event]` (the per-turn events) so `run_n_turns` can aggregate them. Callers ignoring the return value are unaffected.
+- Hardcoded `n=10` in the click handler; underlying method takes `n` for future variants.
+
+### Test results
+- Targeted (FEAT-20 + adjacent): 279 passed (`tests/unit/test_app_bootstrap_invariants.py` + all `tests/unit/ui/screens/test_strategy_*.py`).
+- Broader UI sweep: 3607 passed (`tests/unit/ui/`).

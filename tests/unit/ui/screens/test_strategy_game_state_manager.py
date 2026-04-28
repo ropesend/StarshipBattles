@@ -105,11 +105,11 @@ class TestAdvanceTurn:
         screen.center_camera_on.assert_called_once()
 
 
-class TestProcessFullTurn:
-    """Test _process_full_turn() method."""
+class TestProcessFullTurnLegacy:
+    """Test process_full_turn() method (formerly _process_full_turn, FEAT-20 made public)."""
 
     def test_sets_turn_processing_flag(self):
-        """_process_full_turn() should set turn_processing during processing."""
+        """process_full_turn() should set turn_processing during processing."""
         manager, screen = _make_game_state_manager()
         screen._facade.get_turn_events.return_value = []
 
@@ -122,7 +122,7 @@ class TestProcessFullTurn:
         screen._facade.process_turn.side_effect = track_processing
 
         with patch('pygame.display.get_surface', return_value=None):
-            manager._process_full_turn()
+            manager.process_full_turn()
 
         # Flag should have been True during process_turn
         assert True in processing_values
@@ -130,38 +130,38 @@ class TestProcessFullTurn:
         assert screen.turn_processing is False
 
     def test_calls_facade_process_turn(self):
-        """_process_full_turn() should call facade.process_turn()."""
+        """process_full_turn() should call facade.process_turn()."""
         manager, screen = _make_game_state_manager()
         screen._facade.get_turn_events.return_value = []
 
         with patch('pygame.display.get_surface', return_value=None):
-            manager._process_full_turn()
+            manager.process_full_turn()
 
         screen._facade.process_turn.assert_called_once()
 
     def test_checks_turn_events(self):
-        """_process_full_turn() should check for turn events."""
+        """process_full_turn() should check for turn events."""
         manager, screen = _make_game_state_manager()
         screen._facade.get_turn_events.return_value = []
 
         with patch('pygame.display.get_surface', return_value=None):
-            manager._process_full_turn()
+            manager.process_full_turn()
 
         screen._facade.get_turn_events.assert_called()
 
     def test_opens_event_log_when_events_exist(self):
-        """_process_full_turn() should open event log if there are events."""
+        """process_full_turn() should open event log if there are events."""
         manager, screen = _make_game_state_manager()
         mock_events = [MagicMock()]
         screen._facade.get_turn_events.return_value = mock_events
 
         with patch('pygame.display.get_surface', return_value=None):
-            manager._process_full_turn()
+            manager.process_full_turn()
 
         screen.ui.open_event_log_with_events.assert_called_once_with(mock_events)
 
     def test_auto_saves_when_save_path_exists(self):
-        """_process_full_turn() should auto-save when session has save_path."""
+        """process_full_turn() should auto-save when session has save_path."""
         manager, screen = _make_game_state_manager()
         screen.session.save_path = "/test/save.json"
         screen._facade.get_turn_events.return_value = []
@@ -169,18 +169,18 @@ class TestProcessFullTurn:
         with patch('pygame.display.get_surface', return_value=None), \
              patch('game.strategy.systems.save_game_service.SaveGameService') as MockSGS:
             MockSGS.save_game.return_value = (True, "Saved", "/test/save.json")
-            manager._process_full_turn()
+            manager.process_full_turn()
 
         MockSGS.save_game.assert_called_once_with(screen.session)
 
     def test_refreshes_selected_object(self):
-        """_process_full_turn() should refresh UI for selected object."""
+        """process_full_turn() should refresh UI for selected object."""
         manager, screen = _make_game_state_manager()
         screen._facade.get_turn_events.return_value = []
         screen.selected_object = MagicMock()
 
         with patch('pygame.display.get_surface', return_value=None):
-            manager._process_full_turn()
+            manager.process_full_turn()
 
         screen.on_ui_selection.assert_called_once_with(screen.selected_object)
 
@@ -205,3 +205,125 @@ class TestUpdatePlayerLabel:
         manager._update_player_label()
 
         screen.ui.lbl_current_player.set_text.assert_called_with("Player 1's Turn")
+
+
+# ===========================================================================
+# FEAT-20: process_full_turn (renamed public) + run_n_turns
+# ===========================================================================
+
+class TestProcessFullTurnPublic:
+    """`_process_full_turn` is renamed to public `process_full_turn` (FEAT-20)."""
+
+    def test_public_alias_exists(self):
+        """A public `process_full_turn` method must exist."""
+        manager, _screen = _make_game_state_manager()
+        assert callable(getattr(manager, "process_full_turn", None))
+
+
+class TestRunNTurns:
+    """FEAT-20: dev-mode `run_n_turns(n)` runs the full turn n times with cancel support."""
+
+    def test_calls_process_full_turn_n_times(self):
+        """Calling run_n_turns(5) invokes process_full_turn 5 times."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        screen.dev_run_cancel_requested = False
+
+        with patch.object(manager, "process_full_turn") as mock_pft, \
+             patch.object(manager, "_pump_cancel_events"), \
+             patch("pygame.display.get_surface", return_value=None):
+            completed = manager.run_n_turns(5)
+
+        assert mock_pft.call_count == 5
+        assert completed == 5
+
+    def test_stops_on_cancel_after_current_turn(self):
+        """If cancel is requested between iterations, the loop stops cleanly."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        screen.dev_run_cancel_requested = False
+
+        # Set the cancel flag after the second process_full_turn call so the
+        # loop should stop before iteration 3.
+        call_count = {"n": 0}
+
+        def trip_cancel_after_two(*args, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                screen.dev_run_cancel_requested = True
+
+        with patch.object(manager, "process_full_turn", side_effect=trip_cancel_after_two) as mock_pft, \
+             patch.object(manager, "_pump_cancel_events"), \
+             patch("pygame.display.get_surface", return_value=None):
+            completed = manager.run_n_turns(10)
+
+        assert mock_pft.call_count == 2
+        assert completed == 2
+
+    def test_returns_completed_count(self):
+        """run_n_turns returns the number of turns actually completed."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        screen.dev_run_cancel_requested = False
+
+        with patch.object(manager, "process_full_turn"), \
+             patch.object(manager, "_pump_cancel_events"), \
+             patch("pygame.display.get_surface", return_value=None):
+            completed = manager.run_n_turns(3)
+
+        assert completed == 3
+
+    def test_resets_cancel_flag_at_start(self):
+        """A stale `dev_run_cancel_requested` flag should be cleared on entry."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        # Pre-set: simulate a leftover flag from a prior aborted run.
+        screen.dev_run_cancel_requested = True
+
+        with patch.object(manager, "process_full_turn") as mock_pft, \
+             patch.object(manager, "_pump_cancel_events"), \
+             patch("pygame.display.get_surface", return_value=None):
+            completed = manager.run_n_turns(2)
+
+        assert mock_pft.call_count == 2
+        assert completed == 2
+
+    def test_suppresses_event_log_during_loop_and_surfaces_combined_at_end(self):
+        """Per-turn event log auto-open is suppressed during the loop;
+        a combined log opens once at the end with all events."""
+        manager, screen = _make_game_state_manager()
+        # Each call returns a different list of events.
+        e1 = [MagicMock(name="evt1")]
+        e2 = [MagicMock(name="evt2"), MagicMock(name="evt3")]
+        e3 = []
+        screen._facade.get_turn_events.side_effect = [e1, e2, e3]
+        screen.dev_run_cancel_requested = False
+        # Reset the open-event-log mock since process_full_turn will be REAL here.
+        screen.ui.open_event_log_with_events.reset_mock()
+
+        with patch.object(manager, "_pump_cancel_events"), \
+             patch("pygame.display.get_surface", return_value=None):
+            manager.run_n_turns(3)
+
+        # During the loop, open_event_log_with_events must NOT be called per-turn —
+        # only once at the end with the combined event list (e1 + e2).
+        # (Empty per-turn lists contribute nothing.)
+        assert screen.ui.open_event_log_with_events.call_count == 1
+        combined_events = screen.ui.open_event_log_with_events.call_args[0][0]
+        assert len(combined_events) == 3  # 1 + 2 + 0
+        assert combined_events[0] is e1[0]
+        assert combined_events[1] is e2[0]
+        assert combined_events[2] is e2[1]
+
+    def test_no_combined_log_when_no_events(self):
+        """If no turn produced events, no event log opens at the end."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        screen.dev_run_cancel_requested = False
+        screen.ui.open_event_log_with_events.reset_mock()
+
+        with patch.object(manager, "_pump_cancel_events"), \
+             patch("pygame.display.get_surface", return_value=None):
+            manager.run_n_turns(2)
+
+        screen.ui.open_event_log_with_events.assert_not_called()

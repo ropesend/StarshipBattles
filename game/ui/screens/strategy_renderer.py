@@ -302,6 +302,9 @@ class StrategyRenderer:
             viewport_rect = pygame.Rect(0, self.TOP_BAR_HEIGHT, viewport_w, viewport_h)
             pygame.draw.rect(screen, COLORS['border_normal'], viewport_rect, 2)
 
-    def draw_processing_overlay(self, screen) -> None:
-        """Draw a modal overlay for turn processing."""
-        _layer_draw_processing_overlay(screen, self._get_font)
+    def draw_processing_overlay(self, screen, message: str = "PROCESSING TURN...") -> None:
+        """Draw a modal overlay for turn processing.
+
+        FEAT-20: optional ``message`` lets ``run_n_turns`` show progress text.
+        """
+        _layer_draw_processing_overlay(screen, self._get_font, message)

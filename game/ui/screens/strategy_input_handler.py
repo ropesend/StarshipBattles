@@ -87,6 +87,10 @@ class StrategyInputHandler:
 
         if event.ui_element == ui.btn_next_turn:
             self.scene.advance_turn()
+        # FEAT-20: dev-mode "Run 10 Turns" button. None when dev_mode=False so the
+        # `is not None` guard prevents matching unrelated UI events against a sentinel.
+        elif getattr(ui, 'btn_run_10_turns', None) is not None and event.ui_element == ui.btn_run_10_turns:
+            self.scene.run_n_turns(10)
         elif event.ui_element == ui.btn_colonize:
             self.scene.on_colonize_click()
         elif event.ui_element == ui.btn_build_yard:

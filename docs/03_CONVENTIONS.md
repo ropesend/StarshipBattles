@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-04-27 — PROJ-309 expanded §2.3 File Size with the 500-LOC rule (diagnose / split / preserve API) and exemption for test files
+> **Last verified:** 2026-04-27 — Added §10 Dev-Mode CLI Flag (FEAT-20).
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -143,11 +143,14 @@ the new names and import paths directly.
 | Layer | Path | Dependencies |
 |-------|------|-------------|
 | **Core** | `game/core/` | None (foundation layer) |
-| **Simulation** | `game/simulation/` | Core only (no UI, no Pygame) |
-| **Strategy** | `game/strategy/` | Core, Simulation |
+| **Services** | `game/services/` | Core only |
+| **Assets** | `game/assets/` | Core, Services |
+| **Engine** | `game/engine/` | Core, Services (spatial, collision utilities) |
+| **Simulation** | `game/simulation/` | Core, Services, Engine (no UI, no Pygame) |
+| **Research** | `game/research/` | Core, Services |
+| **Strategy** | `game/strategy/` | Core, Services, Engine, Simulation |
+| **AI** | `game/ai/` | Core, Services, Engine, Simulation |
 | **UI** | `game/ui/` | All layers (top-level) |
-| **AI** | `game/ai/` | Simulation, Strategy |
-| **Engine** | `game/engine/` | Core (spatial, collision utilities) |
 
 - **DO:** Respect dependency direction. Simulation must never import from UI.
 - **DON'T:** Import Pygame in simulation or strategy code.
@@ -170,6 +173,12 @@ the new names and import paths directly.
 
 Production-source files under `game/` should remain **below 500 lines**. When a file approaches or crosses 500 LOC, that's a signal it has accreted multiple responsibilities and needs to be split.
 
+**Current baseline:** historical production files already exceed this limit.
+Do not use that as precedent for new work. When touching an over-limit file,
+prefer extracting the changed responsibility into a cohesive helper/module or
+creating a follow-up cleanup ticket if the requested change cannot safely
+absorb the refactor.
+
 **When a file crosses 500 LOC:**
 
 1. **Diagnose:** Has the file accreted multiple responsibilities? Almost always yes once it crosses this threshold.
@@ -185,6 +194,11 @@ See PROJ-309 for the audit that established this rule and the decomposition of t
 ### 2.4 UI Screen Line Budget (PROJ-282)
 
 UI screen classes (anything implementing `IScene`) should stay **under 300 lines**.
+
+Several existing UI screen modules are above this soft limit. Treat them as
+decomposition candidates: new UI behavior should go into controller,
+view-model, renderer, input-handler, or data-source collaborators rather than
+growing the screen class further.
 
 Logic for mutation, derived view state, rendering, and event handling should
 live in sibling delegate classes following the **MVVM pattern** established by
@@ -493,7 +507,7 @@ When a new system replaces an old one, **eradicate the old system completely**. 
 ### Return types (required)
 Every public function/method must carry a return-type annotation.
 
-- **Modern syntax only:** `int | None`, `list[int]`, `dict[str, T]` — not `Optional[int]`/`List[int]`/`Dict[str, T]`. Python 3.13+ baseline (PROJ-295) means we don't need legacy syntax
+- **Modern syntax for new or touched signatures:** `int | None`, `list[int]`, `dict[str, T]` — not `Optional[int]`/`List[int]`/`Dict[str, T]`. Python 3.13+ baseline (PROJ-295) means new code does not need legacy syntax. Existing legacy annotations remain cleanup backlog; do not expand them when editing a file.
 - **No `return` statement:** annotate `-> None` explicitly
 - **`__init__` and other dunders:** exempt per PEP 484
 - **Forward references:** add `from __future__ import annotations` at the top of the file if needed (or use string literals in the annotation)
@@ -522,3 +536,19 @@ Rules:
 - **Don't bump:** for typo/formatting fixes that don't reflect any verification work
 
 See PROJ-307 for the backfill that established this convention.
+
+---
+
+## 10. Dev-Mode CLI Flag
+
+The application accepts a `--dev` CLI flag (parsed in `game/app_bootstrap.py::parse_args()`) that enables developer-only UI affordances. The flag's value is exposed as `BootstrapResult.dev_mode: bool` and propagated downward by `ScreenRouter` into scenes that opt in via a `dev_mode: bool = False` keyword argument.
+
+Conventions for adding new dev-only widgets or affordances:
+
+- **Source of truth:** `BootstrapResult.dev_mode`. Don't read environment variables or define a parallel "debug" flag elsewhere.
+- **Plumbing pattern:** match the existing `input_mapper` plumbing: kwarg on the scene's `__init__`, forwarded into UI / panel-manager constructors. Default `False` so test fixtures and non-dev paths are unaffected.
+- **Visibility rule:** when `dev_mode=False`, the widget should NOT be rendered (return early or skip construction). Click-handler code that compares `event.ui_element` against the widget MUST guard with `is not None` so a sentinel `None` does not match unrelated events.
+- **No greyed-out clutter:** prefer "absent in production" over "always-rendered-but-disabled".
+- **Naming:** prefix dev-only widget fields with their domain, e.g. `btn_run_10_turns` (NOT `btn_dev_run`).
+
+Established by FEAT-20 (Run-10-Turns dev button on the strategy top bar).

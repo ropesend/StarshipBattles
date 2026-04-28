@@ -3,6 +3,11 @@ StrategyGameStateManager - Manages turn processing and game state for StrategySc
 
 Extracted from StrategyScreen as part of PROJ-173 Phase 4 to reduce StrategyScreen
 to ~530 lines. Handles turn advancement, full turn processing, and player UI updates.
+
+FEAT-20: adds dev-mode `run_n_turns(n)` that calls the (now-public)
+`process_full_turn()` n times in a row with Esc cancellation between iterations.
+Per-turn event-log auto-open is suppressed during the loop and a single combined
+log is surfaced at the end so the dev tool doesn't pop a modal on every turn.
 """
 from __future__ import annotations
 
@@ -22,7 +27,8 @@ class StrategyGameStateManager:
 
     Handles:
     - Player turn advancement (advance_turn)
-    - Full turn processing for all empires (_process_full_turn)
+    - Full turn processing for all empires (process_full_turn)
+    - Dev-mode bulk turn execution (run_n_turns) — FEAT-20
     - Player indicator UI updates
     """
 
@@ -33,6 +39,9 @@ class StrategyGameStateManager:
             screen: Parent StrategyScreen for accessing session, UI, and state.
         """
         self._screen = screen
+        # FEAT-20: when True, process_full_turn defers the event-log popup so
+        # run_n_turns can surface a single combined log at the end.
+        self._suppress_event_log = False
 
     def advance_turn(self) -> None:
         """End current player's order phase. Process turn when all humans ready."""
@@ -41,7 +50,7 @@ class StrategyGameStateManager:
         if self._screen.current_player_index >= len(self._screen.human_player_ids):
             # All humans ready - process the full turn
             self._screen.current_player_index = 0
-            self._process_full_turn()
+            self.process_full_turn()
             self._update_player_label()
         else:
             # Switch to next human player's view
@@ -53,8 +62,14 @@ class StrategyGameStateManager:
             if next_empire and next_empire.colonies:
                 self._screen.center_camera_on(next_empire.colonies[0])
 
-    def _process_full_turn(self) -> None:
-        """Process the turn for all empires simultaneously."""
+    def process_full_turn(self) -> list:
+        """Process the turn for all empires simultaneously.
+
+        Returns:
+            The list of events generated for this turn (may be empty). Used by
+            run_n_turns (FEAT-20) to aggregate events across the loop. The
+            return value is ignored by the single-turn `advance_turn` path.
+        """
         from game.strategy.systems.save_game_service import SaveGameService
 
         self._screen.turn_processing = True
@@ -91,12 +106,83 @@ class StrategyGameStateManager:
 
         # PROJ-77: Show event log if there are events for this turn
         turn_events = self._screen._facade.get_turn_events(turn=processed_turn)
-        if turn_events:
+        # FEAT-20: suppress per-turn popup during run_n_turns; events are still
+        # returned to the caller so the bulk runner can surface a combined log.
+        if turn_events and not self._suppress_event_log:
             self._screen.ui.open_event_log_with_events(turn_events)
 
         # Refresh UI for currently selected object
         if self._screen.selected_object:
             self._screen.on_ui_selection(self._screen.selected_object)
+
+        return turn_events or []
+
+    def run_n_turns(self, n: int) -> int:
+        """FEAT-20: dev-mode — run N full game turns sequentially.
+
+        Pumps pygame events between iterations so Esc can cancel cleanly. Each
+        turn is atomic (auto-save runs at the end) so cancellation between
+        iterations never corrupts save state. Per-turn event-log popups are
+        suppressed during the loop and a single combined log is opened at the
+        end if any turn produced events.
+
+        Args:
+            n: Number of full turns to run.
+
+        Returns:
+            Number of turns actually completed (may be < n if the user cancelled).
+        """
+        self._screen.dev_run_cancel_requested = False
+        completed = 0
+        combined_events: list = []
+
+        prev_suppress = self._suppress_event_log
+        self._suppress_event_log = True
+        try:
+            for i in range(n):
+                self._pump_cancel_events()
+                if self._screen.dev_run_cancel_requested:
+                    break
+
+                # FEAT-20: progress text rendered by the processing overlay.
+                self._screen.turn_processing_message = (
+                    f"PROCESSING TURN {i + 1} / {n}... (Esc to cancel)"
+                )
+
+                turn_events = self.process_full_turn()
+                if turn_events:
+                    combined_events.extend(turn_events)
+                completed += 1
+
+                # Repaint between turns so the user sees progress.
+                screen = pygame.display.get_surface()
+                if screen:
+                    self._screen.draw(screen)
+                    pygame.display.flip()
+        finally:
+            self._suppress_event_log = prev_suppress
+            self._screen.turn_processing_message = None
+
+        # Surface a single combined event log at the end if any events occurred.
+        if combined_events:
+            self._screen.ui.open_event_log_with_events(combined_events)
+
+        # Update the player indicator after the bulk run completes.
+        self._update_player_label()
+        return completed
+
+    def _pump_cancel_events(self) -> None:
+        """Pump pygame events looking for Esc / QUIT to set the cancel flag.
+
+        Called between iterations of `run_n_turns` (never mid-turn). Other
+        event types are left in the queue for the main run loop to handle.
+        """
+        # `pygame.event.get(eventtype)` consumes only the matching events.
+        for event in pygame.event.get([pygame.KEYDOWN, pygame.QUIT]):
+            if event.type == pygame.QUIT:
+                self._screen.dev_run_cancel_requested = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self._screen.dev_run_cancel_requested = True
 
     def _update_player_label(self) -> None:
         """Update the player indicator label."""

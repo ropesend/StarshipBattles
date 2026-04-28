@@ -209,3 +209,72 @@ def test_bootstrap_returns_complete_result() -> None:
     assert result.font_small is not None
     assert result.font_med is not None
     assert result.font_large is not None
+
+
+# ===========================================================================
+# FEAT-20: Dev mode CLI flag
+# ===========================================================================
+
+def test_dev_flag_default_false() -> None:
+    """Without `--dev`, parsed args have `dev_mode=False` and bootstrap propagates it."""
+    from game.app_bootstrap import parse_args
+    import sys
+
+    saved_argv = sys.argv
+    try:
+        sys.argv = ["app.py"]
+        args = parse_args()
+    finally:
+        sys.argv = saved_argv
+
+    assert hasattr(args, "dev_mode"), "parse_args() must surface `dev_mode` attribute"
+    assert args.dev_mode is False
+
+    call_order: list[str] = []
+    result = _patched_bootstrap(call_order)
+    assert hasattr(result, "dev_mode"), "BootstrapResult must expose `dev_mode` field"
+    assert result.dev_mode is False
+
+
+def test_dev_flag_propagates_to_bootstrap_result() -> None:
+    """When `--dev` is passed, `BootstrapResult.dev_mode` is True."""
+    from argparse import Namespace
+    import pygame
+    from unittest.mock import patch
+    from game import app_bootstrap as boot
+    from game.context import ApplicationContext
+    from game.core import registry as registry_mod
+    from game.simulation.components import component as component_mod
+    from game.simulation.entities import ship_loader
+    from game.ui.renderer import sprites as sprites_mod
+
+    # Same patch set as `_patched_bootstrap` but parameterised on dev_mode kwarg.
+    real_create_production = ApplicationContext.create_production
+    real_get_provider = registry_mod.get_default_registry_provider
+    real_load_components = component_mod.load_components
+    real_load_modifiers = component_mod.load_modifiers
+    real_init_ship = ship_loader.initialize_ship_data
+    real_load_sprites = sprites_mod.SpriteManager.load_sprites
+
+    @classmethod
+    def passthrough_create(cls):
+        return real_create_production()
+
+    if not pygame.display.get_surface():
+        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+
+    args = Namespace(force_resolution=False, dev_mode=True)
+
+    with patch.object(ApplicationContext, "create_production", passthrough_create), \
+         patch.object(boot, "get_default_registry_provider", real_get_provider), \
+         patch.object(boot, "load_components", real_load_components), \
+         patch.object(boot, "load_modifiers", real_load_modifiers), \
+         patch.object(boot, "initialize_ship_data", real_init_ship), \
+         patch.object(sprites_mod.SpriteManager, "load_sprites", real_load_sprites), \
+         patch.object(boot, "ensure_component_derivatives", lambda: None), \
+         patch("pygame.display.Info") as mock_info:
+        mock_info.return_value.current_w = 2560
+        mock_info.return_value.current_h = 1600
+        result = boot.bootstrap(args)
+
+    assert result.dev_mode is True

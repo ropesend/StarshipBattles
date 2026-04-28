@@ -64,6 +64,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Starship Battles")
     parser.add_argument('--force-resolution', action='store_true',
                         help='Force 2560x1600 resolution regardless of monitor size')
+    parser.add_argument('--dev', dest='dev_mode', action='store_true',
+                        help='Enable developer-mode UI affordances (e.g. the strategy '
+                             'top-bar "Run 10 Turns" button). Off by default.')
     args, _ = parser.parse_known_args()
     return args
 
@@ -86,6 +89,7 @@ class BootstrapResult:
     font_small: Any
     font_med: Any
     font_large: Any
+    dev_mode: bool = False
 
 
 def _detect_resolution(args: argparse.Namespace,
@@ -197,6 +201,8 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     input_mapper = InputMapper()
     input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
 
+    dev_mode = bool(getattr(args, 'dev_mode', False)) if args is not None else False
+
     return BootstrapResult(
         ctx=ctx,
         screen=screen,
@@ -208,4 +214,5 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         font_small=font_small,
         font_med=font_med,
         font_large=font_large,
+        dev_mode=dev_mode,
     )

@@ -150,7 +150,7 @@ class TestAdvanceTurn:
 class TestProcessFullTurn:
     """Test that turn processing is handled by GameStateManager.
 
-    Note: _process_full_turn() has been moved to StrategyGameStateManager.
+    Note: process_full_turn() has been moved to StrategyGameStateManager (FEAT-20: public).
     These tests verify the delegation pattern works correctly.
     """
 
@@ -383,14 +383,21 @@ class TestScreenLifecycle:
         mocks['ui'].draw.assert_called_once_with(mock_surface)
 
     def test_draw_shows_processing_overlay_when_processing(self):
-        """draw() should show processing overlay when turn_processing is True."""
+        """draw() should show processing overlay when turn_processing is True.
+
+        FEAT-20: overlay now also receives a `message` argument (default
+        "PROCESSING TURN...", overridable by run_n_turns for progress text).
+        """
         screen, mocks = _make_strategy_screen()
         screen.turn_processing = True
+        screen.turn_processing_message = None  # FEAT-20: default message path
         mock_surface = MagicMock()
 
         screen.draw(mock_surface)
 
-        mocks['renderer'].draw_processing_overlay.assert_called_once_with(mock_surface)
+        mocks['renderer'].draw_processing_overlay.assert_called_once_with(
+            mock_surface, "PROCESSING TURN..."
+        )
 
     def test_draw_draws_build_queue_screen_if_open(self):
         """draw() should draw build_queue_screen if it exists."""

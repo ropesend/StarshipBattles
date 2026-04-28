@@ -55,7 +55,7 @@ class StrategyScreen:
 
     TOP_BAR_HEIGHT = 50
 
-    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None, input_mapper=None):
+    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None, input_mapper=None, dev_mode: bool = False):
         """Initialize strategy screen.
 
         Args:
@@ -66,11 +66,15 @@ class StrategyScreen:
                            Called with (action, **kwargs) where action is:
                            - "open_builder": Open design workshop with context kwarg
             input_mapper: Optional InputMapper for centralized keybinding resolution.
+            dev_mode: When True, render developer-mode UI affordances such as
+                the strategy top-bar "Run 10 Turns" button (FEAT-20). Sourced
+                from the ``--dev`` CLI flag via ``BootstrapResult.dev_mode``.
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.scene_callback = scene_callback
         self.input_mapper = input_mapper
+        self.dev_mode = dev_mode
 
         # Session Management
         if session:
@@ -97,7 +101,7 @@ class StrategyScreen:
         self._focus_on_player_home()
 
         # UI
-        self.ui = StrategyUI(self, screen_width, screen_height, input_mapper=input_mapper)
+        self.ui = StrategyUI(self, screen_width, screen_height, input_mapper=input_mapper, dev_mode=dev_mode)
 
         # State
         self.hover_hex = None
@@ -112,6 +116,12 @@ class StrategyScreen:
         self.current_player_index = 0
         self._quit_confirm_dialog = None
         self.build_queue_screen = None
+
+        # FEAT-20: Dev "Run 10 Turns" cancel flag — set by Esc-pump during loop
+        self.dev_run_cancel_requested = False
+        # FEAT-20: progress text shown by the "PROCESSING TURN..." overlay
+        # during dev `run_n_turns`. None means default message.
+        self.turn_processing_message: str | None = None
 
         # Assets
         self.empire_assets = {}
@@ -198,7 +208,9 @@ class StrategyScreen:
         self._renderer.draw(screen)
 
         if self.turn_processing:
-            self._renderer.draw_processing_overlay(screen)
+            # FEAT-20: dev `run_n_turns` overrides the message with progress text.
+            message = getattr(self, 'turn_processing_message', None) or "PROCESSING TURN..."
+            self._renderer.draw_processing_overlay(screen, message)
 
         self.ui.draw(screen)
 
@@ -383,6 +395,22 @@ class StrategyScreen:
     def advance_turn(self) -> None:
         """End current player's order phase. Process turn when all humans ready."""
         self._game_state.advance_turn()
+
+    def run_n_turns(self, n: int = 10) -> int:
+        """Dev-mode: run N full game turns sequentially (FEAT-20).
+
+        Each iteration runs the full end-turn flow for every player. Esc cancels
+        between iterations (never mid-turn — auto-save runs at the end of each
+        turn). Per-turn event-log popups are suppressed during the loop and a
+        single combined log is surfaced at the end.
+
+        Args:
+            n: Number of full turns to run.
+
+        Returns:
+            Number of turns actually completed (may be < n if cancelled).
+        """
+        return self._game_state.run_n_turns(n)
 
     # =========================================================================
     # Selection
