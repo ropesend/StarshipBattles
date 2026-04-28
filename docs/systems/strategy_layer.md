@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-28 — FEAT-17: per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections; also documents FEAT-19 surplus-food happiness bonus.
+> **Last verified:** 2026-04-28 — Added BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation). Earlier same-day pass: FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections; also documents FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -1533,6 +1533,8 @@ fleet_movement_engine, environmental_hazard_engine, spec_compiler, system_tree_p
 - `game/strategy/services/strategic_ability_scanner.py` — `aggregate_multipliers` (intra-MAX, inter-MULTIPLY) and `aggregate_rates` (intra-MAX, inter-SUM)
 
 **Storm migration:** Storms now declare `abilities: Dict[str, Any]` matching components.json. Five storm types in `data/storms.json` v2.0 declare ShieldModifier, ThrustModifier, StrategicSpeedModifier, EnvironmentalDamage (with damage_type), FuelDrain. Overlapping storms multiply per-provider (decisions.md D6) — `tests/integration/strategy/test_overlapping_storm_combat.py` locks in 0.5x · 0.5x = 0.25x for two ion storms.
+
+**Storm coordinate frame (BUG-119):** `StormAbilitySource` carries an optional `system: Any` field set by `_storm_provider`. `affects_hex(hex_coord)` translates the storm's local position via `sys_loc + storm.location + offset` and compares against the global query hex. This mirrors the planet/star/warp-point sibling adapters; without it, every storm in a system whose `global_location` is non-zero — i.e. every storm in a real galaxy — silently produced an empty Sector Effects panel because `Storm.occupied_hexes` is in **local-system coordinates** while the UI passes the **global-galaxy hex**. Test fixtures must use a non-zero `system.global_location` to make the local-vs-global distinction meaningful (three test fixtures were updated for this reason).
 
 **Combat consumption:** `_entries_from_sector_effects(sector_effects)` in `spec_compiler.py` emits one `ModifierEntry` per ACTIVE provider. ShieldModifier, DamageModifier, and ThrustModifier (PROJ-300 D14) flow through the same path with the appropriate stat_keys via `ABILITY_STAT_REGISTRY`.
 

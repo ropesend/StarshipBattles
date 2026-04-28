@@ -1,8 +1,8 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-28 — Reconciled pattern count to 29, updated `ApplicationContext` to 9 managed services, removed stale `SingletonMeta` references, and confirmed the current quick-reference entries.
+> **Last verified:** 2026-04-28 — Reconciled pattern count to 30 with the addition of the Registrar Close-Callback pattern (BUG-121), updated `ApplicationContext` to 9 managed services, removed stale `SingletonMeta` references, and confirmed the current quick-reference entries.
 
-Agent-optimized reference for every core pattern in the codebase (29 patterns).
+Agent-optimized reference for every core pattern in the codebase (30 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -38,6 +38,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 27. [Budget-Aware Randomization](#27-budget-aware-randomization-feat-12)
 28. [Background Service Call](#28-background-service-call-proj-296)
 29. [Universal Ability Source (PROJ-300..305)](#29-universal-ability-source-proj-300305)
+30. [Registrar Close-Callback (BUG-121)](#30-registrar-close-callback-bug-121)
 
 ---
 
@@ -1546,3 +1547,29 @@ Adapters register a provider function with `register_source_provider_at_hex` / `
 - Overlapping storms multiply per-provider (no shared `stack_group`) — two ion storms apply 0.25× shields, not 0.5× (PROJ-300 D6).
 - ThrustModifier is wired into combat propulsion via `ABILITY_STAT_REGISTRY` (PROJ-300 D14).
 - Hostile star systems are deliberately uncapped (PROJ-302 D7); a hazard hint UI in `system_tree_panel` warns the player (D8).
+
+---
+
+## 30. Registrar Close-Callback (BUG-121)
+
+### Where
+- Reference adopters: [`game/ui/screens/strategy_windows/planet_abilities_ctrl.py`](../game/ui/screens/strategy_windows/planet_abilities_ctrl.py) (`PlanetAbilitiesRegistrar._on_closed`); [`game/ui/screens/strategy_windows/list_windows.py`](../game/ui/screens/strategy_windows/list_windows.py) (`PlanetListRegistrar`, `StarListRegistrar`); [`game/ui/screens/strategy_windows/fleet_report_ctrl.py`](../game/ui/screens/strategy_windows/fleet_report_ctrl.py) (`FleetReportRegistrar`)
+- Window classes that override `kill()` to invoke the callback: `PlanetAbilitiesWindow` ([`game/ui/screens/planet_abilities_window.py`](../game/ui/screens/planet_abilities_window.py)), `PlanetListWindow` ([`game/ui/screens/planet_list_window.py`](../game/ui/screens/planet_list_window.py))
+- Modal-state reader: [`game/ui/screens/strategy_event_router.py`](../game/ui/screens/strategy_event_router.py) — `has_modal_open()` walks each tracked window slot and returns True if any is non-None.
+
+### How It Works
+Every modal-style strategy window has a registrar (a controller object on the strategy screen) that owns a slot variable like `wm.planet_abilities_window`. When the registrar opens the window it stores a reference in its slot AND passes `on_close_callback=self._on_closed` to the window constructor. The window stores the callback and overrides pygame_gui's `kill()` to invoke the callback before calling `super().kill()`. The callback resets the slot back to `None`.
+
+This is the **write side** of `has_modal_open()`'s **read side**: both sides must be wired together. Adding a slot to `has_modal_open` without also wiring a cleanup path causes the slot to leak after the user closes the window via the title-bar `[X]`, permanently triggering `has_modal_open() == True` and silently blocking downstream input gating (e.g., the strategy screen's mouse-wheel zoom guard).
+
+### When to Use
+- Any new modal-style window tracked by `StrategyWindowManager` / `StrategyEventRouter`. **The rule is: whenever a slot is added to `has_modal_open`, a corresponding cleanup path (registrar `on_close_callback` OR `_handle_window_close` branch) must be added in the same change.**
+
+### Why
+- pygame_gui's `kill()` releases the widget but does not reset the Python attribute on the parent that holds a reference to the killed window. `has_modal_open()` checks `is not None` (not `.alive()`), so a dead reference still counts as "open" until the slot is explicitly cleared.
+- The `_handle_window_close` event-driven cleanup branch is the alternative (used for ~12 slots today). The registrar callback pattern is preferred for windows whose lifecycle is owned by a registrar, because it keeps the open-and-close paths co-located.
+
+### Key behavior
+- Registrar's `_on_closed` runs synchronously inside `kill()`; the slot is `None` before `kill()` returns.
+- Test contract: `tests/unit/ui/screens/test_strategy_window_manager_public_api.py::test_modal_slot_clears_after_window_kill` is parametrised over every slot in `has_modal_open`'s scan and pins the lifecycle invariant for the whole window family.
+

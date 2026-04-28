@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-04-27 — PROJ-300..305 added the §"Strategic-Layer Sector/System Abilities" section (EnvironmentalDamage, FuelDrain, StrategicSpeedModifier, ThrustModifier) and the IAbilitySource sources-by-kind summary.
+> **Last verified:** 2026-04-28 — Documented the `chance` field on intrinsic ability rolls (FEAT-15). Earlier 2026-04-27 pass: PROJ-300..305 added the §"Strategic-Layer Sector/System Abilities" section (EnvironmentalDamage, FuelDrain, StrategicSpeedModifier, ThrustModifier) and the IAbilitySource sources-by-kind summary.
 
 > Comprehensive catalog of all component abilities available in the game.
 > Source: `game/simulation/components/abilities/`
@@ -1670,3 +1670,28 @@ Multiplies effective combat thrust. Wired through `ABILITY_STAT_REGISTRY` to `ex
 | warp_point | None | sector | rolled from `data/warp_point_types.json` per warp_type (PROJ-303) |
 | system | None | system | rolled from `data/system_archetypes.json`; ~15% of systems get an archetype (PROJ-304) |
 | fleet | Empire (fleet.owner_id) | allied_sector / sector / system / etc. | ship-component-driven; surfaces only when `set_fleet_lookups` registered (PROJ-305) |
+
+### Intrinsic-ability registry — optional `chance` field (FEAT-15)
+
+Every ability declaration in the four registry templates consumed by `roll_intrinsic_abilities`
+(`data/planet_types.json`, `data/star_types.json`, `data/warp_point_types.json`, `data/system_archetypes.json`)
+may carry an optional `chance: float` field in `[0.0, 1.0]`. Default is `1.0` (always fires, no
+RNG draw). When `chance < 1.0`, `roll_intrinsic_abilities` (`game/strategy/services/ability_sources/intrinsic_roll.py`)
+draws `rng.random()` against the threshold and either emits the ability dict (rolled value
+plus the rest of the fields) or skips it entirely; the `chance` key is stripped from the emitted
+ability so it never leaks into runtime ability state.
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `chance` | float in `[0.0, 1.0]` | `1.0` | Probability that the ability fires for this entity at galaxy generation. |
+
+**Determinism contract:** entries without `chance` consume **zero** extra RNG draws — adding the field
+to one registry (e.g. planets) does not shift the seeded RNG stream for the others (stars, warps,
+archetypes), so byte-identical seed determinism is preserved across registries that opt out.
+
+**Per-galaxy effect (planets only, today):** dropping `chance` to ~0.1–0.25 on rare-flavour planet
+abilities reduces the proportion of "effectful" planets in a typical galaxy from ~50% to ~14% while
+keeping defining features (e.g. `DYSON_SPHERE` `EnvironmentalDamage` radiation) at `1.0`.
+
+**Schema validation:** `tests/integration/data/test_intrinsic_registries_coverage.py` enforces
+`0 <= chance <= 1` for every ability declaration in every registry that opts in to the field.

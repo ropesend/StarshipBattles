@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-04-27 — Added §10 Dev-Mode CLI Flag (FEAT-20).
+> **Last verified:** 2026-04-28 — Added §10 Dev-Mode CLI Flag (FEAT-20); reconciled with the rest of the doc consistency pass.
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
