@@ -88,6 +88,16 @@ class TestPathConstants:
         """STARTER_RACES_DIR must be under DATA_DIR."""
         assert Paths.STARTER_RACES_DIR == os.path.join(Paths.DATA_DIR, "races")
 
+    def test_ship_themes_target_size_is_2048(self):
+        """PROJ-314: SHIP_THEMES_TARGET_SIZE is the canonical 2048 px square."""
+        assert Paths.SHIP_THEMES_TARGET_SIZE == 2048
+        assert isinstance(Paths.SHIP_THEMES_TARGET_SIZE, int)
+
+    def test_ship_themes_dir_endswith_shipthemes(self):
+        """PROJ-314: SHIP_THEMES_DIR ends with `ShipThemes`."""
+        assert Paths.SHIP_THEMES_DIR.endswith("ShipThemes")
+        assert Paths.SHIP_THEMES_DIR.startswith(Paths.ASSET_DIR)
+
     def test_component_resolution_dirs_defined(self):
         """Component image resolution subdirectories point to correct locations."""
         assert Paths.COMPONENTS_2048_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 2048")
