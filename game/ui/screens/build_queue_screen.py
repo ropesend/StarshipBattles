@@ -625,6 +625,7 @@ class BuildQueueScreen:
             self.manager,
             planets,
             on_selected,
+            window_manager=None,  # PROJ-313: build queue screen has its own modal lifecycle
             window_title="Select Target Planet",
             list_label="Colonies in sector:",
             show_any_button=False

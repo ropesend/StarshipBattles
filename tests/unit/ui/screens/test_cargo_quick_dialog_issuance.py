@@ -50,7 +50,7 @@ class TestCargoQuickDialogIssuance:
         rect = pygame.Rect(100, 100, 450, 300)
         # Create dialog - __init__ calls _populate_load_items via _populate_items
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene, window_manager=None
         )
 
         assert len(dialog.cargo_items) == 1
@@ -81,7 +81,7 @@ class TestCargoQuickDialogIssuance:
         rect = pygame.Rect(100, 100, 450, 300)
         # Create dialog - __init__ calls _populate_load_items via _populate_items
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene, window_manager=None
         )
 
         item = dialog.cargo_items[0]

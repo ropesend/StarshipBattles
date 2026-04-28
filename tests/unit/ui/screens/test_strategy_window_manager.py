@@ -559,11 +559,15 @@ class TestSystemSelectionPrompt:
 class TestMoveChoicePrompt:
     """Tests for move choice prompt."""
 
-    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIWindow')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.MoveChoiceWindow')
     @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIButton')
     @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UILabel')
     def test_prompt_move_choice_creates_window(self, mock_label, mock_button, mock_window, window_manager):
-        """Test prompt_move_choice creates choice window."""
+        """Test prompt_move_choice creates choice window.
+
+        PROJ-313 Phase 6: window construction routes through the
+        MoveChoiceWindow(StrategyModalWindow) subclass, not raw pygame_gui.
+        """
         fleet = Mock()
         target_hex = (10, 20)
         on_sector = Mock()
@@ -575,11 +579,14 @@ class TestMoveChoicePrompt:
         # Two buttons should be created
         assert mock_button.call_count == 2
 
-    @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIWindow')
+    @patch('game.ui.screens.strategy_windows.move_choice_dialog.MoveChoiceWindow')
     @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UIButton')
     @patch('game.ui.screens.strategy_windows.move_choice_dialog.pygame_gui.elements.UILabel')
     def test_prompt_move_choice_registers_callbacks(self, mock_label, mock_button, mock_window, window_manager):
-        """Test prompt_move_choice registers callbacks in ui_callbacks."""
+        """Test prompt_move_choice registers callbacks in ui_callbacks.
+
+        PROJ-313 Phase 6: window construction routes through MoveChoiceWindow.
+        """
         # Each UIButton() call returns a unique mock
         mock_button.side_effect = [Mock(name='btn1'), Mock(name='btn2')]
 

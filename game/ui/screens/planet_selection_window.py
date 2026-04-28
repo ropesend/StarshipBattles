@@ -10,23 +10,27 @@ from typing import TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
+from pygame_gui.elements import UISelectionList, UIButton, UILabel
 
 from game.assets.asset_manager import get_default_asset_manager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
-class PlanetSelectionWindow(UIWindow):
+class PlanetSelectionWindow(StrategyModalWindow):
     def __init__(
         self,
         rect,
         manager,
         planets,
         on_selection_callback,
+        *,
+        window_manager: "StrategyWindowManager",
         window_title: str = "Select Planet to Colonize",
         list_label: str = "Habitable bodies:",
         show_any_button: bool = True
@@ -47,7 +51,10 @@ class PlanetSelectionWindow(UIWindow):
         if rect.width < 950: rect.width = 950
         if rect.height < 650: rect.height = 650
 
-        super().__init__(rect, manager, window_display_title=window_title)
+        super().__init__(
+            rect, manager, window_display_title=window_title,
+            window_manager=window_manager,
+        )
         self.planets = planets
         self.callback = on_selection_callback
         self.current_selection_name = None

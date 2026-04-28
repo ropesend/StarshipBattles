@@ -12,14 +12,16 @@ import logging
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIButton, UILabel, UIDropDownMenu, UIScrollingContainer
+from pygame_gui.elements import UIButton, UILabel, UIDropDownMenu, UIScrollingContainer
 from game.core.input_actions import InputAction
 from game.strategy.engine.commands import IssueTransferCommand
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 # All resource types in display order
 RESOURCE_TYPES = [
@@ -40,11 +42,13 @@ ARROW_LABELS_LOAD = ["<<<<<", "<<<<", "<<<", "<<", "<"]
 ARROW_LABELS_DROP = [">", ">>", ">>>", ">>>>", ">>>>>"]
 
 
-class TransferDialog(UIWindow):
+class TransferDialog(StrategyModalWindow):
     """Grid-based resource transfer dialog.
 
     Shows all resource types and species with arrow buttons for adjusting
     pending transfer amounts. Confirm issues all non-zero as transfer orders.
+
+    PROJ-313: migrated to StrategyModalWindow base class.
     """
 
     ROW_HEIGHT = 32
@@ -75,8 +79,12 @@ class TransferDialog(UIWindow):
     TARGET_AMT_W = 60
 
     def __init__(self, relative_rect, manager, source_fleet, hex_coord, scene,
+                 *, window_manager: "StrategyWindowManager",
                  input_mapper: Optional['InputMapper'] = None):
-        super().__init__(relative_rect, manager, window_display_title="Resource Transfer")
+        super().__init__(
+            relative_rect, manager, window_display_title="Resource Transfer",
+            window_manager=window_manager,
+        )
         self.source_fleet = source_fleet
         self.hex_coord = hex_coord
         self.scene = scene

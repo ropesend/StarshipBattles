@@ -11,10 +11,14 @@ import logging
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIButton, UILabel
+from pygame_gui.elements import UIButton, UILabel
 
 from game.core.patterns.layer_iterator import iter_keyed_components
 from game.strategy.data.component_activation_state import ActivationPhase
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +50,13 @@ _FOOD_EDITOR_LABEL = 'Food'
 _FOOD_EDITOR_TYPE = 'food'
 
 
-class PlanetAbilitiesWindow(UIWindow):
+class PlanetAbilitiesWindow(StrategyModalWindow):
     """Window listing all toggleable abilities on a planet with toggle buttons.
 
     Also provides environment editor buttons at the top for setting atmosphere,
     gravity, water, and radiation targets.
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
     ROW_HEIGHT = 36
@@ -62,6 +68,8 @@ class PlanetAbilitiesWindow(UIWindow):
         planet,
         facade,
         component_registry=None,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_open_editor: Optional[Callable[[str, Any], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
     ):
@@ -85,6 +93,7 @@ class PlanetAbilitiesWindow(UIWindow):
             manager,
             window_display_title=f"Abilities: {planet.name}",
             resizable=False,
+            window_manager=window_manager,
         )
         self.planet = planet
         self.facade = facade

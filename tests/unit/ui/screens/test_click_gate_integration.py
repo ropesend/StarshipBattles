@@ -63,6 +63,12 @@ def _create_strategy_event_router():
     # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
     wm.planet_abilities_window = None
 
+    # PROJ-313: StrategyModalWindow live-list. Migrated windows participate
+    # via iter_live_modals() instead of slot fields. Tests can append to
+    # wm._modals_for_test to register a window with the new mechanism.
+    wm._modals_for_test = []
+    wm.iter_live_modals = lambda: iter(list(wm._modals_for_test))
+
     ui.window_manager = wm
 
     # No menu panel by default
@@ -158,12 +164,16 @@ class TestClickGateIntegration:
         assert result is False
 
     def test_map_click_blocked_by_fleet_orders_window(self):
-        """Click blocked when fleet_orders_window is open at that position."""
+        """Click blocked when fleet_orders_window is open at that position.
+
+        PROJ-313: fleet_orders_window migrated to StrategyModalWindow;
+        registration is via iter_live_modals rather than a slot field.
+        """
         router, ui, wm = _create_strategy_event_router()
 
         # Create a window that is alive and contains the click point
         window = _create_mock_window(alive=True, rect_contains=True)
-        wm.fleet_orders_window = window
+        wm._modals_for_test.append(window)
 
         mx, my = 600, 400  # Map area, but window rect contains this point
 
@@ -177,7 +187,7 @@ class TestClickGateIntegration:
         router, ui, wm = _create_strategy_event_router()
 
         window = _create_mock_window(alive=True, rect_contains=True)
-        wm.planet_list_window = window
+        wm._modals_for_test.append(window)  # PROJ-313 migrated
 
         mx, my = 600, 400
 
@@ -288,8 +298,8 @@ class TestClickGateIntegration:
 
         # Create multiple windows, all alive but none containing click point
         wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=False)
-        wm.planet_list_window = _create_mock_window(alive=True, rect_contains=False)
-        wm.fleet_report_window = _create_mock_window(alive=True, rect_contains=False)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))  # PROJ-313 migrated
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))  # PROJ-313 migrated
 
         mx, my = 500, 400
 
@@ -305,7 +315,7 @@ class TestClickGateIntegration:
         # First window doesn't contain click
         wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=False)
         # Second window contains click
-        wm.planet_list_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))  # PROJ-313 migrated
 
         mx, my = 500, 400
 
@@ -318,10 +328,13 @@ class TestClickGateWithAllWindowTypes:
     """Tests that all window types in window_manager are properly checked."""
 
     def test_transfer_dialog_blocks(self):
-        """Transfer dialog blocks clicks in its area."""
+        """Transfer dialog blocks clicks in its area.
+
+        PROJ-313: transfer_dialog migrated; now registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.transfer_dialog = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 
@@ -331,37 +344,46 @@ class TestClickGateWithAllWindowTypes:
         """Build queue list window blocks clicks in its area."""
         router, ui, wm = _create_strategy_event_router()
 
-        wm.build_queue_list_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))  # PROJ-313 migrated
 
         result = router.handle_click(600, 400, 1)
 
         assert result is True
 
     def test_empire_build_queue_window_blocks(self):
-        """Empire build queue window blocks clicks in its area."""
+        """Empire build queue window blocks clicks in its area.
+
+        PROJ-313: migrated to StrategyModalWindow; registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.empire_build_queue_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 
         assert result is True
 
     def test_event_log_window_blocks(self):
-        """Event log window blocks clicks in its area."""
+        """Event log window blocks clicks in its area.
+
+        PROJ-313: migrated to StrategyModalWindow; registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.event_log_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 
         assert result is True
 
     def test_empire_panel_window_blocks(self):
-        """Empire panel window blocks clicks in its area."""
+        """Empire panel window blocks clicks in its area.
+
+        PROJ-313: migrated to StrategyModalWindow; registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.empire_panel_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 
@@ -371,7 +393,7 @@ class TestClickGateWithAllWindowTypes:
         """Fleet report window blocks clicks in its area."""
         router, ui, wm = _create_strategy_event_router()
 
-        wm.fleet_report_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))  # PROJ-313 migrated
 
         result = router.handle_click(600, 400, 1)
 
@@ -393,7 +415,8 @@ class TestIsBlockingUIElementAt:
         """Returns True when alive window contains position."""
         router, ui, wm = _create_strategy_event_router()
 
-        wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=True)
+        # PROJ-313: register via iter_live_modals (fleet_orders_window migrated)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router._is_blocking_ui_element_at(500, 400)
 

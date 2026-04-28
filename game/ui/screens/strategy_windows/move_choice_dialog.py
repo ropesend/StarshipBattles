@@ -1,10 +1,14 @@
-"""Move Choice Dialog — the only window built inline from pygame_gui primitives.
+"""Move Choice Dialog.
 
 A small dialog asking the player whether to move to a sector statically or
 to dynamically intercept a fleet at the target. Buttons are wired through
 the composer's ``UICallbackDispatcher``.
 
 PROJ-309 sub-phase 3.10: extracted from ``strategy_window_manager.py``.
+PROJ-313 Phase 6: promoted from inline ``pygame_gui.UIWindow`` construction
+to a named ``MoveChoiceWindow`` subclass of ``StrategyModalWindow`` so it
+follows the structural modal-tracking contract uniformly with all other
+strategy modals.
 """
 from __future__ import annotations
 
@@ -13,12 +17,24 @@ from typing import TYPE_CHECKING, Callable
 import pygame
 import pygame_gui
 
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
+class MoveChoiceWindow(StrategyModalWindow):
+    """Modal window asking the player to choose a move type.
+
+    PROJ-313: Promoted from inline `pygame_gui.UIWindow(...)` construction
+    so move-choice follows the same StrategyModalWindow contract as every
+    other strategy modal. Auto-registers in __init__, auto-deregisters
+    in kill().
+    """
+
+
 class MoveChoiceDialog:
-    """Inline-built dialog asking the player to choose a move type."""
+    """Registrar for the move-choice dialog."""
 
     def __init__(self, composer: "StrategyWindowManager") -> None:
         self._composer = composer
@@ -45,8 +61,10 @@ class MoveChoiceDialog:
         y = (c.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
 
-        win = pygame_gui.elements.UIWindow(
-            rect=rect, manager=c.manager, window_display_title="Select Move Type"
+        win = MoveChoiceWindow(
+            rect=rect, manager=c.manager,
+            window_display_title="Select Move Type",
+            window_manager=c,
         )
         c.move_choice_window = win
 

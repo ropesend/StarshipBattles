@@ -68,7 +68,7 @@ class TestTransferDialog:
 
         # Act
         rect = pygame.Rect(0, 0, 600, 500)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Assert
         # 2 fleets + 1 colonized planet + 1 uncolonized planet = 4 sources
@@ -95,7 +95,7 @@ class TestTransferDialog:
         mock_scene._facade.get_fleet.return_value = dummy_fleet_info
         
         rect = pygame.Rect(0, 0, 600, 500)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
         
         # Act
         dialog._on_source_changed("Fleet 2")
@@ -126,7 +126,7 @@ class TestTransferDialog:
         mock_scene._facade.get_planet.return_value = mock_planet_info
 
         rect = pygame.Rect(0, 0, 900, 700)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Assert - should have 8 resource rows
         resource_keys = [r['cargo_key'] for r in dialog._row_data
@@ -158,7 +158,7 @@ class TestTransferDialog:
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
 
         rect = pygame.Rect(0, 0, 900, 700)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Set up pending transfers manually
         dialog._current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}

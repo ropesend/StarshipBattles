@@ -18,9 +18,11 @@ scan it like the other modals.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Iterator, List, Optional
 
 import pygame_gui
+
+from pygame_gui.elements import UIWindow
 
 from game.ui.screens.strategy_windows.build_queue_windows import (
     BuildQueueListRegistrar,
@@ -140,6 +142,13 @@ class StrategyWindowManager:
         # open without a slot init, and missing from has_modal_open's scan.
         self.planet_abilities_window = None
 
+        # PROJ-313: Modal-window live list. Subclasses of
+        # ``StrategyModalWindow`` auto-register on ``__init__`` and
+        # auto-deregister on ``kill()``. The slot fields above are being
+        # phased out; the dual-track router OR-bridges this list with the
+        # remaining slot scans during migration.
+        self._modals: List[UIWindow] = []
+
         # Callback map for dynamic prompt buttons. Owned here so registrars
         # can register entries via composer.ui_callbacks[btn] = cb without
         # needing a back-reference to the dispatcher.
@@ -178,6 +187,46 @@ class StrategyWindowManager:
         """
         self.width = width
         self.height = height
+
+    # ----------------------------------------------------- PROJ-313 modal API
+
+    def register_modal(self, w: UIWindow) -> None:
+        """Register a modal window. Called from ``StrategyModalWindow.__init__``.
+
+        Args:
+            w: The modal window instance registering itself.
+        """
+        self._modals.append(w)
+
+    def unregister_modal(self, w: UIWindow) -> None:
+        """Deregister a modal window. Called from ``StrategyModalWindow.kill()``.
+
+        Idempotent — safe to call when the window is not currently
+        registered (e.g., after parent-kill cascade orphan reaping).
+
+        Args:
+            w: The modal window instance deregistering itself.
+        """
+        try:
+            self._modals.remove(w)
+        except ValueError:
+            pass
+
+    def iter_live_modals(self) -> Iterator[UIWindow]:
+        """Yield every currently-alive modal window.
+
+        Performs an in-place GC walk that drops any dead references
+        (e.g., orphans from parent-kill cascades that didn't route
+        through ``StrategyModalWindow.kill()``). The list is rewritten
+        to contain only live windows; dead refs are reaped before
+        yielding.
+
+        Yields:
+            Each :class:`UIWindow` that is currently alive in
+            ``self._modals``.
+        """
+        self._modals = [w for w in self._modals if w.alive()]
+        yield from self._modals
 
     # ---------------------------------------------------------------- windows
 

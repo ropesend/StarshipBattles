@@ -43,7 +43,7 @@ class TestTransferDialogEnhanced:
         mock_scene._facade.get_fleet.return_value = MagicMock(passengers_current=100)
         
         rect = pygame.Rect(0, 0, 600, 500)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
         
         # Act
         dialog._on_source_changed("Fleet 1")
@@ -68,7 +68,7 @@ class TestTransferDialogEnhanced:
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
 
         rect = pygame.Rect(0, 0, 900, 700)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Set up: source=Fleet 1, target=Fleet 2, pending drop of 20 passengers
         dialog._current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}

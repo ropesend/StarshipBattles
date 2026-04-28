@@ -43,6 +43,7 @@ class EmpirePanelRegistrar:
             rect,
             c.manager,
             empire,
+            window_manager=c,
             on_close_callback=self._on_closed,
             registries=c.scene.session.registries,  # PROJ-211: Pass registries for DI
             race_registry=race_registry,

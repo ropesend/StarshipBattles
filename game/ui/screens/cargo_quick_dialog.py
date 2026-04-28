@@ -8,19 +8,21 @@ from typing import TYPE_CHECKING, Optional
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIButton, UILabel, UIHorizontalSlider
+from pygame_gui.elements import UIButton, UILabel, UIHorizontalSlider
 from game.core.input_actions import InputAction
 import logging
 
 logger = logging.getLogger(__name__)
 from game.strategy.engine.commands import IssueTransferCommand
 from game.strategy.services.cargo_transfer_service import CargoTransferService
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
-class CargoQuickDialog(UIWindow):
+class CargoQuickDialog(StrategyModalWindow):
     """Simplified cargo transfer dialog for quick drop/load operations.
 
     Unlike the full TransferDialog, this shows a fixed direction (unload or load)
@@ -38,6 +40,8 @@ class CargoQuickDialog(UIWindow):
         hex_coord,
         direction: str,
         scene,
+        *,
+        window_manager: "StrategyWindowManager",
         input_mapper: Optional['InputMapper'] = None
     ):
         """Initialize the quick cargo dialog.
@@ -49,10 +53,14 @@ class CargoQuickDialog(UIWindow):
             hex_coord: The hex coordinate for the transfer.
             direction: 'unload' for dropping cargo, 'load' for loading cargo.
             scene: Reference to StrategyScreen for facade access.
+            window_manager: PROJ-313 StrategyWindowManager for modal registration.
             input_mapper: Optional InputMapper for keyboard shortcuts.
         """
         title = "Drop Cargo" if direction == 'unload' else "Load Cargo"
-        super().__init__(relative_rect, manager, window_display_title=title)
+        super().__init__(
+            relative_rect, manager, window_display_title=title,
+            window_manager=window_manager,
+        )
 
         self.fleet = fleet
         self.hex_coord = hex_coord

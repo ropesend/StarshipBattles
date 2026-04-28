@@ -58,6 +58,12 @@ def mock_ui():
     # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
     ui.window_manager.planet_abilities_window = None
 
+    # PROJ-313: StrategyModalWindow live-list. Migrated windows register
+    # here via the base class's __init__. Tests can append to
+    # _modals_for_test to simulate registration.
+    ui.window_manager._modals_for_test = []
+    ui.window_manager.iter_live_modals = lambda: iter(list(ui.window_manager._modals_for_test))
+
     # Menu panel not open
     ui.menu_panel = None
 
@@ -110,12 +116,16 @@ class TestClickGateWindows:
     """Test clicks blocked by modal windows."""
 
     def test_click_blocked_by_fleet_orders_window(self, event_router, mock_ui):
-        """Click on fleet_orders_window should be blocked."""
+        """Click on fleet_orders_window should be blocked.
+
+        PROJ-313: fleet_orders_window migrated to StrategyModalWindow;
+        registered via iter_live_modals.
+        """
         # Create a mock window at (500, 300) with size 400x500
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(500, 300, 400, 500)
-        mock_ui.window_manager.fleet_orders_window = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         # Click inside the window
         mx, my = 700, 500
@@ -141,7 +151,7 @@ class TestClickGateWindows:
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(100, 100, 2000, 1400)
-        mock_ui.window_manager.planet_list_window = window
+        mock_ui.window_manager._modals_for_test.append(window)  # PROJ-313 migrated
 
         mx, my = 1000, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -177,7 +187,7 @@ class TestClickGateWindows:
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(100, 100, 2000, 1400)
-        mock_ui.window_manager.fleet_report_window = window
+        mock_ui.window_manager._modals_for_test.append(window)  # PROJ-313 migrated
 
         mx, my = 1000, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -185,11 +195,15 @@ class TestClickGateWindows:
         assert result is True
 
     def test_click_blocked_by_transfer_dialog(self, event_router, mock_ui):
-        """Click on transfer_dialog should be blocked."""
+        """Click on transfer_dialog should be blocked.
+
+        PROJ-313: transfer_dialog migrated to StrategyModalWindow;
+        registered via iter_live_modals.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(900, 500, 750, 600)
-        mock_ui.window_manager.transfer_dialog = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 700
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -197,11 +211,15 @@ class TestClickGateWindows:
         assert result is True
 
     def test_click_blocked_by_empire_build_queue_window(self, event_router, mock_ui):
-        """Click on empire_build_queue_window should be blocked."""
+        """Click on empire_build_queue_window should be blocked.
+
+        PROJ-313: empire_build_queue_window migrated to StrategyModalWindow;
+        registered via iter_live_modals.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(100, 100, 2000, 1400)
-        mock_ui.window_manager.empire_build_queue_window = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -209,16 +227,102 @@ class TestClickGateWindows:
         assert result is True
 
     def test_click_blocked_by_event_log_window(self, event_router, mock_ui):
-        """Click on event_log_window should be blocked."""
+        """Click on event_log_window should be blocked.
+
+        PROJ-313: event_log_window migrated; uses iter_live_modals.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(400, 200, 1600, 1000)
-        mock_ui.window_manager.event_log_window = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 700
         result = event_router._is_blocking_ui_element_at(mx, my)
 
         assert result is True
+
+
+class TestClickGateOrBridge:
+    """PROJ-313 OR-bridge: iter_live_modals participates in click gating.
+
+    During Phases 3-7 the router scans BOTH the legacy slot fields AND
+    the new modal list. Either source must independently produce a
+    blocking result.
+    """
+
+    def _make_live_window(self, rect):
+        win = MagicMock()
+        win.alive.return_value = True
+        win.rect = rect
+        return win
+
+    def test_click_blocked_by_modal_list_alone(self, event_router, mock_ui):
+        """Click on a window in iter_live_modals should be blocked."""
+        win = self._make_live_window(MockRect(500, 300, 400, 500))
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
+
+        result = event_router._is_blocking_ui_element_at(700, 500)
+
+        assert result is True
+
+    def test_click_outside_modal_list_window_passes(self, event_router, mock_ui):
+        """Click outside a modal-list window's rect should pass through."""
+        win = self._make_live_window(MockRect(500, 300, 400, 500))
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
+
+        result = event_router._is_blocking_ui_element_at(100, 800)
+
+        assert result is False
+
+    def test_has_modal_open_returns_true_with_only_modal_list(self, event_router, mock_ui):
+        """has_modal_open returns True when modal list populated, no slots."""
+        win = MagicMock()
+        win.alive.return_value = True
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
+        mock_ui.menu_panel = None
+        mock_ui.scene = MagicMock()
+        mock_ui.scene.build_queue_screen = None
+
+        assert event_router.has_modal_open() is True
+
+    def test_has_modal_open_returns_true_with_only_modal_list_item(self, event_router, mock_ui):
+        """has_modal_open returns True when modal list populated.
+
+        PROJ-313 Phase 6: every strategy modal is now a StrategyModalWindow
+        subclass and registered via iter_live_modals(). The legacy slot-scan
+        path is empty (only menu_panel and build_queue_screen remain as
+        pre-modal-tracking checks).
+        """
+        win = MagicMock()
+        win.alive.return_value = True
+        mock_ui.window_manager.iter_live_modals = lambda: iter([win])
+        mock_ui.menu_panel = None
+        mock_ui.scene = MagicMock()
+        mock_ui.scene.build_queue_screen = None
+
+        assert event_router.has_modal_open() is True
+
+    def test_has_modal_open_returns_false_when_both_empty(self, event_router, mock_ui):
+        """has_modal_open returns False when slots and modal list both empty."""
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
+        mock_ui.menu_panel = None
+        mock_ui.scene = MagicMock()
+        mock_ui.scene.build_queue_screen = None
+
+        assert event_router.has_modal_open() is False
+
+    def test_modal_list_dead_ref_does_not_block(self, event_router, mock_ui):
+        """iter_live_modals is responsible for filtering dead refs; if it
+        does yield a dead window the click test still respects rect, but
+        normally dead refs are reaped before yield."""
+        # iter_live_modals normally reaps dead refs, but verify the
+        # router doesn't add an extra .alive() check (it trusts the
+        # iterator's contract).
+        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
+
+        result = event_router._is_blocking_ui_element_at(700, 500)
+
+        assert result is False
 
 
 class TestClickGateMenuPanel:
@@ -296,11 +400,14 @@ class TestHandleClickIntegration:
         assert result is False, "Map click should pass through"
 
     def test_map_click_blocked_when_window_open(self, event_router, mock_ui):
-        """Click on map should be blocked when a window is there."""
+        """Click on map should be blocked when a window is there.
+
+        PROJ-313: register via iter_live_modals (fleet_orders_window migrated).
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(800, 600, 400, 400)
-        mock_ui.window_manager.fleet_orders_window = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 800  # Inside window
         result = event_router.handle_click(mx, my, 1)

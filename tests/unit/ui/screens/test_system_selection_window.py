@@ -59,7 +59,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current_system,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         assert window is not None
@@ -79,7 +79,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current_system,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         # Get the item list from the selection list
@@ -101,7 +101,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current_system,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         # Check format of display strings
@@ -123,7 +123,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current_system,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         # Simulate selection of Betelgeuse
@@ -159,7 +159,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current_system,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         # Mock button presses
@@ -184,7 +184,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current_system,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         # No selection made
@@ -222,7 +222,7 @@ class TestSystemSelectionWindow:
             manager=ui_manager,
             systems=systems,
             current_system=current,
-            on_selection_callback=callback
+            on_selection_callback=callback, window_manager=None
         )
 
         # Check the display strings contain correct distances

@@ -9,12 +9,16 @@ from __future__ import annotations
 import logging
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UILabel, UIButton, UIHorizontalSlider
-from typing import Optional, Callable, Any
+from pygame_gui.elements import UILabel, UIButton, UIHorizontalSlider
+from typing import Optional, Callable, Any, TYPE_CHECKING
 
 from game.ui.screens.species_selector_mixin import (
     build_species_selector, get_selected_race_id, load_race_config,
 )
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +27,19 @@ MIN_WATER = 0.0
 MAX_WATER = 1.0
 
 
-class WaterTargetEditor(UIWindow):
-    """Window for editing water coverage target on a planet."""
+class WaterTargetEditor(StrategyModalWindow):
+    """Window for editing water coverage target on a planet.
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
+    """
 
     def __init__(
         self,
         rect: pygame.Rect,
         manager: pygame_gui.UIManager,
         planet,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_apply_callback: Optional[Callable[[int, Optional[float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
@@ -41,6 +50,7 @@ class WaterTargetEditor(UIWindow):
             rect: Window rectangle.
             manager: UI manager.
             planet: Planet object with surface_water attribute (0.0 to 1.0).
+            window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
             on_apply_callback: Called with (planet_id, water_target) when Apply clicked.
                 water_target is None when clearing, otherwise a float 0.0-1.0.
             on_close_callback: Called when window is closed.
@@ -50,6 +60,7 @@ class WaterTargetEditor(UIWindow):
             rect, manager,
             window_display_title=f"Water Target: {planet.name}",
             resizable=False,
+            window_manager=window_manager,
         )
 
         self.planet = planet

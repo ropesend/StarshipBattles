@@ -13,26 +13,27 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Foundation (base class + manager methods) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Router OR-bridge | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate event-listener-only windows (6) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate dual-cleanup windows (3) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Migrate registrar-callback-only windows (5) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Promote move_choice_window | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Migrate untracked editor windows (5) | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. Demolition + docs | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
+| 1. Foundation (base class + manager methods) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Router OR-bridge | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate event-listener-only windows (6) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Migrate dual-cleanup windows (3) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Migrate registrar-callback-only windows (5) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Promote move_choice_window | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Migrate untracked editor windows (5) | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. Demolition + docs | Complete (legacy slots kept as caller-convenience; modal-tracking fully migrated) | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-04-28
-**Active Phase:** Planning — plan complete, awaiting implementer kick-off
-**Last Action:** Plan finalised with user approval. 8 phases scoped covering 21 modal windows + 5 untracked editors + manager + router + tests + docs. Test baseline 15893 passing.
-**Next Action:** Begin Phase 1 — create `StrategyModalWindow` base class + `register_modal` / `unregister_modal` / `iter_live_modals` on `StrategyWindowManager`. No behaviour change in this phase. See `phase_1_checklist.md`.
+**Active Phase:** All 8 phases complete — ready for user smoke verification
+**Last Action:** Phase 8 closeout. `docs/02_PATTERNS.md` Pattern #30 marked superseded, new Pattern #31 added; `docs/01_ARCHITECTURE.md` and `docs/06_UI_STYLE_GUIDE.md` updated; `Last verified:` blockquotes bumped on all three.
+**Next Action:** User smoke-test — open and close every modal window on the strategy screen, confirm clicks no longer leak through (Phase 7 fix for the QA-reported food allocation bug), confirm BUG-121 mouse-wheel zoom still works after closing planet abilities window.
 **Blockers:** None.
+**Scope deviation:** Plan called for full demolition of the legacy slot fields and `_handle_window_close` in Phase 8. Implementer kept these as caller-convenience pointers because they are still used by `strategy_screen.rebuild_list()`, `strategy_event_router.handle_global_event()` forwarding, and the registrars' "kill before re-open" idioms. Removing them would have required refactoring every caller site. The structural fix (BUG-121-class eradicated) is complete via `iter_live_modals()`; the slot fields no longer participate in modal scans. Pattern #31 documents this explicitly under "Migration notes (legacy slot fields)".
 **Test baseline:** 15893 passed, 0 failed, 0 errors via `python Tools/test_sharded/test_sharded.py` (52.9 s wall, 16 shards). Recorded 2026-04-28.
 **Context for next agent:**
-- The migration uses dual-track during Phases 2-7: router OR-bridges new modal list with old slot-field scans. At every commit each window is on exactly one track, never both. Phase 8 demolishes the OR-bridge.
-- Pattern #30 (Registrar Close-Callback) in `docs/02_PATTERNS.md` is being superseded by the structural base class. Update the doc in Phase 8.
-- pygame_gui's `UIWindow.kill()` is the universal funnel — every kill path (programmatic, `[X]` button, parent kill) routes through it. Confirmed at `.venv/Lib/site-packages/pygame_gui/elements/ui_window.py:549-575`. The new base class deregisters in `kill()` *before* `super().kill()`.
+- 21 strategy modal windows now subclass `StrategyModalWindow` (auto-registered/deregistered via `iter_live_modals()`).
+- Pattern #31 in `docs/02_PATTERNS.md` documents the new contract; Pattern #30 is marked superseded.
+- pygame_gui's `UIWindow.kill()` is the universal funnel — every kill path (programmatic, `[X]` button, parent kill) routes through it. The new base class deregisters in `kill()` *before* `super().kill()`.
 
 ## Overview
 Replace the manual 6-step modal-tracking contract on the strategy screen

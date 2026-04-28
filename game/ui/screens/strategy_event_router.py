@@ -58,38 +58,16 @@ class StrategyEventRouter:
         if self.ui.scene.build_queue_screen is not None:
             return True
 
-        # Check window manager for open windows (PROJ-86)
+        # PROJ-313 Phases 3-6: all strategy modal windows migrated to
+        # StrategyModalWindow and tracked via wm.iter_live_modals()
+        # (OR-bridge below). The slot-based scan path is empty.
         wm = self.ui.window_manager
-        if wm.fleet_orders_window is not None:
-            return True
-        if wm.planet_list_window is not None:
-            return True
-        if wm.star_list_window is not None:
-            return True
-        if wm.fleet_report_window is not None:
-            return True
-        if wm.transfer_dialog is not None:
-            return True
-        if wm.build_queue_list_window is not None:
-            return True
-        if wm.empire_build_queue_window is not None:
-            return True
-        if wm.event_log_window is not None:
-            return True
-        if wm.empire_panel_window is not None:
-            return True
-        if wm.move_choice_window is not None:
-            return True
-        if wm.cargo_quick_dialog is not None:
-            return True
-        if wm.planet_selection_window is not None:
-            return True
-        if wm.system_selection_window is not None:
-            return True
-        if wm.fleet_selection_window is not None:
-            return True
-        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
-        if wm.planet_abilities_window is not None:
+
+        # PROJ-313: Live-list of StrategyModalWindow subclasses. Phases
+        # 3-7 migrate the slot-based windows above into this list; Phase
+        # 8 deletes the slot scans entirely. During the migration this
+        # OR-bridge keeps both tracks active so each commit stays green.
+        for _ in wm.iter_live_modals():
             return True
 
         return False
@@ -227,6 +205,7 @@ class StrategyEventRouter:
             rect=rect,
             manager=ui.manager,
             planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply,
             race_config=race_config,
         )
@@ -248,6 +227,7 @@ class StrategyEventRouter:
         rect = create_centered_rect(400, 300, ui.width, ui.height)
         GravityTargetEditor(
             rect=rect, manager=ui.manager, planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
         )
 
@@ -268,6 +248,7 @@ class StrategyEventRouter:
         rect = create_centered_rect(400, 300, ui.width, ui.height)
         WaterTargetEditor(
             rect=rect, manager=ui.manager, planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
         )
 
@@ -288,6 +269,7 @@ class StrategyEventRouter:
         rect = create_centered_rect(400, 300, ui.width, ui.height)
         RadiationShieldEditor(
             rect=rect, manager=ui.manager, planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
         )
 
@@ -343,6 +325,7 @@ class StrategyEventRouter:
             economy_config=economy,
             resource_catalog=resource_catalog,
             race_resolver=resolve_race,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply,
         )
 
@@ -495,31 +478,24 @@ class StrategyEventRouter:
         """
         wm = self.ui.window_manager
 
-        # Check active windows that should block clicks
+        # Check active windows that should block clicks.
+        # PROJ-313: Slot scans here are being phased out as windows migrate
+        # to StrategyModalWindow; migrated windows participate via
+        # wm.iter_live_modals() in the OR-bridge below.
         blocking_windows = [
-            ('fleet_orders_window', wm.fleet_orders_window),
-            ('planet_list_window', wm.planet_list_window),
-            ('star_list_window', wm.star_list_window),
-            ('fleet_report_window', wm.fleet_report_window),
-            ('transfer_dialog', wm.transfer_dialog),
-            ('build_queue_list_window', wm.build_queue_list_window),
-            ('empire_build_queue_window', wm.empire_build_queue_window),
-            ('event_log_window', wm.event_log_window),
-            ('empire_panel_window', wm.empire_panel_window),
             ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
-            ('move_choice_window', wm.move_choice_window),
-            ('cargo_quick_dialog', wm.cargo_quick_dialog),
-            ('planet_selection_window', wm.planet_selection_window),
-            ('system_selection_window', wm.system_selection_window),
-            ('fleet_selection_window', wm.fleet_selection_window),
-            # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
-            ('planet_abilities_window', wm.planet_abilities_window),
         ]
         for name, window in blocking_windows:
             if window is not None:
                 is_alive = window.alive()
                 if is_alive and window.rect.collidepoint((mx, my)):
                     return True
+
+        # PROJ-313: OR-bridge with the live-list of StrategyModalWindow
+        # subclasses. iter_live_modals already filters dead refs.
+        for window in wm.iter_live_modals():
+            if window.rect.collidepoint((mx, my)):
+                return True
 
         # Check menu panel
         if self.ui.menu_panel is not None:

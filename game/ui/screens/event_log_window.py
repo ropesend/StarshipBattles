@@ -6,11 +6,11 @@ Supports filter tabs and scrollable event list sorted newest first.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIPanel, UIButton
+from pygame_gui.elements import UIPanel, UIButton
 
 from game.ui.components.table import VirtualTable, TableColumnManager, NoSelect
 from game.ui.screens.event_log_data_source import (
@@ -18,6 +18,10 @@ from game.ui.screens.event_log_data_source import (
     EVENT_LOG_COLUMNS,
 )
 from game.ui.screens.event_log_sidebar import EventLogSidebar
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
 # ---------------------------------------------------------------------------
@@ -35,18 +39,21 @@ SIDEBAR_WIDTH = 180
 DOUBLE_CLICK_THRESHOLD_MS = 400
 
 
-class EventLogWindow(UIWindow):
+class EventLogWindow(StrategyModalWindow):
     """Modal window displaying game events with filter tabs.
 
     Shows events in a scrollable list sorted newest-first.
     Filter tabs allow viewing All, Combat, Production, Colonies, or Fleet Ops events.
     Double-clicking a row with location data navigates the camera to that location.
 
+    PROJ-313: Migrated to StrategyModalWindow base class.
+
     Args:
         rect: Window position and size.
         manager: pygame_gui UIManager instance.
         events: List of event dicts (from facade).
-        on_close_callback: Called when the window is closed.
+        window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
+        on_close_callback: Called when the window is closed (registrar slot cleanup).
         on_navigate_callback: Called with [q, r] hex coords when user
             double-clicks an event row that has location data.
     """
@@ -56,6 +63,8 @@ class EventLogWindow(UIWindow):
         rect: pygame.Rect,
         manager: Any,
         events: list[dict],
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_close_callback: Optional[Callable] = None,
         on_navigate_callback: Optional[Callable] = None,
     ) -> None:
@@ -64,6 +73,7 @@ class EventLogWindow(UIWindow):
             manager=manager,
             window_display_title="Event Log",
             resizable=True,
+            window_manager=window_manager,
         )
         self.all_events = list(events)
         self.current_filter = "all"

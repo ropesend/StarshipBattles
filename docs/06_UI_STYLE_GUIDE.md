@@ -1,10 +1,51 @@
 # UI Style Guide
 
-> **Last verified:** 2026-04-11
+> **Last verified:** 2026-04-28 — Added Window Management section (PROJ-313) describing `StrategyModalWindow` as the canonical base class for new strategy-modal windows.
 
 Comprehensive reference for all color constants, theming systems, and usage patterns
 in the Starship Battles UI. The visual identity is a dark blue-gray palette with cyan
 accents -- a futuristic military starship aesthetic.
+
+---
+
+## 0. Window Management (PROJ-313)
+
+**New strategy-modal windows MUST subclass `StrategyModalWindow`** rather
+than `pygame_gui.elements.UIWindow` directly.
+
+```python
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+class MyNewWindow(StrategyModalWindow):
+    def __init__(
+        self,
+        rect,
+        manager,
+        # ... your domain args ...
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
+        # ... other kwargs ...
+    ):
+        super().__init__(
+            rect, manager,
+            window_display_title="My Window",
+            resizable=False,
+            window_manager=window_manager,
+        )
+        # ... your construction ...
+```
+
+The base class auto-registers the instance with the window manager on
+construction and auto-deregisters in `kill()`. The strategy event router
+walks `window_manager.iter_live_modals()` for click-blocking and modal
+detection — no manual slot field, no `has_modal_open()` clause, no
+`_is_blocking_ui_element_at()` clause required.
+
+For windows opened **outside** the strategy screen (e.g., from
+`BuildQueueScreen`), pass `window_manager=None`.
+
+See `docs/02_PATTERNS.md` Pattern #31 for the full rationale and
+historical context (Pattern #30 documents the superseded manual contract).
 
 ---
 

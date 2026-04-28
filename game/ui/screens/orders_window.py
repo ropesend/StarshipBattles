@@ -18,9 +18,11 @@ from game.core.hex_math import HexCoord
 from game.core.input_actions import InputAction
 from game.core.protocols import is_planet, is_fleet
 from game.strategy.data.order_types import OrderType
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
     from typing import Callable
 
 EDITABLE_ORDER_TYPES = frozenset({
@@ -31,18 +33,21 @@ EDITABLE_ORDER_TYPES = frozenset({
 })
 
 
-class OrdersWindow(pygame_gui.elements.UIWindow):
+class OrdersWindow(StrategyModalWindow):
     """
     Window to manage an entity's order queue (fleet or planet).
     Allows re-ordering, deletion, editing, and clearing.
 
     PROJ-238: Generalized from FleetOrdersWindow.
+    PROJ-313: Migrated to StrategyModalWindow base class.
     """
     def __init__(
         self,
         rect,
         manager,
         entity,
+        *,
+        window_manager: "StrategyWindowManager",
         entity_type: str = "fleet",
         input_mapper: Optional['InputMapper'] = None,
         clear_orders_callback: Optional['Callable[[int], None]'] = None,
@@ -73,7 +78,8 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
             manager=manager,
             window_display_title=title,
             element_id='orders_window',
-            resizable=True
+            resizable=True,
+            window_manager=window_manager,
         )
         self.entity = entity
         self.entity_type = entity_type

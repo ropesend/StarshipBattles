@@ -57,6 +57,36 @@ EXPECTED_WINDOW_SLOTS: frozenset[str] = frozenset({
     "planet_abilities_window",  # PROJ-309 3.10: now None-initialized
 })
 
+# PROJ-313: Slots whose windows have been migrated to StrategyModalWindow.
+# These slot fields still exist on the manager (registrar-convenience
+# pointers used by callers like strategy_screen.rebuild_list and
+# strategy_event_router.handle_global_event), but they no longer
+# participate in has_modal_open() / _is_blocking_ui_element_at() scans
+# — modal tracking goes through wm.iter_live_modals() instead. Tests
+# that asserted "setting this slot flips has_modal_open" must skip
+# migrated slots.
+PROJ_313_MIGRATED_SLOTS: frozenset[str] = frozenset({
+    # Phase 3 — event-listener-only windows
+    "fleet_orders_window",
+    "transfer_dialog",
+    "cargo_quick_dialog",
+    "planet_selection_window",
+    "system_selection_window",
+    "fleet_selection_window",
+    # Phase 4 — dual-cleanup windows
+    "empire_build_queue_window",
+    "event_log_window",
+    "empire_panel_window",
+    # Phase 5 — registrar-callback-only windows
+    "planet_list_window",
+    "star_list_window",
+    "build_queue_list_window",
+    "fleet_report_window",
+    "planet_abilities_window",
+    # Phase 6 — inline pygame_gui.UIWindow promoted to MoveChoiceWindow
+    "move_choice_window",
+})
+
 # Public methods the production code calls on StrategyWindowManager.
 EXPECTED_PUBLIC_METHODS: frozenset[str] = frozenset({
     "handle_resize",
@@ -238,10 +268,14 @@ class TestEventRouterContract:
 
     @pytest.mark.parametrize(
         "slot",
-        sorted(EXPECTED_WINDOW_SLOTS - {"settings_window"}),
+        sorted(
+            EXPECTED_WINDOW_SLOTS - {"settings_window"} - PROJ_313_MIGRATED_SLOTS
+        ),
         # `settings_window` is intentionally NOT scanned by has_modal_open
         # today (the SettingsWindow has its own modal-blocking via the
-        # settings flow). All other slots flip has_modal_open to True.
+        # settings flow). PROJ_313_MIGRATED_SLOTS are tracked via
+        # wm.iter_live_modals() instead of slot scans. All other slots
+        # flip has_modal_open to True.
     )
     def test_has_modal_open_returns_true_when_slot_set(
         self, window_manager, mock_scene, slot

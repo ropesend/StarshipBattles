@@ -103,7 +103,9 @@ class OrdersRegistrar:
         from game.ui.screens.orders_window import OrdersWindow
 
         c.fleet_orders_window = OrdersWindow(
-            rect, c.manager, entity, entity_type=entity_type,
+            rect, c.manager, entity,
+            window_manager=c,
+            entity_type=entity_type,
             input_mapper=c._mapper,
             clear_orders_callback=clear_orders_callback,
             delete_order_callback=delete_order_callback,

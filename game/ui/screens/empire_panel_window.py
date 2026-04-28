@@ -10,16 +10,18 @@ from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIPanel, UIButton, UILabel, UIImage, UITextBox, UIScrollingContainer
+from pygame_gui.elements import UIPanel, UIButton, UILabel, UIImage, UITextBox, UIScrollingContainer
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
     from game.core.protocols import IEmpire
     from game.core.registry import GameRegistries
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.core.paths import Paths
 from game.strategy.services.empire_economy_service import EmpireEconomyService  # PROJ-292 M1
 from game.ui.panels.empire_treasury_panel import EmpireTreasuryPanel, load_resource_icons
 from game.ui.screens.race_asset_loader import RaceAssetLoader
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 from game.ui.utils import create_section_header
 
 
@@ -39,7 +41,7 @@ SECTION_GAP = 15
 APTITUDE_COL_WIDTH = 200
 
 
-class EmpirePanelWindow(UIWindow):
+class EmpirePanelWindow(StrategyModalWindow):
     """
     Multi-tab window displaying empire-wide information.
 
@@ -47,6 +49,8 @@ class EmpirePanelWindow(UIWindow):
     - Treasury: Production, expenses, and storage by resource type
     - Population: Species portrait, flag, identity, aptitudes, environment
     - More To Follow: Placeholder for future features
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
     def __init__(
@@ -54,6 +58,8 @@ class EmpirePanelWindow(UIWindow):
         rect: pygame.Rect,
         manager: pygame_gui.UIManager,
         empire: 'IEmpire',
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         registries: 'GameRegistries' = None,
         race_registry: Optional[Any] = None,
@@ -65,7 +71,8 @@ class EmpirePanelWindow(UIWindow):
             rect: Window position and size
             manager: pygame_gui UIManager
             empire: Empire object with race_config, resource_pool, etc.
-            on_close_callback: Optional callback when window closes
+            window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
+            on_close_callback: Optional callback when window closes (registrar slot cleanup).
             registries: GameRegistries for DI (required)
             race_registry: PROJ-290 — optional `IRaceRegistry` threaded
                 through to `EmpireEconomyCalculator` so the Treasury tab
@@ -76,7 +83,8 @@ class EmpirePanelWindow(UIWindow):
             rect,
             manager,
             window_display_title="Empire Overview",
-            resizable=False
+            resizable=False,
+            window_manager=window_manager,
         )
 
         self.empire: 'IEmpire' = empire

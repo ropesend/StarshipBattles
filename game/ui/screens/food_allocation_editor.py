@@ -26,11 +26,14 @@ from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UILabel, UIButton, UIHorizontalSlider, UITextEntryLine
+from pygame_gui.elements import UILabel, UIButton, UIHorizontalSlider, UITextEntryLine
+
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
     from game.strategy.config.economy_config import EconomyConfig
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -152,8 +155,13 @@ def apply_allocations(
         cfg.food_allocation = safe_value
 
 
-class FoodAllocationEditor(UIWindow):
-    """pygame_gui window with one row per species on a colony."""
+class FoodAllocationEditor(StrategyModalWindow):
+    """pygame_gui window with one row per species on a colony.
+
+    PROJ-313: Migrated to StrategyModalWindow base class. Auto-registers
+    with the window manager for modal tracking — clicks inside the editor
+    no longer leak through to the strategy map.
+    """
 
     def __init__(
         self,
@@ -163,6 +171,8 @@ class FoodAllocationEditor(UIWindow):
         economy_config: 'EconomyConfig',
         resource_catalog: Any = None,
         race_resolver: Optional[Callable[[str], Optional[Any]]] = None,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_apply_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
     ) -> None:
@@ -171,6 +181,7 @@ class FoodAllocationEditor(UIWindow):
             rect, manager,
             window_display_title=f"{self._resource_display_name} Allocation — {planet.name}",
             resizable=False,
+            window_manager=window_manager,
         )
 
         self.planet = planet

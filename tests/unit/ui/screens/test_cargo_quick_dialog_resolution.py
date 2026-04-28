@@ -62,7 +62,7 @@ class TestCargoQuickDialogResolutionBug:
         # Act: Pass (0,0) as the hex_coord (simulating a click in system view)
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene, window_manager=None
         )
         
         # Assert: With the fix, the dialog should fallback to fleet.location (50, 100)
@@ -94,7 +94,7 @@ class TestCargoQuickDialogResolutionBug:
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
         
         # Assert

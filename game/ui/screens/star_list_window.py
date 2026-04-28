@@ -8,9 +8,14 @@ PROJ-231: Star List Panel.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import pygame
-from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu
+from pygame_gui.elements import UIPanel, UIButton, UIDropDownMenu
+
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.ui.config import UIConfig
@@ -30,7 +35,7 @@ from game.ui.components.table import VirtualTable, TableColumnManager, SingleSel
 from game.ui.screens.star_data_source import StarDataSource
 
 
-class StarListWindow(UIWindow):
+class StarListWindow(StrategyModalWindow):
     """Window displaying a filterable, sortable list of all stars in the galaxy.
 
     Features:
@@ -38,16 +43,20 @@ class StarListWindow(UIWindow):
     - Sidebar filters for type, mass, temperature, luminosity, age, radius
     - Navigation to star's system location on the strategy map
     - Preset save/load for filter configurations
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
-    def __init__(self, rect, manager, galaxy, on_close_callback=None,
-                 on_navigate_callback=None):
+    def __init__(self, rect, manager, galaxy, *,
+                 window_manager: "StrategyWindowManager | None" = None,
+                 on_close_callback=None, on_navigate_callback=None):
         """Initialize the Star List Window.
 
         Args:
             rect: Window rectangle.
             manager: pygame_gui UIManager.
             galaxy: Galaxy object containing all systems and stars.
+            window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
             on_close_callback: Called when window is closed.
             on_navigate_callback: Called with HexCoord to navigate camera to star.
         """
@@ -56,7 +65,12 @@ class StarListWindow(UIWindow):
         self.btn_navigate = None
         self.last_preset_selection = None
 
-        super().__init__(rect, manager, window_display_title="Galactic Star Registry", resizable=True)
+        super().__init__(
+            rect, manager,
+            window_display_title="Galactic Star Registry",
+            resizable=True,
+            window_manager=window_manager,
+        )
 
         self.galaxy = galaxy
         self.on_close_callback = on_close_callback

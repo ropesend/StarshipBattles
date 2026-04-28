@@ -236,14 +236,14 @@ class TestCloseCallback:
         cb = MagicMock()
         win = _make_window(on_close=cb)
         # Mock super().kill() to avoid pygame dependency
-        with patch('game.ui.screens.event_log_window.UIWindow.kill'):
+        with patch('pygame_gui.elements.UIWindow.kill'):
             win.kill()
         cb.assert_called_once()
 
     def test_kill_works_without_callback(self):
         """kill() should not error when on_close_callback is None."""
         win = _make_window(on_close=None)
-        with patch('game.ui.screens.event_log_window.UIWindow.kill'):
+        with patch('pygame_gui.elements.UIWindow.kill'):
             win.kill()  # Should not raise
 
 
@@ -310,9 +310,16 @@ class TestStrategyUIEventLogIntegration:
         assert ui.window_manager.event_log_window is None
 
     def test_has_modal_open_detects_event_log(self):
-        """_has_modal_open() should return True when event_log_window is set."""
+        """_has_modal_open() should return True when event log is open.
+
+        PROJ-313: event_log_window migrated to StrategyModalWindow;
+        registered via iter_live_modals.
+        """
         ui, _ = self._make_strategy_ui()
-        ui.window_manager.event_log_window = MagicMock()
+        win = MagicMock()
+        win.alive.return_value = True
+        # Simulate StrategyModalWindow registration
+        ui.window_manager.iter_live_modals = lambda: iter([win])
         assert ui._has_modal_open() is True
 
     def test_has_modal_open_false_when_no_event_log(self):

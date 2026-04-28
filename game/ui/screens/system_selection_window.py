@@ -4,20 +4,28 @@ System Selection Window - Star system selection dialog for warp point targeting.
 Used for selecting a target star system when issuing Open Warp Point orders.
 Displays systems alphabetically with hex distances from the current system.
 """
+from typing import TYPE_CHECKING
+
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
+from pygame_gui.elements import UISelectionList, UIButton, UILabel
 
 from game.core.hex_math import hex_distance
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
-class SystemSelectionWindow(UIWindow):
+class SystemSelectionWindow(StrategyModalWindow):
     """
     Dialog window for selecting a target star system.
 
     Displays an alphabetically sorted, scrollable list of star systems
     with their hex distances from the current system. Used by the Open Warp Point
     superweapon order flow.
+
+    PROJ-313: migrated to StrategyModalWindow base class.
     """
 
     def __init__(
@@ -26,7 +34,9 @@ class SystemSelectionWindow(UIWindow):
         manager,
         systems,
         current_system,
-        on_selection_callback
+        on_selection_callback,
+        *,
+        window_manager: "StrategyWindowManager",
     ):
         """
         Initialize system selection window.
@@ -37,8 +47,12 @@ class SystemSelectionWindow(UIWindow):
             systems: List of StarSystem objects to select from (already filtered by caller).
             current_system: Current StarSystem (for distance calculation).
             on_selection_callback: Called with selected system name (str) on confirm.
+            window_manager: PROJ-313 StrategyWindowManager for modal registration.
         """
-        super().__init__(rect, manager, window_display_title="Select Target System")
+        super().__init__(
+            rect, manager, window_display_title="Select Target System",
+            window_manager=window_manager,
+        )
         self.systems = systems
         self.current_system = current_system
         self.callback = on_selection_callback
