@@ -37,7 +37,7 @@ _REM_COL_TO_RESOURCE = {v: k for k, v in _RESOURCE_REM_COLUMNS.items()}
 _PORTRAIT_SIZE = 40
 
 BUILD_QUEUE_COLUMNS: List[Dict[str, Any]] = [
-    {"id": "actions",  "title": "",      "width": 100,  "visible": True, "type": "actions"},
+    {"id": "actions",  "title": "",      "width": 150,  "visible": True, "type": "actions"},
     {"id": "portrait", "title": "",      "width": 50,  "visible": True, "type": "image"},
     {"id": "item",     "title": "Item",  "width": 200, "visible": True},
     {"id": "turns",    "title": "Turns", "width": 60,  "visible": True},

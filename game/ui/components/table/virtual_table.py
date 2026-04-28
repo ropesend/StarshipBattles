@@ -279,7 +279,19 @@ class VirtualTable:
                                     pygame.Surface((rect.width, rect.height))
                                 )
                     elif widget["type"] == "actions":
-                        pass
+                        actions_dict = widget.get("actions_dict", {})
+                        up_btn = actions_dict.get("up")
+                        down_btn = actions_dict.get("down")
+                        if up_btn is not None:
+                            if data_idx == 0:
+                                up_btn.disable()
+                            else:
+                                up_btn.enable()
+                        if down_btn is not None:
+                            if data_idx >= current_count - 1:
+                                down_btn.disable()
+                            else:
+                                down_btn.enable()
                     else:
                         text = str(self._data_source.get_cell_value(data_idx, col_id))
                         if text != widget.get("_last_text"):

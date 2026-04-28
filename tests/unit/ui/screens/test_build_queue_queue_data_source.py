@@ -117,6 +117,20 @@ class TestBuildQueueColumns:
         for col_id in expected:
             assert col_id in ids, f"Missing expected column: {col_id}"
 
+    def test_actions_column_wide_enough_for_four_buttons(self):
+        """FEAT-18: actions column must fit 4 buttons (+, -, ^, v).
+
+        Layout in VirtualTable._rebuild_row_pool: 5 px left pad +
+        4 buttons * 30 px + 3 gaps * 5 px + 5 px right pad = 145 px min.
+        Anything narrower causes the down-button to render past the cell
+        edge and be overpainted by the adjacent portrait widget.
+        """
+        actions_col = next(c for c in BUILD_QUEUE_COLUMNS if c["id"] == "actions")
+        assert actions_col["width"] >= 145, (
+            f"actions column width {actions_col['width']} too narrow for "
+            f"4 action buttons; need at least 145 px"
+        )
+
 
 # =======================================================================
 # Row Count Tests

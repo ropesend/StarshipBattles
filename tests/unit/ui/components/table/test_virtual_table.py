@@ -665,6 +665,110 @@ class TestVirtualTable:
             else:
                 raise
 
+    @pytest.mark.parametrize(
+        "row_idx,row_count,exp_up_disabled,exp_down_disabled",
+        [
+            (0, 3, True, False),   # first row: up disabled, down enabled
+            (1, 3, False, False),  # middle row: both enabled
+            (2, 3, False, True),   # last row: up enabled, down disabled
+            (0, 1, True, True),    # single row: both disabled
+        ],
+        ids=["first", "middle", "last", "single"],
+    )
+    @patch("game.ui.components.table.virtual_table.UIImage")
+    @patch("game.ui.components.table.virtual_table.UILabel")
+    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
+    @patch("game.ui.components.table.virtual_table.UIPanel")
+    @patch("game.ui.components.table.virtual_table.TableHeader")
+    def test_update_visible_rows_disables_edge_action_buttons(
+        self,
+        mock_header_class,
+        mock_panel_class,
+        mock_scrollbar_class,
+        mock_label_class,
+        mock_image_class,
+        mock_panel,
+        mock_manager,
+        column_manager,
+        selection_strategy,
+        row_idx,
+        row_count,
+        exp_up_disabled,
+        exp_down_disabled,
+    ):
+        """FEAT-18: up disabled on row 0, down disabled on last row.
+
+        Buttons in the middle stay enabled. On a single-row queue, both
+        edges coincide so both up and down are disabled.
+        """
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_scrollbar = MagicMock()
+        mock_scrollbar.start_percentage = 0.0
+        mock_scrollbar_class.return_value = mock_scrollbar
+
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        mock_panel_class.return_value = mock_list_panel
+
+        data_source = MockDataSource(rows=row_count)
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+
+        # Replace pool with one slot whose row_index is the row under test.
+        # bg.visible defaults via MagicMock; data_idx must equal row_idx.
+        up_btn = MagicMock()
+        down_btn = MagicMock()
+        bg_mock = MagicMock()
+        bg_mock.visible = True
+        table._row_pool = [{
+            "bg": bg_mock,
+            "row_index": -1,
+            "_last_color": None,
+            "widgets": [{
+                "type": "actions",
+                "col": {"id": "actions", "type": "actions"},
+                "actions_dict": {
+                    "add": MagicMock(),
+                    "remove": MagicMock(),
+                    "up": up_btn,
+                    "down": down_btn,
+                },
+            }],
+        }]
+
+        # Force start_index to row_idx so pool slot 0 maps to row_idx.
+        # update_visible_rows: start_index = int(scroll_y // row_height)
+        # with scroll_y = current_pct * total_h. Easier: directly call
+        # the path by setting scrollbar percentage so that
+        # start_index == row_idx.
+        total_h = row_count * table._row_height
+        if total_h > 0:
+            mock_scrollbar.start_percentage = (row_idx * table._row_height) / total_h
+        table.force_update()
+
+        table.update_visible_rows()
+
+        assert up_btn.disable.called == exp_up_disabled, (
+            f"up.disable() called={up_btn.disable.called}, "
+            f"expected={exp_up_disabled} for row {row_idx}/{row_count}"
+        )
+        assert down_btn.disable.called == exp_down_disabled, (
+            f"down.disable() called={down_btn.disable.called}, "
+            f"expected={exp_down_disabled} for row {row_idx}/{row_count}"
+        )
+        # Inverse: when a button isn't disabled, it must be enabled
+        if not exp_up_disabled:
+            assert up_btn.enable.called, "up should be enabled when not on first row"
+        if not exp_down_disabled:
+            assert down_btn.enable.called, "down should be enabled when not on last row"
+
     @patch("game.ui.components.table.virtual_table.UIImage")
     @patch("game.ui.components.table.virtual_table.UILabel")
     @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
