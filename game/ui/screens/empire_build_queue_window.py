@@ -18,9 +18,10 @@ from typing import Any, Callable, Dict, List, Optional, Set, TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIPanel
+from pygame_gui.elements import UIPanel
 
 from game.ui.config import UIConfig
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 import logging
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ from game.ui.screens.empire_build_queue_formatter import (
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
 @dataclass
@@ -58,18 +60,22 @@ class BatchAddResult:
     skipped: int
 
 
-class EmpireBuildQueueWindow(UIWindow):
+class EmpireBuildQueueWindow(StrategyModalWindow):
     """Window showing all empire build queues in a scrollable list.
 
     Uses MVVM pattern: ViewModel owns state, Sidebar owns filter UI,
     Window coordinates rendering and navigation.
+
+    PROJ-313: Migrated to StrategyModalWindow. Auto-registers with the
+    window manager for modal tracking.
 
     Args:
         rect: Window rectangle on screen.
         manager: pygame_gui UIManager instance.
         empire: Empire whose queues to display.
         galaxy: Galaxy instance for system name lookups.
-        on_close_callback: Called when window is closed.
+        window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
+        on_close_callback: Called when window is closed (registrar slot cleanup).
         on_navigate_to_hex: Called with (hex_coord, source) when user
             navigates to a specific queue.
     """
@@ -80,6 +86,8 @@ class EmpireBuildQueueWindow(UIWindow):
         manager: Any,
         empire: Empire,
         galaxy: Any,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_close_callback: Optional[Callable] = None,
         on_navigate_to_hex: Optional[Callable] = None,
         session: Any = None,
@@ -88,11 +96,13 @@ class EmpireBuildQueueWindow(UIWindow):
         """Initialize the empire build queue window.
 
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
+        PROJ-313: Migrated to StrategyModalWindow base class.
         """
         super().__init__(
             rect, manager,
             window_display_title="Empire Build Yards",
             resizable=True,
+            window_manager=window_manager,
         )
 
         self.empire = empire

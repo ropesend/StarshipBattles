@@ -66,6 +66,7 @@ class EmpireBuildQueueRegistrar:
             c.manager,
             empire,
             galaxy,
+            window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_to_hex=c.scene.on_navigate_to_hex_build,
             session=c.scene.session,

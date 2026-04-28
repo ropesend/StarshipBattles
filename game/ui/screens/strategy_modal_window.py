@@ -95,7 +95,11 @@ class StrategyModalWindow(UIWindow):
         deregistration step entirely.
         """
         try:
-            if self._window_manager is not None:
-                self._window_manager.unregister_modal(self)
+            # getattr-with-default tolerates tests that bypass __init__
+            # via __new__ + patched-init technique (existing pattern in
+            # this codebase).
+            wm = getattr(self, "_window_manager", None)
+            if wm is not None:
+                wm.unregister_modal(self)
         finally:
             super().kill()

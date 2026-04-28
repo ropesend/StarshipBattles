@@ -211,11 +211,15 @@ class TestClickGateWindows:
         assert result is True
 
     def test_click_blocked_by_empire_build_queue_window(self, event_router, mock_ui):
-        """Click on empire_build_queue_window should be blocked."""
+        """Click on empire_build_queue_window should be blocked.
+
+        PROJ-313: empire_build_queue_window migrated to StrategyModalWindow;
+        registered via iter_live_modals.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(100, 100, 2000, 1400)
-        mock_ui.window_manager.empire_build_queue_window = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -223,11 +227,14 @@ class TestClickGateWindows:
         assert result is True
 
     def test_click_blocked_by_event_log_window(self, event_router, mock_ui):
-        """Click on event_log_window should be blocked."""
+        """Click on event_log_window should be blocked.
+
+        PROJ-313: event_log_window migrated; uses iter_live_modals.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(400, 200, 1600, 1000)
-        mock_ui.window_manager.event_log_window = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 700
         result = event_router._is_blocking_ui_element_at(mx, my)

@@ -73,6 +73,10 @@ PROJ_313_MIGRATED_SLOTS: frozenset[str] = frozenset({
     "planet_selection_window",
     "system_selection_window",
     "fleet_selection_window",
+    # Phase 4 — dual-cleanup windows
+    "empire_build_queue_window",
+    "event_log_window",
+    "empire_panel_window",
 })
 
 # Public methods the production code calls on StrategyWindowManager.

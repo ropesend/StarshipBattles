@@ -60,10 +60,8 @@ class StrategyEventRouter:
 
         # Check window manager for open windows (PROJ-86)
         wm = self.ui.window_manager
-        # PROJ-313 Phase 3: fleet_orders_window, transfer_dialog,
-        # cargo_quick_dialog, planet_selection_window, system_selection_window,
-        # fleet_selection_window migrated to StrategyModalWindow; tracked via
-        # wm.iter_live_modals() in the OR-bridge below.
+        # PROJ-313 Phases 3-4: migrated windows tracked via
+        # wm.iter_live_modals() (OR-bridge below).
         if wm.planet_list_window is not None:
             return True
         if wm.star_list_window is not None:
@@ -71,12 +69,6 @@ class StrategyEventRouter:
         if wm.fleet_report_window is not None:
             return True
         if wm.build_queue_list_window is not None:
-            return True
-        if wm.empire_build_queue_window is not None:
-            return True
-        if wm.event_log_window is not None:
-            return True
-        if wm.empire_panel_window is not None:
             return True
         if wm.move_choice_window is not None:
             return True
@@ -503,9 +495,6 @@ class StrategyEventRouter:
             ('star_list_window', wm.star_list_window),
             ('fleet_report_window', wm.fleet_report_window),
             ('build_queue_list_window', wm.build_queue_list_window),
-            ('empire_build_queue_window', wm.empire_build_queue_window),
-            ('event_log_window', wm.event_log_window),
-            ('empire_panel_window', wm.empire_panel_window),
             ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
             ('move_choice_window', wm.move_choice_window),
             # PROJ-309 sub-phase 3.10: was previously omitted from this scan.

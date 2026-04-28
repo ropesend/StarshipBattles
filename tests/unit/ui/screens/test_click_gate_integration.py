@@ -351,30 +351,39 @@ class TestClickGateWithAllWindowTypes:
         assert result is True
 
     def test_empire_build_queue_window_blocks(self):
-        """Empire build queue window blocks clicks in its area."""
+        """Empire build queue window blocks clicks in its area.
+
+        PROJ-313: migrated to StrategyModalWindow; registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.empire_build_queue_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 
         assert result is True
 
     def test_event_log_window_blocks(self):
-        """Event log window blocks clicks in its area."""
+        """Event log window blocks clicks in its area.
+
+        PROJ-313: migrated to StrategyModalWindow; registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.event_log_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 
         assert result is True
 
     def test_empire_panel_window_blocks(self):
-        """Empire panel window blocks clicks in its area."""
+        """Empire panel window blocks clicks in its area.
+
+        PROJ-313: migrated to StrategyModalWindow; registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.empire_panel_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 

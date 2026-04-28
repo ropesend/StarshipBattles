@@ -48,6 +48,7 @@ class EventLogRegistrar:
             rect,
             c.manager,
             events,
+            window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_callback=self._on_navigate,
         )
