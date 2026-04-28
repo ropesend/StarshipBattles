@@ -19,6 +19,11 @@ from game.core.hex_math import hex_to_pixel, HexCoord
 from game.core.protocols import is_planet, is_fleet, is_star_system, is_warp_point
 
 
+# FEAT-21: geometric step for keyboard +/- zoom. One press ≈ 3 mouse wheel ticks
+# (1.15^≈2.9). Tunable single constant.
+ZOOM_KEYBOARD_STEP = 1.5
+
+
 class CameraNavigator:
     """Manages camera focus and zoom operations."""
 
@@ -173,6 +178,28 @@ class CameraNavigator:
         self.camera.zoom = 2.0
 
         logger.debug(f"System View: {target_sys.name} at zoom=2.0")
+
+    def zoom_in_step(self) -> None:
+        """Zoom in by one keyboard step (FEAT-21).
+
+        Mutates ``camera.target_zoom`` geometrically; the existing exponential
+        interpolation in ``Camera.update()`` smooths the visible animation.
+        Clamped to ``camera.max_zoom``.
+        """
+        cam = self.camera
+        cam.target_zoom = min(cam.max_zoom, cam.target_zoom * ZOOM_KEYBOARD_STEP)
+        logger.debug(f"Keyboard zoom in: target_zoom={cam.target_zoom:.3f}")
+
+    def zoom_out_step(self) -> None:
+        """Zoom out by one keyboard step (FEAT-21).
+
+        Mutates ``camera.target_zoom`` geometrically; the existing exponential
+        interpolation in ``Camera.update()`` smooths the visible animation.
+        Clamped to ``camera.min_zoom``.
+        """
+        cam = self.camera
+        cam.target_zoom = max(cam.min_zoom, cam.target_zoom / ZOOM_KEYBOARD_STEP)
+        logger.debug(f"Keyboard zoom out: target_zoom={cam.target_zoom:.3f}")
 
     def cycle_selection(self, obj_type, direction) -> Any:
         """

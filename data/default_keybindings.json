@@ -17,6 +17,8 @@
     "strategy.save_game": {"key": "K_s", "modifiers": ["ctrl"]},
     "strategy.zoom_galaxy": {"key": "K_g", "modifiers": ["shift"]},
     "strategy.zoom_system": {"key": "K_s", "modifiers": ["shift"]},
+    "strategy.zoom_in": {"key": "K_KP_PLUS", "modifiers": []},
+    "strategy.zoom_out": {"key": "K_KP_MINUS", "modifiers": []},
 
     "fleet.move": {"key": "K_m", "modifiers": []},
     "fleet.join": {"key": "K_j", "modifiers": []},

@@ -52,6 +52,12 @@ class UIActionRouter:
         elif action == InputAction.STRATEGY_ZOOM_SYSTEM:
             self.scene._camera_nav.zoom_to_system()
             return True
+        elif action == InputAction.STRATEGY_ZOOM_IN:
+            self.scene._camera_nav.zoom_in_step()
+            return True
+        elif action == InputAction.STRATEGY_ZOOM_OUT:
+            self.scene._camera_nav.zoom_out_step()
+            return True
 
         # --- Button-triggered actions ---
         elif action == InputAction.STRATEGY_NEXT_TURN:

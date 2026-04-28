@@ -44,6 +44,8 @@ class InputAction(str, Enum):
     STRATEGY_SAVE_GAME = "strategy.save_game"
     STRATEGY_ZOOM_GALAXY = "strategy.zoom_galaxy"
     STRATEGY_ZOOM_SYSTEM = "strategy.zoom_system"
+    STRATEGY_ZOOM_IN = "strategy.zoom_in"
+    STRATEGY_ZOOM_OUT = "strategy.zoom_out"
 
     # --- Fleet commands ---
     FLEET_MOVE = "fleet.move"
@@ -115,6 +117,8 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.STRATEGY_SAVE_GAME: "Save Game",
     InputAction.STRATEGY_ZOOM_GALAXY: "Zoom to Galaxy",
     InputAction.STRATEGY_ZOOM_SYSTEM: "Zoom to System",
+    InputAction.STRATEGY_ZOOM_IN: "Zoom In",
+    InputAction.STRATEGY_ZOOM_OUT: "Zoom Out",
     # Fleet
     InputAction.FLEET_MOVE: "Move Fleet",
     InputAction.FLEET_JOIN: "Join Fleet",
@@ -178,6 +182,8 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
         InputAction.STRATEGY_SAVE_GAME,
         InputAction.STRATEGY_ZOOM_GALAXY,
         InputAction.STRATEGY_ZOOM_SYSTEM,
+        InputAction.STRATEGY_ZOOM_IN,
+        InputAction.STRATEGY_ZOOM_OUT,
     ],
     "Fleet Commands": [
         InputAction.FLEET_MOVE,
@@ -257,6 +263,9 @@ _SPECIAL_KEY_DISPLAY: Dict[str, str] = {
     "K_BACKSLASH": "\\",
     "K_MINUS": "-",
     "K_EQUALS": "=",
+    "K_KP_PLUS": "Numpad +",
+    "K_KP_MINUS": "Numpad -",
+    "K_KP_EQUALS": "Numpad =",
 }
 
 # Canonical modifier display order

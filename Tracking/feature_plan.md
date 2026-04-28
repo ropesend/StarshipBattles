@@ -18,7 +18,7 @@
 | FEAT-18 | 2026-04-27 | Build queue — add reorder-down arrow button | Awaiting Confirmation | [FEAT-18.md](features/active/FEAT-18.md) |
 | FEAT-19 | 2026-04-27 | Surplus-food happiness bonus (allocation > 1.0× rewards happiness) | Awaiting Confirmation | [FEAT-19.md](features/active/FEAT-19.md) |
 | FEAT-20 | 2026-04-27 | Dev "Run 10 turns" button next to End Turn | Pending | [FEAT-20.md](features/active/FEAT-20.md) |
-| FEAT-21 | 2026-04-27 | Strategy screen — numpad +/- keyboard zoom controls | Pending | [FEAT-21.md](features/active/FEAT-21.md) |
+| FEAT-21 | 2026-04-27 | Strategy screen — numpad +/- keyboard zoom controls | Awaiting Confirmation | [FEAT-21.md](features/active/FEAT-21.md) |
 
 ## 3. Current Focus: None
 No features currently in progress.

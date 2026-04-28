@@ -152,6 +152,20 @@ class TestZoomViaMapper:
         mock_scene._camera_nav.zoom_to_system.assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
+    def test_kp_plus_zooms_in(self, mock_scene, mapper):
+        """Numpad + triggers keyboard zoom-in step (FEAT-21)."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.handle_event(_keydown(pygame.K_KP_PLUS))
+        mock_scene._camera_nav.zoom_in_step.assert_called_once()
+        mock_scene.ui.handle_event.assert_called()
+
+    def test_kp_minus_zooms_out(self, mock_scene, mapper):
+        """Numpad - triggers keyboard zoom-out step (FEAT-21)."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.handle_event(_keydown(pygame.K_KP_MINUS))
+        mock_scene._camera_nav.zoom_out_step.assert_called_once()
+        mock_scene.ui.handle_event.assert_called()
+
 
 class TestNewHotkeyButtonActions:
     """New hotkey-triggered button actions (Task 2.5)."""
