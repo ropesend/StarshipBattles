@@ -4,6 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-315 | Fleet Report Component Damage Panel | Planning | 2026-04-28 | 2026-04-28 |
+| PROJ-314 | Unify Ship Theme Loader Schema | Planning | 2026-04-28 | 2026-04-28 |
+| PROJ-313 | Strategy Modal Window Base Class Refactor | Planning | 2026-04-28 | 2026-04-28 |
 | PROJ-312 | Add Battle Replay System | Plan Approved | 2026-04-27 | 2026-04-27 |
 | PROJ-310 | Deep Nesting Investigative Review | Planning | 2026-04-26 | 2026-04-26 |
 | PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | Planning | 2026-04-26 | 2026-04-26 |
