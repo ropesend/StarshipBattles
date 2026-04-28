@@ -48,6 +48,7 @@ This module uses defensive programming for robustness during combat:
 from __future__ import annotations
 
 import logging
+import random
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -81,10 +82,29 @@ _NO_TARGET_BEHAVIORS = frozenset({
 })
 
 class AIController:
-    def __init__(self, ship: 'IControllableShip', grid: 'SpatialGrid', enemy_team_id: int):
+    def __init__(
+        self,
+        ship: 'IControllableShip',
+        grid: 'SpatialGrid',
+        enemy_team_id: int,
+        *,
+        rng: Optional[random.Random] = None,
+    ):
+        """Construct an AI controller.
+
+        PROJ-312: ``rng`` is forwarded to behaviors that need a seeded RNG
+        (e.g. ``ErraticBehavior``). Production callers — the
+        ``AIControllerFactory`` — pass ``BattleEngine.rng`` so replay
+        determinism holds. When ``rng`` is ``None``, a fresh
+        ``random.Random()`` instance is constructed for this controller; it
+        is isolated from module-level state but is NOT seed-deterministic.
+        Direct test constructions that don't care about determinism may
+        omit the parameter.
+        """
         self.ship = ship
         self.grid = grid
         self.enemy_team_id = enemy_team_id
+        self._rng: random.Random = rng if rng is not None else random.Random()
 
         # Initialize behaviors
         self.behaviors = {
@@ -97,7 +117,7 @@ class AIController:
             'stationary_fire': StationaryFireBehavior(self),
             'straight_line': StraightLineBehavior(self),
             'rotate_only': RotateOnlyBehavior(self),
-            'erratic': ErraticBehavior(self),
+            'erratic': ErraticBehavior(self, rng=self._rng),
             'orbit': OrbitBehavior(self)
         }
         self.current_behavior = None

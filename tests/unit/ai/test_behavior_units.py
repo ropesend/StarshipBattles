@@ -3,6 +3,7 @@ Unit tests for game/ai/behaviors.py
 
 Tests each behavior class's update logic using mocked controllers and ships.
 """
+import random
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 
@@ -488,7 +489,7 @@ class TestErraticBehavior:
 
     def test_erratic_changes_direction(self, mock_controller, mock_target):
         """Direction changes over time."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         initial_direction = behavior.current_direction
@@ -505,7 +506,7 @@ class TestErraticBehavior:
 
     def test_erratic_enter_randomizes(self, mock_controller):
         """enter() sets random initial values."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         assert behavior.direction_timer == 0.0
@@ -514,7 +515,7 @@ class TestErraticBehavior:
 
     def test_erratic_enter_resets_timer(self, mock_controller, mock_target):
         """enter() resets direction_timer to 0.0 (TCG-FND-023)."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
 
         # Simulate some updates to advance timer
         behavior.direction_timer = 5.0
@@ -530,7 +531,7 @@ class TestErraticBehavior:
         """enter() sets next_change_interval within configured bounds (TCG-FND-023)."""
         from game.core.config import AIConfig
 
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
 
         # Call enter multiple times and check bounds
         for _ in range(10):
@@ -542,7 +543,7 @@ class TestErraticBehavior:
         """update() increments direction_timer by TICK_RATE (TCG-FND-023)."""
         from game.core.config import PhysicsConfig
 
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
         initial_timer = behavior.direction_timer
         behavior.next_change_interval = 100.0  # Prevent direction change
@@ -553,7 +554,7 @@ class TestErraticBehavior:
 
     def test_erratic_update_direction_change_resets_timer(self, mock_controller, mock_target):
         """update() resets timer when direction changes (TCG-FND-023)."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         # Set timer to exceed next change interval
@@ -567,7 +568,7 @@ class TestErraticBehavior:
 
     def test_erratic_update_respects_strategy_intervals(self, mock_controller, mock_target):
         """update() uses strategy's turn_interval_min/max if provided (TCG-FND-023)."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         # Force a direction change
@@ -585,7 +586,7 @@ class TestErraticBehavior:
 
     def test_erratic_update_always_thrusts_forward(self, mock_controller, mock_target):
         """update() always calls thrust_forward (TCG-FND-023)."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         # Test with current_direction = 0 (no rotation)
@@ -598,7 +599,7 @@ class TestErraticBehavior:
 
     def test_erratic_update_rotates_when_direction_nonzero(self, mock_controller, mock_target):
         """update() calls rotate when current_direction is nonzero (TCG-FND-023)."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         behavior.current_direction = 1
@@ -610,7 +611,7 @@ class TestErraticBehavior:
 
     def test_erratic_update_no_rotate_when_direction_zero(self, mock_controller, mock_target):
         """update() does not call rotate when current_direction is 0 (TCG-FND-023)."""
-        behavior = ErraticBehavior(mock_controller)
+        behavior = ErraticBehavior(mock_controller, rng=random.Random())
         behavior.enter()
 
         behavior.current_direction = 0

@@ -6,7 +6,12 @@ for ships and isolates AI layer imports from BattleEngine.
 
 PROJ-126: Factory moved to game/ai/ layer to fix architecture violation.
 Factory now uses two-phase initialization (set_grid after construction).
+
+PROJ-312: Factory now also requires `set_rng()` before `create_for_ship` —
+the per-battle seeded RNG is forwarded to AIController/ErraticBehavior so
+replay determinism holds (Pattern #18 / docs/02_PATTERNS.md).
 """
+import random
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -48,6 +53,7 @@ class TestAIControllerFactory:
 
         factory = AIControllerFactory()
         factory.set_grid(grid)
+        factory.set_rng(random.Random(0))
         controller = factory.create_for_ship(ship, enemy_team_id=1)
 
         assert controller is not None
@@ -82,6 +88,7 @@ class TestAIControllerFactory:
 
         factory = AIControllerFactory()
         factory.set_grid(grid)
+        factory.set_rng(random.Random(0))
         controllers = factory.create_for_ships(ships, enemy_team_id=1)
 
         assert len(controllers) == 2
@@ -101,6 +108,7 @@ class TestAIControllerFactory:
 
         factory = AIControllerFactory()
         factory.set_grid(grid)
+        factory.set_rng(random.Random(0))
         controller = factory.create_for_ship(ship, enemy_team_id=1)
 
         # Verify enemy team is set (AIController stores this)
@@ -119,6 +127,7 @@ class TestAIControllerFactory:
 
         factory = AIControllerFactory()
         factory.set_grid(grid)
+        factory.set_rng(random.Random(0))
         controller = factory.create_for_ship(ship, enemy_team_id=1)
 
         # The controller's ship should be a ShipControllableAdapter

@@ -18,6 +18,7 @@ Usage:
     controller = factory.create_for_ship(ship, enemy_team_id=1)
     controllers = factory.create_for_ships([ship1, ship2], enemy_team_id=1)
 """
+import random
 from typing import List, Optional, TYPE_CHECKING
 
 from game.core.exceptions import StateException
@@ -41,15 +42,17 @@ class AIControllerFactory:
 
     The factory uses a two-phase initialization pattern:
     1. Factory is created without dependencies
-    2. set_grid() is called when the grid becomes available
+    2. set_grid() and set_rng() are called when the grid + RNG become
+       available (PROJ-312: seeded RNG is required for replay determinism)
 
     This allows the factory to be created before BattleEngine exists, then
-    configured once the engine's grid is available.
+    configured once the engine's grid and per-battle RNG are available.
     """
 
     def __init__(self):
-        """Create an AI controller factory (without grid)."""
+        """Create an AI controller factory (without grid or rng)."""
         self._grid: Optional['SpatialGrid'] = None
+        self._rng: Optional[random.Random] = None
 
     def set_grid(self, grid: 'SpatialGrid') -> None:
         """
@@ -63,6 +66,20 @@ class AIControllerFactory:
         """
         self._grid = grid
 
+    def set_rng(self, rng: random.Random) -> None:
+        """Set the per-battle seeded RNG forwarded to AI controllers.
+
+        PROJ-312: replay determinism requires that every RNG consumer in
+        the battle hot path receive ``BattleEngine.rng`` (a seeded
+        ``random.Random`` instance) via DI. The factory threads this rng
+        into each ``AIController`` it builds.
+
+        Called by ``BattleEngine.start_teams`` after
+        ``_initialize_start_state(seed)`` constructs the per-battle RNG and
+        BEFORE controllers are created.
+        """
+        self._rng = rng
+
     def create_for_ship(self, ship: 'Ship', enemy_team_id: int) -> IAIController:
         """
         Create an AI controller for a single ship.
@@ -75,7 +92,7 @@ class AIControllerFactory:
             An AIController instance that implements IAIController
 
         Raises:
-            StateException: If set_grid() hasn't been called
+            StateException: If set_grid() or set_rng() hasn't been called
         """
         if self._grid is None:
             raise StateException(
@@ -83,8 +100,14 @@ class AIControllerFactory:
                 code=ErrorCode.NOT_INITIALIZED.value,
                 context={"state": "grid_missing"}
             )
+        if self._rng is None:
+            raise StateException(
+                "AIControllerFactory rng not initialized",
+                code=ErrorCode.NOT_INITIALIZED.value,
+                context={"state": "rng_missing"}
+            )
         adapter = ShipControllableAdapter(ship)
-        return AIController(adapter, self._grid, enemy_team_id)
+        return AIController(adapter, self._grid, enemy_team_id, rng=self._rng)
 
     def create_for_ships(self, ships: List['Ship'], enemy_team_id: int) -> List[IAIController]:
         """

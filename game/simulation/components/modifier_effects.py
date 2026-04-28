@@ -93,6 +93,25 @@ class ModifierEffect:
             'description': self.describe(),
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ModifierEffect":
+        """Reconstruct a ModifierEffect from its `to_dict` form.
+
+        PROJ-312: needed by replay capture/playback so a captured
+        ``ModifierEntry`` can round-trip through JSON. The `description`
+        field is derived (via `describe()`) and is ignored on read.
+        """
+        return cls(
+            stat_key=data['stat_key'],
+            value=float(data['value']),
+            operation=data['operation'],
+            target_ability=data.get('target_ability'),
+            source_modifier_id=data['source_modifier_id'],
+            source_modifier_name=data['source_modifier_name'],
+            formula_str=data['formula_str'],
+            param_value=float(data['param_value']),
+        )
+
 
 class ModifierEffectEvaluator:
     """
