@@ -293,22 +293,31 @@ class EmpireEconomyCalculator:
                     if r in target:
                         target[r] += amount
 
-        # Planet base queues (complexes only)
+        # Planet base queues (complexes only).
+        # FEAT-17: paused queues contribute zero — ProductionEngine will not
+        # tick them next turn, so they can't be a Treasury expense.
         for colony in empire.colonies:
-            base_rate = get_default_production_rates("planetary_yard")
-            _accumulate(colony.construction_queue, base_rate)
+            if not getattr(colony, 'construction_queue_paused', False):
+                base_rate = get_default_production_rates("planetary_yard")
+                _accumulate(colony.construction_queue, base_rate)
 
-            # Facility queues (shipyards)
+            # Facility queues (shipyards) — per-facility pause flag.
             for facility in colony.facilities:
-                if facility.construction_queue and facility.is_shipyard:
+                if (
+                    facility.construction_queue
+                    and facility.is_shipyard
+                    and not getattr(facility, 'construction_queue_paused', False)
+                ):
                     fac_rate = _get_facility_production_rates(facility)
                     _accumulate(facility.construction_queue, fac_rate)
 
-        # Fleet queues
+        # Fleet queues — per-fleet pause flag.
         for fleet in empire.fleets:
             if not fleet.construction_queue:
                 continue
             if not hasattr(fleet, 'capabilities') or not fleet.capabilities.has_space_shipyard:
+                continue
+            if getattr(fleet, 'construction_queue_paused', False):
                 continue
             yard_count = fleet.capabilities.space_shipyard_count
             base_rate = get_default_production_rates("space_shipyard")

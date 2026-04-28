@@ -48,6 +48,8 @@ def _make_colony(construction_queue=None, facilities=None, stockpile=None, max_s
     colony.name = "Test Colony"
     colony.context_type = "planet"
     colony.construction_queue = construction_queue or []
+    # FEAT-17: pin to False — MagicMock auto-creates a truthy Mock otherwise.
+    colony.construction_queue_paused = False
     # Always include a PlanetaryYard facility so base queue is processed
     default_facilities = [_make_planetary_yard_facility()]
     colony.facilities = facilities if facilities is not None else default_facilities

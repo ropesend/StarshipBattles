@@ -278,6 +278,10 @@ class EmpireBuildQueueViewModel:
                 max_rate = max(source.build_rate.values())
                 return f"{int(max_rate)}/turn"
             return "N/A"
+        if col_id == 'paused':
+            # FEAT-17: simple two-state indicator. Empty string for
+            # unpaused yards keeps the column unobtrusive at a glance.
+            return "PAUSED" if source.is_paused else ""
         if col_id in RESOURCE_RATE_COLS:
             return get_resource_rate_text(source, RESOURCE_RATE_COLS[col_id])
         if col_id in RESOURCE_TOTAL_COLS:

@@ -201,8 +201,14 @@ class ProductionEngine(IProductionEngine):
         self._validate_tick_inputs(empires)
         for empire in empires:
             for colony in empire.colonies:
-                # 1. Base queue (complexes only) — requires PlanetaryYard facility
-                if colony.construction_queue and _colony_has_planetary_yard(colony, self._registries):
+                # 1. Base queue (complexes only) — requires PlanetaryYard
+                # facility. FEAT-17: skip when this colony's planetary-yard
+                # queue is paused (no resource draw, no progress increment).
+                if (
+                    colony.construction_queue
+                    and not getattr(colony, 'construction_queue_paused', False)
+                    and _colony_has_planetary_yard(colony, self._registries)
+                ):
                     base_rate = get_default_production_rates("planetary_yard")
                     self._process_queue_tick_dynamic(
                         colony.construction_queue, empire, tick, galaxy, save_path,
@@ -210,9 +216,15 @@ class ProductionEngine(IProductionEngine):
                         is_complex_only=True
                     )
 
-                # 2. Facility queues (each shipyard independently)
+                # 2. Facility queues (each shipyard independently).
+                # FEAT-17: per-facility pause flag — one paused shipyard does
+                # not affect sibling shipyards on the same colony.
                 for facility in colony.facilities:
-                    if facility.construction_queue and facility.is_shipyard:
+                    if (
+                        facility.construction_queue
+                        and not getattr(facility, 'construction_queue_paused', False)
+                        and facility.is_shipyard
+                    ):
                         fac_rate = _get_facility_production_rates(facility)
                         self._process_queue_tick_dynamic(
                             facility.construction_queue, empire, tick, galaxy, save_path,
@@ -222,8 +234,11 @@ class ProductionEngine(IProductionEngine):
 
             # 3. Fleet queues
             # Fleet yards share one queue; multiple yards multiply build speed.
+            # FEAT-17: per-fleet pause flag.
             for fleet in empire.fleets:
                 if not fleet.is_building or not fleet.capabilities.has_space_shipyard:
+                    continue
+                if getattr(fleet, 'construction_queue_paused', False):
                     continue
 
                 total_rate = self._resolve_fleet_production_rate(fleet)

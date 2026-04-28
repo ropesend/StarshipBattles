@@ -150,3 +150,50 @@ class TestFacilityQueueSerialization:
         facility.construction_queue.append({"design_id": "extra", "type": "ship", "turns_remaining": 1})
         # Serialized data should not be affected
         assert len(data["facilities"][0]["construction_queue"]) == 1
+
+
+class TestFacilityConstructionQueuePaused:
+    """FEAT-17 — PlanetaryFacility.construction_queue_paused round-trips."""
+
+    def test_facility_defaults_paused_to_false(self):
+        facility = _make_shipyard_facility()
+        assert facility.construction_queue_paused is False
+
+    def test_facility_paused_round_trips_via_planet_dict(self):
+        planet = _make_planet()
+        facility = _make_shipyard_facility()
+        facility.construction_queue_paused = True
+        planet.facilities.append(facility)
+
+        data = planet.to_dict()
+        assert data["facilities"][0]["construction_queue_paused"] is True
+
+        restored = Planet.from_dict(data)
+        assert restored.facilities[0].construction_queue_paused is True
+
+    def test_facility_unpaused_round_trips_via_planet_dict(self):
+        planet = _make_planet()
+        facility = _make_shipyard_facility()
+        facility.construction_queue_paused = False
+        planet.facilities.append(facility)
+
+        data = planet.to_dict()
+        restored = Planet.from_dict(data)
+        assert restored.facilities[0].construction_queue_paused is False
+
+    def test_legacy_save_without_paused_key_defaults_to_false(self):
+        """Save written before FEAT-17 must load with paused=False."""
+        planet = _make_planet()
+        data = planet.to_dict()
+        data["facilities"] = [
+            {
+                "instance_id": "old-001",
+                "design_id": "power_plant",
+                "name": "Power Plant",
+                "design_data": {"layers": {}},
+                "is_operational": True,
+                # No construction_queue_paused key
+            }
+        ]
+        restored = Planet.from_dict(data)
+        assert restored.facilities[0].construction_queue_paused is False

@@ -254,6 +254,48 @@ class BaseCommandHandler:
         return getattr(entity, 'construction_queue', None)
 
     @staticmethod
+    def _resolve_queue_owner(entity, queue_id: Optional[str]) -> Any:
+        """Find the entity that *owns* a queue (i.e., where the per-queue
+        flags like FEAT-17's `construction_queue_paused` live).
+
+        Mirrors `_resolve_queue` but returns the owner object, not the
+        list. For planet base / fleet queues that's the entity itself; for
+        a facility queue that's the matching `PlanetaryFacility`.
+
+        Args:
+            entity: Planet or Fleet entity.
+            queue_id: Optional queue identifier. None / planet base pattern
+                / fleet yard ids → the entity itself; a facility
+                instance_id → that facility.
+
+        Returns:
+            The Planet, Fleet, or PlanetaryFacility that owns the queue,
+            or None if `queue_id` references a facility that doesn't exist.
+        """
+        if queue_id is None:
+            return entity
+
+        # Facility queue: queue_id matches a facility instance_id
+        if hasattr(entity, 'facilities'):
+            for facility in entity.facilities:
+                if getattr(facility, 'instance_id', None) == queue_id:
+                    return facility
+
+        # Planet base queue id pattern → planet itself
+        base_queue_pattern = f"planet_{getattr(entity, 'id', '')}_base"
+        if queue_id == base_queue_pattern:
+            return entity
+
+        # Fleet yard ids ("fleet_<id>_yard_<n>") → the fleet itself.
+        # Fleet yards share one queue, so any fleet-yard queue_id resolves
+        # to the same Fleet. Catch this with a generic prefix check rather
+        # than reconstructing the exact id.
+        if isinstance(queue_id, str) and queue_id.startswith(f"fleet_{getattr(entity, 'id', '')}_yard_"):
+            return entity
+
+        return None
+
+    @staticmethod
     def _build_colonize_target(planet, cmd) -> Any:
         """Build COLONIZE order target — Planet or dict with amounts.
 

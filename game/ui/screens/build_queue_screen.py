@@ -215,6 +215,8 @@ class BuildQueueScreen:
 
         self._refresh_queue_display()
         self.renderer.update_queue_header(active_source)
+        # FEAT-17: keep the pause-toggle label in sync with the new selection
+        self.renderer.refresh_pause_button(active_source)
 
     def _get_active_queue(self) -> list:
         """Return the active construction queue list."""
@@ -303,6 +305,56 @@ class BuildQueueScreen:
         else:
             self.session.handle_command(cmd)
 
+    def _dispatch_toggle_pause_command(self) -> None:
+        """FEAT-17 — flip the active queue source's paused flag.
+
+        Resolves the active queue source's owner entity (Planet or Fleet) and
+        the optional facility queue_id, then dispatches
+        SetBuildQueuePausedCommand with the inverted current state.
+        """
+        from game.strategy.engine.commands import (
+            SetBuildQueuePausedCommand,
+            BuildEntityType,
+        )
+
+        source = self.active_queue_source
+        if source is None:
+            logger.warning("Pause toggle ignored — no active queue source")
+            return
+
+        entity = source.owner_entity
+        entity_type = (
+            BuildEntityType.PLANET if hasattr(entity, 'planet_type')
+            else BuildEntityType.FLEET
+        )
+        entity_id = getattr(entity, 'id', 0)
+
+        cmd = SetBuildQueuePausedCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            paused=not source.is_paused,
+            queue_id=source.queue_id,
+        )
+        if self.facade:
+            self.facade.handle_command(cmd)
+        else:
+            self.session.handle_command(cmd)
+
+        # Re-collect sources so the active source's `is_paused` reflects the
+        # new state, then refresh the button label + queue display.
+        self.queue_sources = collect_build_queues_at_hex(
+            self.hex_coord, self.galaxy, self.empire,
+            registries=self.session.registries,
+        )
+        # Re-bind the active source by queue_id (same reference may not exist
+        # after re-collection — match by identifier).
+        for s in self.queue_sources:
+            if s.queue_id == source.queue_id:
+                self.active_queue_source = s
+                self.controller.set_active_queue(s)
+                break
+        self._refresh_queue_display()
+
     # -----------------------------------------------------------------------
     # Refresh Methods (delegate to renderer)
     # -----------------------------------------------------------------------
@@ -329,6 +381,9 @@ class BuildQueueScreen:
             build_rate=build_rate,
             on_queue_selector_refresh=self._refresh_queue_selector,
         )
+        # FEAT-17: re-sync pause button label after each refresh (covers
+        # toggle commands that mutate the active source's `is_paused`).
+        self.renderer.refresh_pause_button(self.active_queue_source)
 
     def _refresh_queue_selector(self) -> None:
         """Rebuild queue selector UI elements."""
@@ -378,6 +433,10 @@ class BuildQueueScreen:
         # Close button
         elif event.ui_element == panels.btn_close:
             self._close()
+
+        # FEAT-17: Pause/Unpause toggle for the active queue source
+        elif event.ui_element == panels.btn_pause_queue:
+            self._dispatch_toggle_pause_command()
 
         # Check action column in virtual table
         action_match = panels.virtual_table.check_action_button_press(event.ui_element)

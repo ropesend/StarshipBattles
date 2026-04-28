@@ -31,6 +31,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# FEAT-17: bottom-of-panel footer strip that hosts the pause/unpause toggle.
+# Sized to fit a comfortable click target without crowding the queue table.
+_PAUSE_FOOTER_HEIGHT = 50
+
+
+def _pause_button_label(is_paused: bool) -> str:
+    """Toggle label per FEAT-17 spec.
+
+    Single source of truth for the button text; reused on initial render
+    and on every queue-selector refresh so re-selecting yards flips the
+    label correctly.
+    """
+    return "Unpause Build Queue" if is_paused else "Pause Build Queue"
+
+
 @dataclass
 class BuildQueuePanels:
     """Container for all BuildQueueScreen panels.
@@ -50,6 +65,8 @@ class BuildQueuePanels:
     virtual_table: VirtualTable
     column_manager: TableColumnManager
     data_source: BuildQueueQueueDataSource
+    # FEAT-17: pause/unpause toggle for the active queue source.
+    btn_pause_queue: ui.UIButton
     filter_panel: ui.UIPanel
     roles_panel: ui.UIPanel
     roles_scrollable: ui.UIScrollingContainer
@@ -130,9 +147,14 @@ class BuildQueuePanelFactory:
         queue_selector = self._create_queue_selector_panel(background)
         design_report = self._create_design_report_panel(background)
         items_panel, items_scrollable = self._create_items_list_panel(background)
-        queue_panel, queue_header, virtual_table, column_manager, data_source = (
-            self._create_build_queue_panel(background)
-        )
+        (
+            queue_panel,
+            queue_header,
+            virtual_table,
+            column_manager,
+            data_source,
+            btn_pause_queue,
+        ) = self._create_build_queue_panel(background)
         filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_drop_pod, roles_scrollable = (
             self._create_filter_panel(background)
         )
@@ -151,6 +173,7 @@ class BuildQueuePanelFactory:
             virtual_table=virtual_table,
             column_manager=column_manager,
             data_source=data_source,
+            btn_pause_queue=btn_pause_queue,
             filter_panel=filter_panel,
             roles_panel=filter_panel,  # It is shared now
             roles_scrollable=roles_scrollable,
@@ -316,9 +339,12 @@ class BuildQueuePanelFactory:
         """Create build queue panel with VirtualTable.
 
         PROJ-221 Phase 4: Replaced hardcoded columns with VirtualTable.
+        FEAT-17: added a bottom-left "Pause Build Queue" toggle button. The
+        VirtualTable's panel shrinks by `_PAUSE_FOOTER_HEIGHT` to make room.
 
         Returns:
-            Tuple of (panel, header_text, virtual_table, column_manager, data_source).
+            Tuple of (panel, header_text, virtual_table, column_manager,
+            data_source, btn_pause_queue).
         """
         panel_left = 10 + 600 + 10 + 580 + 10
         design_details_width = 750
@@ -342,17 +368,25 @@ class BuildQueuePanelFactory:
             container=panel
         )
 
-        # VirtualTable container (below header text)
+        # FEAT-17: reserve a footer strip at the bottom for the pause button.
+        # The label flips between "Pause Build Queue" and "Unpause Build Queue"
+        # at refresh time based on the active queue source's `is_paused`.
+        footer_height = _PAUSE_FOOTER_HEIGHT
+        # VirtualTable container (below header, above footer)
         table_panel = ui.UIPanel(
-            relative_rect=pygame.Rect(0, 42, panel_width, panel_height - 52),
+            relative_rect=pygame.Rect(
+                0, 42, panel_width, panel_height - 52 - footer_height
+            ),
             manager=self.manager,
             container=panel
         )
 
-        # Get initial build rate from first queue source
+        # Get initial build rate / paused-state from first queue source
         initial_build_rate = {}
+        initial_paused = False
         if self.queue_sources:
             initial_build_rate = self.queue_sources[0].build_rate or {}
+            initial_paused = self.queue_sources[0].is_paused
 
         # Create column manager, data source, and VirtualTable
         column_manager = TableColumnManager(BUILD_QUEUE_COLUMNS)
@@ -371,7 +405,17 @@ class BuildQueuePanelFactory:
             header_height=40,
         )
 
-        return panel, header_text, virtual_table, column_manager, data_source
+        # FEAT-17: Pause/Unpause toggle button at bottom-left of the panel.
+        btn_pause_queue = ui.UIButton(
+            relative_rect=pygame.Rect(
+                10, panel_height - footer_height + 5, 220, footer_height - 10
+            ),
+            text=_pause_button_label(initial_paused),
+            manager=self.manager,
+            container=panel,
+        )
+
+        return panel, header_text, virtual_table, column_manager, data_source, btn_pause_queue
 
     def _create_filter_panel(self, container: ui.UIPanel) -> tuple:
         """Create categories/filter panel.

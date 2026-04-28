@@ -74,6 +74,10 @@ class Fleet:
 
         # Production (for fleets with space yards)
         self.construction_queue: List[Dict[str, Any]] = []
+        # FEAT-17: When True, ProductionEngine skips this fleet's space-yard
+        # queue — no cargo draw, no progress increment. Fleet yards share one
+        # queue, so this is per-fleet (not per-yard) granularity.
+        self.construction_queue_paused: bool = False
 
         # Delegate for resource aggregation (PROJ-87 Phase 3)
         self._resource_agg = FleetConsumableAggregator(self)
@@ -414,6 +418,7 @@ class Fleet:
             'orders': [o.to_dict() for o in self.orders],
             'path': [{'q': p.q, 'r': p.r} if isinstance(p, HexCoord) else list(p) if isinstance(p, tuple) else p for p in self.path],
             'construction_queue': self.construction_queue,
+            'construction_queue_paused': self.construction_queue_paused,
         }
 
         # Serialize hierarchy
@@ -507,6 +512,7 @@ class Fleet:
 
         # Restore construction queue
         fleet.construction_queue = data.get('construction_queue', [])
+        fleet.construction_queue_paused = data.get('construction_queue_paused', False)
 
         return fleet
 

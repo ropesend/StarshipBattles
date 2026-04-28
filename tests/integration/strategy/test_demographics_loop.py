@@ -218,6 +218,51 @@ class TestScenarioCFoodAllocationDoubled:
         assert colony_normal.get_species_config("human").last_food_ratio == pytest.approx(1.0)
 
 
+class TestScenarioDSurplusFoodHappinessBonus:
+    """FEAT-19: allocation > 1.0× with sufficient supply visibly raises
+    happiness via the surplus bonus, on top of the legacy
+    `base × ratio × hab` term. End-to-end pipeline check."""
+
+    def test_allocation_one_thirty_five_full_supply_lifts_happiness(self):
+        """Two parallel colonies on identical ideal planets — same
+        stockpile, same race, same population. Only difference is
+        allocation: 1.0× vs 1.35×. After one pipeline pass the 1.35×
+        colony's happiness must be strictly higher than the 1.0×
+        baseline by approximately the bonus value (0.07)."""
+        # Use an explicit EconomyConfig so the bonus coefficients are
+        # pinned regardless of data/economy.json.
+        economy = EconomyConfig(
+            population_consumption={"organics": 0.001},
+            surplus_food_bonus_per_x=0.20,
+            surplus_food_bonus_cap=0.20,
+        )
+        engines = {
+            "organics": OrganicsConsumptionEngine(economy_config=economy),
+            "happiness": HappinessEngine(economy_config=economy),
+            "population": PopulationEngine(),
+        }
+
+        pop_baseline = SpeciesPopulation(race_id="human", count=10_000, happiness=0.0)
+        colony_baseline = _earth_like(
+            populations=[pop_baseline], stockpile={"organics": 1_000.0},
+        )
+        colony_baseline.get_species_config("human").food_allocation = 1.0
+        empire_baseline = _empire_with(colony_baseline, _race(race_id="human"), empire_id=1)
+
+        pop_overfed = SpeciesPopulation(race_id="human", count=10_000, happiness=0.0)
+        colony_overfed = _earth_like(
+            populations=[pop_overfed], stockpile={"organics": 1_000.0},
+        )
+        colony_overfed.get_species_config("human").food_allocation = 1.35
+        empire_overfed = _empire_with(colony_overfed, _race(race_id="human"), empire_id=2)
+
+        _pipeline([empire_baseline, empire_overfed], engines)
+
+        # Both fed → ratio=1.0 in both cases. Difference is the surplus bonus.
+        assert pop_overfed.happiness == pytest.approx(pop_baseline.happiness + 0.07)
+        assert pop_overfed.happiness > pop_baseline.happiness
+
+
 class TestPipelineOrdering:
     def test_order_matters_consumption_must_precede_happiness(self, engines):
         """Prove ordering: if happiness ran BEFORE consumption on turn 1,

@@ -164,6 +164,11 @@ class PlanetEconomyProjector:
         for source in sources:
             if not source.construction_queue:
                 continue
+            # FEAT-17: paused yards do not contribute drain. The queue list
+            # itself is dormant — ProductionEngine will not tick it next turn,
+            # so the actual-per-turn-spend is zero across all resources.
+            if source.is_paused:
+                continue
             scaled_rate = {
                 res: rate * habitability for res, rate in source.build_rate.items()
             }

@@ -354,6 +354,86 @@ class TestYardDrain:
         # No resources should appear at all (no harvest, no upkeep, no yard).
         assert result == {}
 
+    def test_paused_planet_base_queue_contributes_zero_drain(self):
+        """FEAT-17 — paused base queue must NOT appear in yard drain."""
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+        planet = _planet(
+            populations=[],
+            facilities=[_planetary_yard_facility()],
+            construction_queue=[{
+                "design_id": "mine_complex",
+                "type": "complex",
+                "total_cost": {"metals": 5000.0},
+                "resources_consumed": {},
+            }],
+        )
+        planet.construction_queue_paused = True
+
+        projector = PlanetEconomyProjector(
+            registries=_registries(),
+            economy_config=_economy({"organics": 0.001}),
+            race_registry=_StubRegistry({}),
+        )
+
+        result = projector.project(planet)
+
+        # Planet has no harvest/upkeep here, so a paused-and-only-queue
+        # yields the empty result.
+        for res in ("metals", "organics", "radioactives", "vapors", "exotics"):
+            yard = result[res].yard if res in result else 0.0
+            assert yard == 0.0, f"{res}: expected 0 drain (paused), got {yard}"
+
+    def test_paused_shipyard_queue_excluded_unpaused_still_drains(self):
+        """FEAT-17 — only the paused yard is excluded, others keep draining."""
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+        paused_yard = _shipyard_facility(
+            instance_id="yard-1",
+            queue=[{
+                "design_id": "ship_a",
+                "type": "ship",
+                "total_cost": {"metals": 10_000_000.0},
+                "resources_consumed": {},
+            }],
+        )
+        paused_yard.construction_queue_paused = True
+
+        active_yard = _shipyard_facility(
+            instance_id="yard-2",
+            queue=[{
+                "design_id": "ship_b",
+                "type": "ship",
+                "total_cost": {"metals": 10_000_000.0},
+                "resources_consumed": {},
+            }],
+        )
+
+        planet = _planet(
+            populations=[],
+            facilities=[
+                _planetary_yard_facility(),
+                paused_yard,
+                active_yard,
+            ],
+            construction_queue=[],
+        )
+
+        projector = PlanetEconomyProjector(
+            registries=_registries(),
+            economy_config=_economy({"organics": 0.001}),
+            race_registry=_StubRegistry({}),
+        )
+
+        result = projector.project(planet)
+
+        # Only the active shipyard contributes — 30000/turn metals.
+        # The paused yard's would-be 30000 is excluded, and the empty base
+        # queue contributes nothing.
+        assert result["metals"].yard == pytest.approx(30000.0)
+
 
 class TestNetIsHarvestMinusUpkeepMinusYard:
     """For every resource in the union of the three sub-projections,

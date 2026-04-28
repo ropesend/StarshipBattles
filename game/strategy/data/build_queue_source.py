@@ -68,6 +68,11 @@ class BuildQueueSource:
         context_type: "planet" or "fleet" for UI branching.
         build_rate: Per-resource production rates (units per turn).
         planet_id: Planet ID for planet-based queues, None for fleet queues.
+        is_paused: FEAT-17 — mirrors the owning entity's
+            `construction_queue_paused` flag at collection time. Canonical
+            storage lives on the Planet / PlanetaryFacility / Fleet; this is
+            a derived view consumed by Treasury / Planet-detail forecasts and
+            the Empire Build Queue Status column to suppress paused yards.
     """
     queue_id: str
     display_name: str
@@ -78,6 +83,7 @@ class BuildQueueSource:
     context_type: str
     build_rate: Dict[str, float] = field(default_factory=dict)
     planet_id: Optional[int] = None
+    is_paused: bool = False
 
 
 def get_build_rate_booster_mult(planet, galaxy=None, empire=None, registries=None) -> float:
@@ -326,6 +332,8 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource],
             context_type="planet",
             build_rate=scaled_rates,
             planet_id=planet.id,
+            # FEAT-17: propagate the planet's per-base-queue pause flag.
+            is_paused=getattr(planet, 'construction_queue_paused', False),
         ))
 
     # Shipyard facility queues
@@ -346,6 +354,8 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource],
                 context_type="planet",
                 build_rate=boosted_rates,
                 planet_id=planet.id,
+                # FEAT-17: each facility carries its own pause flag.
+                is_paused=getattr(facility, 'construction_queue_paused', False),
             ))
 
 
@@ -359,6 +369,9 @@ def _collect_fleet_sources(fleet, sources: List[BuildQueueSource]) -> None:
         sources: List to append BuildQueueSource objects to.
     """
     yard_count = fleet.capabilities.space_shipyard_count
+    # FEAT-17: fleet yards share one queue, so the per-fleet flag applies to
+    # every per-yard source we emit.
+    fleet_paused = getattr(fleet, 'construction_queue_paused', False)
     for yard_idx in range(yard_count):
         yard_num = yard_idx + 1
         display_suffix = f" - Shipyard {yard_num}" if yard_count > 1 else " - Shipyard"
@@ -372,6 +385,7 @@ def _collect_fleet_sources(fleet, sources: List[BuildQueueSource]) -> None:
             context_type="fleet",
             build_rate=get_default_production_rates("space_shipyard"),
             planet_id=None,
+            is_paused=fleet_paused,
         ))
 
 

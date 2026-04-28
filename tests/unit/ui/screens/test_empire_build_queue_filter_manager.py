@@ -69,7 +69,10 @@ class TestFilterManagerInit:
         col_ids = [c['id'] for c in mgr.columns]
         expected = [
             'location', 'system', 'sector', 'queue_count',
-            'first_item', 'turns_left', 'capabilities', 'build_rate',
+            'first_item', 'turns_left',
+            # FEAT-17: per-yard pause indicator (read-only here)
+            'paused',
+            'capabilities', 'build_rate',
             # Resource rate columns
             'res_metals_rate', 'res_organics_rate', 'res_vapors_rate',
             'res_radioactives_rate', 'res_exotics_rate',

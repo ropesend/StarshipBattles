@@ -1,6 +1,6 @@
 # Production System
 
-> **Last verified:** 2026-04-27 — BUG-120: cross-linked `forecast_queue_turn_spend` as the canonical actual-per-turn-draw helper used by both Treasury and Planet detail UI.
+> **Last verified:** 2026-04-27 — FEAT-17: per-yard `construction_queue_paused` flag; gate added at the top of `process_construction_tick`; `BuildQueueSource.is_paused` propagation skips paused yards in Treasury + Planet-detail forecasts.
 
 This document describes the unified construction/production system: build queues, tick-based resource consumption, turn estimation, and item spawning. The same `ProductionEngine` algorithm handles all build contexts — planet base queues (complexes), planet shipyard facility queues (ships), and fleet space yard queues (ships and complexes).
 
@@ -124,6 +124,24 @@ TurnEngine.process_turn()
             2. Facility queues (each shipyard independently) -- per-facility rate
             3. Fleet queues (if fleet has space yards) -- rate * yard count
 ```
+
+### Per-Yard Pause Flag (FEAT-17)
+
+Each of the three yard types carries an independent `construction_queue_paused: bool` flag on its owning entity:
+
+| Yard | Owner | Flag location |
+|------|-------|---------------|
+| Planetary yard (base queue) | `Planet` | `Planet.construction_queue_paused` |
+| Shipyard facility queue | `PlanetaryFacility` | `PlanetaryFacility.construction_queue_paused` |
+| Fleet space-yard queue | `Fleet` | `Fleet.construction_queue_paused` |
+
+`process_construction_tick` checks this flag at each of its three iteration sites and skips ticking that queue when paused — no resource draw, no `resources_consumed` increment, no shortage logging. The queue list itself is unaffected: add/remove/reorder still work via the construction-queue commands. The currently-progressing item retains its `resources_consumed` while paused; unpausing resumes from that saved progress on the next tick.
+
+Toggle is dispatched via `SetBuildQueuePausedCommand` (entity_id + entity_type + paused + optional facility queue_id) routed through the standard command pipeline. The handler resolves the queue *owner* via `BaseCommandHandler._resolve_queue_owner` (sibling to `_resolve_queue`) and flips the flag.
+
+Forecast helpers — `EmpireEconomyCalculator._aggregate_construction_expenses` (Treasury) and `PlanetEconomyProjector._project_yard_drain` (Planet detail "Yard" row) — also skip paused queues so the forecasted drain matches what the engine will actually consume next turn. The skip is at the iteration site; `forecast_queue_turn_spend` itself remains a pure function of (queue, build_rate). Propagation to those helpers happens via `BuildQueueSource.is_paused`, populated by `_collect_planet_sources` / `_collect_fleet_sources` from the owning entity at collection time.
+
+AI controllers do not toggle pause — the flag is player-driven; defaults to `False` everywhere.
 
 ### Dynamic Resource Consumption Algorithm
 
@@ -265,6 +283,8 @@ Accessed from the strategy screen via the "Build Yard" button on owned planets o
 | `forecast_queue_turn_spend(queue, build_rate)` (`game/strategy/engine/construction_forecast.py`) | Per-item per-turn resource spend for a queue. The canonical "actual draw" function — mirrors `ProductionEngine._calculate_tick_expenditure × 100`. Consumed by `EmpireEconomyCalculator._aggregate_construction_expenses` (Treasury) and `PlanetEconomyProjector._project_yard_drain` (Planet detail "Yard" row). |
 
 **Note:** `estimate_build_turns()` and `get_production_rate_for_queue()` are the authoritative utilities for turn estimation. The command handler delegates to these — do not duplicate this logic elsewhere. For "what will this queue actually consume next turn?" use `forecast_queue_turn_spend` — both Treasury and Planet detail UI flow through it (BUG-120 fix 2026-04-27 unified Planet detail onto this helper after years of summing yard capacity instead).
+
+**FEAT-17:** `BuildQueueSource.is_paused` is populated by `_collect_planet_sources` / `_collect_fleet_sources` from the owner's `construction_queue_paused`. Read this on the source rather than reaching back through `owner_entity` — the source is the consumer-facing contract.
 
 ---
 

@@ -36,6 +36,9 @@ DEFAULT_COLUMNS: List[Dict[str, Any]] = [
     {'id': 'queue_count', 'width': 80, 'title': 'Items', 'visible': True},
     {'id': 'first_item', 'width': 170, 'title': 'Building', 'visible': True},
     {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
+    # FEAT-17: read-only paused indicator. Toggling is done from the
+    # per-hex BuildQueueScreen, not this empire-wide summary.
+    {'id': 'paused', 'width': 70, 'title': 'Status', 'visible': True},
     {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
     {'id': 'build_rate', 'width': 80, 'title': 'Build Rate', 'visible': True},
     # Resource consumption rate columns (per-turn)

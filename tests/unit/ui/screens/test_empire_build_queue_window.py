@@ -443,7 +443,8 @@ class TestGetVisibleColumns:
         assert 'build_rate' in visible_ids
         assert 'location' in visible_ids
         assert 'queue_count' in visible_ids
-        assert len(visible) == 18  # All 18 columns (8 original + 10 resource)
+        # FEAT-17: added 'paused' status column → 19 columns total.
+        assert len(visible) == 19  # 8 original + 1 paused (FEAT-17) + 10 resource
 
 
 class TestGetColumnValue:

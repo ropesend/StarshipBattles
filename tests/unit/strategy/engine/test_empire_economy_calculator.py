@@ -27,6 +27,9 @@ def _mock_colony(**kwargs):
     colony.construction_queue = kwargs.pop('construction_queue', [])
     colony.facilities = kwargs.pop('facilities', [])
     colony.deposits = kwargs.pop('resources', {})
+    # FEAT-17: explicit default — Mock(spec=Planet) auto-creates a truthy
+    # Mock for every attr, so we must pin this to False.
+    colony.construction_queue_paused = kwargs.pop('construction_queue_paused', False)
     for k, v in kwargs.items():
         setattr(colony, k, v)
     return colony
@@ -36,6 +39,7 @@ def _mock_facility(**kwargs):
     """Create a mock facility with construction_queue defaulting to empty."""
     facility = Mock(spec=PlanetaryFacility)
     facility.construction_queue = kwargs.pop('construction_queue', [])
+    facility.construction_queue_paused = kwargs.pop('construction_queue_paused', False)
     for k, v in kwargs.items():
         setattr(facility, k, v)
     return facility
@@ -45,6 +49,7 @@ def _mock_fleet(**kwargs):
     """Create a mock fleet with construction_queue defaulting to empty."""
     fleet = Mock(spec=Fleet)
     fleet.construction_queue = kwargs.pop('construction_queue', [])
+    fleet.construction_queue_paused = kwargs.pop('construction_queue_paused', False)
     for k, v in kwargs.items():
         setattr(fleet, k, v)
     return fleet
@@ -676,6 +681,117 @@ class TestConstructionExpenses:
 
         # Both fighter and satellite count as ships
         assert snapshot.construction_expenses_ships["metals"] == pytest.approx(125.0)
+        assert snapshot.construction_expenses_complexes["metals"] == 0.0
+
+
+class TestConstructionExpensesPausedQueues:
+    """FEAT-17 — paused queues contribute zero to Treasury aggregation."""
+
+    def test_paused_planet_base_queue_excluded(self, minimal_registries):
+        """A paused planet base queue must not show up in complex expenses."""
+        colony = _mock_colony(
+            facilities=[],
+            construction_queue_paused=True,
+            construction_queue=[
+                {
+                    "design_id": "shipyard",
+                    "type": "complex",
+                    "total_cost": {"metals": 500.0, "organics": 200.0},
+                    "resources_consumed": {},
+                }
+            ],
+        )
+
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(registries=minimal_registries)
+        snapshot = calculator.calculate(empire)
+
+        for res in PLANET_RESOURCE_NAMES:
+            assert snapshot.construction_expenses_complexes[res] == 0.0
+            assert snapshot.construction_expenses_ships[res] == 0.0
+
+    def test_paused_facility_queue_excluded_others_still_count(self, minimal_registries):
+        """Paused shipyard contributes 0; unpaused shipyard still drains."""
+        paused_yard = _mock_facility(
+            is_operational=True,
+            is_shipyard=True,
+            construction_queue_paused=True,
+            construction_queue=[
+                {
+                    "design_id": "ship_a",
+                    "type": "ship",
+                    "total_cost": {"metals": 749.0},
+                    "resources_consumed": {},
+                }
+            ],
+            design_data={
+                'layers': {
+                    'CORE': [
+                        {
+                            'id': 'space_shipyard',
+                            'abilities': {
+                                'SpaceShipyard': {
+                                    'construction_speed_bonus': 1.0,
+                                    'production_rates': {"metals": 3000.0, "organics": 1000.0,
+                                                         "vapors": 500.0, "radioactives": 500.0,
+                                                         "exotics": 200.0},
+                                }
+                            },
+                            'resource_cost': {},
+                        }
+                    ]
+                }
+            },
+        )
+        active_yard = _mock_facility(
+            is_operational=True,
+            is_shipyard=True,
+            construction_queue_paused=False,
+            construction_queue=[
+                {
+                    "design_id": "ship_b",
+                    "type": "ship",
+                    "total_cost": {"metals": 749.0},
+                    "resources_consumed": {},
+                }
+            ],
+            design_data={
+                'layers': {
+                    'CORE': [
+                        {
+                            'id': 'space_shipyard',
+                            'abilities': {
+                                'SpaceShipyard': {
+                                    'construction_speed_bonus': 1.0,
+                                    'production_rates': {"metals": 3000.0, "organics": 1000.0,
+                                                         "vapors": 500.0, "radioactives": 500.0,
+                                                         "exotics": 200.0},
+                                }
+                            },
+                            'resource_cost': {},
+                        }
+                    ]
+                }
+            },
+        )
+
+        colony = _mock_colony(facilities=[paused_yard, active_yard])
+        empire = Mock(spec=Empire)
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        calculator = EmpireEconomyCalculator(registries=minimal_registries)
+        snapshot = calculator.calculate(empire)
+
+        # Only the active yard's 749-metal ship counts.
+        assert snapshot.construction_expenses_ships["metals"] == pytest.approx(749.0)
         assert snapshot.construction_expenses_complexes["metals"] == 0.0
 
 

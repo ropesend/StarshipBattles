@@ -361,6 +361,30 @@ class ReorderConstructionQueueCommand(Command):
     queue_id: Optional[str] = None
 
 
+@dataclass
+class SetBuildQueuePausedCommand(Command):
+    """Pause or unpause a construction queue (FEAT-17).
+
+    Targets the same three queue locations as the other construction-queue
+    commands: a planet's base queue, a planet shipyard facility queue, or a
+    fleet space-yard queue. While paused, ProductionEngine skips ticking
+    that queue — no resource draw, no progress increment. The queue list
+    itself remains intact so add/remove/reorder still work.
+
+    Args:
+        entity_id: Planet or fleet ID.
+        entity_type: "planet" or "fleet".
+        paused: True to pause, False to resume.
+        queue_id: Optional queue identifier for multi-queue entities. None
+            (or the planet's base-queue id) targets the entity's main queue;
+            a facility instance_id targets that facility's queue.
+    """
+    entity_id: int
+    entity_type: BuildEntityType
+    paused: bool
+    queue_id: Optional[str] = None
+
+
 # =============================================================================
 # Planet Order Commands (PROJ-237)
 # =============================================================================

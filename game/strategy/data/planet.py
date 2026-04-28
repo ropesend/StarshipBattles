@@ -85,6 +85,11 @@ class Planet:
     # Empire
     owner_id: Optional[int] = None
     construction_queue: list = field(default_factory=list)
+    # FEAT-17: When True, ProductionEngine skips this colony's planetary-yard
+    # base queue. Per-yard granularity — facility queues use their own flag on
+    # PlanetaryFacility, fleet queues use Fleet.construction_queue_paused.
+    # Currently-progressing item retains its `resources_consumed` while paused.
+    construction_queue_paused: bool = False
 
     # Mineral deposits
     # Key: Resource ID (planetary resource from ResourceCatalog) -> {'quantity': int, 'quality': float}
@@ -455,6 +460,7 @@ class Planet:
             'orbit_parent_name': self.orbit_parent_name,
             'owner_id': self.owner_id,
             'construction_queue': self.construction_queue.copy(),
+            'construction_queue_paused': self.construction_queue_paused,
             'deposits': {k: v.copy() for k, v in self.deposits.items()},
             'stockpile': dict(self.stockpile),
             'max_stockpile': dict(self.max_stockpile),
@@ -581,6 +587,7 @@ class Planet:
             orbit_parent_name=data.get('orbit_parent_name'),
             owner_id=data.get('owner_id'),
             construction_queue=data.get('construction_queue', []),
+            construction_queue_paused=data.get('construction_queue_paused', False),
             deposits=data.get('deposits', data.get('resources', {})),
             stockpile=data.get('stockpile', {}),
             max_stockpile=data.get('max_stockpile', {}),

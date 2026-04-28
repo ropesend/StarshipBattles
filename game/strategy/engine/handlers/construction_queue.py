@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         AddToConstructionQueueCommand,
         RemoveFromConstructionQueueCommand,
         ReorderConstructionQueueCommand,
+        SetBuildQueuePausedCommand,
     )
     from game.strategy.engine.game_session import GameSession
 
@@ -223,4 +224,42 @@ class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
         queue.insert(cmd.to_index, item)
 
         logger.info(f"GameSession: Reordered {cmd.entity_type} {cmd.entity_id} queue {cmd.from_index} -> {cmd.to_index}")
+        return ValidationResult.success()
+
+
+class SetBuildQueuePausedCommandHandler(BaseCommandHandler):
+    """Handler for SetBuildQueuePausedCommand (FEAT-17).
+
+    Toggles `construction_queue_paused` on the queue's owner entity. Three
+    targets:
+      - planet base queue → owner is the Planet itself
+      - planet shipyard facility queue → owner is the PlanetaryFacility
+      - fleet space-yard queue → owner is the Fleet itself
+
+    Resolution mirrors the queue-list resolution used by
+    AddToConstructionQueueCommandHandler etc., via
+    `BaseCommandHandler._resolve_queue_owner`.
+    """
+
+    def execute(self, session: 'GameSession', cmd: 'SetBuildQueuePausedCommand') -> ValidationResult:
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Resolve the queue *owner* (entity itself, or a facility)
+        owner = self._resolve_queue_owner(entity, getattr(cmd, 'queue_id', None))
+        if owner is None:
+            return ValidationResult.error(
+                f"Build queue '{getattr(cmd, 'queue_id', None)}' not found."
+            )
+
+        # 3. Set the flag
+        owner.construction_queue_paused = bool(cmd.paused)
+
+        action = "Paused" if cmd.paused else "Resumed"
+        logger.info(
+            f"GameSession: {action} build queue on {cmd.entity_type} "
+            f"{cmd.entity_id} (queue_id={getattr(cmd, 'queue_id', None)})"
+        )
         return ValidationResult.success()

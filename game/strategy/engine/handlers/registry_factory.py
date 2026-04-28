@@ -22,6 +22,7 @@ from game.strategy.engine.handlers.construction_queue import (
     AddToConstructionQueueCommandHandler,
     RemoveFromConstructionQueueCommandHandler,
     ReorderConstructionQueueCommandHandler,
+    SetBuildQueuePausedCommandHandler,
 )
 from game.strategy.engine.handlers.movement import (
     ColonizeCommandHandler,
@@ -82,10 +83,11 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('DeleteOrderCommand', DeleteOrderCommandHandler())
     registry.register('ReorderOrderCommand', ReorderOrderCommandHandler())
 
-    # Construction queue handlers (PROJ-208 Phase 2)
+    # Construction queue handlers (PROJ-208 Phase 2; FEAT-17 added pause toggle)
     registry.register('AddToConstructionQueueCommand', AddToConstructionQueueCommandHandler())
     registry.register('RemoveFromConstructionQueueCommand', RemoveFromConstructionQueueCommandHandler())
     registry.register('ReorderConstructionQueueCommand', ReorderConstructionQueueCommandHandler())
+    registry.register('SetBuildQueuePausedCommand', SetBuildQueuePausedCommandHandler())
 
     # Superweapon direct handlers (PROJ-102)
     registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())

@@ -218,3 +218,24 @@ class BuildQueueRenderer:
             header_text = "<b>Build Queue</b>"
         self.panels.queue_header_text.set_text(header_text)
 
+    def refresh_pause_button(self, active_source) -> None:
+        """FEAT-17 — sync the pause button label to the active queue source.
+
+        Called whenever the active queue source changes (selector click) or
+        the pause flag is toggled, so the label always reflects the current
+        state. When there's no active source (multi-select), the button is
+        disabled so accidental clicks are ignored.
+
+        Args:
+            active_source: Active BuildQueueSource, or None for multi-select.
+        """
+        from game.ui.screens.build_queue_panel_factory import _pause_button_label
+
+        btn = self.panels.btn_pause_queue
+        if active_source is None:
+            btn.set_text(_pause_button_label(False))
+            btn.disable()
+            return
+        btn.enable()
+        btn.set_text(_pause_button_label(active_source.is_paused))
+

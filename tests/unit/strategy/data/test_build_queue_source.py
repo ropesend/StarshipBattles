@@ -817,3 +817,114 @@ class TestGetProductionRateForQueue:
         shipyard_source = [s for s in sources if s.queue_id == "yard-verify"][0]
 
         assert direct_rate == shipyard_source.build_rate
+
+
+# ---------------------------------------------------------------------------
+# Tests: BuildQueueSource.is_paused propagation (FEAT-17)
+# ---------------------------------------------------------------------------
+
+def _make_planetary_yard_facility(instance_id="yard-base") -> PlanetaryFacility:
+    """FEAT-17 — operational facility with the PlanetaryYard ability so the
+    planet base queue gets discovered by `collect_build_queues_at_hex`."""
+    return PlanetaryFacility(
+        instance_id=instance_id,
+        design_id="colony_hub",
+        name="Colony Hub",
+        design_data={
+            "layers": {
+                "hull": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
+            }
+        },
+        is_operational=True,
+    )
+
+
+class TestIsPausedPropagation:
+    """`BuildQueueSource.is_paused` mirrors the owning entity's
+    `construction_queue_paused` flag at collection time."""
+
+    def test_is_paused_defaults_to_false_for_planet_base_queue(self):
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord)
+        planet.facilities.append(_make_planetary_yard_facility())
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        base_source = next(s for s in sources if s.queue_id.endswith("_base"))
+        assert base_source.is_paused is False
+
+    def test_planet_base_queue_paused_propagates(self):
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord)
+        planet.facilities.append(_make_planetary_yard_facility())
+        planet.construction_queue_paused = True
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        # Base queue source is_paused = True
+        base_source = next(s for s in sources if s.queue_id.endswith("_base"))
+        assert base_source.is_paused is True
+
+    def test_facility_queue_paused_propagates_independently(self):
+        """Each facility's flag is independent of the planet's base flag."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord)
+        planet.facilities.append(_make_planetary_yard_facility())
+        f1 = _make_shipyard_facility(instance_id="yard-001")
+        f2 = _make_shipyard_facility(instance_id="yard-002")
+        f1.construction_queue_paused = True
+        f2.construction_queue_paused = False
+        planet.facilities.append(f1)
+        planet.facilities.append(f2)
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        s1 = next(s for s in sources if s.queue_id == "yard-001")
+        s2 = next(s for s in sources if s.queue_id == "yard-002")
+        assert s1.is_paused is True
+        assert s2.is_paused is False
+
+    def test_fleet_queue_paused_propagates_to_all_yard_sources(self):
+        """Fleet yards share one queue, so all per-yard sources for a fleet
+        carry the same is_paused value. Drives `_collect_fleet_sources`
+        directly so the fixture for fleet capabilities doesn't matter."""
+        from game.strategy.data.build_queue_source import _collect_fleet_sources
+
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 42
+        fleet.name = "Test Fleet"
+        fleet.location = HexCoord(0, 0)
+        fleet.construction_queue = []
+        fleet.construction_queue_paused = True
+        fleet.capabilities.space_shipyard_count = 2
+
+        sources: list = []
+        _collect_fleet_sources(fleet, sources)
+
+        assert len(sources) == 2  # one per yard
+        assert all(s.is_paused is True for s in sources)
+        assert all(s.context_type == "fleet" for s in sources)
+
+    def test_fleet_queue_unpaused_propagates_false(self):
+        """Negative case: unpaused fleet queue → is_paused=False on all yards."""
+        from game.strategy.data.build_queue_source import _collect_fleet_sources
+
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 42
+        fleet.name = "Test Fleet"
+        fleet.location = HexCoord(0, 0)
+        fleet.construction_queue = []
+        fleet.construction_queue_paused = False
+        fleet.capabilities.space_shipyard_count = 1
+
+        sources: list = []
+        _collect_fleet_sources(fleet, sources)
+
+        assert sources[0].is_paused is False
+
