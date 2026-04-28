@@ -1309,7 +1309,8 @@ def _make_basic_planet():
 
 def _make_species_view(race_id, race_name, count, *, habitability=0.9,
                        happiness=1.0, growth_rate=0.02,
-                       food_ratio=1.0, food_allocation=1.0):
+                       food_ratio=1.0, food_allocation=1.0,
+                       food_surplus=1.0, food_surplus_bonus=0.0):
     from game.strategy.facade.dto.colony_demographic_view import (
         SpeciesDemographicView,
     )
@@ -1318,6 +1319,7 @@ def _make_species_view(race_id, race_name, count, *, habitability=0.9,
         habitability=habitability, happiness=happiness,
         growth_rate=growth_rate, food_ratio=food_ratio,
         food_allocation=food_allocation,
+        food_surplus=food_surplus, food_surplus_bonus=food_surplus_bonus,
     )
 
 
@@ -1477,3 +1479,40 @@ class TestPerSpeciesSubBlock:
         out = format_planet_info(planet, view=view)
 
         assert "[Content]" in out
+
+
+# ===========================================================================
+# FEAT-19: surplus-food line is conditional — only shown when surplus > 1.0
+# ===========================================================================
+
+class TestSurplusFoodLine:
+    """The "Food surplus: X.XX× → +Y.YY happiness" line is rendered only
+    when `food_surplus > 1.0`. At allocation = 1.0× (the default) the
+    surplus equals 1.0 and the line is suppressed so single-resource /
+    fully-fed-at-1× colonies don't gain a noisy zero-bonus row."""
+
+    def test_no_surplus_line_when_surplus_equals_one(self):
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        view = _make_view([_make_species_view(
+            "human", "Humans", 1000,
+            food_surplus=1.0, food_surplus_bonus=0.0,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "Food surplus" not in out
+
+    def test_surplus_line_shown_when_surplus_above_one(self):
+        """FEAT-19 QA repro values: surplus 1.35× → +0.07 happiness."""
+        from game.ui.screens.strategy_detail_fmt import format_planet_info
+        planet = _make_basic_planet()
+        view = _make_view([_make_species_view(
+            "human", "Humans", 1000,
+            food_surplus=1.35, food_surplus_bonus=0.07,
+        )])
+
+        out = format_planet_info(planet, view=view)
+
+        assert "Food surplus: 1.35×" in out
+        assert "+0.07 happiness" in out

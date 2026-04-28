@@ -138,6 +138,18 @@ class EconomySlice:
                 or getattr(race_config, "name", "")
                 or pop.race_id
             )
+            # FEAT-19 — pre-compute the surplus bonus on the DTO so the UI
+            # formatter never needs an EconomyConfig in scope. Zero when
+            # surplus <= 1.0 so callers can simply check `> 0` to decide
+            # whether to render the conditional "Food surplus" line.
+            surplus = cfg.last_food_surplus
+            if surplus > 1.0:
+                surplus_bonus = min(
+                    economy.surplus_food_bonus_cap,
+                    economy.surplus_food_bonus_per_x * (surplus - 1.0),
+                )
+            else:
+                surplus_bonus = 0.0
             species_views.append(SpeciesDemographicView(
                 race_id=pop.race_id,
                 race_name=display_name,
@@ -147,6 +159,8 @@ class EconomySlice:
                 growth_rate=projected_growth_rate(planet, pop, race_config, cfg),
                 food_ratio=cfg.last_food_ratio,
                 food_allocation=cfg.food_allocation,
+                food_surplus=surplus,
+                food_surplus_bonus=surplus_bonus,
             ))
 
         species_views.sort(key=lambda s: s.count, reverse=True)

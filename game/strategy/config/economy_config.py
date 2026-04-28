@@ -6,13 +6,20 @@ population upkeep without touching code. UI labels resolve via
 `ResourceCatalog.get(id).display_name` — never hardcode resource
 display names outside this file's JSON.
 
-Schema (PROJ-286):
+Schema (PROJ-286 + FEAT-19):
     {
         "population_consumption": {
             "<resource_id>": <rate_per_pop_per_turn>,
             ...
-        }
+        },
+        "surplus_food_bonus_per_x": <happiness per +1.0 surplus, default 0.20>,
+        "surplus_food_bonus_cap": <max bonus per turn, default 0.20>
     }
+
+FEAT-19 surplus fields are optional. HappinessEngine reads them to
+award an additive happiness bonus when `cfg.last_food_surplus > 1.0`
+(allocation > 1.0× AND supply meets the elevated demand). Both have
+dataclass defaults so existing economy.json files keep working.
 
 The engine iterates `population_consumption.items()`, drains each
 resource from the colony stockpile per turn, and writes a per-resource
@@ -58,6 +65,10 @@ class EconomyConfig:
     """Immutable economy parameters loaded from `data/economy.json`."""
 
     population_consumption: Dict[str, float]
+    # FEAT-19 — additive happiness bonus when cfg.last_food_surplus > 1.0.
+    # Defaults shipped at +0.20 per +1.0 surplus, capped at +0.20 per turn.
+    surplus_food_bonus_per_x: float = 0.20
+    surplus_food_bonus_cap: float = 0.20
 
     @property
     def primary_resource(self) -> str:
@@ -110,7 +121,16 @@ def load_economy_config(path: Optional[str] = None) -> EconomyConfig:
     else:
         consumption = {str(k): float(v) for k, v in raw_consumption.items()}
 
-    return EconomyConfig(population_consumption=consumption)
+    # FEAT-19 — graceful defaults so a file missing the surplus keys still
+    # boots with the standard +0.20 / +0.20 cap shipped values.
+    bonus_per_x = float(data.get("surplus_food_bonus_per_x", 0.20))
+    bonus_cap = float(data.get("surplus_food_bonus_cap", 0.20))
+
+    return EconomyConfig(
+        population_consumption=consumption,
+        surplus_food_bonus_per_x=bonus_per_x,
+        surplus_food_bonus_cap=bonus_cap,
+    )
 
 
 _default: Optional[EconomyConfig] = None

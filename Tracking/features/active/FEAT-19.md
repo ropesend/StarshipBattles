@@ -50,7 +50,24 @@ Allocation 1.35× but Happiness 0.24 with Food ratio 1.00:
 Medium
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Work Log
 - 2026-04-27: Created from QA Session 20260427_151244.
+- 2026-04-27: Implemented (TDD).
+  - **Approach:** added `ColonySpeciesConfig.last_food_surplus` `@property` (= `food_allocation × MIN(last_consumption_ratios)`, 1.0 fallback for empty dict). Extended `EconomyConfig` with `surplus_food_bonus_per_x` (0.20) + `surplus_food_bonus_cap` (0.20). `HappinessEngine` now takes `economy_config` keyword-only kwarg and adds `min(cap, per_x × (surplus - 1.0))` to the raw happiness expression BEFORE the existing [0, 3] clamp when `surplus > 1.0`. Facade `EconomySlice` pre-computes `food_surplus` + `food_surplus_bonus` on `SpeciesDemographicView`; UI conditionally renders "Food surplus: X.XX× → +Y.YY happiness" when surplus > 1.0.
+  - **Decision:** `OrganicsConsumptionEngine` and `PopulationEngine` are NOT touched. Surplus is derivable from data the consumption engine already writes (each per-resource ratio is `supplied / (count × allocation × rate)`, so multiplying by allocation yields `supplied / needed_at_1x`). Surplus reaches population growth indirectly through `pop.happiness`; adding a separate surplus term to growth would double-count the reward.
+  - **Files modified:**
+    - `data/economy.json` — added `surplus_food_bonus_per_x: 0.20`, `surplus_food_bonus_cap: 0.20`.
+    - `game/strategy/config/economy_config.py` — added two fields with dataclass defaults; loader populates from JSON with graceful 0.20/0.20 fallback.
+    - `game/strategy/data/colony_species_config.py` — added `last_food_surplus` `@property`.
+    - `game/strategy/engine/happiness_engine.py` — added `economy_config` kwarg (DI mirrors `OrganicsConsumptionEngine`), additive bonus before clamp.
+    - `game/strategy/facade/dto/colony_demographic_view.py` — added `food_surplus` + `food_surplus_bonus` fields.
+    - `game/strategy/facade/slices/economy_slice.py` — pre-computes both fields from `EconomyConfig` coefs.
+    - `game/ui/screens/strategy_detail_fmt.py` — conditional surplus row in per-species sub-block.
+    - `docs/systems/strategy_layer.md` — Happiness §8 documents `last_food_surplus`, the new economy.json fields, the additive bonus formula, and the "PopulationEngine NOT touched" decision. Bumped `Last verified:` to 2026-04-27.
+    - Tests: `tests/unit/strategy/data/test_colony_species_config.py` (+5 surplus-property tests, +1 read-only test), `tests/unit/strategy/engine/test_happiness_engine.py` (+9 surplus-bonus tests, 1 legacy test updated to acknowledge the bonus), `tests/integration/strategy/test_demographics_loop.py` (+1 end-to-end surplus test), `tests/unit/strategy/facade/test_colony_demographic_view.py` (+3 DTO-population tests, 1 helper updated), `tests/unit/ui/screens/test_strategy_detail_fmt.py` (+2 UI render tests, 1 helper updated).
+  - **Test results:** Targeted (212/212 pass on the 7 affected test files). Full sharded suite: 15800/15802 pass (the 2 failing tests — `test_empire_build_queue_window`, `test_empire_build_queue_filter_manager` — are pre-existing FEAT-17-related failures unrelated to FEAT-19; verified by re-running with the FEAT-19 working tree stashed: those tests pass without my changes when other parallel teammate edits are also gone).
+  - **QA-ticket reproduction (verified by `test_surplus_partial_below_cap`):** allocation 1.35× with full supply → surplus 1.35 → bonus = `min(0.20, 0.20 × 0.35) = 0.07`. Pre-fix happiness 0.24 → post-fix 0.31.
+  - **Save compatibility:** No new persisted fields. `last_food_surplus` is a derived property; `to_dict` / `from_dict` unchanged. Old saves load identically.
+  - **Branch:** `main` (worktree not enabled per coordinator).

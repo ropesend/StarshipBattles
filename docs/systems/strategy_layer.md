@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-27 — FEAT-15: per-ability `chance` field added to intrinsic-ability registry templates (planets only today); §IAbilitySource framework note updated.
+> **Last verified:** 2026-04-28 — FEAT-17: per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections; also documents FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -229,6 +229,7 @@ Core state:
 - `orders: List[Order]`, `path: List[HexCoord]`
 - `speed: float` -- minimum of all combat-capable ships' speeds
 - `construction_queue: List[Dict]` -- for fleets with space yards
+- `construction_queue_paused: bool` -- FEAT-17 per-fleet pause flag; when True, `ProductionEngine.process_construction_tick` skips ticking this fleet's queue and Treasury / Planet-detail forecasts treat its drain as zero. Fleet yards share one queue, so this is per-fleet (not per-yard). Mirror flags exist on `Planet.construction_queue_paused` (planetary-yard base queue) and `PlanetaryFacility.construction_queue_paused` (each shipyard facility queue, independently)
 
 **Fleet ID generation:** `Galaxy.get_next_fleet_id()` produces globally unique
 sequential IDs across all empires. This prevents ID collisions in the galaxy-wide
@@ -312,7 +313,7 @@ design-role default" — resolved at battle start by
 `FormationResolver.resolve(...)` consuming `resolve_default_for_task_force`.
 
 Serialized on `TaskForce.to_dict()` / `from_dict()`. Missing key in
-legacy saves deserializes to `None` (CLAUDE.md "saves are disposable"
+legacy saves deserializes to `None` (the project "saves are disposable"
 rule applies).
 
 See `docs/systems/combat_simulation.md` §0 "Formation System" for the
@@ -1391,6 +1392,7 @@ Per-turn pipeline that converts a colony's multi-resource upkeep stockpile + per
 - `food_allocation: float = 1.0` — player-set linear scalar. Default 1.0 ("normal rations"). Range 0 to ∞ (UI slider capped at 5.0 with typed-input override). Scales BOTH upkeep consumption (across EVERY declared resource) AND the derived happiness/reproduction chain.
 - `last_consumption_ratios: Dict[str, float]` — **TRANSIENT** per-resource supply-ratio dict written by `OrganicsConsumptionEngine` each turn. Keys are resource ids declared in `EconomyConfig.population_consumption`; values are `supplied / needed` per resource. NOT serialized — `ColonySpeciesConfig.to_dict` excludes it and `from_dict` always resets to `{}`. Downstream readers rely on the engine overwriting every entry every turn; the engine writes 1.0 per declared resource for zero-population / zero-allocation edge cases to prevent stale values.
 - `last_food_ratio: float` — **computed `@property`** returning `min(last_consumption_ratios.values())` with a 1.0 fallback when the dict is empty. Read by `HappinessEngine` and `PopulationEngine` unchanged — their source files don't change when upgrading from single-resource (PROJ-284) to multi-resource (PROJ-286) consumption. Models Liebig's Law of the Minimum: the colony is "as well-fed as its worst-supplied resource". A 100%-organics / 0%-metals colony has aggregate ratio 0 and is treated as starving. No setter — callers must write to `last_consumption_ratios` directly.
+- `last_food_surplus: float` — **computed `@property`** (FEAT-19) returning `food_allocation × min(last_consumption_ratios.values())` with a 1.0 fallback when the dict is empty. Unbounded; only exceeds 1.0 when allocation > 1.0 AND every declared resource's supply meets the elevated demand. Read by `HappinessEngine` to award an additive surplus-food happiness bonus. Identity: each per-resource ratio is `supplied / (count × allocation × rate)`, so multiplying by `allocation` yields `supplied / (count × rate)` — i.e. "supplied / needed_at_1x". No setter — pure derivation from `food_allocation` + `last_consumption_ratios`.
 
 `Planet.get_species_config(race_id)` is a lazy-create-and-store helper — callers can read or mutate the returned config without checking for absence first.
 
@@ -1404,16 +1406,20 @@ Per-turn pipeline that converts a colony's multi-resource upkeep stockpile + per
         "organics": 0.001,
         "metals": 0.0001,
         "radioactives": 0.00001
-    }
+    },
+    "surplus_food_bonus_per_x": 0.20,
+    "surplus_food_bonus_cap": 0.20
 }
 ```
 
-`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this dict via the CLAUDE.md `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to a hardcoded `{"organics": 0.001}` default (PROJ-284-equivalent) on missing JSON, malformed JSON, or `population_consumption` present but not a dict. The `primary_resource` convenience property returns the first key in insertion order (Python 3.7+), used by UI titles that want a single "main food" label. PROJ-291 C2 retired the legacy `population_food_resource` shim — the `FoodAllocationEditor` now reads `primary_resource` directly.
+`EconomyConfig` (`game/strategy/config/economy_config.py`) loads this dict via the project `get_default_* / set_default_*` module-accessor pattern. Graceful fallback to a hardcoded `{"organics": 0.001}` default (PROJ-284-equivalent) on missing JSON, malformed JSON, or `population_consumption` present but not a dict. The `primary_resource` convenience property returns the first key in insertion order (Python 3.7+), used by UI titles that want a single "main food" label. PROJ-291 C2 retired the legacy `population_food_resource` shim; `FoodAllocationEditor` reads `primary_resource` directly.
+
+**FEAT-19 surplus-food coefficients.** `surplus_food_bonus_per_x` (default 0.20) is the additive happiness reward per +1.0 of `last_food_surplus` above 1.0; `surplus_food_bonus_cap` (default 0.20) is the per-turn ceiling on that bonus. Both are optional in the JSON — the loader provides the same defaults so existing files keep working unchanged. Tunable via data edit; balance lever for the over-feeding strategy.
 
 ### Formulas
 
 - **Consumption** (`OrganicsConsumptionEngine`): per species per colony, the engine `clear()`s `cfg.last_consumption_ratios` then iterates `economy.population_consumption.items()`. For each `(resource_id, per_pop_rate)`: `needed = pop.count * cfg.food_allocation * per_pop_rate`; drains `min(needed, available)` from `planet.stockpile[resource_id]`; writes `cfg.last_consumption_ratios[resource_id] = supplied / needed` (or 1.0 when `needed == 0`).
-- **Happiness** (`HappinessEngine`): `happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. `last_food_ratio` is the MIN across declared resources — if any upkeep resource is at 0%, happiness collapses to 0 regardless of the others. Unbounded above 1.0 on purpose — over-supply + ideal habitability can push happiness past neutral. Clamp at 3 prevents runaway values.
+- **Happiness** (`HappinessEngine`): `raw = race.base_happiness * cfg.last_food_ratio * habitability`. **FEAT-19**: when `cfg.last_food_surplus > 1.0`, an additive bonus `min(economy.surplus_food_bonus_cap, economy.surplus_food_bonus_per_x * (cfg.last_food_surplus - 1.0))` is added to `raw` BEFORE the clamp. Final `happiness = clamp(raw, 0, 3)`. The surplus bonus participates in the same [0, 3] clamp — it does not bypass it. `last_food_ratio` is the MIN across declared resources — if any upkeep resource is at 0%, happiness collapses to 0 regardless of the others (the bonus also vanishes because surplus = allocation × MIN ratio = 0). Unbounded above 1.0 on purpose — over-supply + ideal habitability + surplus bonus can push happiness past neutral. Clamp at 3 prevents runaway values. The bonus reaches population growth indirectly through `pop.happiness` — neither `PopulationEngine` nor `colony_output.projected_growth_rate` was touched.
 - **Population growth** (`PopulationEngine`): `growth = (race.base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, planet.max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` in `population_engine.py`. The defensive `min(1.0, happiness)` clamp from the pre-PROJ-284 formula was removed so the new [0, 3] happiness range is honored — `happiness=3` triples the logistic term. Via the MIN aggregation, a colony starving on even one declared resource sees full decline_term.
 
 ### Multi-species engine resolution (PROJ-291 Phase 2)

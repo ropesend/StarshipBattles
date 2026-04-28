@@ -220,6 +220,80 @@ class TestColonizedReturnsView:
         assert "ghost_race" not in race_ids
 
 
+class TestFoodSurplusOnDTO:
+    """FEAT-19: SpeciesDemographicView carries `food_surplus` (unbounded)
+    AND `food_surplus_bonus` (pre-computed per the EconomyConfig
+    coefficients). UI consumes both directly so the formatter never
+    re-derives the math."""
+
+    def test_default_allocation_one_yields_surplus_one_no_bonus(self):
+        """allocation=1.0, full supply → surplus=1.0, bonus=0.0."""
+        cfg = ColonySpeciesConfig(food_allocation=1.0)
+        cfg.last_consumption_ratios = {"organics": 1.0}
+        planet = _earth(
+            populations=[SpeciesPopulation(race_id="human", count=100)],
+            species_configs={"human": cfg},
+        )
+        facade = _facade_for(planet,
+                             race_registry=_StubRegistry({"human": _race("human")}),
+                             economy=EconomyConfig(
+                                 population_consumption={"organics": 0.001},
+                                 surplus_food_bonus_per_x=0.20,
+                                 surplus_food_bonus_cap=0.20,
+                             ))
+
+        view = facade.get_colony_demographic_view(42)
+        s = view.species[0]
+
+        assert s.food_surplus == pytest.approx(1.0)
+        assert s.food_surplus_bonus == pytest.approx(0.0)
+
+    def test_allocation_one_thirty_five_yields_partial_bonus(self):
+        """FEAT-19 repro: allocation=1.35 + full supply → surplus=1.35,
+        bonus = min(0.20, 0.20 × 0.35) = 0.07."""
+        cfg = ColonySpeciesConfig(food_allocation=1.35)
+        cfg.last_consumption_ratios = {"organics": 1.0}
+        planet = _earth(
+            populations=[SpeciesPopulation(race_id="human", count=100)],
+            species_configs={"human": cfg},
+        )
+        facade = _facade_for(planet,
+                             race_registry=_StubRegistry({"human": _race("human")}),
+                             economy=EconomyConfig(
+                                 population_consumption={"organics": 0.001},
+                                 surplus_food_bonus_per_x=0.20,
+                                 surplus_food_bonus_cap=0.20,
+                             ))
+
+        view = facade.get_colony_demographic_view(42)
+        s = view.species[0]
+
+        assert s.food_surplus == pytest.approx(1.35)
+        assert s.food_surplus_bonus == pytest.approx(0.07)
+
+    def test_allocation_two_hits_cap(self):
+        """allocation=2.0 → surplus=2.0, raw bonus 0.20 = cap → 0.20."""
+        cfg = ColonySpeciesConfig(food_allocation=2.0)
+        cfg.last_consumption_ratios = {"organics": 1.0}
+        planet = _earth(
+            populations=[SpeciesPopulation(race_id="human", count=100)],
+            species_configs={"human": cfg},
+        )
+        facade = _facade_for(planet,
+                             race_registry=_StubRegistry({"human": _race("human")}),
+                             economy=EconomyConfig(
+                                 population_consumption={"organics": 0.001},
+                                 surplus_food_bonus_per_x=0.20,
+                                 surplus_food_bonus_cap=0.20,
+                             ))
+
+        view = facade.get_colony_demographic_view(42)
+        s = view.species[0]
+
+        assert s.food_surplus == pytest.approx(2.0)
+        assert s.food_surplus_bonus == pytest.approx(0.20)
+
+
 class TestResourceProjections:
     def test_projections_include_consumption_resources(self):
         cfg = ColonySpeciesConfig(food_allocation=1.0)
@@ -355,6 +429,8 @@ class TestSpeciesSortedInDTOConstructor:
                 growth_rate=0.01,
                 food_ratio=1.0,
                 food_allocation=1.0,
+                food_surplus=1.0,
+                food_surplus_bonus=0.0,
             )
 
         # Caller passes in ASCENDING order; DTO must re-sort.
@@ -388,6 +464,8 @@ class TestSpeciesSortedInDTOConstructor:
                 growth_rate=0.01,
                 food_ratio=1.0,
                 food_allocation=1.0,
+                food_surplus=1.0,
+                food_surplus_bonus=0.0,
             )
 
         # Two species with equal counts; their relative order should be

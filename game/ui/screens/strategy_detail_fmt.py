@@ -239,6 +239,17 @@ def format_planet_info(
                         f"&nbsp;&nbsp;Food ratio: {s.food_ratio:.2f}<br>"
                         f"&nbsp;&nbsp;&nbsp;Allocation: {s.food_allocation:.2f}\u00d7<br>"
                     )
+                    # FEAT-19: only show the surplus row when the player is
+                    # actually over-feeding AND supply meets the elevated
+                    # demand. At allocation=1.0\u00d7 (the default) surplus=1.0
+                    # and this row stays hidden.
+                    if s.food_surplus > 1.0:
+                        text += (
+                            f"&nbsp;&nbsp;&nbsp;Food surplus: "
+                            f"{s.food_surplus:.2f}\u00d7"
+                            f"&nbsp;&nbsp;&nbsp;\u2192 "
+                            f"+{s.food_surplus_bonus:.2f} happiness<br>"
+                        )
             elif len(populations) > 0:
                 # Legacy single-line layout — preserved for callers that
                 # do not pass a `ColonyDemographicView` (uncolonized snapshots,

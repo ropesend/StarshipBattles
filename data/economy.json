@@ -3,5 +3,7 @@
         "organics": 0.0001,
         "metals": 0.00001,
         "radioactives": 0.000001
-    }
+    },
+    "surplus_food_bonus_per_x": 0.20,
+    "surplus_food_bonus_cap": 0.20
 }

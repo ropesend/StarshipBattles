@@ -26,6 +26,17 @@ ONE species on ONE colony. Currently:
         files do not change when upgrading from single-resource
         (PROJ-284) to multi-resource (PROJ-286) consumption.
 
+    last_food_surplus (computed property — FEAT-19):
+        `food_allocation × MIN(last_consumption_ratios)` with 1.0
+        fallback when the dict is empty. Unbounded; only exceeds 1.0
+        when allocation > 1.0 AND supply meets the elevated demand.
+        Read by HappinessEngine to award an additive surplus-food
+        happiness bonus. Identity: each per-resource ratio is
+        `supplied / (count × allocation × rate)`, so multiplying by
+        `allocation` yields `supplied / (count × rate)` —
+        i.e. "supplied / needed_at_1x", which is the surplus the player
+        is asking us to reward.
+
 Storage location: `Planet.species_configs: Dict[race_id, ColonySpeciesConfig]`.
 This keeps `SpeciesPopulation` pure runtime state and gives future
 per-colony per-species knobs (labor allocation, taxation, etc.) a
@@ -75,6 +86,24 @@ class ColonySpeciesConfig:
         if not self.last_consumption_ratios:
             return 1.0
         return min(self.last_consumption_ratios.values())
+
+    @property
+    def last_food_surplus(self) -> float:
+        """FEAT-19 — unbounded "supplied / needed_at_1x" aggregate.
+
+        Equals `food_allocation × MIN(last_consumption_ratios)`. Returns
+        1.0 when the dict is empty (uncolonized / pre-first-turn /
+        zero-pop), preserving the no-demand-no-surplus invariant.
+
+        Only exceeds 1.0 when allocation > 1.0 AND every declared
+        resource's supply meets the elevated demand — exactly the
+        surplus-reward case. Below 1.0× allocation it equals
+        `last_food_ratio` (MIN drags it down). HappinessEngine reads
+        this to award an additive bonus when surplus > 1.0.
+        """
+        if not self.last_consumption_ratios:
+            return 1.0
+        return self.food_allocation * min(self.last_consumption_ratios.values())
 
     def to_dict(self) -> Dict[str, Any]:
         """Emit only persistable fields. `last_consumption_ratios` is

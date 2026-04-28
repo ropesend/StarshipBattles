@@ -1,4 +1,4 @@
-"""Per-colony per-species happiness derivation (PROJ-284 Phase 3).
+"""Per-colony per-species happiness derivation (PROJ-284 Phase 3 + FEAT-19).
 
 Runs ONCE per turn, AFTER `OrganicsConsumptionEngine.process_consumption`
 (which writes `ColonySpeciesConfig.last_food_ratio`) and BEFORE
@@ -6,17 +6,25 @@ Runs ONCE per turn, AFTER `OrganicsConsumptionEngine.process_consumption`
 `SpeciesPopulation.happiness`). Replaces the pre-PROJ-284 world in
 which happiness was a static dial that no engine ever wrote.
 
-Formula:
-    happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)
+Formula (FEAT-19):
+    raw = race.base_happiness * cfg.last_food_ratio * habitability
+    if cfg.last_food_surplus > 1.0:
+        raw += min(cap, per_x * (cfg.last_food_surplus - 1.0))
+    happiness = clamp(raw, 0, 3)
 
 - `base_happiness` lives on `RaceConfig` (PROJ-283, default 0.5).
-- `last_food_ratio` lives on `ColonySpeciesConfig` (PROJ-284 Phase 1,
-  written by `OrganicsConsumptionEngine` in Phase 2).
+- `last_food_ratio` + `last_food_surplus` live on `ColonySpeciesConfig`
+  (PROJ-284 Phase 1 / FEAT-19), both derived from the dict that
+  `OrganicsConsumptionEngine` writes in Phase 2.
 - `habitability` is a [0, 1] geometric mean from `score_planet_for_race`
   (PROJ-283 Phase 4, registry-driven via `FACTOR_REGISTRY`).
+- Surplus bonus is additive (not multiplicative) so allocation > 1.0×
+  with met demand is rewarded without compounding the starvation
+  penalty. Coefficients live on `EconomyConfig` (data-driven).
 - Unbounded above 1.0 on purpose — over-supply on an ideal planet can
   push happiness past the neutral point. Clamp at 3 prevents absurd
-  setups from producing runaway values.
+  setups from producing runaway values; the surplus bonus participates
+  in the same clamp.
 """
 from __future__ import annotations
 
@@ -28,6 +36,7 @@ from game.strategy.interfaces.engines import IHappinessEngine
 
 if TYPE_CHECKING:
     from game.core.protocols import IRaceRegistry
+    from game.strategy.config.economy_config import EconomyConfig
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
     from game.strategy.data.race_config import RaceConfig
@@ -43,7 +52,12 @@ HAPPINESS_MAX: float = 3.0
 class HappinessEngine(IHappinessEngine):
     """Derives `SpeciesPopulation.happiness` each turn."""
 
-    def __init__(self, race_registry: Optional['IRaceRegistry'] = None) -> None:
+    def __init__(
+        self,
+        race_registry: Optional['IRaceRegistry'] = None,
+        *,
+        economy_config: Optional['EconomyConfig'] = None,
+    ) -> None:
         """Initialize the happiness engine.
 
         Args:
@@ -57,8 +71,20 @@ class HappinessEngine(IHappinessEngine):
                 `race_id` doesn't match the empire's primary race so
                 the pop is gracefully skipped (PROJ-287 line-16 deferral
                 reversed).
+            economy_config: FEAT-19 — optional `EconomyConfig` carrying
+                the surplus-food bonus coefficients
+                (`surplus_food_bonus_per_x`, `surplus_food_bonus_cap`).
+                When None, lazy-loads the module default from
+                `data/economy.json`. Mirrors the DI pattern used by
+                `OrganicsConsumptionEngine`.
         """
         self._race_registry = race_registry
+        if economy_config is None:
+            from game.strategy.config.economy_config import (
+                get_default_economy_config,
+            )
+            economy_config = get_default_economy_config()
+        self._economy = economy_config
 
     def _validate_tick_inputs(self, empires: List['Empire']) -> None:
         """PROJ-251: precondition validation — reject None colonies loudly."""
@@ -90,6 +116,15 @@ class HappinessEngine(IHappinessEngine):
             habitability = score_planet_for_race(colony, race_config)
             cfg = colony.get_species_config(pop.race_id)
             raw = race_config.base_happiness * cfg.last_food_ratio * habitability
+            # FEAT-19: additive surplus-food bonus when allocation > 1.0×
+            # AND supply meets the elevated demand. Bonus participates in
+            # the [0, 3] clamp below — does NOT bypass it.
+            if cfg.last_food_surplus > 1.0:
+                raw += min(
+                    self._economy.surplus_food_bonus_cap,
+                    self._economy.surplus_food_bonus_per_x
+                    * (cfg.last_food_surplus - 1.0),
+                )
             pop.happiness = max(HAPPINESS_MIN, min(HAPPINESS_MAX, raw))
 
     def _get_race_config(

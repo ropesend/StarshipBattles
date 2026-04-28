@@ -180,6 +180,66 @@ class TestColonySpeciesConfigSerialization:
         assert restored.last_food_ratio == 1.0
 
 
+class TestLastFoodSurplus:
+    """FEAT-19: `last_food_surplus` is an unbounded "supplied / needed_at_1x"
+    aggregate. Equals `food_allocation × MIN(last_consumption_ratios)` —
+    only exceeds 1.0 when allocation > 1.0 AND supply meets the elevated
+    demand. Read by HappinessEngine to award the surplus-food bonus."""
+
+    def test_empty_dict_returns_one(self):
+        """Pre-first-turn / uncolonized: empty ratios dict → 1.0 (mirrors
+        `last_food_ratio`'s empty-dict contract — no demand, no surplus)."""
+        from game.strategy.data.colony_species_config import ColonySpeciesConfig
+        cfg = ColonySpeciesConfig()
+        assert cfg.last_food_surplus == 1.0
+
+    def test_full_supply_at_alloc_one_returns_one(self):
+        """Allocation=1.0 + ratio=1.0 → surplus=1.0 (no bonus)."""
+        from game.strategy.data.colony_species_config import ColonySpeciesConfig
+        cfg = ColonySpeciesConfig(food_allocation=1.0)
+        cfg.last_consumption_ratios = {"organics": 1.0}
+        assert cfg.last_food_surplus == pytest.approx(1.0)
+
+    def test_full_supply_above_one_returns_allocation(self):
+        """Allocation=1.35 + ratio=1.0 → surplus=1.35 (the FEAT-19 repro
+        scenario from the QA screenshot)."""
+        from game.strategy.data.colony_species_config import ColonySpeciesConfig
+        cfg = ColonySpeciesConfig(food_allocation=1.35)
+        cfg.last_consumption_ratios = {"organics": 1.0}
+        assert cfg.last_food_surplus == pytest.approx(1.35)
+
+    def test_starving_returns_alloc_times_min_ratio(self):
+        """Allocation=2.0 with one resource at 50% supply → MIN ratio=0.5,
+        surplus = 2.0 × 0.5 = 1.0. Surplus collapses to 1.0 (no bonus)
+        when supply doesn't meet the elevated demand — exactly the
+        ticket's "still penalises" acceptance."""
+        from game.strategy.data.colony_species_config import ColonySpeciesConfig
+        cfg = ColonySpeciesConfig(food_allocation=2.0)
+        cfg.last_consumption_ratios = {"organics": 1.0, "metals": 0.5}
+        assert cfg.last_food_surplus == pytest.approx(1.0)
+
+    def test_zero_pop_one_per_resource_yields_alloc_as_surplus(self):
+        """`OrganicsConsumptionEngine` writes 1.0 per declared resource
+        when needed=0 (zero pop / zero allocation). Surplus is then
+        `allocation × 1.0 = allocation` — unaffected by ratios because
+        the engine has signaled "no demand"."""
+        from game.strategy.data.colony_species_config import ColonySpeciesConfig
+        cfg = ColonySpeciesConfig(food_allocation=5.0)
+        cfg.last_consumption_ratios = {"organics": 1.0}
+        assert cfg.last_food_surplus == pytest.approx(5.0)
+
+
+class TestLastFoodSurplusIsReadOnly:
+    """No setter — surplus is a pure derivation from `food_allocation` +
+    `last_consumption_ratios`. Mirrors the `last_food_ratio` contract."""
+
+    def test_setting_last_food_surplus_raises(self):
+        from game.strategy.data.colony_species_config import ColonySpeciesConfig
+        cfg = ColonySpeciesConfig()
+        with pytest.raises(AttributeError):
+            cfg.last_food_surplus = 2.0  # type: ignore[misc]
+
+
 class TestColonySpeciesConfigFutureExtensibility:
     """Sanity check that the class is safe to extend without breaking
     the PROJ-284/286 invariants (food_allocation persists, transient

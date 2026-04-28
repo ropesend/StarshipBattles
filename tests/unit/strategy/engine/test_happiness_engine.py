@@ -144,7 +144,11 @@ class TestHappinessIdealPlanet:
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
 
     def test_ideal_planet_food_ratio_two_amplifies_happiness(self, engine):
-        """food_ratio=2 doubles the happiness signal for the same base."""
+        """food_ratio=2 doubles the happiness signal for the same base.
+
+        FEAT-19 note: ratio=2.0 with default allocation=1.0 yields
+        `last_food_surplus = 1.0 * 2.0 = 2.0`, so the additive surplus
+        bonus also triggers (capped at +0.20 per shipped defaults)."""
         pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
         planet = _earth_like(populations=[pop])
         race = _race(base_happiness=0.5)
@@ -154,8 +158,8 @@ class TestHappinessIdealPlanet:
         engine.process_happiness([empire], galaxy=None)
 
         hab = score_planet_for_race(planet, race)
-        # base * ratio * hab = 0.5 * 2.0 * ~0.94 ≈ 0.94 (still under cap 3)
-        assert pop.happiness == pytest.approx(0.5 * 2.0 * hab)
+        # base * ratio * hab + capped bonus = 0.5 * 2.0 * ~0.94 + 0.20.
+        assert pop.happiness == pytest.approx(0.5 * 2.0 * hab + 0.20)
 
 
 class TestHappinessHostilePlanet:
@@ -187,6 +191,188 @@ class TestHappinessStarvation:
         engine.process_happiness([empire], galaxy=None)
 
         assert pop.happiness == pytest.approx(0.0)
+
+
+class TestHappinessSurplusBonus:
+    """FEAT-19: when `cfg.last_food_surplus > 1.0`, an additive bonus
+    `min(cap, per_x × (surplus - 1.0))` is added before the [0, 3]
+    clamp. Defaults: per_x=0.20, cap=0.20 (data-driven via EconomyConfig)."""
+
+    def _make_engine(self, *, per_x: float = 0.20, cap: float = 0.20):
+        """HappinessEngine wired with an explicit EconomyConfig so the
+        bonus coefficients are pinned per-test instead of relying on the
+        module-level default."""
+        from game.strategy.config.economy_config import EconomyConfig
+        from game.strategy.engine.happiness_engine import HappinessEngine
+        cfg = EconomyConfig(
+            population_consumption={"organics": 0.001},
+            surplus_food_bonus_per_x=per_x,
+            surplus_food_bonus_cap=cap,
+        )
+        return HappinessEngine(economy_config=cfg)
+
+    def test_surplus_one_no_bonus(self):
+        """allocation=1.0, ratio=1.0 → surplus=1.0 → no bonus, falls back
+        to legacy formula `base × ratio × hab`."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 1.0
+        cfg.last_consumption_ratios = {"organics": 1.0}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
+
+    def test_surplus_partial_below_cap(self):
+        """FEAT-19 QA-screenshot repro: allocation=1.35, ratio=1.0 →
+        surplus=1.35, bonus = min(0.20, 0.20 × 0.35) = 0.07."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 1.35
+        cfg.last_consumption_ratios = {"organics": 1.0}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        expected = 0.5 * 1.0 * hab + 0.07
+        assert pop.happiness == pytest.approx(expected)
+
+    def test_surplus_at_cap(self):
+        """allocation=2.0, ratio=1.0 → surplus=2.0, bonus = min(0.20, 0.20)
+        = 0.20 (cap reached exactly)."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 2.0
+        cfg.last_consumption_ratios = {"organics": 1.0}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        assert pop.happiness == pytest.approx(0.5 * 1.0 * hab + 0.20)
+
+    def test_surplus_above_cap_clamps(self):
+        """allocation=5.0 → surplus=5.0, raw bonus would be 0.80, but
+        cap=0.20 caps it at 0.20."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 5.0
+        cfg.last_consumption_ratios = {"organics": 1.0}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        assert pop.happiness == pytest.approx(0.5 * 1.0 * hab + 0.20)
+
+    def test_starving_at_high_alloc_no_bonus(self):
+        """allocation=2.0 but only 50% supply → surplus=1.0 → no bonus.
+        Boundary case: surplus must be STRICTLY > 1.0 to trigger the
+        bonus, otherwise an unmet-demand colony would silently get a
+        boost it didn't earn."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 2.0
+        cfg.last_consumption_ratios = {"organics": 0.5}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        # Base term uses last_food_ratio=0.5, no bonus added.
+        assert pop.happiness == pytest.approx(0.5 * 0.5 * hab)
+
+    def test_starving_well_below_one_no_bonus(self):
+        """allocation=2.0, supply=25% → surplus=0.5 → no bonus, base
+        happiness already reduced via last_food_ratio=0.25."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 2.0
+        cfg.last_consumption_ratios = {"organics": 0.25}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        assert pop.happiness == pytest.approx(0.5 * 0.25 * hab)
+
+    def test_multi_resource_min_drives_surplus(self):
+        """allocation=2.0, organics=1.0 metals=0.6 → MIN ratio=0.6 →
+        surplus = 2.0 × 0.6 = 1.2 → bonus = min(0.20, 0.20 × 0.2) = 0.04.
+        Liebig's Law on the surplus side mirrors the base formula."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 2.0
+        cfg.last_consumption_ratios = {"organics": 1.0, "metals": 0.6}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        # base × MIN ratio × hab + bonus(0.04)
+        assert pop.happiness == pytest.approx(0.5 * 0.6 * hab + 0.04)
+
+    def test_bonus_data_driven_via_economy_config(self):
+        """Inject explicit `surplus_food_bonus_per_x=0.50` and
+        `surplus_food_bonus_cap=0.30` — bonus must use injected coefs,
+        not the defaults. Pins the data-driven contract."""
+        engine = self._make_engine(per_x=0.50, cap=0.30)
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=0.5)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 1.4  # surplus = 1.4
+        cfg.last_consumption_ratios = {"organics": 1.0}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        hab = score_planet_for_race(planet, race)
+        # bonus = min(0.30, 0.50 × 0.4) = min(0.30, 0.20) = 0.20
+        assert pop.happiness == pytest.approx(0.5 * 1.0 * hab + 0.20)
+
+    def test_clamp_at_three_includes_bonus(self):
+        """Bonus participates in the existing [0, 3] clamp — bonus does
+        not bypass it. Use a surplus that pushes the pre-clamp sum past 3."""
+        engine = self._make_engine()
+        pop = SpeciesPopulation(race_id="human", count=100, happiness=0.0)
+        planet = _earth_like(populations=[pop])
+        race = _race(base_happiness=1.0)
+        empire = _empire(1, [planet], race)
+        cfg = planet.get_species_config("human")
+        cfg.food_allocation = 2.0  # surplus 2.0 → bonus 0.20
+        # Manually push base term high — engine wouldn't normally write
+        # ratio=10 but the property reads whatever the dict holds.
+        cfg.last_consumption_ratios = {"organics": 10.0}
+
+        engine.process_happiness([empire], galaxy=None)
+
+        # base 1.0 × 10.0 × ~0.94 = 9.4, +0.20 = 9.6, clamped to 3.0.
+        assert pop.happiness == pytest.approx(3.0)
 
 
 class TestHappinessClamping:

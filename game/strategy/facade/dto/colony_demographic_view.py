@@ -23,16 +23,24 @@ class SpeciesDemographicView:
     """One row in a colony's per-species demographics table.
 
     Fields:
-        race_id:          Stable identifier (matches `RaceConfig.race_id`).
-        race_name:        Display name; falls back to `race_id` if the race's
-                          `race_name`/`name` are both empty.
-        count:            Current population units (1 unit = 1,000 people).
-        habitability:     `score_planet_for_race(planet, race_config)` -> [0, 1].
-        happiness:        Current `pop.happiness` (HappinessEngine output, [0, 3]).
-        growth_rate:      Per-capita next-turn rate from `projected_growth_rate`.
-                          Multiply by `count` for absolute Δpop.
-        food_ratio:       `cfg.last_food_ratio` (MIN across consumption resources).
-        food_allocation:  `cfg.food_allocation` slider value.
+        race_id:             Stable identifier (matches `RaceConfig.race_id`).
+        race_name:           Display name; falls back to `race_id` if the race's
+                             `race_name`/`name` are both empty.
+        count:               Current population units (1 unit = 1,000 people).
+        habitability:        `score_planet_for_race(planet, race_config)` -> [0, 1].
+        happiness:           Current `pop.happiness` (HappinessEngine output, [0, 3]).
+        growth_rate:         Per-capita next-turn rate from `projected_growth_rate`.
+                             Multiply by `count` for absolute Δpop.
+        food_ratio:          `cfg.last_food_ratio` (MIN across consumption resources).
+        food_allocation:     `cfg.food_allocation` slider value.
+        food_surplus:        FEAT-19 — `cfg.last_food_surplus`. Unbounded; only
+                             exceeds 1.0 when allocation > 1.0 AND supply meets
+                             the elevated demand.
+        food_surplus_bonus:  FEAT-19 — pre-computed additive happiness bonus
+                             from the surplus using the EconomyConfig
+                             coefficients. Zero when `food_surplus <= 1.0`. UI
+                             reads this directly so the formatter never
+                             re-derives the formula.
     """
     race_id: str
     race_name: str
@@ -42,6 +50,8 @@ class SpeciesDemographicView:
     growth_rate: float
     food_ratio: float
     food_allocation: float
+    food_surplus: float
+    food_surplus_bonus: float
 
 
 @dataclass(frozen=True)
