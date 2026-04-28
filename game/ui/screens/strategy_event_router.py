@@ -58,13 +58,10 @@ class StrategyEventRouter:
         if self.ui.scene.build_queue_screen is not None:
             return True
 
-        # Check window manager for open windows (PROJ-86)
+        # PROJ-313 Phases 3-6: all strategy modal windows migrated to
+        # StrategyModalWindow and tracked via wm.iter_live_modals()
+        # (OR-bridge below). The slot-based scan path is empty.
         wm = self.ui.window_manager
-        # PROJ-313 Phases 3-5: most windows migrated to StrategyModalWindow
-        # and tracked via wm.iter_live_modals() (OR-bridge below). Only
-        # move_choice_window remains (Phase 6 will migrate it).
-        if wm.move_choice_window is not None:
-            return True
 
         # PROJ-313: Live-list of StrategyModalWindow subclasses. Phases
         # 3-7 migrate the slot-based windows above into this list; Phase
@@ -482,7 +479,6 @@ class StrategyEventRouter:
         # wm.iter_live_modals() in the OR-bridge below.
         blocking_windows = [
             ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
-            ('move_choice_window', wm.move_choice_window),
         ]
         for name, window in blocking_windows:
             if window is not None:

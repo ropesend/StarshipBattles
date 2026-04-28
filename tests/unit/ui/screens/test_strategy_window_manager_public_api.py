@@ -83,6 +83,8 @@ PROJ_313_MIGRATED_SLOTS: frozenset[str] = frozenset({
     "build_queue_list_window",
     "fleet_report_window",
     "planet_abilities_window",
+    # Phase 6 — inline pygame_gui.UIWindow promoted to MoveChoiceWindow
+    "move_choice_window",
 })
 
 # Public methods the production code calls on StrategyWindowManager.

@@ -285,15 +285,17 @@ class TestClickGateOrBridge:
 
         assert event_router.has_modal_open() is True
 
-    def test_has_modal_open_returns_true_with_only_slot(self, event_router, mock_ui):
-        """has_modal_open returns True when slot populated, modal list empty.
+    def test_has_modal_open_returns_true_with_only_modal_list_item(self, event_router, mock_ui):
+        """has_modal_open returns True when modal list populated.
 
-        Uses move_choice_window as the still-slot-tracked example;
-        Phase 6 will migrate it. After Phase 6 only the `menu_panel` and
-        `_pending_confirmation_dialog` remain on the slot path.
+        PROJ-313 Phase 6: every strategy modal is now a StrategyModalWindow
+        subclass and registered via iter_live_modals(). The legacy slot-scan
+        path is empty (only menu_panel and build_queue_screen remain as
+        pre-modal-tracking checks).
         """
-        mock_ui.window_manager.move_choice_window = MagicMock()
-        mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
+        win = MagicMock()
+        win.alive.return_value = True
+        mock_ui.window_manager.iter_live_modals = lambda: iter([win])
         mock_ui.menu_panel = None
         mock_ui.scene = MagicMock()
         mock_ui.scene.build_queue_screen = None
