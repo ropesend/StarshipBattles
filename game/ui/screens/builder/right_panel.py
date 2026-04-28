@@ -260,9 +260,8 @@ class BuilderRightPanel:
     def update_portrait_image(self) -> None:
         """Update the ship portrait based on current theme and class.
 
-        PROJ-314: portrait path comes from the ShipThemeManager
-        (data-driven via theme.json) rather than a hardcoded
-        `<Class>_Portrait.jpg` filename convention.
+        Portrait path comes from the ShipThemeManager via theme.json's
+        data-driven assets schema.
         """
         import os
 

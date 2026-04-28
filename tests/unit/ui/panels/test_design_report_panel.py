@@ -246,6 +246,30 @@ class TestUpdateDesign:
 class TestUpdatePortrait:
     """Tests for portrait image generation."""
 
+    def test_portrait_uses_ship_theme_manager(self) -> None:
+        """_update_portrait uses ShipThemeManager's unified Surface contract."""
+        from game.ui.panels.design_report_panel import DesignReportPanel
+
+        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
+            panel = DesignReportPanel.__new__(DesignReportPanel)
+
+        ship = _make_mock_ship()
+        panel.portrait_image = MagicMock()
+        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
+        source = pygame.Surface((64, 64))
+        manager = MagicMock()
+        manager.get_portrait_image.return_value = source
+
+        with patch(
+            'game.ui.panels.design_report_panel.get_default_ship_theme_manager',
+            return_value=manager,
+        ):
+            panel._update_portrait(ship)
+
+        manager.get_portrait_image.assert_called_once_with(ship.theme_id, ship.ship_class)
+        panel.portrait_image.set_image.assert_called_once()
+        assert panel.portrait_image.set_image.call_args.args[0].get_size() == (200, 200)
+
     def test_portrait_loads_from_file(self):
         """_update_portrait attempts to load from file paths."""
         from game.ui.panels.design_report_panel import DesignReportPanel

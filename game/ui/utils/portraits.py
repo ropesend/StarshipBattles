@@ -1,20 +1,15 @@
-"""Shared portrait loading and placeholder generation utilities.
+"""Shared portrait placeholder generation utilities.
 
-Provides common functions for ship class name parsing, portrait file
-resolution, and placeholder portrait creation used across UI panels.
+Provides common functions for ship class colors and placeholder portrait
+creation used across UI panels.
 
 Usage:
     from game.ui.utils.portraits import (
-        parse_ship_class_name,
         get_ship_class_color,
-        get_portrait_filename,
-        get_portrait_search_paths,
         create_placeholder_portrait,
     )
 """
-from game.core.paths import Paths
-import re
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 
 import pygame
 
@@ -40,32 +35,6 @@ _SHIP_CLASS_COLORS = {
 }
 
 
-def parse_ship_class_name(ship_class) -> str:
-    """Parse a ship class name, cleaning it for file path construction.
-
-    Handles formats like "Large Escort (Scout)" -> "ScoutLargeEscort"
-    and "Heavy Cruiser" -> "HeavyCruiser".
-
-    Args:
-        ship_class: Ship class string, or None/non-string value.
-
-    Returns:
-        Cleaned class name with spaces removed. Returns "Unknown" for
-        None or empty values.
-    """
-    if ship_class is None or ship_class == '':
-        return "Unknown"
-    if not isinstance(ship_class, str):
-        return str(ship_class)
-
-    match = re.match(r"(.*)\s+\((.*)\)", ship_class)
-    if match:
-        base = match.group(1).strip().replace(" ", "")
-        sub = match.group(2).strip().replace(" ", "")
-        return f"{sub}{base}"
-    return ship_class.replace(" ", "")
-
-
 def get_ship_class_color(ship_class: Optional[str]) -> Tuple[int, int, int]:
     """Get the color associated with a ship class for placeholder portraits.
 
@@ -78,56 +47,6 @@ def get_ship_class_color(ship_class: Optional[str]) -> Tuple[int, int, int]:
     if ship_class is None:
         return SHIP_CLASS_DEFAULT
     return _SHIP_CLASS_COLORS.get(ship_class, SHIP_CLASS_DEFAULT)
-
-
-def get_portrait_filename(ship_class: str) -> str:
-    """Build the legacy portrait filename for a ship class.
-
-    PROJ-314: this helper is kept for backward compatibility with one
-    or two callers but the canonical lookup now goes through
-    :class:`game.ui.assets.ship_theme_manager.ShipThemeManager`.
-
-    Args:
-        ship_class: Raw ship class name.
-
-    Returns:
-        Filename string like "ScoutLargeEscort_Portrait.jpg".
-    """
-    class_clean = parse_ship_class_name(ship_class)
-    return f"{class_clean}_Portrait.jpg"
-
-
-def get_portrait_search_paths(theme: str, ship_class: str) -> List[str]:
-    """Return paths to search for a ship portrait, theme-driven first.
-
-    PROJ-314: the canonical portrait path is read from the
-    :class:`game.ui.assets.ship_theme_manager.ShipThemeManager` (which
-    consumes theme.json's ``assets:`` block). The legacy
-    ``<Class>_Portrait.jpg`` convention is appended as a last-resort
-    fallback during the migration window — most callers should switch
-    to ``ShipThemeManager.get_portrait_image()`` directly.
-
-    Args:
-        theme: Theme ID (e.g. "Federation").
-        ship_class: Raw ship class name.
-
-    Returns:
-        List of file paths to try, in priority order.
-    """
-    paths: List[str] = []
-    try:
-        from game.ui.assets.ship_theme_manager import get_default_ship_theme_manager
-        manager = get_default_ship_theme_manager()
-        if not manager.discovery_complete:
-            manager.initialize()
-        portrait_path = manager.get_portrait_path(theme, ship_class)
-        if portrait_path:
-            paths.append(portrait_path)
-    except Exception:  # Intentional broad catch: helper must never raise — UI degrades to default portrait.
-        pass
-
-    paths.append(Paths.DEFAULT_SHIP_PORTRAIT)
-    return paths
 
 
 def create_placeholder_portrait(

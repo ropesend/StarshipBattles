@@ -31,10 +31,7 @@ from game.ui.utils.formatters import (
 
 # Portrait utilities
 from game.ui.utils.portraits import (
-    parse_ship_class_name,
     get_ship_class_color,
-    get_portrait_filename,
-    get_portrait_search_paths,
     create_placeholder_portrait,
 )
 
@@ -55,9 +52,6 @@ __all__ = [
     'format_compact_number',
     'get_damage_color',
     # Portraits
-    'parse_ship_class_name',
     'get_ship_class_color',
-    'get_portrait_filename',
-    'get_portrait_search_paths',
     'create_placeholder_portrait',
 ]

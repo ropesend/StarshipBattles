@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Optional, Dict
 import pygame
 
 from game.core.paths import Paths
+from game.ui.assets.ship_theme_manager import get_default_ship_theme_manager
 from game.ui.colors import (
     RESOURCE_METALS, RESOURCE_ORGANICS, RESOURCE_VAPORS,
     RESOURCE_RADIOACTIVES, RESOURCE_EXOTICS,
@@ -20,7 +21,6 @@ from game.ui.colors import (
     VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX,
     TEXT_DIM, WHITE
 )
-from game.ui.utils.portraits import get_portrait_search_paths
 
 logger = logging.getLogger(__name__)
 
@@ -105,20 +105,8 @@ class BuildQueuePortraitLoader:
         if not isinstance(ship_class, str):
             ship_class = str(ship_class) if ship_class else 'Unknown'
 
-        # Use shared portrait search paths
-        portrait_paths = get_portrait_search_paths(theme, ship_class)
-
-        for path in portrait_paths:
-            if os.path.exists(path):
-                try:
-                    loaded_img = pygame.image.load(path)
-                    return pygame.transform.smoothscale(loaded_img, (size, size))
-                except pygame.error as e:
-                    logger.warning(f"Failed to load portrait from '{path}': {e}")
-                    continue
-
-        # Fallback: Create a colored placeholder based on vehicle type
-        return self._create_placeholder(design, size)
+        portrait = get_default_ship_theme_manager().get_portrait_image(theme, ship_class)
+        return pygame.transform.smoothscale(portrait, (size, size))
 
     def load_queue_item_portrait(self, design_id: str, item_type: str, size: int) -> Optional[pygame.Surface]:
         """

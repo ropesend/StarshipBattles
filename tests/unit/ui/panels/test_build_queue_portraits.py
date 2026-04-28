@@ -90,6 +90,31 @@ class TestResourceIconLoading:
                 assert surface.get_height() == 20
 
 
+class TestDesignPortraitLoading:
+    """Tests for design portrait loading through ShipThemeManager."""
+
+    def test_load_design_portrait_uses_ship_theme_manager(
+        self, portrait_loader,
+    ) -> None:
+        """Ship portraits come from the theme manager, not legacy filenames."""
+        design = Mock()
+        design.ship_class = "Cruiser"
+        design.vehicle_type = "Ship"
+        source = pygame.Surface((64, 64))
+        manager = Mock()
+        manager.get_portrait_image.return_value = source
+
+        with patch(
+            "game.ui.panels.build_queue_portraits.get_default_ship_theme_manager",
+            return_value=manager,
+        ):
+            result = portrait_loader.load_design_portrait(design, size=24)
+
+        manager.get_portrait_image.assert_called_once_with("Federation", "Cruiser")
+        assert isinstance(result, pygame.Surface)
+        assert result.get_size() == (24, 24)
+
+
 class TestResourcePortraitConstants:
     """Tests for resource portrait constants."""
 

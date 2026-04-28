@@ -62,9 +62,8 @@ def load_portrait_thumbnail(design: DesignMetadata, size: int = 50) -> pygame.Su
 def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pygame.Surface:
     """Load portrait thumbnail without cache lookup.
 
-    PROJ-314: portrait paths come from the ShipThemeManager (data-driven
-    via `theme.json`'s `assets:` block) rather than the legacy
-    `<Class>_Portrait.jpg` filename convention.
+    Portrait paths come from the ShipThemeManager via `theme.json`'s
+    data-driven `assets:` block.
     """
     theme = design.theme_id or "Federation"
     ship_class = design.ship_class or "Unknown"

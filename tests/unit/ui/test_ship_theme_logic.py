@@ -1,8 +1,8 @@
 """Unit tests for ShipThemeManager logic (PROJ-314 schema).
 
-The hardcoded `<Class>_Portrait.jpg` filename convention and the
+The legacy portrait filename convention and the
 `_ship_class_to_portrait_name()` parser were both deleted in PROJ-314
-Phase 3 — portrait paths now come from the theme.json `assets:` block.
+Phase 3; portrait paths now come from the theme.json `assets:` block.
 """
 from __future__ import annotations
 

@@ -14,12 +14,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UILabel, UIPanel, UITextBox
 from typing import Optional, TYPE_CHECKING
+from game.ui.assets.ship_theme_manager import get_default_ship_theme_manager
 from game.ui.panels.design_stats_panel import DesignStatsPanel
-from game.ui.utils.portraits import (
-    get_ship_class_color,
-    get_portrait_search_paths,
-    create_placeholder_portrait,
-)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -167,12 +163,7 @@ class DesignReportPanel:
         self.rows_map = self._stats_panel.rows_map
 
     def _update_portrait(self, ship: Ship) -> None:
-        """Update ship portrait image by loading from file system."""
-        import os
-        import logging
-
-        logger = logging.getLogger(__name__)
-
+        """Update ship portrait image from the active ship-theme manager."""
         # Get portrait dimensions from the UIImage widget
         portrait_rect = self.portrait_image.relative_rect
         portrait_width = portrait_rect.width
@@ -184,29 +175,10 @@ class DesignReportPanel:
         if not isinstance(ship_class, str):
             ship_class = str(ship_class) if ship_class else 'Unknown'
 
-        # Try loading from file system using shared search paths
-        portrait_paths = get_portrait_search_paths(theme, ship_class)
-
-        portrait_surface = None
-        for path in portrait_paths:
-            if os.path.exists(path):
-                try:
-                    loaded_img = pygame.image.load(path)
-                    portrait_surface = pygame.transform.smoothscale(
-                        loaded_img, (portrait_width, portrait_height)
-                    )
-                    break
-                except (FileNotFoundError, OSError, pygame.error) as e:
-                    logger.warning(f"Failed to load portrait from {path}: {e}")
-                    continue
-
-        # Fallback: Create placeholder portrait using shared utility
-        if portrait_surface is None:
-            base_color = get_ship_class_color(ship_class)
-            portrait_surface = create_placeholder_portrait(
-                portrait_width, portrait_height, base_color,
-                ship.name, subtitle=ship_class,
-            )
+        portrait_surface = get_default_ship_theme_manager().get_portrait_image(theme, ship_class)
+        portrait_surface = pygame.transform.smoothscale(
+            portrait_surface, (portrait_width, portrait_height)
+        )
 
         # Update UIImage
         self.portrait_image.set_image(portrait_surface)

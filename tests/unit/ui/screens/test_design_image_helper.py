@@ -50,8 +50,7 @@ class TestLoadPortraitThumbnail:
     def test_logs_warning_when_file_exists_but_load_fails(self):
         """Logs warning when file exists but pygame.image.load fails.
 
-        PROJ-314: portrait paths come from ShipThemeManager, not the
-        deleted `<Class>_Portrait.jpg` convention.
+        PROJ-314: portrait paths come from ShipThemeManager.
         """
         from game.ui.screens.design_image_helper import load_portrait_thumbnail
         from game.ui.assets import ShipThemeManager, set_default_ship_theme_manager
@@ -124,7 +123,7 @@ class TestLoadPortraitThumbnail:
         mock_img.fill((255, 0, 0))
 
         def exists_side_effect(path):
-            return "Cruiser_Portrait.jpg" in path
+            return "cruiser.png" in path
 
         with patch('os.path.exists', side_effect=exists_side_effect):
             with patch('pygame.image.load', return_value=mock_img):
