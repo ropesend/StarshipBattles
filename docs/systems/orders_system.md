@@ -1,6 +1,6 @@
 # Strategy Orders System Architecture
 
-> **Last verified:** 2026-04-07
+> **Last verified:** 2026-04-28 — BUG-122 fix; documents JOIN_FLEET edge cases (mutual / cyclic / convergent) and FLEET_JOIN_CANCELLED reason taxonomy.
 
 > **PROJ-187**: Strategy Orders Tick-Based Action System
 
@@ -108,6 +108,27 @@ Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` rea
 | OrderType | Behavior |
 |-----------|----------|
 | `JOIN_FLEET` | Processed instantly by `OrderProcessor` (not tick-based); merges fleet into target fleet |
+
+#### `JOIN_FLEET` edge cases (BUG-122)
+
+`OrderProcessor.process_instant_orders` is a three-phase loop:
+
+1. **Collect**: walk every empire's fleets and snapshot `(empire, source, target)` triples for any fleet whose current order is `JOIN_FLEET` and whose location matches the target's location.
+2. **Canonicalise**: collapse mutual `A↔B` pairs into a single merge using **most-ships-wins** (smaller id breaks ties; deterministic). Cycles of three or more are NOT pre-collapsed — Phase 3's per-iteration aliveness check handles them naturally (whichever direction iterates first wins; the rest skip).
+3. **Execute with re-validation**: before each merge, re-check that *both* source and target are still in `empire.fleets`. Any entry that fails the check is skipped and emits a `FLEET_JOIN_CANCELLED` event with a structured `reason` field.
+
+This shape is required because earlier merges in the same tick can absorb either the source or the target of a later candidate. Without re-validation, the snapshot would write ships into a dead fleet reference, then unconditionally remove the source — silently destroying both fleets.
+
+`Fleet.merge_with` similarly excludes the absorbing fleet from `redirect_pursuers` to prevent it from being registered as a pursuer of itself (which would cause a self-targeting `JOIN_FLEET` order on the next tick).
+
+#### `FLEET_JOIN_CANCELLED` reasons
+
+| Reason | Source | When |
+|--------|--------|------|
+| `absorbed_by_other_merge` | `OrderProcessor.process_instant_orders` | The source fleet was absorbed by an earlier merge in the same tick (Phase 3 source check). |
+| `target_absorbed_mid_iteration` | `OrderProcessor.process_instant_orders` | The target fleet was absorbed by an earlier merge in the same tick (Phase 3 target check). The stale `JOIN_FLEET` order is also popped. |
+| `self_target_after_redirect` | `Fleet.merge_with` | The absorbing fleet had a `JOIN_FLEET` order targeting the absorbed fleet; that order is dropped instead of being rewritten onto self. |
+| _(unstructured)_ | `Empire.remove_fleet` (PROJ-222) | A fleet was destroyed/removed; pursuers' orders are cancelled. Pre-dates the `reason` field. |
 
 ### Planet Action Orders (`PLANET_ACTION_ORDER_TYPES`)
 

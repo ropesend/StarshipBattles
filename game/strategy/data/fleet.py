@@ -343,6 +343,31 @@ class Fleet:
         self.orders = [o for o in self.orders if o.type != order_type]
         return removed
 
+    def remove_orders_by_type_and_target(
+        self,
+        order_types: frozenset[OrderType],
+        target: 'Fleet',
+    ) -> List[Order]:
+        """Remove all orders matching both an order-type set and a Fleet target.
+
+        Used by BUG-122 fix: when a pursuer is excluded from redirect_pursuers
+        (because it would create a self-target cycle), its now-stale pursuit
+        orders against the absorbed fleet must be dropped.
+
+        Returns the removed orders.
+        """
+        removed = [
+            o for o in self.orders
+            if o.type in order_types and o.target is target
+        ]
+        for order in removed:
+            self._unregister_from_target(order)
+        self.orders = [
+            o for o in self.orders
+            if not (o.type in order_types and o.target is target)
+        ]
+        return removed
+
     def merge_with(self, other_fleet: 'Fleet', event_bus=None) -> None:
         """
         Merge this fleet into other_fleet.
@@ -360,32 +385,67 @@ class Fleet:
 
         # PROJ-222: Redirect all pursuers to other_fleet BEFORE clearing orders
         # (clear_orders would unregister from targets, but redirect must happen first)
-        redirected = self._pursuer_tracker.redirect_pursuers(other_fleet)
-        if redirected:
-            from game.strategy.events.event_types import EventType, EventCategory
+        # BUG-122: Exclude other_fleet from redirect — it must not become a
+        # pursuer of itself if it had a JOIN_FLEET order targeting self.
+        from game.strategy.data.fleet_pursuer_tracker import PURSUIT_ORDER_TYPES
+        from game.strategy.events.event_types import EventType, EventCategory
+        from game.core.event_logging import log_event
+
+        redirected, excluded = self._pursuer_tracker.redirect_pursuers(
+            other_fleet,
+            exclude=frozenset({other_fleet}),
+        )
+
+        for pursuer, _old_target in redirected:
             if event_bus:
-                for pursuer, _old_target in redirected:
-                    event_bus.log_event(
-                        EventType.FLEET_JOIN_REDIRECTED,
-                        category=EventCategory.FLEET_OPERATIONS,
-                        empire_id=pursuer.owner_id,
-                        message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
-                        fleet_id=pursuer.id,
-                        old_target_id=self.id,
-                        new_target_id=other_fleet.id,
-                    )
+                event_bus.log_event(
+                    EventType.FLEET_JOIN_REDIRECTED,
+                    category=EventCategory.FLEET_OPERATIONS,
+                    empire_id=pursuer.owner_id,
+                    message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
+                    fleet_id=pursuer.id,
+                    old_target_id=self.id,
+                    new_target_id=other_fleet.id,
+                )
             else:
-                from game.core.event_logging import log_event
-                for pursuer, _old_target in redirected:
-                    log_event(
-                        EventType.FLEET_JOIN_REDIRECTED,
-                        category=EventCategory.FLEET_OPERATIONS,
-                        empire_id=pursuer.owner_id,
-                        message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
-                        fleet_id=pursuer.id,
-                        old_target_id=self.id,
-                        new_target_id=other_fleet.id,
-                    )
+                log_event(
+                    EventType.FLEET_JOIN_REDIRECTED,
+                    category=EventCategory.FLEET_OPERATIONS,
+                    empire_id=pursuer.owner_id,
+                    message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
+                    fleet_id=pursuer.id,
+                    old_target_id=self.id,
+                    new_target_id=other_fleet.id,
+                )
+
+        # BUG-122: Drop excluded pursuers' stale orders targeting self and
+        # emit FLEET_JOIN_CANCELLED so the player sees why they vanished.
+        for pursuer in excluded:
+            pursuer.remove_orders_by_type_and_target(PURSUIT_ORDER_TYPES, self)
+            logger.warning(
+                f"[BUG-122] Fleet {pursuer.id} pursuit orders dropped during merge "
+                f"of Fleet {self.id} into Fleet {other_fleet.id}: would have created self-join"
+            )
+            if event_bus:
+                event_bus.log_event(
+                    EventType.FLEET_JOIN_CANCELLED,
+                    category=EventCategory.FLEET_OPERATIONS,
+                    empire_id=pursuer.owner_id,
+                    message=f"Fleet {pursuer.id} join order cancelled: would have self-targeted Fleet {other_fleet.id}",
+                    fleet_id=pursuer.id,
+                    target_fleet_id=self.id,
+                    reason="self_target_after_redirect",
+                )
+            else:
+                log_event(
+                    EventType.FLEET_JOIN_CANCELLED,
+                    category=EventCategory.FLEET_OPERATIONS,
+                    empire_id=pursuer.owner_id,
+                    message=f"Fleet {pursuer.id} join order cancelled: would have self-targeted Fleet {other_fleet.id}",
+                    fleet_id=pursuer.id,
+                    target_fleet_id=self.id,
+                    reason="self_target_after_redirect",
+                )
 
         # Transfer ships
         other_fleet.ships.extend(self.ships)

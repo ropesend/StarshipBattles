@@ -118,9 +118,11 @@ class TestRedirectPursuers:
         tracker = FleetPursuerTracker(old_target)
         tracker.add_pursuer(pursuer)
 
-        result = tracker.redirect_pursuers(new_target)
-        assert len(result) == 1
-        assert result[0][0] is pursuer  # (pursuer, old_target)
+        # BUG-122: returns (redirected, excluded)
+        redirected, excluded = tracker.redirect_pursuers(new_target)
+        assert len(redirected) == 1
+        assert redirected[0][0] is pursuer  # (pursuer, old_target)
+        assert excluded == []
 
     def test_redirect_preserves_non_targeting_orders(self):
         old_target = make_fleet("old_target")
@@ -150,8 +152,10 @@ class TestRedirectPursuers:
         new_target = make_fleet("new_target")
         tracker = FleetPursuerTracker(old_target)
 
-        result = tracker.redirect_pursuers(new_target)
-        assert result == []
+        # BUG-122: returns (redirected, excluded)
+        redirected, excluded = tracker.redirect_pursuers(new_target)
+        assert redirected == []
+        assert excluded == []
 
 
 class TestUnregisterOnOrderRemoval:
@@ -356,3 +360,69 @@ class TestNotifyTargetDestroyed:
 
         result = tracker.notify_target_destroyed()
         assert result == []
+
+
+class TestRedirectPursuersExcludeKwarg:
+    """BUG-122: redirect_pursuers must support excluding fleets to prevent
+    self-join cycles when the absorbing fleet is itself a pursuer of the
+    fleet being absorbed.
+    """
+
+    def test_redirect_excludes_specified_fleet_from_rewrite(self):
+        """An excluded pursuer's orders are NOT rewritten."""
+        old_target = make_fleet("old_target")
+        new_target = make_fleet("new_target")
+        normal_pursuer = make_fleet("normal_pursuer")
+
+        # new_target is itself a pursuer of old_target (mutual-join scenario)
+        new_target.add_order(Order(OrderType.JOIN_FLEET, target=old_target))
+        normal_pursuer.add_order(Order(OrderType.JOIN_FLEET, target=old_target))
+
+        tracker = FleetPursuerTracker(old_target)
+        tracker.add_pursuer(new_target)
+        tracker.add_pursuer(normal_pursuer)
+
+        tracker.redirect_pursuers(new_target, exclude=frozenset({new_target}))
+
+        # new_target's order is NOT rewritten (still points to old_target)
+        assert new_target.orders[0].target is old_target
+        # normal_pursuer's order IS rewritten
+        assert normal_pursuer.orders[0].target is new_target
+
+    def test_redirect_returns_tuple_of_redirected_and_excluded(self):
+        """The new return shape is (redirected, excluded)."""
+        old_target = make_fleet("old_target")
+        new_target = make_fleet("new_target")
+        normal_pursuer = make_fleet("normal_pursuer")
+
+        new_target.add_order(Order(OrderType.JOIN_FLEET, target=old_target))
+        normal_pursuer.add_order(Order(OrderType.JOIN_FLEET, target=old_target))
+
+        tracker = FleetPursuerTracker(old_target)
+        tracker.add_pursuer(new_target)
+        tracker.add_pursuer(normal_pursuer)
+
+        result = tracker.redirect_pursuers(new_target, exclude=frozenset({new_target}))
+
+        assert isinstance(result, tuple) and len(result) == 2
+        redirected, excluded = result
+        assert any(p is normal_pursuer for p, _ in redirected)
+        assert not any(p is new_target for p, _ in redirected)
+        assert new_target in excluded
+
+    def test_redirect_excluded_fleet_not_added_to_new_target(self):
+        """An excluded pursuer must not register as a pursuer of new_target.
+
+        Without this, new_target would end up registered as its own pursuer.
+        """
+        old_target = make_fleet("old_target")
+        new_target = make_fleet("new_target")
+
+        new_target.add_order(Order(OrderType.JOIN_FLEET, target=old_target))
+
+        tracker = FleetPursuerTracker(old_target)
+        tracker.add_pursuer(new_target)
+
+        tracker.redirect_pursuers(new_target, exclude=frozenset({new_target}))
+
+        assert new_target not in new_target.pursuer_tracker.pursuers

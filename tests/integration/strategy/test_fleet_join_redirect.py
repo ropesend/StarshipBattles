@@ -210,3 +210,175 @@ class TestOrderLifecycleEdgeCases:
 
         result = JoinCommandHandler().execute(session, cmd)
         assert not result.is_valid
+
+
+class TestMutualAndCyclicJoin:
+    """BUG-122: mutual / cyclic / convergent JOIN_FLEET semantics.
+
+    Three structural failures interacted to silently destroy fleets:
+    1. process_instant_orders snapshotted candidates without re-validating
+       aliveness during execution.
+    2. _execute_fleet_merge unconditionally removed the source even when
+       the target was already absorbed.
+    3. redirect_pursuers rewrote the absorbing fleet's own pursuit order
+       onto itself, creating a self-join cycle.
+    """
+
+    def _add_dummy_ships(self, fleet, count):
+        """Append `count` placeholder ship stand-ins for ship-count assertions.
+
+        Returns is_combat_capable=False so FleetSpeedCalculator skips them
+        during merge-triggered speed recalc — the bug under test is about
+        fleet/order plumbing, not speed."""
+        class _DummyShip:
+            def is_combat_capable(self):
+                return False
+        for _ in range(count):
+            fleet.ships.append(_DummyShip())
+
+    def test_mutual_join_equal_ships_smaller_id_wins(self):
+        """F2 ↔ F3 mutual JOIN_FLEET, equal ships → smaller id wins, all ships in survivor."""
+        from game.strategy.engine.order_processor import OrderProcessor
+
+        empire = Empire(0, "E", (255, 0, 0))
+        f2 = Fleet("f2", 0, HexCoord(50, 0))
+        f3 = Fleet("f3", 0, HexCoord(50, 0))
+        empire.add_fleet(f2)
+        empire.add_fleet(f3)
+        self._add_dummy_ships(f2, 1)
+        self._add_dummy_ships(f3, 1)
+
+        f2.add_order(Order(OrderType.JOIN_FLEET, target=f3))
+        f3.add_order(Order(OrderType.JOIN_FLEET, target=f2))
+        f3.pursuer_tracker.add_pursuer(f2)
+        f2.pursuer_tracker.add_pursuer(f3)
+
+        OrderProcessor().process_instant_orders([empire])
+
+        assert len(empire.fleets) == 1, (
+            f"Expected exactly one survivor, got {[f.id for f in empire.fleets]}"
+        )
+        survivor = empire.fleets[0]
+        assert survivor.id == "f2", "Smaller id should win on tie"
+        assert len(survivor.ships) == 2, "All ships should be in the survivor"
+
+    def test_mutual_join_unequal_ships_more_ships_wins(self):
+        """F2 (3 ships) ↔ F3 (1 ship) → F2 wins regardless of id ordering."""
+        from game.strategy.engine.order_processor import OrderProcessor
+
+        empire = Empire(0, "E", (255, 0, 0))
+        # Use ids where smaller-id tiebreaker would pick the LOSER, to prove
+        # that ship-count is the primary criterion.
+        big = Fleet("z_big", 0, HexCoord(50, 0))
+        small = Fleet("a_small", 0, HexCoord(50, 0))
+        empire.add_fleet(big)
+        empire.add_fleet(small)
+        self._add_dummy_ships(big, 3)
+        self._add_dummy_ships(small, 1)
+
+        big.add_order(Order(OrderType.JOIN_FLEET, target=small))
+        small.add_order(Order(OrderType.JOIN_FLEET, target=big))
+        small.pursuer_tracker.add_pursuer(big)
+        big.pursuer_tracker.add_pursuer(small)
+
+        OrderProcessor().process_instant_orders([empire])
+
+        assert len(empire.fleets) == 1
+        survivor = empire.fleets[0]
+        assert survivor.id == "z_big", "More ships should win, ignoring id ordering"
+        assert len(survivor.ships) == 4
+
+    def test_redirect_does_not_create_self_join_order(self):
+        """BUG-122 Failure 3: F3 pursues F2; F2 merges into F3 → F3's order
+        targeting F2 must be dropped, not rewritten to target F3 itself."""
+        empire = Empire(0, "E", (255, 0, 0))
+        f2 = Fleet("f2", 0, HexCoord(50, 0))
+        f3 = Fleet("f3", 0, HexCoord(50, 0))
+        empire.add_fleet(f2)
+        empire.add_fleet(f3)
+
+        # F3 has a JOIN_FLEET order targeting F2 → F3 is a pursuer of F2
+        f3.add_order(Order(OrderType.JOIN_FLEET, target=f2))
+        f2.pursuer_tracker.add_pursuer(f3)
+
+        # F2 merges into F3 directly (isolating Failure 3)
+        f2.merge_with(f3)
+        empire.remove_fleet(f2)
+
+        # F3 must not have any self-targeting orders
+        for order in f3.orders:
+            assert order.target is not f3, (
+                f"BUG-122 Failure 3: F3 has self-targeting order: {order.type}"
+            )
+        # F3 must not be its own pursuer
+        assert f3 not in f3.pursuer_tracker.pursuers
+
+    def test_three_fleet_cycle_one_survives_no_ships_lost(self):
+        """F1 → F2 → F3 → F1 at same hex. Whichever direction iterates first
+        wins; the rest must skip with target_absorbed_mid_iteration. Total
+        ship count is preserved and exactly one fleet survives."""
+        from game.strategy.engine.order_processor import OrderProcessor
+
+        empire = Empire(0, "E", (255, 0, 0))
+        f1 = Fleet("f1", 0, HexCoord(50, 0))
+        f2 = Fleet("f2", 0, HexCoord(50, 0))
+        f3 = Fleet("f3", 0, HexCoord(50, 0))
+        empire.add_fleet(f1)
+        empire.add_fleet(f2)
+        empire.add_fleet(f3)
+        self._add_dummy_ships(f1, 1)
+        self._add_dummy_ships(f2, 1)
+        self._add_dummy_ships(f3, 1)
+
+        f1.add_order(Order(OrderType.JOIN_FLEET, target=f2))
+        f2.add_order(Order(OrderType.JOIN_FLEET, target=f3))
+        f3.add_order(Order(OrderType.JOIN_FLEET, target=f1))
+        f2.pursuer_tracker.add_pursuer(f1)
+        f3.pursuer_tracker.add_pursuer(f2)
+        f1.pursuer_tracker.add_pursuer(f3)
+
+        OrderProcessor().process_instant_orders([empire])
+
+        assert len(empire.fleets) == 1, (
+            f"Expected one survivor in 3-cycle, got {[f.id for f in empire.fleets]}"
+        )
+        survivor = empire.fleets[0]
+        assert len(survivor.ships) == 3, (
+            f"All 3 ships should be in survivor, got {len(survivor.ships)}"
+        )
+
+    def test_convergent_join_target_absorbed_mid_iteration(self):
+        """F4 → F5 → F2 ↔ F3 at same hex. F2/F3 mutual-merge first, then
+        F5 finds its target (F2) gone. F5 must NOT silently drop ships;
+        ship count across the empire must be preserved."""
+        from game.strategy.engine.order_processor import OrderProcessor
+
+        empire = Empire(0, "E", (255, 0, 0))
+        f2 = Fleet("f2", 0, HexCoord(50, 0))
+        f3 = Fleet("f3", 0, HexCoord(50, 0))
+        f4 = Fleet("f4", 0, HexCoord(50, 0))
+        f5 = Fleet("f5", 0, HexCoord(50, 0))
+        for fl in (f2, f3, f4, f5):
+            empire.add_fleet(fl)
+            self._add_dummy_ships(fl, 1)
+
+        # F4 → F5
+        f4.add_order(Order(OrderType.JOIN_FLEET, target=f5))
+        f5.pursuer_tracker.add_pursuer(f4)
+        # F5 → F2
+        f5.add_order(Order(OrderType.JOIN_FLEET, target=f2))
+        f2.pursuer_tracker.add_pursuer(f5)
+        # F2 ↔ F3
+        f2.add_order(Order(OrderType.JOIN_FLEET, target=f3))
+        f3.add_order(Order(OrderType.JOIN_FLEET, target=f2))
+        f3.pursuer_tracker.add_pursuer(f2)
+        f2.pursuer_tracker.add_pursuer(f3)
+
+        initial_total = sum(len(fl.ships) for fl in (f2, f3, f4, f5))
+
+        OrderProcessor().process_instant_orders([empire])
+
+        final_total = sum(len(fl.ships) for fl in empire.fleets)
+        assert final_total == initial_total, (
+            f"BUG-122: ships were lost. Started with {initial_total}, ended with {final_total}"
+        )

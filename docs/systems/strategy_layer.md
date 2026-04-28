@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-28 — Added BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation). Earlier same-day pass: FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections; also documents FEAT-19 surplus-food happiness bonus.
+> **Last verified:** 2026-04-28 — BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -529,7 +529,7 @@ Tracks fleets pursuing this fleet via `MOVE_TO_FLEET`/`JOIN_FLEET` orders (PROJ-
 - `pursuers` -- read-only `FrozenSet` of all pursuing fleets
 - `pursuer_count` -- number of active pursuers
 - `add_pursuer(fleet)` / `remove_pursuer(fleet)` -- register/unregister
-- `redirect_pursuers(new_target)` -- on merge, redirect all pursuers to new fleet
+- `redirect_pursuers(new_target, *, exclude=frozenset())` -- on merge, redirect all pursuers to new fleet, returning `(redirected, excluded)`. Pursuers in `exclude` are dropped (BUG-122: prevents self-target cycle when `new_target` is itself a pursuer of the merging fleet). The caller is responsible for emitting `FLEET_JOIN_CANCELLED(reason="self_target_after_redirect")` for each excluded pursuer.
 - `notify_target_destroyed()` -- on destruction, cancel all pursuit orders
 
 Not serialized — rebuilt from order targets on load.

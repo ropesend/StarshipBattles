@@ -54,7 +54,12 @@ class FleetPursuerTracker:
         """Unregister a fleet from pursuing this fleet."""
         self._pursuers.discard(fleet)
 
-    def redirect_pursuers(self, new_target: 'Fleet') -> List[Tuple['Fleet', 'Fleet']]:
+    def redirect_pursuers(
+        self,
+        new_target: 'Fleet',
+        *,
+        exclude: FrozenSet['Fleet'] = frozenset(),
+    ) -> Tuple[List[Tuple['Fleet', 'Fleet']], List['Fleet']]:
         """Redirect all pursuers from this fleet to new_target.
 
         Called when this fleet merges into new_target. Rewrites all
@@ -62,16 +67,33 @@ class FleetPursuerTracker:
         self._fleet to new_target, and transfers the pursuer
         registration to new_target's tracker.
 
-        Returns:
-            List of (pursuer, old_target) tuples for event logging.
-        """
-        if not self._pursuers:
-            return []
+        BUG-122: Pursuers in `exclude` are NOT rewritten and NOT transferred
+        to new_target. They are returned in the second tuple element so the
+        caller can drop their now-stale orders. The typical case is when
+        new_target itself is one of self._pursuers (mutual JOIN_FLEET),
+        which would otherwise create a self-targeting order.
 
-        redirected: List[Tuple['Fleet', 'Fleet']] = []
+        Args:
+            new_target: Fleet to redirect pursuit to.
+            exclude: Pursuers to skip (kept out of redirect AND new target).
+
+        Returns:
+            (redirected, excluded):
+              redirected: [(pursuer, old_target), ...] for actually-redirected pursuers
+              excluded: [pursuer, ...] for pursuers that were skipped
+        """
         old_target = self._fleet
+        redirected: List[Tuple['Fleet', 'Fleet']] = []
+        excluded_list: List['Fleet'] = []
+
+        if not self._pursuers:
+            return redirected, excluded_list
 
         for pursuer in list(self._pursuers):
+            if pursuer in exclude:
+                excluded_list.append(pursuer)
+                continue
+
             # Rewrite order targets
             for order in pursuer.orders:
                 if order.type in PURSUIT_ORDER_TYPES and order.target is old_target:
@@ -82,8 +104,10 @@ class FleetPursuerTracker:
                 new_target._pursuer_tracker.add_pursuer(pursuer)
             redirected.append((pursuer, old_target))
 
+        # Excluded pursuers are removed from this fleet's pursuer set too —
+        # this fleet is being absorbed, so they aren't "still pursuing" anything.
         self._pursuers.clear()
-        return redirected
+        return redirected, excluded_list
 
     def notify_target_destroyed(self) -> List['Fleet']:
         """Cancel all pursuer orders targeting this fleet.
