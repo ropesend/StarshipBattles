@@ -9,6 +9,12 @@ Run::
     python -m Tools.regenerate_ship_portraits.audit
     python -m Tools.regenerate_ship_portraits.audit --theme Federation
     python -m Tools.regenerate_ship_portraits.audit --json
+
+Exit codes:
+    0 = no findings
+    2 = size mismatches or other non-portrait findings
+    3 = missing portraits, regardless of other findings
+    1 = unexpected script crash
 """
 from __future__ import annotations
 
@@ -145,6 +151,13 @@ def audit_theme(theme_dir: str) -> ThemeFinding:
         portrait_rel = entry.get("portrait")
         if portrait_rel:
             ship_finding.portrait = _audit_file(theme_dir, portrait_rel, declared_portrait_tup)
+        else:
+            ship_finding.portrait = FileFinding(
+                relpath="",
+                exists=False,
+                declared_size=declared_portrait_tup,
+                casing_ok=True,
+            )
         finding.ships.append(ship_finding)
 
     return finding
@@ -222,8 +235,64 @@ def _format_human(findings: list[ThemeFinding]) -> str:
         if not (skin_missing or portrait_missing or casing_violations
                 or size_mismatches or f.extras or f.missing):
             out.append("  CLEAN")
-    out.append("")
+    exit_code = _exit_code_for(findings)
+    size_count = _count_size_mismatches(findings)
+    missing_portrait_count = _count_missing_portraits(findings)
+    out.append(
+        f"EXIT {exit_code} - {size_count} size mismatches, "
+        f"{missing_portrait_count} missing portraits"
+    )
     return "\n".join(out)
+
+
+def _count_missing_portraits(findings: list[ThemeFinding]) -> int:
+    """Return the number of declared ship slots without a real portrait file."""
+    return sum(
+        1
+        for finding in findings
+        for ship in finding.ships
+        if ship.portrait is not None and not ship.portrait.exists
+    )
+
+
+def _count_size_mismatches(findings: list[ThemeFinding]) -> int:
+    """Return the number of files whose actual size differs from declaration."""
+    count = 0
+    for finding in findings:
+        for ship in finding.ships:
+            for file_finding in (ship.skin, ship.portrait):
+                if (
+                    file_finding is not None
+                    and file_finding.exists
+                    and file_finding.declared_size
+                    and file_finding.actual_size
+                    and file_finding.actual_size != file_finding.declared_size
+                ):
+                    count += 1
+    return count
+
+
+def _has_other_findings(findings: list[ThemeFinding]) -> bool:
+    """Return True for schema, coverage, casing, or skin findings."""
+    for finding in findings:
+        if finding.errors or finding.extras or finding.missing:
+            return True
+        for ship in finding.ships:
+            if ship.skin is not None and not ship.skin.exists:
+                return True
+            for file_finding in (ship.skin, ship.portrait):
+                if file_finding is not None and not file_finding.casing_ok:
+                    return True
+    return False
+
+
+def _exit_code_for(findings: list[ThemeFinding]) -> int:
+    """Return the audit process exit code for a set of findings."""
+    if _count_missing_portraits(findings):
+        return 3
+    if _count_size_mismatches(findings) or _has_other_findings(findings):
+        return 2
+    return 0
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -255,7 +324,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(json.dumps([asdict(f) for f in findings], indent=2))
     else:
         print(_format_human(findings))
-    return 0
+    return _exit_code_for(findings)
 
 
 if __name__ == "__main__":

@@ -18,15 +18,15 @@
 | 2. R6 — Architecture docs service-count fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. R3 — Delete legacy `<Class>_Portrait.jpg` helper | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. R5 — `Tools/regenerate_ship_portraits/` conventions | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. R2 — Make audit + smoke test a real release gate | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. R4 — Migrate codex-ship-theme-creator skill to new schema | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 5. R2 — Make audit + smoke test a real release gate | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. R4 — Migrate codex-ship-theme-creator skill to new schema | In Progress | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-04-28
-**Active Phase:** Phase 5 — R2 make audit + smoke test a real release gate
-**Last Action:** Phase 4 complete. `Tools/regenerate_ship_portraits/` now has a README, a Tools catalog entry, and direct-script bootstrap support for both `cli.py` and `audit.py`.
-**Next Action:** Phase 5 makes the audit script fail on missing portraits/size mismatches and strengthens Race Setup smoke tests with explicit allowlists.
+**Active Phase:** Phase 6 - R4 migrate codex-ship-theme-creator skill to new schema
+**Last Action:** Phase 5 complete. `Tools/regenerate_ship_portraits.audit` now exits non-zero on missing portraits or size mismatches, and Race Setup smoke tests enforce exact portrait/skin dimensions plus fallback allowlists.
+**Next Action:** Phase 6 migrates `.agents/skills/codex-ship-theme-creator/scripts/create_manifest.py` and `validate_theme.py` to emit and validate the `assets:` schema.
 **Blockers:** None
 **Test baseline at plan time:** 15959 / 15959 passing (post-PROJ-314 baseline).
 
