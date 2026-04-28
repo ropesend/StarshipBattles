@@ -235,17 +235,28 @@ class TestUpkeepMultiResource:
 
 
 class TestYardDrain:
-    """Yard projection sums build_rate across non-empty queues."""
+    """Yard projection sums per-turn spend across non-empty queues.
 
-    def test_single_queued_complex_drains_at_planetary_yard_rate(self):
+    BUG-120: Yard drain reflects what the queued items will actually
+    consume next turn (via `forecast_queue_turn_spend`), not the yard's
+    raw per-resource capacity.
+    """
+
+    def test_single_queued_complex_drains_per_turn_spend(self):
         from game.strategy.services.planet_economy_projector import (
             PlanetEconomyProjector,
         )
-        # Place a non-empty item on the planet's base queue.
+        # Item costs only metals + radioactives, more than one turn's worth
+        # of capacity (so spend is rate-bound at 2000/turn for each).
         planet = _planet(
             populations=[],
             facilities=[_planetary_yard_facility()],
-            construction_queue=[{"id": "mine_complex", "type": "complex"}],
+            construction_queue=[{
+                "design_id": "mine_complex",
+                "type": "complex",
+                "total_cost": {"metals": 5000.0, "radioactives": 3000.0},
+                "resources_consumed": {},
+            }],
         )
         projector = PlanetEconomyProjector(
             registries=_registries(),
@@ -255,26 +266,53 @@ class TestYardDrain:
 
         result = projector.project(planet)
 
-        # planetary_yard default rates (data/production_rates.json) = 2000 per resource.
-        # Habitability = 1.0 (no populations).
-        for res in ("metals", "organics", "radioactives", "vapors", "exotics"):
-            assert result[res].yard == pytest.approx(2000.0), \
-                f"{res} expected 2000 yard drain, got {result[res].yard}"
+        # planetary_yard default rates = 2000/turn per resource. The item
+        # needs max(5000/2000, 3000/2000) = 2.5 turns to finish, so the
+        # next turn is rate-bound: 2000 metals + 2000 radioactives. The
+        # other three resources do NOT appear in total_cost and must
+        # therefore not drain at all (BUG-120 regression guard).
+        assert result["metals"].yard == pytest.approx(2000.0)
+        assert result["radioactives"].yard == pytest.approx(2000.0)
+        for res in ("organics", "vapors", "exotics"):
+            yard = result[res].yard if res in result else 0.0
+            assert yard == 0.0, f"{res}: expected 0 drain, got {yard}"
 
     def test_multi_queue_aggregates_drains(self):
         from game.strategy.services.planet_economy_projector import (
             PlanetEconomyProjector,
         )
-        # Planetary yard with one item + 2 shipyards each with one item.
-        # Base rate 2000 + 30000 + 30000 = 62000 per resource.
+        # Planetary yard (rate 2000/turn) with a metals-only complex +
+        # 2 shipyards (rate 30000/turn each) with metals-only ships.
+        # All items oversized so each yard's metals spend is rate-bound.
         planet = _planet(
             populations=[],
             facilities=[
                 _planetary_yard_facility(),
-                _shipyard_facility(instance_id="yard-1", queue=[{"id": "ship_a"}]),
-                _shipyard_facility(instance_id="yard-2", queue=[{"id": "ship_b"}]),
+                _shipyard_facility(
+                    instance_id="yard-1",
+                    queue=[{
+                        "design_id": "ship_a",
+                        "type": "ship",
+                        "total_cost": {"metals": 10_000_000.0},
+                        "resources_consumed": {},
+                    }],
+                ),
+                _shipyard_facility(
+                    instance_id="yard-2",
+                    queue=[{
+                        "design_id": "ship_b",
+                        "type": "ship",
+                        "total_cost": {"metals": 10_000_000.0},
+                        "resources_consumed": {},
+                    }],
+                ),
             ],
-            construction_queue=[{"id": "complex_a"}],
+            construction_queue=[{
+                "design_id": "complex_a",
+                "type": "complex",
+                "total_cost": {"metals": 10_000_000.0},
+                "resources_consumed": {},
+            }],
         )
         projector = PlanetEconomyProjector(
             registries=_registries(),
@@ -284,9 +322,13 @@ class TestYardDrain:
 
         result = projector.project(planet)
 
-        for res in ("metals", "organics", "radioactives", "vapors", "exotics"):
-            assert result[res].yard == pytest.approx(62000.0), \
-                f"{res} expected 62000 (2000 + 30000 + 30000), got {result[res].yard}"
+        # 2000 (planetary yard) + 30000 (shipyard 1) + 30000 (shipyard 2)
+        # = 62000/turn, all drawn as metals because no item costs other
+        # resources.
+        assert result["metals"].yard == pytest.approx(62000.0)
+        for res in ("organics", "radioactives", "vapors", "exotics"):
+            yard = result[res].yard if res in result else 0.0
+            assert yard == 0.0, f"{res}: expected 0 drain, got {yard}"
 
     def test_empty_queue_contributes_zero_drain(self):
         from game.strategy.services.planet_economy_projector import (
@@ -330,7 +372,16 @@ class TestNetIsHarvestMinusUpkeepMinusYard:
                 _planetary_yard_facility(),
             ],
             deposits={"organics": {"quality": 0.5}},
-            construction_queue=[{"id": "complex_a"}],
+            # BUG-120: queue items must declare `total_cost` so the
+            # forecast can compute a per-turn spend. Use organics so all
+            # three sub-projections (harvest/upkeep/yard) hit the same
+            # resource and the net arithmetic is non-trivial.
+            construction_queue=[{
+                "design_id": "complex_a",
+                "type": "complex",
+                "total_cost": {"organics": 10_000_000.0},
+                "resources_consumed": {},
+            }],
             species_configs={"human": cfg},
         )
         registry = _StubRegistry({"human": _race("human")})
@@ -384,7 +435,15 @@ class TestHabitabilityScalesHarvestAndYardOnly:
                 _planetary_yard_facility(),
             ],
             deposits={"metals": {"quality": 1.0}},
-            construction_queue=[{"id": "complex_a"}],
+            # BUG-120: queue item drains metals at the planetary-yard rate;
+            # `total_cost` huge so spend is rate-bound (cleaner habitability
+            # math than a cost-bound clamp).
+            construction_queue=[{
+                "design_id": "complex_a",
+                "type": "complex",
+                "total_cost": {"metals": 10_000_000.0},
+                "resources_consumed": {},
+            }],
             species_configs={"human": cfg},
         )
         registry = _StubRegistry({"human": _race("human")})
@@ -404,6 +463,137 @@ class TestHabitabilityScalesHarvestAndYardOnly:
         assert result["metals"].harvest == pytest.approx(100.0 * habitability)
         # planetary yard rate 2000 * habitability for metals.
         assert result["metals"].yard == pytest.approx(2000.0 * habitability)
+
+
+class TestYardDrainMatchesQueueItemCosts:
+    """BUG-120 regression guard.
+
+    Pin that yard drain follows the **queued items' cost** — not the
+    yard's per-resource capacity. The pre-fix implementation summed
+    `BuildQueueSource.build_rate` directly, so a queue containing an
+    item that needed only metals + radioactives produced ghost drain
+    rows for organics / vapors / exotics at full capacity. These tests
+    fail under that buggy code and pass once `_project_yard_drain`
+    delegates to `forecast_queue_turn_spend`.
+    """
+
+    def test_drain_zero_for_resources_not_in_queue_item_total_cost(self):
+        """Shipyard with a battleship that costs only metals +
+        radioactives + exotics: organics/vapors must NOT drain even
+        though the yard's capacity declares 30000/turn for them."""
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+        # Mirrors the QA-captured `bs_battleship_gc` cost shape — three
+        # of five resources, all > 1 turn's worth of capacity so spend
+        # is rate-bound to the shipyard's 30000/turn per resource.
+        planet = _planet(
+            populations=[],
+            facilities=[
+                _shipyard_facility(
+                    instance_id="yard-1",
+                    queue=[{
+                        "design_id": "bs_battleship_gc",
+                        "type": "ship",
+                        "total_cost": {
+                            "metals": 3_000_000.0,
+                            "radioactives": 1_418_500.0,
+                            "exotics": 1_878_800.0,
+                        },
+                        "resources_consumed": {},
+                    }],
+                ),
+            ],
+        )
+        projector = PlanetEconomyProjector(
+            registries=_registries(),
+            economy_config=_economy({"organics": 0.001}),
+            race_registry=_StubRegistry({}),
+        )
+
+        result = projector.project(planet)
+
+        # Rate-bound at the shipyard's 30000/turn capacity for each cost
+        # resource. `forecast_queue_turn_spend` clamps `spend` against
+        # `remaining_cost`, but every resource here costs > 30000 so no
+        # clamp triggers.
+        assert result["metals"].yard == pytest.approx(30_000.0)
+        assert result["radioactives"].yard == pytest.approx(30_000.0)
+        assert result["exotics"].yard == pytest.approx(30_000.0)
+        # CRITICAL — these must be 0 / absent. Pre-fix code reported
+        # 30000/turn for these too, surfacing as the QA-observed
+        # uniform `-22106.5` Yard row.
+        for res in ("organics", "vapors"):
+            yard = result[res].yard if res in result else 0.0
+            assert yard == 0.0, f"BUG-120 regression: {res} drained {yard}"
+
+    def test_drain_clamps_when_item_cheaper_than_one_turns_capacity(self):
+        """Item costing only 500 metals (< 2000/turn capacity) must
+        drain exactly 500, not the full capacity."""
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+        planet = _planet(
+            populations=[],
+            facilities=[_planetary_yard_facility()],
+            construction_queue=[{
+                "design_id": "tiny_complex",
+                "type": "complex",
+                "total_cost": {"metals": 500.0},
+                "resources_consumed": {},
+            }],
+        )
+        projector = PlanetEconomyProjector(
+            registries=_registries(),
+            economy_config=_economy({"organics": 0.001}),
+            race_registry=_StubRegistry({}),
+        )
+
+        result = projector.project(planet)
+
+        # Cost-bound: item completes in 0.25 turns, so total spend = 500.
+        assert result["metals"].yard == pytest.approx(500.0)
+        for res in ("organics", "radioactives", "vapors", "exotics"):
+            yard = result[res].yard if res in result else 0.0
+            assert yard == 0.0, f"{res}: expected 0 drain, got {yard}"
+
+    def test_drain_carries_over_to_next_queue_item_when_first_completes(self):
+        """When item 1 completes mid-turn, remaining capacity flows to
+        item 2 — the projector must include the carried-over spend."""
+        from game.strategy.services.planet_economy_projector import (
+            PlanetEconomyProjector,
+        )
+        planet = _planet(
+            populations=[],
+            facilities=[_planetary_yard_facility()],
+            construction_queue=[
+                # Item 1 finishes in 0.25 turns (500 / 2000).
+                {
+                    "design_id": "small",
+                    "type": "complex",
+                    "total_cost": {"metals": 500.0},
+                    "resources_consumed": {},
+                },
+                # Item 2 absorbs the remaining 0.75 turns of capacity =
+                # 1500 metals (rate-bound, since it costs 5_000_000).
+                {
+                    "design_id": "big",
+                    "type": "complex",
+                    "total_cost": {"metals": 5_000_000.0},
+                    "resources_consumed": {},
+                },
+            ],
+        )
+        projector = PlanetEconomyProjector(
+            registries=_registries(),
+            economy_config=_economy({"organics": 0.001}),
+            race_registry=_StubRegistry({}),
+        )
+
+        result = projector.project(planet)
+
+        # Item 1 (500) + item 2's carry-over (1500) = 2000 total/turn.
+        assert result["metals"].yard == pytest.approx(2000.0)
 
 
 class TestUnownedPlanetReturnsEmpty:

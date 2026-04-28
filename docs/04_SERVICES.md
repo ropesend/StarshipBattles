@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-04-27 — PROJ-300 replaced AreaEffectManager + EnvironmentalEffects + StormEffect with the universal IAbilitySource framework (system_effects_collector, ability_iterator, ability_sources/ adapter package).
+> **Last verified:** 2026-04-27 — BUG-120 fix: `PlanetEconomyProjector._project_yard_drain` now delegates to `forecast_queue_turn_spend` so the Planet view's "Yard" row reflects actual queue consumption, not yard capacity.
 
 ## Overview
 
@@ -1157,7 +1157,7 @@ Read-only per-planet flux projector — feeds UI panels (PROJ-289 / PROJ-290) so
 - Three sub-projections:
   - `_project_harvest(planet, habitability)` — delegates to `compute_planet_production(planet, registries)` then scales by habitability (PROJ-285).
   - `_project_upkeep(planet)` — iterates `planet.populations × economy.population_consumption.items()`, summing `pop.count * cfg.food_allocation * per_pop_rate`. Mirrors `OrganicsConsumptionEngine._process_colony` exactly. Upkeep is NOT habitability-scaled (demand is independent of planet conditions).
-  - `_project_yard_drain(planet, habitability)` — calls `_collect_planet_sources` (`game/strategy/data/build_queue_source.py`) to enumerate the planet's base + shipyard queues, sums `build_rate * habitability` for each non-empty queue. Build-rate boosters (system-wide / sector-wide) are NOT factored in — `project(planet)` doesn't carry galaxy/empire context, and v1 takes the planet-in-isolation view.
+  - `_project_yard_drain(planet, habitability)` — calls `_collect_planet_sources` (`game/strategy/data/build_queue_source.py`) to enumerate the planet's base + shipyard queues, then delegates to `forecast_queue_turn_spend` (`game/strategy/engine/construction_forecast.py`) for each non-empty queue. The forecast helper is the canonical "actual per-turn draw" function — it walks the queue with carry-over capacity, mirroring `ProductionEngine._calculate_tick_expenditure`, and returns the resources each item will actually consume. Habitability is applied to the source's `build_rate` BEFORE the forecast walk, matching `ProductionEngine._process_queue_tick_dynamic`. Resources the queued items don't cost report zero (so the projector and the engine agree on every resource — fixed in BUG-120 2026-04-27, which previously summed yard capacity across all 5 resources regardless of what was queued). Build-rate boosters (system-wide / sector-wide) are NOT factored in — `project(planet)` doesn't carry galaxy/empire context, and v1 takes the planet-in-isolation view.
 
 **DTO** — `ResourceProjection` (frozen dataclass, same module):
 - Fields: `resource_id: str`, `harvest: float`, `upkeep: float`, `yard: float`, `net: float`.

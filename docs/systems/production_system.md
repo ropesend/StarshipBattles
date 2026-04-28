@@ -1,6 +1,6 @@
 # Production System
 
-> **Last verified:** 2026-04-18
+> **Last verified:** 2026-04-27 — BUG-120: cross-linked `forecast_queue_turn_spend` as the canonical actual-per-turn-draw helper used by both Treasury and Planet detail UI.
 
 This document describes the unified construction/production system: build queues, tick-based resource consumption, turn estimation, and item spawning. The same `ProductionEngine` algorithm handles all build contexts — planet base queues (complexes), planet shipyard facility queues (ships), and fleet space yard queues (ships and complexes).
 
@@ -262,8 +262,9 @@ Accessed from the strategy screen via the "Build Yard" button on owned planets o
 | `get_production_rate_for_queue(entity, queue_id)` | Rate for a specific queue (used by command handler) |
 | `estimate_build_turns(total_cost, rate)` | Limiting-resource turn estimate (single source of truth) |
 | `get_default_production_rates(yard_type)` | Load rates from `data/production_rates.json` |
+| `forecast_queue_turn_spend(queue, build_rate)` (`game/strategy/engine/construction_forecast.py`) | Per-item per-turn resource spend for a queue. The canonical "actual draw" function — mirrors `ProductionEngine._calculate_tick_expenditure × 100`. Consumed by `EmpireEconomyCalculator._aggregate_construction_expenses` (Treasury) and `PlanetEconomyProjector._project_yard_drain` (Planet detail "Yard" row). |
 
-**Note:** `estimate_build_turns()` and `get_production_rate_for_queue()` are the authoritative utilities for turn estimation. The command handler delegates to these — do not duplicate this logic elsewhere.
+**Note:** `estimate_build_turns()` and `get_production_rate_for_queue()` are the authoritative utilities for turn estimation. The command handler delegates to these — do not duplicate this logic elsewhere. For "what will this queue actually consume next turn?" use `forecast_queue_turn_spend` — both Treasury and Planet detail UI flow through it (BUG-120 fix 2026-04-27 unified Planet detail onto this helper after years of summing yard capacity instead).
 
 ---
 

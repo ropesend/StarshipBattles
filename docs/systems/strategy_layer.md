@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-27 — PROJ-300 added §10 Universal IAbilitySource Framework; AreaEffectManager / EnvironmentalEffects / StormEffect eradicated.
+> **Last verified:** 2026-04-27 — BUG-120 fix: `_project_yard_drain` now delegates to `forecast_queue_turn_spend`; equivalence contract block updated.
 
 System documentation for the turn-based strategy layer.
 
@@ -1475,7 +1475,9 @@ Engine methods like `PopulationEngine._grow_species` and `OrganicsConsumptionEng
 - **`PlanetEconomyProjector.project(planet) -> Dict[resource_id, ResourceProjection]`** at `game/strategy/services/planet_economy_projector.py` — per-resource harvest / upkeep / yard / net for one planet.
 - **`StrategySessionFacade.get_colony_demographic_view(planet_id)`** — facade-level DTO bundling per-species + per-resource state for one colony in one read; consumed by PROJ-289 / PROJ-290 UI panels.
 
-**Equivalence contract**: the projection math tracks the engine math. `tests/integration/strategy/test_growth_rate_equivalence.py` runs a 12-cell matrix asserting `projected_growth_rate(...) * pop.count` equals `PopulationEngine._grow_species`'s observed Δpop (within int-cast tolerance + the engine's `max(0, ...)` floor) for every combination of food_ratio × happiness × P/K_eff. If either side drifts, CI fails — the fix is to update BOTH together, not to silence the test.
+**Equivalence contract**: the projection math tracks the engine math. `tests/integration/strategy/test_growth_rate_equivalence.py` runs a 12-cell matrix asserting `projected_growth_rate(...) * pop.count` equals `PopulationEngine._grow_species`'s observed Δpop (within int-cast tolerance + the engine's `max(0, ...)` floor) for every combination of food_ratio × happiness × P/K_eff. `tests/integration/strategy/test_projector_drain_matches_engine.py` similarly pins that `_project_yard_drain` per-turn output equals `ProductionEngine._calculate_tick_expenditure × 100` for every resource the queue item costs. If either side drifts, CI fails — the fix is to update BOTH together, not to silence the test.
+
+**BUG-120 (2026-04-27)**: `_project_yard_drain` previously summed each yard's full per-resource `build_rate` (capacity), producing ghost drain rows for resources the queued items didn't actually cost. It now delegates to the canonical `forecast_queue_turn_spend` helper (the same one `EmpireEconomyCalculator._aggregate_construction_expenses` uses for Treasury) so the Planet detail "Yard" row matches the build queue panel's per-item per-turn rate.
 
 See [docs/04_SERVICES.md § Planet Economy Projector](../04_SERVICES.md#planet-economy-projector-proj-288) for the full service catalog entries.
 

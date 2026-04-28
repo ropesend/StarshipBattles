@@ -1,10 +1,12 @@
-"""Integration test pinning projector vs engine drain agreement (PROJ-292 H2).
+"""Integration test pinning projector vs engine drain agreement (PROJ-292 H2; updated BUG-120 2026-04-27).
 
 `PlanetEconomyProjector._project_yard_drain` reaches into the
 `_collect_planet_sources` private API from `build_queue_source.py` and
-mirrors `ProductionEngine._process_queue_tick_dynamic` rate math. This
-file pins that the two paths agree — if either refactors in a
-signature-breaking way, these tests catch the drift loudly.
+delegates to `forecast_queue_turn_spend` — the same per-turn distribution
+helper `ProductionEngine._process_queue_tick_dynamic` ultimately consumes
+via `_calculate_tick_expenditure`. This file pins that the two paths
+agree — if either refactors in a signature-breaking way, these tests
+catch the drift loudly.
 
 Contract under test:
     For every resource the queue item's `total_cost` declares,
@@ -12,13 +14,15 @@ Contract under test:
 when the queue item is too expensive to complete within a single turn
 (so drain is rate-bound, not cost-capped).
 
-Scope caveat (documented divergence): the projector sums `build_rate`
-across EVERY resource declared in the queue's production rate —
-including resources the current queue item doesn't cost. The engine
-only drains resources the item's `total_cost` actually requires. So
-pinning "projector == engine" requires restricting the comparison to
-the resources the item costs; other projector entries are "would-drain
-if the item needed them" ghost projections, not bugs.
+BUG-120 (2026-04-27): the projector now also reports zero drain for
+resources the queue item doesn't cost — the engine likewise drains
+zero for those resources, so projector and engine now agree on every
+resource (no more "ghost projection" caveat for non-cost resources;
+the previous behaviour surfaced as a uniform "Yard" row across all 5
+resources in the Planet detail UI). The tests below restrict
+comparisons to `item.total_cost` resources to keep their assertions
+tight, but the broader contract — projector and engine agree on
+EVERY resource — is now true.
 """
 from __future__ import annotations
 

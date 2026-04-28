@@ -131,16 +131,31 @@ class PlanetEconomyProjector:
     def _project_yard_drain(
         self, planet: "IPlanet", habitability: float
     ) -> Dict[str, float]:
-        """Per-resource yard drain summed across non-empty active queues
-        (planetary base + shipyard facilities), then scaled by habitability
-        to mirror `ProductionEngine._process_queue_tick_dynamic`."""
+        """Per-resource yard drain — actual per-turn spend across the
+        planet's active build queues.
+
+        Walks every queue source (planetary base + shipyard facilities)
+        with the canonical `forecast_queue_turn_spend` helper, the same
+        per-tick distribution function `EmpireEconomyCalculator` uses
+        for Treasury construction-expense aggregation. Habitability is
+        applied to each source's `build_rate` BEFORE the forecast walk,
+        mirroring `ProductionEngine._process_queue_tick_dynamic` which
+        scales `production_rate` outside its per-tick loop. The result
+        is sparse: resources the queue items don't cost get filtered
+        out (BUG-120 — they previously surfaced as ghost drain rows).
+
+        Build-rate boosters (system-/sector-/empire-scope) are not
+        applied here — they require galaxy + empire context the v1
+        projector contract doesn't carry.
+        """
         # `_collect_planet_sources` is strategy-internal (`_` prefix denotes
         # non-public-API but inside the same layer); calling it directly is
         # cheaper than reimplementing the queue-discovery + rate-resolution
-        # logic. Pass galaxy=None and empire=None so the build-rate booster
-        # math short-circuits to 1.0 — boosters require external context
-        # the v1 projector contract doesn't carry (see module docstring).
+        # logic.
         from game.strategy.data.build_queue_source import _collect_planet_sources
+        from game.strategy.engine.construction_forecast import (
+            forecast_queue_turn_spend,
+        )
 
         sources: list = []
         _collect_planet_sources(planet, sources, registries=self._registries)
@@ -149,10 +164,16 @@ class PlanetEconomyProjector:
         for source in sources:
             if not source.construction_queue:
                 continue
-            for resource_id, rate in source.build_rate.items():
-                drain[resource_id] = (
-                    drain.get(resource_id, 0.0) + rate * habitability
-                )
+            scaled_rate = {
+                res: rate * habitability for res, rate in source.build_rate.items()
+            }
+            per_item_spend = forecast_queue_turn_spend(
+                source.construction_queue, scaled_rate
+            )
+            for spend in per_item_spend:
+                for resource_id, amount in spend.items():
+                    if amount > 0:
+                        drain[resource_id] = drain.get(resource_id, 0.0) + amount
         return drain
 
 
