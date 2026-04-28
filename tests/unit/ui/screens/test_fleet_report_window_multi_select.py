@@ -78,7 +78,7 @@ class TestFleetReportWindowInit:
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
             with patch('pygame_gui.UIManager'):
-                with patch('game.ui.screens.fleet_report_window.UIWindow.__init__'):
+                with patch('pygame_gui.elements.UIWindow.__init__'):
                     with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
                         with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
                             from game.ui.screens.fleet_report_window import FleetReportWindow
@@ -96,7 +96,7 @@ class TestFleetReportWindowInit:
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
             with patch('pygame_gui.UIManager'):
-                with patch('game.ui.screens.fleet_report_window.UIWindow.__init__'):
+                with patch('pygame_gui.elements.UIWindow.__init__'):
                     with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
                         with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
                             from game.ui.screens.fleet_report_window import FleetReportWindow
@@ -114,7 +114,7 @@ class TestFleetReportWindowInit:
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
             with patch('pygame_gui.UIManager'):
-                with patch('game.ui.screens.fleet_report_window.UIWindow.__init__'):
+                with patch('pygame_gui.elements.UIWindow.__init__'):
                     with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
                         with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
                             from game.ui.screens.fleet_report_window import FleetReportWindow
@@ -143,7 +143,7 @@ class TestMultiSelectBehavior:
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
             with patch('pygame_gui.UIManager'):
-                with patch('game.ui.screens.fleet_report_window.UIWindow.__init__'):
+                with patch('pygame_gui.elements.UIWindow.__init__'):
                     with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
                         with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
                             from game.ui.screens.fleet_report_window import FleetReportWindow
@@ -226,7 +226,7 @@ class TestShipRemoval:
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
             with patch('pygame_gui.UIManager'):
-                with patch('game.ui.screens.fleet_report_window.UIWindow.__init__'):
+                with patch('pygame_gui.elements.UIWindow.__init__'):
                     with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
                         with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
                             from game.ui.screens.fleet_report_window import FleetReportWindow

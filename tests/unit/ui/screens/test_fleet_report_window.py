@@ -687,7 +687,7 @@ class TestFleetReportTriStateWiring:
         window.refresh_list = MagicMock()
         return window, mocks
 
-    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    @patch('pygame_gui.elements.UIWindow.update')
     def test_filter_state_changed_calls_set_filter_state(self, _mock_super):
         """Window should call view_model.set_filter_state when sidebar returns filter_state_changed."""
         from game.ui.filters.filter_state import FilterState
@@ -700,7 +700,7 @@ class TestFleetReportTriStateWiring:
         window.update(0.016)
         mocks['view_model'].set_filter_state.assert_called_once_with('warp_capable', FilterState.YES)
 
-    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    @patch('pygame_gui.elements.UIWindow.update')
     def test_filter_state_changed_refreshes_list(self, _mock_super):
         """Window should refresh list after tri-state filter change."""
         from game.ui.filters.filter_state import FilterState
@@ -713,7 +713,7 @@ class TestFleetReportTriStateWiring:
         window.update(0.016)
         window.refresh_list.assert_called_once()
 
-    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    @patch('pygame_gui.elements.UIWindow.update')
     def test_filter_state_changed_clears_selection(self, _mock_super):
         """Window should clear selection after tri-state filter change."""
         from game.ui.filters.filter_state import FilterState
@@ -726,7 +726,7 @@ class TestFleetReportTriStateWiring:
         window.update(0.016)
         window.selection.clear.assert_called()
 
-    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    @patch('pygame_gui.elements.UIWindow.update')
     def test_status_filter_toggle_still_works(self, _mock_super):
         """Window should still handle status filter toggles via filter_toggled."""
         window, mocks = self._setup_window_for_update({

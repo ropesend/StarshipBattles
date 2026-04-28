@@ -43,6 +43,7 @@ class PlanetAbilitiesRegistrar:
         rect = pygame.Rect(x, y, width, height)
         c.planet_abilities_window = PlanetAbilitiesWindow(
             rect, c.manager, planet, c.scene.facade, component_registry,
+            window_manager=c,
             on_open_editor=self.open_editor,
             on_close_callback=self._on_closed,
         )

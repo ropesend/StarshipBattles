@@ -256,7 +256,7 @@ def mock_editor_internals():
     """Patch the UIWindow base + `_build_ui` so we can instantiate the
     editor without a live pygame display. Tests then exercise the
     non-UI methods (`collect_allocations`, title-derivation)."""
-    with patch('game.ui.screens.food_allocation_editor.UIWindow.__init__', return_value=None):
+    with patch('pygame_gui.elements.UIWindow.__init__', return_value=None):
         with patch.object(
             # patch `_build_ui` so the constructor doesn't touch widgets.
             # The tests access `._rows` + `._row_widgets` directly.

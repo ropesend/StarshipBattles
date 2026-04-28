@@ -187,7 +187,7 @@ class TestClickGateIntegration:
         router, ui, wm = _create_strategy_event_router()
 
         window = _create_mock_window(alive=True, rect_contains=True)
-        wm.planet_list_window = window
+        wm._modals_for_test.append(window)  # PROJ-313 migrated
 
         mx, my = 600, 400
 
@@ -298,8 +298,8 @@ class TestClickGateIntegration:
 
         # Create multiple windows, all alive but none containing click point
         wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=False)
-        wm.planet_list_window = _create_mock_window(alive=True, rect_contains=False)
-        wm.fleet_report_window = _create_mock_window(alive=True, rect_contains=False)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))  # PROJ-313 migrated
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))  # PROJ-313 migrated
 
         mx, my = 500, 400
 
@@ -315,7 +315,7 @@ class TestClickGateIntegration:
         # First window doesn't contain click
         wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=False)
         # Second window contains click
-        wm.planet_list_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))  # PROJ-313 migrated
 
         mx, my = 500, 400
 
@@ -344,7 +344,7 @@ class TestClickGateWithAllWindowTypes:
         """Build queue list window blocks clicks in its area."""
         router, ui, wm = _create_strategy_event_router()
 
-        wm.build_queue_list_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))  # PROJ-313 migrated
 
         result = router.handle_click(600, 400, 1)
 
@@ -393,7 +393,7 @@ class TestClickGateWithAllWindowTypes:
         """Fleet report window blocks clicks in its area."""
         router, ui, wm = _create_strategy_event_router()
 
-        wm.fleet_report_window = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))  # PROJ-313 migrated
 
         result = router.handle_click(600, 400, 1)
 

@@ -60,20 +60,10 @@ class StrategyEventRouter:
 
         # Check window manager for open windows (PROJ-86)
         wm = self.ui.window_manager
-        # PROJ-313 Phases 3-4: migrated windows tracked via
-        # wm.iter_live_modals() (OR-bridge below).
-        if wm.planet_list_window is not None:
-            return True
-        if wm.star_list_window is not None:
-            return True
-        if wm.fleet_report_window is not None:
-            return True
-        if wm.build_queue_list_window is not None:
-            return True
+        # PROJ-313 Phases 3-5: most windows migrated to StrategyModalWindow
+        # and tracked via wm.iter_live_modals() (OR-bridge below). Only
+        # move_choice_window remains (Phase 6 will migrate it).
         if wm.move_choice_window is not None:
-            return True
-        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
-        if wm.planet_abilities_window is not None:
             return True
 
         # PROJ-313: Live-list of StrategyModalWindow subclasses. Phases
@@ -491,14 +481,8 @@ class StrategyEventRouter:
         # to StrategyModalWindow; migrated windows participate via
         # wm.iter_live_modals() in the OR-bridge below.
         blocking_windows = [
-            ('planet_list_window', wm.planet_list_window),
-            ('star_list_window', wm.star_list_window),
-            ('fleet_report_window', wm.fleet_report_window),
-            ('build_queue_list_window', wm.build_queue_list_window),
             ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
             ('move_choice_window', wm.move_choice_window),
-            # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
-            ('planet_abilities_window', wm.planet_abilities_window),
         ]
         for name, window in blocking_windows:
             if window is not None:

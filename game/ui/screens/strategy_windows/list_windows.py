@@ -54,6 +54,7 @@ class PlanetListRegistrar:
             c.manager,
             galaxy,
             empire,
+            window_manager=c,
             on_close_callback=self._on_closed,
             asset_resolver=c._asset_resolver,
             empires=c.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
@@ -91,6 +92,7 @@ class StarListRegistrar:
             rect,
             c.manager,
             c.scene.galaxy,
+            window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_callback=self._on_navigate,
         )

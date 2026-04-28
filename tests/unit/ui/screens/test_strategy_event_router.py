@@ -151,7 +151,7 @@ class TestClickGateWindows:
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(100, 100, 2000, 1400)
-        mock_ui.window_manager.planet_list_window = window
+        mock_ui.window_manager._modals_for_test.append(window)  # PROJ-313 migrated
 
         mx, my = 1000, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -187,7 +187,7 @@ class TestClickGateWindows:
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(100, 100, 2000, 1400)
-        mock_ui.window_manager.fleet_report_window = window
+        mock_ui.window_manager._modals_for_test.append(window)  # PROJ-313 migrated
 
         mx, my = 1000, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
@@ -288,11 +288,11 @@ class TestClickGateOrBridge:
     def test_has_modal_open_returns_true_with_only_slot(self, event_router, mock_ui):
         """has_modal_open returns True when slot populated, modal list empty.
 
-        Uses planet_list_window (still slot-tracked) as the example slot;
-        fleet_orders_window was migrated in Phase 3 and no longer
-        participates in slot scans.
+        Uses move_choice_window as the still-slot-tracked example;
+        Phase 6 will migrate it. After Phase 6 only the `menu_panel` and
+        `_pending_confirmation_dialog` remain on the slot path.
         """
-        mock_ui.window_manager.planet_list_window = MagicMock()
+        mock_ui.window_manager.move_choice_window = MagicMock()
         mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([]))
         mock_ui.menu_panel = None
         mock_ui.scene = MagicMock()

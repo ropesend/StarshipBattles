@@ -54,6 +54,7 @@ class FleetReportRegistrar:
             c.manager,
             fleet,
             empire=empire,
+            window_manager=c,
             on_close_callback=self._on_closed,
             split_fleet_callback=split_fleet_callback,
         )

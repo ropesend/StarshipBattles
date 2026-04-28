@@ -10,10 +10,10 @@ PROJ-208 Phase 1: Refactored to use SplitFleetCommand via command pipeline.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TYPE_CHECKING
 
 import pygame
-from pygame_gui.elements import UIWindow, UIPanel
+from pygame_gui.elements import UIPanel
 
 from game.ui.config import UIConfig
 from game.ui.screens.fleet_report_view_model import FleetListViewModel
@@ -21,16 +21,22 @@ from game.ui.components.table import VirtualTable, TableColumnManager, MultiSele
 from game.ui.screens.fleet_data_source import FleetDataSource, DEFAULT_FLEET_COLUMNS
 from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
 
-class FleetReportWindow(UIWindow):
+class FleetReportWindow(StrategyModalWindow):
     """
     Window to view detailed fleet information including:
     - Fleet summary statistics (left panel)
     - Ship list with filtering/sorting (center)
     - Individual ship details with damage (right panel)
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
     def __init__(
@@ -39,6 +45,8 @@ class FleetReportWindow(UIWindow):
         manager,
         fleet,
         empire=None,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_close_callback=None,
         split_fleet_callback: Optional[Callable[[int, list], None]] = None
     ):
@@ -50,6 +58,7 @@ class FleetReportWindow(UIWindow):
             manager: pygame_gui UIManager
             fleet: Fleet object to display
             empire: Empire object for fleet management operations (used for remove button visibility)
+            window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
             on_close_callback: Function to call when window is closed
             split_fleet_callback: Callback to dispatch SplitFleetCommand(fleet_id, ship_instance_ids).
                 When provided, ship removal goes through command pipeline.
@@ -58,7 +67,8 @@ class FleetReportWindow(UIWindow):
             rect=rect,
             manager=manager,
             window_display_title=f"Fleet Report: {fleet.id}",
-            resizable=True
+            resizable=True,
+            window_manager=window_manager,
         )
 
         self.fleet = fleet

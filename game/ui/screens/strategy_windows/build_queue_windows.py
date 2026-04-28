@@ -35,6 +35,7 @@ class BuildQueueListRegistrar:
             rect,
             c.manager,
             empire,
+            window_manager=c,
             on_close_callback=self._on_closed,
             input_mapper=c._mapper,
         )

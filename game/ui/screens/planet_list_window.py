@@ -7,11 +7,16 @@ PROJ-188 Phase 3: Migrated to VirtualTable + PlanetDataSource + SingleSelect.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import pygame
 import pygame_gui.windows
 from game.core.resources import ResourceCatalog
-from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu
+from pygame_gui.elements import UIPanel, UIButton, UIDropDownMenu
+
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 _PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
@@ -101,8 +106,12 @@ def build_effect_columns(effect_keys: list[str]) -> list[dict]:
         })
     return columns
 
-class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None, race_registry=None, facade=None):
+class PlanetListWindow(StrategyModalWindow):
+    def __init__(self, rect, manager, galaxy, empire, *,
+                 window_manager: "StrategyWindowManager | None" = None,
+                 on_close_callback=None, asset_resolver=None, empires=None,
+                 registries=None, on_navigate_callback=None,
+                 race_registry=None, facade=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
@@ -117,7 +126,12 @@ class PlanetListWindow(UIWindow):
         # Mirrors the pattern established in `strategy_detail_formatter._show_planet_report`.
         self._facade = facade
 
-        super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
+        super().__init__(
+            rect, manager,
+            window_display_title="Galactic Planet Registry",
+            resizable=True,
+            window_manager=window_manager,
+        )
 
         self.galaxy = galaxy
         self.empire = empire # Current player empire for "Owner" context

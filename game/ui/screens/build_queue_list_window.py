@@ -5,22 +5,34 @@ from typing import Any, TYPE_CHECKING, Optional
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UILabel
+from pygame_gui.elements import UILabel
 
 from game.core.input_actions import InputAction
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
-class BuildQueueListWindow(UIWindow):
-    """Window listing all active build queues across planets and fleets."""
+class BuildQueueListWindow(StrategyModalWindow):
+    """Window listing all active build queues across planets and fleets.
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
+    """
 
     ROW_HEIGHT = 30
 
-    def __init__(self, rect, manager, empire, on_close_callback=None,
+    def __init__(self, rect, manager, empire, *,
+                 window_manager: "StrategyWindowManager | None" = None,
+                 on_close_callback=None,
                  input_mapper: Optional['InputMapper'] = None):
-        super().__init__(rect, manager, window_display_title="Build Yards", resizable=False)
+        super().__init__(
+            rect, manager,
+            window_display_title="Build Yards",
+            resizable=False,
+            window_manager=window_manager,
+        )
         self.empire = empire
         self.on_close_callback = on_close_callback
         self._mapper = input_mapper
