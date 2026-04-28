@@ -28,6 +28,7 @@
 | [process_flags](process_flags/) | Process flag images into multi-resolution variants | Asset Processing |
 | [process_planet_spheres](process_planet_spheres/) | Detect and mask planet spheres (OpenCV) | Asset Processing |
 | [qa_observer](qa_observer/) | QA session recorder (audio + screenshots) | QA |
+| [regenerate_ship_portraits](regenerate_ship_portraits/) | Generate and audit ship-theme portraits via OpenAI gpt-image-2 | Asset Processing |
 | [ship_background_remover](ship_background_remover/) | Remove black backgrounds from ship images | Asset Processing |
 | [star_mask_tool](star_mask_tool/) | Star masking via FastAPI server | Asset Processing |
 | [techtree_editor](techtree_editor/) | Visual tech tree editor (Dear PyGui) | GUI Editor |
@@ -53,6 +54,7 @@
 - **[process_cursors](process_cursors/)** -- Splits cursor sprite sheet into individual cursor files at 64x64 and 32x32.
 - **[process_flags](process_flags/)** -- Extracts flags from composite images, trims, and generates multi-resolution variants (1024 down to 32).
 - **[process_planet_spheres](process_planet_spheres/)** -- Detects circular planet bounds using Hough circles (OpenCV) and applies transparency masks.
+- **[regenerate_ship_portraits](regenerate_ship_portraits/)** -- Generates missing ship-theme portraits via OpenAI `gpt-image-2` and audits PROJ-314 `theme.json` asset coverage.
 - **[ship_background_remover](ship_background_remover/)** -- Removes black backgrounds from ship images with configurable threshold, trims, and centers on square canvas.
 - **[star_mask_tool](star_mask_tool/)** -- FastAPI server for configuring star masking parameters.
 

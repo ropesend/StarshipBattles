@@ -42,6 +42,21 @@ import time
 from dataclasses import asdict, dataclass, field
 from typing import Optional
 
+
+def _find_project_root() -> pathlib.Path:
+    """Find project root by looking for game/ and data/ directories."""
+    current = pathlib.Path(__file__).resolve().parent
+    for _ in range(10):
+        if (current / "game").is_dir() and (current / "data").is_dir():
+            return current
+        current = current.parent
+    raise RuntimeError("Could not find project root")
+
+
+_PROJECT_ROOT = _find_project_root()
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from game.core.exceptions import ImageException
 from game.core.paths import Paths
 from game.core.ship_classes import SHIP_CLASSES_WITH_VISUAL_THEMES
