@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Reference
 
-> **Last verified:** 2026-04-28 — PROJ-313 added structural modal-window tracking via `StrategyModalWindow` base class (see `docs/02_PATTERNS.md` Pattern #31); 21 strategy modal windows migrated. Confirmed no Simulation-layer `get_default_registry_provider()` calls, documented the current UI dependencies on Research and Assets, and kept PROJ-297/298 removals reflected.
+> **Last verified:** 2026-04-28 — PROJ-314 added `game/ui/services/image/` for AI portrait generation (gpt-image-2) and unified the ship-theme loader on a canonical `assets:` schema; PROJ-313 added structural modal-window tracking via `StrategyModalWindow` base class (see `docs/02_PATTERNS.md` Pattern #31). Confirmed no Simulation-layer `get_default_registry_provider()` calls, documented the current UI dependencies on Research and Assets, and kept PROJ-297/298 removals reflected.
 
 Primary architecture document for the Starship Battles codebase. All claims verified against source code.
 
@@ -209,7 +209,7 @@ Current services:
 | `panels/`        | BattlePanels, BuilderWidgets |
 | `components/`    | Reusable UI components including `table/` subpackage |
 | `widgets/`       | PanelFactory, ScrollableJsonPanel, UIElementRegistry |
-| `services/`      | InputMapper, ShipFactory, ShipIO, ComponentService, ValidationService (BattleFactories deleted in PROJ-270 Phase 8.2) |
+| `services/`      | InputMapper, ShipFactory, ShipIO, ComponentService, ValidationService (BattleFactories deleted in PROJ-270 Phase 8.2). Includes `services/image/` (PROJ-314) — `ImageProvider` Protocol + `OpenAIImageProvider` (gpt-image-2) + `NullImageProvider` + factory + `ImageBackgroundCall`. |
 | `orchestration/` | (Package retained for future UI orchestration; `BattleOrchestrator` removed — `AIControllerFactory` is the canonical AI creation path) |
 | `research/`      | Research/tech tree UI visualization |
 | `interfaces/`    | UI-layer interface definitions |

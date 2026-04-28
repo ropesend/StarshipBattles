@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-04-28 — Added §10 Dev-Mode CLI Flag (FEAT-20); reconciled with the rest of the doc consistency pass.
+> **Last verified:** 2026-04-28 — Added §11 Ship Theme Asset Conventions (PROJ-314) including the canonical `theme.json` schema, 2048×2048 PNG standard, lowercase-with-underscores filename rule, and skin/portrait basename matching; §10 Dev-Mode CLI Flag (FEAT-20) verified intact.
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -552,3 +552,91 @@ Conventions for adding new dev-only widgets or affordances:
 - **Naming:** prefix dev-only widget fields with their domain, e.g. `btn_run_10_turns` (NOT `btn_dev_run`).
 
 Established by FEAT-20 (Run-10-Turns dev button on the strategy top bar).
+
+---
+
+## 11. Ship Theme Asset Conventions (PROJ-314)
+
+Every ship-theme directory under `assets/ShipThemes/<Theme>/` must
+declare its skin and portrait art via a single `theme.json` file in the
+canonical schema below. The legacy `images:` schema (flat
+`{class: path}` map) and the hardcoded `<Class>_Portrait.jpg` filename
+convention have both been retired.
+
+### 11.1 Canonical `theme.json` schema
+
+```json
+{
+  "schema_version": 1,
+  "name": "Federation",
+  "description": "...",
+  "image_sizes": {
+    "skin":     [2048, 2048],
+    "portrait": [2048, 2048]
+  },
+  "assets": {
+    "Battleship": {
+      "skin":     "Skins/battleship.png",
+      "portrait": "Portraits/battleship.png",
+      "scale":    1.0
+    }
+  }
+}
+```
+
+- `schema_version: 1` is required. Unknown versions log a warning and
+  the loader continues (forward compatibility).
+- `name` is the human-readable theme name shown in Race Setup.
+- `description` is a free-form string, also fed to the AI portrait-
+  regenerator (`Tools/regenerate_ship_portraits/`) as theme-style
+  context for `gpt-image-2`.
+- `image_sizes.skin` and `image_sizes.portrait` are `[width, height]`
+  arrays. The loader compares declared vs. actual via PIL and logs a
+  warning on mismatch (it does NOT reject the asset).
+- `assets` keys MUST exactly match
+  `game.core.ship_classes.SHIP_CLASSES_WITH_VISUAL_THEMES` (display
+  form: `"Light Cruiser"`, `"Fighter (Medium)"`, etc.). Extras log a
+  warning, missing entries log info.
+- `assets[<class>].skin` is required.
+- `assets[<class>].portrait` is OPTIONAL. When absent or pointing at a
+  missing file, `ShipThemeManager.get_portrait_image()` returns the
+  synthetic placeholder Surface (consistent with `load_image()`).
+- `assets[<class>].scale` defaults to `1.0`.
+
+### 11.2 Image format and resolution
+
+- All ship-theme assets are PNG only (per §5 / `docs/03_CONVENTIONS.md`
+  §285–288). JPG is not supported.
+- Standard resolution is **2048×2048 square**, exposed as
+  `Paths.SHIP_THEMES_TARGET_SIZE` (PROJ-314 Phase 1).
+
+### 11.3 Filename rules
+
+- Filenames MUST be `lowercase_with_underscores.png`.
+- Skin and portrait basenames MUST match per ship class (e.g.
+  `Skins/battle_cruiser.png` and `Portraits/battle_cruiser.png`). This
+  removes the cross-platform case-sensitivity hazard that broke Linux
+  CI on mixed-case Federation/Klingons/Romulans/Atlantians filenames
+  prior to PROJ-314.
+
+### 11.4 Adding a new theme
+
+1. Create `assets/ShipThemes/<NewTheme>/`,
+   `<NewTheme>/Skins/`, `<NewTheme>/Portraits/`.
+2. Place 19 lowercase_with_underscores `.png` skins (one per canonical
+   ship class).
+3. Optionally place 19 portraits with the same basenames; or run the
+   regenerator CLI:
+
+   ```sh
+   python -m Tools.regenerate_ship_portraits.cli --theme <NewTheme>
+   ```
+
+4. Author `theme.json` in the canonical schema above.
+5. Run `python -m Tools.regenerate_ship_portraits.audit
+   --theme <NewTheme>` to verify there are no coverage / casing / size
+   gaps.
+6. Run the integration smoke test:
+   `pytest tests/integration/ui/test_race_setup_ships_smoke.py`.
+
+Established by PROJ-314.
