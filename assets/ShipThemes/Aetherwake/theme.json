@@ -1,25 +1,93 @@
 {
-    "name": "Aetherwake",
-    "description": "Graphite orbital carrier hulls with glacier armor, cyan reactor trenches, amber running lights, and concealed naval hardpoints.",
-    "images": {
-        "Escort": "Skins/escort.png",
-        "Frigate": "Skins/frigate.png",
-        "Destroyer": "Skins/destroyer.png",
-        "Light Cruiser": "Skins/light_cruiser.png",
-        "Cruiser": "Skins/cruiser.png",
-        "Heavy Cruiser": "Skins/heavy_cruiser.png",
-        "Battle Cruiser": "Skins/battlecruiser.png",
-        "Battleship": "Skins/battleship.png",
-        "Dreadnought": "Skins/dreadnought.png",
-        "Superdreadnought": "Skins/superdreadnought.png",
-        "Monitor": "Skins/monitor.png",
-        "Fighter (Small)": "Skins/small_fighter.png",
-        "Fighter (Medium)": "Skins/medium_fighter.png",
-        "Fighter (Large)": "Skins/large_fighter.png",
-        "Fighter (Heavy)": "Skins/heavy_fighter.png",
-        "Satellite (Small)": "Skins/small_satellite.png",
-        "Satellite (Medium)": "Skins/medium_satellite.png",
-        "Satellite (Large)": "Skins/large_satellite.png",
-        "Satellite (Heavy)": "Skins/heavy_satellite.png"
+  "schema_version": 1,
+  "name": "Aetherwake",
+  "description": "Sleek silver hulls with luminous turquoise accents and aerodynamic curves.",
+  "image_sizes": {
+    "skin": [
+      2048,
+      2048
+    ],
+    "portrait": [
+      2048,
+      2048
+    ]
+  },
+  "assets": {
+    "Escort": {
+      "skin": "Skins/escort.png",
+      "scale": 1.0
+    },
+    "Frigate": {
+      "skin": "Skins/frigate.png",
+      "scale": 1.0
+    },
+    "Destroyer": {
+      "skin": "Skins/destroyer.png",
+      "scale": 1.0
+    },
+    "Light Cruiser": {
+      "skin": "Skins/light_cruiser.png",
+      "scale": 1.0
+    },
+    "Cruiser": {
+      "skin": "Skins/cruiser.png",
+      "scale": 1.0
+    },
+    "Heavy Cruiser": {
+      "skin": "Skins/heavy_cruiser.png",
+      "scale": 1.0
+    },
+    "Battle Cruiser": {
+      "skin": "Skins/battle_cruiser.png",
+      "scale": 1.0
+    },
+    "Battleship": {
+      "skin": "Skins/battleship.png",
+      "scale": 1.0
+    },
+    "Dreadnought": {
+      "skin": "Skins/dreadnought.png",
+      "scale": 1.0
+    },
+    "Superdreadnought": {
+      "skin": "Skins/super_dreadnought.png",
+      "scale": 1.0
+    },
+    "Monitor": {
+      "skin": "Skins/monitor.png",
+      "scale": 1.0
+    },
+    "Fighter (Small)": {
+      "skin": "Skins/small_fighter.png",
+      "scale": 1.0
+    },
+    "Fighter (Medium)": {
+      "skin": "Skins/medium_fighter.png",
+      "scale": 1.0
+    },
+    "Fighter (Large)": {
+      "skin": "Skins/large_fighter.png",
+      "scale": 1.0
+    },
+    "Fighter (Heavy)": {
+      "skin": "Skins/heavy_fighter.png",
+      "scale": 1.0
+    },
+    "Satellite (Small)": {
+      "skin": "Skins/small_satellite.png",
+      "scale": 1.0
+    },
+    "Satellite (Medium)": {
+      "skin": "Skins/medium_satellite.png",
+      "scale": 1.0
+    },
+    "Satellite (Large)": {
+      "skin": "Skins/large_satellite.png",
+      "scale": 1.0
+    },
+    "Satellite (Heavy)": {
+      "skin": "Skins/heavy_satellite.png",
+      "scale": 1.0
     }
+  }
 }

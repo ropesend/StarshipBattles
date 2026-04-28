@@ -258,42 +258,31 @@ class BuilderRightPanel:
 
 
     def update_portrait_image(self) -> None:
-        """Update the ship portrait based on current theme and class."""
+        """Update the ship portrait based on current theme and class.
+
+        PROJ-314: portrait path comes from the ShipThemeManager
+        (data-driven via theme.json) rather than a hardcoded
+        `<Class>_Portrait.jpg` filename convention.
+        """
         import os
-        import re
-        
-        # Determine paths
+
         theme = self.builder.ship.theme_id
         ship_class = self.builder.ship.ship_class
-        
-        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
-        if match:
-             base = match.group(1).strip().replace(" ", "")
-             sub = match.group(2).strip().replace(" ", "")
-             class_clean = f"{sub}{base}"
-        else:
-             class_clean = ship_class.replace(" ", "")
 
-        filename = f"{class_clean}_Portrait.jpg"
-        
-        # Load from assets/ShipThemes/{theme}/Portraits/
-        full_path = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename)
-
-        if not os.path.exists(full_path):
-            # Try with spaces in ship class name
-            full_path_space = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", f"{ship_class}_Portrait.jpg")
-            if os.path.exists(full_path_space):
-                full_path = full_path_space
+        from game.ui.assets.ship_theme_manager import get_default_ship_theme_manager
+        manager = get_default_ship_theme_manager()
+        if not manager.discovery_complete:
+            manager.initialize()
+        full_path = manager.get_portrait_path(theme, ship_class)
+        if not full_path or not os.path.exists(full_path):
+            default_path = Paths.DEFAULT_SHIP_PORTRAIT
+            if os.path.exists(default_path):
+                full_path = default_path
             else:
-                 # Fallback to Default Portrait
-                 default_path = Paths.DEFAULT_SHIP_PORTRAIT
-                 if os.path.exists(default_path):
-                     full_path = default_path
-                 else:
-                     if self.portrait_image:
-                         self.portrait_image.kill()
-                         self.portrait_image = None
-                     return
+                if self.portrait_image:
+                    self.portrait_image.kill()
+                    self.portrait_image = None
+                return
 
         try:
             image_surf = pygame.image.load(full_path).convert_alpha()

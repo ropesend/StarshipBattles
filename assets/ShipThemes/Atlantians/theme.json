@@ -1,24 +1,111 @@
 {
-    "name": "Atlantians",
-    "images": {
-        "Escort": "Skins/Escort.png",
-        "Frigate": "Skins/Frigate.png",
-        "Destroyer": "Skins/Destroyer.png",
-        "Light Cruiser": "Skins/light cruiser.png",
-        "Cruiser": "Skins/Cruiser.png",
-        "Heavy Cruiser": "Skins/heavey cruiser.png",
-        "Battle Cruiser": "Skins/Battlecruiser.png",
-        "Battleship": "Skins/Battleship.png",
-        "Dreadnought": "Skins/Dreadnaught.png",
-        "Superdreadnought": "Skins/super dreadnaught.png",
-        "Monitor": "Skins/monitor.png",
-        "Fighter (Small)": "Skins/small fighter.png",
-        "Fighter (Medium)": "Skins/medium fighter.png",
-        "Fighter (Large)": "Skins/large fighter.png",
-        "Fighter (Heavy)": "Skins/heavy fighter.png",
-        "Satellite (Small)": "Skins/small satellite.png",
-        "Satellite (Medium)": "Skins/medium satellite.png",
-        "Satellite (Large)": "Skins/large satellite.png",
-        "Satellite (Heavy)": "Skins/heavy satellite.png"
+  "schema_version": 1,
+  "name": "Atlantians",
+  "description": "Organic curved hulls in deep ocean blues with bioluminescent piping.",
+  "image_sizes": {
+    "skin": [
+      2048,
+      2048
+    ],
+    "portrait": [
+      2048,
+      2048
+    ]
+  },
+  "assets": {
+    "Escort": {
+      "skin": "Skins/escort.png",
+      "scale": 1.0,
+      "portrait": "Portraits/escort.png"
+    },
+    "Frigate": {
+      "skin": "Skins/frigate.png",
+      "scale": 1.0,
+      "portrait": "Portraits/frigate.png"
+    },
+    "Destroyer": {
+      "skin": "Skins/destroyer.png",
+      "scale": 1.0,
+      "portrait": "Portraits/destroyer.png"
+    },
+    "Light Cruiser": {
+      "skin": "Skins/light_cruiser.png",
+      "scale": 1.0
+    },
+    "Cruiser": {
+      "skin": "Skins/cruiser.png",
+      "scale": 1.0,
+      "portrait": "Portraits/cruiser.png"
+    },
+    "Heavy Cruiser": {
+      "skin": "Skins/heavy_cruiser.png",
+      "scale": 1.0,
+      "portrait": "Portraits/heavy_cruiser.png"
+    },
+    "Battle Cruiser": {
+      "skin": "Skins/battle_cruiser.png",
+      "scale": 1.0,
+      "portrait": "Portraits/battle_cruiser.png"
+    },
+    "Battleship": {
+      "skin": "Skins/battleship.png",
+      "scale": 1.0,
+      "portrait": "Portraits/battleship.png"
+    },
+    "Dreadnought": {
+      "skin": "Skins/dreadnought.png",
+      "scale": 1.0,
+      "portrait": "Portraits/dreadnought.png"
+    },
+    "Superdreadnought": {
+      "skin": "Skins/super_dreadnought.png",
+      "scale": 1.0,
+      "portrait": "Portraits/super_dreadnought.png"
+    },
+    "Monitor": {
+      "skin": "Skins/monitor.png",
+      "scale": 1.0,
+      "portrait": "Portraits/monitor.png"
+    },
+    "Fighter (Small)": {
+      "skin": "Skins/small_fighter.png",
+      "scale": 1.0,
+      "portrait": "Portraits/small_fighter.png"
+    },
+    "Fighter (Medium)": {
+      "skin": "Skins/medium_fighter.png",
+      "scale": 1.0,
+      "portrait": "Portraits/medium_fighter.png"
+    },
+    "Fighter (Large)": {
+      "skin": "Skins/large_fighter.png",
+      "scale": 1.0,
+      "portrait": "Portraits/large_fighter.png"
+    },
+    "Fighter (Heavy)": {
+      "skin": "Skins/heavy_fighter.png",
+      "scale": 1.0,
+      "portrait": "Portraits/heavy_fighter.png"
+    },
+    "Satellite (Small)": {
+      "skin": "Skins/small_satellite.png",
+      "scale": 1.0,
+      "portrait": "Portraits/small_satellite.png"
+    },
+    "Satellite (Medium)": {
+      "skin": "Skins/medium_satellite.png",
+      "scale": 1.0,
+      "portrait": "Portraits/medium_satellite.png"
+    },
+    "Satellite (Large)": {
+      "skin": "Skins/large_satellite.png",
+      "scale": 1.0,
+      "portrait": "Portraits/large_satellite.png"
+    },
+    "Satellite (Heavy)": {
+      "skin": "Skins/heavy_satellite.png",
+      "scale": 1.0,
+      "portrait": "Portraits/heavy_satellite.png"
     }
+  }
 }

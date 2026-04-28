@@ -60,22 +60,31 @@ def load_portrait_thumbnail(design: DesignMetadata, size: int = 50) -> pygame.Su
 
 
 def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pygame.Surface:
-    """Load portrait thumbnail without cache lookup."""
+    """Load portrait thumbnail without cache lookup.
+
+    PROJ-314: portrait paths come from the ShipThemeManager (data-driven
+    via `theme.json`'s `assets:` block) rather than the legacy
+    `<Class>_Portrait.jpg` filename convention.
+    """
     theme = design.theme_id or "Federation"
     ship_class = design.ship_class or "Unknown"
 
-    # Normalize class name for filename
-    class_clean = ship_class.replace(" ", "_").replace("-", "_")
-    filename = f"{class_clean}_Portrait.jpg"
+    # Resolve the absolute portrait path via the theme manager, then
+    # smoothscale to the requested thumbnail size.
+    from game.ui.assets.ship_theme_manager import get_default_ship_theme_manager
 
-    # Try multiple portrait paths
-    portrait_paths = [
-        os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename),
-        os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", f"{ship_class}_Portrait.jpg"),
-        Paths.DEFAULT_SHIP_PORTRAIT,
-    ]
+    manager = get_default_ship_theme_manager()
+    if not manager.discovery_complete:
+        manager.initialize()
+    portrait_path = manager.get_portrait_path(theme, ship_class)
 
-    for path in portrait_paths:
+    candidate_paths: list[str] = []
+    if portrait_path:
+        candidate_paths.append(portrait_path)
+    if os.path.exists(Paths.DEFAULT_SHIP_PORTRAIT):
+        candidate_paths.append(Paths.DEFAULT_SHIP_PORTRAIT)
+
+    for path in candidate_paths:
         if os.path.exists(path):
             try:
                 loaded_img = pygame.image.load(path)

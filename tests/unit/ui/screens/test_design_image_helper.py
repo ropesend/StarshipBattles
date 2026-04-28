@@ -48,26 +48,36 @@ class TestLoadPortraitThumbnail:
         assert result.get_height() == 75
 
     def test_logs_warning_when_file_exists_but_load_fails(self):
-        """Logs warning when file exists but pygame.image.load fails."""
+        """Logs warning when file exists but pygame.image.load fails.
+
+        PROJ-314: portrait paths come from ShipThemeManager, not the
+        deleted `<Class>_Portrait.jpg` convention.
+        """
         from game.ui.screens.design_image_helper import load_portrait_thumbnail
+        from game.ui.assets import ShipThemeManager, set_default_ship_theme_manager
 
         design = Mock()
         design.theme_id = "Federation"
         design.ship_class = "Cruiser"
         design.vehicle_type = "Ship"
-        design.design_id = "test_design"
+        design.design_id = "test_design_pf_warn"
 
-        # First path exists but fails to load, rest don't exist
-        def exists_side_effect(path):
-            return "Cruiser_Portrait.jpg" in path
+        # Stub the ShipThemeManager so it returns a portrait path that
+        # exists but cannot be loaded.
+        manager = Mock(spec=ShipThemeManager)
+        manager.discovery_complete = True
+        manager.get_portrait_path.return_value = "/fake/Federation/Portraits/cruiser.png"
+        set_default_ship_theme_manager(manager)
+        try:
+            with patch('os.path.exists', return_value=True):
+                with patch('pygame.image.load', side_effect=pygame.error("Load failed")):
+                    with patch('game.ui.screens.design_image_helper.logger') as mock_logger:
+                        result = load_portrait_thumbnail(design)
 
-        with patch('os.path.exists', side_effect=exists_side_effect):
-            with patch('pygame.image.load', side_effect=pygame.error("Load failed")):
-                with patch('game.ui.screens.design_image_helper.logger') as mock_logger:
-                    result = load_portrait_thumbnail(design)
-
-        assert mock_logger.warning.called
-        assert isinstance(result, pygame.Surface)  # Falls back to placeholder
+            assert mock_logger.warning.called
+            assert isinstance(result, pygame.Surface)  # Falls back to placeholder.
+        finally:
+            set_default_ship_theme_manager(ShipThemeManager())
 
     def test_different_vehicle_types_produce_different_placeholder_colors(self):
         """Different vehicle types produce different placeholder colors."""
