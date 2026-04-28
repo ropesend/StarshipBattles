@@ -19,7 +19,12 @@ import pygame_gui
 from typing import Dict, List, Optional, Callable, TYPE_CHECKING
 
 from game.core.string_utils import display_name
+from game.strategy.data.habitability_factors import (
+    iter_gas_factors,
+    iter_scalar_factors,
+)
 from game.ui.assets import get_default_ship_theme_manager
+from game.ui.widgets.preference_row import PreferenceRow
 
 logger = logging.getLogger(__name__)
 from game.ui.utils import create_section_header
@@ -27,6 +32,20 @@ from game.ui.utils import create_section_header
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
     from game.ui.screens.race_asset_loader import RaceAssetLoader
+
+
+# FEAT-14: human-readable labels for the 7 RaceConfig aptitudes. Keys match
+# the `aptitude_<key>` field-name suffix on `RaceConfig`. Order = display
+# order on the Summary tab.
+_APTITUDE_DISPLAY: tuple[tuple[str, str], ...] = (
+    ("strength", "Strength"),
+    ("intelligence", "Intelligence"),
+    ("constitution", "Constitution"),
+    ("dexterity", "Dexterity"),
+    ("tolerance_other_species", "Tolerance (other species)"),
+    ("cooperation", "Cooperation"),
+    ("conflict_tolerance", "Conflict Tolerance"),
+)
 
 
 class RaceSummaryPanel:
@@ -76,6 +95,13 @@ class RaceSummaryPanel:
         self.summary_flag_panel: Optional[pygame_gui.elements.UIPanel] = None
         self.summary_portrait_panel: Optional[pygame_gui.elements.UIPanel] = None
         self.summary_ship_panel: Optional[pygame_gui.elements.UIPanel] = None
+
+        # FEAT-14: column-3 dynamic content. The factor rows + aptitude rows
+        # are rebuilt on every refresh() because (a) the gas list filters by
+        # setpoint > 0 (which can change), and (b) iterating the registry
+        # directly is the cleanest data-driven path.
+        self._env_scroll_container: Optional[pygame_gui.elements.UIScrollingContainer] = None
+        self._dynamic_env_labels: List[pygame_gui.elements.UILabel] = []
 
         # Load Race button
         self.btn_load: Optional[pygame_gui.elements.UIButton] = None
@@ -242,148 +268,24 @@ class RaceSummaryPanel:
     def _create_column3_content(self, x: int, y: int, col_width: int) -> None:
         """Create column 3: Environment, Aptitudes, and Descriptions.
 
-        PROJ-66 Phase 6: Added homeworld, water, aptitudes, and budget display.
+        FEAT-14: Column 3 is now a `UIScrollingContainer` whose content is
+        rebuilt by `refresh()` from `FACTOR_REGISTRY` + the 7 aptitudes —
+        adding a factor to the registry surfaces a row automatically with no
+        change to this file. The constructor only allocates the container;
+        `refresh()` populates everything inside.
         """
-        # Environment header
-        create_section_header("Environment:", y, col_width, self.ui_manager, self.panel, x=x)
-
-        env_y = y + 25
-
-        # Homeworld Type (NEW)
-        self.summary_labels['homeworld'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Homeworld: Custom",
+        # Match the legacy column-3 vertical span so the ship preview panel
+        # below (positioned by column 1) stays put.
+        scroll_height = 400
+        self._env_scroll_container = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(x, y, col_width, scroll_height),
             manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 22
-
-        # Gravity
-        self.summary_labels['gravity'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Gravity: 1.0g +/- 0.30",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 22
-
-        # Temperature
-        self.summary_labels['temperature'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Temperature: 293K +/- 50",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 22
-
-        # Water (NEW)
-        self.summary_labels['water'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Water: 50% +/- 30",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 22
-
-        # Radiation
-        self.summary_labels['radiation'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Radiation: 0",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 28
-
-        # Aptitudes section (NEW)
-        create_section_header("Aptitudes:", env_y, col_width, self.ui_manager, self.panel, x=x)
-        env_y += 25
-
-        # Budget status (NEW)
-        self.summary_labels['budget'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Budget: 0/100 used",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 22
-
-        # Aptitude summary (compact format)
-        self.summary_labels['aptitudes'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 66),
-            text="STR:5 INT:5 CON:5\nDEX:5 TOL:5 COO:5\nHAP:5 POP:5 CFT:5",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 72
-
-        # Descriptions summary
-        create_section_header("Descriptions:", env_y, col_width, self.ui_manager, self.panel, x=x)
-        env_y += 25
-
-        self.summary_labels['bio_status'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Biological: 0 chars",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 22
-
-        self.summary_labels['socio_status'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 22),
-            text="Sociological: 0 chars",
-            manager=self.ui_manager,
-            container=self.panel
+            container=self.panel,
         )
 
     # =========================================================================
     # Formatting Methods
     # =========================================================================
-
-    # PROJ-283 Phase 4: env summaries now read from `race_config.preferences`
-    # (the legacy gravity_ideal/_tolerance/etc. fields are gone).
-    # These formatters present a compact label until the Phase 5 UI rebuild
-    # replaces this whole panel.
-
-    def _format_gravity_summary(self) -> str:
-        """Format gravity summary string (m/s² → g for display)."""
-        pref = self.race_config.preferences.get("gravity")
-        if pref is None:
-            return "Gravity: --"
-        ideal_g = pref.setpoint / 9.81
-        tol_g = pref.tolerance / 9.81
-        return f"Gravity: {ideal_g:.1f}g +/- {tol_g:.2f}"
-
-    def _format_temperature_summary(self) -> str:
-        """Format temperature summary string."""
-        pref = self.race_config.preferences.get("temperature")
-        if pref is None:
-            return "Temperature: --"
-        return f"Temperature: {pref.setpoint:.0f}K +/- {pref.tolerance:.0f}"
-
-    def _format_radiation_summary(self) -> str:
-        """Format radiation summary string."""
-        pref = self.race_config.preferences.get("radiation")
-        if pref is None:
-            return "Radiation: --"
-        return f"Radiation: tol {pref.tolerance:+.0f}"
-
-    def _format_atmosphere_summary(self) -> str:
-        """Format atmosphere summary string. Lists gas factors with
-        non-zero setpoints (i.e., gases the race prefers to breathe)."""
-        atmo_parts = []
-        for fid, pref in self.race_config.preferences.items():
-            if not fid.startswith("gas.") or pref.setpoint <= 0:
-                continue
-            formula = fid.split(".", 1)[1]
-            kpa = pref.setpoint / 1000.0
-            atmo_parts.append(f"{formula}: {kpa:.1f} kPa")
-        if atmo_parts:
-            atmo_text = ", ".join(atmo_parts[:4])
-            if len(atmo_parts) > 4:
-                atmo_text += "..."
-        else:
-            atmo_text = "All neutral"
-        return atmo_text
 
     def _format_bio_status(self) -> str:
         """Format biological description status string."""
@@ -442,13 +344,6 @@ class RaceSummaryPanel:
             return f"Homeworld: {hw_label}"
         return "Homeworld: Custom"
 
-    def _format_water_summary(self) -> str:
-        """Format water preferences (PROJ-283: read from preferences['water'])."""
-        pref = self.race_config.preferences.get("water")
-        if pref is None:
-            return "Water: --"
-        return f"Water: {pref.setpoint*100:.0f}% +/- {pref.tolerance*100:.0f}"
-
     def _format_budget_summary(self) -> str:
         """Format point budget status."""
         from game.strategy.data.race_point_budget import RacePointBudget
@@ -457,19 +352,6 @@ class RaceSummaryPanel:
         total = budget.total_budget
         return f"Budget: {total_cost}/{total} used"
 
-    def _format_aptitudes_summary(self) -> str:
-        """Format aptitude values in compact 3-line format."""
-        rc = self.race_config
-        line1 = f"STR:{rc.aptitude_strength} INT:{rc.aptitude_intelligence} CON:{rc.aptitude_constitution}"
-        line2 = f"DEX:{rc.aptitude_dexterity} TOL:{rc.aptitude_tolerance_other_species} COO:{rc.aptitude_cooperation}"
-        # PROJ-283 Phase 4: happiness + population_growth aptitudes deleted;
-        # display the new derived/seed fields instead.
-        line3 = (
-            f"HAP:{rc.base_happiness:.2f} REPRO:{rc.base_reproduction_rate*100:.1f}% "
-            f"CFT:{rc.aptitude_conflict_tolerance}"
-        )
-        return f"{line1}\n{line2}\n{line3}"
-
     # =========================================================================
     # Refresh Summary
     # =========================================================================
@@ -477,7 +359,11 @@ class RaceSummaryPanel:
     def refresh(self) -> None:
         """Refresh summary panel with current race_config data.
 
-        PROJ-66 Phase 6: Added identity, homeworld, water, aptitudes, budget.
+        FEAT-14: Column-3 environment + aptitudes + descriptions section is
+        now rebuilt from `FACTOR_REGISTRY` + RaceConfig.aptitudes via
+        `_rebuild_env_scroll_content()` — no per-factor branches here.
+        Columns 1 and 2 (identity, theme, previews) keep their static-label
+        + set_text refresh path.
         """
         logger.debug("Refreshing race summary panel")
 
@@ -511,39 +397,155 @@ class RaceSummaryPanel:
         # Update ship preview
         self._refresh_ship_preview()
 
-        # PROJ-66: Update homeworld
-        if 'homeworld' in self.summary_labels:
-            self.summary_labels['homeworld'].set_text(self._format_homeworld_summary())
+        # FEAT-14: rebuild the entire column-3 scrollable content from the
+        # registry + aptitudes. Replaces the per-factor set_text path.
+        self._rebuild_env_scroll_content()
 
-        # Update gravity
-        if 'gravity' in self.summary_labels:
-            self.summary_labels['gravity'].set_text(self._format_gravity_summary())
+    # ------------------------------------------------------------------ #
+    # FEAT-14: registry-driven column-3 content                            #
+    # ------------------------------------------------------------------ #
 
-        # Update temperature
-        if 'temperature' in self.summary_labels:
-            self.summary_labels['temperature'].set_text(self._format_temperature_summary())
+    def _rebuild_env_scroll_content(self) -> None:
+        """Kill any previously rendered factor / aptitude / description rows
+        and rebuild them inside `self._env_scroll_container` from the
+        current race_config.
 
-        # PROJ-66: Update water
-        if 'water' in self.summary_labels:
-            self.summary_labels['water'].set_text(self._format_water_summary())
+        Layout:
+            [Environment]
+            Homeworld: ...
+            <one row per scalar factor>          (iter_scalar_factors)
+            <one row per gas factor with setpoint > 0>  (iter_gas_factors filtered)
 
-        # Update radiation
-        if 'radiation' in self.summary_labels:
-            self.summary_labels['radiation'].set_text(self._format_radiation_summary())
+            [Aptitudes]
+            Budget: ...
+            <one row per aptitude>               (_APTITUDE_DISPLAY × 7)
+            Base Happiness: ...
+            Base Reproduction Rate: ...
 
-        # PROJ-66: Update aptitudes and budget
-        if 'budget' in self.summary_labels:
-            self.summary_labels['budget'].set_text(self._format_budget_summary())
+            [Descriptions]
+            Biological: ...
+            Sociological: ...
 
-        if 'aptitudes' in self.summary_labels:
-            self.summary_labels['aptitudes'].set_text(self._format_aptitudes_summary())
+        Adding a factor to FACTOR_REGISTRY surfaces a row here automatically
+        (PROJ-283/293 contract). The setpoint ± tolerance values are
+        formatted via `PreferenceRow.format_value`, the canonical PROJ-293
+        display contract.
+        """
+        # Kill old labels (refresh may be called many times during a session).
+        for label in self._dynamic_env_labels:
+            label.kill()
+        self._dynamic_env_labels = []
 
-        # Update description statuses
-        if 'bio_status' in self.summary_labels:
-            self.summary_labels['bio_status'].set_text(self._format_bio_status())
+        if self._env_scroll_container is None:
+            return
 
-        if 'socio_status' in self.summary_labels:
-            self.summary_labels['socio_status'].set_text(self._format_socio_status())
+        container = self._env_scroll_container
+        # Inner width: leave room for the vertical scrollbar.
+        inner_width = max(200, container.get_relative_rect().width - 30)
+        row_height = 22
+        section_gap = 8
+        y = 4
+
+        y = self._render_section_header("Environment", y, inner_width, row_height)
+        y = self._render_env_row(
+            self._format_homeworld_summary(), y, inner_width, row_height,
+        )
+        y = self._render_factor_rows(y, inner_width, row_height)
+        y += section_gap
+
+        y = self._render_section_header("Aptitudes", y, inner_width, row_height)
+        y = self._render_env_row(
+            self._format_budget_summary(), y, inner_width, row_height,
+        )
+        y = self._render_aptitude_rows(y, inner_width, row_height)
+        y += section_gap
+
+        y = self._render_section_header("Descriptions", y, inner_width, row_height)
+        y = self._render_env_row(
+            self._format_bio_status(), y, inner_width, row_height,
+        )
+        y = self._render_env_row(
+            self._format_socio_status(), y, inner_width, row_height,
+        )
+
+        # Tell the scroll container how tall its inner content is so the
+        # scrollbar appears when we overflow the visible region.
+        container.set_scrollable_area_dimensions((inner_width, y + 4))
+
+    def _render_section_header(
+        self, text: str, y: int, width: int, row_height: int,
+    ) -> int:
+        """Render a section header inside the scroll container. Returns the
+        next y position."""
+        label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(0, y, width, row_height + 4),
+            text=text,
+            manager=self.ui_manager,
+            container=self._env_scroll_container,
+            object_id="#section_header",
+        )
+        self._dynamic_env_labels.append(label)
+        return y + row_height + 4
+
+    def _render_env_row(
+        self, text: str, y: int, width: int, row_height: int,
+    ) -> int:
+        """Render a single text row inside the scroll container. Returns the
+        next y position."""
+        label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(0, y, width, row_height),
+            text=text,
+            manager=self.ui_manager,
+            container=self._env_scroll_container,
+        )
+        self._dynamic_env_labels.append(label)
+        return y + row_height
+
+    def _render_factor_rows(self, y: int, width: int, row_height: int) -> int:
+        """Render one row per FACTOR_REGISTRY entry (scalars unconditionally;
+        gases filtered by setpoint > 0). Reuses `PreferenceRow.format_value`
+        for the PROJ-293 display contract."""
+        for factor in iter_scalar_factors():
+            pref = self.race_config.preferences.get(factor.id)
+            if pref is None:
+                # Defensive — registry & race_config should stay in sync, but
+                # if a save predates a registry addition we render "--".
+                text = f"{factor.display_name}: --"
+            else:
+                setpoint_text = PreferenceRow.format_value(factor, pref.setpoint)
+                tolerance_text = PreferenceRow.format_value(factor, pref.tolerance)
+                text = f"{factor.display_name}: {setpoint_text} ± {tolerance_text}"
+            y = self._render_env_row(text, y, width, row_height)
+
+        for factor in iter_gas_factors():
+            pref = self.race_config.preferences.get(factor.id)
+            if pref is None or pref.setpoint <= 0:
+                # Skip gases the race doesn't care about — matches the legacy
+                # atmosphere-summary filter.
+                continue
+            setpoint_text = PreferenceRow.format_value(factor, pref.setpoint)
+            tolerance_text = PreferenceRow.format_value(factor, pref.tolerance)
+            text = f"{factor.display_name}: {setpoint_text} ± {tolerance_text}"
+            y = self._render_env_row(text, y, width, row_height)
+
+        return y
+
+    def _render_aptitude_rows(self, y: int, width: int, row_height: int) -> int:
+        """Render one row per aptitude + the two PROJ-283 derived seeds
+        (`base_happiness`, `base_reproduction_rate`)."""
+        rc = self.race_config
+        for key, label in _APTITUDE_DISPLAY:
+            value = getattr(rc, f"aptitude_{key}")
+            y = self._render_env_row(f"{label}: {value}", y, width, row_height)
+        # Derived seeds — kept on the Summary tab for completeness.
+        y = self._render_env_row(
+            f"Base Happiness: {rc.base_happiness:.2f}", y, width, row_height,
+        )
+        y = self._render_env_row(
+            f"Base Reproduction Rate: {rc.base_reproduction_rate * 100:.1f}%",
+            y, width, row_height,
+        )
+        return y
 
     def _refresh_flag_preview(self) -> None:
         """Refresh flag preview images."""

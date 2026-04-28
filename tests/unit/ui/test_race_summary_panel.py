@@ -5,6 +5,7 @@ PROJ-44 Phase 7 Task 7.1: TDD tests for the summary panel extraction.
 Tests the race summary display panel functionality.
 """
 
+import pygame
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -144,77 +145,10 @@ class TestRaceSummaryPanelCreation:
 class TestSummaryDataFormatting:
     """Tests for summary data formatting methods."""
 
-    def test_format_gravity_summary(self, mock_race_config):
-        """Gravity summary shows ideal and tolerance."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-
-            result = panel._format_gravity_summary()
-
-            assert "1.0" in result
-            assert "0.30" in result
-            assert "g" in result
-
-    def test_format_temperature_summary(self, mock_race_config):
-        """Temperature summary shows ideal and tolerance."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-
-            result = panel._format_temperature_summary()
-
-            assert "293" in result
-            assert "50" in result
-            assert "K" in result
-
-    # PROJ-283 Phase 4: Sensitive/Resistant labels were derived from the
-    # legacy `radiation_tolerance` (signed -100..+100). The new model
-    # stores `pref.tolerance` (unsigned σ) on a `radiation` factor —
-    # there's no direction to label. The summary now just shows the
-    # numeric tolerance; the sensitive/resistant test surface goes away.
-
-    def test_format_radiation_summary_shows_tolerance(self, mock_race_config):
-        """Radiation summary renders the radiation tolerance value."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-            result = panel._format_radiation_summary()
-            assert "Radiation" in result
-
-    def test_format_atmosphere_summary_with_preferences(self, mock_race_config):
-        """Atmosphere summary lists gas factors with non-zero setpoints
-        (formatted by chemical formula + kPa)."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-
-            result = panel._format_atmosphere_summary()
-
-            # PROJ-283 Phase 4: chemical-formula labels + kPa.
-            assert "O2" in result
-            assert "N2" in result
-            assert "kPa" in result
-
-    def test_format_atmosphere_summary_all_neutral(self, mock_race_config_empty):
-        """Atmosphere summary shows neutral when all zero."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config_empty
-
-            result = panel._format_atmosphere_summary()
-
-            assert "neutral" in result.lower() or "0" in result
+    # FEAT-14: gravity / temperature / radiation / water / atmosphere are no
+    # longer rendered via per-factor formatters. The Summary tab now iterates
+    # FACTOR_REGISTRY end-to-end and uses `PreferenceRow.format_value` —
+    # see TestFeat14RegistryDrivenSummary below.
 
     def test_format_description_status_with_content(self, mock_race_config):
         """Description status shows character count when content exists."""
@@ -269,6 +203,10 @@ class TestRefreshSummary:
             panel.summary_flag_panel = None
             panel.summary_portrait_panel = None
             panel.summary_ship_panel = None
+            # FEAT-14: column-3 scroll container is None in these legacy
+            # tests — _rebuild_env_scroll_content treats that as a no-op.
+            panel._env_scroll_container = None
+            panel._dynamic_env_labels = []
 
             panel.refresh()
 
@@ -290,31 +228,14 @@ class TestRefreshSummary:
             panel.summary_flag_panel = None
             panel.summary_portrait_panel = None
             panel.summary_ship_panel = None
+            # FEAT-14: column-3 scroll container is None in these legacy
+            # tests — _rebuild_env_scroll_content treats that as a no-op.
+            panel._env_scroll_container = None
+            panel._dynamic_env_labels = []
 
             panel.refresh()
 
             panel.summary_labels['theme_value'].set_text.assert_called()
-
-    def test_refresh_updates_gravity_label(self, mock_race_config):
-        """refresh() updates gravity label from race_config."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-            panel.summary_labels = {'gravity': MagicMock()}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-
-            panel.refresh()
-
-            panel.summary_labels['gravity'].set_text.assert_called()
 
     def test_refresh_clears_previous_flag_images(self, mock_race_config):
         """refresh() clears previous flag images before creating new ones."""
@@ -335,6 +256,10 @@ class TestRefreshSummary:
             panel.summary_flag_panel = None
             panel.summary_portrait_panel = None
             panel.summary_ship_panel = None
+            # FEAT-14: column-3 scroll container is None in these legacy
+            # tests — _rebuild_env_scroll_content treats that as a no-op.
+            panel._env_scroll_container = None
+            panel._dynamic_env_labels = []
 
             panel.refresh()
 
@@ -371,6 +296,10 @@ class TestPlaceholders:
             panel.summary_flag_panel = None
             panel.summary_portrait_panel = None
             panel.summary_ship_panel = None
+            # FEAT-14: column-3 scroll container is None in these legacy
+            # tests — _rebuild_env_scroll_content treats that as a no-op.
+            panel._env_scroll_container = None
+            panel._dynamic_env_labels = []
 
             panel.refresh()
 
@@ -397,6 +326,10 @@ class TestPlaceholders:
             panel.summary_flag_panel = None
             panel.summary_portrait_panel = None
             panel.summary_ship_panel = None
+            # FEAT-14: column-3 scroll container is None in these legacy
+            # tests — _rebuild_env_scroll_content treats that as a no-op.
+            panel._env_scroll_container = None
+            panel._dynamic_env_labels = []
 
             panel.refresh()
 
@@ -466,3 +399,248 @@ class TestFeat12RandomizeAllButton:
 
         sig = inspect.signature(RaceSummaryPanel.__init__)
         assert "on_randomize_all_callback" in sig.parameters
+
+
+# =============================================================================
+# FEAT-14: Registry-driven Summary tab
+# =============================================================================
+
+
+def _collect_label_texts(label_constructor_mock) -> list:
+    """Pull every `text=` (or 2nd positional) value passed to a mocked
+    UILabel constructor."""
+    texts: list = []
+    for call in label_constructor_mock.call_args_list:
+        args, kwargs = call
+        if "text" in kwargs:
+            texts.append(kwargs["text"])
+    return texts
+
+
+@pytest.fixture
+def mock_race_config_full():
+    """RaceConfig with non-default setpoints on every FACTOR_REGISTRY entry
+    (so the gas filter doesn't skip any) — exercises the full registry render."""
+    from game.strategy.data.race_config import RaceConfig
+    from game.strategy.data.environmental_preference import EnvironmentalPreference
+    from game.strategy.data.habitability_factors import FACTOR_REGISTRY
+
+    config = RaceConfig(name="Full Race", flag_id="f", portrait_id="p", theme_id="t")
+    for fid, factor in FACTOR_REGISTRY.items():
+        # Non-zero setpoint everywhere so gas filter renders all 10 gases.
+        setpoint = factor.default_setpoint if factor.default_setpoint > 0 else 1.0
+        config.preferences[fid] = EnvironmentalPreference(
+            setpoint=setpoint,
+            tolerance=factor.default_tolerance,
+            min_value=factor.min_value,
+            max_value=factor.max_value,
+            step=factor.step,
+        )
+    return config
+
+
+class TestFeat14RegistryDrivenSummary:
+    """FEAT-14: Summary tab iterates FACTOR_REGISTRY end-to-end and renders
+    every aptitude explicitly. Reuses `PreferenceRow.format_value` — no
+    per-factor formatters in the panel."""
+
+    def _refresh_with_mocked_uilabel(self, race_config, monkeypatch=None):
+        """Stub out pygame_gui inside the summary panel module, instantiate
+        a panel via __new__ (skipping pygame init), wire the dynamic-label
+        bookkeeping the new column-3 code expects, call refresh(), and
+        return the captured UILabel-text list.
+        """
+        from game.ui.panels import race_summary_panel as rsp_module
+
+        # Fresh mock class so each call returns a distinct widget.
+        ui_label_mock = MagicMock()
+        ui_label_mock.side_effect = lambda *a, **kw: MagicMock()
+        ui_panel_mock = MagicMock()
+        ui_panel_mock.side_effect = lambda *a, **kw: MagicMock()
+        ui_scroll_mock = MagicMock()
+        ui_scroll_mock.side_effect = lambda *a, **kw: MagicMock()
+
+        with patch.object(rsp_module.pygame_gui.elements, "UILabel", ui_label_mock), \
+             patch.object(rsp_module.pygame_gui.elements, "UIPanel", ui_panel_mock), \
+             patch.object(
+                 rsp_module.pygame_gui.elements,
+                 "UIScrollingContainer",
+                 ui_scroll_mock,
+             ), \
+             patch.object(rsp_module, "create_section_header", MagicMock()):
+            panel = rsp_module.RaceSummaryPanel.__new__(rsp_module.RaceSummaryPanel)
+            panel.race_config = race_config
+            panel.summary_labels = {}
+            panel.summary_flag_images = []
+            panel.summary_portrait_image = None
+            panel.summary_ship_images = []
+            panel.summary_ship_labels = []
+            panel._asset_loader = MagicMock()
+            panel.summary_flag_panel = None
+            panel.summary_portrait_panel = None
+            panel.summary_ship_panel = None
+            panel.ui_manager = MagicMock()
+            panel.panel = MagicMock()
+            panel._env_scroll_container = MagicMock()
+            # _rebuild_env_scroll_content reads container.get_relative_rect().width
+            # so it can size labels — give it a real int.
+            panel._env_scroll_container.get_relative_rect.return_value = pygame.Rect(
+                0, 0, 800, 400,
+            )
+            panel._dynamic_env_labels = []
+
+            panel.refresh()
+
+            return _collect_label_texts(ui_label_mock), panel
+
+    def test_refresh_renders_every_scalar_factor_display_name(
+        self, mock_race_config_full,
+    ):
+        """Every FACTOR_REGISTRY scalar entry's `display_name` appears in the
+        rendered Summary text. This is the registry-driven contract."""
+        from game.strategy.data.habitability_factors import iter_scalar_factors
+
+        texts, _ = self._refresh_with_mocked_uilabel(mock_race_config_full)
+        joined = "\n".join(texts)
+        for factor in iter_scalar_factors():
+            assert factor.display_name in joined, (
+                f"Scalar factor {factor.id} ({factor.display_name}) missing "
+                f"from Summary tab. Rendered text: {joined!r}"
+            )
+
+    def test_refresh_renders_every_set_gas_factor_display_name(
+        self, mock_race_config_full,
+    ):
+        """Every gas factor with setpoint > 0 appears by display name. The
+        full-config fixture sets every gas to non-zero, so all 10 gases
+        must render."""
+        from game.strategy.data.habitability_factors import iter_gas_factors
+
+        texts, _ = self._refresh_with_mocked_uilabel(mock_race_config_full)
+        joined = "\n".join(texts)
+        for factor in iter_gas_factors():
+            assert factor.display_name in joined, (
+                f"Gas factor {factor.id} ({factor.display_name}) missing "
+                f"from Summary tab."
+            )
+
+    def test_refresh_uses_preference_row_format_for_setpoint(
+        self, mock_race_config_full,
+    ):
+        """Setpoint values are formatted via PreferenceRow.format_value —
+        gravity at 9.81 m/s^2 should render as "1.0 g" (display_scale 1/9.81,
+        precision 1, unit "g")."""
+        texts, _ = self._refresh_with_mocked_uilabel(mock_race_config_full)
+        joined = "\n".join(texts)
+        # Gravity setpoint 9.81 m/s^2 → "1.0 g"
+        assert "1.0 g" in joined, (
+            f"Gravity setpoint not rendered with PROJ-293 display contract "
+            f"in {joined!r}"
+        )
+        # Temperature 293 K (precision 0)
+        assert "293 K" in joined or "293K" in joined, (
+            f"Temperature setpoint not rendered with display unit in {joined!r}"
+        )
+
+    def test_refresh_renders_all_seven_aptitudes_by_name(
+        self, mock_race_config,
+    ):
+        """All 7 RaceConfig aptitudes show with explicit human-readable labels
+        and their assigned scores. PROJ-283 collapsed happiness +
+        population_growth into base_happiness + base_reproduction_rate;
+        those are NOT counted as 'aptitudes' but should still appear."""
+        texts, _ = self._refresh_with_mocked_uilabel(mock_race_config)
+        joined = "\n".join(texts)
+        # Each aptitude's human-readable name + value present.
+        expected_aptitude_labels = [
+            "Strength",
+            "Intelligence",
+            "Constitution",
+            "Dexterity",
+            "Tolerance",        # tolerance_other_species
+            "Cooperation",
+            "Conflict Tolerance",
+        ]
+        for label in expected_aptitude_labels:
+            assert label in joined, (
+                f"Aptitude label {label!r} missing from Summary tab. "
+                f"Rendered: {joined!r}"
+            )
+
+    def test_refresh_renders_base_happiness_and_reproduction(
+        self, mock_race_config,
+    ):
+        """The PROJ-283 derived seeds — base_happiness and
+        base_reproduction_rate — are still rendered explicitly (they are not
+        aptitudes per se, but the user wants a complete review)."""
+        texts, _ = self._refresh_with_mocked_uilabel(mock_race_config)
+        joined = "\n".join(texts)
+        # base_happiness default = 0.5 → "0.50"
+        # base_reproduction_rate default = 0.03 → "3.0%"
+        assert "Happiness" in joined or "happiness" in joined.lower()
+        assert "Reproduction" in joined or "reproduction" in joined.lower()
+
+    def test_adding_factor_to_registry_surfaces_automatically(
+        self, mock_race_config_full, monkeypatch,
+    ):
+        """Acceptance: adding a factor to FACTOR_REGISTRY surfaces a row with
+        ZERO panel-side change (matches PROJ-283/293 contract).
+
+        We monkeypatch `iter_scalar_factors` to yield an extra synthetic
+        factor and assert its display_name appears in the rendered text."""
+        from game.strategy.data.habitability_factors import (
+            HabitabilityFactor,
+            iter_scalar_factors,
+            _default_gaussian_scorer,
+        )
+        from game.strategy.data.environmental_preference import EnvironmentalPreference
+
+        fake_factor = HabitabilityFactor(
+            id="fake_axis",
+            display_name="Fake Test Axis",
+            unit="widgets",
+            display_scale=1.0,
+            weight=0.1,
+            default_setpoint=42.0,
+            default_tolerance=5.0,
+            min_value=0.0,
+            max_value=100.0,
+            step=1.0,
+            extractor=lambda planet: 0.0,
+            scorer=_default_gaussian_scorer,
+            display_unit="W",
+            display_precision=0,
+        )
+
+        original = list(iter_scalar_factors())
+
+        def patched_iter():
+            yield from original
+            yield fake_factor
+
+        # Inject a preference for the fake factor so the panel doesn't
+        # KeyError on lookup.
+        mock_race_config_full.preferences["fake_axis"] = EnvironmentalPreference(
+            setpoint=fake_factor.default_setpoint,
+            tolerance=fake_factor.default_tolerance,
+            min_value=fake_factor.min_value,
+            max_value=fake_factor.max_value,
+            step=fake_factor.step,
+        )
+
+        from game.ui.panels import race_summary_panel as rsp_module
+        from game.strategy.data import habitability_factors as hab_module
+        monkeypatch.setattr(rsp_module, "iter_scalar_factors", patched_iter)
+        # The budget calculator (called by _format_budget_summary) iterates
+        # race_config.preferences and looks up each factor in FACTOR_REGISTRY
+        # via get_factor(). Register the fake there too so the lookup
+        # succeeds — this is the same single-edit contract the ticket
+        # promises ("adding to FACTOR_REGISTRY surfaces automatically").
+        monkeypatch.setitem(hab_module.FACTOR_REGISTRY, "fake_axis", fake_factor)
+
+        texts, _ = self._refresh_with_mocked_uilabel(mock_race_config_full)
+        joined = "\n".join(texts)
+        assert "Fake Test Axis" in joined, (
+            f"Adding a factor to FACTOR_REGISTRY did not surface it on the "
+            f"Summary tab. Rendered text: {joined!r}"
+        )

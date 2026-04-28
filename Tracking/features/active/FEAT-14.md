@@ -36,7 +36,50 @@ remain in the Descriptions box (too large to inline).
 Medium
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Work Log
 - 2026-04-27: Created from QA Session 20260427_151244.
+- 2026-04-27: Implemented (deep-dive-session/investigator-feat-14).
+  - **Approach:** Replaced the static 4-factor / 1-aptitude-summary block in
+    `_create_column3_content` with a `UIScrollingContainer`. The container's
+    contents are rebuilt on every `refresh()` from `iter_scalar_factors()`
+    + filtered `iter_gas_factors()` (setpoint > 0) + the 7 RaceConfig
+    aptitudes. Setpoint ± tolerance values are formatted via
+    `PreferenceRow.format_value` — the canonical PROJ-293 display contract,
+    NOT a re-implementation. Adding a new factor to `FACTOR_REGISTRY`
+    surfaces a row automatically (acceptance criterion).
+  - **Files modified:**
+    - `game/ui/panels/race_summary_panel.py` (+115 / -129 LOC; net −14)
+    - `tests/unit/ui/test_race_summary_panel.py` (+213 / -85 LOC; net +128)
+  - **Deletions:** Removed 5 per-factor formatters
+    (`_format_gravity_summary`, `_format_temperature_summary`,
+    `_format_radiation_summary`, `_format_water_summary`,
+    `_format_aptitudes_summary`) and the obsolete legacy tests that
+    called them.
+  - **Discovery:** `_format_atmosphere_summary` was found to be dead code
+    (defined but never invoked from `refresh()`) — deleted in this PR.
+    The atmosphere "summary line" mentioned in the original ticket
+    description has not actually appeared in the rendered UI for some
+    time; the new registry-driven loop now renders all gases the race
+    has set explicitly.
+  - **New aptitude rendering:** all 7 aptitudes now show on one row each
+    (Strength / Intelligence / Constitution / Dexterity / Tolerance
+    (other species) / Cooperation / Conflict Tolerance) plus the two
+    PROJ-283 derived seeds (Base Happiness, Base Reproduction Rate).
+    Replaces the legacy compact 3-line "STR:5 INT:5 CON:5 ..." packing.
+  - **Tests:** 6 new acceptance tests in
+    `TestFeat14RegistryDrivenSummary`:
+      1. Every scalar factor's `display_name` rendered.
+      2. Every gas factor with setpoint > 0 rendered.
+      3. Setpoint values use `PreferenceRow.format_value` ("1.0 g",
+         "293 K") — verifies PROJ-293 display contract reuse.
+      4. All 7 aptitudes rendered by long name.
+      5. `base_happiness` and `base_reproduction_rate` both rendered.
+      6. Monkeypatching `iter_scalar_factors` to yield a synthetic
+         factor surfaces it in the rendered text — the
+         "registry-add-only" acceptance proof.
+  - **Test results:** Targeted (`tests/unit/ui/ tests/unit/strategy/`):
+    6657/6657 passed. Full sharded suite: **15726/15726 passed**, zero
+    regressions.
+  - **Branch:** main.
