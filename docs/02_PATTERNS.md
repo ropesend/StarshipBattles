@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-28 — PROJ-318 verified `ApplicationContext` manages 10 services including the PROJ-314 `ImageProvider`; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code: 20 adopters, modal tracking via `iter_live_modals()`, retained non-modal checks, and retained slot-cleanup regressions. Pattern count is 31.
+> **Last verified:** 2026-04-28 — FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry (14 sub-phases via `_timed_phase` helper, `[startup]` log prefix, eager `save_history()`). Earlier same-day pass: PROJ-318 verified `ApplicationContext` manages 10 services including the PROJ-314 `ImageProvider`; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 31.
 
 Agent-optimized reference for every core pattern in the codebase (31 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -114,6 +114,23 @@ profiler = get_default_profiler()
 # Test code — fresh isolated instances
 ctx = ApplicationContext.create_test(profiler=mock_profiler)
 ```
+
+### Bootstrap Phase Timing (FEAT-22)
+
+`game/app_bootstrap.py:bootstrap()` instruments 14 named sub-phases via a
+private `_timed_phase(name, profiler)` context manager. Each sub-phase
+emits one `[startup] <subphase>: X.XXs` line via `logger.info` and appends
+an entry named `"startup: <subphase>"` to `ctx.profiler.records`. The
+fixed `[startup]` log prefix is greppable and the `"startup: "` record
+prefix is greppable in the persisted `profiling_history.json` session.
+
+Two phases (`pygame.init` and `ctx.create_production`) run before the
+profiler exists; they are timed with raw `time.perf_counter()` and
+back-filled into the profiler immediately after `create_production()`.
+
+`bootstrap()` calls `ctx.profiler.save_history()` eagerly before returning
+so launch diagnostics survive in-game crashes; the existing post-`run()`
+flush in `app.py` continues to append a second session per launch.
 
 ### Removed: SingletonMeta
 

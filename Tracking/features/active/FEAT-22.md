@@ -46,7 +46,35 @@ instrumented.
 Low (developer ergonomics, not a player-facing bug)
 
 ## Status
-Pending
+**Awaiting User Verification** (2026-04-28). 14-phase instrumentation
+landed in `game/app_bootstrap.py`:
+
+- New private `_timed_phase(name, profiler)` context manager records into
+  `profiler.records` and emits `[startup] <name>: X.XXs` via `logger.info`.
+- `pygame.init` and `ctx.create_production` timed via raw `perf_counter`
+  (profiler doesn't exist yet); records back-filled into the real
+  profiler immediately after `create_production()` returns.
+- 12 remaining sub-phases wrapped with `_timed_phase`: `font.init`,
+  `font.preload`, `display.detect_resolution`, `display.set_mode`,
+  `registry.load_components`, `registry.load_modifiers`,
+  `registry.load_resources`, `registry.initialize_ship_data`,
+  `registry.build_game_registries`, `assets.ensure_component_derivatives`,
+  `assets.load_sprites`, `input.load_keybindings`.
+- Final `[startup] total bootstrap: X.XXs` line.
+- Eager `ctx.profiler.save_history()` before `bootstrap()` returns so
+  launch diagnostics survive in-game crashes.
+
+Test coverage: 6 tests in `tests/unit/test_app_bootstrap_profiling.py`.
+PROJ-309 invariants test (`test_app_bootstrap_invariants.py`) still
+passes — wrapping in context managers does not reorder calls.
+
+Docs: `docs/02_PATTERNS.md` Profiler section gains a "Bootstrap Phase
+Timing" subsection.
+
+## Work Log
+- 2026-04-28: Filed; investigation completed.
+- 2026-04-28: Implementation landed (claude/deep-dive). 6 new tests, full
+  sharded suite green. Status flipped to Awaiting User Verification.
 
 ## Work Log
 - 2026-04-28: Created from QA Session 20260428_052952.

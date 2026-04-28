@@ -25,8 +25,10 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Iterator
 
 import pygame
 
@@ -108,44 +110,96 @@ def _detect_resolution(args: argparse.Namespace,
     return int(monitor_w * 0.9), int(monitor_h * 0.9)
 
 
+@contextmanager
+def _timed_phase(name: str, profiler: Any) -> Iterator[None]:
+    """Time a bootstrap sub-phase, record into profiler, log a `[startup]` line.
+
+    FEAT-22: bypasses `Profiler.is_active()` gating because bootstrap timing
+    is unconditional — we want diagnostic visibility every launch, even when
+    the on-screen profiler HUD is off.
+    """
+    t0 = time.perf_counter()
+    try:
+        yield
+    finally:
+        dt = time.perf_counter() - t0
+        profiler.records.append({
+            "name": f"startup: {name}",
+            "duration_ms": dt * 1000.0,
+            "timestamp": time.time(),
+            "metadata": {},
+        })
+        logger.info(f"[startup] {name}: {dt:.2f}s")
+
+
 def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     """Run the entire app initialisation sequence in deterministic order.
 
     Single linear function — no conditional branches that could re-order
     the six invariants documented at the top of this module. Returns a
     fully-wired `BootstrapResult` for `Game` to consume.
-    """
-    # Invariant 1: pygame.init() FIRST. All subsequent pygame calls
-    # (display.Info, set_mode, font.init, pygame_gui.UIManager) require
-    # the SDL subsystems to be live.
-    pygame.init()
 
-    # DI container. Must precede `get_default_registry_provider()` (which
-    # reads module-level `_default_*` accessors populated by
-    # `ApplicationContext.create_production()`).
-    # Invariant 3.
+    FEAT-22: instruments 14 sub-phases. Each emits a `[startup] <name>: X.XXs`
+    log line and an entry in `ctx.profiler.records`. Timings are flushed via
+    `ctx.profiler.save_history()` before returning so a crash mid-game does
+    not lose launch diagnostics. A final `[startup] total bootstrap: X.XXs`
+    line summarises wall-clock cost.
+    """
+    t_total_start = time.perf_counter()
+
+    # The first two phases run BEFORE the profiler exists (pygame.init runs
+    # before ApplicationContext, and create_production() *constructs* the
+    # profiler). Time them with raw perf_counter and back-fill the records
+    # into the real profiler once it's available.
+    t_pygame_init = time.perf_counter()
+    pygame.init()
+    dt_pygame_init = time.perf_counter() - t_pygame_init
+    logger.info(f"[startup] pygame.init: {dt_pygame_init:.2f}s")
+
+    # Invariant 3: ApplicationContext before any registry provider lookup.
+    t_ctx = time.perf_counter()
     ctx = ApplicationContext.create_production()
+    dt_ctx = time.perf_counter() - t_ctx
+    logger.info(f"[startup] ctx.create_production: {dt_ctx:.2f}s")
+
+    # Back-fill the two pre-profiler timings into the real profiler.
+    now = time.time()
+    ctx.profiler.records.append({
+        "name": "startup: pygame.init",
+        "duration_ms": dt_pygame_init * 1000.0,
+        "timestamp": now,
+        "metadata": {},
+    })
+    ctx.profiler.records.append({
+        "name": "startup: ctx.create_production",
+        "duration_ms": dt_ctx * 1000.0,
+        "timestamp": now,
+        "metadata": {},
+    })
 
     # Invariant 2: font subsystem initialised BEFORE any `get_font(...)`
     # call. MenuScene's constructor pulls fonts; constructed in
     # ScreenRouter — but our own three font handles below also require it.
-    pygame.font.init()
-    font_small = get_font(12)
-    font_med = get_font(20)
-    font_large = get_font(32)
+    with _timed_phase("font.init", ctx.profiler):
+        pygame.font.init()
+    with _timed_phase("font.preload", ctx.profiler):
+        font_small = get_font(12)
+        font_med = get_font(20)
+        font_large = get_font(32)
 
     # Monitor detection + resolution selection.
-    info = pygame.display.Info()
-    width, height = _detect_resolution(args, info.current_w, info.current_h)
+    with _timed_phase("display.detect_resolution", ctx.profiler):
+        info = pygame.display.Info()
+        width, height = _detect_resolution(args, info.current_w, info.current_h)
 
     # Surface acquisition. Reuse existing display surface if the host
     # already created one (test path). Otherwise create with RESIZABLE.
-    if not pygame.display.get_surface():
-        screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-    else:
-        screen = pygame.display.get_surface()
-
-    pygame.display.set_caption(f"Starship Battles ({width}x{height})")
+    with _timed_phase("display.set_mode", ctx.profiler):
+        if not pygame.display.get_surface():
+            screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        else:
+            screen = pygame.display.get_surface()
+        pygame.display.set_caption(f"Starship Battles ({width}x{height})")
 
     clock = pygame.time.Clock()
 
@@ -154,54 +208,68 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     # silent ref misses.
     # PROJ-211: pass registry_provider explicitly (no fallback).
     provider = get_default_registry_provider()
-    load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
-    load_modifiers(Paths.MODIFIERS_FILE, registry_provider=provider)
+    with _timed_phase("registry.load_components", ctx.profiler):
+        load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
+    with _timed_phase("registry.load_modifiers", ctx.profiler):
+        load_modifiers(Paths.MODIFIERS_FILE, registry_provider=provider)
 
     # Hydrate the resources registry from the canonical ResourceCatalog.
     # PROJ-309 §6: ResourceCatalog.from_json() was called twice in the
     # original `app.py`; hold a single instance and reuse for both
     # registry hydration and `GameRegistries`.
-    catalog = ResourceCatalog.from_json(Paths.RESOURCES_FILE)
-    resources_registry = ctx.registry_manager.resources
-    for defn in catalog.all_definitions():
-        resources_registry[defn.id] = {
-            'id': defn.id,
-            'name': defn.name,
-            'description': defn.description,
-            'display_group': defn.display_group,
-            'has_quality': defn.has_quality,
-        }
+    with _timed_phase("registry.load_resources", ctx.profiler):
+        catalog = ResourceCatalog.from_json(Paths.RESOURCES_FILE)
+        resources_registry = ctx.registry_manager.resources
+        for defn in catalog.all_definitions():
+            resources_registry[defn.id] = {
+                'id': defn.id,
+                'name': defn.name,
+                'description': defn.description,
+                'display_group': defn.display_group,
+                'has_quality': defn.has_quality,
+            }
 
-    initialize_ship_data(Paths.ROOT_DIR, registry_provider=provider)
+    with _timed_phase("registry.initialize_ship_data", ctx.profiler):
+        initialize_ship_data(Paths.ROOT_DIR, registry_provider=provider)
 
     # Build the GameRegistries DI container (PROJ-38 / PROJ-181). Reuses
     # the already-loaded catalog rather than calling `from_json()` again.
-    registry_mgr = ctx.registry_manager
-    registries = GameRegistries(
-        components=registry_mgr.components,
-        modifiers=registry_mgr.modifiers,
-        vehicle_classes=registry_mgr.vehicle_classes,
-        resources=registry_mgr.resources,
-        resource_catalog=catalog,
-    )
+    with _timed_phase("registry.build_game_registries", ctx.profiler):
+        registry_mgr = ctx.registry_manager
+        registries = GameRegistries(
+            components=registry_mgr.components,
+            modifiers=registry_mgr.modifiers,
+            vehicle_classes=registry_mgr.vehicle_classes,
+            resources=registry_mgr.resources,
+            resource_catalog=catalog,
+        )
 
     # Generated component resolutions are derived from tracked 1024px masters.
     # Must precede sprite loading because the sprite manager reads the
     # files generated by this step.
-    ensure_component_derivatives()
+    with _timed_phase("assets.ensure_component_derivatives", ctx.profiler):
+        ensure_component_derivatives()
 
     # Invariant 5: sprites loaded AFTER registries (some sprite metadata
     # may resolve registry IDs) and AFTER component-derivative generation
     # (the manager reads the just-derived PNGs), but BEFORE scene
     # constructors (which build rendering pipelines).
-    sprite_mgr = get_default_sprite_manager()
-    sprite_mgr.load_sprites(Paths.ROOT_DIR)
+    with _timed_phase("assets.load_sprites", ctx.profiler):
+        sprite_mgr = get_default_sprite_manager()
+        sprite_mgr.load_sprites(Paths.ROOT_DIR)
 
     # Centralised keybindings (PROJ-71).
-    input_mapper = InputMapper()
-    input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
+    with _timed_phase("input.load_keybindings", ctx.profiler):
+        input_mapper = InputMapper()
+        input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
 
     dev_mode = bool(getattr(args, 'dev_mode', False)) if args is not None else False
+
+    dt_total = time.perf_counter() - t_total_start
+    logger.info(f"[startup] total bootstrap: {dt_total:.2f}s")
+
+    # Eager flush so launch diagnostics survive an in-game crash.
+    ctx.profiler.save_history()
 
     return BootstrapResult(
         ctx=ctx,
@@ -216,3 +284,5 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         font_large=font_large,
         dev_mode=dev_mode,
     )
+
+
