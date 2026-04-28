@@ -2,23 +2,19 @@
 
 ## 1. Context Handoff Summary
 *(State of the system for the next agent)*
-*QA Session 20260324_122443: FEAT-06, FEAT-07, FEAT-09 confirmed working and archived. Feature queue is now empty.*
+*QA Session 20260428_052952: FEAT-10, FEAT-11, FEAT-12, FEAT-14, FEAT-15, FEAT-16, FEAT-18, FEAT-19, FEAT-21 confirmed working and archived. FEAT-13, FEAT-17, FEAT-20 remain pending verification.*
 
 ## 2. Feature Queue
 | ID | Date Added | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| FEAT-10 | 2026-03-24 | Add "Fleet Operations" filter tab to Event Log window | Awaiting Confirmation | [FEAT-10.md](active_features/FEAT-10.md) |
-| FEAT-11 | 2026-03-25 | Data-driven planet resource generation with mass scaling (expand astrophysics.json) | Awaiting Confirmation | [FEAT-11.md](active_features/FEAT-11.md) |
-| FEAT-12 | 2026-04-26 | Race Setup randomization — Environment + Aptitudes buttons + master "Randomize All" on Summary tab | Awaiting Confirmation | [FEAT-12.md](features/active/FEAT-12.md) |
 | FEAT-13 | 2026-04-27 | Generate visual asset captions for race images (LLM description metadata) | Awaiting Confirmation | [FEAT-13.md](features/active/FEAT-13.md) |
-| FEAT-14 | 2026-04-27 | Race Setup Summary tab — show all environmental factors and aptitudes | Awaiting Confirmation | [FEAT-14.md](features/active/FEAT-14.md) |
-| FEAT-15 | 2026-04-27 | Per-planet probability roll for intrinsic abilities (make planet effects rare) | Awaiting Confirmation | [FEAT-15.md](features/active/FEAT-15.md) |
-| FEAT-16 | 2026-04-27 | Planet List — filter and column support for planet effects/abilities | Awaiting Confirmation | [FEAT-16.md](features/active/FEAT-16.md) |
 | FEAT-17 | 2026-04-27 | Build queue pause/unpause toggle button | Awaiting Confirmation | [FEAT-17.md](features/active/FEAT-17.md) |
-| FEAT-18 | 2026-04-27 | Build queue — add reorder-down arrow button | Awaiting Confirmation | [FEAT-18.md](features/active/FEAT-18.md) |
-| FEAT-19 | 2026-04-27 | Surplus-food happiness bonus (allocation > 1.0× rewards happiness) | Awaiting Confirmation | [FEAT-19.md](features/active/FEAT-19.md) |
 | FEAT-20 | 2026-04-27 | Dev "Run 10 turns" button next to End Turn | Awaiting Confirmation | [FEAT-20.md](features/active/FEAT-20.md) |
-| FEAT-21 | 2026-04-27 | Strategy screen — numpad +/- keyboard zoom controls | Awaiting Confirmation | [FEAT-21.md](features/active/FEAT-21.md) |
+| FEAT-22 | 2026-04-28 | Startup phase profiling — log timings before main menu appears | Pending | [FEAT-22.md](features/active/FEAT-22.md) |
+| FEAT-23 | 2026-04-28 | Race Setup Summary tab — relocate portrait next to flag, widen environment column to right two-thirds | Pending | [FEAT-23.md](features/active/FEAT-23.md) |
+| FEAT-24 | 2026-04-28 | Default new-game galaxy size to 5 systems | Pending | [FEAT-24.md](features/active/FEAT-24.md) |
+| FEAT-25 | 2026-04-28 | Planet Registry — upgrade Effects filter from on/off chips to 3-way tri-state | Pending | [FEAT-25.md](features/active/FEAT-25.md) |
+| FEAT-26 | 2026-04-28 | Wire replay_id through to Event Log and add Replay button on combat entries (closes PROJ-312 UI gap) | Pending | [FEAT-26.md](features/active/FEAT-26.md) |
 
 ## 3. Current Focus: None
 No features currently in progress.

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "hull_geometry": "Large circular primary hull (saucer) connected via a slender dorsal neck to a secondary engineering hull; twin cylindrical warp nacelles extend on pylons",
+  "materials_and_finish": "Smooth, polished hull with subtle grid lines; the name 'BATTLESHIP' is clearly stenciled in bold black lettering on the dorsal saucer surface",
+  "design_philosophy": "Balanced power distribution and modular mission pods; emphasizes scientific exploration and defensive versatility",
+  "color_scheme": "Light beige and off-white hull plating; the nacelle field grills glow with a vibrant blue energy; red navigation lights on the saucer rim",
+  "technology_level_hint": "advanced",
+  "distinctive_traits": "Iconic multi-hull configuration with distinct separation between primary and secondary systems"
+}

@@ -1176,3 +1176,100 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** No targeted patch — fix was a side effect of larger Combat Lab refactors (PROJ-269/270/279/280). Discovered as already-resolved during deep-dive-parallel session 2026-04-27. Anti-reversion guards: keep `pre_tick_loop_callback` ordering in `battle_runner.py:302-306`, keep `_NO_TARGET_BEHAVIORS` exemption in `controller.py:79-81`. The two scenarios themselves serve as regression tests via their precondition checks.
 
 ---
+
+## [BUG-80A] - Planets List - Planet details panel dimensions and positioning
+* **Date Solved:** 2026-02-11
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Extracted `_detail_panel_geometry()` in `planet_list_window.py` to compute right-aligned X, dynamic height (min 450px), and added `set_dimensions()` override that recreates the panel on window resize.
+* **Key Test Case:** `tests/unit/ui/screens/test_planet_list_components.py::TestDetailPanelGeometry` (6 new tests)
+* **Notes:** Renumbered from BUG-80 → BUG-80A on 2026-04-28 due to ID collision with the 2026-02-10 "Build Yards List" bug already archived under BUG-80 (see line 850).
+
+---
+
+## [BUG-107] - Game crashes on turn advance after loading a save — ShipInstance missing registries
+* **Date Solved:** 2026-03-24
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** PROJ-211 Phase 2 added `registries` parameter to Empire/Fleet/ShipInstance `from_dict()` but the GameSession caller was never updated. Added `registries=session._registries` to the `Empire.from_dict()` call in `game/strategy/engine/game_session.py:322`.
+* **Key Test Case:** `tests/unit/strategy/test_game_session_save_load_registries.py` (2 tests)
+
+---
+
+## [BUG-108] - Planet generation does not check for hex collisions with secondary/additional stars
+* **Date Solved:** 2026-03-24
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Added `_collect_star_exclusion_zones()` to `PlanetGenerator` which collects all secondary stars' occupied hexes plus a buffer (radius_hexes+2 total exclusion). Pre-populates `occupied_locations` set in `_generate_orbital_slots()` before planet placement.
+* **Key Test Case:** `test_generate_orbital_slots_avoids_secondary_star_hexes` in `tests/unit/strategy/data/test_planet_gen.py`
+
+---
+
+## [BUG-109] - Resources decline each turn despite large production surplus — eventual total maintenance failure
+* **Date Solved:** 2026-03-24
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Treasury showed inflated production because `EmpireEconomyCalculator._aggregate_colony_production()` computed `base_rate × quality` without checking remaining planet resource quantity. Updated the method to cap production by planet quantity, matching the actual harvest logic.
+* **Key Test Case:** `tests/unit/strategy/` aggregate colony production tests (2906 strategy tests pass)
+
+---
+
+## [BUG-111] - SeekerPointDefenseNoneScenario crashes during batch run — missing `attacker` attribute
+* **Date Solved:** 2026-03-28
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Added `skip_test` early-return guard in `test_executor.py:run_next_batch()`, `test_executor.py:run_headless()`, and `combat_lab/runner.py:run_scenario()`. Skipped scenarios now bypass data loading, engine setup, and simulation loop entirely.
+* **Key Test Case:** `tests/unit/test_lab/test_batch_skip.py` (7 tests)
+
+---
+
+## [BUG-115] - New Game Setup — Cancel button does not work
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Title-bar `[X]` close on `RaceSetupScreen` only called `self.kill()`, never `on_cancel_callback`, so the parent's `active_race_modal` reference stayed truthy and the early-return guard swallowed every subsequent button press. Fix A: override `on_close_window_button_pressed` to delegate to `controller.on_cancel()`. Fix B: drop the now-redundant `active_race_modal` early-return guard (pygame_gui already z-orders modals above parents).
+* **Key Test Case:** `TestBug115CloseButtonInvokesCancel` and `TestBug115CancelAfterModalLeak` (4 tests)
+
+---
+
+## [BUG-116] - Workshop quick-add places armor components in wrong layer (CORE/OUTER instead of ARMOR)
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Two-part fix. Part 1 (data): added `block_classification:Armor` to all 11 non-ARMOR layer entries across the 5 vehicle templates in `data/vehiclelayers.json`. Part 2 (production code): `VehicleDesignService.move_component` previously bypassed all addition rules — replaced with iteration of `validator.addition_rules` skipping only `MassBudgetRule`, with rollback on validation failure.
+* **Key Test Case:** `test_armor_routes_to_armor_layer_regardless_of_selection` and `test_armor_cannot_be_moved_into_non_armor_layer` (parametrised across all layer/vehicle combinations)
+
+---
+
+## [BUG-117] - Ship details "Main Systems" shows broken "Max Egy: --" / "Egy Gen: --"
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Removed stale `max_energy` and `energy_gen` rows from `data/stats_sections.json` and `data/stats_layout.json`. The Combat Resources section already renders the same data correctly via `get_logistics_rows`. Root cause: rows lacked a `getter`, falling through to `getattr(ship, attr_key, 0)` against attributes that don't exist on `Ship` (energy lives on `ship.resources`).
+* **Key Test Case:** `TestMainSectionEnergyRowsRemoved::test_main_section_has_no_energy_rows` in `test_stats_visibility.py`
+
+---
+
+## [BUG-118] - Race Setup — "Randomize All" doesn't refresh Summary tab left-column labels
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** `RaceSetupController.populate_ui_from_config()` updated `race_config` references on every panel including the summary panel, but only called `set_from_config()` on non-summary panels. Added `screen._summary_panel.refresh()` at the end of `populate_ui_from_config()` and removed the now-redundant explicit refresh from `on_race_selected()`.
+* **Key Test Case:** `TestBug118SummaryRefreshOnPopulate` (3 tests)
+
+---
+
+## [BUG-119] - Plasma Storm sector effects not displayed (storm hex coordinate-frame mismatch)
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** `StormAbilitySource.affects_hex` did a raw `hex_coord in self.storm.occupied_hexes` while the storm's coordinates are local to the system. Mirroring the planet path, added optional `system: Any = None` parameter and `sys_loc + storm.location + offset` translation; `_storm_provider` in `ability_iterator.py` passes `system=system`. Three masking tests using `HexCoord(0, 0)` origin were updated to use non-zero origins.
+* **Key Test Case:** `TestBug119StormGlobalCoordinateFrame` in `test_system_effects_collector.py`
+
+---
+
+## [BUG-120] - Planet "Yard" resource row shows yard capacity instead of actual queue consumption
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** `_project_yard_drain()` was summing each yard's `build_rate` (the yard's per-resource capacity, uniform across resources). Rewrote it to delegate to the existing `forecast_queue_turn_spend` helper, applying habitability to `build_rate` before the forecast walk (matches `ProductionEngine._process_queue_tick_dynamic`). Sparse output filters resources with zero amount.
+* **Key Test Case:** `TestYardDrainMatchesQueueItemCosts` (3 new tests) in `test_planet_economy_projector.py`
+
+---
+
+## [BUG-121] - Strategy screen mouse-wheel zoom does not work
+* **Date Solved:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** PROJ-309 sub-phase 3.10 added `planet_abilities_window` to `has_modal_open()` (read side) but not to the close-side cleanup. The slot leaked stale references after window close, permanently short-circuiting `_handle_scroll`. Added `on_close_callback` kwarg + `kill()` override on `PlanetAbilitiesWindow`, with `_on_closed` registrar that resets the slot. New parametrised contract test guards every modal slot against this regression.
+* **Key Test Case:** `TestModalSlotCleanupContract` (parametrised across 14 modal slots) in `test_strategy_window_manager_public_api.py`
+
+---

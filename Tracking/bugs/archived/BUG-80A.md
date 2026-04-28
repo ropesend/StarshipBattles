@@ -1,4 +1,6 @@
-# BUG-80: Planets List - Planet details panel dimensions and positioning
+# BUG-80A: Planets List - Planet details panel dimensions and positioning
+
+> **Note:** Originally filed as BUG-80 on 2026-02-11. After QA confirmation in session 20260428_052952, an ID collision was discovered — a different bug (Build Yards List, fixed 2026-02-10) was already archived under BUG-80. Renumbered to BUG-80A to preserve both records.
 
 ## Description
 
