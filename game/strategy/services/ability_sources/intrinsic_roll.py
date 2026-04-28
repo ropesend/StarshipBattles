@@ -20,6 +20,13 @@ def roll_intrinsic_abilities(
       `rng.uniform(x, y)` for floats or `rng.randint(x, y)` for ints (decided
       by the values' types).
     - `damage_type`, `scope`, `stack_group`, and other string fields pass through.
+    - `chance` (FEAT-15): optional float in [0.0, 1.0]. When present and
+      `< 1.0`, the helper draws `rng.random()` and **omits the ability
+      from the output entirely** if the roll fails. The `chance` key is
+      stripped from the output (it's a generation-time gate, not runtime
+      state). When absent or `>= 1.0`, the ability always fires AND
+      consumes zero RNG draws — legacy templates produce byte-identical
+      output to pre-FEAT-15 behaviour.
 
     Returns a fresh dict (input is not mutated).
 
@@ -41,8 +48,19 @@ def roll_intrinsic_abilities(
             result[ability_name] = copy.deepcopy(ability_data)
             continue
 
+        # FEAT-15: per-ability probability gate. Only consumes RNG when
+        # the field is present and < 1.0, so chance-less templates keep
+        # their pre-FEAT-15 RNG-stream alignment (preserves determinism
+        # for stars/warps/archetypes, none of which carry `chance`).
+        chance = ability_data.get('chance', 1.0)
+        if chance < 1.0:
+            if rng.random() >= chance:
+                continue  # Failed roll — ability does not fire.
+
         rolled: Dict[str, Any] = {}
         for key, value in ability_data.items():
+            if key == 'chance':
+                continue  # Generation-time gate; never leaks to runtime.
             if (
                 isinstance(value, dict)
                 and 'min' in value

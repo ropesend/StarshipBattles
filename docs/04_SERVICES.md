@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-04-27 — BUG-120 fix: `PlanetEconomyProjector._project_yard_drain` now delegates to `forecast_queue_turn_spend` so the Planet view's "Yard" row reflects actual queue consumption, not yard capacity.
+> **Last verified:** 2026-04-27 — FEAT-15: `roll_intrinsic_abilities` helper note extended to describe the optional per-ability `chance` field.
 
 ## Overview
 
@@ -982,7 +982,7 @@ damage_per_turn = sum(
 ```
 
 **Shared helpers for PROJ-301..304** (intrinsic ability sources):
-- `roll_intrinsic_abilities(template, rng)` in `ability_sources/intrinsic_roll.py` — convert `{"min": x, "max": y}` ranges to scalar rolls.
+- `roll_intrinsic_abilities(template, rng)` in `ability_sources/intrinsic_roll.py` — convert `{"min": x, "max": y}` ranges to scalar rolls. Optional per-ability `chance` field (FEAT-15, default `1.0`) gates whether the ability fires; when `chance < 1.0` the helper draws `rng.random()` and skips the ability on failed roll. The `chance` key is stripped from the output. Templates without `chance` consume zero extra RNG draws (preserves byte-identical determinism for stars/warps/archetypes).
 - `format_intrinsic_source_label(entity_name, type_name)` in `ability_sources/labels.py` — canonical label format.
 
 ---

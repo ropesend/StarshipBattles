@@ -70,3 +70,34 @@ def test_system_archetypes_registry_has_known_set():
     assert 0.0 <= chance <= 1.0, (
         f"PROJ-304 archetype_chance {chance} must be in [0.0, 1.0]"
     )
+
+
+def _walk_ability_chances(registry: dict) -> list:
+    """Yield (entry_key, ability_name, chance) for every ability that
+    declares a `chance` field in a per-type intrinsic registry."""
+    found = []
+    for entry_key, entry_data in registry.items():
+        if not isinstance(entry_data, dict):
+            continue
+        abilities = entry_data.get('abilities', {})
+        if not isinstance(abilities, dict):
+            continue
+        for ability_name, ability_data in abilities.items():
+            if isinstance(ability_data, dict) and 'chance' in ability_data:
+                found.append((entry_key, ability_name, ability_data['chance']))
+    return found
+
+
+def test_planet_types_chance_fields_in_valid_range():
+    """FEAT-15: every per-ability `chance` field in planet_types.json must
+    be a numeric value in [0.0, 1.0]. Mirrors the archetype_chance check."""
+    registry = _load_registry(Paths.PLANET_TYPES_FILE, 'planet_types')
+    for entry_key, ability_name, chance in _walk_ability_chances(registry):
+        assert isinstance(chance, (int, float)) and not isinstance(chance, bool), (
+            f"FEAT-15: planet_types.{entry_key}.{ability_name}.chance "
+            f"must be numeric, got {type(chance).__name__}={chance!r}"
+        )
+        assert 0.0 <= chance <= 1.0, (
+            f"FEAT-15: planet_types.{entry_key}.{ability_name}.chance={chance} "
+            f"must be in [0.0, 1.0]"
+        )

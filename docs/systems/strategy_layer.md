@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-27 — BUG-120 fix: `_project_yard_drain` now delegates to `forecast_queue_turn_spend`; equivalence contract block updated.
+> **Last verified:** 2026-04-27 — FEAT-15: per-ability `chance` field added to intrinsic-ability registry templates (planets only today); §IAbilitySource framework note updated.
 
 System documentation for the turn-based strategy layer.
 
@@ -1521,7 +1521,7 @@ fleet_movement_engine, environmental_hazard_engine, spec_compiler, system_tree_p
 
 **Key files:**
 - `game/core/protocols/strategy_entities.py` — `IAbilitySource` protocol + `is_ability_source` TypeGuard
-- `game/strategy/services/ability_sources/` — adapter package (`FacilityAbilitySource`, `StormAbilitySource`, plus the shared `roll_intrinsic_abilities` and `format_intrinsic_source_label` helpers used by PROJ-301..304)
+- `game/strategy/services/ability_sources/` — adapter package (`FacilityAbilitySource`, `StormAbilitySource`, plus the shared `roll_intrinsic_abilities` and `format_intrinsic_source_label` helpers used by PROJ-301..304). Per-ability `chance` field (FEAT-15, default `1.0`) on registry templates gates whether each declared ability fires for a given entity at galaxy generation; today only `data/planet_types.json` populates it (planet effects are rare flavour, e.g. CRYOPLANET `ThrustModifier` chance=0.10). Templates without `chance` consume zero extra RNG draws so stars/warps/archetypes remain byte-identically deterministic.
 - `game/strategy/services/ability_iterator.py` — provider registration + iterator
 - `game/strategy/services/system_effects_collector.py` — aggregation pipeline + `find_sector_effect`/`aggregate_value_or` helpers
 - `game/strategy/services/strategic_ability_scanner.py` — `aggregate_multipliers` (intra-MAX, inter-MULTIPLY) and `aggregate_rates` (intra-MAX, inter-SUM)

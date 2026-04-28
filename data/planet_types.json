@@ -1,6 +1,6 @@
 {
-    "version": "1.0",
-    "description": "Planet intrinsic ability templates. Registered as IAbilitySource via PlanetIntrinsicAbilitySource (PROJ-301). Keys are PlanetType enum names. Empty `abilities` is fine for benign types. {\"min\": x, \"max\": y} ranges are rolled at galaxy generation via roll_intrinsic_abilities (helper from PROJ-300).",
+    "version": "1.1",
+    "description": "Planet intrinsic ability templates. Registered as IAbilitySource via PlanetIntrinsicAbilitySource (PROJ-301). Keys are PlanetType enum names. Empty `abilities` is fine for benign types. {\"min\": x, \"max\": y} ranges are rolled at galaxy generation via roll_intrinsic_abilities (helper from PROJ-300). Optional per-ability `chance` field (float in [0.0, 1.0], default 1.0) gates whether the ability fires for a given planet — FEAT-15 makes planet effects rare flavour rather than default behaviour.",
     "planet_types": {
         "CONTINENTAL": {
             "name": "Continental",
@@ -21,14 +21,14 @@
             "name": "Magma",
             "description": "Volcanic hellscape; ejected plasma and radiation buffet ships in orbit.",
             "abilities": {
-                "EnvironmentalDamage": {"rate": {"min": 0.1, "max": 0.5}, "damage_type": "thermal", "scope": "sector"}
+                "EnvironmentalDamage": {"rate": {"min": 0.1, "max": 0.5}, "damage_type": "thermal", "scope": "sector", "chance": 0.20}
             }
         },
         "CRYOPLANET": {
             "name": "Cryoplanet",
             "description": "Frozen surface; cold-trapped gases reduce thrust efficiency in low orbit.",
             "abilities": {
-                "ThrustModifier": {"multiplier": {"min": 0.85, "max": 0.95}, "scope": "sector"}
+                "ThrustModifier": {"multiplier": {"min": 0.85, "max": 0.95}, "scope": "sector", "chance": 0.10}
             }
         },
         "BARREN": {
@@ -40,21 +40,21 @@
             "name": "Jovian",
             "description": "Gas giant; deep gravity well slows strategic transit through this hex.",
             "abilities": {
-                "StrategicSpeedModifier": {"multiplier": {"min": 0.7, "max": 0.9}, "scope": "sector"}
+                "StrategicSpeedModifier": {"multiplier": {"min": 0.7, "max": 0.9}, "scope": "sector", "chance": 0.15}
             }
         },
         "ICE_GIANT": {
             "name": "Ice Giant",
             "description": "Distant gas/ice giant; ammonia haze interferes with shields.",
             "abilities": {
-                "ShieldModifier": {"multiplier": {"min": 0.85, "max": 0.95}, "scope": "sector"}
+                "ShieldModifier": {"multiplier": {"min": 0.85, "max": 0.95}, "scope": "sector", "chance": 0.10}
             }
         },
         "CHTHONIAN": {
             "name": "Chthonian",
             "description": "Stripped giant core; radioactive remnants emit constant flux.",
             "abilities": {
-                "EnvironmentalDamage": {"rate": {"min": 0.05, "max": 0.2}, "damage_type": "radiation", "scope": "sector"}
+                "EnvironmentalDamage": {"rate": {"min": 0.05, "max": 0.2}, "damage_type": "radiation", "scope": "sector", "chance": 0.25}
             }
         },
         "ICE_DWARF": {

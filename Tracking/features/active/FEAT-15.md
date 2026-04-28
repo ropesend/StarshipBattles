@@ -43,7 +43,33 @@ default behaviour.
 Medium
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Work Log
 - 2026-04-27: Created from QA Session 20260427_151244.
+- 2026-04-27: Investigation complete. Approved approach: extend the shared `roll_intrinsic_abilities` helper (Option A) — schema-consistent across all four PROJ-301..304 registries; default `chance=1.0` consumes zero extra RNG so stars/warps/archetypes remain byte-identically deterministic. Recommended tuning table approved; DYSON_SPHERE stays at `chance=1.0` (defining feature).
+- 2026-04-27: Implementation complete.
+  - **Helper** (`game/strategy/services/ability_sources/intrinsic_roll.py`): per-ability `chance` field gates the roll. When `chance < 1.0`, draws `rng.random()` once and `continue`s on failure. The `chance` key is stripped from the output dict (it's a generation-time gate, not runtime state). Templates without `chance` consume zero extra RNG draws — preserves byte-identical determinism.
+  - **Data** (`data/planet_types.json`): version bumped 1.0 → 1.1; description extended; `chance` populated per the table below.
+  - **Tests:**
+    - 6 new unit tests in `tests/unit/strategy/services/ability_sources/test_intrinsic_roll.py` under `TestRollIntrinsicAbilitiesChanceGate` (chance=1.0 always fires; chance=0.0 never fires; chance=0.1 ≈ 10% over 1000 seeds; chance key stripped; seeded RNG determinism; chance-less templates produce byte-identical output).
+    - 1 new schema test in `tests/integration/data/test_intrinsic_registries_coverage.py` (`test_planet_types_chance_fields_in_valid_range`) walks every ability with a `chance` field and asserts numeric in [0.0, 1.0].
+    - All 5 existing tests in `tests/unit/strategy/data/test_intrinsic_rng_determinism.py` still pass — confirms star/warp/archetype RNG streams are unshifted.
+  - **Docs:** `docs/systems/strategy_layer.md` and `docs/04_SERVICES.md` updated; both `Last verified:` timestamps bumped.
+  - **Test results:**
+    - Targeted (FEAT-15 scope): 114/114 pass.
+    - Broader (`tests/unit/strategy/`, `tests/integration/strategy/`, `tests/integration/data/`): 3550 pass, 1 skipped.
+    - Full sharded suite: 15731 pass / 15732, 1 pre-existing test-isolation flake in `test_collect_movements_respects_speed` (passes when run alone; unrelated to FEAT-15 — fleet movement engine, not intrinsic abilities).
+  - **Estimated effect on a 100-planet galaxy** (uniform type distribution, ~8 planets per type):
+    - Before: ~50 planets with abilities (~50%).
+    - After: 8 × (0.20 + 0.10 + 0.15 + 0.10 + 0.25 + 1.00) = ~14 planets with abilities (~14%). Likely lower in practice — DYSON_SPHERE/CHTHONIAN are intrinsically rarer types.
+
+### Tuning table applied
+| Planet type | Ability | Chance | Rationale |
+|---|---|---|---|
+| MAGMA | EnvironmentalDamage (thermal, 0.1–0.5/tick) | 0.20 | Magma planets are dramatic — slightly above baseline so the type still feels distinct. |
+| CRYOPLANET | ThrustModifier (0.85–0.95) | 0.10 | Mild thrust debuff — nuisance, not crisis. |
+| JOVIAN | StrategicSpeedModifier (0.7–0.9) | 0.15 | Strategic-layer effect on a common type — keep occasional. |
+| ICE_GIANT | ShieldModifier (0.85–0.95) | 0.10 | Per ticket call-out. |
+| CHTHONIAN | EnvironmentalDamage (radiation, 0.05–0.2/tick) | 0.25 | Rare planet type; when one exists radiation should usually be on. |
+| DYSON_SPHERE | EnvironmentalDamage (radiation, 0.3–0.6/tick) | 1.00 (omitted = default) | Defining feature of a Dyson sphere; kept deterministic. |
