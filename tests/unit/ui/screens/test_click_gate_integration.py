@@ -63,6 +63,12 @@ def _create_strategy_event_router():
     # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
     wm.planet_abilities_window = None
 
+    # PROJ-313: StrategyModalWindow live-list. Migrated windows participate
+    # via iter_live_modals() instead of slot fields. Tests can append to
+    # wm._modals_for_test to register a window with the new mechanism.
+    wm._modals_for_test = []
+    wm.iter_live_modals = lambda: iter(list(wm._modals_for_test))
+
     ui.window_manager = wm
 
     # No menu panel by default
@@ -158,12 +164,16 @@ class TestClickGateIntegration:
         assert result is False
 
     def test_map_click_blocked_by_fleet_orders_window(self):
-        """Click blocked when fleet_orders_window is open at that position."""
+        """Click blocked when fleet_orders_window is open at that position.
+
+        PROJ-313: fleet_orders_window migrated to StrategyModalWindow;
+        registration is via iter_live_modals rather than a slot field.
+        """
         router, ui, wm = _create_strategy_event_router()
 
         # Create a window that is alive and contains the click point
         window = _create_mock_window(alive=True, rect_contains=True)
-        wm.fleet_orders_window = window
+        wm._modals_for_test.append(window)
 
         mx, my = 600, 400  # Map area, but window rect contains this point
 
@@ -393,7 +403,8 @@ class TestIsBlockingUIElementAt:
         """Returns True when alive window contains position."""
         router, ui, wm = _create_strategy_event_router()
 
-        wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=True)
+        # PROJ-313: register via iter_live_modals (fleet_orders_window migrated)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router._is_blocking_ui_element_at(500, 400)
 

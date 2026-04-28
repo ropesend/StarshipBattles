@@ -1,6 +1,7 @@
 import pytest
 import pygame
 import pygame_gui
+from unittest.mock import MagicMock
 from game.ui.screens.orders_window import OrdersWindow
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -15,8 +16,18 @@ def manager():
 def fleet():
     return Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
 
-def test_order_descriptions(manager, fleet):
-    window = OrdersWindow(pygame.Rect(0, 0, 400, 500), manager, fleet)
+
+@pytest.fixture
+def window_manager():
+    """Stub StrategyWindowManager for OrdersWindow construction (PROJ-313)."""
+    wm = MagicMock()
+    wm._modals = []
+    wm.register_modal = lambda w: wm._modals.append(w)
+    wm.unregister_modal = lambda w: wm._modals.remove(w) if w in wm._modals else None
+    return wm
+
+def test_order_descriptions(manager, fleet, window_manager):
+    window = OrdersWindow(pygame.Rect(0, 0, 400, 500), manager, fleet, window_manager=window_manager)
     
     # Test TRANSFER load
     order_load = Order(OrderType.TRANSFER, target={'direction': 'load', 'cargo_type': 'passengers', 'amount': 10})
@@ -34,8 +45,8 @@ def test_order_descriptions(manager, fleet):
     order_pop_unload = Order(OrderType.UNLOAD_POPULATION, target={'direction': 'unload', 'cargo_type': 'passengers', 'amount': 10})
     assert window._get_order_description(order_pop_unload) == "drop cargo"
 
-def test_auto_refresh(manager, fleet):
-    window = OrdersWindow(pygame.Rect(0, 0, 400, 500), manager, fleet)
+def test_auto_refresh(manager, fleet, window_manager):
+    window = OrdersWindow(pygame.Rect(0, 0, 400, 500), manager, fleet, window_manager=window_manager)
     assert len(window.rows) == 0
     
     # Add order externally
@@ -56,7 +67,7 @@ def test_auto_refresh(manager, fleet):
     window.update(0.1)
     assert len(window.rows) == 0
 
-def test_clear_orders_uses_callback(manager, fleet):
+def test_clear_orders_uses_callback(manager, fleet, window_manager):
     """PROJ-207 Phase 4: Clear All should dispatch via callback when provided."""
     # Track callback invocations
     callback_calls = []
@@ -66,6 +77,7 @@ def test_clear_orders_uses_callback(manager, fleet):
 
     window = OrdersWindow(
         pygame.Rect(0, 0, 400, 500), manager, fleet,
+        window_manager=window_manager,
         clear_orders_callback=mock_callback
     )
 
@@ -87,10 +99,11 @@ def test_clear_orders_uses_callback(manager, fleet):
     assert callback_calls[0] == 1  # fleet.id
 
 
-def test_clear_orders_requires_callback(manager, fleet):
+def test_clear_orders_requires_callback(manager, fleet, window_manager):
     """Without callback, clear orders does nothing (PROJ-208: fallback removed)."""
     window = OrdersWindow(
-        pygame.Rect(0, 0, 400, 500), manager, fleet
+        pygame.Rect(0, 0, 400, 500), manager, fleet,
+        window_manager=window_manager,
         # No callback provided
     )
 
@@ -112,10 +125,10 @@ def test_clear_orders_requires_callback(manager, fleet):
     assert len(fleet.orders) == 1  # Orders NOT cleared - callback required
 
 
-def test_buttons_fit_within_container(manager, fleet):
+def test_buttons_fit_within_container(manager, fleet, window_manager):
     """BUG-105: All row buttons (up, down, delete) must fit within the container width."""
     # Use the default window width from strategy_window_manager (480px)
-    window = OrdersWindow(pygame.Rect(0, 0, 480, 500), manager, fleet)
+    window = OrdersWindow(pygame.Rect(0, 0, 480, 500), manager, fleet, window_manager=window_manager)
 
     fleet.add_order(Order(OrderType.MOVE, target=HexCoord(1, 1)))
     fleet.add_order(Order(OrderType.MOVE, target=HexCoord(2, 2)))
@@ -141,11 +154,11 @@ def test_buttons_fit_within_container(manager, fleet):
         )
 
 
-def test_buttons_use_relative_positioning(manager, fleet):
+def test_buttons_use_relative_positioning(manager, fleet, window_manager):
     """BUG-105: Button positions should adapt to different window widths."""
     # Create two windows with different widths
-    narrow = OrdersWindow(pygame.Rect(0, 0, 480, 500), manager, fleet)
-    wide = OrdersWindow(pygame.Rect(0, 0, 600, 500), manager, fleet)
+    narrow = OrdersWindow(pygame.Rect(0, 0, 480, 500), manager, fleet, window_manager=window_manager)
+    wide = OrdersWindow(pygame.Rect(0, 0, 600, 500), manager, fleet, window_manager=window_manager)
 
     fleet.add_order(Order(OrderType.MOVE, target=HexCoord(1, 1)))
     narrow.update(0.1)
