@@ -106,17 +106,32 @@ class TestResolveTargetLayer:
 
         assert result == LayerType.ARMOR
 
-    def test_selected_invalid_layer_finds_nearest_valid(self, viewmodel_with_ship):
-        """When selected layer is invalid for the component, finds nearest valid."""
+    @pytest.mark.parametrize("selection", [
+        None,
+        LayerType.HULL,
+        LayerType.CORE,
+        LayerType.INNER,
+        LayerType.OUTER,
+        LayerType.ARMOR,
+    ])
+    def test_armor_routes_to_armor_layer_regardless_of_selection(
+        self, viewmodel_with_ship, selection
+    ):
+        """BUG-116: armor_plate must resolve to ARMOR for every selected_layer.
+
+        Armor components carry major_classification=Armor. The ARMOR layer is
+        the only valid home for them; CORE/INNER/OUTER must reject via
+        block_classification:Armor.
+        """
         viewmodel, _, registries = viewmodel_with_ship
         from game.simulation.components.component import create_component
 
-        # armor_plate should only be valid in ARMOR layer
         comp = create_component('armor_plate', registries=registries)
-        result = viewmodel.resolve_target_layer(comp, selected_layer=LayerType.CORE)
+        result = viewmodel.resolve_target_layer(comp, selected_layer=selection)
 
-        assert result is not None
-        # Should find a valid layer (ARMOR for armor_plate)
+        assert result == LayerType.ARMOR, (
+            f"Expected ARMOR with selection={selection!r}, got {result!r}"
+        )
 
     def test_hull_never_returned(self, viewmodel_with_ship):
         """HULL is never returned as a quick-add target."""
@@ -252,3 +267,41 @@ class TestQuickAddComponent:
         viewmodel.quick_add_component('standard_engine', count=1)
 
         assert len(viewmodel.ship.get_all_components()) == all_before + 1
+
+    @pytest.mark.parametrize("armor_id", [
+        "armor_plate",
+        "emissive_armor",
+        "scattering_armor",
+        "shield_regenerating_armor",
+    ])
+    def test_armor_quick_add_no_selection_lands_in_armor(
+        self, viewmodel_with_ship, armor_id
+    ):
+        """BUG-116: quick-add of an armor component with no selected_layer
+        must place it in the ARMOR layer, not CORE/INNER/OUTER.
+
+        Regression for QA Session 20260427_151244 where armor was landing in
+        CORE (and OUTER) due to the innermost-wins resolution algorithm
+        finding all non-ARMOR layers valid in the absence of
+        block_classification:Armor rules.
+        """
+        viewmodel, _, _ = viewmodel_with_ship
+
+        ship = viewmodel.ship
+        before = {l: len(ship.layers[l].components) for l in ship.layers}
+
+        result = viewmodel.quick_add_component(armor_id)
+
+        assert result is True
+        after = {l: len(ship.layers[l].components) for l in ship.layers}
+
+        assert after[LayerType.ARMOR] == before[LayerType.ARMOR] + 1, (
+            f"{armor_id} should have been placed in ARMOR; "
+            f"before={before}, after={after}"
+        )
+        for l in ship.layers:
+            if l == LayerType.ARMOR:
+                continue
+            assert after[l] == before[l], (
+                f"{armor_id} leaked into {l.name}; before={before}, after={after}"
+            )

@@ -53,3 +53,32 @@ class TestLayerRestrictionsRefactor:
         weapon = self.create_mock_component("gun", "Weapons", "ProjectileWeapon")
         result = self.rule.validate(self.ship, weapon, LayerType.INNER)
         assert result.is_valid is True
+
+    def test_block_classification_armor(self):
+        """BUG-116: block_classification:Armor must reject armor components
+        in non-ARMOR layers (mirrors test_block_classification for the
+        Armor classification)."""
+        ship = MagicMock()
+        ship.layers = {
+            LayerType.CORE: LayerData(restrictions=["block_classification:Armor"]),
+            LayerType.OUTER: LayerData(restrictions=["block_classification:Armor"]),
+            LayerType.ARMOR: LayerData(restrictions=["allow_classification:Armor"]),
+        }
+
+        armor = self.create_mock_component("plate", "Armor", "Armor")
+
+        for blocking_layer in (LayerType.CORE, LayerType.OUTER):
+            result = self.rule.validate(ship, armor, blocking_layer)
+            assert result.is_valid is False, (
+                f"Armor must be blocked in {blocking_layer.name}"
+            )
+            assert "Classification 'Armor' blocked" in result.errors[0]
+
+        # ARMOR layer should still accept armor
+        result = self.rule.validate(ship, armor, LayerType.ARMOR)
+        assert result.is_valid is True
+
+        # Non-armor components must remain unaffected by the new block rule
+        engine = self.create_mock_component("eng", "Engines", "Engine")
+        result = self.rule.validate(ship, engine, LayerType.CORE)
+        assert result.is_valid is True

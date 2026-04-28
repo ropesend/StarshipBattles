@@ -345,8 +345,30 @@ class VehicleDesignService:
             errors.append(f"Failed to remove component at index {index}")
             return DesignResult(success=False, errors=errors)
 
-        # Add to target — bypass normal validation (mass budget is advisory)
+        # BUG-116: Validate the re-add against the target layer using every
+        # addition rule EXCEPT MassBudgetRule. The pre-existing blanket bypass
+        # was intended to keep mass budgets advisory for moves, but it also
+        # silently waived layer-restriction rules (block_classification /
+        # allow_classification), which lets armor land in CORE/INNER/OUTER and
+        # weapons land in ARMOR via manual move. Skipping just MassBudgetRule
+        # preserves the design intent ("budgets are advisory") while closing
+        # the classification leak.
+        from game.simulation.validation.ship_validator import MassBudgetRule
+
+        validator = get_or_create_validator(registry_provider=ship._registries)
+        for rule in validator.addition_rules:
+            if isinstance(rule, MassBudgetRule):
+                continue
+            res = rule.validate(ship, component, target_layer)
+            if not res.is_valid:
+                # Roll back source removal so the move is fully atomic.
+                ship.layers[source_layer].components.insert(index, component)
+                ship.recalculate_stats()
+                return DesignResult(success=False, errors=list(res.errors))
+
+        # Add to target — mass budget remains advisory (no MassBudgetRule check).
         ship.layers[target_layer].components.append(component)
+        ship.recalculate_stats()
 
         return DesignResult(success=True, ship=ship)
 

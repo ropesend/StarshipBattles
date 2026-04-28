@@ -72,3 +72,45 @@ class TestDynamicLayers:
         # Try to add to CORE (should succeed if allowed)
         success = ship.add_component(weapon, LayerType.CORE)
         assert success, "Should allow in non-restricted layer"
+
+    @pytest.mark.parametrize("ship_class,armor_id", [
+        ("Escort",                     "armor_plate"),        # Capital_Escort
+        ("Cruiser",                    "armor_plate"),        # Capital_Standard
+        ("Battleship",                 "armor_plate"),        # Capital_Standard
+        ("Fighter (Small)",            "mini_armor"),         # Fighter_Standard
+        ("Satellite (Small)",          "armor_plate"),        # Satellite_Standard
+        ("Planetary Complex (Tier 1)", "armor_plate"),        # Planetary_Complex
+    ])
+    def test_block_classification_armor_rejects_in_non_armor_layers(
+        self, fresh_registries, ship_class, armor_id
+    ):
+        """BUG-116: armor components must be rejected by every non-ARMOR layer
+        on every vehicle template, and accepted by ARMOR.
+
+        Round-trip via ship.add_component to confirm the data fix in
+        data/vehiclelayers.json (block_classification:Armor on CORE/INNER/OUTER)
+        wires through the LayerRestrictionDefinitionRule end-to-end. Uses
+        real armor components so allowed_vehicle_types is satisfied (Fighter
+        templates use mini_armor; Capital/Satellite/Planetary use armor_plate).
+        """
+        from game.simulation.components.component import create_component
+
+        ship = Ship(
+            "Armor Restriction Test", 0, 0, (255, 0, 0),
+            ship_class=ship_class, registries=fresh_registries,
+        )
+
+        for layer_type in ship.layers:
+            if layer_type == LayerType.HULL:
+                continue
+            armor = create_component(armor_id, registries=fresh_registries)
+            success = ship.add_component(armor, layer_type)
+            if layer_type == LayerType.ARMOR:
+                assert success, (
+                    f"Armor must be accepted in ARMOR for {ship_class}"
+                )
+            else:
+                assert not success, (
+                    f"Armor must be rejected in {layer_type.name} for "
+                    f"{ship_class} (block_classification:Armor missing?)"
+                )
