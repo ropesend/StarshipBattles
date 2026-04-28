@@ -15,17 +15,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Audit lock-in + canonical constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. New `game/ui/services/image/` service | Complete | phase_2_checklist.md (TBD) |
-| 3. Loader rewrite | Complete | phase_3_checklist.md (TBD) |
-| 4. Image generation tool + asset prep | Complete (AI image generation deferred to user) | phase_4_checklist.md (TBD) |
-| 5. Atomic schema migration | Complete | phase_5_checklist.md (TBD) |
-| 6. Cleanup + documentation | Complete | phase_6_checklist.md (TBD) |
+| 2. New `game/ui/services/image/` service | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Loader rewrite | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Image generation tool + asset prep | Complete (AI image generation deferred to user) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Atomic schema migration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Cleanup + documentation | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-04-28
 **Active Phase:** All 6 phases complete.
-**Last Action:** Phase 6 — docs updated (`docs/01_ARCHITECTURE.md` + `docs/03_CONVENTIONS.md` §11), plan-table marked complete.
+**Last Action:** PROJ-318 Phase 1 retroactively completed the missing PROJ-314 phase checklists and restored audit-gate traceability.
 **Next Action:** User runs the regenerator CLI with `OPENAI_API_KEY` set to backfill the 20 deferred portraits:
 
 ```
@@ -37,8 +37,7 @@ The schema/loader/asset-prep work is fully landed; running the CLI is
 the only remaining step before the QA Aetherwake / Atlantians-Light-Cruiser
 gaps disappear in Race Setup → Ships.
 
-**Blockers:** None — generation deferred so the project does not depend
-on the user's OpenAI account.
+**Blockers:** None
 **Test baseline at plan time:** 15893 / 15893 passing (sharded suite, 65.8s wall).
 
 ## Overview
