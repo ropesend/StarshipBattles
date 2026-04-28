@@ -9,14 +9,18 @@ import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
-    UIWindow, UIPanel, UILabel, UIButton, UIHorizontalSlider,
+    UIPanel, UILabel, UIButton, UIHorizontalSlider,
     UIScrollingContainer,
 )
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
 
 from game.ui.screens.species_selector_mixin import (
     build_species_selector, get_selected_race_id, load_race_config,
 )
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -41,14 +45,19 @@ GAS_DISPLAY = {
 MAX_SLIDER_PA = 150000.0
 
 
-class AtmosphereTargetEditor(UIWindow):
-    """Window for editing atmosphere modification targets on a planet."""
+class AtmosphereTargetEditor(StrategyModalWindow):
+    """Window for editing atmosphere modification targets on a planet.
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
+    """
 
     def __init__(
         self,
         rect: pygame.Rect,
         manager: pygame_gui.UIManager,
         planet,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_apply_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
@@ -59,6 +68,7 @@ class AtmosphereTargetEditor(UIWindow):
             rect: Window rectangle.
             manager: UI manager.
             planet: Planet object with atmosphere and atmosphere_target.
+            window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
             on_apply_callback: Called with (planet_id, target_dict) when Apply clicked.
             on_close_callback: Called when window is closed.
             race_config: Optional RaceConfig for species ideal presets.
@@ -67,6 +77,7 @@ class AtmosphereTargetEditor(UIWindow):
             rect, manager,
             window_display_title=f"Atmosphere Target: {planet.name}",
             resizable=True,
+            window_manager=window_manager,
         )
 
         self.planet = planet

@@ -205,6 +205,7 @@ class StrategyEventRouter:
             rect=rect,
             manager=ui.manager,
             planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply,
             race_config=race_config,
         )
@@ -226,6 +227,7 @@ class StrategyEventRouter:
         rect = create_centered_rect(400, 300, ui.width, ui.height)
         GravityTargetEditor(
             rect=rect, manager=ui.manager, planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
         )
 
@@ -246,6 +248,7 @@ class StrategyEventRouter:
         rect = create_centered_rect(400, 300, ui.width, ui.height)
         WaterTargetEditor(
             rect=rect, manager=ui.manager, planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
         )
 
@@ -266,6 +269,7 @@ class StrategyEventRouter:
         rect = create_centered_rect(400, 300, ui.width, ui.height)
         RadiationShieldEditor(
             rect=rect, manager=ui.manager, planet=planet,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
         )
 
@@ -321,6 +325,7 @@ class StrategyEventRouter:
             economy_config=economy,
             resource_catalog=resource_catalog,
             race_resolver=resolve_race,
+            window_manager=ui.window_manager,
             on_apply_callback=on_apply,
         )
 

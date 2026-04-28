@@ -9,12 +9,16 @@ from __future__ import annotations
 import logging
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UILabel, UIButton, UIHorizontalSlider
-from typing import Any, Optional, Callable
+from pygame_gui.elements import UILabel, UIButton, UIHorizontalSlider
+from typing import Any, Optional, Callable, TYPE_CHECKING
 
 from game.ui.screens.species_selector_mixin import (
     build_species_selector, get_selected_race_id, load_race_config,
 )
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +30,19 @@ MIN_GRAVITY_G = 0.1
 MAX_GRAVITY_G = 3.0
 
 
-class GravityTargetEditor(UIWindow):
-    """Window for editing gravity modification target on a planet."""
+class GravityTargetEditor(StrategyModalWindow):
+    """Window for editing gravity modification target on a planet.
+
+    PROJ-313: Migrated to StrategyModalWindow base class.
+    """
 
     def __init__(
         self,
         rect: pygame.Rect,
         manager: pygame_gui.UIManager,
         planet,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
         on_apply_callback: Optional[Callable[[int, Optional[float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
@@ -42,6 +51,7 @@ class GravityTargetEditor(UIWindow):
             rect, manager,
             window_display_title=f"Gravity Target: {planet.name}",
             resizable=False,
+            window_manager=window_manager,
         )
 
         self.planet = planet
