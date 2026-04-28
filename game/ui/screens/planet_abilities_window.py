@@ -63,6 +63,7 @@ class PlanetAbilitiesWindow(UIWindow):
         facade,
         component_registry=None,
         on_open_editor: Optional[Callable[[str, Any], None]] = None,
+        on_close_callback: Optional[Callable[[], None]] = None,
     ):
         """Initialize the abilities window.
 
@@ -74,6 +75,10 @@ class PlanetAbilitiesWindow(UIWindow):
             component_registry: Component registry for ability lookup.
             on_open_editor: Callback(editor_type, planet) to open environment editors.
                 editor_type is one of: 'atmosphere', 'gravity', 'water', 'radiation'.
+            on_close_callback: Callback fired from kill() so the registrar can
+                reset its slot to None. Without this, the slot leaks and
+                ``StrategyEventRouter.has_modal_open()`` returns True forever
+                after the window is closed (BUG-121).
         """
         super().__init__(
             relative_rect,
@@ -85,11 +90,17 @@ class PlanetAbilitiesWindow(UIWindow):
         self.facade = facade
         self.component_registry = component_registry
         self._on_open_editor = on_open_editor
+        self._on_close_callback = on_close_callback
         self._toggle_buttons: Dict[str, UIButton] = {}
         self._editor_buttons: List[UIButton] = []
         self._status_labels: Dict[str, UILabel] = {}
         self._widgets = []
         self._build_ui()
+
+    def kill(self) -> None:
+        if self._on_close_callback is not None:
+            self._on_close_callback()
+        super().kill()
 
     def _build_ui(self) -> None:
         """Build environment editor buttons and ability rows."""

@@ -417,3 +417,55 @@ class TestMouseEventHandling:
         # Verify modal check returned True
         mock_scene.ui._has_modal_open.assert_called()
         assert mock_scene.ui._has_modal_open.return_value is True
+
+    def test_handle_scroll_works_after_planet_abilities_window_close(
+        self, mock_scene, mapper
+    ):
+        """Scroll wheel must zoom after opening AND closing the Planet Abilities window.
+
+        Regression test for BUG-121: the planet_abilities_window slot was
+        never cleared on UI_WINDOW_CLOSE, so has_modal_open() returned True
+        forever after the user closed the abilities window once. With the
+        fix in place, the registrar's on_close_callback resets the slot to
+        None and has_modal_open() returns False — scroll is forwarded to
+        the camera.
+        """
+        from game.ui.screens.strategy_event_router import StrategyEventRouter
+
+        # Wire up a real event router on top of a mocked window manager so
+        # has_modal_open() walks the real slot-presence logic.
+        wm = MagicMock()
+        # All slots None — emulating "user opened abilities window then closed it
+        # AND the close callback fired".
+        for slot in (
+            "planet_list_window", "star_list_window", "build_queue_list_window",
+            "empire_build_queue_window", "event_log_window", "fleet_orders_window",
+            "fleet_report_window", "transfer_dialog", "empire_panel_window",
+            "settings_window", "move_choice_window", "cargo_quick_dialog",
+            "planet_selection_window", "system_selection_window",
+            "fleet_selection_window", "planet_abilities_window",
+        ):
+            setattr(wm, slot, None)
+        wm._pending_confirmation_dialog = None
+
+        ui = MagicMock()
+        ui.window_manager = wm
+        ui.menu_panel = None
+        scene_for_router = MagicMock()
+        scene_for_router.build_queue_screen = None
+        ui.scene = scene_for_router
+        router = StrategyEventRouter(ui)
+
+        # Drive the input handler from a different scene mock that exposes
+        # the real has_modal_open via the router.
+        mock_scene.screen_width = 1920
+        mock_scene.TOP_BAR_HEIGHT = 50
+        mock_scene.ui._has_modal_open = router.has_modal_open
+        mock_scene.camera = MagicMock()
+
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        with patch('pygame.mouse.get_pos', return_value=(500, 300)):
+            event = pygame.event.Event(pygame.MOUSEWHEEL, {'y': 1})
+            handler._handle_scroll(event)
+
+        mock_scene.camera.update_input.assert_called_once()

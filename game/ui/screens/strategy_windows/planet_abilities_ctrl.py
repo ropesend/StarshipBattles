@@ -44,7 +44,15 @@ class PlanetAbilitiesRegistrar:
         c.planet_abilities_window = PlanetAbilitiesWindow(
             rect, c.manager, planet, c.scene.facade, component_registry,
             on_open_editor=self.open_editor,
+            on_close_callback=self._on_closed,
         )
+
+    def _on_closed(self) -> None:
+        # BUG-121: clear the slot so StrategyEventRouter.has_modal_open()
+        # returns False once the window is killed. Without this callback the
+        # slot kept pointing at a dead UIWindow forever, blocking strategy
+        # mouse-wheel zoom for the rest of the session.
+        self._composer.planet_abilities_window = None
 
     def open_editor(self, editor_type: str, planet) -> None:
         """Dispatch a planet-environment editor request to the event router.

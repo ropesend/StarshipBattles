@@ -261,3 +261,139 @@ class TestEventRouterContract:
             f"has_modal_open() did not return True with {slot} set; "
             f"the slot may have been dropped from the modal-detection scan."
         )
+
+
+# Slots that StrategyEventRouter._handle_window_close clears directly when
+# pygame_gui dispatches UI_WINDOW_CLOSE. Any other slot must clear via a
+# registrar-registered on_close_callback fired from the window's kill().
+SLOTS_CLEARED_BY_HANDLE_WINDOW_CLOSE: frozenset[str] = frozenset({
+    "fleet_orders_window",
+    "star_list_window",
+    "fleet_report_window",
+    "transfer_dialog",
+    "build_queue_list_window",
+    "empire_build_queue_window",
+    "event_log_window",
+    "empire_panel_window",
+    "move_choice_window",
+    "cargo_quick_dialog",
+    "planet_selection_window",
+    "system_selection_window",
+    "fleet_selection_window",
+})
+
+
+class TestModalSlotCleanupContract:
+    """Every slot scanned by has_modal_open() must clear to None on close.
+
+    Regression guard for BUG-121 — `planet_abilities_window` was added to
+    has_modal_open()'s scan in PROJ-309 sub-phase 3.10 but the close-side
+    cleanup was never wired up, so the slot pointed at a dead UIWindow
+    forever after the user closed it once. has_modal_open() returned True
+    permanently and strategy mouse-wheel zoom died for the rest of the
+    session.
+
+    For every modal-tracked slot (the 15 slots minus settings_window which
+    is intentionally exempt), confirm there is SOME cleanup path that
+    returns the slot to None when the underlying window closes.
+    """
+
+    @pytest.mark.parametrize(
+        "slot",
+        sorted(EXPECTED_WINDOW_SLOTS - {"settings_window"}),
+    )
+    def test_modal_slot_clears_after_window_kill(
+        self, window_manager, slot, mock_scene
+    ) -> None:
+        """For each modal-tracked slot, simulate close and assert slot is None.
+
+        Two cleanup pathways are recognized:
+        1. ``StrategyEventRouter._handle_window_close`` reset
+           (the elif chain) — used by 13 of 15 slots.
+        2. Registrar ``on_close_callback`` fired from the window's
+           ``kill()`` override — used by ``planet_list_window``
+           (post-fix: also ``planet_abilities_window``).
+
+        If neither pathway clears the slot, the slot will leak forever
+        once the user closes the corresponding window.
+        """
+        import pygame_gui
+        from game.ui.screens.strategy_event_router import StrategyEventRouter
+
+        # Place a sentinel window in the slot.
+        sentinel_window = Mock()
+        setattr(window_manager, slot, sentinel_window)
+
+        # Path 1: try _handle_window_close.
+        if slot in SLOTS_CLEARED_BY_HANDLE_WINDOW_CLOSE:
+            ui = Mock()
+            ui.window_manager = window_manager
+            ui.scene = mock_scene
+            router = StrategyEventRouter(ui)
+            event = Mock()
+            event.type = pygame_gui.UI_WINDOW_CLOSE
+            event.ui_element = sentinel_window
+            router._handle_window_close(event)
+            assert getattr(window_manager, slot) is None, (
+                f"Slot {slot} should clear via _handle_window_close but did not."
+            )
+            return
+
+        # Path 2: this slot must rely on a registrar-registered
+        # on_close_callback. The contract: the registrar's open() call
+        # must pass `on_close_callback=...` so the window's kill() can
+        # reset the slot. Inspect each registrar to find the slot it
+        # owns.
+        registrar_slot_map = {
+            "planet_list_window": (
+                "game.ui.screens.strategy_windows.list_windows",
+                "PlanetListRegistrar",
+            ),
+            "planet_abilities_window": (
+                "game.ui.screens.strategy_windows.planet_abilities_ctrl",
+                "PlanetAbilitiesRegistrar",
+            ),
+        }
+        assert slot in registrar_slot_map, (
+            f"Slot {slot} is not cleared by _handle_window_close AND has no "
+            f"registered registrar in this guard test. Either add a "
+            f"_handle_window_close branch (and update "
+            f"SLOTS_CLEARED_BY_HANDLE_WINDOW_CLOSE) OR add a registrar "
+            f"on_close_callback (and add the registrar to this map). "
+            f"Without a cleanup path, the slot will leak — see BUG-121."
+        )
+
+        from importlib import import_module
+        import inspect as _inspect
+        module_name, registrar_cls_name = registrar_slot_map[slot]
+        module = import_module(module_name)
+        registrar_cls = getattr(module, registrar_cls_name)
+
+        # The registrar must define an `_on_closed` method that resets the
+        # slot to None on the composer it holds. This is the contract that
+        # PlanetListRegistrar follows; the same contract is what BUG-121's
+        # fix establishes for PlanetAbilitiesRegistrar.
+        assert hasattr(registrar_cls, "_on_closed"), (
+            f"{registrar_cls_name} must define _on_closed() to clear "
+            f"composer.{slot} (BUG-121 cleanup contract)."
+        )
+
+        # Verify the registrar's open() call wires the callback. We can't
+        # call open() without a real pygame display, but we CAN inspect
+        # the source for the on_close_callback kwarg.
+        open_src = _inspect.getsource(registrar_cls.open)
+        assert "on_close_callback" in open_src, (
+            f"{registrar_cls_name}.open() must pass `on_close_callback=...` "
+            f"to the window constructor so the slot can clear on kill "
+            f"(BUG-121)."
+        )
+
+        # Verify _on_closed actually resets the slot.
+        composer = Mock()
+        setattr(composer, slot, sentinel_window)
+        registrar = registrar_cls(composer)
+        registrar._on_closed()
+        assert getattr(composer, slot) is None, (
+            f"{registrar_cls_name}._on_closed() must reset composer.{slot} "
+            f"to None (BUG-121)."
+        )

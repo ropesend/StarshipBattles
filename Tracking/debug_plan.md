@@ -18,7 +18,7 @@
 | BUG-118 | 2026-04-27 | Race Setup — "Randomize All" doesn't refresh Summary tab left-column labels | Awaiting Confirmation | [BUG-118.md](bugs/active/BUG-118.md) |
 | BUG-119 | 2026-04-27 | Plasma Storm sector effects not displayed (storm hex coordinate-frame mismatch) | Awaiting Confirmation | [BUG-119.md](bugs/active/BUG-119.md) |
 | BUG-120 | 2026-04-27 | Planet "Yard" resource row shows yard capacity instead of actual queue consumption | Awaiting Confirmation | [BUG-120.md](bugs/active/BUG-120.md) |
-| BUG-121 | 2026-04-27 | Strategy screen mouse-wheel zoom does not work | Pending | [BUG-121.md](bugs/active/BUG-121.md) |
+| BUG-121 | 2026-04-27 | Strategy screen mouse-wheel zoom does not work | Awaiting Confirmation | [BUG-121.md](bugs/active/BUG-121.md) |
 
 ## 3. Current Focus: None
 No bugs currently in progress.
