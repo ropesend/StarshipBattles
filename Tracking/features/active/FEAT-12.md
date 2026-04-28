@@ -285,3 +285,12 @@ Six TDD sub-tasks in dependency order. Each is independently testable and could 
 | `docs/02_PATTERNS.md` | 6 | Add "Budget-Aware Randomization" pattern entry. |
 | `Tracking/features/active/FEAT-12.md` | 6 | Status → Awaiting Confirmation; Work Log entries. |
 | `Tracking/feature_plan.md` | 6 | Row status update. |
+
+---
+### 📝 User Update [2026-04-27]
+
+Verified during QA Session 20260427_151244. The feature works end-to-end: clicking "Randomize All" on the Summary tab generates Identity, Visuals, Ships, Environment, and Aptitudes correctly. **However**, the Summary tab itself does not visually refresh — its left-column labels (Faction, Species, Government, Physical, Society) stay blank until the user switches to another tab and back.
+
+Filed as **BUG-118** with root cause analysis: `RaceSetupController.populate_ui_from_config()` updates `race_config` references on every panel but skips calling `_summary_panel.refresh()`. FEAT-12 stays Awaiting Confirmation pending BUG-118 fix.
+
+See [BUG-118.md](../../bugs/active/BUG-118.md).
