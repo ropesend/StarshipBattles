@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Reference
 
-> **Last verified:** 2026-04-28 — Confirmed no Simulation-layer `get_default_registry_provider()` calls, documented the current UI dependencies on Research and Assets, and kept PROJ-297/298 removals reflected.
+> **Last verified:** 2026-04-28 — PROJ-313 added structural modal-window tracking via `StrategyModalWindow` base class (see `docs/02_PATTERNS.md` Pattern #31); 21 strategy modal windows migrated. Confirmed no Simulation-layer `get_default_registry_provider()` calls, documented the current UI dependencies on Research and Assets, and kept PROJ-297/298 removals reflected.
 
 Primary architecture document for the Starship Battles codebase. All claims verified against source code.
 

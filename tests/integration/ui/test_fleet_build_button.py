@@ -218,8 +218,8 @@ class TestFleetOrdersWindowBuildDisplay:
 
         rect = pygame.Rect(100, 100, 400, 300)
 
-        # Create window
-        window = OrdersWindow(rect, ui_manager, fleet)
+        # Create window (PROJ-313: window_manager=None for non-strategy-screen test)
+        window = OrdersWindow(rect, ui_manager, fleet, window_manager=None)
 
         # Get order description
         desc = window._get_order_description(fleet.orders[0])

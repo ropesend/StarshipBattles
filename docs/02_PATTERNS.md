@@ -1,8 +1,8 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-28 — Reconciled pattern count to 30 with the addition of the Registrar Close-Callback pattern (BUG-121), updated `ApplicationContext` to 9 managed services, removed stale `SingletonMeta` references, and confirmed the current quick-reference entries. Pattern #18 (Per-Battle RNG) was expanded by PROJ-312 Phase 1 to cover the AI chain (`AIControllerFactory._rng` → `AIController._rng` → `ErraticBehavior._rng`) plus the AST guard regression contract.
+> **Last verified:** 2026-04-28 — PROJ-313 superseded Pattern #30 (Registrar Close-Callback) with structural enforcement via the new `StrategyModalWindow` base class (Pattern #31 below); the manual 6-step contract is now eradicated for new strategy-modal windows. Pattern count is 31. Pattern #18 (Per-Battle RNG) was expanded by PROJ-312 Phase 1 to cover the AI chain (`AIControllerFactory._rng` → `AIController._rng` → `ErraticBehavior._rng`) plus the AST guard regression contract.
 
-Agent-optimized reference for every core pattern in the codebase (30 patterns).
+Agent-optimized reference for every core pattern in the codebase (31 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -38,7 +38,8 @@ Each section: **Where**, **How It Works**, **When to Use**.
 27. [Budget-Aware Randomization](#27-budget-aware-randomization-feat-12)
 28. [Background Service Call](#28-background-service-call-proj-296)
 29. [Universal Ability Source (PROJ-300..305)](#29-universal-ability-source-proj-300305)
-30. [Registrar Close-Callback (BUG-121)](#30-registrar-close-callback-bug-121)
+30. [Registrar Close-Callback (BUG-121) — SUPERSEDED](#30-registrar-close-callback-bug-121)
+31. [Strategy Modal Window Base Class (PROJ-313)](#31-strategy-modal-window-base-class-proj-313)
 
 ---
 
@@ -1578,6 +1579,18 @@ Adapters register a provider function with `register_source_provider_at_hex` / `
 
 ## 30. Registrar Close-Callback (BUG-121)
 
+> **STATUS: SUPERSEDED by Pattern #31 (PROJ-313).** This pattern documented
+> the per-window manual contract used for strategy modal windows pre-PROJ-313:
+> add a slot to ``StrategyWindowManager``, scan it in ``has_modal_open()``,
+> override ``kill()`` on the window to fire ``on_close_callback``, and
+> implement a registrar ``_on_closed`` that resets the slot. PROJ-313
+> replaced this six-step manual contract with structural enforcement via
+> the ``StrategyModalWindow`` base class (Pattern #31). New strategy-modal
+> windows MUST subclass ``StrategyModalWindow``; do not implement Pattern
+> #30 manually for new code. The pattern documentation below is preserved
+> for historical reference and to explain how slot-tracked legacy windows
+> still partially work during the migration window.
+
 ### Where
 - Reference adopters: [`game/ui/screens/strategy_windows/planet_abilities_ctrl.py`](../game/ui/screens/strategy_windows/planet_abilities_ctrl.py) (`PlanetAbilitiesRegistrar._on_closed`); [`game/ui/screens/strategy_windows/list_windows.py`](../game/ui/screens/strategy_windows/list_windows.py) (`PlanetListRegistrar`, `StarListRegistrar`); [`game/ui/screens/strategy_windows/fleet_report_ctrl.py`](../game/ui/screens/strategy_windows/fleet_report_ctrl.py) (`FleetReportRegistrar`)
 - Window classes that override `kill()` to invoke the callback: `PlanetAbilitiesWindow` ([`game/ui/screens/planet_abilities_window.py`](../game/ui/screens/planet_abilities_window.py)), `PlanetListWindow` ([`game/ui/screens/planet_list_window.py`](../game/ui/screens/planet_list_window.py))
@@ -1599,3 +1612,39 @@ This is the **write side** of `has_modal_open()`'s **read side**: both sides mus
 - Registrar's `_on_closed` runs synchronously inside `kill()`; the slot is `None` before `kill()` returns.
 - Test contract: `tests/unit/ui/screens/test_strategy_window_manager_public_api.py::test_modal_slot_clears_after_window_kill` is parametrised over every slot in `has_modal_open`'s scan and pins the lifecycle invariant for the whole window family.
 
+
+---
+
+## 31. Strategy Modal Window Base Class (PROJ-313)
+
+### Where
+- Base class: [`game/ui/screens/strategy_modal_window.py`](../game/ui/screens/strategy_modal_window.py) — `StrategyModalWindow(UIWindow)`.
+- Registry: `StrategyModalWindow._registered_subclasses` (populated by `__init_subclass__` at class definition time).
+- Manager API: `StrategyWindowManager.register_modal()`, `unregister_modal()`, `iter_live_modals()` in [`game/ui/screens/strategy_window_manager.py`](../game/ui/screens/strategy_window_manager.py).
+- Adopters (21 windows): `OrdersWindow`, `TransferDialog`, `CargoQuickDialog`, `PlanetSelectionWindow`, `SystemSelectionWindow`, `FleetSelectionWindow`, `EmpireBuildQueueWindow`, `EventLogWindow`, `EmpirePanelWindow`, `PlanetListWindow`, `StarListWindow`, `BuildQueueListWindow`, `FleetReportWindow`, `PlanetAbilitiesWindow`, `MoveChoiceWindow`, `FoodAllocationEditor`, `AtmosphereTargetEditor`, `GravityTargetEditor`, `WaterTargetEditor`, `RadiationShieldEditor`.
+
+### How It Works
+Subclassing `StrategyModalWindow` auto-registers the instance with a `StrategyWindowManager` on construction (via `register_modal(self)` in `__init__`) and auto-deregisters on `kill()` (via `unregister_modal(self)` before `super().kill()`).
+
+`StrategyEventRouter.has_modal_open()` and `_is_blocking_ui_element_at()` walk a single live-list — `window_manager.iter_live_modals()` — that GC-filters dead refs via `.alive()` on every iteration. Both methods are one-liners.
+
+The contract is structural: the constructor accepts a required keyword-only `window_manager` parameter, so forgetting registration is impossible. The `kill()` override is in the base class, so forgetting deregistration is impossible. pygame_gui's `UIWindow.kill()` is the universal funnel for every kill path (programmatic, title-bar `[X]` button, parent-kill cascade), so `StrategyModalWindow.kill()` always runs.
+
+### When to Use
+**Any new modal-style window that should block strategy-screen input.** Subclass `StrategyModalWindow`, accept `window_manager` as a keyword-only param in `__init__`, and forward it to `super().__init__(..., window_manager=window_manager)`. No further wiring required — no manual slot field on `StrategyWindowManager`, no clauses in `has_modal_open()` or `_is_blocking_ui_element_at()`, no `kill()` override.
+
+For windows opened **outside** the strategy screen (e.g., `BuildQueueScreen` opening a `PlanetSelectionWindow`), pass `window_manager=None`. The instance simply doesn't register; the contract is preserved at strategy-screen callers.
+
+### Why
+- Eradicates the BUG-22 / BUG-69 / BUG-121 / BUG-122-foodallocation bug class structurally — clicks-through and stale-flag-leak failures are no longer possible because their causal contract steps are absent.
+- The asymmetric `is not None` (in `has_modal_open`) vs `.alive()` (in `_is_blocking_ui_element_at`) check that produced BUG-121 is collapsed: both paths now walk the same `.alive()`-filtered list.
+- Test contract simplification: a parametrised behavioural test iterates `_registered_subclasses` and verifies every subclass auto-registers/deregisters. Replaces the source-string-matching test that produced false negatives.
+
+### Key Behavior
+- `kill()` deregisters BEFORE `super().kill()`, so the modal is off the live list at the moment `alive()` flips to False.
+- `unregister_modal` is idempotent (swallows `ValueError` for already-removed entries) — calling `kill()` twice is safe.
+- `iter_live_modals` performs an in-place GC walk (`self._modals = [w for w in self._modals if w.alive()]`) on every call — orphan refs from parent-kill cascades are reaped within one walk.
+- Test contract: `tests/unit/ui/screens/test_strategy_modal_window.py` covers the base class invariants; `tests/integration/ui/test_editor_click_blocking.py` covers the Phase 7 click-through fix.
+
+### Migration notes (legacy slot fields)
+The 16 slot fields on `StrategyWindowManager` are KEPT post-migration as caller-convenience pointers (used by `strategy_screen.rebuild_list()`, `handle_global_event` forwarding, "kill before re-open" idioms). They no longer participate in modal tracking — `has_modal_open()` and `_is_blocking_ui_element_at()` ignore them entirely. The legacy `_handle_window_close` event listener is also kept; it clears these slots when pygame_gui posts `UI_WINDOW_CLOSE`, so callers see `None` after close. Pattern #30's "registrar callback to clear the slot" mechanism remains active where present, but the contract for **modal tracking** is now Pattern #31.
