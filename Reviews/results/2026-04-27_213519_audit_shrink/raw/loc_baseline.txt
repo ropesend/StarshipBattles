@@ -1,0 +1,286 @@
+{
+  "production": {
+    "game/ai": {
+      "py": [
+        2942,
+        19
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/assets": {
+      "py": [
+        493,
+        2
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/core": {
+      "py": [
+        6210,
+        34
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/engine": {
+      "py": [
+        399,
+        4
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/research": {
+      "py": [
+        966,
+        7
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/simulation": {
+      "py": [
+        22145,
+        89
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/strategy": {
+      "py": [
+        39784,
+        194
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "game/ui": {
+      "py": [
+        68365,
+        292
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        83,
+        1
+      ]
+    },
+    "game/ (top-level)": {
+      "py": [
+        1665,
+        7
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "launcher.py": {
+      "py": [
+        9,
+        1
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    }
+  },
+  "tests": {
+    "tests/unit": {
+      "py": [
+        245518,
+        958
+      ],
+      "json": [
+        2451,
+        37
+      ],
+      "other": [
+        940,
+        3
+      ]
+    },
+    "tests/integration": {
+      "py": [
+        31938,
+        158
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "tests/regression": {
+      "py": [
+        1140,
+        7
+      ],
+      "json": [
+        4743,
+        65
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "tests/performance": {
+      "py": [
+        255,
+        3
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "tests/repro_issues": {
+      "py": [
+        833,
+        9
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        55,
+        1
+      ]
+    },
+    "tests/fixtures": {
+      "py": [
+        2509,
+        10
+      ],
+      "json": [
+        136,
+        6
+      ],
+      "other": [
+        439,
+        1
+      ]
+    },
+    "tests/infrastructure": {
+      "py": [
+        476,
+        3
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    },
+    "tests/ (top-level)": {
+      "py": [
+        919,
+        5
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        574,
+        1
+      ]
+    },
+    "combat_lab/": {
+      "py": [
+        21598,
+        53
+      ],
+      "json": [
+        265850,
+        963
+      ],
+      "other": [
+        4583,
+        13
+      ]
+    },
+    "conftest.py": {
+      "py": [
+        145,
+        1
+      ],
+      "json": [
+        0,
+        0
+      ],
+      "other": [
+        0,
+        0
+      ]
+    }
+  }
+}

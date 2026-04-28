@@ -1160,3 +1160,19 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** None.
 
 ---
+
+## BUG-113 Combat Lab — Projectile weapon tests show no pass/fail indicators
+* **Date Solved:** 2026-04-12 (archived 2026-04-27 from /deep-dive-parallel queue audit)
+* **Brief Summary of Solution:** Resolved by the Combat Lab cleanup project. `MetadataManagementService` was deleted entirely and the `_run_static_validation` startup pass was removed from `TestLabUIController`. Every scenario now implements `validate(engine) -> List[Check]`, and `TestScenario._run_validation()` populates `results['validation_results']` for every run, so projectile/seeker scenarios produce the same renderer payload as beam scenarios after any run. Empty-indicator state now only appears for tests that have never been run (expected).
+* **Key Test Case:** Run any projectile scenario (e.g., PROJ360-001) — Test Viewer shows green/red indicator instead of empty gray circle.
+* **Notes:** Discovered as already-resolved during deep-dive-parallel session 2026-04-27. No code changes in this archive action; only ticket housekeeping.
+
+---
+
+## BUG-114 Combat Lab — Projectile test targets remain stationary (regression)
+* **Date Solved:** ~2026-04-11 (verified resolved in main on 2026-04-27)
+* **Brief Summary of Solution:** Implicit fix from the PROJ-269/270 unified battle entry/exit refactor. Scenario hooks (`wire_ships` + `custom_setup`) now fire via `pre_tick_loop_callback` after `engine.start()` but before tick 1, so `target.movement_policy = 'test_straight_line'` set in `custom_setup` takes effect on the first AI tick. The AI controller's `_NO_TARGET_BEHAVIORS` set already exempts `straight_line` from the no-target early-return.
+* **Key Test Case:** Run PROJECTILE-002 (slow linear) and PROJECTILE-003 (fast linear) headlessly via `combat_lab.runner.TestRunner.run_scenario` — both PASS, with target ships displaced 619px and 18,581px respectively. `combat_lab/output/combat_lab_test_log.jsonl` shows consistent PASS results since 2026-04-11.
+* **Notes:** No targeted patch — fix was a side effect of larger Combat Lab refactors (PROJ-269/270/279/280). Discovered as already-resolved during deep-dive-parallel session 2026-04-27. Anti-reversion guards: keep `pre_tick_loop_callback` ordering in `battle_runner.py:302-306`, keep `_NO_TARGET_BEHAVIORS` exemption in `controller.py:79-81`. The two scenarios themselves serve as regression tests via their precondition checks.
+
+---

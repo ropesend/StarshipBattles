@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-04-18
+> **Last verified:** 2026-04-28 — Corrected `ComponentState` and PROJ-269 decision links while preserving the current BattleSpec/BattleOutcome and modifier-stack flow.
 
 System documentation for the real-time combat simulation layer.
 
@@ -123,7 +123,7 @@ called each tick from the tick loop to update peak_speed / ticks_alive
 1v1 smoke battle (ships at 1000px, minimal event traffic):
 MINIMAL ≈ NORMAL ≈ DETAILED ≈ 28-30ms. See
 `tests/performance/test_telemetry_overhead.py` for the regression gate
-and `Projects/active_projects/PROJ-269/decisions.md` for updated
+and `Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md` for updated
 baselines.
 
 **`HitRecord.modifiers_applied`** is populated at DETAILED telemetry by
@@ -252,7 +252,7 @@ carries the same damage.
 
 Flow:
 1. `ShipInstance.components: Dict[str, ComponentState]`
-   ([game/strategy/data/component_state.py](../../game/strategy/data/component_state.py))
+   ([game/core/component_state.py](../../game/core/component_state.py))
    keyed by `"{component_id}#{instance_index}"` — disambiguates
    identical components (e.g. three seeker missiles).
 2. `build_strategy_battle_spec(...)` translates each `ComponentState`
@@ -562,7 +562,7 @@ PROJ-269 Phase 6. Variance now lives on `BattleSpec` fields:
 | `is_headless_default` | Driver choice: blocking `run_battle(spec, ...)` vs per-frame `BattleController.start_from_spec(spec, ...)` |
 | `apply_results` | `BattleSpec.post_battle_hook` (e.g. `apply_outcome_to_fleets`) |
 
-See [`Projects/active_projects/PROJ-269/decisions.md`](../../Projects/active_projects/PROJ-269/decisions.md)
+See [`Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md`](../../Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md)
 for the full rationale.
 
 ---

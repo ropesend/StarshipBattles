@@ -1,6 +1,6 @@
 # Component System
 
-> **Last verified:** 2026-04-16
+> **Last verified:** 2026-04-28 — Updated ship-layer guidance for data-driven vehicle layer restrictions and the current armor-only placement rule.
 
 This document provides an overview of the ship component system in Starship Battles.
 
@@ -259,6 +259,11 @@ Ships organize components into layers. The `LayerType` enum is defined in `game/
 ```python
 from game.core.constants import LayerType
 ```
+
+Layer availability and placement restrictions are data-driven by
+`data/vehiclelayers.json`. Current vehicle templates block components with
+`major_classification: "Armor"` from `CORE`, `INNER`, and `OUTER`; armor
+components belong in `LayerType.ARMOR`.
 
 ## Component Data Format (components.json)
 

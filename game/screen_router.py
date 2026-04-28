@@ -84,6 +84,7 @@ class ScreenRouter:
         self.height = boot.height
         self.registries = boot.registries
         self.input_mapper = boot.input_mapper
+        self.dev_mode = boot.dev_mode
 
         # Overlay-dialog state. `_forward_event_to_scene` (in RunLoop)
         # reads these to gate event dispatch.
@@ -119,6 +120,7 @@ class ScreenRouter:
             self.width, self.height,
             scene_callback=scene_callbacks.strategy,
             input_mapper=self.input_mapper,
+            dev_mode=self.dev_mode,
         )
         # NB: TestLabScreen still asks for `self` (the legacy "Game" handle)
         # in its first arg. The router stands in for that role here.
@@ -224,6 +226,7 @@ class ScreenRouter:
                 self.width, self.height, session=session,
                 scene_callback=self._scene_callbacks.strategy,
                 input_mapper=self.input_mapper,
+                dev_mode=self.dev_mode,
             )
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_new_game_setup = False
@@ -285,6 +288,7 @@ class ScreenRouter:
                 self.width, self.height, session=session,
                 scene_callback=self._scene_callbacks.strategy,
                 input_mapper=self.input_mapper,
+                dev_mode=self.dev_mode,
             )
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
         else:
@@ -339,6 +343,7 @@ class ScreenRouter:
                 self.width, self.height, session=game_session,
                 scene_callback=self._scene_callbacks.strategy,
                 input_mapper=self.input_mapper,
+                dev_mode=self.dev_mode,
             )
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_load_menu = False

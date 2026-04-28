@@ -18,15 +18,15 @@
       }
     }
   },
-  "agent": {
-    "plan": {
   "command": {
     "audit-shrink": {
       "template": "Load the audit-shrink skill and run a comprehensive code shrinkage audit on the production codebase (game/).",
       "description": "Run a comprehensive code shrinkage audit"
     }
   },
-  "permission": {
+  "agent": {
+    "plan": {
+      "permission": {
         "edit": "deny",
         "bash": "deny"
       }

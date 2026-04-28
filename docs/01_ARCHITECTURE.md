@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Reference
 
-> **Last verified:** 2026-04-27 — PROJ-306 closed the last Simulation→Core global-lookup violation; layer-separation rule is now strictly enforced (no `get_default_registry_provider` calls in `game/simulation/`). Updated by PROJ-297 (formula_system.py + singleton.py removed) and PROJ-298 (FleetOrder rename complete).
+> **Last verified:** 2026-04-28 — Confirmed no Simulation-layer `get_default_registry_provider()` calls, documented the current UI dependencies on Research and Assets, and kept PROJ-297/298 removals reflected.
 
 Primary architecture document for the Starship Battles codebase. All claims verified against source code.
 
@@ -8,12 +8,15 @@ Primary architecture document for the Starship Battles codebase. All claims veri
 
 ## Layer Structure
 
-Seven layers with strict downward-only dependency flow:
+Eight layers with strict downward-only dependency flow:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  UI Layer          game/ui/, game/app.py                     │
 │  Pygame screens, panels, widgets, rendering                  │
+├──────────────────────────────────────────────────────────────┤
+│  Assets Layer      game/assets/                              │
+│  Asset managers, generated image derivatives, image lookup   │
 ├──────────────────────────────────────────────────────────────┤
 │  AI Layer          game/ai/                                  │
 │  Ship combat AI: behaviors, targeting, strategy              │
@@ -43,7 +46,8 @@ Seven layers with strict downward-only dependency flow:
 
 | Layer      | Allowed Dependencies                              |
 |------------|---------------------------------------------------|
-| UI         | AI, Strategy, Simulation, Engine, Services, Core  |
+| UI         | AI, Strategy, Research, Simulation, Engine, Services, Assets, Core |
+| Assets     | Services, Core                                    |
 | AI         | Simulation, Engine, Services, Core                |
 | Strategy   | Simulation, Engine, Services, Core                |
 | Research   | Services, Core                                    |
@@ -59,6 +63,7 @@ Seven layers with strict downward-only dependency flow:
 - Simulation must not import Strategy, AI, or UI
 - Strategy must not import UI
 - Engine must not import Simulation, Strategy, AI, or UI
+- Assets must not import UI, Strategy, Simulation, Research, AI, or Engine
 
 ### What belongs in `game/services/`? (PROJ-296)
 
@@ -99,6 +104,13 @@ Current services:
 | `llm/deepseek.py`   | `DeepSeekProvider` — OpenAI-compatible HTTP client with hardened timeouts, SSL on, custom UA, retry on 5xx (not 429) |
 | `llm/background.py` | `LLMBackgroundCall` (Pattern #28: Background Service Call) + `shutdown_all_calls()` |
 | `llm/defaults.py`   | `get_default_llm_provider()` / `set_default_llm_provider()` accessors |
+
+### `game/assets/` -- Asset infrastructure
+
+| Module                | Description |
+|-----------------------|-------------|
+| `asset_manager.py`    | AssetManager plus default accessors for loading/caching external images, generated component derivatives, race/planet/star images, and missing-texture fallbacks |
+| `component_derivatives.py` | Startup helper that generates and refreshes component image derivatives from the tracked 1024px source set |
 
 ### `game/core/` -- Foundation layer, no game-layer dependencies
 

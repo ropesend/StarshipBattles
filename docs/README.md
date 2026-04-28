@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-27 — Post-PROJ-297/298/306/307/308/310/311 verification pass. Reading table includes `resource_system.md` (PROJ-297); pattern count is 27 (PROJ-297); every doc under `docs/` carries a `Last verified:` marker (PROJ-307). Earlier PROJ-270/271 architecture summary still applies: every battle compiles a `BattleSpec` and emits a `BattleOutcome`; modifier math emits real stat_keys (`shield_capacity_mult`, `damage_mult`, `shield_bonus_add`) that flow through `FleetAuraManager` → `ship.external_stats` → `get_effective_stat`.
+> **Last verified:** 2026-04-28 — Documentation consistency pass: pattern count is 29, `ApplicationContext` manages 9 services, broken archive links were corrected, and current layer/dependency guidance was reconciled with source.
 
 ---
 
@@ -14,7 +14,7 @@
 | # | Document | What you learn |
 |---|----------|---------------|
 | 1 | [01_ARCHITECTURE.md](01_ARCHITECTURE.md) | Layer structure, package APIs, protocols, data flow |
-| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 27 design patterns with file locations and code examples |
+| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 29 design patterns with file locations and code examples |
 | 3 | [03_CONVENTIONS.md](03_CONVENTIONS.md) | Naming, file organization, imports, testing conventions |
 
 ### Step 2: Task-specific (read based on what you're doing)
@@ -64,7 +64,7 @@
 docs/
 ├── README.md                    <- You are here
 ├── 01_ARCHITECTURE.md           # Layers, packages, APIs, protocols, data flow
-├── 02_PATTERNS.md               # 27 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
+├── 02_PATTERNS.md               # 29 design patterns (ApplicationContext DI, Facade, CQRS, External-Stats Bridge, Scope-Driven Team Routing, Spec Compiler, ...)
 ├── 03_CONVENTIONS.md            # Naming, file org, imports, test conventions
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging

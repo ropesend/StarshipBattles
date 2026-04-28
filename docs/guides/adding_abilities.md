@@ -1,6 +1,6 @@
 # Adding New Abilities
 
-> **Last verified:** 2026-04-16
+> **Last verified:** 2026-04-28 — Updated ship-layer guidance for current data-driven armor placement restrictions.
 
 > Step-by-step guide for adding new abilities to the game.
 > For a complete catalog of all existing abilities, see [ability_reference.md](../systems/ability_reference.md).
@@ -378,6 +378,11 @@ Defined in `game/core/constants.py`:
 ```python
 from game.core.constants import LayerType
 ```
+
+Vehicle-specific layer restrictions come from `data/vehiclelayers.json`, not
+from the enum itself. Current templates reserve `major_classification:
+"Armor"` components for `LayerType.ARMOR`; non-armor layers carry
+`block_classification:Armor`.
 
 ### Ability Access Methods
 

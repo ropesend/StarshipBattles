@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-27 — Body count "(28 patterns)" corrected to 27 (matches header and TOC); PROJ-297 originally fixed CLAUDE.md/README references.
+> **Last verified:** 2026-04-28 — Reconciled pattern count to 29, updated `ApplicationContext` to 9 managed services, removed stale `SingletonMeta` references, and confirmed the current quick-reference entries.
 
 Agent-optimized reference for every core pattern in the codebase (29 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -61,10 +61,11 @@ class ApplicationContext:
     def __init__(self, registry_manager, profiler,
                  component_cache, policy_manager, asset_manager,
                  sprite_manager, ship_theme_manager,
-                 game_settings):
+                 game_settings, llm_provider):
         self.registry_manager = registry_manager
         self.profiler = profiler
-        # ... all 8 services
+        self.llm_provider = llm_provider
+        # ... all 9 services
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -77,7 +78,7 @@ class ApplicationContext:
         ...
 ```
 
-### Services Managed (8 total)
+### Services Managed (9 total)
 
 | Service | File | Layer |
 |---------|------|-------|
@@ -89,6 +90,7 @@ class ApplicationContext:
 | SpriteManager | `game/ui/renderer/sprites.py` | UI |
 | ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
 | GameSettings | `game/ui/services/game_settings.py` | UI |
+| LLMProvider | `game/services/llm/provider.py` | Services |
 
 ### How Services Are Accessed
 
@@ -109,10 +111,12 @@ profiler = get_default_profiler()
 ctx = ApplicationContext.create_test(profiler=mock_profiler)
 ```
 
-### Legacy: SingletonMeta (Deprecated)
+### Removed: SingletonMeta
 
-`SingletonMeta` (`game/core/singleton.py`) is retained but **no production code uses it**.
-No `.instance()` or `.reset()` methods exist on any of the 9 services.
+`SingletonMeta` and `game/core/singleton.py` were removed by PROJ-297. No
+current production service uses `.instance()` / `.reset()` singleton access;
+new service wiring goes through `ApplicationContext`, constructor injection,
+or the documented module-level `get_default_*` / `set_default_*` accessor pair.
 
 ---
 
@@ -1022,7 +1026,7 @@ Phase 6 removed `BattleModeHandler` + 4 concrete handlers + the
 | `apply_results(...)` | `BattleSpec.post_battle_hook` |
 
 See `docs/systems/combat_simulation.md` §0–§1 and
-`Projects/active_projects/PROJ-269/decisions.md` for the full
+`Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md` for the full
 rationale.
 
 ---
@@ -1470,7 +1474,6 @@ exposes per-domain status, and is polled by the UI.
 | Pattern | Primary File | Key Class/Function |
 |---------|-------------|-------------------|
 | ApplicationContext (DI) | `game/context.py` | `ApplicationContext` |
-| Singleton (deprecated) | `game/core/singleton.py` | `SingletonMeta` |
 | Protocol+TypeGuard | `game/core/protocols.py` | `IFleet`, `is_fleet()` |
 | DI (Registry) | `game/core/registry.py` | `DefaultRegistryProvider`, `TestRegistryProvider` |
 | Registry | `game/core/registry.py` | `RegistryManager`, `GameRegistries` |
@@ -1501,6 +1504,7 @@ exposes per-domain status, and is polled by the UI.
 | Scope-Driven Team Routing | `game/simulation/combat/ability_stat_registry.py` | `OPPONENT_SCOPES`, `emit_entries_for_ability` |
 | Ability-Stat Registry | `game/simulation/combat/ability_stat_registry.py` | `ABILITY_STAT_REGISTRY`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS` |
 | Background Service Call | `game/services/llm/background.py` | `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls` |
+| Universal Ability Source | `game/strategy/services/system_effects_collector.py` + `ability_sources/` | `IAbilitySource`, `collect_system_effects` |
 
 ### Critical Naming Reminders
 

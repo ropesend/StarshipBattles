@@ -1,0 +1,48 @@
+{
+  "runs": [
+    {
+      "date": "2026-04-27",
+      "review_dir": "Reviews/results/2026-04-27_213519_audit_shrink",
+      "deep_review_shard": "UI",
+      "rotation_index": 0,
+      "production_loc": 143262,
+      "dead_code_files": 0,
+      "dead_code_functions": 4,
+      "dead_code_imports": 8,
+      "duplication_clusters": 29,
+      "estimated_shrinkable_loc": 2053,
+      "top_hotspots": [
+        "ui/screens/race_setup/input_handler.py",
+        "ui/screens/battle_setup/input_handler.py",
+        "ui/panels/system_tree_panel.py",
+        "ui/screens/planet_list_window.py",
+        "ui/screens/builder/left_panel.py"
+      ]
+    },
+    {
+      "date": "2026-04-27",
+      "review_dir": "Reviews/results/2026-04-27_213519_audit_shrink",
+      "deep_review_shards": [
+        "UI",
+        "SIM",
+        "STR",
+        "FND"
+      ],
+      "rotation_index": 0,
+      "production_loc": 143262,
+      "dead_code_files": 3,
+      "dead_code_classes": 1,
+      "dead_code_functions": 14,
+      "dead_code_imports": 9,
+      "duplication_clusters": 29,
+      "estimated_shrinkable_loc": 3770,
+      "top_hotspots": [
+        "ui/screens/race_setup/input_handler.py",
+        "strategy/services/system_effects_collector.py",
+        "ui/screens/battle_setup/input_handler.py",
+        "ui/panels/system_tree_panel.py",
+        "ui/screens/planet_list_window.py"
+      ]
+    }
+  ]
+}

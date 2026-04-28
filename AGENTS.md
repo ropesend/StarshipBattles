@@ -36,13 +36,17 @@ python Tools/audit_shrink/audit_shrink.py   # Phase 1: deterministic tools
 
 ## Architecture (Quick Reference)
 
-Layered, bottom-up: **Core → Simulation → Strategy → UI** (+ AI depends on Simulation and Strategy).
+Layered, bottom-up: **Core / Services / Assets / Engine → Simulation / Research → Strategy / AI → UI**.
 
 - `game/core/` — No dependencies. Registries, validation, protocols, hex math, formula engine.
-- `game/simulation/` — Depends on Core. Combat engine, components, abilities, modifiers, entities.
-- `game/strategy/` — Depends on Core + Simulation. Galaxy map, fleets, planets, economy, turn engine, facade.
+- `game/services/` — Depends on Core only. Cross-cutting infrastructure, currently LLM provider services.
+- `game/assets/` — Depends on Core + Services. Asset managers and generated image derivative tooling.
+- `game/engine/` — Depends on Core + Services. Low-level physics, collision detection, spatial indexing.
+- `game/simulation/` — Depends on Core + Services + Engine. Combat engine, components, abilities, modifiers, entities.
+- `game/research/` — Depends on Core + Services. Tech tree and research mechanics.
+- `game/strategy/` — Depends on Core + Services + Engine + Simulation. Galaxy map, fleets, planets, economy, turn engine, facade.
+- `game/ai/` — Depends on Core + Services + Engine + Simulation. Behaviors, targeting, spatial navigation.
 - `game/ui/` — Depends on all. Pygame screens, panels, widgets, renderer.
-- `game/ai/` — Depends on Simulation + Strategy. Behaviors, targeting, spatial navigation.
 
 Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 9 services), Facade/Delegate, CQRS-lite, two-phase ability aggregation, Habitability Factor Registry (single-source-of-truth for all habitability axes).
 

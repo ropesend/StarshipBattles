@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-04-27 — FEAT-15: `roll_intrinsic_abilities` helper note extended to describe the optional per-ability `chance` field.
+> **Last verified:** 2026-04-28 — Updated vehicle-design examples for current armor layer restrictions, corrected retired `population_food_resource` wording, and aligned module-accessor references with current project docs.
 
 ## Overview
 
@@ -331,7 +331,7 @@ if result.success:
 
     # Add components
     result = service.add_component(ship, "laser_cannon", LayerType.OUTER)
-    result = service.add_component_bulk(ship, "standard_armor", LayerType.OUTER, count=4)
+    result = service.add_component_bulk(ship, "armor_plate", LayerType.ARMOR, count=4)
 
     # Validate
     validation = service.validate_design(ship)
@@ -1072,13 +1072,13 @@ See [docs/systems/strategy_layer.md §7](systems/strategy_layer.md#7-race-prefer
 
 **Locations:**
 - `game/strategy/data/colony_species_config.py` — `ColonySpeciesConfig(food_allocation: float = 1.0, last_consumption_ratios: Dict[str, float] = {})` per-colony per-species dataclass stored as `Planet.species_configs: Dict[race_id, ColonySpeciesConfig]`. `last_food_ratio` is a read-only computed `@property` returning `min(last_consumption_ratios.values())` with 1.0 fallback when the dict is empty (Liebig's Law aggregation). `to_dict` emits only `food_allocation`; `from_dict` always resets `last_consumption_ratios` to `{}`. `__post_init__` validates `food_allocation >= 0`. `Planet.get_species_config(race_id)` is a lazy-create-and-store helper.
-- `game/strategy/config/economy_config.py` — `EconomyConfig(population_consumption: Dict[str, float])` frozen dataclass with `primary_resource` property (first dict key; used for UI titles) and legacy `population_food_resource` read-only shim delegating to `primary_resource` (preserved until PROJ-289 migrates UI callers). Loader `load_economy_config(path=None)` + module-accessor singleton (`get_default_economy_config` / `set_default_economy_config`) per the CLAUDE.md `get_default_*` pattern. Graceful fallback to `{"organics": 0.001}` on missing file, malformed JSON, or `population_consumption` present but not a dict.
+- `game/strategy/config/economy_config.py` — `EconomyConfig(population_consumption: Dict[str, float])` frozen dataclass with `primary_resource` property (first dict key; used for UI titles). The legacy `population_food_resource` shim was retired by PROJ-291 C2; UI callers read `primary_resource` directly. Loader `load_economy_config(path=None)` + module-accessor singleton (`get_default_economy_config` / `set_default_economy_config`) follows the project `get_default_*` pattern. Graceful fallback to `{"organics": 0.001}` on missing file, malformed JSON, or `population_consumption` present but not a dict.
 - `data/economy.json` — `{"population_consumption": {"organics": 0.001, "metals": 0.0001, "radioactives": 0.00001}}`. Modders add/remove/retune entries; UI primary-resource label auto-derives from `ResourceCatalog.get(economy.primary_resource).name`.
 - `game/strategy/engine/organics_consumption_engine.py` — `OrganicsConsumptionEngine.process_consumption(empires) -> None`. Per species per colony: clears `cfg.last_consumption_ratios`, then iterates `economy.population_consumption.items()` and for each `(resource_id, per_pop_rate)` drains `needed = pop.count * food_allocation * per_pop_rate` from `stockpile[resource_id]`, caps at available, writes `cfg.last_consumption_ratios[resource_id] = supplied / needed` (or 1.0 for zero-need edge cases). Class name kept despite the multi-resource expansion — see PROJ-286 decisions.md for the rename-deferral rationale.
 - `game/strategy/engine/happiness_engine.py` — `HappinessEngine.process_happiness(empires, galaxy) -> None`. Writes `pop.happiness = clamp(race.base_happiness * cfg.last_food_ratio * habitability, 0, 3)` via `score_planet_for_race(planet, race_config)`. Source file UNCHANGED between PROJ-284 single-resource and PROJ-286 multi-resource — the computed property feeds the MIN-aggregated ratio transparently. Unbounded above 1.0 (up to 3x) so over-supply + ideal habitability can boost growth past the neutral point.
 - `game/strategy/engine/population_engine.py` — `PopulationEngine._grow_species`: `growth = (base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` module constant. Source file UNCHANGED between PROJ-284 and PROJ-286.
 - `game/strategy/interfaces/engines.py` — `IOrganicsConsumptionEngine`, `IHappinessEngine` protocols. Both wired onto `TurnEngineConfig` (fields 14 + 15) and `TurnEngine.__init__` kwargs.
-- `game/ui/screens/food_allocation_editor.py` — `FoodAllocationEditor` pygame_gui window with per-species slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title reads `{primary_resource.name} Allocation — {planet.name}` via the `population_food_resource` legacy shim. Apply callback writes to `planet.get_species_config(race_id).food_allocation`. Per-resource upkeep display is out of scope here — PROJ-289 will extend the UI to show all declared resources.
+- `game/ui/screens/food_allocation_editor.py` — `FoodAllocationEditor` pygame_gui window with per-species slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title reads `{primary_resource.name} Allocation — {planet.name}` from `EconomyConfig.primary_resource`. Apply callback writes to `planet.get_species_config(race_id).food_allocation`.
 
 **Turn order (post-PROJ-284/286):** `[100-tick loop] → OrganicsConsumptionEngine.process_consumption → HappinessEngine.process_happiness → PopulationEngine.process_population_growth → QualityEngine → AtmosphereEngine → WaterEngine`.
 

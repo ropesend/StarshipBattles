@@ -1,6 +1,6 @@
 # Error Handling Guidelines
 
-> **Last verified:** 2026-04-26
+> **Last verified:** 2026-04-28 — Corrected PROJ-308 archive link and retained broad-catch policy; remaining unjustified broad catches are current cleanup findings, not documentation exceptions.
 
 Error handling conventions, exception hierarchy, logging standards, and reference patterns for the Starship Battles codebase.
 
@@ -551,7 +551,7 @@ The justification line MUST appear on the same line as the `except` clause OR on
 - "legacy"
 - any comment that doesn't say *what* failures are expected and *why* fire-and-forget is correct
 
-A broad catch without a justification comment is a code-review failure. See [PROJ-308](../Projects/active_projects/PROJ-308/) for the audit that established this convention (24 sites triaged 2026-04-27).
+A broad catch without a justification comment is a code-review failure. See [PROJ-308](../Projects/archived_projects/PROJ-308/) for the audit that established this convention (24 sites triaged 2026-04-27).
 
 **PROJ-251 Changes:** The turn engine's `_time_phase()` no longer swallows exceptions. It wraps them in `EnginePhaseError` and re-raises to halt the turn. The serialization chain (`Fleet.from_dict()`, `Empire.from_dict()`, `OrderSerializer.deserialize_orders()`, `Galaxy.from_dict()`) no longer silently skips corrupt entries — it raises `PersistenceException`. The `_log_empire_state()` debug logging method retains its broad catch (acceptable — logging must not crash the turn).
 
