@@ -189,3 +189,30 @@ class TestSectionDefinition:
             visibility={"type": "dynamic"}, items=[], generator="logistics"
         )
         assert section.generator == "logistics"
+
+
+class TestMainSectionEnergyRowsRemoved:
+    """BUG-117 regression: stale energy rows in Main Systems must stay removed.
+
+    The `main` section previously declared `max_energy` and `energy_gen` items
+    that fell through to `getattr(ship, attr_key, 0)` and never populated
+    (those attributes don't exist on Ship — energy lives on `ship.resources`).
+    The same data is rendered correctly by the dynamic Combat Resources
+    section (`get_logistics_rows`).
+    """
+
+    def test_main_section_has_no_energy_rows(self):
+        from game.ui.screens.builder.stats_config import SECTIONS_CONFIG
+
+        main_section = SECTIONS_CONFIG.get("main")
+        assert main_section is not None, "main section must be defined"
+
+        item_ids = {item.key for item in main_section.items}
+        assert "max_energy" not in item_ids, (
+            "max_energy is a stale duplicate of Combat Resources' Energy Capacity row "
+            "(BUG-117); it has no getter and renders as '--'."
+        )
+        assert "energy_gen" not in item_ids, (
+            "energy_gen is a stale duplicate of Combat Resources' Energy Generation row "
+            "(BUG-117); ship has no `energy_gen_rate` attribute."
+        )

@@ -12,11 +12,9 @@
 | BUG-108 | 2026-03-24 | Planet generation does not check for hex collisions with secondary/additional stars | Awaiting Confirmation | [BUG-108.md](active_bugs/BUG-108.md) |
 | BUG-109 | 2026-03-24 | Resources decline each turn despite large production surplus — eventual total maintenance failure | Awaiting Confirmation | [BUG-109.md](active_bugs/BUG-109.md) |
 | BUG-111 | 2026-03-28 | SeekerPointDefenseNoneScenario crashes during batch run — missing `attacker` attribute | Awaiting Confirmation | [BUG-111.md](active_bugs/BUG-111.md) |
-| BUG-113 | 2026-03-28 | Combat Lab — Projectile weapon tests show no pass/fail indicators | Pending | [BUG-113.md](active_bugs/BUG-113.md) |
-| BUG-114 | 2026-03-28 | Combat Lab — Projectile test targets remain stationary (regression) | Pending | [BUG-114.md](active_bugs/BUG-114.md) |
-| BUG-115 | 2026-04-26 | New Game Setup — Cancel button does not work | Pending | [BUG-115.md](bugs/active/BUG-115.md) |
+| BUG-115 | 2026-04-26 | New Game Setup — Cancel button does not work | Awaiting Confirmation | [BUG-115.md](bugs/active/BUG-115.md) |
 | BUG-116 | 2026-04-27 | Workshop quick-add places armor components in wrong layer (CORE/OUTER instead of ARMOR) | Pending | [BUG-116.md](bugs/active/BUG-116.md) |
-| BUG-117 | 2026-04-27 | Ship details "Main Systems" shows broken "Max Egy: --" / "Egy Gen: --" rows | Pending | [BUG-117.md](bugs/active/BUG-117.md) |
+| BUG-117 | 2026-04-27 | Ship details "Main Systems" shows broken "Max Egy: --" / "Egy Gen: --" rows | Awaiting Confirmation | [BUG-117.md](bugs/active/BUG-117.md) |
 | BUG-118 | 2026-04-27 | Race Setup — "Randomize All" doesn't refresh Summary tab left-column labels | Pending | [BUG-118.md](bugs/active/BUG-118.md) |
 | BUG-119 | 2026-04-27 | Plasma Storm sector effects not displayed (storm hex coordinate-frame mismatch) | Pending | [BUG-119.md](bugs/active/BUG-119.md) |
 | BUG-120 | 2026-04-27 | Planet "Yard" resource row shows yard capacity instead of actual queue consumption | Pending | [BUG-120.md](bugs/active/BUG-120.md) |

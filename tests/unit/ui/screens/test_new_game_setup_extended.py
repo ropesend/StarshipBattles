@@ -254,3 +254,68 @@ class TestOnCancelClicked:
 
         screen.on_cancel_callback.assert_called_once()
         screen.kill.assert_called_once()
+
+
+# =============================================================================
+# BUG-115: Cancel-after-stale-modal Tests
+# =============================================================================
+
+
+class TestBug115CancelAfterModalLeak:
+    """BUG-115: After the Race Setup modal is killed without invoking its
+    cancel callback (e.g., user clicks the title-bar [X]), the parent's
+    `active_race_modal` reference is stale. The fix is to drop the
+    early-return guard in `process_event` so the parent's button branch
+    still runs. The modal child consumes its own events first via
+    pygame_gui z-ordering."""
+
+    def _build_button_event(self, ui_element):
+        import pygame
+        import pygame_gui
+        return pygame.event.Event(
+            pygame_gui.UI_BUTTON_PRESSED,
+            {"ui_element": ui_element},
+        )
+
+    def test_parent_cancel_works_when_modal_reference_is_stale(self):
+        """Parent btn_cancel fires even when active_race_modal still
+        references a killed wizard window."""
+        screen = _make_screen()
+        screen.btn_cancel = MagicMock()
+        screen.btn_start = MagicMock()
+        screen.load_race_buttons = [MagicMock() for _ in range(4)]
+        screen.setup_race_buttons = [MagicMock() for _ in range(4)]
+
+        # Stale reference simulating post-[X]-close on the wizard.
+        stale_modal = MagicMock()
+        screen.active_race_modal = stale_modal
+
+        with patch.object(
+            type(screen).__mro__[1], 'process_event', return_value=False
+        ):
+            event = self._build_button_event(screen.btn_cancel)
+            from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+            handled = NewGameSetupScreen.process_event(screen, event)
+
+        screen.on_cancel_callback.assert_called_once()
+        screen.kill.assert_called_once()
+        assert handled is True
+
+    def test_parent_start_works_when_modal_reference_is_stale(self):
+        """Parent btn_start dispatch is also unblocked once the guard is
+        gone (sanity check that we didn't only special-case Cancel)."""
+        screen = _make_screen()
+        screen.btn_cancel = MagicMock()
+        screen.btn_start = MagicMock()
+        screen.load_race_buttons = [MagicMock() for _ in range(4)]
+        screen.setup_race_buttons = [MagicMock() for _ in range(4)]
+        screen.active_race_modal = MagicMock()
+
+        with patch.object(
+            type(screen).__mro__[1], 'process_event', return_value=False
+        ), patch.object(screen, '_on_start_clicked') as on_start:
+            event = self._build_button_event(screen.btn_start)
+            from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+            NewGameSetupScreen.process_event(screen, event)
+
+        on_start.assert_called_once()

@@ -19,17 +19,6 @@
                 {
                     "id": "max_hp",
                     "label": "Max HP"
-                },
-                {
-                    "id": "max_energy",
-                    "label": "Max Egy"
-                },
-                {
-                    "id": "energy_gen",
-                    "label": "Egy Gen",
-                    "key": "energy_gen_rate",
-                    "formatter": "fmt_decimal",
-                    "unit": "/s"
                 }
             ]
         },

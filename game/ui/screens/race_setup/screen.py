@@ -370,6 +370,15 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             controller.cancel_all()
         super().kill()
 
+    def on_close_window_button_pressed(self) -> None:
+        """BUG-115: Route the title-bar [X]-close through the same path
+        as the in-window Cancel button. Default ``UIWindow`` behaviour
+        only calls ``self.kill()``, which leaves callers' modal-tracking
+        state stale (e.g., ``NewGameSetupScreen.active_race_modal``).
+        Delegating to ``controller.on_cancel`` fires ``on_cancel_callback``
+        and then ``kill()`` — single canonical cancel path."""
+        self._controller.on_cancel()
+
     def process_event(self, event: pygame.event.Event) -> bool:
         """Delegate event dispatch to the input handler."""
         super_handled = super().process_event(event)

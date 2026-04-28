@@ -353,10 +353,13 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """Process pygame events."""
-        # If a modal is active, let it handle events first
-        if self.active_race_modal is not None:
-            return super().process_event(event)
-
+        # BUG-115: No modal-active early-return guard. pygame_gui z-orders
+        # child windows above the parent and dispatches to them first, so
+        # the modal already gets first crack at events. The previous guard
+        # silently swallowed all parent button events whenever
+        # `active_race_modal` was stale (e.g., the modal was killed via
+        # title-bar [X] without invoking its cancel callback), making
+        # Cancel / Start permanently dead.
         handled = super().process_event(event)
 
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:

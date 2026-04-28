@@ -1329,3 +1329,42 @@ class TestProj299DialogPositioningRegression:
 
         src = inspect.getsource(RaceSetupRenderer.show_llm_error_popup)
         assert "get_container()" in src and "get_size()" in src
+
+
+# ===========================================================================
+# BUG-115: Title-bar [X] close routes through cancel callback
+# ===========================================================================
+
+
+class TestBug115CloseButtonInvokesCancel:
+    """BUG-115: Default `UIWindow.on_close_window_button_pressed` only
+    calls `kill()`, leaving the parent's `active_race_modal` reference
+    stale. RaceSetupScreen overrides this method to route the [X]-close
+    through the same path as the in-window Cancel button so the cancel
+    callback fires."""
+
+    def test_close_window_button_invokes_cancel_callback(self):
+        """[X]-close on the wizard fires `on_cancel_callback` (so the
+        parent NewGameSetupScreen clears `active_race_modal`)."""
+        screen, _ = _make_race_setup_screen()
+        screen.kill = MagicMock()
+
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        RaceSetupScreen.on_close_window_button_pressed(screen)
+
+        screen.on_cancel_callback.assert_called_once()
+        screen.kill.assert_called_once()
+
+    def test_close_window_button_routes_through_controller(self):
+        """The override delegates to `controller.on_cancel`, which is the
+        single canonical cancel path (so any future cancel-side behaviour
+        — logging, LLM cleanup, etc. — is shared between [X] and
+        btn_cancel)."""
+        screen, mocks = _make_race_setup_screen()
+        screen.kill = MagicMock()
+
+        with patch.object(mocks['controller'], 'on_cancel') as on_cancel:
+            from game.ui.screens.race_setup_screen import RaceSetupScreen
+            RaceSetupScreen.on_close_window_button_pressed(screen)
+
+        on_cancel.assert_called_once()
