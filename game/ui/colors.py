@@ -58,6 +58,9 @@ HP_HEALTHY = (0, 255, 0)         # Bright green (>50%)
 HP_DAMAGED = (255, 200, 0)       # Yellow (20-50%)
 HP_CRITICAL = (255, 50, 50)      # Red (<20%)
 HP_DESTROYED = (100, 100, 100)   # Gray (0%)
+# PROJ-315: Manually-disabled components — distinct from HP_DESTROYED to
+# convey "off but not broken". Used by the Fleet Report COMPONENT STATUS panel.
+MUTED_GREY = (130, 130, 150)
 
 # === Resource Display ===
 RESOURCE_FUEL = (255, 165, 0)    # Orange

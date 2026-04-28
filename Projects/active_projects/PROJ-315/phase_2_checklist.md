@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Replace the existing damage section in
 `ship_detail_panel.py` with a new always-rendering COMPONENT STATUS
 section. Add module-level grouping helpers and the strikethrough
@@ -19,7 +19,7 @@ overlay utility. Add ~15 widget tests.
 **File:** `game/ui/panels/ship_detail_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_ship_detail_panel.py -k group_components_by_id`
 
-- [ ] At the top of the file (above the `class ShipDetailPanel`),
+- [x] At the top of the file (above the `class ShipDetailPanel`),
   add three frozen dataclasses + one pure function:
   ```python
   @dataclass(frozen=True)
@@ -43,14 +43,14 @@ overlay utility. Add ~15 widget tests.
       damage_threshold_lookup: Callable[[str], float],
   ) -> list[ComponentGroup]: ...
   ```
-- [ ] Implementation rules:
+- [x] Implementation rules:
   - Group by `component_id`. Preserve first-seen order across the input list.
   - `damage_pct = 0.0 if max_hp == 0 else (1.0 - current_hp / max_hp)`.
   - `is_damage_induced_inactive = (not is_active) and (current_hp < max_hp * threshold)`. False for healthy or fully-destroyed views (the destroyed case is covered by `current_hp == 0` separately).
   - `avg_damage_pct = mean(inst.damage_pct for inst in instances)`.
   - `functional = sum(1 for inst in instances if inst.is_active)`.
   - `display_name = display_name(component_id)` from `game.core.string_utils`.
-- [ ] Pure-function tests in
+- [x] Pure-function tests in
   `tests/unit/ui/panels/test_ship_detail_panel.py` under a new
   `TestGroupComponentsById` class:
   1. Empty input → empty output.
@@ -61,7 +61,7 @@ overlay utility. Add ~15 widget tests.
   6. Mixed: a registry stub returning thresholds per component_id is honoured.
   7. Division-by-zero guard: max_hp == 0 → `damage_pct == 0.0`, no exception.
   8. Group ordering: components arrive interleaved (engine, weapon, engine, weapon) → grouped output preserves first-seen order (engine first).
-- [ ] Verify: targeted test runs green.
+- [x] Verify: targeted test runs green.
 
 **Notes:**
 
@@ -71,11 +71,11 @@ overlay utility. Add ~15 widget tests.
 **Files:** `game/ui/colors.py`, `game/ui/panels/ship_detail_panel.py`
 **Tests:** `pytest tests/unit/ui/test_colors.py` (if exists; otherwise no test for the constant — it's pinned by snapshot tests in 2.4)
 
-- [ ] In `game/ui/colors.py`, add `MUTED_GREY = (130, 130, 150)` near
+- [x] In `game/ui/colors.py`, add `MUTED_GREY = (130, 130, 150)` near
   the existing `HP_*` constants. Document: "Manually-disabled
   components — distinct from `HP_DESTROYED` to convey 'off but not
   broken'."
-- [ ] In `ship_detail_panel.py`, add a private helper:
+- [x] In `ship_detail_panel.py`, add a private helper:
   ```python
   def _apply_strikethrough(self, label: UILabel) -> None:
       """Overlay a horizontal line across `label` to convey strike.
@@ -84,7 +84,7 @@ overlay utility. Add ~15 widget tests.
       game/ui/screens/test_lab/dialogs.py.
       """
   ```
-- [ ] Keep the `UIImage` overlay pinned to the label's rect so the
+- [x] Keep the `UIImage` overlay pinned to the label's rect so the
   strike scrolls with the scrolling container. Track in
   `self.ui_elements` for `_clear_elements()` cleanup.
 
@@ -96,12 +96,12 @@ overlay utility. Add ~15 widget tests.
 **File:** `game/ui/panels/ship_detail_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_ship_detail_panel.py`
 
-- [ ] Remove the `if damage_count > 0:` gate at lines 271–275.
+- [x] Remove the `if damage_count > 0:` gate at lines 271–275.
   Replace with an unconditional call to a renamed
   `_build_component_section(ship, 10, y, width)`. Update the
   section header text from `COMPONENT DAMAGE (...)` to
   `COMPONENT STATUS`.
-- [ ] Rename `_build_damage_section` → `_build_component_section`
+- [x] Rename `_build_damage_section` → `_build_component_section`
   and rewrite the body. Internal flow:
   1. Call `ship.iter_all_components_by_layer()` → `views_by_layer`.
   2. For each layer in `LAYER_ORDER = ['CORE', 'INNER', 'OUTER', 'ARMOR']`:
@@ -115,14 +115,14 @@ overlay utility. Add ~15 widget tests.
          `get_damage_color(1.0 - avg_damage_pct)`.
        - If `expanded_groups.get((layer, comp_id))`, render
          `len(instances)` instance rows below it.
-- [ ] Per-instance rendering rules per `design.md`:
+- [x] Per-instance rendering rules per `design.md`:
   - Healthy/Damaged/Critical: `get_damage_color(hp_pct)` colour, no strike.
   - Destroyed (`current_hp == 0`): `HP_DESTROYED` colour, **strike**.
   - Damage-induced inactive (`is_damage_induced_inactive == True`,
     `current_hp > 0`): `HP_CRITICAL` colour, **strike**.
   - Manually disabled (`!is_active and not is_damage_induced_inactive`):
     `MUTED_GREY` colour, no strike.
-- [ ] Replace the existing `expanded_layers` initialiser at lines
+- [x] Replace the existing `expanded_layers` initialiser at lines
   57–63 with deterministic-from-ship logic — moved into
   `update_ship` so it re-fires per the user's Phase C decision:
   ```python
@@ -138,11 +138,11 @@ overlay utility. Add ~15 widget tests.
   and sets `expanded_layers[layer] = True` iff that layer contains a
   destroyed instance, otherwise `False`. Also resets
   `expanded_groups = {}`.
-- [ ] Group-row chevron handling: extend `process_event` so clicks on
+- [x] Group-row chevron handling: extend `process_event` so clicks on
   group buttons toggle `expanded_groups[(layer, comp_id)]` and
   trigger a rebuild via `self.update_ship(self.current_ship)`. Hold
   group buttons in a parallel `self.group_buttons: dict[tuple[str, str], UIButton]`.
-- [ ] Wire the threshold lookup. Production path:
+- [x] Wire the threshold lookup. Production path:
   ```python
   from game.core.constants import CombatConstants
   registry_provider = get_default_registry_provider()
@@ -156,10 +156,10 @@ overlay utility. Add ~15 widget tests.
   ```
   Wrap with `# Intentional broad catch: registry may be absent in
   test contexts` only if a try/except is needed.
-- [ ] Fix the latent `_`-split parser bug at the old lines 367–375
+- [x] Fix the latent `_`-split parser bug at the old lines 367–375
   by removing it entirely. The new view uses
   `ComponentInstanceView.component_id` directly.
-- [ ] Verify: targeted test run green; manual inspection in a fresh
+- [x] Verify: targeted test run green; manual inspection in a fresh
   game loads cleanly.
 
 **Notes:**
@@ -177,40 +177,40 @@ Re-use the canonical fixtures: autouse pygame fixture from
 Add a new test class `TestComponentStatusSection` with at least the
 following tests (12-15 total):
 
-- [ ] Pristine ship: section renders, header "COMPONENT STATUS",
+- [x] Pristine ship: section renders, header "COMPONENT STATUS",
   every layer collapsed by default, every group row reads
   `<N>/<N>` functional and `0%` avg damage in neutral colour.
-- [ ] Single damaged engine: collapsed group row shows the right avg
+- [x] Single damaged engine: collapsed group row shows the right avg
   % and `<functional>/<total>`; layer header tinted HP_DAMAGED.
-- [ ] 4 engines at 75/75/25/25 with the bottom two below threshold:
+- [x] 4 engines at 75/75/25/25 with the bottom two below threshold:
   collapsed group reads `2 / 4` and `50%`.
-- [ ] Destroyed instance: containing layer auto-expands on
+- [x] Destroyed instance: containing layer auto-expands on
   `update_ship`. Group row stays collapsed by default. Manually
   expanding the group reveals an instance row that renders in
   `HP_DESTROYED` colour with the strikethrough overlay.
-- [ ] Damage-induced inactive (HP > 0 but below threshold,
+- [x] Damage-induced inactive (HP > 0 but below threshold,
   is_active=False): instance row renders in `HP_CRITICAL` red with
   strikethrough.
-- [ ] Manually-disabled (is_active=False, HP == max_hp): instance
+- [x] Manually-disabled (is_active=False, HP == max_hp): instance
   row renders in `MUTED_GREY`, no strikethrough.
-- [ ] Layer ordering deterministic: the rendered layer headers
+- [x] Layer ordering deterministic: the rendered layer headers
   always appear in `[CORE, INNER, OUTER, ARMOR]` order.
-- [ ] HULL layer suppressed even when present in design_data.
-- [ ] Toggle a layer manually then call `update_ship` with a fresh
+- [x] HULL layer suppressed even when present in design_data.
+- [x] Toggle a layer manually then call `update_ship` with a fresh
   ship → auto-expand re-fires; manual collapse does NOT persist
   across ship reselection (Phase C decision).
-- [ ] Group-row toggle cycles `expanded_groups` and rebuilds
+- [x] Group-row toggle cycles `expanded_groups` and rebuilds
   correctly.
-- [ ] Display-name format: group row text matches exactly
+- [x] Display-name format: group row text matches exactly
   `"Reactor Standard × 4"` (× is U+00D7, single-space padding).
-- [ ] Read-only contract: assert that the only `UIButton` instances
+- [x] Read-only contract: assert that the only `UIButton` instances
   spawned inside the section equal the layer-header buttons +
   group-header buttons. No instance-row buttons. The pre-existing
   `Remove from Fleet` button is unaffected.
-- [ ] Component_id with numeric suffix (`reactor_mark_2`) renders
+- [x] Component_id with numeric suffix (`reactor_mark_2`) renders
   with the right display name and the right group count — pins the
   parser-bug fix.
-- [ ] Save/load round-trip: damage state survives reload, panel
+- [x] Save/load round-trip: damage state survives reload, panel
   rebuilds the same view.
 
 **Notes:**
@@ -221,10 +221,10 @@ following tests (12-15 total):
 **File:** N/A
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Run the full sharded suite. Expected baseline (15893) + new
+- [x] Run the full sharded suite. Expected baseline (15893) + new
   Phase 1 + Phase 2 tests (~25-30 added) → ~15918-15923 passed, 0
   failed.
-- [ ] Manual smoke (in addition to the verification list in plan.md):
+- [x] Manual smoke (in addition to the verification list in plan.md):
   open Fleet Report on a healthy fleet — see all components, all
   collapsed, all 100%. Run a battle that destroys a component;
   re-open Fleet Report and verify the affected layer auto-expanded
@@ -235,8 +235,8 @@ following tests (12-15 total):
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to point to Phase 3.
-- [ ] Run `python Projects/scripts/validate_phase.py PROJ-315 2`.
+- [x] All task checkboxes above are checked.
+- [x] Update status at top of this file to `Complete`.
+- [x] Update plan.md phase table row to `Complete`.
+- [x] Update plan.md Current State to point to Phase 3.
+- [x] Run `python Projects/scripts/validate_phase.py PROJ-315 2`.

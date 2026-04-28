@@ -14,14 +14,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Strategy data helper (`iter_all_components_by_layer`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Widget rewrite (COMPONENT STATUS section) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Widget rewrite (COMPONENT STATUS section) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Documentation + closeout | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-04-28 — Phase 1 complete
-**Active Phase:** Phase 2 — widget rewrite
-**Last Action:** Phase 1 implementation + tests landed. `ComponentInstanceView` added to `game/core/component_state.py`; `ShipInstance.iter_all_components_by_layer()` added at `game/strategy/data/ship_instance.py`. 12 new tests (5 dataclass + 7 iterator). Sharded: 15917 passed | 1 known flake.
-**Next Action:** Phase 2 — module-level grouping dataclasses + group_components_by_id() + widget rewrite.
+**Last Updated:** 2026-04-28 — Phase 2 complete
+**Active Phase:** Phase 3 — documentation + closeout
+**Last Action:** Phase 2 implementation + tests landed. `ship_detail_panel.py` rewritten with module-level grouping helpers, `MUTED_GREY` colour, strikethrough overlay, COMPONENT STATUS section, auto-expand re-fire on ship select. 23 new Phase 2 tests (8 group + 15 widget). Total: **15937 passed, 1 known flake** via `pytest tests/`. Sharded runner blocked by pre-existing `\a`-in-worktree-path bug — see decisions.md. `ship_detail_panel.py` LOC now 681 — flagged in decisions.md as future PROJ-309 candidate.
+**Next Action:** Phase 3 — `docs/06_UI_STYLE_GUIDE.md` update + Work Log + close out.
 **Blockers:** None. Two spec ambiguities resolved with the user during Phase C: (a) damage-induced inactive components render in red with strikethrough; manually-disabled components render in muted grey without strike; (b) layer auto-expand re-fires on every ship selection (no manual-collapse persistence).
 
 ## Overview

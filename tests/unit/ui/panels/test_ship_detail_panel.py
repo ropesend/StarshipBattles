@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
+from pygame_gui.elements import UIButton
 
 
 # --- Helpers ---
@@ -335,6 +336,7 @@ class TestClearElements:
         elem2 = MagicMock()
         panel.ui_elements = [elem1, elem2]
         panel.layer_buttons = {'CORE': MagicMock()}
+        panel.group_buttons = {}
 
         panel._clear_elements()
 
@@ -350,6 +352,7 @@ class TestClearElements:
 
         panel.ui_elements = [MagicMock(), MagicMock()]
         panel.layer_buttons = {'CORE': MagicMock()}
+        panel.group_buttons = {}
 
         panel._clear_elements()
 
@@ -364,6 +367,7 @@ class TestClearElements:
 
         panel.ui_elements = []
         panel.layer_buttons = {'CORE': MagicMock(), 'ARMOR': MagicMock()}
+        panel.group_buttons = {}
 
         panel._clear_elements()
 
@@ -514,3 +518,464 @@ class TestPanelKill:
         panel.kill()
 
         panel.panel.kill.assert_called_once()
+
+
+# --- group_components_by_id Tests (PROJ-315 Phase 2 Task 2.1) ---
+
+
+class TestGroupComponentsById:
+    """Pure-function tests for the module-level grouping helper.
+
+    No pygame dependencies — exercises the dataclasses + grouping logic
+    directly so the same fixtures back the widget tests below.
+    """
+
+    @staticmethod
+    def _view(comp_id, idx, current_hp, max_hp, is_active=True):
+        from game.core.component_state import ComponentInstanceView
+        return ComponentInstanceView(
+            component_id=comp_id,
+            instance_index=idx,
+            current_hp=current_hp,
+            max_hp=max_hp,
+            is_active=is_active,
+        )
+
+    @staticmethod
+    def _half_threshold(_comp_id):
+        return 0.5
+
+    def test_empty_input_returns_empty_list(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        result = group_components_by_id([], self._half_threshold)
+
+        assert result == []
+
+    def test_single_full_hp_instance(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        result = group_components_by_id(
+            [self._view('reactor_standard', 0, 100, 100)],
+            self._half_threshold,
+        )
+
+        assert len(result) == 1
+        group = result[0]
+        assert group.component_id == 'reactor_standard'
+        assert group.display_name == 'Reactor Standard'
+        assert group.total == 1
+        assert group.functional == 1
+        assert group.avg_damage_pct == pytest.approx(0.0)
+
+    def test_four_engines_75_75_25_25_with_threshold_half(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        # Engines at 75%, 75%, 25%, 25% — first two healthy, last two below
+        # the 0.5 threshold and is_active=False to model damage-induced inactive.
+        views = [
+            self._view('engine_basic', 0, 75, 100, is_active=True),
+            self._view('engine_basic', 1, 75, 100, is_active=True),
+            self._view('engine_basic', 2, 25, 100, is_active=False),
+            self._view('engine_basic', 3, 25, 100, is_active=False),
+        ]
+
+        result = group_components_by_id(views, self._half_threshold)
+
+        assert len(result) == 1
+        group = result[0]
+        assert group.total == 4
+        assert group.functional == 2
+        assert group.avg_damage_pct == pytest.approx(0.50)
+        # First two: not damage-induced inactive (active).
+        assert group.instances[0].is_damage_induced_inactive is False
+        assert group.instances[1].is_damage_induced_inactive is False
+        # Last two: HP below threshold AND inactive.
+        assert group.instances[2].is_damage_induced_inactive is True
+        assert group.instances[3].is_damage_induced_inactive is True
+
+    def test_all_destroyed_group(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        views = [
+            self._view('weapon_laser', 0, 0, 100, is_active=False),
+            self._view('weapon_laser', 1, 0, 100, is_active=False),
+        ]
+
+        result = group_components_by_id(views, self._half_threshold)
+
+        group = result[0]
+        assert group.functional == 0
+        assert group.avg_damage_pct == pytest.approx(1.0)
+
+    def test_manually_disabled_full_hp_is_not_damage_induced_inactive(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        views = [
+            self._view('reactor_standard', 0, 100, 100, is_active=False),
+        ]
+
+        result = group_components_by_id(views, self._half_threshold)
+
+        group = result[0]
+        assert group.functional == 0
+        assert group.instances[0].is_damage_induced_inactive is False
+
+    def test_per_id_threshold_lookup_honoured(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        thresholds = {
+            'engine_basic': 0.8,
+            'reactor_standard': 0.2,
+        }
+
+        def lookup(comp_id):
+            return thresholds.get(comp_id, 0.5)
+
+        # Engine at 50% HP, threshold 0.8 -> below threshold
+        # Reactor at 50% HP, threshold 0.2 -> above threshold
+        views = [
+            self._view('engine_basic', 0, 50, 100, is_active=False),
+            self._view('reactor_standard', 0, 50, 100, is_active=False),
+        ]
+
+        result = group_components_by_id(views, lookup)
+
+        groups = {g.component_id: g for g in result}
+        assert groups['engine_basic'].instances[0].is_damage_induced_inactive is True
+        assert groups['reactor_standard'].instances[0].is_damage_induced_inactive is False
+
+    def test_zero_max_hp_returns_zero_damage_pct_no_exception(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        views = [
+            self._view('legacy_zero', 0, 0, 0, is_active=True),
+        ]
+
+        result = group_components_by_id(views, self._half_threshold)
+
+        assert result[0].instances[0].damage_pct == pytest.approx(0.0)
+
+    def test_grouping_preserves_first_seen_order(self):
+        from game.ui.panels.ship_detail_panel import group_components_by_id
+
+        views = [
+            self._view('engine_basic', 0, 100, 100),
+            self._view('weapon_laser', 0, 100, 100),
+            self._view('engine_basic', 1, 100, 100),
+            self._view('weapon_laser', 1, 100, 100),
+        ]
+
+        result = group_components_by_id(views, self._half_threshold)
+
+        assert [g.component_id for g in result] == ['engine_basic', 'weapon_laser']
+        assert result[0].total == 2
+        assert result[1].total == 2
+
+
+# --- Component Status Section widget tests (PROJ-315 Phase 2 Task 2.4) ------
+
+
+def _stub_ship_instance(views_by_layer):
+    """Build a MagicMock that quacks like a ShipInstance for the panel."""
+    ship = MagicMock()
+    ship.instance_id = 'ship_test'
+    ship.design_id = 'TestDesign'
+    ship.name = 'Test Ship'
+    ship.design_data = {
+        'name': 'TestDesign',
+        'theme_id': 'Federation',
+        'ship_class': 'Cruiser',
+    }
+    ship.get_display_id.return_value = 'TST-001'
+    ship.get_status_text.return_value = 'OK'
+    ship.get_hp_display.return_value = '100/100'
+    ship.get_hp_percentage.return_value = 1.0
+    ship.get_resource_display.return_value = 'N/A'
+    ship.get_resource_percentage.return_value = 0.0
+    ship.get_damaged_component_count.return_value = 0
+    ship.iter_all_components_by_layer.return_value = views_by_layer
+    ship.battles_survived = 0
+    ship.kills = 0
+    ship.experience = 0
+    return ship
+
+
+def _view(comp_id, idx, current_hp, max_hp, is_active=True):
+    from game.core.component_state import ComponentInstanceView
+    return ComponentInstanceView(
+        component_id=comp_id,
+        instance_index=idx,
+        current_hp=current_hp,
+        max_hp=max_hp,
+        is_active=is_active,
+    )
+
+
+def _new_panel(ui_manager):
+    """Construct a real ShipDetailPanel against the cached ui_manager."""
+    from game.ui.panels.ship_detail_panel import ShipDetailPanel
+    rect = pygame.Rect(0, 0, 400, 800)
+    return ShipDetailPanel(manager=ui_manager, rect=rect)
+
+
+def _label_texts(panel):
+    return [getattr(el, 'text', '') for el in panel.ui_elements]
+
+
+class TestComponentStatusSection:
+    """PROJ-315 Phase 2 Task 2.4 widget tests."""
+
+    def test_pristine_ship_renders_section_header(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [_view('reactor_standard', 0, 100, 100)],
+            'INNER': [_view('bridge_standard', 0, 100, 100)],
+            'OUTER': [_view('weapon_laser', 0, 100, 100)],
+            'ARMOR': [_view('armor_plate', 0, 100, 100)],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(ship)
+
+        assert any('COMPONENT STATUS' in t for t in _label_texts(panel))
+
+    def test_pristine_ship_all_layers_collapsed(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [_view('reactor_standard', 0, 100, 100)],
+            'INNER': [_view('bridge_standard', 0, 100, 100)],
+            'OUTER': [_view('weapon_laser', 0, 100, 100)],
+            'ARMOR': [_view('armor_plate', 0, 100, 100)],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(ship)
+
+        for layer, expanded in panel.expanded_layers.items():
+            assert expanded is False, f"Layer {layer} should be collapsed by default"
+
+    def test_pristine_layer_header_shows_full_functional(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 100, 100),
+                _view('engine_basic', 0, 100, 100),
+                _view('engine_basic', 1, 100, 100),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(ship)
+
+        core_btn = panel.layer_buttons['CORE']
+        assert '3/3 functional' in core_btn.text
+        assert '0% avg damage' in core_btn.text
+
+    def test_four_engines_75_75_25_25_collapsed_group_row(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('engine_basic', 0, 75, 100, is_active=True),
+                _view('engine_basic', 1, 75, 100, is_active=True),
+                _view('engine_basic', 2, 25, 100, is_active=False),
+                _view('engine_basic', 3, 25, 100, is_active=False),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+
+        key = ('CORE', 'engine_basic')
+        group_btn = panel.group_buttons[key]
+        assert 'Engine Basic' in group_btn.text
+        assert '× 4' in group_btn.text
+        assert '2/4' in group_btn.text
+        assert '50%' in group_btn.text
+
+    def test_destroyed_instance_auto_expands_layer(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 0, 100, is_active=False),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(ship)
+
+        assert panel.expanded_layers['CORE'] is True
+
+    def test_destroyed_instance_renders_in_destroyed_color_with_strike(self, ui_manager):
+        from game.ui.colors import HP_DESTROYED
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 0, 100, is_active=False),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        # CORE auto-expanded; expand the group too.
+        panel.toggle_group('CORE', 'reactor_standard')
+
+        instance_labels = [
+            el for el in panel.ui_elements
+            if hasattr(el, '_proj315_color')
+        ]
+        assert len(instance_labels) == 1
+        assert instance_labels[0]._proj315_color == HP_DESTROYED
+        assert instance_labels[0]._proj315_strike is True
+
+    def test_damage_induced_inactive_renders_critical_with_strike(self, ui_manager):
+        from game.ui.colors import HP_CRITICAL
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('engine_basic', 0, 25, 100, is_active=False),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+        panel.toggle_group('CORE', 'engine_basic')
+
+        instance_labels = [
+            el for el in panel.ui_elements
+            if hasattr(el, '_proj315_color')
+        ]
+        assert len(instance_labels) == 1
+        assert instance_labels[0]._proj315_color == HP_CRITICAL
+        assert instance_labels[0]._proj315_strike is True
+
+    def test_manually_disabled_renders_muted_grey_no_strike(self, ui_manager):
+        from game.ui.colors import MUTED_GREY
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 100, 100, is_active=False),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+        panel.toggle_group('CORE', 'reactor_standard')
+
+        instance_labels = [
+            el for el in panel.ui_elements
+            if hasattr(el, '_proj315_color')
+        ]
+        assert len(instance_labels) == 1
+        assert instance_labels[0]._proj315_color == MUTED_GREY
+        assert instance_labels[0]._proj315_strike is False
+
+    def test_layer_order_is_deterministic(self, ui_manager):
+        ship = _stub_ship_instance({
+            'OUTER': [_view('weapon_laser', 0, 100, 100)],
+            'CORE': [_view('reactor_standard', 0, 100, 100)],
+            'ARMOR': [_view('armor_plate', 0, 100, 100)],
+            'INNER': [_view('bridge_standard', 0, 100, 100)],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(ship)
+
+        # Layer buttons preserve LAYER_ORDER iteration order
+        layer_btn_order = list(panel.layer_buttons.keys())
+        assert layer_btn_order == ['CORE', 'INNER', 'OUTER', 'ARMOR']
+
+    def test_hull_layer_suppressed_even_when_present(self, ui_manager):
+        # Note: iter_all_components_by_layer already filters HULL upstream
+        # (Phase 1 contract). This test pins the panel-side guarantee.
+        ship = _stub_ship_instance({
+            'CORE': [_view('reactor_standard', 0, 100, 100)],
+            'HULL': [_view('hull_plating', 0, 100, 100)],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(ship)
+
+        assert 'HULL' not in panel.layer_buttons
+
+    def test_auto_expand_re_fires_on_ship_reselect(self, ui_manager):
+        clean_ship = _stub_ship_instance({
+            'CORE': [_view('reactor_standard', 0, 100, 100)],
+        })
+        damaged_ship = _stub_ship_instance({
+            'CORE': [_view('reactor_standard', 0, 0, 100, is_active=False)],
+        })
+        panel = _new_panel(ui_manager)
+
+        panel.update_ship(clean_ship)
+        panel.toggle_layer('CORE')
+        assert panel.expanded_layers['CORE'] is True
+
+        panel.update_ship(damaged_ship)
+        # Auto-expand re-fires; CORE remains True (now due to destroyed).
+        assert panel.expanded_layers['CORE'] is True
+
+        # Reselecting a clean ship re-fires and resets to False.
+        panel.update_ship(clean_ship)
+        assert panel.expanded_layers['CORE'] is False
+
+    def test_group_toggle_cycles_state(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [_view('reactor_standard', 0, 100, 100)],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+
+        key = ('CORE', 'reactor_standard')
+        assert panel.expanded_groups.get(key, False) is False
+        panel.toggle_group('CORE', 'reactor_standard')
+        assert panel.expanded_groups[key] is True
+        panel.toggle_group('CORE', 'reactor_standard')
+        assert panel.expanded_groups[key] is False
+
+    def test_group_row_text_format(self, ui_manager):
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 100, 100),
+                _view('reactor_standard', 1, 100, 100),
+                _view('reactor_standard', 2, 100, 100),
+                _view('reactor_standard', 3, 100, 100),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+
+        key = ('CORE', 'reactor_standard')
+        group_btn = panel.group_buttons[key]
+        # × is U+00D7
+        assert 'Reactor Standard × 4' in group_btn.text
+
+    def test_component_id_with_underscores_renders_correctly(self, ui_manager):
+        """Pins the parser-bug fix from Phase 1 — `reactor_mark_2` round-trips."""
+        ship = _stub_ship_instance({
+            'CORE': [_view('reactor_mark_2', 0, 100, 100)],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+
+        key = ('CORE', 'reactor_mark_2')
+        assert key in panel.group_buttons
+        assert 'Reactor Mark 2' in panel.group_buttons[key].text
+
+    def test_no_component_rows_have_buttons(self, ui_manager):
+        """Read-only contract: instance rows are labels, not buttons."""
+        ship = _stub_ship_instance({
+            'CORE': [
+                _view('reactor_standard', 0, 100, 100),
+                _view('reactor_standard', 1, 50, 100),
+            ],
+        })
+        panel = _new_panel(ui_manager)
+        panel.update_ship(ship)
+        panel.toggle_layer('CORE')
+        panel.toggle_group('CORE', 'reactor_standard')
+
+        # Buttons inside the section must equal layer + group buttons only.
+        button_count = len(panel.layer_buttons) + len(panel.group_buttons)
+        # The pre-existing Remove from Fleet button is unaffected (none here
+        # because on_remove_ship is None in _new_panel).
+        actual_buttons = [
+            el for el in panel.ui_elements if isinstance(el, UIButton)
+        ]
+        assert len(actual_buttons) == button_count
+
+
