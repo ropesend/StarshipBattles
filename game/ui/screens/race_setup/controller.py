@@ -172,7 +172,6 @@ class RaceSetupController:
 
         if self._screen.btn_save:
             self._screen.btn_save.set_text("Update")
-        self._screen._refresh_summary()
 
     def on_race_browser_cancelled(self) -> None:
         logger.debug("Race browser cancelled")
@@ -217,6 +216,13 @@ class RaceSetupController:
             screen._aptitudes_panel.set_from_config()
         if screen._description_panel:
             screen._description_panel.set_from_config()
+        # BUG-118: the summary panel uses `refresh()`, not
+        # `set_from_config()`, so it must be invoked explicitly here.
+        # Without this, bulk-update entry points (Randomize All, race
+        # load) leave the Summary tab's left-column labels stale until
+        # the next tab switch triggers `_refresh_summary()`.
+        if screen._summary_panel:
+            screen._summary_panel.refresh()
 
     # ------------------------------------------------------------------
     # Per-tab randomization

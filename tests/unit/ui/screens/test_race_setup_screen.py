@@ -1368,3 +1368,97 @@ class TestBug115CloseButtonInvokesCancel:
             RaceSetupScreen.on_close_window_button_pressed(screen)
 
         on_cancel.assert_called_once()
+
+
+# ===========================================================================
+# BUG-118: populate_ui_from_config must refresh the summary panel
+# ===========================================================================
+
+
+class TestBug118SummaryRefreshOnPopulate:
+    """BUG-118: `populate_ui_from_config` must call `_summary_panel.refresh()`.
+
+    The summary panel uses `refresh()` while every other panel uses
+    `set_from_config()`, so it was silently skipped from the bulk-refresh
+    path. This made "Randomize All" leave the Summary tab's left-column
+    labels (Faction, Species, Government, Physical, Society) stuck on
+    "—" until the user switched tabs and back.
+    """
+
+    def test_populate_ui_from_config_refreshes_summary_panel(self):
+        """The bulk-refresh helper invokes `_summary_panel.refresh()`."""
+        screen, _ = _make_race_setup_screen()
+
+        screen._controller.populate_ui_from_config()
+
+        screen._summary_panel.refresh.assert_called_once()
+
+    def test_randomize_all_refreshes_summary_panel_left_column(self):
+        """End-to-end: clicking "Randomize All" triggers the summary
+        refresh that paints the left-column identity labels."""
+        from game.strategy.data.environmental_preference import (
+            EnvironmentalPreference,
+        )
+        from game.strategy.data.race_config import RaceConfig
+
+        screen, _ = _make_race_setup_screen()
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
+        screen._renderer.refresh_ship_preview = MagicMock()
+        screen._flag_gallery._discover_assets = MagicMock(
+            return_value=[("flag_a",)]
+        )
+        screen._portrait_gallery._discover_assets = MagicMock(
+            return_value=[("p_a.jpg",)]
+        )
+        screen._theme_gallery._discover_assets = MagicMock(
+            return_value=[("Federation",)]
+        )
+
+        fake_pref = EnvironmentalPreference(
+            setpoint=9.81, tolerance=2.0,
+            min_value=0.1, max_value=30.0, step=0.98,
+        )
+        fake_all = {
+            "race_name": "Rossarian",
+            "race_name_plural": "Rossarians",
+            "leader_name": "Zara IV",
+            "physical_type": "Humanoid",
+            "government_type": "Empire",
+            "government_organization": "Autocracy",
+            "leader_title": "Emperor",
+            "society_type": "Explorers",
+            "faction_name": "Rossarian Empire",
+            "flag_id": "flag_a",
+            "portrait_id": "p_a.jpg",
+            "theme_id": "Federation",
+            "homeworld_type": "CONTINENTAL",
+            "preferences": {"gravity": fake_pref},
+            "base_reproduction_rate": 0.05,
+            "base_happiness": 0.7,
+            "aptitudes": {
+                "strength": 60, "intelligence": 70, "constitution": 50,
+                "dexterity": 30, "tolerance_other_species": 50,
+                "cooperation": 50, "conflict_tolerance": 40,
+            },
+        }
+        with patch(
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_all.return_value = fake_all
+            screen._controller.randomize_all()
+
+        screen._summary_panel.refresh.assert_called()
+
+    def test_on_race_selected_refreshes_summary_panel(self):
+        """Loading a race via the browser dialog also refreshes the
+        summary panel — the explicit `_refresh_summary()` call was
+        deleted from `on_race_selected` in favour of the canonical
+        path inside `populate_ui_from_config`."""
+        screen, _ = _make_race_setup_screen()
+        new_config = _make_race_config_mock()
+
+        screen._controller.on_race_selected(new_config)
+
+        screen._summary_panel.refresh.assert_called()
