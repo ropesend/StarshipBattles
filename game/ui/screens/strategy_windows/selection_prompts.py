@@ -43,7 +43,8 @@ class SelectionPromptRegistrar:
         rect = pygame.Rect(x, y, width, height)
         # PROJ-54: PlanetSelectionWindow uses PlanetReportPanel internally.
         c.planet_selection_window = PlanetSelectionWindow(
-            rect, c.manager, planets, on_select
+            rect, c.manager, planets, on_select,
+            window_manager=c,
         )
 
     def open_system(self, systems, current_system, on_selected: Callable) -> None:
@@ -61,7 +62,8 @@ class SelectionPromptRegistrar:
         y = (c.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
         c.system_selection_window = SystemSelectionWindow(
-            rect, c.manager, systems, current_system, on_selected
+            rect, c.manager, systems, current_system, on_selected,
+            window_manager=c,
         )
 
     def prompt_fleet(self, fleets, on_select: Callable) -> None:
@@ -78,5 +80,6 @@ class SelectionPromptRegistrar:
         y = (c.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
         c.fleet_selection_window = FleetSelectionWindow(
-            rect, c.manager, fleets, on_select
+            rect, c.manager, fleets, on_select,
+            window_manager=c,
         )

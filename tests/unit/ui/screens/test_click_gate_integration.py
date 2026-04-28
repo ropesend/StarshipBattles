@@ -328,10 +328,13 @@ class TestClickGateWithAllWindowTypes:
     """Tests that all window types in window_manager are properly checked."""
 
     def test_transfer_dialog_blocks(self):
-        """Transfer dialog blocks clicks in its area."""
+        """Transfer dialog blocks clicks in its area.
+
+        PROJ-313: transfer_dialog migrated; now registered via iter_live_modals.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        wm.transfer_dialog = _create_mock_window(alive=True, rect_contains=True)
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=True))
 
         result = router.handle_click(600, 400, 1)
 

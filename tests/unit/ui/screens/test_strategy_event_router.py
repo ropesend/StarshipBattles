@@ -195,11 +195,15 @@ class TestClickGateWindows:
         assert result is True
 
     def test_click_blocked_by_transfer_dialog(self, event_router, mock_ui):
-        """Click on transfer_dialog should be blocked."""
+        """Click on transfer_dialog should be blocked.
+
+        PROJ-313: transfer_dialog migrated to StrategyModalWindow;
+        registered via iter_live_modals.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(900, 500, 750, 600)
-        mock_ui.window_manager.transfer_dialog = window
+        mock_ui.window_manager._modals_for_test.append(window)
 
         mx, my = 1000, 700
         result = event_router._is_blocking_ui_element_at(mx, my)

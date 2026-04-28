@@ -55,7 +55,7 @@ class TestCargoQuickDialog:
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Assert
@@ -83,7 +83,7 @@ class TestCargoQuickDialog:
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene, window_manager=None
         )
 
         # Assert: Two population types
@@ -106,7 +106,7 @@ class TestCargoQuickDialog:
 
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Verify we have an item
@@ -142,7 +142,7 @@ class TestCargoQuickDialog:
 
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Set slider to a value
@@ -187,7 +187,7 @@ class TestCargoQuickDialog:
 
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Set slider to max
@@ -222,7 +222,7 @@ class TestCargoQuickDialog:
 
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Act
@@ -255,7 +255,7 @@ class TestCargoQuickDialog:
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Assert: No cargo items, but dialog handles it gracefully
@@ -276,7 +276,7 @@ class TestCargoQuickDialog:
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'unload', mock_scene, window_manager=None
         )
 
         # Assert: No cargo items since no colony to unload to
@@ -291,7 +291,7 @@ class TestCargoQuickDialog:
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
-            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene
+            rect, mock_manager, mock_fleet, (0, 0), 'load', mock_scene, window_manager=None
         )
 
         # Assert

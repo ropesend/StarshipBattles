@@ -46,6 +46,7 @@ class TransferDialogRegistrar:
             source_fleet=source_fleet,
             hex_coord=hex_coord,
             scene=c.scene,
+            window_manager=c,
             input_mapper=c._mapper,
         )
 
@@ -73,5 +74,6 @@ class TransferDialogRegistrar:
             hex_coord=hex_coord,
             direction=direction,
             scene=c.scene,
+            window_manager=c,
             input_mapper=c._mapper,
         )

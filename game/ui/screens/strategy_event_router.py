@@ -60,15 +60,15 @@ class StrategyEventRouter:
 
         # Check window manager for open windows (PROJ-86)
         wm = self.ui.window_manager
-        # PROJ-313: fleet_orders_window migrated to StrategyModalWindow;
-        # tracked via wm.iter_live_modals() (OR-bridge below).
+        # PROJ-313 Phase 3: fleet_orders_window, transfer_dialog,
+        # cargo_quick_dialog, planet_selection_window, system_selection_window,
+        # fleet_selection_window migrated to StrategyModalWindow; tracked via
+        # wm.iter_live_modals() in the OR-bridge below.
         if wm.planet_list_window is not None:
             return True
         if wm.star_list_window is not None:
             return True
         if wm.fleet_report_window is not None:
-            return True
-        if wm.transfer_dialog is not None:
             return True
         if wm.build_queue_list_window is not None:
             return True
@@ -79,14 +79,6 @@ class StrategyEventRouter:
         if wm.empire_panel_window is not None:
             return True
         if wm.move_choice_window is not None:
-            return True
-        if wm.cargo_quick_dialog is not None:
-            return True
-        if wm.planet_selection_window is not None:
-            return True
-        if wm.system_selection_window is not None:
-            return True
-        if wm.fleet_selection_window is not None:
             return True
         # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
         if wm.planet_abilities_window is not None:
@@ -510,17 +502,12 @@ class StrategyEventRouter:
             ('planet_list_window', wm.planet_list_window),
             ('star_list_window', wm.star_list_window),
             ('fleet_report_window', wm.fleet_report_window),
-            ('transfer_dialog', wm.transfer_dialog),
             ('build_queue_list_window', wm.build_queue_list_window),
             ('empire_build_queue_window', wm.empire_build_queue_window),
             ('event_log_window', wm.event_log_window),
             ('empire_panel_window', wm.empire_panel_window),
             ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
             ('move_choice_window', wm.move_choice_window),
-            ('cargo_quick_dialog', wm.cargo_quick_dialog),
-            ('planet_selection_window', wm.planet_selection_window),
-            ('system_selection_window', wm.system_selection_window),
-            ('fleet_selection_window', wm.fleet_selection_window),
             # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
             ('planet_abilities_window', wm.planet_abilities_window),
         ]

@@ -57,7 +57,7 @@ class StrategyModalWindow(UIWindow):
     def __init__(
         self,
         *args: Any,
-        window_manager: "StrategyWindowManager",
+        window_manager: "StrategyWindowManager | None",
         **kwargs: Any,
     ) -> None:
         """Initialize and register with the window manager.
@@ -68,12 +68,17 @@ class StrategyModalWindow(UIWindow):
             window_manager: The :class:`StrategyWindowManager` that owns
                 the modal-tracking list. The instance registers itself
                 here on construction and deregisters on ``kill()``.
+                Pass ``None`` only when the window is being opened
+                outside the strategy screen (e.g. from a sub-screen
+                like ``BuildQueueScreen``); in that case the window
+                doesn't participate in strategy-screen modal tracking.
             **kwargs: Forwarded to ``UIWindow.__init__``. Typically
                 ``window_display_title``, ``resizable``, etc.
         """
         super().__init__(*args, **kwargs)
         self._window_manager = window_manager
-        window_manager.register_modal(self)
+        if window_manager is not None:
+            window_manager.register_modal(self)
 
     def kill(self) -> None:
         """Deregister from the window manager, then kill the underlying window.
@@ -86,8 +91,11 @@ class StrategyModalWindow(UIWindow):
 
         Idempotent: ``unregister_modal`` swallows ``ValueError`` for
         already-removed entries, so calling ``kill()`` twice is safe.
+        Windows constructed with ``window_manager=None`` skip the
+        deregistration step entirely.
         """
         try:
-            self._window_manager.unregister_modal(self)
+            if self._window_manager is not None:
+                self._window_manager.unregister_modal(self)
         finally:
             super().kill()

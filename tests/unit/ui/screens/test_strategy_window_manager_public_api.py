@@ -66,7 +66,13 @@ EXPECTED_WINDOW_SLOTS: frozenset[str] = frozenset({
 # that asserted "setting this slot flips has_modal_open" must skip
 # migrated slots.
 PROJ_313_MIGRATED_SLOTS: frozenset[str] = frozenset({
-    "fleet_orders_window",  # Phase 3
+    # Phase 3 — event-listener-only windows
+    "fleet_orders_window",
+    "transfer_dialog",
+    "cargo_quick_dialog",
+    "planet_selection_window",
+    "system_selection_window",
+    "fleet_selection_window",
 })
 
 # Public methods the production code calls on StrategyWindowManager.

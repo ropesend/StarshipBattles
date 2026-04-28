@@ -10,10 +10,13 @@ import logging
 from typing import TYPE_CHECKING, Callable, List
 
 import pygame
-from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
+from pygame_gui.elements import UISelectionList, UIButton, UILabel
+
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
     from game.strategy.facade.dto.fleet_dto import FleetInfo
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +35,12 @@ def _fleet_display_label(fleet: 'FleetInfo') -> str:
     return f"{fleet.name} — {fleet.composition_summary}"
 
 
-class FleetSelectionWindow(UIWindow):
+class FleetSelectionWindow(StrategyModalWindow):
     """Modal dialog for selecting a fleet from a list.
 
     Follows the PlanetSelectionWindow pattern: UISelectionList + Confirm/Cancel.
+
+    PROJ-313: migrated to StrategyModalWindow base class.
     """
 
     def __init__(
@@ -44,6 +49,8 @@ class FleetSelectionWindow(UIWindow):
         manager,
         fleets: List['FleetInfo'],
         on_selection_callback: Callable[['FleetInfo'], None],
+        *,
+        window_manager: "StrategyWindowManager",
         window_title: str = "Select Fleet to Join",
     ):
         """Initialize fleet selection window.
@@ -53,9 +60,13 @@ class FleetSelectionWindow(UIWindow):
             manager: pygame_gui UIManager instance.
             fleets: List of FleetInfo DTOs to choose from.
             on_selection_callback: Called with the selected FleetInfo.
+            window_manager: PROJ-313 StrategyWindowManager for modal registration.
             window_title: Window title text.
         """
-        super().__init__(rect, manager, window_display_title=window_title)
+        super().__init__(
+            rect, manager, window_display_title=window_title,
+            window_manager=window_manager,
+        )
         self.fleets = fleets
         self.callback = on_selection_callback
 
