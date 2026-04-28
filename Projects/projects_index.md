@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-315 | Fleet Report Component Damage Panel | Planning | 2026-04-28 | 2026-04-28 |
+| PROJ-315 | Fleet Report Component Damage Panel | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
 | PROJ-314 | Unify Ship Theme Loader Schema | Planning | 2026-04-28 | 2026-04-28 |
 | PROJ-313 | Strategy Modal Window Base Class Refactor | Planning | 2026-04-28 | 2026-04-28 |
 | PROJ-312 | Add Battle Replay System | Plan Approved | 2026-04-27 | 2026-04-27 |
