@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-28 — Documentation consistency pass: pattern count is 30 (added Registrar Close-Callback for BUG-121), `ApplicationContext` manages 9 services, broken archive links were corrected, and current layer/dependency guidance was reconciled with source.
+> **Last verified:** 2026-04-28 — PROJ-318 documentation consistency pass: pattern count is 31, `ApplicationContext` manages 10 services including `ImageProvider`, broken archive links remain corrected, and current layer/dependency guidance was reconciled with source.
 
 ---
 

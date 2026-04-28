@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-28 — PROJ-313 superseded Pattern #30 (Registrar Close-Callback) with structural enforcement via the new `StrategyModalWindow` base class (Pattern #31 below); the manual 6-step contract is now eradicated for new strategy-modal windows. Pattern count is 31. Pattern #18 (Per-Battle RNG) was expanded by PROJ-312 Phase 1 to cover the AI chain (`AIControllerFactory._rng` → `AIController._rng` → `ErraticBehavior._rng`) plus the AST guard regression contract.
+> **Last verified:** 2026-04-28 — PROJ-318 verified `ApplicationContext` manages 10 services including the PROJ-314 `ImageProvider`; PROJ-313 superseded Pattern #30 (Registrar Close-Callback) with structural enforcement via the new `StrategyModalWindow` base class (Pattern #31 below). Pattern count is 31.
 
 Agent-optimized reference for every core pattern in the codebase (31 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -63,11 +63,12 @@ class ApplicationContext:
     def __init__(self, registry_manager, profiler,
                  component_cache, policy_manager, asset_manager,
                  sprite_manager, ship_theme_manager,
-                 game_settings, llm_provider):
+                 game_settings, llm_provider, image_provider):
         self.registry_manager = registry_manager
         self.profiler = profiler
         self.llm_provider = llm_provider
-        # ... all 9 services
+        self.image_provider = image_provider
+        # ... all 10 services
 
     @classmethod
     def create_production(cls) -> 'ApplicationContext':
@@ -80,7 +81,7 @@ class ApplicationContext:
         ...
 ```
 
-### Services Managed (9 total)
+### Services Managed (10 total)
 
 | Service | File | Layer |
 |---------|------|-------|
@@ -93,6 +94,7 @@ class ApplicationContext:
 | ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
 | GameSettings | `game/ui/services/game_settings.py` | UI |
 | LLMProvider | `game/services/llm/provider.py` | Services |
+| ImageProvider | `game/ui/services/image/provider.py` | UI |
 
 ### How Services Are Accessed
 

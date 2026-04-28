@@ -91,7 +91,7 @@ Current services:
 
 | Module                | Description |
 |-----------------------|-------------|
-| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages the production service graph; additional services (e.g., `ship_materializer` in PROJ-274) follow the same module-level `get_default_*` / `set_default_*` pattern and are consulted on demand rather than wired into the context constructor. |
+| `context.py`          | ApplicationContext DI container. `create_production()` and `create_test()`. Manages the production service graph, including the PROJ-314 UI `ImageProvider`. Context-owned services install matching module-level defaults where applicable; services outside the constructor (e.g., `ship_materializer` in PROJ-274) follow the same `get_default_*` / `set_default_*` pattern and are consulted on demand. |
 
 ### `game/services/` -- Cross-cutting infrastructure (PROJ-296)
 

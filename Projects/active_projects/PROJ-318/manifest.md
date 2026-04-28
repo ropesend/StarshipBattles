@@ -17,6 +17,7 @@
 | `docs/02_PATTERNS.md` | Doc | Phase 2 — bump "9 services" → "10 services" in the Singleton-Free DI section (lines 83-95). Add `ImageProvider` row to the table. Update the `# all 9 services` comment in the code example. Bump `Last verified:` date. |
 | `docs/README.md` | Doc | Phase 2 — bump "9 services" → "10 services" on line 4. Bump `Last verified:` date. |
 | `AGENTS.md` | Doc | Phase 2 — bump "9 services" → "10 services" on line 51 (or wherever it appears). |
+| `docs/01_ARCHITECTURE.md` | Doc | Phase 2 — implementation found the `ApplicationContext` row still described new services as outside constructor wiring; update it to mention the context-owned `ImageProvider`. |
 | `game/ui/utils/portraits.py` | Production | Phase 3 — delete `get_portrait_filename()` (lines 83-97). Delete legacy fallback in `get_portrait_search_paths()` (lines 98-114) or delete the whole function if its sole purpose was the legacy lookup. Update production callers (`build_queue_portraits.py:23`, `design_report_panel.py:18-20`) to use `ShipThemeManager.get_portrait_image()` directly. |
 | `tests/unit/ui/utils/test_portraits.py` | Test | Phase 3 — delete `TestGetPortraitFilename` class (3 tests). Verify no other test depends on `get_portrait_filename`. |
 | `game/ui/panels/build_queue_portraits.py` | Production | Phase 3 — line 23 caller of `get_portrait_search_paths()`; replace with `ShipThemeManager.get_portrait_image()`. |

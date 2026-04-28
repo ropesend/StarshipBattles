@@ -15,7 +15,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. R1 — Audit-gate hygiene | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. R6 — Architecture docs service-count fix | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. R6 — Architecture docs service-count fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. R3 — Delete legacy `<Class>_Portrait.jpg` helper | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. R5 — `Tools/regenerate_ship_portraits/` conventions | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. R2 — Make audit + smoke test a real release gate | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -24,9 +24,9 @@
 ## Current State
 
 **Last Updated:** 2026-04-28
-**Active Phase:** Phase 2 — R6 architecture docs service-count fix
-**Last Action:** Phase 1 complete. PROJ-314 phase checklists now exist for all six phases, all checklist boxes are checked, PROJ-314 blockers are `None`, and `validate_audit_ready.py PROJ-314` exits 0.
-**Next Action:** Phase 2 updates stale service-count documentation in `docs/02_PATTERNS.md`, `docs/README.md`, and `AGENTS.md`.
+**Active Phase:** Phase 3 — R3 delete legacy `<Class>_Portrait.jpg` helper
+**Last Action:** Phase 2 complete. Stale service-count docs now say `ApplicationContext` manages 10 services, `ImageProvider` is documented, and the full sharded suite passed 15998/15998.
+**Next Action:** Phase 3 audits and removes remaining legacy portrait helper functions and migrates production callers to `ShipThemeManager`.
 **Blockers:** None
 **Test baseline at plan time:** 15959 / 15959 passing (post-PROJ-314 baseline).
 

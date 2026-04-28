@@ -48,7 +48,7 @@ Layered, bottom-up: **Core / Services / Assets / Engine → Simulation / Researc
 - `game/ai/` — Depends on Core + Services + Engine + Simulation. Behaviors, targeting, spatial navigation.
 - `game/ui/` — Depends on all. Pygame screens, panels, widgets, renderer.
 
-Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 9 services), Facade/Delegate, CQRS-lite, two-phase ability aggregation, Habitability Factor Registry (single-source-of-truth for all habitability axes).
+Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 services), Facade/Delegate, CQRS-lite, two-phase ability aggregation, Habitability Factor Registry (single-source-of-truth for all habitability axes).
 
 ## Critical Conventions
 

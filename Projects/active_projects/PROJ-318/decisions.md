@@ -19,3 +19,4 @@
 | 2026-04-28 | Architecture docs to update for service-count fix | `docs/02_PATTERNS.md`, `docs/README.md`, `AGENTS.md`. `docs/01_ARCHITECTURE.md` was correctly updated by PROJ-314 (line 3 verified). |
 | 2026-04-28 | One commit per phase | Each phase resolves one verified finding cleanly. Independent commits make rollback safe and review easy. |
 | 2026-04-28 | Test baseline at plan time: 15959 / 15959 passing | Post-PROJ-314 baseline. Net delta after PROJ-318 estimated at +5 / -3 tests (Phase 5 adds ~5 dimension/coverage assertions; Phase 3 deletes 3 legacy-helper tests). |
+| 2026-04-28 | Phase 2 also updates `docs/01_ARCHITECTURE.md` context row | During implementation, `docs/01_ARCHITECTURE.md` was found to mention the image service but still describe additional services as not wired into the `ApplicationContext` constructor. Updating that row is the root-cause documentation fix, even though the original Phase 2 plan expected the file to be read-only. |
