@@ -235,6 +235,11 @@ class BattleEngine:
         self._ai_factory = ai_factory
         if self._ai_factory is not None:
             self._ai_factory.set_grid(self.grid)
+            # PROJ-312: forward the engine's pre-seed RNG to the factory so
+            # tests that pre-create controllers before start_teams() get a
+            # working factory. start_teams() will overwrite this with the
+            # seeded `random.Random(seed)` instance once the seed is known.
+            self._ai_factory.set_rng(self.rng)
 
         # PROJ-269 Phase 3: boundary region (per-tick enforcement).
         # Defaults to UnboundedRegion when not passed — matches pre-Phase-3 behavior.
@@ -318,6 +323,11 @@ class BattleEngine:
         if ai_controllers is not None:
             self.ai_controllers = list(ai_controllers)
         elif self._ai_factory is not None:
+            # PROJ-312: forward the per-battle seeded RNG to the factory so
+            # every controller it builds (and every behavior they own —
+            # ErraticBehavior in particular) consumes a deterministic RNG.
+            # Pattern #18 (Per-Battle RNG).
+            self._ai_factory.set_rng(self.rng)
             # Phase 3 Task 3.3: AI factory's `enemy_team_id` is a 2-team
             # artifact. For N teams, we pass any non-self team id as a
             # hint — Task 3.4 refines the AI to scan all enemies.

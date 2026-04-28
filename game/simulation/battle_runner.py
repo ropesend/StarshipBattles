@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
     from game.simulation.entities.ship import Ship
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
+    from game.simulation.replay.replay_capture import ReplayCaptureContext
 
 logger = logging.getLogger(__name__)
 
@@ -145,12 +146,27 @@ def start_engine_from_spec(
     *,
     ai_factory: "IAIControllerFactory",
     ship_builder: Callable[[ShipSpec, int], "Ship"],
+    capture_context: "Optional[ReplayCaptureContext]" = None,
 ) -> "tuple[BattleEngine, Dict[str, Ship]]":
     """Construct and start a `BattleEngine` from a `BattleSpec`.
 
     Thin wrapper around `materialize_spec_ships` + `BattleEngine` setup
     + `engine.start_teams()`. Returns `(engine, ships_by_role)`.
+
+    PROJ-312: when a `capture_context` is supplied AND a non-null capture
+    sink is registered via `set_default_capture_sink`, the spec is
+    captured as a `ReplaySpec` and forwarded to
+    `sink.on_battle_started(...)` BEFORE the tick loop begins. The
+    returned `replay_id` is stored on `engine.replay_id` so
+    `extract_outcome` can fire the matching `on_battle_ended` callback.
     """
+    # PROJ-312: capture spec at battle entry. Imports kept local so the
+    # battle-runner's startup cost doesn't grow when capture is unused.
+    from game.simulation.replay import (
+        ReplaySpec,
+        get_default_capture_sink,
+    )
+
     engine = BattleEngine(
         logger=BattleLogger(enabled=False),
         ai_factory=ai_factory,
@@ -158,6 +174,20 @@ def start_engine_from_spec(
     if spec.boundary is not None:
         engine.boundary = spec.boundary
     engine.modifier_stack = spec.modifier_stack
+
+    # PROJ-312: pre-tick capture hook. Skip when no context (Phase 5
+    # replay-mode playback intentionally passes None to avoid recursion).
+    engine.replay_id: Optional[str] = None  # type: ignore[attr-defined]
+    if capture_context is not None:
+        sink = get_default_capture_sink()
+        replay_spec = ReplaySpec.from_battle_spec(
+            spec, ship_instance_lookup=capture_context.ship_instance_lookup
+        )
+        try:
+            replay_id = sink.on_battle_started(replay_spec, context=capture_context)
+        except Exception:  # Intentional broad catch: capture must not crash a battle
+            replay_id = None
+        engine.replay_id = replay_id  # type: ignore[attr-defined]
 
     teams_by_id, ships_by_role = materialize_spec_ships(
         spec, ship_builder=ship_builder,
@@ -232,6 +262,7 @@ def run_battle(
     headless: bool = True,
     per_tick_callback: Optional[Callable[["BattleEngine"], None]] = None,
     pre_tick_loop_callback: Optional[Callable[["BattleEngine"], None]] = None,
+    capture_context: "Optional[ReplayCaptureContext]" = None,
 ) -> BattleOutcome:
     """Run a fully-specified battle and return its outcome.
 
@@ -292,6 +323,7 @@ def run_battle(
 
     engine, _ships_by_role = start_engine_from_spec(
         spec, ai_factory=ai_factory, ship_builder=ship_builder,
+        capture_context=capture_context,
     )
 
     # PROJ-269 Phase 5: attach telemetry subscribers based on spec level.
@@ -319,6 +351,20 @@ def run_battle(
         stats_aggregator=stats_aggregator,
         hit_log_recorder=hit_log_recorder,
     )
+
+    # PROJ-312: post-tick capture hook — fires BEFORE post_battle_hook so
+    # capture is never perturbed by hook side effects.
+    replay_id = getattr(engine, "replay_id", None)
+    if replay_id:
+        from game.simulation.replay import (
+            ReplayOutcome,
+            get_default_capture_sink,
+        )
+        try:
+            replay_outcome = ReplayOutcome.from_battle_outcome(outcome)
+            get_default_capture_sink().on_battle_ended(replay_id, replay_outcome)
+        except Exception:  # Intentional broad catch: capture must not crash a battle
+            logger.exception("PROJ-312 replay capture: on_battle_ended failed")
 
     if spec.post_battle_hook is not None:
         spec.post_battle_hook(outcome)

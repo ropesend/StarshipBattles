@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-28 — Reconciled pattern count to 30 with the addition of the Registrar Close-Callback pattern (BUG-121), updated `ApplicationContext` to 9 managed services, removed stale `SingletonMeta` references, and confirmed the current quick-reference entries.
+> **Last verified:** 2026-04-28 — Reconciled pattern count to 30 with the addition of the Registrar Close-Callback pattern (BUG-121), updated `ApplicationContext` to 9 managed services, removed stale `SingletonMeta` references, and confirmed the current quick-reference entries. Pattern #18 (Per-Battle RNG) was expanded by PROJ-312 Phase 1 to cover the AI chain (`AIControllerFactory._rng` → `AIController._rng` → `ErraticBehavior._rng`) plus the AST guard regression contract.
 
 Agent-optimized reference for every core pattern in the codebase (30 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -1184,25 +1184,31 @@ class ISerializable(Protocol):
 
 ---
 
-## 18. Per-Battle RNG (PROJ-252)
+## 18. Per-Battle RNG (PROJ-252, extended by PROJ-312)
 
 ### Where
 
 `game/simulation/systems/battle_engine.py` -- `BattleEngine.rng`,
 `game/engine/collision.py` -- `CollisionSystem.rng`,
 `game/simulation/combat/damage_calculator.py` -- `DamageCalculator.rng`,
+`game/ai/ai_factory.py` -- `AIControllerFactory._rng` (PROJ-312),
+`game/ai/controller.py` -- `AIController._rng` (PROJ-312),
+`game/ai/behaviors.py` -- `ErraticBehavior._rng` (PROJ-312),
 `game/strategy/engine/conflict_resolution_engine.py` -- `ConflictResolutionEngine._rng`
 
 ### How It Works
 
 Each `BattleEngine.start(seed=N)` creates a per-instance `random.Random(seed)`.
-This RNG is propagated to subsystems (`CollisionSystem`, `DamageCalculator`).
-The global `random` module is **never** seeded by simulation code.
+This RNG is propagated to subsystems (`CollisionSystem`, `DamageCalculator`,
+`AIControllerFactory` → `AIController` → `ErraticBehavior`). The global
+`random` module is **never** seeded by simulation code.
 
 ```python
-# BattleEngine.start()
-self.rng = random.Random(seed)
-self.collision_system.rng = self.rng
+# BattleEngine.start_teams()
+self._initialize_start_state(seed, ...)        # self.rng = random.Random(seed)
+...
+self._ai_factory.set_rng(self.rng)             # PROJ-312: AI chain
+self._ai_factory.create_for_ships(team_ships, ...)
 ```
 
 `ConflictResolutionEngine` has its own `self._rng = random.Random()` for
@@ -1212,8 +1218,28 @@ strategy-layer randomness (empire pairing in multi-empire conflicts).
 
 - All combat randomness (hit rolls, damage distribution, fighter spawn offsets)
   must use the battle's `self.rng`, never `random.random()`.
+- AI behaviors that need randomness (e.g. `ErraticBehavior`) take `rng` as a
+  required keyword-only constructor argument and consume it via `self._rng`.
+  The `AIController` forwards its own `_rng` (sourced from
+  `AIControllerFactory._rng`, ultimately `BattleEngine.rng`).
 - Strategy-layer randomness uses its own `Random` instance.
 - **Never** call `random.seed()` from simulation or strategy code.
+
+### Regression Contract (PROJ-312)
+
+The AST guard at
+[tests/unit/quality/test_no_unseeded_random.py](../tests/unit/quality/test_no_unseeded_random.py)
+fails if any `.py` file under `game/simulation/`, `game/engine/`, or
+`game/ai/` calls `random.<X>(...)` other than `random.Random(...)`. New
+RNG consumers in those layers MUST inject a `random.Random` instance via
+DI; module-level `random.*` is forbidden. An explicit
+`# noqa: replay-determinism` allowlist marker exists for genuinely-justified
+exceptions, but none are expected today.
+
+Bit-stable replay is verified at
+[tests/integration/fleet_combat/test_battle_determinism.py](../tests/integration/fleet_combat/test_battle_determinism.py)
+via `TestBattleStateHashRegression` (SHA-256 of canonical per-ship final
+state, asserted equal across 5 repeated runs of the same seeded battle).
 
 ---
 

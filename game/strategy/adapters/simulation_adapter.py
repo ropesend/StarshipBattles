@@ -21,7 +21,7 @@ PROJ-269 Phase 6 Tasks 6.5 + 6.11:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TYPE_CHECKING
 
 from game.simulation.battle_runner import run_battle
 from game.strategy.interfaces.battle_resolver import BattleResult, IBattleResolver
@@ -155,10 +155,20 @@ class SimulationBattleResolver(IBattleResolver):
         # layer is allowed to call `get_default_registry_provider()`;
         # the Simulation layer cannot.
         from game.core.registry import get_default_registry_provider
+
+        # PROJ-312: build the replay capture context. ship_instance_lookup
+        # serializes the strategy ShipInstance via ShipInstanceSerializer
+        # so the captured ReplaySpec can re-materialize independently of
+        # current strategy state. Phase 4's ReplayStore consumes this; if
+        # no sink is registered, the context is harmless overhead.
+        capture_context = self._build_capture_context(
+            fleet_list, registries=registries
+        )
         outcome = run_battle(
             spec,
             ai_factory=self._ai_factory,
             registry_provider=get_default_registry_provider(),
+            capture_context=capture_context,
         )
 
         winner = self._determine_winner(outcome)
@@ -214,6 +224,85 @@ class SimulationBattleResolver(IBattleResolver):
             seed=seed,
             environmental_effects=environmental_effects,
             team_modifiers=team_modifiers,
+        )
+
+    def _build_capture_context(
+        self,
+        fleets: List['Fleet'],
+        *,
+        registries: Optional['GameRegistries'],
+    ) -> Any:
+        """Build a ``ReplayCaptureContext`` for this strategy battle.
+
+        PROJ-312: the context carries metadata + a ``ship_instance_lookup``
+        callable that serializes each ``ShipInstance`` via
+        ``ShipInstanceSerializer.to_dict`` so the captured ``ReplaySpec``
+        can re-materialize independently of current strategy state.
+
+        Sector / turn / empire metadata is filled in opportunistically
+        from the fleet inputs; missing values are left as ``None`` /
+        empty tuples (Phase 4 enriches further when integrating with the
+        save lifecycle).
+        """
+        from datetime import datetime, timezone
+
+        from game.simulation.replay import (
+            ReplayCaptureContext,
+            compute_components_registry_hash,
+        )
+        from game.strategy.data.ship_instance_serializer import (
+            ShipInstanceSerializer,
+        )
+
+        # Empire participation by team order; tolerate fleets without an
+        # empire association (orphan/AI-only).
+        empires: List[str] = []
+        for fleet in fleets:
+            owner = getattr(fleet, "owner", None) or getattr(fleet, "empire", None)
+            name = getattr(owner, "name", None) if owner is not None else None
+            if name is None:
+                name = getattr(fleet, "owner_name", None) or "Unknown"
+            empires.append(str(name))
+
+        # Sector — every fleet at the same hex by IBattleResolver invariant.
+        sector_coords: Optional[Tuple[int, int]] = None
+        sector_name: Optional[str] = None
+        if fleets:
+            location = getattr(fleets[0], "location", None)
+            if location is not None:
+                q = getattr(location, "q", None)
+                r = getattr(location, "r", None)
+                if q is not None and r is not None:
+                    sector_coords = (int(q), int(r))
+                    sector_name = f"({q}, {r})"
+
+        # Components-registry hash — fed by Phase 6 drift-warning UI.
+        components_hash = (
+            compute_components_registry_hash(registries)
+            if registries is not None
+            else "sha256:unknown"
+        )
+
+        # ship_instance_lookup serializes the strategy ShipInstance referenced
+        # by ShipSpec.instance_ref. Returns None when no instance is attached
+        # (synthetic / Combat Lab / Battle Setup fixtures).
+        def _lookup(ship_spec):  # type: ignore[no-redef]
+            instance = getattr(ship_spec, "instance_ref", None)
+            if instance is None:
+                return None
+            try:
+                return ShipInstanceSerializer.to_dict(instance)
+            except Exception:  # Intentional broad catch: capture must not crash a battle
+                return None
+
+        return ReplayCaptureContext(
+            sector_name=sector_name,
+            sector_coords=sector_coords,
+            turn_number=None,  # Phase 4 wires the GameSession turn number
+            participating_empires=tuple(empires),
+            components_registry_hash=components_hash,
+            captured_at=datetime.now(timezone.utc).isoformat(),
+            ship_instance_lookup=_lookup,
         )
 
     def _determine_winner(self, outcome) -> Optional[int]:

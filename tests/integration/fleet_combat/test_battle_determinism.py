@@ -5,7 +5,15 @@ Verifies that:
 - Same seed produces identical battle outcomes
 - Global random state does not contaminate battle results
 - Different seeds produce different outcomes
+
+PROJ-312 Phase 1 extends this harness with a state-hash regression
+(``TestBattleStateHashRegression``) that fingerprints the full per-ship
+final state and asserts bit-stability across runs. The hash catches subtle
+divergences (a single position drift, an extra projectile) that the
+coarser winner/tick/HP comparison would miss.
 """
+import hashlib
+import json
 import random
 
 from game.simulation.systems.battle_engine import BattleEngine
@@ -124,3 +132,93 @@ class TestBattleDeterminism:
         assert winner1 == winner2
         assert ticks1 == ticks2
         assert survivors1 == survivors2
+
+
+def _hash_battle_final_state(team0_ships, team1_ships, seed, max_ticks=500):
+    """Run a seeded battle and return a stable SHA-256 of its full per-ship
+    final state.
+
+    The fingerprint includes per-ship name, alive status, derelict status,
+    HP, position (rounded to 4 decimals to absorb pure float-noise from
+    re-runs), rotation, and team_id. Sorted by ship name so iteration
+    order can't perturb the hash.
+
+    Used by ``TestBattleStateHashRegression`` (PROJ-312 Phase 1 Task 1.4).
+    """
+    factory = AIControllerFactory()
+    engine = BattleEngine(ai_factory=factory)
+    engine.start(team0_ships, team1_ships, seed=seed)
+
+    while not engine.is_battle_over() and engine.tick_counter < max_ticks:
+        engine.update()
+
+    state = []
+    for ship in sorted(engine.ships, key=lambda s: s.name):
+        rotation = float(getattr(ship, "angle", 0.0) or 0.0)
+        state.append({
+            "name": ship.name,
+            "team_id": ship.team_id,
+            "is_alive": bool(ship.is_alive),
+            "is_derelict": bool(getattr(ship, "is_derelict", False)),
+            "hp": float(ship.hp),
+            "x": round(float(ship.x), 4),
+            "y": round(float(ship.y), 4),
+            "rotation": round(rotation, 4),
+        })
+    state_blob = {
+        "tick_counter": engine.tick_counter,
+        "winner": engine.get_winner(),
+        "ships": state,
+    }
+    canonical = json.dumps(state_blob, sort_keys=True)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+class TestBattleStateHashRegression:
+    """PROJ-312 Phase 1 Task 1.4 — bit-stable per-ship final state.
+
+    Two runs of the same seeded battle must produce the same SHA-256 of the
+    canonical state fingerprint. This is a stronger contract than the
+    coarse winner/tick/HP comparison in ``TestBattleDeterminism``: it
+    catches a single-pixel position drift, a stray projectile, or any
+    other subtle divergence in the simulation hot path.
+    """
+
+    def test_seeded_battle_state_hash_stable_within_process(self, fresh_registries):
+        """Bit-identical state hash across two runs in the same process."""
+        t0a, t1a = _make_teams(fresh_registries)
+        hash_a = _hash_battle_final_state(t0a, t1a, seed=42)
+
+        t0b, t1b = _make_teams(fresh_registries)
+        hash_b = _hash_battle_final_state(t0b, t1b, seed=42)
+
+        assert hash_a == hash_b, (
+            "Two seed=42 battles produced different state hashes within "
+            "the same process. A non-seeded RNG consumer is leaking into "
+            "the hot path. Re-run the AST guard "
+            "(tests/unit/quality/test_no_unseeded_random.py)."
+        )
+
+    def test_seeded_battle_state_hash_stable_across_repeats(self, fresh_registries):
+        """Run the same seeded battle 5 times; every hash must agree.
+
+        Catches flakiness that a single re-run might miss — e.g., a
+        non-deterministic dict iteration order that happens to be stable
+        for two consecutive runs but drifts on the third.
+        """
+        hashes = []
+        for _ in range(5):
+            t0, t1 = _make_teams(fresh_registries)
+            hashes.append(_hash_battle_final_state(t0, t1, seed=42))
+        assert len(set(hashes)) == 1, (
+            f"5 seed=42 runs produced {len(set(hashes))} distinct state "
+            f"hashes (expected 1). Hashes: {hashes}"
+        )
+
+    # Note: a "different seeds → different state hash" assertion is
+    # tempting here, but the simple 1v1 deterministic-kite scenario
+    # converges on the same final ship positions regardless of seed.
+    # Seed-sensitivity is verified at the RNG-sequence level by
+    # ``test_different_seeds_produce_different_rng_sequences`` and at
+    # the unit level by
+    # ``tests/unit/ai/test_erratic_behavior_seeded.py::test_different_seeds_diverge``.

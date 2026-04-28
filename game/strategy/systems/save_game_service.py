@@ -22,6 +22,45 @@ from game.core.exceptions import PersistenceException, ValidationException, Stat
 logger = logging.getLogger(__name__)
 
 
+# PROJ-312: optional ReplayStore hook. Wired from app bootstrap via
+# `set_replay_store(...)`. Static SaveGameService methods invoke
+# `_notify_replay_store_*` so save lifecycle (create / load / delete) keeps
+# the store's `save_root` aligned with the active save folder. When no
+# store is registered, every notification is a no-op.
+_replay_store: Optional[object] = None
+
+
+def set_replay_store(store: Optional[object]) -> None:
+    """Register a ``ReplayStore`` (or any object with the same lifecycle
+    methods). Pass ``None`` to detach. Production wiring lives in
+    ``ApplicationContext.create_production`` (Phase 4)."""
+    global _replay_store
+    _replay_store = store
+
+
+def get_replay_store() -> Optional[object]:
+    return _replay_store
+
+
+def _notify_replay_store_save_or_load(save_path: str) -> None:
+    if _replay_store is None:
+        return
+    try:
+        from pathlib import Path as _Path
+        _replay_store.set_save_root(_Path(save_path))  # type: ignore[attr-defined]
+    except Exception:  # Intentional broad catch: store hooks must not crash save/load
+        logger.exception("PROJ-312 replay-store save_root hook failed")
+
+
+def _notify_replay_store_save_deleted() -> None:
+    if _replay_store is None:
+        return
+    try:
+        _replay_store.clear_save_root()  # type: ignore[attr-defined]
+    except Exception:  # Intentional broad catch: store hooks must not crash delete
+        logger.exception("PROJ-312 replay-store clear_save_root hook failed")
+
+
 class SaveGameService:
     """Manages saving and loading complete game state"""
 
@@ -101,6 +140,8 @@ class SaveGameService:
                 return False, "Failed to save metadata", None
 
             logger.info(f"SaveGameService: Saved turn {game_session.turn_number} to {os.path.basename(save_path)}")
+            # PROJ-312: keep the replay store pointed at the active save.
+            _notify_replay_store_save_or_load(save_path)
             return True, f"Game saved: Turn {game_session.turn_number}", save_path
 
         except PermissionError as e:
@@ -145,6 +186,8 @@ class SaveGameService:
         # Resolve turn number for logging
         loaded_turn = game_state.get('turn_number', turn_number or 1)
         logger.info(f"SaveGameService: Loaded turn {loaded_turn} from {os.path.basename(resolved_path)}")
+        # PROJ-312: keep the replay store pointed at the active save.
+        _notify_replay_store_save_or_load(resolved_path)
         return game_session, f"Game loaded: Turn {loaded_turn}"
 
     @staticmethod
@@ -257,6 +300,9 @@ class SaveGameService:
             shutil.rmtree(save_path)
 
             logger.info(f"SaveGameService: Deleted save {os.path.basename(save_path)}")
+            # PROJ-312: detach the replay store so it doesn't keep pointing
+            # at a deleted folder. The `replays/` subfolder went with rmtree.
+            _notify_replay_store_save_deleted()
             return True, "Save deleted successfully"
 
         except PermissionError as e:

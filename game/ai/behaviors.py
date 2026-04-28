@@ -316,10 +316,14 @@ class ErraticBehavior(AIBehavior):
     Supports optional leash constraint: if leash_radius is set in the
     movement policy, the ship steers back toward its starting position
     when it drifts beyond that radius.
+
+    PROJ-312: rng must be supplied via DI. The behavior never reaches the
+    module-level ``random`` module — Pattern #18 (Per-Battle RNG).
     """
 
-    def __init__(self, controller: Any) -> None:
+    def __init__(self, controller: Any, *, rng: random.Random) -> None:
         super().__init__(controller)
+        self._rng = rng
         self.direction_timer: float = 0.0
         self.current_direction: int = 1
         self.next_change_interval: float = 1.0
@@ -327,8 +331,8 @@ class ErraticBehavior(AIBehavior):
 
     def enter(self) -> None:
         self.direction_timer = 0.0
-        self.current_direction = random.choice([-1, 1])
-        self.next_change_interval = random.uniform(
+        self.current_direction = self._rng.choice([-1, 1])
+        self.next_change_interval = self._rng.uniform(
             AIConfig.ERRATIC_TURN_INTERVAL_MIN,
             AIConfig.ERRATIC_TURN_INTERVAL_MAX
         )
@@ -367,8 +371,8 @@ class ErraticBehavior(AIBehavior):
 
         if self.direction_timer >= self.next_change_interval:
             # Change direction randomly
-            self.current_direction = random.choice([-1, 0, 1])
-            self.next_change_interval = random.uniform(min_interval, max_interval)
+            self.current_direction = self._rng.choice([-1, 0, 1])
+            self.next_change_interval = self._rng.uniform(min_interval, max_interval)
             self.direction_timer = 0.0
 
         # Apply rotation if not going straight

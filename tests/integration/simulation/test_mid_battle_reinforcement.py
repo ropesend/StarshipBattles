@@ -38,9 +38,16 @@ class _MockAIControllerFactory:
 
     def __init__(self):
         self._grid = None
+        self._rng = None
 
     def set_grid(self, grid):
         self._grid = grid
+
+    def set_rng(self, rng):
+        # PROJ-312: factory protocol gained set_rng to forward the
+        # per-battle seeded RNG into AI behaviors. Mock accepts and
+        # ignores — the mock controller has no RNG-consuming logic.
+        self._rng = rng
 
     def create_for_ship(self, ship, enemy_team_id):
         # Wrap in a mock adapter matching ShipControllableAdapter shape

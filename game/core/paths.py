@@ -62,6 +62,7 @@ class Paths:
     RACES_DIR: str = os.path.join(OUTPUT_DIR, "races")
     LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
     SETTINGS_DIR: str = os.path.join(OUTPUT_DIR, "settings")
+    REPLAY_SETTINGS_FILE: str = os.path.join(OUTPUT_DIR, "settings", "replay_settings.json")
 
     # === Data Subdirectories ===
     BATTLES_DIR: str = os.path.join(DATA_DIR, "battles")
