@@ -82,6 +82,32 @@ Apply mode is intentionally not implemented yet. Per the final coordination
 plan, apply only lands once the dry-run reports have been reviewed and the
 classification rules have been exercised on the real settings file.
 
+## Skill usage tracking
+
+```powershell
+python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start
+python Tools/agent_coordination/summarize_skill_usage.py
+```
+
+Counters are **advisory only**. They identify rarely-used skills as cleanup
+candidates; they never authorize automatic deletion.
+
+- The first invocation auto-generates a per-checkout `install_id` at
+  `AgentCoordination/local/install_id.json` (gitignored).
+- Each invocation increments the counter for one (skill, agent) pair in
+  `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`.
+- `summarize_skill_usage.py` aggregates every per-install file into
+  `AgentCoordination/generated/skill_usage/summary.json` (tracked artifact
+  with `schema_version`, total counts, per-install breakdown, and most-recent
+  `last_used` timestamp).
+- Allowed `--agent` values: `claude`, `anti`, `ocode`, `codex`. Skill names
+  must satisfy the Agent Skills regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
+
+For Claude Code the natural integration is a skill-scoped hook in
+`.claude/settings.json` that calls `log_skill_usage.py` with the matched
+skill name. Other agents call the script explicitly; transcript-scanning is
+a viable alternative if hook support is missing.
+
 ## Test baseline `git_sha` semantics
 
 The companion file `AgentCoordination/generated/test_baseline.json` records
