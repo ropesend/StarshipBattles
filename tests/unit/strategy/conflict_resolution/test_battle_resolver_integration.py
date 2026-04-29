@@ -42,7 +42,8 @@ class TestBattleResolverIntegration:
 
         class TrackingResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
                 calls.append(list(fleets))
                 return BattleResult(
                     winner=0, tick_count=100,
@@ -66,18 +67,26 @@ class TestBattleResolverIntegration:
         assert f1 in calls[0] and f2 in calls[0]
 
     def test_mock_resolver_enables_unit_testing(self):
+        """BUG-126: when the (mock) resolver wipes the loser's fleet to
+        zero ships, the engine reports the destroyed fleet id. The
+        strategy engine no longer calls `empire.remove_fleet` itself —
+        that is the `PostBattleHook`'s job."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class AlwaysTeam0WinsResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
-                fleets = list(fleets)
+                               registries=None, environmental_effects=None,
+                               empires=None):
+                fleet_list = list(fleets)
+                # Simulate the PostBattleHook wiping the loser fleet.
+                for f in fleet_list[1:]:
+                    f.ships = []
                 return BattleResult(
                     winner=0, tick_count=50,
                     team_survivors={
                         0: [MagicMock()],
-                        **{i: [] for i in range(1, len(fleets))},
+                        **{i: [] for i in range(1, len(fleet_list))},
                     },
                 )
 
@@ -92,8 +101,9 @@ class TestBattleResolverIntegration:
 
         engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-        # Loser (team 1 = emp2) had its fleet pruned
-        emp2.remove_fleet.assert_called_once_with(f2, event_bus=None)
+        # Strategy engine no longer prunes — that is the hook's job.
+        emp2.remove_fleet.assert_not_called()
+        # But the engine reports the wiped fleet for audit/event payload.
         assert engine._fleets_destroyed == [2]
 
     def test_battle_results_not_applied_via_adapter(self):
@@ -106,7 +116,8 @@ class TestBattleResolverIntegration:
 
         class ResultResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
                 return BattleResult(
                     winner=0, tick_count=100,
                     team_survivors={0: [MagicMock()], 1: [MagicMock()]},
@@ -125,14 +136,18 @@ class TestBattleResolverIntegration:
         # Would raise AttributeError if engine called fleet.battle.*.
         engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-    def test_draw_resolves_to_team_with_more_survivors(self):
-        """PROJ-275 Phase 7 — draw winner picked by survivor count."""
+    def test_draw_keeps_both_fleets(self):
+        """BUG-126: draws no longer destroy a fleet. The legacy
+        survivor-count tiebreaker is gone — both fleets remain in
+        their empires when `BattleResult.winner is None` and both
+        sides retain ships."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class DrawResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
                 return BattleResult(
                     winner=None, tick_count=1000,
                     team_survivors={0: [MagicMock(), MagicMock()], 1: [MagicMock()]},
@@ -148,9 +163,10 @@ class TestBattleResolverIntegration:
 
         engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
-        # Team 0 had more survivors → loses no fleet; team 1 loses theirs.
+        # Both fleets retained their ships — neither is destroyed.
         emp1.remove_fleet.assert_not_called()
-        emp2.remove_fleet.assert_called_once_with(f2, event_bus=None)
+        emp2.remove_fleet.assert_not_called()
+        assert engine._fleets_destroyed == []
 
     def test_seed_passed_to_resolver(self):
         """The engine's deterministic seed counter feeds the resolver."""
@@ -161,7 +177,8 @@ class TestBattleResolverIntegration:
 
         class SeedCapturingResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
                 nonlocal received_seed
                 received_seed = seed
                 return BattleResult(
@@ -205,7 +222,8 @@ class TestResolveAllConflicts:
 
         class QuickResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
                 return BattleResult(
                     winner=0, tick_count=10,
                     team_survivors={i: ([MagicMock()] if i == 0 else []) for i in range(len(list(fleets)))},
@@ -223,15 +241,23 @@ class TestResolveAllConflicts:
         assert result.combats_resolved >= 1
 
     def test_resolve_all_conflicts_tracks_destroyed_fleets(self):
+        """BUG-126: a fleet id appears in `fleets_destroyed` only when
+        the resolver wiped its `ships` list to empty — not just because
+        the resolver named it the loser."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class FirstFleetWinsResolver(IBattleResolver):
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
+                # Simulate the PostBattleHook wiping the loser fleet.
+                fleet_list = list(fleets)
+                for f in fleet_list[1:]:
+                    f.ships = []
                 return BattleResult(
                     winner=0, tick_count=10,
-                    team_survivors={i: ([MagicMock()] if i == 0 else []) for i in range(len(list(fleets)))},
+                    team_survivors={i: ([MagicMock()] if i == 0 else []) for i in range(len(fleet_list))},
                 )
 
         engine = ConflictResolutionEngine(battle_resolver=FirstFleetWinsResolver())
@@ -243,7 +269,7 @@ class TestResolveAllConflicts:
 
         result = engine.resolve_all_conflicts([emp1, emp2])
 
-        # Team 1's fleet (id=2) was destroyed.
+        # Team 1's fleet (id=2) was wiped → reported as destroyed.
         assert result.fleets_destroyed == [2]
 
     def test_no_conflicts_returns_zero_combats(self):

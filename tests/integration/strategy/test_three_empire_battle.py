@@ -24,22 +24,34 @@ from game.strategy.interfaces.battle_resolver import (
 
 
 class _RecordingResolver(IBattleResolver):
-    """Records every `resolve_battle` invocation for assertion."""
+    """Records every `resolve_battle` invocation for assertion.
+
+    BUG-126: simulates the PostBattleHook by wiping the `ships` list
+    on every fleet that did NOT win. The strategy engine reports a
+    fleet as destroyed only when its ships list is empty after the
+    resolver returns.
+    """
 
     def __init__(self, winner_team_id: int = 0):
         self.calls = []
         self.winner_team_id = winner_team_id
 
     def resolve_battle(self, fleets, modifiers=None, seed=None,
-                       registries=None, environmental_effects=None):
+                       registries=None, environmental_effects=None,
+                       empires=None):
+        fleet_list = list(fleets)
         self.calls.append({
-            "fleets": list(fleets),
+            "fleets": fleet_list,
             "modifiers": modifiers,
             "seed": seed,
         })
+        # Simulate the PostBattleHook wiping the loser fleets.
+        for tid, f in enumerate(fleet_list):
+            if tid != self.winner_team_id:
+                f.ships = []
         team_survivors = {
             tid: ([MagicMock()] if tid == self.winner_team_id else [])
-            for tid in range(len(fleets))
+            for tid in range(len(fleet_list))
         }
         return BattleResult(
             winner=self.winner_team_id,
@@ -112,9 +124,11 @@ def test_three_empire_battle_returns_three_team_battle_result():
     assert len(call["fleets"]) == 3
 
 
-def test_three_empire_battle_destroys_losing_empire_fleets():
-    """After the single 3-team battle, ALL non-winning empires lose
-    their fleet (winner=team 0 → empires 1 + 2 each lose their fleet)."""
+def test_three_empire_battle_reports_destroyed_fleets():
+    """BUG-126: when the resolver wipes loser fleets to zero ships,
+    the engine reports their ids in `fleets_destroyed` — but the
+    strategy layer no longer calls `empire.remove_fleet` itself. That
+    is the `PostBattleHook`'s job (mocked away here)."""
     resolver = _RecordingResolver(winner_team_id=0)
     engine = ConflictResolutionEngine(battle_resolver=resolver)
 
@@ -129,11 +143,10 @@ def test_three_empire_battle_destroys_losing_empire_fleets():
 
     result = engine.resolve_all_conflicts([empire_a, empire_b, empire_c])
 
-    # Both losing empires should have remove_fleet called for their fleet.
-    empire_b.remove_fleet.assert_called_once()
-    empire_c.remove_fleet.assert_called_once()
-    # Winner's fleet stays.
+    # Strategy engine no longer calls remove_fleet itself.
     empire_a.remove_fleet.assert_not_called()
-    # Combat stats reflect a single battle with 2 destroyed fleets.
+    empire_b.remove_fleet.assert_not_called()
+    empire_c.remove_fleet.assert_not_called()
+    # Combat stats reflect a single battle with 2 wiped fleets.
     assert result.combats_resolved == 1
     assert sorted(result.fleets_destroyed) == [2, 3]

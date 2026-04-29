@@ -103,7 +103,8 @@ class TestBattleSeedGeneration:
                 self.received_seeds = []
 
             def resolve_battle(self, fleets, modifiers=None, seed=None,
-                               registries=None, environmental_effects=None):
+                               registries=None, environmental_effects=None,
+                               empires=None):
                 self.received_seeds.append(seed)
                 return BattleResult(
                     winner=0,

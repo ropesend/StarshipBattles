@@ -64,6 +64,7 @@ class IBattleResolver(ABC):
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
         environmental_effects: Any = None,  # PROJ-300: now a sector-effects list
+        empires: Optional[Mapping[int, Any]] = None,
     ) -> BattleResult:
         """
         Resolve a battle between N fleets.
@@ -79,6 +80,11 @@ class IBattleResolver(ABC):
                 `collect_sector_effects` (or None). The spec compiler
                 emits one ModifierEntry per active provider so overlapping
                 storms multiply.
+            empires: BUG-126 — optional `{team_id: Empire}` mapping
+                threaded into the spec compiler's `PostBattleHook` so
+                fleets that end the battle with zero ships are removed
+                from their empire's `fleets` list. Production callers
+                must pass this; tests with mock resolvers may omit it.
 
         Returns:
             BattleResult with winner, tick count, and per-team survivors.

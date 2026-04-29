@@ -588,8 +588,9 @@ class TestCombatResolvedEvent:
     """ConflictResolutionEngine emits combat_resolved event on combat."""
 
     def test_simulated_combat_emits_combat_resolved_event(self):
-        """`_resolve_combat_at_hex` emits a combat_resolved event for each
-        winner/loser pair (PROJ-275 Phase 7)."""
+        """`_resolve_combat_at_hex` emits one combat_resolved event per
+        battle (BUG-126: schema migrated to `participating_fleet_ids` /
+        `surviving_fleet_ids` / `destroyed_fleet_ids`)."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
@@ -598,7 +599,13 @@ class TestCombatResolvedEvent:
         mock_result = MagicMock()
         mock_result.winner = 0
         mock_result.team_survivors = {0: [MagicMock()], 1: []}
-        mock_resolver.resolve_battle.return_value = mock_result
+
+        # Simulate the PostBattleHook wiping team 1's fleet.
+        def _resolve_battle(fleets, **_kw):
+            list(fleets)[1].ships = []
+            return mock_result
+
+        mock_resolver.resolve_battle.side_effect = _resolve_battle
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ConflictResolutionEngine(battle_resolver=mock_resolver, event_bus=bus)
@@ -619,19 +626,21 @@ class TestCombatResolvedEvent:
         etype, kw = calls[0]
         assert etype == EventType.COMBAT_RESOLVED
         assert kw["category"] == EventCategory.COMBAT
-        assert kw["winner_fleet_id"] == 1
-        assert kw["loser_fleet_id"] == 2
+        assert sorted(kw["participating_fleet_ids"]) == [1, 2]
+        assert kw["surviving_fleet_ids"] == [1]
+        assert kw["destroyed_fleet_ids"] == [2]
 
-    def test_combat_event_when_team1_wins(self):
-        """combat_resolved event reflects correct winner when team 1 wins."""
+    def test_combat_event_emitted_even_when_no_fleet_destroyed(self):
+        """A draw still emits exactly one event; both fleets are
+        reported as participants AND survivors."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
         mock_resolver = MagicMock()
         mock_result = MagicMock()
-        mock_result.winner = 1
-        mock_result.team_survivors = {0: [], 1: [MagicMock()]}
+        mock_result.winner = None
+        mock_result.team_survivors = {0: [MagicMock()], 1: [MagicMock()]}
         mock_resolver.resolve_battle.return_value = mock_result
 
         calls, fake, bus = _capture_log_event_calls()
@@ -651,19 +660,22 @@ class TestCombatResolvedEvent:
 
         assert len(calls) == 1
         _, kw = calls[0]
-        assert kw["winner_fleet_id"] == 20
-        assert kw["loser_fleet_id"] == 10
+        assert sorted(kw["participating_fleet_ids"]) == [10, 20]
+        assert sorted(kw["surviving_fleet_ids"]) == [10, 20]
+        assert kw["destroyed_fleet_ids"] == []
 
     def test_combat_event_includes_empire_id(self):
-        """combat_resolved event includes the winner's empire_id."""
+        """The event's `empire_id` carries the lowest participating
+        empire id — the strategy layer no longer designates a 'winning'
+        empire (BUG-126)."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
         mock_resolver = MagicMock()
         mock_result = MagicMock()
-        mock_result.winner = 0
-        mock_result.team_survivors = {0: [MagicMock()], 1: []}
+        mock_result.winner = None
+        mock_result.team_survivors = {0: [MagicMock()], 1: [MagicMock()]}
         mock_resolver.resolve_battle.return_value = mock_result
 
         calls, fake, bus = _capture_log_event_calls()
@@ -682,7 +694,7 @@ class TestCombatResolvedEvent:
         engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
 
         _, kw = calls[0]
-        assert kw["empire_id"] == 5  # Winner's empire_id
+        assert kw["empire_id"] == 5  # Lowest participating empire id
 
 
 # ===========================================================================

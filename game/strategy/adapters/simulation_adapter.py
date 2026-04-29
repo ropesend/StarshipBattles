@@ -70,6 +70,7 @@ class SimulationBattleResolver(IBattleResolver):
         seed: Optional[int] = None,
         registries: Optional['GameRegistries'] = None,
         environmental_effects: Any = None,  # PROJ-300: now a sector-effects list
+        empires: Optional[Mapping[int, Any]] = None,
     ) -> BattleResult:
         """Resolve a battle between N fleets via the unified entry.
 
@@ -86,12 +87,21 @@ class SimulationBattleResolver(IBattleResolver):
             environmental_effects: Optional sector/hex environmental
                 effects (storm shield interference). Flows into the
                 BattleSpec's ModifierStack as global entries.
+            empires: BUG-126 — optional `{team_id: Empire}` mapping
+                threaded into the spec compiler's `PostBattleHook` so
+                empty fleets are pruned from their empire's `fleets`
+                list post-battle.
 
         Returns:
             BattleResult with winner, tick count, and per-team survivors.
             Fleet state (ship removal, component HP updates) has already
             been written back by the compiler's post-battle hook when this
             returns.
+
+        BUG-126: branch decisions are logged at INFO level
+        (`branch=shortcut_no_capable | shortcut_sole_survivor |
+        simulator`) so operators can grep `battle.log` for which path
+        each strategy battle took.
         """
         fleet_list = list(fleets)
         if len(fleet_list) < 2:
@@ -99,11 +109,6 @@ class SimulationBattleResolver(IBattleResolver):
                 f"SimulationBattleResolver.resolve_battle requires at least "
                 f"2 fleets; got {len(fleet_list)}"
             )
-
-        logger.info(
-            f"Simulating {len(fleet_list)}-team battle: "
-            + " vs ".join(f"Fleet {f.id}" for f in fleet_list)
-        )
 
         # Per-team combat-capable ship lists, indexed by team_id.
         combat_capable: Dict[int, List[Any]] = {
@@ -114,16 +119,22 @@ class SimulationBattleResolver(IBattleResolver):
 
         # Short-circuits when not enough teams can fight.
         if len(teams_with_ships) == 0:
-            logger.warning("No team has any combat-capable ships")
+            logger.info(
+                "Strategy battle resolved branch=shortcut_no_capable "
+                "fleets=[%s]: no team has any combat-capable ships",
+                ", ".join(f"Fleet {f.id}" for f in fleet_list),
+            )
             return BattleResult(
                 winner=None, tick_count=0,
                 team_survivors={tid: [] for tid in combat_capable},
             )
         if len(teams_with_ships) == 1:
             sole_winner = teams_with_ships[0]
-            logger.warning(
-                f"Only team {sole_winner} has combat-capable ships; "
-                f"declared winner without simulation"
+            logger.info(
+                "Strategy battle resolved branch=shortcut_sole_survivor "
+                "fleets=[%s] sole_team=%d: declared winner without simulation",
+                ", ".join(f"Fleet {f.id}" for f in fleet_list),
+                sole_winner,
             )
             survivors = {
                 tid: (
@@ -136,6 +147,13 @@ class SimulationBattleResolver(IBattleResolver):
                 winner=sole_winner, tick_count=0, team_survivors=survivors
             )
 
+        logger.info(
+            "Strategy battle resolved branch=simulator "
+            "fleets=[%s]: dispatching %d-team battle to run_battle",
+            ", ".join(f"Fleet {f.id}" for f in fleet_list),
+            len(fleet_list),
+        )
+
         battle_seed = self._resolve_seed(seed)
         spec = self._build_spec(
             fleet_list,
@@ -143,6 +161,7 @@ class SimulationBattleResolver(IBattleResolver):
             registries=registries,
             environmental_effects=environmental_effects,
             modifiers=modifiers,
+            empires=empires,
         )
         # PROJ-274: no ship_builder closure needed. The strategy compiler
         # sets `ShipSpec.instance_ref = ship_instance` on each spec; the
@@ -177,11 +196,20 @@ class SimulationBattleResolver(IBattleResolver):
             for tid, fleet in enumerate(fleet_list)
         }
 
-        logger.info(
-            f"Battle complete: winner={winner}, ticks={outcome.duration_ticks}"
+        # BUG-126: log per-team post-battle ship counts on a single
+        # line so `battle.log` carries a complete snapshot of every
+        # strategy battle. The strategy layer ignores `winner` (kept
+        # for IBattleResolver-contract reasons / Combat Lab UI), so
+        # log it as informational only.
+        survivor_summary = ", ".join(
+            f"team {tid}={len(survivors)}"
+            for tid, survivors in team_survivors.items()
         )
-        for tid, survivors in team_survivors.items():
-            logger.info(f"  Team {tid} survivors: {len(survivors)}")
+        logger.info(
+            "Strategy battle complete: ticks=%d simulator_winner=%s "
+            "survivors[%s]",
+            outcome.duration_ticks, winner, survivor_summary,
+        )
 
         return BattleResult(
             winner=winner,
@@ -209,6 +237,7 @@ class SimulationBattleResolver(IBattleResolver):
         registries: Optional['GameRegistries'],
         environmental_effects: Any,  # PROJ-300: now a sector-effects list
         modifiers: Optional[Mapping[int, Any]],
+        empires: Optional[Mapping[int, Any]] = None,
     ) -> BattleSpec:
         from game.strategy.combat.spec_compiler import build_strategy_battle_spec
 
@@ -220,6 +249,7 @@ class SimulationBattleResolver(IBattleResolver):
 
         return build_strategy_battle_spec(
             fleets,
+            empires=empires,
             registries=registries,
             seed=seed,
             environmental_effects=environmental_effects,

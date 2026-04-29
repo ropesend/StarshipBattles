@@ -23,15 +23,32 @@ from tests.conftest import make_mock_ship_instance
 
 
 class InstantBattleResolver(IBattleResolver):
-    """Battle resolver that instantly declares team 0 the winner."""
+    """Battle resolver that instantly declares team 0 the winner.
+
+    BUG-126: simulates the `PostBattleHook` by wiping the loser fleets'
+    ship lists AND removing them from their owning empire. Production
+    callers receive this side-effect via `apply_outcome_to_fleets` +
+    `_prune_empty_fleets`; here we hand-roll it because the hook is
+    bypassed when callers inject a mock resolver."""
+
+    def __init__(self, empires_by_team=None):
+        self._empires_by_team = empires_by_team or {}
 
     def resolve_battle(self, fleets, modifiers=None, seed=None, registries=None,
-                       environmental_effects=None):
+                       environmental_effects=None, empires=None):
         fleet_list = list(fleets)
         survivors = {i: [] for i in range(len(fleet_list))}
         survivors[0] = list(
             fleet_list[0].battle.to_battle_ships(team_id=0, registries=registries)
         )
+        # Simulate the PostBattleHook: wipe loser ship lists and prune
+        # empty fleets from their empires.
+        empires_by_team = empires or self._empires_by_team
+        for tid, fleet in enumerate(fleet_list[1:], start=1):
+            fleet.ships = []
+            empire = empires_by_team.get(tid)
+            if empire is not None and fleet in empire.fleets:
+                empire.remove_fleet(fleet)
         return BattleResult(
             winner=0,
             tick_count=1,
@@ -148,9 +165,12 @@ class TestCombatUnregistersDestroyedFleet:
         _assert_registered(galaxy, fleet1)
         _assert_registered(galaxy, fleet2)
 
-        # Resolve combat using instant resolver to skip full simulation
+        # Resolve combat using instant resolver to skip full simulation.
+        # BUG-126: the resolver also simulates the PostBattleHook
+        # (wiping loser ships + pruning the fleet from its empire),
+        # because the strategy engine no longer prunes fleets itself.
         engine = ConflictResolutionEngine(
-            battle_resolver=InstantBattleResolver(),
+            battle_resolver=InstantBattleResolver(empires_by_team={0: emp1, 1: emp2}),
             registries=fresh_registries,
         )
         result = engine.resolve_all_conflicts([emp1, emp2], galaxy)

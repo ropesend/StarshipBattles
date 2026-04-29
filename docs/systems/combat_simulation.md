@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-04-28 — Corrected `ComponentState` and PROJ-269 decision links while preserving the current BattleSpec/BattleOutcome and modifier-stack flow.
+> **Last verified:** 2026-04-29 — BUG-126: documented the new strategy-layer combat-resolution contract (no winner, surviving fleets remain in hex, re-engagement on subsequent ticks) and the migrated `COMBAT_RESOLVED` event schema (`participating_fleet_ids` / `surviving_fleet_ids` / `destroyed_fleet_ids`).
 
 System documentation for the real-time combat simulation layer.
 
@@ -967,16 +967,89 @@ compilers; callers only need to pass `num_teams=len(teams)`.
 `IBattleResolver.resolve_battle(fleets, modifiers, ...)` per contested
 sector, regardless of how many empires are present. The old sequential
 2-fleet decomposition (`while len(fleets_by_emp) > 1: rng.sample(emp_ids, 2)`)
-has been deleted. The losing empire bookkeeping (marking fleets
-destroyed, calling `empire.remove_fleet`) is driven by the `winner` and
-`team_survivors` fields of the returned `BattleResult`.
+has been deleted.
+
+**Strategy-layer combat resolution contract (BUG-126).** The strategy
+layer does **not** assign a winner. After the resolver returns:
+
+* `BattleResult.winner` is informational only — the strategy
+  `ConflictResolutionEngine` does not consume it. The legacy
+  survivor-count tiebreaker that picked a "winner" on draws is gone
+  (`_resolve_winner_team` was deleted).
+* The compiler-attached `PostBattleHook`
+  (`game/strategy/combat/post_battle_hook.py::apply_outcome_to_fleets`)
+  is the authoritative source of truth: it mutates each
+  `Fleet.ships` list to reflect SURVIVED / DERELICT / DESTROYED /
+  RETREATED outcomes and prunes empty fleets from
+  `Empire.fleets` via `_prune_empty_fleets`.
+* `_resolve_combat_at_hex` simply observes which fleets ended the
+  battle with zero ships and reports their ids in
+  `ConflictResult.fleets_destroyed` — it no longer calls
+  `empire.remove_fleet` itself.
+* Surviving ships from BOTH sides remain in their fleets at the
+  contested hex. If two co-located fleets both retain ships, combat
+  re-engages on the next strategy tick — the `TurnEngine` runs
+  `TICKS_PER_TURN = 100` sub-ticks per turn and dispatches Phase 4
+  combat each tick. There is no "already fought this turn" guard.
+* For the spec compiler's `PostBattleHook` to prune empty fleets,
+  the `empires={team_id: Empire}` mapping must thread through
+  `IBattleResolver.resolve_battle(empires=...)` →
+  `_build_spec(empires=...)` →
+  `build_strategy_battle_spec(empires=...)`. This is wired through
+  for the production `SimulationBattleResolver`. Mock resolvers in
+  tests must accept the `empires` kwarg even if they ignore it.
+
+**`COMBAT_RESOLVED` event schema (BUG-126).** The event payload no
+longer carries `winner_fleet_id` / `loser_fleet_id`. New keys:
+
+* `participating_fleet_ids: List[int]` — every fleet that entered
+  the battle, in team_id order.
+* `surviving_fleet_ids: List[int]` — fleets that retained ≥1 ship.
+* `destroyed_fleet_ids: List[int]` — fleets the hook wiped to zero
+  ships.
+* `empire_id` carries the **lowest** participating empire id (kept
+  for the existing event-log filter column; not a "winning empire"
+  marker).
+
+Every resolved combat emits exactly one event, even on draws. Old
+clients reading `winner_fleet_id` will silently see `None` — per
+project ERADICATE policy, callers should be migrated to the new
+schema in the same change that introduces them. The event-log UI
+(`EventLogWindow`) does not consume any of these keys; it only reads
+`category` / `turn` / `system` / `planet` / `storm` / `message`.
+
+**Diagnostic INFO logging (BUG-126).** Every strategy battle now
+logs its branch decision and post-battle survivor counts at INFO so
+operators can grep `battle.log` for which path each battle took:
+
+* `simulation_adapter.py`:
+  `Strategy battle resolved branch={shortcut_no_capable |
+  shortcut_sole_survivor | simulator} fleets=[Fleet 1, Fleet 2]`
+* `simulation_adapter.py` (after the simulator runs):
+  `Strategy battle complete: ticks=N simulator_winner=X
+  survivors[team 0=K, team 1=K]`
+* `conflict_resolution_engine.py` on entry:
+  `Combat at HexCoord(q, r): empire 0/Fleet 1(N ships) vs empire 1/Fleet 2(N ships)`
+* `conflict_resolution_engine.py` on exit:
+  `Combat at HexCoord(q, r) resolved: surviving=[1, 2], destroyed=[]`
 
 **Interface shape.** `IBattleResolver.resolve_battle(fleets: Sequence[Fleet],
 modifiers: Optional[Mapping[int, Any]] = None, seed=None, registries=None,
-environmental_effects=None) -> BattleResult`. `BattleResult` carries
-`team_survivors: Dict[int, List[IPostBattleShip]]` keyed by team_id (one
-entry per participating team, including empty lists for teams that got
-wiped).
+environmental_effects=None, empires=None) -> BattleResult`. `BattleResult`
+carries `team_survivors: Dict[int, List[IPostBattleShip]]` keyed by team_id
+(one entry per participating team, including empty lists for teams that got
+wiped). The `empires` kwarg (BUG-126) carries the
+`{team_id: Empire}` mapping the spec compiler's `PostBattleHook` needs to
+prune empty fleets.
+
+**Performance follow-up (out of BUG-126 scope).** Two stationary
+co-located fleets re-engage every sub-tick of every turn (up to 100
+battles per turn) until one side is wiped. With weaponless fleets
+the simulator runs to its `absolute_max_ticks` ceiling each time —
+~4.4s per battle observed in BUG-126's repro. A follow-on ticket
+should add an early-termination condition (e.g. "no damage dealt by
+either side in last N ticks → end as draw") or a tighter
+strategy-layer `absolute_max_ticks` ceiling.
 
 **Max teams = 8.** UI cap + ring entry-vector sanity cap. The simulation
 engine has no hard cap; the limit lives in `BattleSetupState`, the two

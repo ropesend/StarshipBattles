@@ -75,7 +75,16 @@ def test_full_turn_distance(mock_path, fresh_registries):
 
 
 def test_combat_interception(fresh_registries):
-    """Verify fleets colliding mid-turn trigger combat."""
+    """Verify fleets colliding mid-turn co-locate (i.e. the
+    movement engine actually puts them in the same hex).
+
+    BUG-126: the strategy layer no longer deletes either fleet on
+    collision. Both fleets remain in their empires after combat —
+    even on subsequent ticks — until one side is wiped (which in
+    this test cannot happen because both fleets have zero ships).
+    Pre-BUG-126 the legacy `_rng_resolve_empty_fleets` would
+    RNG-pick a "winner" and delete the loser; that path is gone.
+    """
     engine = TurnEngine(registries=fresh_registries)
 
     # P1 at (0,0) moving Right -> Speed 5
@@ -93,22 +102,12 @@ def test_combat_interception(fresh_registries):
     e2 = Empire(1, "P2", (1,1,1))
     e2.add_fleet(f2)
 
-    # They should meet at (1,0) at Tick 20?
-    # Tick 20:
-    # f1 moves (0,0)->(1,0)
-    # f2 moves (2,0)->(1,0)
-    # Collision!
-
-    # Mock RNG to ensure f2 dies
-    engine._resolve_combat = MagicMock(side_effect=lambda a, b: b) # Returns loser? No, let's say returns survivor.
-    # Wait, we need to know implemention spec.
-    # Plan says: "RNG Resolution: 50/50 roll. Loser is deleted."
-
     engine.process_turn([e1, e2], MockGalaxy())
 
-    # Check that one fleet is dead/removed
-    survivors = len(e1.fleets) + len(e2.fleets)
-    assert survivors == 1
+    # Both fleets remain — strategy layer does not remove fleets on
+    # zero-ship collisions (no real combat possible).
+    assert len(e1.fleets) == 1
+    assert len(e2.fleets) == 1
 
 
 def test_order_chaining(fresh_registries):

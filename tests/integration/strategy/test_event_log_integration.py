@@ -159,13 +159,16 @@ class TestFacadeEventQueries:
 
         session._event_bus.log_event(EventType.COMBAT_RESOLVED, category=EventCategory.COMBAT,
                       empire_id=0, message="Battle at (3,4)",
-                      winner_fleet_id=1, loser_fleet_id=2)
+                      participating_fleet_ids=[1, 2],
+                      surviving_fleet_ids=[1],
+                      destroyed_fleet_ids=[2])
 
         events = facade.get_all_events()
         assert len(events) == 1
         assert events[0]["event_type"] == "combat_resolved"
         assert events[0]["category"] == "combat"
-        assert events[0]["details"]["winner_fleet_id"] == 1
+        assert events[0]["details"]["surviving_fleet_ids"] == [1]
+        assert events[0]["details"]["destroyed_fleet_ids"] == [2]
 
 
 # ---------------------------------------------------------------------------

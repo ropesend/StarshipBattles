@@ -29,12 +29,20 @@ class InstantBattleResolver(IBattleResolver):
     """
 
     def resolve_battle(self, fleets, modifiers=None, seed=None, registries=None,
-                       environmental_effects=None):
+                       environmental_effects=None, empires=None):
         fleet_list = list(fleets)
         survivors = {i: [] for i in range(len(fleet_list))}
         survivors[0] = list(
             fleet_list[0].battle.to_battle_ships(team_id=0, registries=registries)
         )
+        # BUG-126: simulate the PostBattleHook by wiping the loser
+        # fleets' ships AND removing them from their empires (the
+        # strategy engine no longer prunes fleets itself).
+        for tid, fleet in enumerate(fleet_list[1:], start=1):
+            fleet.ships = []
+            empire = (empires or {}).get(tid)
+            if empire is not None and fleet in empire.fleets:
+                empire.remove_fleet(fleet)
         return BattleResult(
             winner=0,
             tick_count=1,

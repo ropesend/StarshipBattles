@@ -98,8 +98,13 @@ class TestEvent:
             category=EventCategory.COMBAT,
             turn=10,
             empire_id=3,
-            message="Battle at (5,3): Fleet 7 victorious",
-            details={"location": [5, 3], "winner_fleet_id": 7, "loser_fleet_id": 12},
+            message="Battle at (5,3): 2 fleets engaged",
+            details={
+                "location": [5, 3],
+                "participating_fleet_ids": [7, 12],
+                "surviving_fleet_ids": [7],
+                "destroyed_fleet_ids": [12],
+            },
         )
         restored = Event.from_dict(original.to_dict())
         assert restored.event_type == original.event_type
@@ -339,7 +344,7 @@ class TestEventLogFilteringEdgeCases:
         log.append(_make_event(event_type=EventType.COLONY_FOUNDED, category=EventCategory.COLONIES,
                                message="Colony", details={"planet_id": 5}))
         log.append(_make_event(event_type=EventType.COMBAT_RESOLVED, category=EventCategory.COMBAT,
-                               message="Combat", details={"winner_fleet_id": 1}))
+                               message="Combat", details={"surviving_fleet_ids": [1]}))
 
         restored = EventLog.from_dict(log.to_dict())
         restored_events = restored.get_all_events()
