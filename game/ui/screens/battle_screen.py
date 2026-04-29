@@ -587,6 +587,18 @@ class BattleScreen:
 
         screen.blit(font.render(speed_text, True, speed_color), (width // 2 - 50, 10))
 
+        # FEAT-26: REPLAY MODE badge — visible whenever the controller
+        # config marks this as replay playback. Top-center under the
+        # speed indicator so the player always knows the battle they're
+        # watching is read-only.
+        controller = getattr(self, "_controller", None)
+        config = getattr(controller, "config", None) if controller else None
+        if config is not None and getattr(config, "replay_mode", False):
+            badge_surf = font.render("REPLAY MODE", True, SPEED_FAST)
+            badge_rect = badge_surf.get_rect()
+            badge_rect.midtop = (width // 2, 36)
+            screen.blit(badge_surf, badge_rect)
+
         # Profiler indicator
         if profiler_active:
             prof_text = font.render("PROFILING ACTIVE", True, PROFILING_TEXT)

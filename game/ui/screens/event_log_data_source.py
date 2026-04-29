@@ -11,6 +11,10 @@ from game.ui.components.table.data_source import ITableDataSource
 
 # Column definitions for the event log table
 # PROJ-215: Granular location columns (system, planet, local_hex, galaxy_hex)
+# FEAT-26: `replay_action` is a per-row Replay button on combat events
+# whose `details["replay_id"]` is non-None. Generic single-button column
+# type (see VirtualTable) — visible by default for feature discovery;
+# non-combat rows render a disabled button.
 EVENT_LOG_COLUMNS = [
     {"id": "category", "width": 90, "title": "Category", "visible": True, "sortable": True},
     {"id": "turn", "width": 60, "title": "Turn", "visible": True, "sortable": True},
@@ -20,6 +24,16 @@ EVENT_LOG_COLUMNS = [
     {"id": "galaxy_hex", "width": 80, "title": "Galaxy Hex", "visible": False, "sortable": True},
     {"id": "storm", "width": 120, "title": "Storm", "visible": False, "sortable": True},
     {"id": "message", "width": 500, "title": "Message", "visible": True, "sortable": True},
+    {
+        "id": "replay_action",
+        "width": 80,
+        "title": "Replay",
+        "visible": True,
+        "sortable": False,
+        "type": "replay_action",
+        "action": "replay",
+        "label": "Replay",
+    },
 ]
 
 # Category icons (text prefix for each category)
@@ -127,7 +141,33 @@ class EventLogDataSource(ITableDataSource):
         if column_id == "message":
             return event.get("message", "")
 
+        # FEAT-26: replay_action column is a button (no text); return empty.
+        if column_id == "replay_action":
+            return ""
+
         return ""
+
+    def get_cell_replay_id(self, row_index: int) -> Optional[str]:
+        """FEAT-26: return the captured replay's uuid for this row, if any.
+
+        Combat-category rows whose `details["replay_id"]` is a non-empty
+        string return that string. Every other row (legacy combat rows
+        without the field, non-combat rows) returns None — the UI uses
+        None to render a disabled Replay button.
+
+        Args:
+            row_index: Zero-based row index in the filtered list.
+
+        Returns:
+            The replay uuid string, or None when no replay is available.
+        """
+        event = self.get_event_at_index(row_index)
+        if event is None:
+            return None
+        if event.get("category") != "combat":
+            return None
+        replay_id = event.get("details", {}).get("replay_id")
+        return replay_id if replay_id else None
 
     def get_event_at_index(self, row_index: int) -> Optional[Dict[str, Any]]:
         """Get event at given row index in filtered list.

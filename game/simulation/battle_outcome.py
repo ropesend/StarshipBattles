@@ -173,6 +173,13 @@ class BattleOutcome:
     `telemetry_level` is echoed from the input spec so downstream code can
     branch on detail availability (e.g. "hit log is empty because level was
     MINIMAL" vs. "hit log is empty because no one fired").
+
+    FEAT-26: `replay_id` is the uuid string assigned by the
+    `IReplayCaptureSink` for the captured replay sidecar, or `None` when
+    no real replay was written (NullCaptureSink, replay-of-replay paths,
+    capture failures). This is the upstream source of truth — every
+    other layer (`BattleResult.replay_id`, the `COMBAT_RESOLVED` event's
+    `details["replay_id"]`) carries the same string verbatim.
     """
 
     end_reason: EndReason
@@ -180,6 +187,7 @@ class BattleOutcome:
     seed: int
     teams: Tuple[TeamOutcome, ...]
     telemetry_level: object  # TelemetryLevel — real type lands in Task 1.5
+    replay_id: Optional[str] = None
 
 
 __all__ = [

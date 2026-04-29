@@ -480,12 +480,20 @@ def extract_outcome(
 
     end_reason = _derive_end_reason(engine, spec)
 
+    # FEAT-26: surface engine.replay_id on BattleOutcome. Empty string
+    # (returned by NullCaptureSink when no real capture happened) is
+    # canonicalised to None so downstream consumers see a single
+    # "no replay" signal.
+    raw_replay_id = getattr(engine, "replay_id", None)
+    replay_id = raw_replay_id or None
+
     return BattleOutcome(
         end_reason=end_reason,
         duration_ticks=engine.tick_counter,
         seed=spec.seed,
         teams=tuple(team_outcomes),
         telemetry_level=spec.telemetry_level,
+        replay_id=replay_id,
     )
 
 

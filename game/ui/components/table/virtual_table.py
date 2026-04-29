@@ -125,6 +125,11 @@ class VirtualTable:
             for widget in row.get("widgets", []):
                 if "el" in widget:
                     widget["el"].kill()
+                if "actions_dict" in widget:
+                    for btn in widget["actions_dict"].values():
+                        btn.kill()
+                if widget.get("type") == "replay_action" and "button" in widget:
+                    widget["button"].kill()
         self._row_pool.clear()
 
         # Calculate how many rows we need
@@ -169,10 +174,10 @@ class VirtualTable:
                     btn_size = self._row_height - 10
                     if btn_size > 30:
                         btn_size = 30
-                    
+
                     spacing = 5
                     btn_x = x + 5
-                    
+
                     for action, text in [("add", "+"), ("remove", "-"), ("up", "^"), ("down", "v")]:
                         btn = UIButton(
                             relative_rect=pygame.Rect(btn_x, (self._row_height - btn_size) // 2, btn_size, btn_size),
@@ -182,9 +187,30 @@ class VirtualTable:
                         )
                         actions_dict[action] = btn
                         btn_x += btn_size + spacing
-                        
+
                     widgets.append({
                         "type": "actions", "col": col, "actions_dict": actions_dict
+                    })
+                elif col.get("type") == "replay_action":
+                    # FEAT-26: generic single-button action column. The
+                    # column dict carries the action key + button label,
+                    # so the table layer stays domain-neutral. Per-row
+                    # enable/disable + button-press dispatch lives in
+                    # update_visible_rows + check_action_button_press.
+                    btn_height = self._row_height - 6
+                    btn = UIButton(
+                        relative_rect=pygame.Rect(
+                            x + 4, 3, max(width - 8, 30), btn_height
+                        ),
+                        text=str(col.get("label", "")),
+                        manager=self._manager,
+                        container=row_bg,
+                    )
+                    widgets.append({
+                        "type": "replay_action",
+                        "col": col,
+                        "button": btn,
+                        "action": col.get("action", "replay"),
                     })
                 else:
                     # Label widget
@@ -292,6 +318,28 @@ class VirtualTable:
                                 down_btn.disable()
                             else:
                                 down_btn.enable()
+                    elif widget["type"] == "replay_action":
+                        # FEAT-26: enable iff the data source reports a
+                        # non-None replay id for this row. Generic seam:
+                        # data sources without the hook leave the button
+                        # disabled (no replays => no clickable button).
+                        btn = widget["button"]
+                        replay_id_getter = getattr(
+                            self._data_source, "get_cell_replay_id", None
+                        )
+                        replay_id = (
+                            replay_id_getter(data_idx)
+                            if replay_id_getter is not None
+                            else None
+                        )
+                        if replay_id:
+                            btn.enable()
+                            btn.tool_tip_text = "Replay this battle"
+                        else:
+                            btn.disable()
+                            btn.tool_tip_text = (
+                                "No replay available — older save."
+                            )
                     else:
                         text = str(self._data_source.get_cell_value(data_idx, col_id))
                         if text != widget.get("_last_text"):
@@ -380,6 +428,10 @@ class VirtualTable:
     def check_action_button_press(self, ui_element: Any) -> Optional[Tuple[str, int]]:
         """Check if an action button was pressed.
 
+        Handles both action-column types:
+        - ``"actions"`` — multi-button (build queue: add/remove/up/down)
+        - ``"replay_action"`` — single button (FEAT-26: Event Log Replay)
+
         Args:
             ui_element: The UI element that triggered the event.
 
@@ -389,12 +441,18 @@ class VirtualTable:
         for row in self._row_pool:
             if not row.get("bg", None) or not row["bg"].visible:
                 continue
-                
+
             for widget in row.get("widgets", []):
                 if widget["type"] == "actions":
                     for action, btn in widget.get("actions_dict", {}).items():
                         if ui_element == btn:
                             return (action, row.get("row_index", -1))
+                elif widget["type"] == "replay_action":
+                    if ui_element == widget.get("button"):
+                        return (
+                            widget.get("action", "replay"),
+                            row.get("row_index", -1),
+                        )
         return None
 
     def check_header_presses(self) -> Dict[str, Any]:
@@ -434,6 +492,8 @@ class VirtualTable:
                 if "actions_dict" in widget:
                     for btn in widget["actions_dict"].values():
                         btn.kill()
+                if widget.get("type") == "replay_action" and "button" in widget:
+                    widget["button"].kill()
         self._row_pool.clear()
 
         # Kill containers

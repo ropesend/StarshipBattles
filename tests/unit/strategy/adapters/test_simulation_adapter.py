@@ -229,3 +229,82 @@ class TestSimulationBattleResolverDependencyInjection:
         source = inspect.getsource(module)
         module_imports_section = source.split("class SimulationBattleResolver")[0]
         assert "from game.ai.ai_factory import AIControllerFactory" not in module_imports_section
+
+
+# ---------------------------------------------------------------------------
+# FEAT-26 — replay_id plumbing
+# ---------------------------------------------------------------------------
+
+
+def _make_outcome_with_replay_id(replay_id, winner_team_id=0, duration=100):
+    """Like _make_outcome, but also surface a replay_id field on the
+    BattleOutcome stand-in (FEAT-26)."""
+    outcome = _make_outcome(winner_team_id=winner_team_id, duration=duration)
+    outcome.replay_id = replay_id
+    return outcome
+
+
+class TestSimulationAdapterReplayId:
+    """FEAT-26: BattleResult.replay_id is populated from BattleOutcome.replay_id."""
+
+    def test_simulator_branch_threads_replay_id_from_outcome(self):
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+
+        outcome = _make_outcome_with_replay_id(
+            replay_id="captured-uuid-string", winner_team_id=0
+        )
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            return_value=outcome,
+        ):
+            result = resolver.resolve_battle([fleet1, fleet2])
+
+        assert result.replay_id == "captured-uuid-string"
+
+    def test_simulator_branch_replay_id_is_none_when_outcome_has_none(self):
+        """A simulator-run battle with no captured replay still threads
+        ``None`` through (e.g. when no capture sink is registered)."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+
+        outcome = _make_outcome_with_replay_id(replay_id=None, winner_team_id=0)
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            return_value=outcome,
+        ):
+            result = resolver.resolve_battle([fleet1, fleet2])
+
+        assert result.replay_id is None
+
+    def test_no_capable_shortcut_branch_replay_id_is_none(self):
+        """The 'no team can fight' shortcut never runs the simulator,
+        so there is no replay_id."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [])
+        fleet2 = _make_fleet(2, [])
+
+        result = resolver.resolve_battle([fleet1, fleet2])
+
+        assert result.replay_id is None
+
+    def test_sole_survivor_shortcut_branch_replay_id_is_none(self):
+        """The 'one team has all combat-capable ships' shortcut never
+        runs the simulator, so there is no replay_id."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_fleet(2, [])
+
+        result = resolver.resolve_battle([fleet1, fleet2])
+
+        assert result.replay_id is None

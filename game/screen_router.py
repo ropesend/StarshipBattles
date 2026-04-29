@@ -463,8 +463,23 @@ class ScreenRouter:
         self.race_setup_window = None
         logger.debug("Race setup cancelled")
 
-    def start_battle(self, spec: Any, *, headless: bool = False) -> None:
-        """Start a battle from a compiled `BattleSpec` (PROJ-270 Phase 3)."""
+    def start_battle(
+        self,
+        spec: Any,
+        *,
+        headless: bool = False,
+        config: Optional[Any] = None,
+    ) -> None:
+        """Start a battle from a compiled `BattleSpec` (PROJ-270 Phase 3).
+
+        FEAT-26: ``config`` (optional) lets callers thread a pre-built
+        ``BattleConfig`` — used by the replay-launch path on the Event
+        Log to set ``replay_mode=True`` + ``replay_id`` + the captured
+        telemetry level. When ``config`` is supplied, ``headless`` is
+        ignored (the caller has already set the right operational
+        flags). When omitted, the original default-config build path
+        runs unchanged.
+        """
         from game.ai.ai_factory import AIControllerFactory
         from game.simulation.battle_config import BattleConfig
         from game.simulation.battle_controller import BattleController
@@ -473,12 +488,13 @@ class ScreenRouter:
                 or self.battle_scene.screen_height != self.height):
             self.battle_scene.handle_resize(self.width, self.height)
 
-        config = BattleConfig(
-            headless=headless,
-            seed=spec.seed,
-            end_condition=spec.end_condition,
-            absolute_max_ticks=spec.absolute_max_ticks,
-        )
+        if config is None:
+            config = BattleConfig(
+                headless=headless,
+                seed=spec.seed,
+                end_condition=spec.end_condition,
+                absolute_max_ticks=spec.absolute_max_ticks,
+            )
 
         # PROJ-270 Phase 10 + PROJ-274: single spec-in path. Compiler
         # (build_manual_battle_spec) sets ship_spec.instance_ref so the

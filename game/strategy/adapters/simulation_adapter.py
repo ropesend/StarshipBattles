@@ -215,6 +215,10 @@ class SimulationBattleResolver(IBattleResolver):
             winner=winner,
             tick_count=outcome.duration_ticks,
             team_survivors=team_survivors,
+            # FEAT-26: thread the captured replay id up to the strategy layer
+            # so `ConflictResolutionEngine` can attach it to the
+            # `COMBAT_RESOLVED` event for the Event Log Replay button.
+            replay_id=outcome.replay_id,
         )
 
     # ------------------------------------------------------------------

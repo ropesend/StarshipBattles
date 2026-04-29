@@ -337,8 +337,38 @@ class Game:
     def _on_race_setup_cancel(self) -> None:
         self._router._on_race_setup_cancel()
 
-    def start_battle(self, spec: Any, *, headless: bool = False) -> None:
-        self._router.start_battle(spec, headless=headless)
+    def start_battle(
+        self,
+        spec: Any,
+        *,
+        headless: bool = False,
+        config: Optional[Any] = None,
+    ) -> None:
+        self._router.start_battle(spec, headless=headless, config=config)
+
+    def start_replay(self, record: Any) -> None:
+        """FEAT-26: launch a captured replay in the BattleScreen.
+
+        Reconstructs the playable ``BattleSpec`` from a ``ReplayRecord``
+        (PROJ-312 Phase 5's ``replay_record_to_spec``), builds a
+        ``BattleConfig`` with ``replay_mode=True`` so the BattleScreen
+        renders the REPLAY MODE badge, and dispatches through the
+        standard ``start_battle`` entry. Capture is intentionally skipped
+        for replay playback (no recursion).
+        """
+        from game.simulation.battle_config import BattleConfig
+        from game.simulation.replay.replay_player import replay_record_to_spec
+
+        spec = replay_record_to_spec(record)
+        config = BattleConfig(
+            seed=spec.seed,
+            end_condition=spec.end_condition,
+            absolute_max_ticks=spec.absolute_max_ticks,
+            replay_mode=True,
+            replay_id=record.replay_id,
+            captured_telemetry_level=getattr(spec, "telemetry_level", None),
+        )
+        self.start_battle(spec, config=config)
 
     # ------------------------------------------------------------------
     # Action handler dispatch (kept on `Game` for test-mockability:

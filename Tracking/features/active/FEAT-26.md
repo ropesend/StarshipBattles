@@ -76,7 +76,7 @@ user explicitly asked for the post-battle viewing capability during
 QA.
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Related
 - **PROJ-312** (active, all 6 phases code-complete) — the project
@@ -115,5 +115,52 @@ should be considered companion fixes — closing FEAT-26 alone makes
 BUG-126's "no replay to verify what really happened" symptom
 disappear, but the underlying simulation-shortcut behaviour remains
 until BUG-126 is also addressed.
+
+---
+
+- 2026-04-29: Implementation landed on branch `worktree-feat-feat-26`
+  off main (post-BUG-123 d4eabd657 + post-BUG-126 2868fea55).
+  Plumbing path threads `engine.replay_id` through `BattleOutcome`
+  (`battle_outcome.py`) → `BattleResult` (`battle_resolver.py`) →
+  `COMBAT_RESOLVED.details["replay_id"]` (`conflict_resolution_engine.py`).
+  Empty-string canonicalisation at the `extract_outcome` seam keeps
+  "no replay" a single signal. UI: new generic `replay_action`
+  single-button column type in `VirtualTable` (distinct from the
+  build-queue 4-button `actions` column); `EventLogWindow` accepts
+  `replay_resolver` + `launch_replay_callback` kwargs and dispatches
+  per-row clicks through `_handle_replay_click`; `EventLogRegistrar`
+  builds `ReplayResolver.from_registries(...)` from the active save's
+  `ReplayStore` + the loaded component registry; new
+  `Game.start_replay(record)` wraps `replay_record_to_spec` +
+  `BattleConfig(replay_mode=True, replay_id=..., captured_telemetry_level=...)`
+  through the widened `screen_router.start_battle(spec, *, headless=False, config=None)`.
+  `BattleScreen.draw_hud` renders a top-center "REPLAY MODE" badge
+  when `controller.config.replay_mode is True`. Graceful-degradation
+  on missing/corrupt/version_drift surfaces a `UIMessageWindow`
+  toast; registry_drift warns and proceeds with launch.
+
+  **Tests** (37 new): `test_battle_outcome_replay_id.py`,
+  `test_battle_resolver_replay_id.py`,
+  `test_conflict_resolution_event_replay.py`,
+  `test_simulation_adapter.py::TestSimulationAdapterReplayId`,
+  `test_event_log_replay_button.py`, `test_event_log_data_source.py`
+  (column-count assertions bumped 8 → 9),
+  `test_event_log_graceful_degradation.py`,
+  `test_event_log_replay_e2e.py`. Full regression
+  (`pytest tests/ -n 12`): **16122 passed, 3 skipped, 0 failures**
+  (sharded runner has a pre-existing escape-sequence bug on Python
+  3.13 unrelated to FEAT-26; xdist `-n 12` is the documented
+  alternative per CLAUDE.md).
+
+  **Deferred to follow-up tickets** (per loose-acceptance interpretation
+  approved by team-lead):
+  - Combat Lab + Battle Setup capture (only strategy battles
+    populate `replay_id` in v1; the field exists on every
+    `BattleResult` regardless).
+  - `engine.replay_id` typed-attribute cleanup (currently
+    `# type: ignore[attr-defined]` on `BattleEngine`).
+  - `docs/systems/strategy_layer.md` replay capture/playback section
+    (file held by FEAT-27 during this implementation; will land in a
+    separate follow-up doc PR after FEAT-27 merges).
 
 ---

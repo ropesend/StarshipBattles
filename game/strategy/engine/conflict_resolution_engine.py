@@ -111,6 +111,7 @@ class ConflictResolutionEngine(IConflictEngine):
         destroyed_fleet_ids: List[int],
         location,
         environmental_effects=None,
+        replay_id: Optional[str] = None,
     ) -> None:
         """Log a single combat_resolved event for an N-team battle.
 
@@ -120,6 +121,13 @@ class ConflictResolutionEngine(IConflictEngine):
         `surviving_fleet_ids` / `destroyed_fleet_ids` instead of
         `winner_fleet_id` / `loser_fleet_id`.
 
+        FEAT-26: `replay_id` (when present) is the uuid of the captured
+        replay sidecar. The kwarg flows into `Event.details["replay_id"]`
+        via `EventBus.log_event(**kwargs)` so the Event Log UI can
+        render a Replay button for this row. None = no captured replay
+        (legacy event from before PROJ-312, shortcut-branch battle, or
+        capture sink unregistered).
+
         Args:
             fleets: All participating fleets, in team_id order.
             surviving_fleet_ids: Fleet ids that retained ≥1 ship.
@@ -128,6 +136,7 @@ class ConflictResolutionEngine(IConflictEngine):
             location: Hex location of the combat.
             environmental_effects: Optional sector-effects list from
                 `collect_sector_effects` (PROJ-300).
+            replay_id: Optional uuid of the captured replay sidecar.
         """
         # Look up system name for granular event log columns.
         system_name = ""
@@ -181,6 +190,7 @@ class ConflictResolutionEngine(IConflictEngine):
             location_hex=[location.q, location.r],
             system_name=system_name,
             storm_names=storm_names,
+            replay_id=replay_id,
         )
 
     def _validate_tick_inputs(self, empires) -> None:
@@ -327,7 +337,7 @@ class ConflictResolutionEngine(IConflictEngine):
         # happen via the compiler's `PostBattleHook` inside `run_battle`.
         # `empires` flows through to the hook so empty fleets are
         # removed from their empires post-battle.
-        self._battle_resolver.resolve_battle(
+        result = self._battle_resolver.resolve_battle(
             fleets,
             modifiers=modifiers,
             seed=seed,
@@ -350,12 +360,17 @@ class ConflictResolutionEngine(IConflictEngine):
             f"surviving={surviving_fleet_ids}, destroyed={destroyed_fleet_ids}"
         )
 
+        # FEAT-26: thread the captured replay id (when present) into the
+        # COMBAT_RESOLVED event so the Event Log can render a Replay
+        # button for this battle. None = no captured replay (older
+        # save, shortcut branch, or no capture sink registered).
         self._log_combat_result(
             fleets,
             surviving_fleet_ids=surviving_fleet_ids,
             destroyed_fleet_ids=destroyed_fleet_ids,
             location=location,
             environmental_effects=environmental_effects,
+            replay_id=getattr(result, "replay_id", None),
         )
 
     def _lookup_environmental_effects(self, location) -> Optional[Any]:

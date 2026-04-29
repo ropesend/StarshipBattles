@@ -3,14 +3,17 @@
 PROJ-77 Phase 4: Modal window showing turn events (production, colonies, combat).
 PROJ-188 Phase 5: Migrated to VirtualTable with EventLogDataSource.
 Supports filter tabs and scrollable event list sorted newest first.
+FEAT-26: Per-row Replay button on combat events with a captured replay.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton
+from pygame_gui.windows import UIMessageWindow
 
 from game.ui.components.table import VirtualTable, TableColumnManager, NoSelect
 from game.ui.screens.event_log_data_source import (
@@ -21,7 +24,25 @@ from game.ui.screens.event_log_sidebar import EventLogSidebar
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
+    from game.simulation.replay import ReplayRecord
+    from game.strategy.services.replay_resolver import ReplayResolver
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
+
+logger = logging.getLogger(__name__)
+
+
+# FEAT-26: tooltip / dialog text for ReplayResolver graceful-degradation.
+_REPLAY_REASON_MESSAGES = {
+    "missing": "Replay not available — file missing or evicted.",
+    "corrupt": "Replay file is corrupt and cannot be played.",
+    "version_drift": "Replay was captured under a different game version.",
+}
+_REPLAY_DRIFT_TITLE = "Replay version drift"
+_REPLAY_DRIFT_MESSAGE = (
+    "This replay was captured under a different components.json and may "
+    "not play back accurately. Continuing anyway."
+)
+_REPLAY_NOT_AVAILABLE_TITLE = "Replay unavailable"
 
 
 # ---------------------------------------------------------------------------
@@ -74,6 +95,8 @@ class EventLogWindow(StrategyModalWindow):
         on_close_callback: Optional[Callable] = None,
         on_navigate_callback: Optional[Callable] = None,
         empire_name: Optional[str] = None,
+        replay_resolver: "Optional[ReplayResolver]" = None,
+        launch_replay_callback: "Optional[Callable[[ReplayRecord], None]]" = None,
     ) -> None:
         title = (
             f"Event Log — {empire_name} Empire"
@@ -91,6 +114,11 @@ class EventLogWindow(StrategyModalWindow):
         self.current_filter = "all"
         self.on_close_callback = on_close_callback
         self.on_navigate_callback = on_navigate_callback
+        # FEAT-26: replay launch wiring. None on both = legacy/test paths
+        # where the Replay button click is a no-op (button itself is
+        # disabled when no resolver is provided, see _handle_replay_click).
+        self._replay_resolver = replay_resolver
+        self._launch_replay_callback = launch_replay_callback
 
         # Double-click tracking
         self._last_click_time: int = 0
@@ -348,6 +376,17 @@ class EventLogWindow(StrategyModalWindow):
                     self.virtual_table.update_visible_rows()
                     handled = True
 
+            # FEAT-26: per-row Replay button (replay_action column).
+            if not handled and self.virtual_table is not None:
+                action_match = self.virtual_table.check_action_button_press(
+                    clicked
+                )
+                if action_match is not None:
+                    action, row_idx = action_match
+                    if action == "replay" and row_idx >= 0:
+                        self._handle_replay_click(row_idx)
+                        handled = True
+
         # FEAT-04: Double-click on row navigates to event location
         if (
             hasattr(event, "type")
@@ -371,6 +410,76 @@ class EventLogWindow(StrategyModalWindow):
                     self._last_click_time = now
 
         return handled
+
+    def _handle_replay_click(self, row_index: int) -> None:
+        """FEAT-26: dispatch a Replay button click for the row.
+
+        Reads the row's ``replay_id`` from the data source. When present,
+        invokes ``ReplayResolver.resolve(...)`` and routes by the
+        ``ReplayLookup`` result:
+
+        - ``found=True, registry_drift=False`` → fire the launch callback.
+        - ``found=True, registry_drift=True`` → surface a drift warning
+          dialog AND launch (clean-sheet: drift is informational, not
+          blocking — playback may visually diverge but won't crash).
+        - ``found=False`` → surface the reason via a UIMessageWindow.
+
+        No-ops cleanly when ``replay_id`` is None (legacy combat row),
+        or when no resolver / launch callback is wired (tests, headless).
+        """
+        if self.data_source is None:
+            return
+        replay_id = self.data_source.get_cell_replay_id(row_index)
+        if not replay_id:
+            return
+        if self._replay_resolver is None:
+            logger.debug(
+                "FEAT-26 replay click ignored — no ReplayResolver wired."
+            )
+            return
+
+        lookup = self._replay_resolver.resolve(replay_id)
+
+        if not lookup.found:
+            reason = lookup.reason or "missing"
+            message = _REPLAY_REASON_MESSAGES.get(
+                reason,
+                f"Replay unavailable ({reason}).",
+            )
+            self._show_replay_message(_REPLAY_NOT_AVAILABLE_TITLE, message)
+            return
+
+        if lookup.registry_drift:
+            self._show_replay_message(
+                _REPLAY_DRIFT_TITLE, _REPLAY_DRIFT_MESSAGE
+            )
+
+        if self._launch_replay_callback is not None and lookup.record is not None:
+            self._launch_replay_callback(lookup.record)
+
+    def _show_replay_message(self, title: str, message: str) -> None:
+        """FEAT-26: surface a graceful-degradation message to the user.
+
+        Uses ``UIMessageWindow`` (the project's standard modal dialog).
+        Sized centred over the Event Log window.
+        """
+        try:
+            container_rect = self.get_container().get_rect()
+        except Exception:  # Intentional broad catch: pygame_gui internals may not be ready in test contexts
+            container_rect = pygame.Rect(0, 0, 600, 200)
+        w, h = 480, 180
+        dialog_rect = pygame.Rect(
+            container_rect.centerx - w // 2,
+            container_rect.centery - h // 2,
+            w,
+            h,
+        )
+        UIMessageWindow(
+            rect=dialog_rect,
+            html_message=message,
+            manager=self.ui_manager,
+            window_title=title,
+        )
 
     def _handle_row_navigate(self, row_index: int) -> None:
         """Navigate to the location of an event row.

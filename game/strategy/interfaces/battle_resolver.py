@@ -34,10 +34,17 @@ class BattleResult:
     PROJ-275 Phase 7: replaced the legacy `team0_survivors` /
     `team1_survivors` pair (2-team only) with the dict form so any
     number of teams can be reported.
+
+    FEAT-26: `replay_id` carries the captured replay's uuid string from
+    `BattleOutcome.replay_id`. None when no real replay was written
+    (shortcut branches that skip the simulator, or simulator runs with
+    no capture sink). The strategy `ConflictResolutionEngine` reads this
+    to attach the replay reference to the `COMBAT_RESOLVED` event.
     """
     winner: Optional[int]
     tick_count: int
     team_survivors: Dict[int, List[IPostBattleShip]] = field(default_factory=dict)
+    replay_id: Optional[str] = None
 
 
 class IBattleResolver(ABC):

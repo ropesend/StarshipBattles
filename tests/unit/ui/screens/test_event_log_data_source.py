@@ -60,8 +60,10 @@ class TestEventLogColumns:
     """Test EVENT_LOG_COLUMNS constant."""
 
     def test_column_count(self):
-        """Should have exactly 8 columns (category, turn, system, planet, local_hex, galaxy_hex, storm, message)."""
-        assert len(EVENT_LOG_COLUMNS) == 8
+        """Should have exactly 9 columns (category, turn, system, planet,
+        local_hex, galaxy_hex, storm, message, replay_action — FEAT-26
+        added the per-row Replay button column)."""
+        assert len(EVENT_LOG_COLUMNS) == 9
 
     def test_category_column(self):
         """Category column should have correct definition."""
@@ -446,8 +448,8 @@ class TestGranularLocationColumns:
     """Test granular location columns replacing single Location column."""
 
     def test_column_count(self):
-        """EVENT_LOG_COLUMNS should have 8 columns."""
-        assert len(EVENT_LOG_COLUMNS) == 8
+        """EVENT_LOG_COLUMNS should have 9 columns (FEAT-26 added replay_action)."""
+        assert len(EVENT_LOG_COLUMNS) == 9
 
     def test_system_column_definition(self):
         """System column should exist with correct definition."""
@@ -564,8 +566,8 @@ class TestStormColumn:
         assert isinstance(col["width"], int)
 
     def test_storm_column_count_updated(self):
-        """EVENT_LOG_COLUMNS should now have 8 columns."""
-        assert len(EVENT_LOG_COLUMNS) == 8
+        """EVENT_LOG_COLUMNS should now have 9 columns (FEAT-26 added replay_action)."""
+        assert len(EVENT_LOG_COLUMNS) == 9
 
     def test_storm_cell_value_single_storm(self):
         """Storm column should display storm name from event details."""

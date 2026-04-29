@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-04-29 — BUG-126: documented the new strategy-layer combat-resolution contract (no winner, surviving fleets remain in hex, re-engagement on subsequent ticks) and the migrated `COMBAT_RESOLVED` event schema (`participating_fleet_ids` / `surviving_fleet_ids` / `destroyed_fleet_ids`).
+> **Last verified:** 2026-04-29 — FEAT-26: documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`) so the Event Log can render the per-row Replay button. Empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract from prior verification still current.
 
 System documentation for the real-time combat simulation layer.
 
@@ -999,8 +999,8 @@ layer does **not** assign a winner. After the resolver returns:
   for the production `SimulationBattleResolver`. Mock resolvers in
   tests must accept the `empires` kwarg even if they ignore it.
 
-**`COMBAT_RESOLVED` event schema (BUG-126).** The event payload no
-longer carries `winner_fleet_id` / `loser_fleet_id`. New keys:
+**`COMBAT_RESOLVED` event schema (BUG-126 + FEAT-26).** The event payload
+no longer carries `winner_fleet_id` / `loser_fleet_id`. Keys:
 
 * `participating_fleet_ids: List[int]` — every fleet that entered
   the battle, in team_id order.
@@ -1010,13 +1010,22 @@ longer carries `winner_fleet_id` / `loser_fleet_id`. New keys:
 * `empire_id` carries the **lowest** participating empire id (kept
   for the existing event-log filter column; not a "winning empire"
   marker).
+* `replay_id: Optional[str]` (FEAT-26) — uuid of the captured replay
+  sidecar at `output/saves/<save>/replays/replay_<uuid>.json`, or
+  `None` for legacy events / shortcut-branch battles / runs without
+  a registered capture sink. The Event Log UI reads this to render a
+  per-row Replay button. Older saves with events from before
+  FEAT-26 simply have no `replay_id` key in `Event.details`;
+  `details.get("replay_id")` resolves to `None` and the button
+  renders disabled with the "older save" tooltip.
 
 Every resolved combat emits exactly one event, even on draws. Old
 clients reading `winner_fleet_id` will silently see `None` — per
 project ERADICATE policy, callers should be migrated to the new
 schema in the same change that introduces them. The event-log UI
-(`EventLogWindow`) does not consume any of these keys; it only reads
-`category` / `turn` / `system` / `planet` / `storm` / `message`.
+(`EventLogWindow`) reads `category` / `turn` / `system` / `planet` /
+`storm` / `message` for column rendering, plus
+`details["replay_id"]` (FEAT-26) for the Replay action column.
 
 **Diagnostic INFO logging (BUG-126).** Every strategy battle now
 logs its branch decision and post-battle survivor counts at INFO so
@@ -1077,3 +1086,63 @@ mid-fight, because they aren't ship entities — they're pre-compiled stack
 entries. A future project that wants destructible external modifiers
 must turn them into real in-battle ship entities (with their own ability
 providers) rather than static stack entries.
+
+---
+
+## 10. Replay ID Plumbing (FEAT-26)
+
+PROJ-312 captures every strategy battle to
+`output/saves/<save>/replays/replay_<uuid>.json` and stashes the uuid
+on `engine.replay_id` (set by
+`IReplayCaptureSink.on_battle_started` — see
+[`game/simulation/battle_runner.py`](../../game/simulation/battle_runner.py)
+`start_engine_from_spec`). FEAT-26 surfaces that uuid through every
+layer above so the Event Log can render a per-row Replay button.
+
+**Plumbing path (single source of truth at each seam):**
+
+```
+engine.replay_id  (battle_runner.py:start_engine_from_spec)
+   │
+   ▼  extract_outcome reads engine.replay_id; "" → None coercion
+BattleOutcome.replay_id : Optional[str]
+   │
+   ▼  SimulationBattleResolver.resolve_battle (simulator branch only)
+BattleResult.replay_id : Optional[str]    ← shortcut branches stay None
+   │
+   ▼  ConflictResolutionEngine._resolve_combat_at_hex captures the
+   │  return value and forwards via _log_combat_result(replay_id=...)
+EventBus.log_event(... replay_id=...)
+   │
+   ▼  Event.details=kwargs (auto-persists in saves; no schema change)
+event["details"]["replay_id"] : Optional[str]
+   │
+   ▼  EventLogDataSource.get_cell_replay_id(row_index)
+VirtualTable replay_action column → per-row Replay button
+   │
+   ▼  EventLogWindow._handle_replay_click → ReplayResolver.resolve(...)
+   │  graceful-degradation dispatch (UIMessageWindow on missing /
+   │  corrupt / version_drift / registry_drift) + launch callback
+Game.start_replay(record) → BattleConfig(replay_mode=True, ...)
+   → BattleScreen renders the "REPLAY MODE" badge
+```
+
+**Empty-string canonicalisation.** `NullCaptureSink.on_battle_started`
+returns `""` (no real capture happened); `extract_outcome` coerces
+`""` → `None` so downstream consumers see one signal. Do not propagate
+empty strings further — `ReplayResolver.resolve("")` will report
+`reason="missing"`, which would surface a misleading toast on Event
+Log rows that never had a real replay to begin with.
+
+**Where `replay_id` stays `None`:**
+
+* Shortcut branches in `SimulationBattleResolver` that skip the
+  simulator (no combat-capable team / sole survivor).
+* Headless paths that pass `capture_context=None` (replay-of-replay
+  playback, deterministic verification tests).
+* Combat Lab + Battle Setup — capture context is not built for these
+  contexts in v1 (loose acceptance scope; tracked for follow-up).
+* Legacy events from saves predating FEAT-26.
+
+In every case the Event Log button renders disabled with the "older
+save" tooltip — no crashes, no false positives.
