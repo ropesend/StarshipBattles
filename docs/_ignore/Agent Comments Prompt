@@ -1,75 +1,68 @@
-You are taking one final review pass on Codex’s Version 4 multi-agent coordination plan for the Starship Battles repository.
+You are reviewing the implementation branch for the first Agent Coordination tooling slice in the Starship Battles repo.
 
-Important: before writing your final Markdown response, discuss any remaining disagreements, concerns, or clarifying questions with the user in chat. Do not write the response file until the user has had a chance to respond. If you have no remaining disagreements, concerns, or clarifying questions, say that first and ask whether the user wants you to proceed with the response file.
+Branch:
+- codex/agent-coordination-baseline-inventory
 
-Context files to read:
-- AgentCoordination/codex_agent_coordination_plan_v4.md
-- AgentCoordination/codex_agent_coordination_plan_v3.md
-- AgentCoordination/claude_code_agent_coordination_v3_comments.md
-- AgentCoordination/opencode_deepseek_v4_pro_agent_coordination_v3_comments.md
-- AgentCoordination/antigravity_agent_coordination_v3_comments.md
-- AgentCoordination/user_response.md
-- Relevant local surfaces:
-  - AGENTS.md
-  - CLAUDE.md
-  - opencode.json
-  - .codex/config.toml
-  - .agents/CODEX.md
-  - .agents/skills/**
-  - .claude/skills/**
-  - .agent/skills/**
-  - .agent/workflows/**
-  - .opencode/skills/**
+Commit:
+- 22f17ba16 Add agent coordination baseline inventory
 
-Settled V4 decisions:
-- AGENTS.md is the shared source of truth.
-- Runtime skill prefixes are:
-  - claude-
-  - anti-
-  - ocode-
-  - codex-
-- Prefix migration must be scripted, dry-run first, and applied atomically.
-- Generated files are tracked:
-  - AgentCoordination/generated/test_baseline.json
-  - AgentCoordination/generated/agent_surface_inventory.json
-- Test baseline policy:
-  - successful whole-suite run updates counts only when suite shape changes
-  - baseline_changed_at updates when counts change
-  - --refresh-baseline-timestamp updates verified_at on successful whole-suite final verification
-  - failed/partial/targeted runs never update the baseline
-- Try to track a sanitized .claude/settings.local.json only if path safety can be proven.
-- Skill usage tracking is script-driven, per repo copy, and advisory only.
-- Stable reinforcement duplication is allowed only with closed validator markers.
-- Stale .agent/workflows/ and .agent/MIGRATION_PROGRESS.md should be removed after replacement artifacts exist.
-- Antigravity remains lower priority and focused mostly on tooling/assets.
+Context:
+- This implements the first slice of AgentCoordination/codex_agent_coordination_plan_final.md.
+- Scope should be limited to generated test baseline support, generated agent surface inventory, and related docs/tests.
+- Do not review the future prefix rename, sanitizer, usage counters, or full validator except where this commit blocks or complicates them.
 
-Your tasks:
-1. Read the context files and inspect relevant local agent surfaces.
-2. Research official/primary docs only if needed to verify a remaining concern. Cite links you rely on.
-3. Identify only material remaining issues with V4.
-4. Discuss those issues with the user in chat before writing a file.
-5. After the user replies and allows you to proceed, create one concise Markdown response in AgentCoordination/.
-6. Do not implement repository changes beyond writing your review response file.
+Files to review:
+- AgentCoordination/codex_agent_coordination_plan_final.md
+- AgentCoordination/generated/test_baseline.json
+- AgentCoordination/generated/agent_surface_inventory.json
+- Tools/test_sharded/test_sharded.py
+- Tools/test_sharded/README.md
+- Tools/agent_coordination/inventory_agent_surfaces.py
+- Tools/agent_coordination/README.md
+- tests/unit/tools/test_test_sharded_baseline.py
+- tests/unit/tools/test_agent_surface_inventory.py
+- AGENTS.md
+- CLAUDE.md
+- Tools/README.md
 
-Focus only on:
-- Remaining correctness issues.
-- Implementation risks not addressed by V4.
-- Missing sequencing/guardrails.
-- Any V4 decision that is likely to fail in your agent system.
-- Any evidence-backed reason to revise the plan before implementation begins.
+Known validation already run:
+- `py -3.10 Tools/test_sharded/test_sharded.py --refresh-baseline-timestamp`
+  - Result: `16063 tests | 16060 passed | 0 failed | 0 errors | 3 skipped`
+- `py -3.10 -m pytest tests/unit/tools/test_agent_surface_inventory.py tests/unit/tools/test_test_sharded_baseline.py -q`
+  - Result: `9 passed`
 
-Response file requirements:
-- Claude Code: AgentCoordination/claude_code_agent_coordination_v4_comments.md
-- OpenCode DeepSeek V4 Pro: AgentCoordination/opencode_deepseek_v4_pro_agent_coordination_v4_comments.md
-- Antigravity: AgentCoordination/antigravity_agent_coordination_v4_comments.md
-- Keep it concise, ideally under 1,000 words.
-- Do not list agreement unless it is necessary context for a disagreement.
-- Use these sections only:
-  - User Discussion Summary
-  - Remaining Issues
-  - Implementation Risks
-  - Required V4 Changes
+Known point to scrutinize:
+- `AgentCoordination/generated/test_baseline.json` stores `git_sha` from the pre-commit HEAD, because the full suite ran before the commit existed. Decide whether that is acceptable, should be omitted, or should be handled differently.
+
+Review goals:
+1. Identify correctness bugs, regression risks, missing tests, schema issues, or maintainability problems in this commit.
+2. Verify the baseline update policy:
+   - only successful whole-suite runs update the tracked baseline
+   - count changes update `baseline_changed_at`
+   - `--refresh-baseline-timestamp` updates `verified_at`
+   - failed/partial/targeted runs do not update baseline
+   - skipped counts are parsed correctly
+3. Verify the inventory tool:
+   - schema version is present
+   - surface counts and prefix expectations are correct
+   - OpenCode visibility is correct
+   - stale references are detected without overreaching
+   - output is deterministic enough for a tracked generated file
+4. Review whether docs now point agents at generated baseline/inventory correctly.
+5. Keep the review focused and actionable.
+
+Output requirements:
+- Do not modify files.
+- Write a concise review response in AgentCoordination/.
+- Filename:
+  - Claude Code: AgentCoordination/claude_code_baseline_inventory_review.md
+  - OpenCode/DeepSeek: AgentCoordination/opencode_deepseek_baseline_inventory_review.md
+- Use these sections:
+  - Summary Judgment
+  - Blocking Issues
+  - Non-Blocking Issues
+  - Questions
   - Evidence
   - Final Recommendation
 
-If there are no remaining issues, write “None” under Remaining Issues and Required V4 Changes.
+If there are no issues in a section, write “None”.
