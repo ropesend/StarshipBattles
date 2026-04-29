@@ -62,11 +62,60 @@
       "severity": "stale"
     },
     {
-      "kind": "stale_starship_path",
+      "kind": "absolute_path",
+      "line": 13,
+      "path": ".claude/settings.local.json",
+      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 32,
+      "path": ".claude/settings.local.json",
+      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 32,
+      "path": ".claude/settings.local.json",
+      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
       "line": 40,
       "path": ".claude/settings.local.json",
-      "pattern": "//c/Dev/Starship Battles",
-      "severity": "stale"
+      "pattern": "//c/Dev/Starship",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 45,
+      "path": ".claude/settings.local.json",
+      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 48,
+      "path": ".claude/settings.local.json",
+      "pattern": "//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 51,
+      "path": ".claude/settings.local.json",
+      "pattern": "c:\\\\Dev\\\\Starship",
+      "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 52,
+      "path": ".claude/settings.local.json",
+      "pattern": "c:\\\\Dev\\\\Starship",
+      "severity": "warn"
     }
   ],
   "surfaces": [
@@ -2141,5 +2190,6 @@
       ],
       "surface_path": ".agent/skills"
     }
-  ]
+  ],
+  "warnings": []
 }

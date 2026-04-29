@@ -53,6 +53,23 @@ There is also a PowerShell convenience wrapper:
 - Saves per-test timing data to `.test_durations.json` for future runs.
 - Updates `AgentCoordination/generated/test_baseline.json` only after successful whole-suite runs. Failed, partial, or interrupted runs leave the baseline unchanged.
 
+## Test baseline schema
+
+The generated `AgentCoordination/generated/test_baseline.json` records the most recent green whole-suite result. Field semantics:
+
+- `git_sha` — the SHA of `HEAD` **at the moment the runner executed**, not the SHA of the commit that contains the file. The runner cannot know about commits that have not happened yet, so when you run the suite and then commit the resulting baseline file, `git_sha` will refer to the parent commit. This is the intended contract: it answers "what code did the recorded counts come from?"
+- `baseline_changed_at` — timestamp updated whenever any of `total`, `passed`, `failed`, `errors`, `skipped` change.
+- `verified_at` — timestamp of the most recent green whole-suite run. Updated even when counts are unchanged if `--refresh-baseline-timestamp` is passed.
+- `schema_version` — bumped only on breaking schema changes.
+
+The summary line in stdout includes a `skipped` column:
+
+```
+TOTAL: N tests | N passed | N failed | N errors | N skipped
+```
+
+CI scripts that parse this line by column position must account for the trailing `skipped` field added in the baseline tooling slice.
+
 ## Exit Code
 
 - `0` if all shards pass.

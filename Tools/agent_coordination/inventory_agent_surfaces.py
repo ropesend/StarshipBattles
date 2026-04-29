@@ -13,13 +13,34 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 DEFAULT_OUTPUT = Path("AgentCoordination/generated/agent_surface_inventory.json")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-HARDCODED_BASELINE_RE = re.compile(r"\b154\d{2}\+?\b")
+
+# 4-5 digit candidate counts. Keyword co-occurrence on the same line is required
+# to avoid false positives on PROJ ids, ports, version numbers, etc.
+TEST_COUNT_CANDIDATE_RE = re.compile(r"(?<![\w-])(\d{4,5})\+?(?![\w-])")
+TEST_COUNT_KEYWORD_RE = re.compile(r"\b(?:tests?|baseline|passed|skipped|failed|errored?|errors)\b", re.IGNORECASE)
+
+# Generic absolute-path detection. Matches Windows drive letters (`c:\`, `C:/`)
+# and POSIX-style absolute mounts (`//c/`, `/c/`). Settings files that legitimately
+# carry absolute paths are still flagged here; downstream policy decides severity.
+ABSOLUTE_PATH_RE = re.compile(
+    r"(?:[A-Za-z]:[\\/]|(?<![\w/])//[A-Za-z]/|(?<![\w/])/[A-Za-z]/)"
+    r"[^\"'\s,;)]+"
+)
 
 CLAUDE_FRONTMATTER_KEYS = {
     "allowed-tools",
     "argument-hint",
+    "arguments",
+    "context",
     "disable-model-invocation",
+    "effort",
+    "agent",
+    "hooks",
     "model",
+    "paths",
+    "shell",
+    "user-invocable",
+    "when_to_use",
 }
 
 SURFACES = [
@@ -54,7 +75,6 @@ STALE_LITERAL_PATTERNS = [
     ("docs/bug_tracker.md", "removed_doc_path"),
     ("docs/lessons_learned.md", "removed_doc_path"),
     ("assets/tools/ship_background_remover.py", "removed_tool_path"),
-    ("//c/Dev/Starship Battles", "stale_starship_path"),
 ]
 
 
@@ -109,6 +129,24 @@ def _load_opencode_permissions(repo_root: Path) -> dict[str, str]:
         str(pattern): str(value)
         for pattern, value in skill_permissions.items()
     }
+
+
+def _opencode_permission_warnings(permissions: dict[str, str]) -> list[dict[str, object]]:
+    warnings: list[dict[str, object]] = []
+    if not permissions:
+        return warnings
+    keys = list(permissions.keys())
+    if "*" in keys and keys[0] != "*":
+        warnings.append({
+            "kind": "opencode_wildcard_not_first",
+            "severity": "warn",
+            "detail": (
+                "opencode.json skill permissions list `*` after specific patterns. "
+                "Inventory pattern resolution uses last-match-wins, so a trailing "
+                "`*` overrides earlier specific rules. Move `*` to the first key."
+            ),
+        })
+    return warnings
 
 
 def _opencode_permission(
@@ -246,13 +284,21 @@ def _scan_file_for_stale_patterns(path: Path, repo_root: Path) -> list[dict[str,
                     "kind": kind,
                     "severity": "stale",
                 })
-        if HARDCODED_BASELINE_RE.search(line):
+        if TEST_COUNT_CANDIDATE_RE.search(line) and TEST_COUNT_KEYWORD_RE.search(line):
             findings.append({
                 "path": _relative_path(path, repo_root),
                 "line": line_number,
                 "pattern": "hardcoded test baseline",
                 "kind": "hardcoded_test_baseline",
                 "severity": "stale",
+            })
+        for match in ABSOLUTE_PATH_RE.finditer(line):
+            findings.append({
+                "path": _relative_path(path, repo_root),
+                "line": line_number,
+                "pattern": match.group(0),
+                "kind": "absolute_path",
+                "severity": "warn",
             })
     return findings
 
@@ -308,6 +354,7 @@ def build_inventory(repo_root: Path) -> dict[str, object]:
             for config in SURFACES
         ],
         "stale_references": _find_stale_references(resolved_root),
+        "warnings": _opencode_permission_warnings(opencode_permissions),
     }
 
 
