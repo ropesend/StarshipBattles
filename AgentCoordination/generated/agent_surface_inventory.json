@@ -3,65 +3,6 @@
   "schema_version": 1,
   "stale_references": [
     {
-      "kind": "stale_surface",
-      "path": ".agent/MIGRATION_PROGRESS.md",
-      "severity": "stale"
-    },
-    {
-      "kind": "stale_surface",
-      "path": ".agent/workflows",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_tool_path",
-      "line": 50,
-      "path": ".agent/workflows/generate_ship_theme.md",
-      "pattern": "assets/tools/ship_background_remover.py",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_doc_path",
-      "line": 6,
-      "path": ".agent/workflows/resolve_bug.md",
-      "pattern": "docs/bug_tracker.md",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_doc_path",
-      "line": 8,
-      "path": ".agent/workflows/resolve_bug.md",
-      "pattern": "docs/lessons_learned.md",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_doc_path",
-      "line": 9,
-      "path": ".agent/workflows/resolve_bug.md",
-      "pattern": "docs/lessons_learned.md",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_doc_path",
-      "line": 22,
-      "path": ".agent/workflows/resolve_bug.md",
-      "pattern": "docs/bug_tracker.md",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_doc_path",
-      "line": 23,
-      "path": ".agent/workflows/resolve_bug.md",
-      "pattern": "docs/lessons_learned.md",
-      "severity": "stale"
-    },
-    {
-      "kind": "removed_test_command",
-      "line": 14,
-      "path": ".agent/workflows/run-tests.md",
-      "pattern": "python -m unittest discover",
-      "severity": "stale"
-    },
-    {
       "kind": "absolute_path",
       "line": 13,
       "path": ".claude/settings.local.json",
