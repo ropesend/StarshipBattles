@@ -21,6 +21,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from datetime import datetime, timezone
 from pathlib import Path
 
 def _find_project_root():
@@ -36,6 +37,9 @@ def _find_project_root():
 PROJECT_ROOT = _find_project_root()
 DURATIONS_FILE = PROJECT_ROOT / ".test_durations.json"
 SHARD_RESULTS_DIR = PROJECT_ROOT / ".pytest_cache" / "shard_results"
+TEST_BASELINE_FILE = PROJECT_ROOT / "AgentCoordination" / "generated" / "test_baseline.json"
+BASELINE_COMMAND = "python Tools/test_sharded/test_sharded.py"
+BASELINE_COUNT_KEYS = ("total", "passed", "failed", "errors", "skipped")
 
 
 def _physical_core_count():
@@ -244,11 +248,11 @@ def run_shard(shard_id, test_ids):
 # Result aggregation
 # ---------------------------------------------------------------------------
 
-def parse_shard_xml(shard_id):
-    """Parse JUnit XML for a shard, returning (tests, failures, errors, time, test_durations)."""
+def parse_shard_xml(shard_id: int) -> tuple[int, int, int, int, float, dict[str, float]]:
+    """Parse JUnit XML for a shard."""
     xml_path = SHARD_RESULTS_DIR / f"shard_{shard_id}.xml"
     if not xml_path.exists():
-        return 0, 0, 0, 0.0, {}
+        return 0, 0, 0, 0, 0.0, {}
 
     tree = ET.parse(xml_path)
     root = tree.getroot()
@@ -256,6 +260,7 @@ def parse_shard_xml(shard_id):
     total_tests = 0
     total_failures = 0
     total_errors = 0
+    total_skipped = 0
     total_time = 0.0
     durations = {}
 
@@ -263,6 +268,7 @@ def parse_shard_xml(shard_id):
         total_tests += int(suite.get("tests", 0))
         total_failures += int(suite.get("failures", 0))
         total_errors += int(suite.get("errors", 0))
+        total_skipped += int(suite.get("skipped", 0))
         total_time += float(suite.get("time", 0.0))
 
     for testcase in root.iter("testcase"):
@@ -281,7 +287,7 @@ def parse_shard_xml(shard_id):
                 node_id = f"{module_path}::{name}"
             durations[node_id] = dur
 
-    return total_tests, total_failures, total_errors, total_time, durations
+    return total_tests, total_failures, total_errors, total_skipped, total_time, durations
 
 
 def collect_failures_and_warnings(stdout_text):
@@ -325,16 +331,105 @@ def save_durations(all_durations):
         json.dump(existing, f, indent=1)
 
 
+def _utc_timestamp() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _git_sha() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
+def _load_test_baseline() -> dict[str, object] | None:
+    if not TEST_BASELINE_FILE.exists():
+        return None
+    try:
+        data = json.loads(TEST_BASELINE_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def _baseline_counts_changed(
+    existing: dict[str, object] | None,
+    counts: dict[str, int],
+) -> bool:
+    if existing is None:
+        return True
+    return any(existing.get(key) != counts[key] for key in BASELINE_COUNT_KEYS)
+
+
+def _write_test_baseline(payload: dict[str, object]) -> None:
+    TEST_BASELINE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    TEST_BASELINE_FILE.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_test_baseline_if_needed(
+    summary: dict[str, int],
+    *,
+    full_suite_success: bool,
+    refresh_baseline_timestamp: bool,
+) -> str:
+    if not full_suite_success:
+        return "skipped"
+
+    counts = {key: int(summary[key]) for key in BASELINE_COUNT_KEYS}
+    existing = _load_test_baseline()
+    counts_changed = _baseline_counts_changed(existing, counts)
+
+    if not counts_changed and not refresh_baseline_timestamp:
+        return "unchanged"
+
+    now = _utc_timestamp()
+    baseline_changed_at = now
+    status = "created" if existing is None else "updated"
+    if not counts_changed and existing is not None:
+        baseline_changed_at = str(existing.get("baseline_changed_at", ""))
+        status = "refreshed"
+
+    payload: dict[str, object] = {
+        "schema_version": 1,
+        "command": BASELINE_COMMAND,
+        **counts,
+        "baseline_changed_at": baseline_changed_at,
+        "verified_at": now,
+        "git_sha": _git_sha(),
+    }
+    _write_test_baseline(payload)
+    return status
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Sharded test runner")
     physical_cores = _physical_core_count()
     parser.add_argument("--shards", type=int, default=physical_cores, help=f"Number of shards (default: {physical_cores}, auto-detected physical cores)")
     parser.add_argument("--verbose", action="store_true", help="Show per-shard test lists")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--refresh-baseline-timestamp",
+        action="store_true",
+        help="Refresh test_baseline.json verified_at after a successful whole-suite run",
+    )
+    args = parser.parse_args(argv)
 
     num_shards = args.shards
 
@@ -394,13 +489,15 @@ def main():
     total_tests = 0
     total_failures = 0
     total_errors = 0
+    total_skipped = 0
     all_durations = {}
 
     for i in range(num_shards):
-        tests, failures, errors, shard_time, durations = parse_shard_xml(i)
+        tests, failures, errors, skipped, shard_time, durations = parse_shard_xml(i)
         total_tests += tests
         total_failures += failures
         total_errors += errors
+        total_skipped += skipped
         all_durations.update(durations)
 
     # Collect failures and warnings from stdout
@@ -454,11 +551,31 @@ def main():
         print("\n".join(unique_warnings))
 
     # Final summary
-    total_passed = total_tests - total_failures - total_errors
+    total_passed = total_tests - total_failures - total_errors - total_skipped
     print(f"\n{'='*60}")
-    print(f"TOTAL: {total_tests} tests | {total_passed} passed | {total_failures} failed | {total_errors} errors")
+    print(f"TOTAL: {total_tests} tests | {total_passed} passed | {total_failures} failed | {total_errors} errors | {total_skipped} skipped")
     print(f"Wall time: {overall_elapsed:.1f}s ({num_shards} shards)")
     print(f"{'='*60}")
+
+    full_suite_success = (
+        total_tests == len(test_ids)
+        and total_failures == 0
+        and total_errors == 0
+        and not any(rc != 0 for rc, _, _, _ in shard_results.values())
+    )
+    baseline_status = _write_test_baseline_if_needed(
+        {
+            "total": total_tests,
+            "passed": total_passed,
+            "failed": total_failures,
+            "errors": total_errors,
+            "skipped": total_skipped,
+        },
+        full_suite_success=full_suite_success,
+        refresh_baseline_timestamp=args.refresh_baseline_timestamp,
+    )
+    if baseline_status in {"created", "updated", "refreshed"}:
+        print(f"Test baseline {baseline_status}: {TEST_BASELINE_FILE}")
 
     # Exit with failure if any shard failed
     if any(rc != 0 for rc, _, _, _ in shard_results.values()):

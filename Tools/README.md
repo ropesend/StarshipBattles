@@ -10,6 +10,7 @@
 
 | Tool | Purpose | Type |
 |------|---------|------|
+| [agent_coordination](agent_coordination/) | Generate tracked agent surface inventory artifacts | Diagnostics |
 | [analyze_dependency_graph](analyze_dependency_graph/) | Import dependency graph from entry points | Analysis |
 | [background_eraser](background_eraser/) | Remove image backgrounds via FastAPI server | Asset Processing |
 | [check_context](check_context/) | Report Claude Code session context usage (ground-truth via transcript `usage` data) | Diagnostics |
@@ -65,6 +66,7 @@
 
 ### Diagnostics & Analysis
 
+- **[agent_coordination](agent_coordination/)** -- Generates tracked, schema-versioned inventories of agent-facing skill/config surfaces for coordination and later validation work.
 - **[check_orphans](check_orphans/)** -- Scans `game/` for modules that aren't imported by anything. Helps identify dead code.
 - **[diagnose_blueprints](diagnose_blueprints/)** -- Generates star systems from each blueprint and verifies they match expected characteristics.
 - **[analyze_dependency_graph](analyze_dependency_graph/)** -- Parses Python imports from entry points to build a dependency graph. Identifies unreachable modules.

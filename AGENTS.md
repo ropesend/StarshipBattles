@@ -64,7 +64,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - `conftest.py` force-sets `SDL_VIDEODRIVER=dummy` before imports — tests run headless.
 - `reset_game_state` fixture (autouse function-scoped) clears singletons, hydrates registries from session cache.
 - Session-scoped registries via `session_registries` fixture. Function-scoped variant: `fresh_registries`.
-- 15477+ tests baseline. Known flakes: `test_colony_owner_id_matches_empire` (test-isolation) and some `test_fleet_operations.py` resource-accumulation tests. If 1-4 random failures appear in those areas, re-run before triaging.
+- Repo-wide test baseline lives in `AgentCoordination/generated/test_baseline.json`. Known flakes: `test_colony_owner_id_matches_empire` (test-isolation) and some `test_fleet_operations.py` resource-accumulation tests. If 1-4 random failures appear in those areas, re-run before triaging.
 
 ## Tooling Notes
 
