@@ -13,6 +13,8 @@ from pygame_gui.elements import (
     UIHorizontalSlider, UIDropDownMenu
 )
 
+from game.ui.components.filters.tri_state_widget import TriStateFilterWidget
+
 
 def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
                   planet_ranges, columns, preset_manager,
@@ -143,10 +145,11 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
     if x != x_start:
         y_off += 35
 
-    # --- Effects Filter (FEAT-16) ---
+    # --- Effects Filter (FEAT-25 tri-state) ---
     # Conditionally rendered: only when at least one planet in the galaxy
     # carries an intrinsic ability. When omitted, ui_filters['effects'] is
     # an empty dict so window event-handling iterations are no-ops.
+    # All-button → all FilterState.YES; None-button → all FilterState.IGNORE.
     ui_filters['effects'] = {}
     btn_all_effects = None
     btn_none_effects = None
@@ -166,7 +169,6 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
                                     manager, container=content_container)
         y_off += 30
 
-        x = x_start
         for group_key in effect_keys_list:
             # Resolve display name from group_key. Group-keys like
             # 'EnvironmentalDamage:thermal' split into ('EnvironmentalDamage',
@@ -181,24 +183,16 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
                 data = {}
             label = _effect_display_name(ability_name, data)
 
-            btn = UIButton(
-                relative_rect=pygame.Rect(x, y_off, 160, 30),
-                text=label,
+            widget = TriStateFilterWidget(
+                attribute_name=group_key,
+                label=label,
+                rect=pygame.Rect(10, y_off, width, 28),
                 manager=manager,
                 container=content_container,
-                object_id='@filter_toggle_on',
             )
-            # Store the display label so toggle handlers (which work in
-            # terms of group_key) can render `[Thermal Damage]` rather
-            # than `[EnvironmentalDamage:thermal]`.
-            btn._display_label = label
-            ui_filters['effects'][group_key] = btn
-            x += 170
-            if x > width - 160:
-                x = x_start
-                y_off += 35
-        if x != x_start:
-            y_off += 35
+            ui_filters['effects'][group_key] = widget
+            y_off += 30
+        y_off += 10
 
     # --- Range Sliders ---
     def add_range(label, key, min_limit, max_limit) -> None:

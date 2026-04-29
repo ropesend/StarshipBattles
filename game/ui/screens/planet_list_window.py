@@ -35,6 +35,7 @@ from game.strategy.services.system_effects_collector import (
     format_intrinsic_ability_magnitude,
 )
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
+from game.ui.filters.filter_state import FilterState
 from game.ui.screens.planet_list_filter_manager import PlanetListFilterManager
 from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
@@ -197,10 +198,11 @@ class PlanetListWindow(StrategyModalWindow):
         self._effect_keys = compute_planet_effect_keys(self.all_planets)
         self.columns.extend(build_effect_columns(self._effect_keys))
 
-        # FEAT-16: seed the manager's filter_effects with one True entry
-        # per discovered effect group-key. All True initially so the
-        # filter is a no-op until the user unticks something.
-        self._filter_mgr.filter_effects = {k: True for k in self._effect_keys}
+        # FEAT-25: seed the manager's filter_effects with one
+        # FilterState.IGNORE entry per discovered effect group-key. The
+        # all-IGNORE state is the no-op default; the user opts into a
+        # filter by switching individual rows to YES or NO.
+        self._filter_mgr.filter_effects = {k: FilterState.IGNORE for k in self._effect_keys}
 
         # UI Containers - Sidebar
         self.sidebar_panel = UIPanel(
@@ -236,10 +238,9 @@ class PlanetListWindow(StrategyModalWindow):
         self.dd_presets = sidebar_widgets['dd_presets']
         self.ui_filters = sidebar_widgets['ui_filters']
 
-        # FEAT-16: initialize Effects toggle button visual states to match
-        # the seeded filter_effects dict (all True = all selected).
-        for key, btn in self.ui_filters.get('effects', {}).items():
-            btn.select()
+        # FEAT-25: TriStateFilterWidget defaults to IGNORE on construction,
+        # which matches the seeded filter_effects dict. No visual init
+        # required.
 
         # Main Content Area - Panel for VirtualTable
         main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
@@ -384,12 +385,12 @@ class PlanetListWindow(StrategyModalWindow):
             if event.ui_element == self.btn_none_owners:
                 self._set_all_filters(self.filter_owner, 'owners', False)
                 return True
-            # FEAT-16: Effects All/None batch buttons (None when section omitted)
+            # FEAT-25: Effects All/None batch buttons → FilterState.YES / IGNORE
             if self.btn_all_effects is not None and event.ui_element == self.btn_all_effects:
-                self._set_all_filters(self.filter_effects, 'effects', True)
+                self._set_all_effects(FilterState.YES)
                 return True
             if self.btn_none_effects is not None and event.ui_element == self.btn_none_effects:
-                self._set_all_filters(self.filter_effects, 'effects', False)
+                self._set_all_effects(FilterState.IGNORE)
                 return True
             if event.ui_element == self.btn_save_preset:
                 self._save_preset()
@@ -404,10 +405,15 @@ class PlanetListWindow(StrategyModalWindow):
                 if event.ui_element == btn:
                     self._toggle_filter(self.filter_owner, key, btn)
                     return True
-            # FEAT-16: Effects toggle buttons
-            for key, btn in self.ui_filters.get('effects', {}).items():
-                if event.ui_element == btn:
-                    self._toggle_filter(self.filter_effects, key, btn)
+            # FEAT-25: Effects tri-state radio buttons. The widget owns
+            # all three radios; check_pressed returns the new FilterState
+            # if our event element matches one of them.
+            for key, widget in self.ui_filters.get('effects', {}).items():
+                new_state = widget.check_pressed(event.ui_element)
+                if new_state is not None:
+                    widget.set_state(new_state)
+                    self.filter_effects[key] = new_state
+                    self.refresh_list()
                     return True
             # Check column toggle buttons
             for col_id, btn in self.ui_filters.get('columns', {}).items():
@@ -525,7 +531,12 @@ class PlanetListWindow(StrategyModalWindow):
     # -----------------------------------------------------------------------
 
     def _set_all_filters(self, filter_dict, ui_key, enabled) -> None:
-        """Set all filters in a category to enabled/disabled."""
+        """Set all filters in a category to enabled/disabled.
+
+        For Type and Owner sections (UIButton chips). Effects uses
+        `_set_all_effects` instead because TriStateFilterWidget has no
+        `select()` / `unselect()` API.
+        """
         for key, btn in self.ui_filters.get(ui_key, {}).items():
             filter_dict[key] = enabled
             label = getattr(btn, '_display_label', key)
@@ -535,6 +546,16 @@ class PlanetListWindow(StrategyModalWindow):
             else:
                 btn.unselect()
                 btn.set_text(f"{label}")
+        self.refresh_list()
+
+    def _set_all_effects(self, state: FilterState) -> None:
+        """Set every Effects filter row to the same FilterState (FEAT-25).
+
+        Wraps both the data dict and the TriStateFilterWidget visuals.
+        """
+        for key, widget in self.ui_filters.get('effects', {}).items():
+            self.filter_effects[key] = state
+            widget.set_state(state)
         self.refresh_list()
 
     def _toggle_filter(self, filter_dict, key, btn) -> None:

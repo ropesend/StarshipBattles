@@ -213,13 +213,12 @@ class TestComputePlanetEffectKeys:
 
 
 class TestEffectsPredicate:
-    """`effects_predicate(filter_effects)` returns a predicate. Per FEAT-16:
+    """`effects_predicate(filter_effects)` returns a predicate. Per FEAT-25:
 
-    - Multiple effects selected → OR semantics (any selected key on the
-      planet passes).
-    - Zero effects selected (or all-False) → **no-op** — every planet
-      passes. Different from Type/Owner, which treat zero-selected as
-      'show none'. Documented in planet_list_filters.py.
+    - Per-effect tri-state (FilterState.YES / NO / IGNORE).
+    - Multiple non-IGNORE effects compose as **AND**.
+    - All-IGNORE (or empty) → no-op (every planet passes). The only no-op state.
+    - YES requires presence; NO requires absence.
     """
 
     def _planet_with(self, abilities):
@@ -228,40 +227,86 @@ class TestEffectsPredicate:
         return p
 
     def test_no_selections_is_noop_show_all(self):
-        """Special-case (FEAT-16): zero effect chips ticked = filter
-        inactive, every planet passes regardless of whether it has effects."""
+        """Empty filter dict = no-op."""
         from game.ui.screens.planet_list_filters import effects_predicate
         pred = effects_predicate({})
         assert pred(self._planet_with({})) is True
         assert pred(self._planet_with({'ThrustModifier': {'multiplier': 0.9}})) is True
 
-    def test_all_false_selections_is_also_noop_show_all(self):
-        """An all-False dict is functionally equivalent to no selections."""
+    def test_all_ignore_is_noop_show_all(self):
+        """All-IGNORE dict is functionally equivalent to empty."""
         from game.ui.screens.planet_list_filters import effects_predicate
-        pred = effects_predicate({'ThrustModifier': False, 'FuelDrain': False})
+        from game.ui.filters.filter_state import FilterState
+        pred = effects_predicate({
+            'ThrustModifier': FilterState.IGNORE,
+            'FuelDrain': FilterState.IGNORE,
+        })
         assert pred(self._planet_with({})) is True
         assert pred(self._planet_with({'ThrustModifier': {'multiplier': 0.9}})) is True
 
-    def test_or_within_group_one_match_passes(self):
-        """OR-within-Effects: any selected key on the planet passes."""
+    def test_yes_requires_presence(self):
+        """YES: planet must have the effect; planets without it are rejected."""
         from game.ui.screens.planet_list_filters import effects_predicate
-        pred = effects_predicate({
-            'ThrustModifier': True,
-            'FuelDrain': True,
-        })
-        # planet has ThrustModifier — passes (OR satisfied)
-        assert pred(self._planet_with({'ThrustModifier': {'multiplier': 0.9, 'scope': 'sector'}})) is True
-        # planet has FuelDrain — passes
-        assert pred(self._planet_with({'FuelDrain': {'rate': 0.5, 'scope': 'sector'}})) is True
-        # planet has neither — fails
-        assert pred(self._planet_with({})) is False
-        # planet has ShieldModifier (not selected) — fails
-        assert pred(self._planet_with({'ShieldModifier': {'multiplier': 0.85}})) is False
+        from game.ui.filters.filter_state import FilterState
+        pred = effects_predicate({'ThrustModifier': FilterState.YES})
+        with_thrust = self._planet_with({'ThrustModifier': {'multiplier': 0.9, 'scope': 'sector'}})
+        without_thrust = self._planet_with({})
+        with_other = self._planet_with({'ShieldModifier': {'multiplier': 0.85}})
+        assert pred(with_thrust) is True
+        assert pred(without_thrust) is False
+        assert pred(with_other) is False
 
-    def test_environmental_damage_type_distinguished(self):
-        """Selecting EnvironmentalDamage:thermal must not match a radiation planet."""
+    def test_no_requires_absence(self):
+        """NO: planet must NOT have the effect; planets with it are rejected."""
         from game.ui.screens.planet_list_filters import effects_predicate
-        pred = effects_predicate({'EnvironmentalDamage:thermal': True})
+        from game.ui.filters.filter_state import FilterState
+        pred = effects_predicate({'ThrustModifier': FilterState.NO})
+        with_thrust = self._planet_with({'ThrustModifier': {'multiplier': 0.9, 'scope': 'sector'}})
+        without_thrust = self._planet_with({})
+        assert pred(with_thrust) is False
+        assert pred(without_thrust) is True
+
+    def test_yes_and_no_compose_as_and(self):
+        """{Thermal: NO, Shield: YES} → both conditions must hold simultaneously."""
+        from game.ui.screens.planet_list_filters import effects_predicate
+        from game.ui.filters.filter_state import FilterState
+        pred = effects_predicate({
+            'EnvironmentalDamage:thermal': FilterState.NO,
+            'ShieldModifier': FilterState.YES,
+        })
+        only_shield = self._planet_with({'ShieldModifier': {'multiplier': 0.85}})
+        only_thermal = self._planet_with({
+            'EnvironmentalDamage': {'rate': 0.3, 'damage_type': 'thermal', 'scope': 'sector'},
+        })
+        both = self._planet_with({
+            'ShieldModifier': {'multiplier': 0.85},
+            'EnvironmentalDamage': {'rate': 0.3, 'damage_type': 'thermal', 'scope': 'sector'},
+        })
+        neither = self._planet_with({})
+        assert pred(only_shield) is True   # NO satisfied (no thermal), YES satisfied (has shield)
+        assert pred(only_thermal) is False  # NO violated (has thermal)
+        assert pred(both) is False          # NO violated
+        assert pred(neither) is False       # YES violated (no shield)
+
+    def test_ignore_mixed_with_others_skipped(self):
+        """{A: YES, B: IGNORE} behaves identically to {A: YES} alone."""
+        from game.ui.screens.planet_list_filters import effects_predicate
+        from game.ui.filters.filter_state import FilterState
+        pred_mixed = effects_predicate({
+            'ThrustModifier': FilterState.YES,
+            'FuelDrain': FilterState.IGNORE,
+        })
+        pred_alone = effects_predicate({'ThrustModifier': FilterState.YES})
+        with_thrust_only = self._planet_with({'ThrustModifier': {'multiplier': 0.9}})
+        with_fuel_only = self._planet_with({'FuelDrain': {'rate': 0.5}})
+        assert pred_mixed(with_thrust_only) is pred_alone(with_thrust_only) is True
+        assert pred_mixed(with_fuel_only) is pred_alone(with_fuel_only) is False
+
+    def test_environmental_damage_yes_distinguishes_subtype(self):
+        """YES on EnvironmentalDamage:thermal must not match a radiation planet."""
+        from game.ui.screens.planet_list_filters import effects_predicate
+        from game.ui.filters.filter_state import FilterState
+        pred = effects_predicate({'EnvironmentalDamage:thermal': FilterState.YES})
         thermal_planet = self._planet_with({
             'EnvironmentalDamage': {'rate': 0.3, 'damage_type': 'thermal', 'scope': 'sector'},
         })
@@ -270,6 +315,20 @@ class TestEffectsPredicate:
         })
         assert pred(thermal_planet) is True
         assert pred(radiation_planet) is False
+
+    def test_environmental_damage_no_excludes_thermal_planet(self):
+        """NO on EnvironmentalDamage:thermal must reject thermal planets."""
+        from game.ui.screens.planet_list_filters import effects_predicate
+        from game.ui.filters.filter_state import FilterState
+        pred = effects_predicate({'EnvironmentalDamage:thermal': FilterState.NO})
+        thermal_planet = self._planet_with({
+            'EnvironmentalDamage': {'rate': 0.3, 'damage_type': 'thermal', 'scope': 'sector'},
+        })
+        radiation_planet = self._planet_with({
+            'EnvironmentalDamage': {'rate': 0.1, 'damage_type': 'radiation', 'scope': 'sector'},
+        })
+        assert pred(thermal_planet) is False
+        assert pred(radiation_planet) is True
 
 
 class TestFilterPlanetsWithEffects:
@@ -291,6 +350,7 @@ class TestFilterPlanetsWithEffects:
 
     def test_effects_and_type_compose_as_and(self):
         from game.ui.screens.planet_list_filters import filter_planets
+        from game.ui.filters.filter_state import FilterState
         magma_thermal = self._planet(
             name="Inferno", type_cat="Magma",
             abilities={'EnvironmentalDamage': {'rate': 0.3, 'damage_type': 'thermal'}},
@@ -302,24 +362,24 @@ class TestFilterPlanetsWithEffects:
         continental = self._planet(name="Terra", type_cat="Continental")
         all_planets = [magma_thermal, cryo_thrust, continental]
 
-        # type=Magma only AND effects=ThrustModifier → empty (Magma has thermal damage, not thrust)
+        # type=Magma only AND effects=ThrustModifier=YES → empty (Magma has thermal damage, not thrust)
         out = filter_planets(
             all_planets, "",
             {'Magma': True, 'Cryoplanet': False, 'Continental': False},
             0, 100, 0, 1000, 0, 1000,
             filter_owner={'Player': True, 'Enemy': True, 'Unowned': True},
             empire=MagicMock(id=1),
-            filter_effects={'ThrustModifier': True},
+            filter_effects={'ThrustModifier': FilterState.YES},
         )
         assert out == []
 
-        # type=Cryoplanet AND effects=ThrustModifier → cryo_thrust passes
+        # type=Cryoplanet AND effects=ThrustModifier=YES → cryo_thrust passes
         out = filter_planets(
             all_planets, "",
             {'Magma': False, 'Cryoplanet': True, 'Continental': False},
             0, 100, 0, 1000, 0, 1000,
             filter_owner={'Player': True, 'Enemy': True, 'Unowned': True},
             empire=MagicMock(id=1),
-            filter_effects={'ThrustModifier': True},
+            filter_effects={'ThrustModifier': FilterState.YES},
         )
         assert out == [cryo_thrust]

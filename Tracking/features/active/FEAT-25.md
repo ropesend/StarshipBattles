@@ -69,7 +69,46 @@ categories, zero-selected = no-op". Under tri-state, the no-op state is
 Low (UX refinement of an already-working feature)
 
 ## Status
-Pending
+**Awaiting User Verification** (2026-04-28). End-to-end tri-state migration
+landed across 5 production files + 3 test files. The FEAT-16 OR-within-
+Effects contract is fully replaced (no compatibility layer):
+
+- `game/ui/screens/planet_list_filter_manager.py` — `filter_effects`
+  retyped to `Dict[str, FilterState]`. `toggle_effect` deleted;
+  `set_all_effects` takes a `FilterState` argument.
+- `game/ui/screens/planet_list_filters.py` — `effects_predicate`
+  rewritten: skip IGNORE, AND across YES/NO. Module docstring rewrites
+  the FEAT-16 paragraph end-to-end.
+- `game/ui/screens/planet_list_sidebar.py` — chip loop replaced with
+  `TriStateFilterWidget` rows; `_display_label` hack dropped (widget
+  owns its own label). `All` and `None` buttons retained for Effects
+  (intentional divergence from fleet-report; Effects is dynamically-
+  sized so bulk-clear has real ergonomic value).
+- `game/ui/screens/planet_list_window.py` — initial seed flipped from
+  `{k: True}` → `{k: FilterState.IGNORE}`. Visual init loop deleted
+  (widget defaults to IGNORE on construction). `_set_all_effects`
+  helper added; `All` button → `FilterState.YES`, `None` → `IGNORE`.
+  Event-handler effects branch rewritten to use
+  `widget.check_pressed(event.ui_element)`.
+- `game/ui/screens/planet_list_presets.py` — capture serializes
+  FilterState as `.value` strings (`"yes"`/`"no"`/`"ignore"`); apply
+  reads them back into the enum and silently drops legacy bool /
+  invalid-string entries to `IGNORE` (no migration shim).
+
+Test coverage:
+- `TestEffectsPredicate` rewritten with 8 tests covering all-IGNORE
+  no-op, YES/NO presence/absence, AND composition, IGNORE-mixed,
+  and EnvironmentalDamage subtype distinction (both YES and NO).
+- `TestFilterEffects` rewritten for `FilterState` enum values.
+- `TestFilterPlanetsWithEffects` updated to pass `FilterState.YES`.
+- `TestSidebarEffectsSection` patch list extended with
+  `TriStateFilterWidget`.
+- New `TestPresetRoundTrip` class with 4 tests for the
+  `.value`-string round-trip and legacy-bool fallback.
+
+Full sharded suite: 16050 tests, 16049 passed, 1 known flake
+(`test_colony_owner_id_matches_empire`, documented test-isolation
+issue, passes alone).
 
 ## Related
 - FEAT-16 (archived, completed) — added the Effects filter section
@@ -77,3 +116,7 @@ Pending
 
 ## Work Log
 - 2026-04-28: Created from QA Session 20260428_052952.
+- 2026-04-28: Investigation completed and tri-state migration landed
+  (claude/deep-dive). 8 new predicate tests + 4 round-trip tests +
+  contract updates across 3 existing test classes. Status flipped to
+  Awaiting User Verification.

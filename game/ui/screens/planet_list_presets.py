@@ -8,6 +8,7 @@ from typing import Any
 import os
 from game.core.paths import Paths
 from game.core.json_utils import load_json, save_json
+from game.ui.filters.filter_state import FilterState
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,11 +87,18 @@ def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_own
         cols_data.append({'id': c['id'], 'visible': c['visible']})
 
     # Filters
+    # FEAT-25: serialize Effects as .value strings ("yes"/"no"/"ignore"),
+    # JSON-friendly. Read back into FilterState in apply_planet_list_state.
+    effects_serialized = {}
+    if filter_effects:
+        for k, s in filter_effects.items():
+            effects_serialized[k] = s.value if isinstance(s, FilterState) else FilterState.IGNORE.value
+
     filters_data = {
         'name': txt_name_filter.get_text(),
         'types': filter_types.copy(),
         'owner': filter_owner.copy(),
-        'effects': dict(filter_effects) if filter_effects else {},
+        'effects': effects_serialized,
         'ranges': {
             'gravity': [
                 ui_filters['gravity']['min'].get_current_value(),
@@ -196,26 +204,28 @@ def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_fi
                         btn.unselect()
                         btn.set_text(f"{o}")
 
-        # FEAT-16: Restore Effects Filters. Saved presets may reference
-        # group-keys not present in the current galaxy (different save) —
-        # those are silently dropped to keep filter_effects in sync with
-        # the live key set populated by the window.
+        # FEAT-25: Restore tri-state Effects filters from .value strings.
+        # Saved presets may reference group-keys not present in the
+        # current galaxy (different save); those are silently dropped to
+        # keep filter_effects in sync with the live key set populated by
+        # the window. Legacy FEAT-16 bool entries (or any non-string)
+        # silently → FilterState.IGNORE — no migration shim.
         if 'effects' in f and filter_effects is not None:
             saved_effects = f['effects']
             for key in list(filter_effects.keys()):
-                if key in saved_effects:
-                    filter_effects[key] = bool(saved_effects[key])
+                raw = saved_effects.get(key)
+                if isinstance(raw, str):
+                    try:
+                        filter_effects[key] = FilterState(raw)
+                    except ValueError:
+                        filter_effects[key] = FilterState.IGNORE
+                else:
+                    filter_effects[key] = FilterState.IGNORE
 
-            # Update Effects Toggles UI
-            for k, btn in ui_filters.get('effects', {}).items():
+            # Update TriStateFilterWidget visuals
+            for k, widget in ui_filters.get('effects', {}).items():
                 if k in filter_effects:
-                    label = getattr(btn, '_display_label', k)
-                    if filter_effects[k]:
-                        btn.select()
-                        btn.set_text(f"[{label}]")
-                    else:
-                        btn.unselect()
-                        btn.set_text(f"{label}")
+                    widget.set_state(filter_effects[k])
 
         if 'ranges' in f:
             r = f['ranges']

@@ -3,25 +3,28 @@
 This module contains the filtering and sorting logic for the planet list,
 separated from the UI rendering code.
 
-FEAT-16 — Effects filter semantics
-==================================
-The Effects filter category (`filter_effects`) follows OR-within-Effects
-just like the Type and Owner categories. **Special case:** when the
-`filter_effects` dict is empty or has no `True` entries, the filter is a
-no-op (every planet passes). This is **different** from `filter_types` /
-`filter_owner`, where zero selected = "show none". Reasoning: a player
-who unticks every effect chip means "I no longer care about effects" not
-"hide every planet". Tests in `test_planet_list_filters.py::TestEffectsPredicate`
-pin this contract.
+FEAT-25 — Effects filter semantics (tri-state)
+==============================================
+The Effects filter is per-effect tri-state using `FilterState` values:
 
-Internally `filter_planets` is implemented as a predicate-list pipeline
-(FEAT-16) so each category gates planets independently and new categories
+    - `FilterState.YES`    → planet MUST have this effect
+    - `FilterState.NO`     → planet MUST NOT have this effect
+    - `FilterState.IGNORE` → this effect does not constrain the result
+
+Multiple non-IGNORE effects compose as **AND**. The only no-op state is
+"all effects IGNORE" (or empty dict). This replaces the FEAT-16 OR-within-
+Effects contract end-to-end — there is no compatibility layer.
+
+Tests in `test_planet_list_filters.py::TestEffectsPredicate` pin this
+contract. Internally `filter_planets` is implemented as a predicate-list
+pipeline so each category gates planets independently and new categories
 compose without growing the function signature.
 """
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List
 from game.core.constants import EARTH_MASS
+from game.ui.filters.filter_state import FilterState
 from game.ui.utils.formatters import format_compact_number
 from game.strategy.services.system_effects_collector import make_group_key
 
@@ -99,27 +102,29 @@ def _range_predicate(attr_name: str, min_v: float, max_v: float) -> Callable[[An
     return lambda p: min_v <= getattr(p, attr_name) <= max_v
 
 
-def effects_predicate(filter_effects: Dict[str, bool] | None) -> Callable[[Any], bool]:
-    """Predicate for the FEAT-16 Effects filter category.
+def effects_predicate(filter_effects: Dict[str, FilterState] | None) -> Callable[[Any], bool]:
+    """Predicate for the FEAT-25 tri-state Effects filter.
 
-    OR-within-Effects: a planet passes if it has at least one of the
-    selected (True) effect group-keys.
-
-    **Special case** — empty dict OR no True entries → no-op (every planet
-    passes). Different from Type/Owner; documented in module docstring.
+    - All-IGNORE (or empty): no-op, every planet passes.
+    - For each non-IGNORE effect: AND. YES requires presence,
+      NO requires absence.
     """
     if not filter_effects:
         return lambda p: True
-    selected = {k for k, v in filter_effects.items() if v}
-    if not selected:
+    active = [(k, s) for k, s in filter_effects.items() if s is not FilterState.IGNORE]
+    if not active:
         return lambda p: True
 
     def predicate(p) -> bool:
         abilities = getattr(p, 'intrinsic_abilities', None) or {}
-        for ability_name, ability_data in abilities.items():
-            if make_group_key(ability_name, ability_data) in selected:
-                return True
-        return False
+        present = {make_group_key(name, data) for name, data in abilities.items()}
+        for key, state in active:
+            has = key in present
+            if state is FilterState.YES and not has:
+                return False
+            if state is FilterState.NO and has:
+                return False
+        return True
 
     return predicate
 
@@ -150,9 +155,9 @@ def filter_planets(
     filter_owner=None,
     empire=None,
     *,
-    filter_effects: Dict[str, bool] | None = None,
+    filter_effects: Dict[str, FilterState] | None = None,
 ) -> Any:
-    """Filter planets via the FEAT-16 predicate-list pipeline.
+    """Filter planets via the predicate-list pipeline.
 
     Args:
         planets: List of all planets with cached values.
@@ -163,8 +168,8 @@ def filter_planets(
         min_m, max_m: Mass range in Earth masses.
         filter_owner: Dict of owner category -> bool (BUG-27).
         empire: Current player's empire for ownership categorization.
-        filter_effects: Dict of effect group-key -> bool (FEAT-16). Empty
-            or all-False → no-op (see module docstring).
+        filter_effects: Dict of effect group-key -> FilterState (FEAT-25).
+            All-IGNORE or empty → no-op (see module docstring).
 
     Returns:
         List of filtered planets.

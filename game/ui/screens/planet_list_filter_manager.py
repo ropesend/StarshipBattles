@@ -51,12 +51,14 @@ class PlanetListFilterManager:
         # Multi-select owner filters (all enabled by default)
         self.filter_owner: Dict[str, bool] = {o: True for o in OWNER_CATEGORIES}
 
-        # FEAT-16: Multi-select Effects filter. Keys are effect group-keys
+        # FEAT-25: Tri-state Effects filter. Keys are effect group-keys
         # (e.g. 'EnvironmentalDamage:thermal', 'ThrustModifier'). Unlike
         # filter_types/filter_owner, the key set is NOT fixed — it's
         # populated dynamically from `compute_planet_effect_keys` once the
-        # galaxy is loaded. Starts empty.
-        self.filter_effects: Dict[str, bool] = {}
+        # galaxy is loaded. Each key holds a FilterState (YES requires
+        # presence, NO requires absence, IGNORE skips). Starts empty;
+        # window code seeds discovered keys with FilterState.IGNORE.
+        self.filter_effects: Dict[str, FilterState] = {}
 
         # Range filters (min/max pairs)
         self.filter_ranges: Dict[str, List[float]] = {
@@ -120,26 +122,16 @@ class PlanetListFilterManager:
         for key in self.filter_owner:
             self.filter_owner[key] = enabled
 
-    def toggle_effect(self, group_key: str) -> bool:
-        """Toggle an Effects-group filter (FEAT-16).
+    def set_all_effects(self, state: FilterState) -> None:
+        """Set every effects-group filter to the same FilterState (FEAT-25).
 
-        Args:
-            group_key: Effect group-key to toggle (e.g. 'ThrustModifier').
-
-        Returns:
-            New state, or False if the key is not currently registered
-            (the window populates `filter_effects` dynamically from the
-            galaxy's planets, so unknown keys are a no-op).
+        Used by the sidebar's All / None buttons. By convention All=YES,
+        None=IGNORE — the dispatching code is the single source of truth
+        for that mapping; this method just blanket-applies whatever it
+        receives.
         """
-        if group_key not in self.filter_effects:
-            return False
-        self.filter_effects[group_key] = not self.filter_effects[group_key]
-        return self.filter_effects[group_key]
-
-    def set_all_effects(self, enabled: bool) -> None:
-        """Set all Effects-group filters to the same state (FEAT-16)."""
         for key in self.filter_effects:
-            self.filter_effects[key] = enabled
+            self.filter_effects[key] = state
 
     def get_filter_state(self) -> Dict[str, Any]:
         """Return complete filter state as a dict.

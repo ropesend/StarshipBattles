@@ -816,6 +816,8 @@ class TestSidebarEffectsSection:
             patch('game.ui.screens.planet_list_sidebar.UITextEntryLine'),
             patch('game.ui.screens.planet_list_sidebar.UIHorizontalSlider'),
             patch('game.ui.screens.planet_list_sidebar.UIDropDownMenu'),
+            # FEAT-25: Effects section now uses TriStateFilterWidget
+            patch('game.ui.screens.planet_list_sidebar.TriStateFilterWidget'),
         ]
 
     def _call_build_sidebar(self, effect_keys):
