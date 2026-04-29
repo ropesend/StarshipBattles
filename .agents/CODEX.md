@@ -36,3 +36,13 @@ Use the skill that matches the user request. If no skill matches, follow `AGENTS
 - Do not spawn subagents unless the current Codex client supports them and the user has explicitly asked for parallel or delegated work. If a protocol expects parallel agents but that is not available, run the review sequentially and state the limitation.
 - For OpenAI API, Codex, or model questions, use the `openaiDeveloperDocs` MCP server configured in `.codex/config.toml` when available.
 - After changing Codex skills or config, run the skill validator on changed skill folders.
+
+## Skill Usage Logging
+
+Every time you invoke a `codex-*` skill, call the usage counter once with `--agent codex`:
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent codex --skill <full-prefixed-skill-name>
+```
+
+The script auto-creates a per-checkout install ID and increments the counter in `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`. See `AGENTS.md §"Skill Usage Logging"` for full context. Counters are advisory only.

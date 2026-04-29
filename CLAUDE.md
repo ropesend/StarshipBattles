@@ -330,6 +330,23 @@ When faced with choices, prefer:
 
 ---
 
+## Skill Usage Logging
+
+When you invoke a `claude-*` skill (any of the 32 skills under `.claude/skills/`), call the usage counter once with `--agent claude`:
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start
+```
+
+Substitute the full prefixed skill name (e.g. `claude-ticket-work`, `claude-proj-extract-phase`). The script:
+- Auto-creates `AgentCoordination/local/install_id.json` (UUID, gitignored) on first call.
+- Increments the per-skill, per-agent counter at `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`.
+- Records `last_used` timestamp.
+
+Counters are **advisory only** — they identify cleanup candidates and never authorize automatic deletion. See `AGENTS.md §"Skill Usage Logging"` and `Tools/agent_coordination/README.md §"Skill usage tracking"` for full context.
+
+---
+
 ## Subagent Report Output
 
 Subagent reports go to `.agent_reports/` by default. This directory is git-ignored and its contents are disposable.

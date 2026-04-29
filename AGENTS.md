@@ -78,3 +78,19 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - Tickets: `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`.
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
+
+## Skill Usage Logging
+
+Every time you invoke a skill on this repo (any `.claude/skills/`, `.agent/skills/`, `.agents/skills/`, or `.opencode/skills/` skill), call the usage counter once with your agent prefix and the skill's full prefixed name:
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent <claude|anti|ocode|codex> --skill <full-prefixed-skill-name>
+```
+
+Examples:
+- Claude Code invoking `/claude-proj-start` → `python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start`
+- Codex invoking `$codex-starship-project-system` → `python Tools/agent_coordination/log_skill_usage.py --agent codex --skill codex-starship-project-system`
+- OpenCode invoking `/ocode-audit-shrink` → `python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-audit-shrink`
+- Antigravity invoking an `anti-*` skill → `python Tools/agent_coordination/log_skill_usage.py --agent anti --skill <name>`
+
+Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); only the aggregated `summary.json` is meant for cross-checkout review.
