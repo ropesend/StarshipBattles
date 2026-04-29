@@ -55,7 +55,35 @@ Environment / Aptitudes / Descriptions block has more horizontal room.
 Low (cosmetic — the data is already correct, just the layout to change)
 
 ## Status
-Pending
+**Awaiting User Verification** (2026-04-28). Single-file restructure
+landed in `game/ui/panels/race_summary_panel.py`:
+
+- `_create_content` switched from `col_width = (panel_width - 40) // 3`
+  to two named widths: `left_col_width = panel_width // 3 - 15` and
+  `right_col_width = panel_width - left_col_width - 30`. Drops the
+  legacy `y - 55` alignment hack.
+- `_create_column1_content` renamed to `_create_left_column_content`
+  and extended to also place Portrait header + 280×280 panel at the
+  bottom of the left column. Returns the column's bottom Y for the
+  right column to match.
+- `_create_column2_content` deleted. Ship-Theme header+value migrated
+  to a new `_create_ship_theme_strip(x, y, full_width, height)` helper
+  that places a 30-px strip above the ship preview gallery (where it
+  visually labels what it describes). The
+  `summary_labels['theme_header']` / `summary_labels['theme_value']`
+  keys are preserved so `refresh()` and FEAT-12 randomization continue
+  to work without modification.
+- `_create_column3_content` renamed to `_create_environment_column`
+  with new `(x, y, col_width, col_height)` signature; the scroll
+  container now starts at the same Y as the "Faction" header (no more
+  `y - 55` hack) and ends at the portrait's bottom edge.
+
+Test coverage: existing 20 tests in `tests/unit/ui/test_race_summary_panel.py`
+unchanged — they assert label text/keys, not pixel coordinates, so the
+restructure is transparent. All 3668 ui-tests pass.
 
 ## Work Log
 - 2026-04-28: Created from QA Session 20260428_052952.
+- 2026-04-28: Investigation completed and layout restructure landed
+  (claude/deep-dive). Full ui-test sweep green. Status flipped to
+  Awaiting User Verification.

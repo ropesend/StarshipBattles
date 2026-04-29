@@ -144,25 +144,31 @@ class RaceSummaryPanel:
         )
         y += 55
 
-        # Three column layout for larger display
-        col_width = (panel_width - 40) // 3
-
-        # Column 1: Race Name and Flag
+        # FEAT-23: two-column layout — left ⅓ stacks Identity/Flag/Portrait,
+        # right ⅔ holds the FACTOR_REGISTRY scroll container. Drops the
+        # legacy three-column split and the y-55 alignment hack.
+        left_col_width = panel_width // 3 - 15
+        right_col_width = panel_width - left_col_width - 30
         col1_x = 10
-        y = self._create_column1_content(col1_x, y, col_width)
+        col2_x = col1_x + left_col_width + 15
 
-        # Column 2: Portrait and Ship Theme
-        col2_x = col1_x + col_width + 15
-        self._create_column2_content(col2_x, y - 55, col_width)  # Offset y for alignment
+        # Left column: Identity → Flag → Portrait (stacked).
+        left_col_bottom = self._create_left_column_content(col1_x, y, left_col_width)
 
-        # Column 3: Environment and Descriptions
-        col3_x = col2_x + col_width + 15
-        self._create_column3_content(col3_x, y - 55, col_width)
+        # Right column: FACTOR_REGISTRY scroll container, top-aligned with
+        # left column, bottom-aligned with the portrait.
+        right_col_height = left_col_bottom - y
+        self._create_environment_column(col2_x, y, right_col_width, right_col_height)
 
-        # Ship preview panel - full width across bottom
-        ship_panel_y = y + 400 - 55  # Below flag and portrait areas
-        ship_preview_width = panel_width - 20  # Full width minus margins
-        ship_preview_height = 200  # Height for 150px images + 30px labels + padding
+        # Ship Theme label strip + Ship preview panel below both columns.
+        ship_preview_width = panel_width - 20
+        ship_preview_height = 200
+        theme_strip_height = 30
+        theme_strip_y = left_col_bottom + 20
+        ship_panel_y = theme_strip_y + theme_strip_height + 5
+
+        self._create_ship_theme_strip(10, theme_strip_y, ship_preview_width, theme_strip_height)
+
         self.summary_ship_panel = pygame_gui.elements.UIPanel(
             relative_rect=pygame.Rect(10, ship_panel_y, ship_preview_width, ship_preview_height),
             manager=self.ui_manager,
@@ -170,10 +176,11 @@ class RaceSummaryPanel:
             object_id="#summary_preview"
         )
 
-    def _create_column1_content(self, x: int, y: int, col_width: int) -> int:
-        """Create column 1: Identity and Flag.
+    def _create_left_column_content(self, x: int, y: int, col_width: int) -> int:
+        """Create the left column (FEAT-23): Identity → Flag → Portrait, stacked.
 
-        PROJ-66 Phase 6: Updated to show faction name and identity fields.
+        Returns the y-coordinate of the column's bottom edge so the right
+        column's scroll container can match its height.
         """
         # Faction Name (prominent at top)
         self.summary_labels['faction_header'] = create_section_header(
@@ -214,7 +221,7 @@ class RaceSummaryPanel:
             container=self.panel
         )
 
-        # Flag preview (smaller to make room)
+        # Flag preview
         self.summary_labels['flag_header'] = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(x, y + 145, col_width, 25),
             text="Flag:",
@@ -230,57 +237,65 @@ class RaceSummaryPanel:
             object_id="#summary_preview"
         )
 
-        return y + 170 + flag_preview_size
+        flag_bottom = y + 170 + flag_preview_size
 
-    def _create_column2_content(self, x: int, y: int, col_width: int) -> None:
-        """Create column 2: Portrait and Ship Theme."""
-        # Portrait preview (larger)
+        # FEAT-23: Portrait now lives at the bottom of the left column.
+        portrait_header_y = flag_bottom + 10
         self.summary_labels['portrait_header'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, col_width, 30),
+            relative_rect=pygame.Rect(x, portrait_header_y, col_width, 30),
             text="Portrait:",
             manager=self.ui_manager,
             container=self.panel
         )
 
         portrait_preview_size = 280
+        portrait_y = portrait_header_y + 35
         self.summary_portrait_panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(x, y + 35, portrait_preview_size, portrait_preview_size),
+            relative_rect=pygame.Rect(x, portrait_y, portrait_preview_size, portrait_preview_size),
             manager=self.ui_manager,
             container=self.panel,
             object_id="#summary_preview"
         )
 
-        # Ship Theme header (next to portrait)
-        ship_theme_y = y + 35 + portrait_preview_size + 15
+        return portrait_y + portrait_preview_size
+
+    def _create_environment_column(self, x: int, y: int, col_width: int, col_height: int) -> None:
+        """Create the right column (FEAT-23): FACTOR_REGISTRY scroll container.
+
+        FEAT-14: A `UIScrollingContainer` whose content is rebuilt by
+        `refresh()` from `FACTOR_REGISTRY` + the 7 aptitudes — adding a
+        factor to the registry surfaces a row automatically with no change
+        to this file. The constructor only allocates the container;
+        `refresh()` populates everything inside.
+
+        FEAT-23: width is now ⅔ of the panel and height matches the left
+        column's bottom — long lines no longer wrap.
+        """
+        self._env_scroll_container = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(x, y, col_width, col_height),
+            manager=self.ui_manager,
+            container=self.panel,
+        )
+
+    def _create_ship_theme_strip(self, x: int, y: int, full_width: int, height: int) -> None:
+        """Create the FEAT-23 Ship Theme label strip above the ship preview.
+
+        Preserves the FEAT-12/14 contract: `summary_labels['theme_header']`
+        and `summary_labels['theme_value']` keys still exist, so `refresh()`
+        continues to update them without modification.
+        """
+        label_width = full_width // 4
         self.summary_labels['theme_header'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, ship_theme_y, col_width, 30),
+            relative_rect=pygame.Rect(x, y, label_width, height),
             text="Ship Theme:",
             manager=self.ui_manager,
             container=self.panel
         )
         self.summary_labels['theme_value'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, ship_theme_y + 30, col_width, 30),
+            relative_rect=pygame.Rect(x + label_width, y, full_width - label_width, height),
             text="[Click Ships tab to set]",
             manager=self.ui_manager,
             container=self.panel
-        )
-
-    def _create_column3_content(self, x: int, y: int, col_width: int) -> None:
-        """Create column 3: Environment, Aptitudes, and Descriptions.
-
-        FEAT-14: Column 3 is now a `UIScrollingContainer` whose content is
-        rebuilt by `refresh()` from `FACTOR_REGISTRY` + the 7 aptitudes —
-        adding a factor to the registry surfaces a row automatically with no
-        change to this file. The constructor only allocates the container;
-        `refresh()` populates everything inside.
-        """
-        # Match the legacy column-3 vertical span so the ship preview panel
-        # below (positioned by column 1) stays put.
-        scroll_height = 400
-        self._env_scroll_container = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(x, y, col_width, scroll_height),
-            manager=self.ui_manager,
-            container=self.panel,
         )
 
     # =========================================================================
