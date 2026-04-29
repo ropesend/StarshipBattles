@@ -162,3 +162,38 @@ This file serves as the permanent index of all completed features with implement
 * **Implementation Summary:** Plugged into the PROJ-71 data-driven keybinding system rather than raw KEYDOWN checks. Added `STRATEGY_ZOOM_IN` / `STRATEGY_ZOOM_OUT` `InputAction` values bound to `K_KP_PLUS` / `K_KP_MINUS` in `default_keybindings.json`. Routed via `UIActionRouter.handle_ui_action` to two new `CameraNavigator` methods (`zoom_in_step` / `zoom_out_step`) that mutate `camera.target_zoom` geometrically by `ZOOM_KEYBOARD_STEP = 1.5` (around 3 wheel ticks per press), clamped to `[min_zoom, max_zoom]`. Existing `Camera.update()` exponential interpolation handles smoothing.
 * **Test Case:** 7 new tests across `test_camera_navigator.py` and `test_strategy_input_handler_hotkeys.py`. 233/233 targeted; 15824/15824 full sharded.
 ---
+
+## [FEAT-13] - Generate visual asset captions for race images (LLM description metadata)
+* **Date Completed:** 2026-04-28
+* **Confirmed in:** QA Session 20260428_190154
+* **Original Request:** Generate `.caption.json` sidecars for every existing visual asset (flags, race portraits, ship themes) so the Race Setup Description LLM (PROJ-296/299) receives real visual references instead of placeholder `{"note": "no visual reference available"}`.
+* **Implementation Summary:** Generated caption sidecars conforming to schemas in `Tools/captioning/schemas/` for all visual assets — flags (geometry/color_palette/symbolism/cultural_hints/mood/distinctive_traits), race portraits (anatomy/coloration/attire_and_adornment/posture_and_expression/technology_level_hint/distinctive_traits), and ship themes (hull_geometry/materials_and_finish/design_philosophy/color_scheme/technology_level_hint/distinctive_traits). Captioning toolchain at `Tools/captioning/` drives generation via Gemini-vision.
+* **Test Case:** Caption files validated by `Tools/captioning/validate_captions.py`. Bio/socio descriptions visibly reference visual traits.
+* **Notes:** New asset additions should follow the captioning workflow documented in `Tools/captioning/README.md`.
+---
+
+## [FEAT-17] - Build queue pause/unpause toggle button
+* **Date Completed:** 2026-04-27
+* **Confirmed in:** QA Session 20260428_190154
+* **Original Request:** Add a "Pause Build Queue" toggle button at the bottom-left of every per-yard build queue panel that stops resource consumption while preserving accumulated progress on the in-progress item.
+* **Implementation Summary:** Added `construction_queue_paused: bool = False` to the three yard-owning entities (`Planet`, `PlanetaryFacility`, `Fleet`). `ProductionEngine.process_construction_tick` gates each iteration site (planet base / facility / fleet yard) on the flag; `_process_queue_tick_dynamic` unchanged so dispatcher/processor split stays clean. Treasury (`EmpireEconomyCalculator`) and Planet-detail (`PlanetEconomyProjector`) skip paused queues so the forecasted next-turn drain matches what `ProductionEngine` will consume. New `SetBuildQueuePausedCommand` + handler follow the PROJ-208 CQRS pattern. New `BaseCommandHandler._resolve_queue_owner` helper. UI: text-only "Pause Build Queue" / "Unpause Build Queue" toggle at the bottom-left of the per-yard build queue panel; Empire Build Queue Window gets a read-only "Status" column showing PAUSED. AI controllers do not touch the flag — player-driven only. Save/load uses `data.get('construction_queue_paused', False)` so legacy saves load with paused=False.
+* **Test Case:** 37/37 paused-feature tests pass (`test_paused_queue.py`, `test_construction_queue_paused_persistence.py`, `test_facility_construction_queue.py`, `test_build_queue_source.py`, `test_planet_economy_projector.py`, `test_empire_economy_calculator.py`, `test_set_build_queue_paused_command.py`, `test_empire_build_queue_filter_manager.py`, `test_empire_build_queue_window.py`). Full sharded suite 15802/15802 pass.
+* **Notes:** Flag lives on the yard-owning entity (NOT on `BuildQueueSource` which is transient/derived, NOT per queue item). Currently-progressing item retains its `resources_consumed` while paused; unpausing resumes from saved progress on the next tick (no rollback).
+---
+
+## [FEAT-23] - Race Setup Summary tab — relocate portrait next to flag, widen environment column to right two-thirds
+* **Date Completed:** 2026-04-28
+* **Confirmed in:** QA Session 20260428_190154
+* **Original Request:** Restructure the Summary tab from three equal-width columns into a left ⅓ / right ⅔ arrangement so the Environment / Aptitudes / Descriptions block has more horizontal room. Portrait moves below the flag in the left column.
+* **Implementation Summary:** Single-file restructure in `game/ui/panels/race_summary_panel.py`. `_create_content` switched from `col_width = (panel_width - 40) // 3` to two named widths: `left_col_width = panel_width // 3 - 15` and `right_col_width = panel_width - left_col_width - 30`. Dropped the legacy `y - 55` alignment hack. `_create_column1_content` renamed to `_create_left_column_content` and extended to also place Portrait header + 280×280 panel at the bottom of the left column. `_create_column2_content` deleted; Ship-Theme header+value migrated to a new `_create_ship_theme_strip(x, y, full_width, height)` helper that places a 30-px strip above the ship preview gallery. The `summary_labels['theme_header']` / `summary_labels['theme_value']` keys are preserved so `refresh()` and FEAT-12 randomization continue to work. `_create_column3_content` renamed to `_create_environment_column` with new `(x, y, col_width, col_height)` signature.
+* **Test Case:** Existing 20 tests in `tests/unit/ui/test_race_summary_panel.py` unchanged — they assert label text/keys, not pixel coordinates, so the restructure is transparent. All 3668 ui-tests pass.
+---
+
+## [FEAT-24] - Default new-game galaxy size to 5 systems
+* **Date Completed:** 2026-04-28
+* **Confirmed in:** QA Session 20260428_190154
+* **Original Request:** Lower the default galaxy size on the New Game Setup screen from 50 systems to 5 systems and the slider's minimum from 25 to 5 so first-time and iteration runs start with a tiny galaxy.
+* **Implementation Summary:** 4 edits in `game/ui/screens/new_game_setup_screen.py` — `self.system_count = 50` → `5`; slider `value_range=(25, 150)` → `(5, 150)`; `build_game_config(..., system_count: int = 50)` → `5`; docstring `"default: 50"` → `"default: 5"`. Click increment unchanged at 5.
+* **Test Case:** New `TestNewGameSetupSystemCountDefault` class (2 tests, TDD red-green) in `tests/unit/ui/test_new_game_setup.py`. Targeted: 37 passed across `test_new_game_setup.py` and `test_new_game_setup_extended.py`. Direct `pytest tests/`: 15905 passed, 3 skipped.
+* **Notes:** Followup feature requested in QA Session 20260428_190154 — extend galaxy generator to support starting with 1–2 systems (which has different invariants: no warp points to place, both empires share a system when systems=1).
+---

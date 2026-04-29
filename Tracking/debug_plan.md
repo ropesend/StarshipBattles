@@ -2,12 +2,16 @@
 
 ## 1. Context Handoff Summary
 *(State of the system for the next agent)*
-*QA Session 20260428_052952: BUG-80 (renumbered to BUG-80A due to ID collision), BUG-107, BUG-108, BUG-109, BUG-111, BUG-115, BUG-116, BUG-117, BUG-118, BUG-119, BUG-120, BUG-121 all confirmed fixed and archived. Bug queue now empty pending new findings from session 20260428_052952.*
+*QA Session 20260428_052952: BUG-80 (renumbered to BUG-80A due to ID collision), BUG-107, BUG-108, BUG-109, BUG-111, BUG-115, BUG-116, BUG-117, BUG-118, BUG-119, BUG-120, BUG-121 all confirmed fixed and archived. QA Session 20260428_190154 added BUG-123 / BUG-124 / BUG-125 / BUG-126 — all multi-empire / combat-correctness issues; BUG-122 fix awaiting user verification.*
 
 ## 2. Bug Queue
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| BUG-122 | 2026-04-28 | Multiple fleets disappear when joining each other in the same hex — mutual-join + redirect-without-self-exclusion | Pending | [BUG-122.md](bugs/active/BUG-122.md) |
+| BUG-122 | 2026-04-28 | Multiple fleets disappear when joining each other in the same hex — mutual-join + redirect-without-self-exclusion | Awaiting Confirmation | [BUG-122.md](bugs/active/BUG-122.md) |
+| BUG-123 | 2026-04-28 | Event Log shows events from all empires combined; should filter to the active empire | Pending | [BUG-123.md](bugs/active/BUG-123.md) |
+| BUG-124 | 2026-04-28 | Ship skin icons broken on strategy map for every theme — loader looks for `Battlecruiser.png`, files are `battle_cruiser.png` | Pending | [BUG-124.md](bugs/active/BUG-124.md) |
+| BUG-125 | 2026-04-28 | Hot-seat player can issue orders to opponent fleets — fleet command handlers trust UI-supplied empire_id | Pending | [BUG-125.md](bugs/active/BUG-125.md) |
+| BUG-126 | 2026-04-28 | Strategy-layer combat ends with weaponless ship "winning" — likely sole-survivor shortcut firing on a non-empty opposing fleet | Pending | [BUG-126.md](bugs/active/BUG-126.md) |
 
 ## 3. Current Focus: None
 No bugs currently in progress.

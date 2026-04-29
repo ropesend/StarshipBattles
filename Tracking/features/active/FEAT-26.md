@@ -92,3 +92,28 @@ Pending
   `SimulationBattleResolver.resolve_battle()` → `run_battle()` is
   the unified entry — and (b) battles are captured to disk but
   cannot be opened from the UI. This ticket closes the gap.
+
+---
+
+### 📝 User Update [2026-04-28 19:23]
+
+**Observation:** During QA Session 20260428_190154 [19:23:10 –
+19:24:20] the user explicitly cited the missing replay capability as
+a problem:
+
+> "When combat is occurring I'm still not able to see any replay."
+
+This confirms the gap FEAT-26 already covers is observable in the
+wild — players hit it during normal play, not just in
+investigation. **No scope change to this ticket.**
+
+The same observation also surfaced an unrelated combat-resolution
+bug (weaponless ship "winning" with kills=0) which has been filed
+separately as
+[BUG-126](../../bugs/active/BUG-126.md). FEAT-26 and BUG-126
+should be considered companion fixes — closing FEAT-26 alone makes
+BUG-126's "no replay to verify what really happened" symptom
+disappear, but the underlying simulation-shortcut behaviour remains
+until BUG-126 is also addressed.
+
+---

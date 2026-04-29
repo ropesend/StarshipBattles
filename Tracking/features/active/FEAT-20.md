@@ -39,7 +39,7 @@ Reproduced layout in QA Session 20260427_151244 at 15:52:
 Low
 
 ## Status
-Awaiting Confirmation
+In-Progress (revised scope per QA Session 20260428_190154 — see User Update below)
 
 ## Work Log
 - 2026-04-27: Created from QA Session 20260427_151244.
@@ -70,3 +70,50 @@ Awaiting Confirmation
 ### Test results
 - Targeted (FEAT-20 + adjacent): 279 passed (`tests/unit/test_app_bootstrap_invariants.py` + all `tests/unit/ui/screens/test_strategy_*.py`).
 - Broader UI sweep: 3607 passed (`tests/unit/ui/`).
+
+---
+
+### 📝 User Update [2026-04-28 19:12]
+
+**Reason:** The button should appear unconditionally — not gated behind
+`--dev`. The user reports running the game without `--dev` and not seeing
+the button, which is the intended FEAT-20 design but is no longer the
+desired behaviour.
+
+QA Session 20260428_190154 [19:12:50 – 19:13:11]:
+
+> "I want to change the 'Run 10 turns' button — I just want it to show
+> up all the time. Will remove it later but I don't want it to be in the
+> special dev mode that you have to run. Feature 20 — I want to update
+> that."
+
+**New scope:**
+
+1. Remove the `--dev` CLI flag dependency from the button-render path:
+   - `BootstrapResult.dev_mode` no longer gates the button (the field
+     can stay if other dev-only widgets land later, or be deleted if
+     this was its only consumer — decide during implementation).
+   - `create_strategy_panels(...)` always renders `btn_run_10_turns`
+     at top-bar slot 10.
+   - `StrategyInputHandler` click branch always routes to
+     `run_n_turns(10)`.
+2. Decide what to do with the `--dev` plumbing if FEAT-20 was its only
+   consumer. Per CLAUDE.md System Migration Policy ("ERADICATE the
+   old system"), if no other dev-mode-gated widget exists, delete the
+   `--dev` flag, the `BootstrapResult.dev_mode` field, and the
+   propagation through `ScreenRouter` / `StrategyScreen` /
+   `StrategyUI` / `create_strategy_panels`. Otherwise, leave the flag
+   in place but FEAT-20 stops consuming it.
+3. Update tests accordingly:
+   - `test_app_bootstrap_invariants.py` dev-flag tests — delete or
+     repurpose depending on (2).
+   - `test_strategy_panel_manager.py` — remove the `dev_mode=False`
+     branch's "no button" assertion; assert button always renders.
+4. Status flips from `Awaiting Confirmation` back to `In-Progress`
+   once an agent picks this up.
+
+**No re-rejection of the original implementation** — the
+synchronous-loop, Esc-cancel, per-turn auto-save behaviour is all
+correct. Only the visibility gate changes.
+
+---
