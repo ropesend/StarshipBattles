@@ -23,6 +23,7 @@ Architecture:
 PROJ-187: Path projection accounts for action_time on non-movement orders.
 """
 import logging
+import threading
 from dataclasses import dataclass, replace
 from typing import Any, Dict, Optional, Tuple
 
@@ -110,6 +111,22 @@ class NavigationStep:
     next_hex: Optional[HexCoord]
     new_state: 'NavigationState'
     order_complete: bool = False
+
+
+# Per-thread set of fleet IDs currently being projected.
+# Guards against cyclic MOVE_TO_FLEET orders (A intercepts B, B intercepts A,
+# or longer chains) that would otherwise infinite-recurse through
+# project_path -> get_destination -> calculate_intercept_point ->
+# project_fleet_path -> project_path.
+_projection_guard = threading.local()
+
+
+def _get_projection_stack() -> set:
+    stack = getattr(_projection_guard, "fleet_ids", None)
+    if stack is None:
+        stack = set()
+        _projection_guard.fleet_ids = stack
+    return stack
 
 
 class FleetNavigationService:
@@ -406,6 +423,27 @@ class FleetNavigationService:
         Returns:
             List of PathSegment objects
         """
+        # Re-entrancy guard: a fleet's projected path cannot recursively
+        # depend on itself. If we're already projecting this fleet up the
+        # call stack (mutual or chained MOVE_TO_FLEET intercepts), return
+        # an empty path. calculate_intercept_point handles an empty target
+        # path by chasing the target's current location.
+        stack = _get_projection_stack()
+        if fleet.id in stack:
+            return []
+        stack.add(fleet.id)
+        try:
+            return self._project_path_inner(fleet, galaxy, max_turns, component_registry)
+        finally:
+            stack.discard(fleet.id)
+
+    def _project_path_inner(
+        self,
+        fleet: Fleet,
+        galaxy,
+        max_turns: int,
+        component_registry,
+    ) -> list:
         segments = []
         state = NavigationState.from_fleet(fleet)
 
