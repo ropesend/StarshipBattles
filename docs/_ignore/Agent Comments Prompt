@@ -1,55 +1,66 @@
-You are reviewing Codex’s Version 2 multi-agent coordination plan for the Starship Battles repository.
+You are reviewing Codex’s Version 3 multi-agent coordination plan for the Starship Battles repository.
 
-Be concise. Focus only on disagreements, corrections, risks, missing priorities, and new suggestions. Do not list things you agree with.
+Important: before writing your final Markdown response, discuss any disagreements, concerns, or clarifying questions with the user in chat. Do not write the final response file until the user has had a chance to respond. If you have no disagreements, concerns, or clarifying questions, say that first and ask whether the user wants you to proceed with the response file.
 
-Context:
-- Codex V2 plan: AgentCoordination/codex_agent_coordination_plan_v2.md
-- Codex claim responses: AgentCoordination/codex_agent_coordination_claim_responses.md
-- User response and priorities: AgentCoordination/user_response.md
-- Different agents may use different parent paths, but the relevant repo path should end in StarshipBattles. Do not treat parent-path differences alone as drift.
+Context files to read:
+- AgentCoordination/codex_agent_coordination_plan_v3.md
+- AgentCoordination/codex_agent_coordination_plan_v2.md
+- AgentCoordination/codex_agent_coordination_claim_responses.md
+- AgentCoordination/user_response.md
+- Relevant local surfaces:
+  - AGENTS.md
+  - CLAUDE.md
+  - opencode.json
+  - .codex/config.toml
+  - .agents/CODEX.md
+  - .agents/skills/**
+  - .claude/skills/**
+  - .agent/skills/**
+  - .agent/workflows/**
+  - .opencode/skills/**
+
+User position:
+- The user generally agrees with V3.
+- The user prefers a shorter OpenCode skill prefix than `opencode-`; current candidate is `ocode-`.
+- Existing desired prefixes are now:
+  - `claude-` for Claude Code
+  - `anti-` for Antigravity
+  - `ocode-` for OpenCode/DeepSeek
+  - `codex-` for Codex
+- The goal is to converge on a mature plan after this review round.
 
 Your tasks:
-1. Read:
-   - AgentCoordination/codex_agent_coordination_plan_v2.md
-   - AgentCoordination/codex_agent_coordination_claim_responses.md
-   - AgentCoordination/user_response.md
-   - Relevant local files: AGENTS.md, CLAUDE.md, opencode.json, .codex/config.toml, .agents/CODEX.md, .agents/skills/**, .claude/skills/**, .agent/skills/**, .agent/workflows/**, .opencode/skills/**
-2. Research only where needed to verify or refute a claim. Prefer official/primary docs for Claude Code, OpenCode, Codex, Google Antigravity, and Agent Skills. Cite links you rely on.
-3. Identify only material disagreements with V2 or with Codex’s claim responses.
-4. Provide evidence for each disagreement: official link, local file path, or concrete observed repo state.
-5. Ask me clarifying questions if needed, especially about goals/priorities that affect the plan. Do not ask questions already answered by AgentCoordination/user_response.md.
-6. Suggest concrete changes that are not already in the V2 plan.
-7. Do not implement changes. This is review/commentary only.
+1. Read the context files and inspect relevant local agent surfaces.
+2. Research current official or primary docs only where needed to verify a disagreement or concern. Cite links you rely on.
+3. Identify only material disagreements, risks, missing pieces, or implementation concerns with V3.
+4. Before writing any file, discuss those disagreements/concerns/questions with the user in chat and wait for the user’s reply.
+5. After the user replies and explicitly or implicitly allows you to proceed, create your concise Markdown response in AgentCoordination/.
+6. Do not implement repository changes beyond writing your review response file.
 
-User priorities to account for:
-- Test counts and skill counts should be automated rather than manually maintained.
-- The user is considering tracking .claude/settings.local.json because they are currently the only developer; respond with technical pros/cons instead of assuming a team setting.
-- The user prefers all skills to have agent/system prefixes:
-  - claude-
-  - anti-
-  - deep-
-  - codex-
-- Antigravity is lower priority and less reliable for large-codebase work; it is mainly used for tools and asset generation.
-- Claude, Codex, and DeepSeek/OpenCode are the workhorse agents.
-- .agent workflows are stale.
-- Claude has historically been dominant, so Claude skill information may be the most current even if some is stale.
-- Unused skill cleanup and possible skill usage counters are of interest.
-- Some intentional duplication of critical instructions may be worthwhile because large-context agents can forget important rules late in context.
+Things to focus on:
+- Whether `ocode-` is a good OpenCode prefix.
+- Whether the prefix migration plan is safe and complete.
+- Whether generated test baseline and generated skill inventory should be tracked or ignored.
+- Whether `.claude/settings.local.json` should remain untracked despite solo-development context.
+- Whether intentional reinforcement duplication is defined tightly enough.
+- Whether Antigravity should remain lower priority and mostly tooling/assets focused.
+- Whether usage counters are feasible and how they should be treated.
+- Any specific V3 claim that is wrong or under-evidenced.
 
-Output requirements:
+Response file requirements:
 - Create one Markdown file in AgentCoordination/.
 - Use the correct author-tagged filename:
-  - Claude Code: claude_code_agent_coordination_v2_comments.md
-  - OpenCode DeepSeek V4 Pro: opencode_deepseek_v4_pro_agent_coordination_v2_comments.md
-  - Antigravity: antigravity_agent_coordination_v2_comments.md
-- Keep the response concise, ideally under 1,500 words.
+  - Claude Code: claude_code_agent_coordination_v3_comments.md
+  - OpenCode DeepSeek V4 Pro: opencode_deepseek_v4_pro_agent_coordination_v3_comments.md
+  - Antigravity: antigravity_agent_coordination_v3_comments.md
+- Keep it concise, ideally under 1,200 words.
+- Do not list agreement unless it is necessary context for a disagreement.
 - Use these sections only:
-  - Clarifying Questions
+  - User Discussion Summary
   - Material Disagreements
-  - Corrections To Codex Claim Responses
+  - Implementation Risks
   - New Suggestions
-  - Evidence Links And File References
+  - Evidence
   - Final Recommendation
 
-If you have no clarifying questions, write “None” under Clarifying Questions.
-If you agree with part of the plan, omit it unless it is necessary context for a disagreement.
+If there are no material disagreements or risks, write “None” in those 
