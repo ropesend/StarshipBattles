@@ -56,6 +56,32 @@ override them, so the inventory emits a warning to surface that case. OpenCode
 itself may use most-specific-pattern-wins; if so, future migration to that
 strategy must be done with a manifest update, not a silent reorder.
 
+## Claude settings sanitizer
+
+```powershell
+python Tools/agent_coordination/sanitize_claude_settings.py
+python Tools/agent_coordination/sanitize_claude_settings.py --format json
+```
+
+Dry-run only. Classifies entries in `.claude/settings.json` and
+`.claude/settings.local.json` as one of:
+
+- `OK` — repo-relative, current Starship Battles checkout, or known-safe system library
+- `STALE_WARN` — references the legacy `Dev\Starship Battles` checkout layout. Proposed rewrites preserve scope and separator style; the sanitizer refuses any rewrite that would broaden permissions.
+- `EXTERNAL_REVIEW` — absolute path outside known Starship Battles roots
+- `DANGEROUS` — destructive or overly broad permission (`rm -rf`, `del /s`, `git push --force`, `git reset --hard`, `Read(//**)`, etc.)
+- `SECRET` — looks like a hard-coded credential (AWS / OpenAI / GitHub PAT / Slack token)
+
+Exit codes:
+
+- `0` — only OK / STALE_WARN findings; warnings are reported but not blocking.
+- `1` — at least one DANGEROUS, SECRET, or EXTERNAL_REVIEW finding.
+- `2` — file parse error.
+
+Apply mode is intentionally not implemented yet. Per the final coordination
+plan, apply only lands once the dry-run reports have been reviewed and the
+classification rules have been exercised on the real settings file.
+
 ## Test baseline `git_sha` semantics
 
 The companion file `AgentCoordination/generated/test_baseline.json` records
