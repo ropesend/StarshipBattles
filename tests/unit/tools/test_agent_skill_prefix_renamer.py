@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from Tools.agent_coordination import rename_skills_with_prefixes as renamer
 
 
@@ -65,8 +63,8 @@ def test_build_rename_map_rejects_invalid_resulting_name(tmp_path: Path) -> None
 
 def test_find_slash_references_in_markdown(tmp_path: Path) -> None:
     _write_skill(tmp_path, ".claude/skills", "proj-start")
-    other = _write_skill(tmp_path, ".claude/skills", "proj-extract-phase",
-                          body="See `/proj-start` for initialization.\n")
+    _write_skill(tmp_path, ".claude/skills", "proj-extract-phase",
+                  body="See `/proj-start` for initialization.\n")
 
     refs = renamer.find_references(tmp_path, names={"proj-start"})
     matched = [r for r in refs if "proj-extract-phase" in str(r["path"])]
@@ -177,3 +175,129 @@ def test_plan_opencode_permissions_preserves_explicit_ocode_allow() -> None:
         "ocode-*": "allow",
     })
     assert new_perms["ocode-*"] == "allow"
+
+
+# ---------------------------------------------------------------------------
+# Apply mode
+# ---------------------------------------------------------------------------
+
+
+def test_apply_renames_directory_and_updates_frontmatter(tmp_path: Path) -> None:
+    _write_skill(tmp_path, ".claude/skills", "proj-start")
+    rc = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    old_dir = tmp_path / ".claude" / "skills" / "proj-start"
+    new_dir = tmp_path / ".claude" / "skills" / "claude-proj-start"
+    assert not old_dir.exists()
+    assert new_dir.is_dir()
+    skill_md = new_dir / "SKILL.md"
+    text = skill_md.read_text(encoding="utf-8")
+    assert "name: claude-proj-start" in text
+    assert "name: proj-start" not in text
+
+
+def test_apply_rewrites_slash_references_in_other_skills(tmp_path: Path) -> None:
+    _write_skill(tmp_path, ".claude/skills", "proj-start")
+    _write_skill(
+        tmp_path,
+        ".claude/skills",
+        "proj-extract-phase",
+        body="Run `/proj-start` to begin a new project.\n",
+    )
+    rc = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    other_renamed = tmp_path / ".claude" / "skills" / "claude-proj-extract-phase" / "SKILL.md"
+    text = other_renamed.read_text(encoding="utf-8")
+    assert "/claude-proj-start" in text
+    assert "/proj-start" not in text
+
+
+def test_apply_rewrites_path_literals_in_agents_md(tmp_path: Path) -> None:
+    _write_skill(tmp_path, ".opencode/skills", "audit-shrink")
+    agents = tmp_path / "AGENTS.md"
+    agents.write_text(
+        "See `.opencode/skills/audit-shrink/SKILL.md` for the workflow.\n",
+        encoding="utf-8",
+    )
+    rc = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    text = agents.read_text(encoding="utf-8")
+    assert ".opencode/skills/ocode-audit-shrink/SKILL.md" in text
+    assert ".opencode/skills/audit-shrink/SKILL.md" not in text
+
+
+def test_apply_rewrites_opencode_command_keys_and_template(tmp_path: Path) -> None:
+    _write_skill(tmp_path, ".opencode/skills", "audit-shrink")
+    config = tmp_path / "opencode.json"
+    config.write_text(
+        json.dumps({
+            "command": {
+                "audit-shrink": {
+                    "template": "Load the audit-shrink skill and run audit.",
+                    "description": "Run shrinkage audit",
+                }
+            },
+            "permission": {
+                "skill": {
+                    "*": "allow",
+                    "proj-*": "deny",
+                }
+            },
+        }, indent=2),
+        encoding="utf-8",
+    )
+    rc = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    data = json.loads(config.read_text(encoding="utf-8"))
+    assert "ocode-audit-shrink" in data["command"]
+    assert "audit-shrink" not in data["command"]
+    template = data["command"]["ocode-audit-shrink"]["template"]
+    assert "ocode-audit-shrink" in template
+    assert "Load the audit-shrink" not in template
+    perms = data["permission"]["skill"]
+    assert perms["*"] == "allow"
+    assert perms["claude-*"] == "deny"
+    assert perms["codex-*"] == "deny"
+    assert perms["anti-*"] == "deny"
+    assert "proj-*" not in perms
+
+
+def test_apply_rewrites_dollar_references_in_codex_yaml(tmp_path: Path) -> None:
+    skill_dir = tmp_path / ".agents" / "skills" / "codex-foo" / "agents"
+    skill_dir.mkdir(parents=True)
+    skill_md = tmp_path / ".agents" / "skills" / "codex-foo" / "SKILL.md"
+    skill_md.write_text(
+        "---\nname: codex-foo\ndescription: t\n---\n\n# body\n",
+        encoding="utf-8",
+    )
+    yaml_file = skill_dir / "openai.yaml"
+    # Reference a non-codex skill that will be renamed
+    _write_skill(tmp_path, ".claude/skills", "proj-start")
+    yaml_file.write_text(
+        'default_prompt: "Use $proj-start to begin."\n',
+        encoding="utf-8",
+    )
+    rc = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    text = yaml_file.read_text(encoding="utf-8")
+    assert "$claude-proj-start" in text
+    assert "$proj-start" not in text
+
+
+def test_apply_is_idempotent(tmp_path: Path) -> None:
+    _write_skill(tmp_path, ".claude/skills", "proj-start")
+    rc1 = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    rc2 = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc1 == 0
+    assert rc2 == 0
+    new_dir = tmp_path / ".claude" / "skills" / "claude-proj-start"
+    assert new_dir.is_dir()
+
+
+def test_apply_refuses_when_invalid_rename_present(tmp_path: Path) -> None:
+    long_name = "x" * 60
+    _write_skill(tmp_path, ".claude/skills", long_name)
+    rc = renamer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc != 0
+    # No rename happened
+    assert (tmp_path / ".claude" / "skills" / long_name).is_dir()

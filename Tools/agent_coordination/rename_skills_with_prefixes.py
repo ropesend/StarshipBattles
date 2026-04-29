@@ -280,6 +280,158 @@ def render_rename_map_toml(plan: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
+def _names_alternation(names: Iterable[str]) -> str:
+    return "|".join(re.escape(n) for n in sorted(set(names), key=len, reverse=True))
+
+
+def _build_rewrite_patterns(name_map: dict[str, str]) -> list[tuple[re.Pattern[str], str]]:
+    """Return a list of (compiled_regex, replacement_template) tuples.
+
+    Each replacement template uses backreferences to inject the new name.
+    Patterns are ordered by specificity to avoid partial matches.
+    """
+    if not name_map:
+        return []
+    patterns: list[tuple[re.Pattern[str], str]] = []
+    # Sort longest-first so e.g. `proj-extract-phase` matches before `proj-extract`.
+    sorted_old_names = sorted(name_map.keys(), key=len, reverse=True)
+    for old in sorted_old_names:
+        new = name_map[old]
+        old_esc = re.escape(old)
+        # Path literals: `.claude/skills/<name>` (also `.agent`, `.agents`, `.opencode`)
+        patterns.append((
+            re.compile(rf"((?:\.claude|\.agent|\.agents|\.opencode)[/\\]+skills[/\\]+){old_esc}(?=[/\\\s\"'`)/.])"),
+            rf"\g<1>{new}",
+        ))
+        # Slash invocation form: `/<name>` not preceded by alphanum/underscore/hyphen.
+        patterns.append((
+            re.compile(rf"(?<![A-Za-z0-9_-])/{old_esc}\b"),
+            f"/{new}",
+        ))
+        # Dollar form: `$<name>`
+        patterns.append((
+            re.compile(rf"\${old_esc}\b"),
+            f"${new}",
+        ))
+    return patterns
+
+
+def _rewrite_text_with_patterns(text: str, patterns: list[tuple[re.Pattern[str], str]]) -> str:
+    for pattern, replacement in patterns:
+        text = pattern.sub(replacement, text)
+    return text
+
+
+def _rewrite_skill_md_frontmatter(path: Path, old_name: str, new_name: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    new_text = re.sub(
+        rf"^name:\s*{re.escape(old_name)}\s*$",
+        f"name: {new_name}",
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if new_text != text:
+        path.write_text(new_text, encoding="utf-8")
+
+
+def _rewrite_opencode_json(repo_root: Path, name_map: dict[str, str]) -> None:
+    config_path = repo_root / "opencode.json"
+    if not config_path.exists():
+        return
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return
+
+    # Rewrite command keys and template bodies.
+    command = data.get("command")
+    if isinstance(command, dict):
+        new_command: dict[str, object] = {}
+        for key, value in command.items():
+            new_key = name_map.get(key, key)
+            if isinstance(value, dict):
+                new_value = dict(value)
+                template = new_value.get("template")
+                if isinstance(template, str):
+                    new_value["template"] = _rewrite_template_body(template, name_map)
+                description = new_value.get("description")
+                if isinstance(description, str):
+                    new_value["description"] = _rewrite_template_body(description, name_map)
+            else:
+                new_value = value
+            new_command[new_key] = new_value
+        data["command"] = new_command
+
+    # Replace the permission map structurally.
+    permission = data.get("permission")
+    if isinstance(permission, dict):
+        skill = permission.get("skill")
+        if isinstance(skill, dict):
+            permission["skill"] = plan_opencode_permissions({str(k): str(v) for k, v in skill.items()})
+
+    config_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def _rewrite_template_body(text: str, name_map: dict[str, str]) -> str:
+    if not name_map:
+        return text
+    sorted_old = sorted(name_map.keys(), key=len, reverse=True)
+    for old in sorted_old:
+        new = name_map[old]
+        text = re.sub(rf"(?<![A-Za-z0-9_-]){re.escape(old)}(?![A-Za-z0-9_-])", new, text)
+    return text
+
+
+def _rewrite_files(repo_root: Path, name_map: dict[str, str]) -> None:
+    if not name_map:
+        return
+    patterns = _build_rewrite_patterns(name_map)
+    for path in _candidate_files(repo_root):
+        if path.name == "opencode.json":
+            continue  # handled structurally
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        new_text = _rewrite_text_with_patterns(text, patterns)
+        if new_text != text:
+            path.write_text(new_text, encoding="utf-8")
+
+
+def apply_rename_plan(repo_root: Path, plan: dict[str, object]) -> None:
+    """Apply a rename plan in-place.
+
+    Order of operations:
+    1. Rewrite SKILL.md frontmatter `name:` for each renamed skill.
+    2. Rewrite repo-wide references (slash, dollar, path-literal).
+    3. Rewrite opencode.json structurally (command keys + template bodies + permissions).
+    4. Rename directories last.
+    """
+    renames = [r for r in plan["renames"] if not r["already_compliant"] and r["valid"]]  # type: ignore[index]
+    if not renames:
+        return
+
+    name_map: dict[str, str] = {}
+    for entry in renames:
+        old_name = str(entry["old_name"])
+        new_name = str(entry["new_name"])
+        name_map[old_name] = new_name
+        skill_md = repo_root / str(entry["surface_path"]) / old_name / "SKILL.md"
+        if skill_md.exists():
+            _rewrite_skill_md_frontmatter(skill_md, old_name, new_name)
+
+    _rewrite_files(repo_root, name_map)
+    _rewrite_opencode_json(repo_root, name_map)
+
+    for entry in renames:
+        old_dir = repo_root / str(entry["surface_path"]) / str(entry["old_name"])
+        new_dir = repo_root / str(entry["surface_path"]) / str(entry["new_name"])
+        if not old_dir.exists() or new_dir.exists():
+            continue
+        old_dir.rename(new_dir)
+
+
 def render_renames_md(plan: dict[str, object], references: list[dict[str, object]]) -> str:
     lines = ["# Skill Rename Plan (Audit Artifact)", ""]
     lines.append(
@@ -366,11 +518,21 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Renames planned: {sum(1 for r in plan['renames'] if not r['already_compliant'])}")
     print(f"References: {len(references)}")
 
-    if args.apply and not invalid:
-        print("--apply is reserved for the dedicated atomic rename phase. Use the dedicated rename PR instead.", file=sys.stderr)
-        return 2
+    if invalid:
+        return 1
 
-    return 1 if invalid else 0
+    if args.apply:
+        apply_rename_plan(repo_root, plan)
+        # Recompute the inventory output and audit artifacts so the artifacts
+        # reflect post-rename state.
+        post_plan = build_rename_plan(repo_root)
+        post_references: list[dict[str, object]] = []
+        (output_dir / "skill_rename_map.toml").write_text(render_rename_map_toml(post_plan), encoding="utf-8")
+        (output_dir / "SKILL_RENAMES.md").write_text(render_renames_md(post_plan, post_references), encoding="utf-8")
+        print(f"Applied {len([r for r in plan['renames'] if not r['already_compliant']])} renames")
+        return 0
+
+    return 0
 
 
 if __name__ == "__main__":

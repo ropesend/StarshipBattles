@@ -13,7 +13,7 @@ import difflib
 import json
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 if __name__ == "__main__" and __package__ is None:
@@ -27,7 +27,6 @@ if __name__ == "__main__" and __package__ is None:
 from Tools.agent_coordination.inventory_agent_surfaces import (  # noqa: E402
     SCHEMA_VERSION as INVENTORY_SCHEMA_VERSION,
     SURFACES,
-    SKILL_NAME_RE,
     _find_project_root,
     build_inventory,
 )
@@ -64,18 +63,11 @@ REMOVED_PATH_LITERALS = (
     ("assets/tools/ship_background_remover.py", "vol.removed_tool_path"),
 )
 
-# Files exempt from volatile-fact scanning (the validator + plan reference these
-# strings on purpose).
-VOLATILE_EXCLUDE_SUFFIXES = (
-    "Tools/agent_coordination/validate_agent_surfaces.py",
-    "Tools/agent_coordination/inventory_agent_surfaces.py",
-    "Tools/agent_coordination/sanitize_claude_settings.py",
-    "Tools/agent_coordination/rename_skills_with_prefixes.py",
-    "Tools/agent_coordination/check_skill_prefixes.py",
-    "Tools/test_sharded/test_sharded.py",
-    "Tools/test_sharded/README.md",
-    "Tools/agent_coordination/README.md",
-)
+# Files exempt from volatile-fact scanning. Currently the scanner only walks
+# adapter docs (AGENTS.md, CLAUDE.md, .agents/CODEX.md) and SKILL.md files,
+# so this list intentionally has zero entries — none of those would ever need
+# excluding from a volatile-fact rule.
+VOLATILE_EXCLUDE_SUFFIXES: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
