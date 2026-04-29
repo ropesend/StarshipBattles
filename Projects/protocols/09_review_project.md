@@ -465,7 +465,7 @@ If any changes were applied that affect which files the project touches (new tas
 - Regenerate `manifest.md` by scanning all phase checklists for `**File:**` fields
 - Include all files from the Key Files table in `plan.md`
 - Include all test files (new and existing) referenced in tasks
-- If no `manifest.md` exists, create one now (required for `/proj-parallel`)
+- If no `manifest.md` exists, create one now (required for `/claude-proj-parallel`)
 
 ### 5.1: Update Current State
 

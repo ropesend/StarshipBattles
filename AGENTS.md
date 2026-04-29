@@ -31,7 +31,7 @@ python -m combat_lab.run_tests
 
 # Code shrinkage audit (read-only analysis)
 python Tools/audit_shrink/audit_shrink.py   # Phase 1: deterministic tools
-# Then /audit-shrink                         # Phase 2: agents + report
+# Then /ocode-audit-shrink                         # Phase 2: agents + report
 ```
 
 ## Architecture (Quick Reference)
@@ -69,7 +69,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 ## Tooling Notes
 
 - **`Tools/test_sharded/`** — Sharded parallel runner. Auto-detects CPU count with greedy load balancing from `.test_durations.json`. This is the canonical full-suite runner.
-- **`Tools/audit_shrink/`** — Code shrinkage audit: vulture (dead code), radon (complexity), clone detector (near-duplicate functions), orphan/dependency analysis. See `.opencode/skills/audit-shrink/SKILL.md` for the agent-driven Phase 2 workflow.
+- **`Tools/audit_shrink/`** — Code shrinkage audit: vulture (dead code), radon (complexity), clone detector (near-duplicate functions), orphan/dependency analysis. See `.opencode/skills/ocode-audit-shrink/SKILL.md` for the agent-driven Phase 2 workflow.
 - **`requirements-dev.txt`** includes radon, vulture, Pillow, numpy, opencv-python, matplotlib, fastapi, uvicorn, dearpygui, and QA tooling. Runtime-only deps in `requirements.txt`.
 
 ## Project Management

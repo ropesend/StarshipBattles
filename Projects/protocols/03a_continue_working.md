@@ -150,7 +150,7 @@ For each task until an exit condition (§3) is met:
    - **Update `manifest.md`** — every time you edit a file not yet listed,
      add a row explaining the change. Do this DURING the task, not at
      handoff — it's easy to forget at stop time. An up-to-date manifest is
-     required for `/proj-parallel` conflict detection AND for the next
+     required for `/claude-proj-parallel` conflict detection AND for the next
      agent to understand what's in flight.
 
    **f. Update Current State**

@@ -332,38 +332,38 @@
       "kind": "skill_surface",
       "opencode_visible": true,
       "skill_names": [
-        "analysis-complexity",
-        "analysis-dead-code",
-        "analysis-sweep",
-        "debug-parallel",
-        "deep-dive-parallel",
-        "fix-crash",
-        "loc",
-        "proj-add-to-plan",
-        "proj-archive",
-        "proj-audit",
-        "proj-continue",
-        "proj-extract-phase",
-        "proj-manage-plan",
-        "proj-parallel",
-        "proj-reset-baseline",
-        "proj-review",
-        "proj-revise",
-        "proj-start",
-        "qa-feedback",
-        "qa-triage",
-        "ticket-add",
-        "ticket-answer",
-        "ticket-batch-close",
-        "ticket-close",
-        "ticket-continue",
-        "ticket-deep-dive",
-        "ticket-next",
-        "ticket-reject",
-        "ticket-update",
-        "ticket-work",
-        "triage-to-proj",
-        "validate-designs"
+        "claude-analysis-complexity",
+        "claude-analysis-dead-code",
+        "claude-analysis-sweep",
+        "claude-debug-parallel",
+        "claude-deep-dive-parallel",
+        "claude-fix-crash",
+        "claude-loc",
+        "claude-proj-add-to-plan",
+        "claude-proj-archive",
+        "claude-proj-audit",
+        "claude-proj-continue",
+        "claude-proj-extract-phase",
+        "claude-proj-manage-plan",
+        "claude-proj-parallel",
+        "claude-proj-reset-baseline",
+        "claude-proj-review",
+        "claude-proj-revise",
+        "claude-proj-start",
+        "claude-qa-feedback",
+        "claude-qa-triage",
+        "claude-ticket-add",
+        "claude-ticket-answer",
+        "claude-ticket-batch-close",
+        "claude-ticket-close",
+        "claude-ticket-continue",
+        "claude-ticket-deep-dive",
+        "claude-ticket-next",
+        "claude-ticket-reject",
+        "claude-ticket-update",
+        "claude-ticket-work",
+        "claude-triage-to-proj",
+        "claude-validate-designs"
       ],
       "skills": [
         {
@@ -373,11 +373,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "analysis-complexity",
+          "directory": "claude-analysis-complexity",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Run cyclomatic complexity analysis on the codebase using radon and report all high-complexity functions",
-            "name": "analysis-complexity"
+            "name": "claude-analysis-complexity"
           },
           "frontmatter_description": "Run cyclomatic complexity analysis on the codebase using radon and report all high-complexity functions",
           "frontmatter_fields": [
@@ -386,12 +386,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "analysis-complexity",
+          "frontmatter_name": "claude-analysis-complexity",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/analysis-complexity/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-analysis-complexity/SKILL.md",
           "spec_violations": []
         },
         {
@@ -401,11 +401,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "analysis-dead-code",
+          "directory": "claude-analysis-dead-code",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Run Vulture dead code analysis on game/ and tests/, categorize findings, and report confirmed dead code",
-            "name": "analysis-dead-code"
+            "name": "claude-analysis-dead-code"
           },
           "frontmatter_description": "Run Vulture dead code analysis on game/ and tests/, categorize findings, and report confirmed dead code",
           "frontmatter_fields": [
@@ -414,12 +414,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "analysis-dead-code",
+          "frontmatter_name": "claude-analysis-dead-code",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/analysis-dead-code/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-analysis-dead-code/SKILL.md",
           "spec_violations": []
         },
         {
@@ -429,11 +429,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "analysis-sweep",
+          "directory": "claude-analysis-sweep",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Fire-and-forget parallel codebase sweep \u2014 launches 25 agents across 5 sweep types and 5 module shards, then generates prospective projects for user approval",
-            "name": "analysis-sweep"
+            "name": "claude-analysis-sweep"
           },
           "frontmatter_description": "Fire-and-forget parallel codebase sweep \u2014 launches 25 agents across 5 sweep types and 5 module shards, then generates prospective projects for user approval",
           "frontmatter_fields": [
@@ -442,12 +442,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "analysis-sweep",
+          "frontmatter_name": "claude-analysis-sweep",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/analysis-sweep/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-analysis-sweep/SKILL.md",
           "spec_violations": []
         },
         {
@@ -457,25 +457,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "debug-parallel",
+          "directory": "claude-debug-parallel",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Fix multiple bugs in parallel using coordinated agents with file-level conflict avoidance (e.g., /debug-parallel 85 86 87 or /debug-parallel all)",
-            "name": "debug-parallel"
+            "description": "Fix multiple bugs in parallel using coordinated agents with file-level conflict avoidance (e.g., /claude-debug-parallel 85 86 87 or /claude-debug-parallel all)",
+            "name": "claude-debug-parallel"
           },
-          "frontmatter_description": "Fix multiple bugs in parallel using coordinated agents with file-level conflict avoidance (e.g., /debug-parallel 85 86 87 or /debug-parallel all)",
+          "frontmatter_description": "Fix multiple bugs in parallel using coordinated agents with file-level conflict avoidance (e.g., /claude-debug-parallel 85 86 87 or /claude-debug-parallel all)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "debug-parallel",
+          "frontmatter_name": "claude-debug-parallel",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/debug-parallel/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-debug-parallel/SKILL.md",
           "spec_violations": []
         },
         {
@@ -485,25 +485,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "deep-dive-parallel",
+          "directory": "claude-deep-dive-parallel",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /deep-dive-parallel or /deep-dive-parallel bug 85 86 87)",
-            "name": "deep-dive-parallel"
+            "description": "Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /claude-deep-dive-parallel or /claude-deep-dive-parallel bug 85 86 87)",
+            "name": "claude-deep-dive-parallel"
           },
-          "frontmatter_description": "Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /deep-dive-parallel or /deep-dive-parallel bug 85 86 87)",
+          "frontmatter_description": "Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /claude-deep-dive-parallel or /claude-deep-dive-parallel bug 85 86 87)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "deep-dive-parallel",
+          "frontmatter_name": "claude-deep-dive-parallel",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/deep-dive-parallel/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-deep-dive-parallel/SKILL.md",
           "spec_violations": []
         },
         {
@@ -513,11 +513,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "fix-crash",
+          "directory": "claude-fix-crash",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Diagnose a crash from a traceback \u2014 root cause analysis, pattern compliance check, and TDD fix with no bandaids",
-            "name": "fix-crash"
+            "name": "claude-fix-crash"
           },
           "frontmatter_description": "Diagnose a crash from a traceback \u2014 root cause analysis, pattern compliance check, and TDD fix with no bandaids",
           "frontmatter_fields": [
@@ -526,12 +526,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "fix-crash",
+          "frontmatter_name": "claude-fix-crash",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/fix-crash/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-fix-crash/SKILL.md",
           "spec_violations": []
         },
         {
@@ -540,11 +540,11 @@
           "claude_specific_frontmatter": [
             "disable-model-invocation"
           ],
-          "directory": "loc",
+          "directory": "claude-loc",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Count lines of code across the project with breakdowns by section and file type",
-            "name": "loc"
+            "name": "claude-loc"
           },
           "frontmatter_description": "Count lines of code across the project with breakdowns by section and file type",
           "frontmatter_fields": [
@@ -552,12 +552,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "loc",
+          "frontmatter_name": "claude-loc",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/loc/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-loc/SKILL.md",
           "spec_violations": []
         },
         {
@@ -567,11 +567,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-add-to-plan",
+          "directory": "claude-proj-add-to-plan",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Add one or more existing projects to the refactor plan",
-            "name": "proj-add-to-plan"
+            "name": "claude-proj-add-to-plan"
           },
           "frontmatter_description": "Add one or more existing projects to the refactor plan",
           "frontmatter_fields": [
@@ -580,12 +580,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-add-to-plan",
+          "frontmatter_name": "claude-proj-add-to-plan",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-add-to-plan/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-add-to-plan/SKILL.md",
           "spec_violations": []
         },
         {
@@ -595,11 +595,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-archive",
+          "directory": "claude-proj-archive",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Archive completed projects (from refactor plan and/or active_projects)",
-            "name": "proj-archive"
+            "name": "claude-proj-archive"
           },
           "frontmatter_description": "Archive completed projects (from refactor plan and/or active_projects)",
           "frontmatter_fields": [
@@ -608,12 +608,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-archive",
+          "frontmatter_name": "claude-proj-archive",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-archive/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-archive/SKILL.md",
           "spec_violations": []
         },
         {
@@ -623,11 +623,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-audit",
+          "directory": "claude-proj-audit",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Perform a skeptical audit of a completed project to verify quality and correctness",
-            "name": "proj-audit"
+            "name": "claude-proj-audit"
           },
           "frontmatter_description": "Perform a skeptical audit of a completed project to verify quality and correctness",
           "frontmatter_fields": [
@@ -636,12 +636,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-audit",
+          "frontmatter_name": "claude-proj-audit",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-audit/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-audit/SKILL.md",
           "spec_violations": []
         },
         {
@@ -651,11 +651,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-continue",
+          "directory": "claude-proj-continue",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Continue working on an active project using the autonomous TDD work loop",
-            "name": "proj-continue"
+            "name": "claude-proj-continue"
           },
           "frontmatter_description": "Continue working on an active project using the autonomous TDD work loop",
           "frontmatter_fields": [
@@ -664,12 +664,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-continue",
+          "frontmatter_name": "claude-proj-continue",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-continue/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-continue/SKILL.md",
           "spec_violations": []
         },
         {
@@ -679,11 +679,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-extract-phase",
+          "directory": "claude-proj-extract-phase",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Extract a complex phase from a project into its own independent project",
-            "name": "proj-extract-phase"
+            "name": "claude-proj-extract-phase"
           },
           "frontmatter_description": "Extract a complex phase from a project into its own independent project",
           "frontmatter_fields": [
@@ -692,12 +692,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-extract-phase",
+          "frontmatter_name": "claude-proj-extract-phase",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-extract-phase/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-extract-phase/SKILL.md",
           "spec_violations": []
         },
         {
@@ -707,11 +707,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-manage-plan",
+          "directory": "claude-proj-manage-plan",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Add, remove, update, or reorder projects in the master Projects/refactor_loop/refactor_plan.md",
-            "name": "proj-manage-plan"
+            "name": "claude-proj-manage-plan"
           },
           "frontmatter_description": "Add, remove, update, or reorder projects in the master Projects/refactor_loop/refactor_plan.md",
           "frontmatter_fields": [
@@ -720,12 +720,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-manage-plan",
+          "frontmatter_name": "claude-proj-manage-plan",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-manage-plan/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-manage-plan/SKILL.md",
           "spec_violations": []
         },
         {
@@ -735,25 +735,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-parallel",
+          "directory": "claude-proj-parallel",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Execute multiple projects in parallel using worktree-isolated agents with file-level conflict avoidance (e.g., /proj-parallel PROJ-86 PROJ-87 or /proj-parallel all)",
-            "name": "proj-parallel"
+            "description": "Execute multiple projects in parallel using worktree-isolated agents with file-level conflict avoidance (e.g., /claude-proj-parallel PROJ-86 PROJ-87 or /claude-proj-parallel all)",
+            "name": "claude-proj-parallel"
           },
-          "frontmatter_description": "Execute multiple projects in parallel using worktree-isolated agents with file-level conflict avoidance (e.g., /proj-parallel PROJ-86 PROJ-87 or /proj-parallel all)",
+          "frontmatter_description": "Execute multiple projects in parallel using worktree-isolated agents with file-level conflict avoidance (e.g., /claude-proj-parallel PROJ-86 PROJ-87 or /claude-proj-parallel all)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-parallel",
+          "frontmatter_name": "claude-proj-parallel",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-parallel/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-parallel/SKILL.md",
           "spec_violations": []
         },
         {
@@ -763,11 +763,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-reset-baseline",
+          "directory": "claude-proj-reset-baseline",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Run tests and reset refactor plan baseline for a fresh loop run",
-            "name": "proj-reset-baseline"
+            "name": "claude-proj-reset-baseline"
           },
           "frontmatter_description": "Run tests and reset refactor plan baseline for a fresh loop run",
           "frontmatter_fields": [
@@ -776,12 +776,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-reset-baseline",
+          "frontmatter_name": "claude-proj-reset-baseline",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-reset-baseline/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-reset-baseline/SKILL.md",
           "spec_violations": []
         },
         {
@@ -791,11 +791,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-review",
+          "directory": "claude-proj-review",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Review and validate a project plan against the current codebase, then interactively update it",
-            "name": "proj-review"
+            "name": "claude-proj-review"
           },
           "frontmatter_description": "Review and validate a project plan against the current codebase, then interactively update it",
           "frontmatter_fields": [
@@ -804,12 +804,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-review",
+          "frontmatter_name": "claude-proj-review",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-review/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-review/SKILL.md",
           "spec_violations": []
         },
         {
@@ -819,11 +819,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-revise",
+          "directory": "claude-proj-revise",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Revise a completed project by adding new phases based on real-world usage feedback",
-            "name": "proj-revise"
+            "name": "claude-proj-revise"
           },
           "frontmatter_description": "Revise a completed project by adding new phases based on real-world usage feedback",
           "frontmatter_fields": [
@@ -832,12 +832,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-revise",
+          "frontmatter_name": "claude-proj-revise",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-revise/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-revise/SKILL.md",
           "spec_violations": []
         },
         {
@@ -847,11 +847,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-start",
+          "directory": "claude-proj-start",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Initialize a new refactoring/addition project with deep code review and planning",
-            "name": "proj-start"
+            "name": "claude-proj-start"
           },
           "frontmatter_description": "Initialize a new refactoring/addition project with deep code review and planning",
           "frontmatter_fields": [
@@ -860,12 +860,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-start",
+          "frontmatter_name": "claude-proj-start",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/proj-start/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-start/SKILL.md",
           "spec_violations": []
         },
         {
@@ -875,11 +875,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "qa-feedback",
+          "directory": "claude-qa-feedback",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Process a QA session interactively within the current agent session, using Socratic questioning to deeply understand each observation before continuing work",
-            "name": "qa-feedback"
+            "name": "claude-qa-feedback"
           },
           "frontmatter_description": "Process a QA session interactively within the current agent session, using Socratic questioning to deeply understand each observation before continuing work",
           "frontmatter_fields": [
@@ -888,12 +888,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "qa-feedback",
+          "frontmatter_name": "claude-qa-feedback",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/qa-feedback/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-qa-feedback/SKILL.md",
           "spec_violations": []
         },
         {
@@ -903,11 +903,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "qa-triage",
+          "directory": "claude-qa-triage",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
-            "name": "qa-triage"
+            "name": "claude-qa-triage"
           },
           "frontmatter_description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
           "frontmatter_fields": [
@@ -916,12 +916,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "qa-triage",
+          "frontmatter_name": "claude-qa-triage",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/qa-triage/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-qa-triage/SKILL.md",
           "spec_violations": []
         },
         {
@@ -931,25 +931,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-add",
+          "directory": "claude-ticket-add",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Create new bug or feature tickets (e.g., /ticket-add bug <descriptions> or /ticket-add feature <descriptions>)",
-            "name": "ticket-add"
+            "description": "Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)",
+            "name": "claude-ticket-add"
           },
-          "frontmatter_description": "Create new bug or feature tickets (e.g., /ticket-add bug <descriptions> or /ticket-add feature <descriptions>)",
+          "frontmatter_description": "Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-add",
+          "frontmatter_name": "claude-ticket-add",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-add/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-add/SKILL.md",
           "spec_violations": []
         },
         {
@@ -959,25 +959,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-answer",
+          "directory": "claude-ticket-answer",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /ticket-answer bug 42 <answers>)",
-            "name": "ticket-answer"
+            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)",
+            "name": "claude-ticket-answer"
           },
-          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /ticket-answer bug 42 <answers>)",
+          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-answer",
+          "frontmatter_name": "claude-ticket-answer",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-answer/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-answer/SKILL.md",
           "spec_violations": []
         },
         {
@@ -987,25 +987,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-batch-close",
+          "directory": "claude-ticket-batch-close",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Archive multiple confirmed tickets in one operation (e.g., /ticket-batch-close bug 46 49 50)",
-            "name": "ticket-batch-close"
+            "description": "Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)",
+            "name": "claude-ticket-batch-close"
           },
-          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /ticket-batch-close bug 46 49 50)",
+          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-batch-close",
+          "frontmatter_name": "claude-ticket-batch-close",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-batch-close/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-batch-close/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1015,25 +1015,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-close",
+          "directory": "claude-ticket-close",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /ticket-close bug 42)",
-            "name": "ticket-close"
+            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /anti-ticket-close bug 42)",
+            "name": "claude-ticket-close"
           },
-          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /ticket-close bug 42)",
+          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /anti-ticket-close bug 42)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-close",
+          "frontmatter_name": "claude-ticket-close",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-close/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-close/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1043,25 +1043,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-continue",
+          "directory": "claude-ticket-continue",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /ticket-continue bug or /ticket-continue feature)",
-            "name": "ticket-continue"
+            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)",
+            "name": "claude-ticket-continue"
           },
-          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /ticket-continue bug or /ticket-continue feature)",
+          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-continue",
+          "frontmatter_name": "claude-ticket-continue",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-continue/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-continue/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1071,25 +1071,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-deep-dive",
+          "directory": "claude-ticket-deep-dive",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /ticket-deep-dive bug 42)",
-            "name": "ticket-deep-dive"
+            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)",
+            "name": "claude-ticket-deep-dive"
           },
-          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /ticket-deep-dive bug 42)",
+          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-deep-dive",
+          "frontmatter_name": "claude-ticket-deep-dive",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-deep-dive/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-deep-dive/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1099,25 +1099,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-next",
+          "directory": "claude-ticket-next",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Pick the highest priority pending ticket and start working on it (e.g., /ticket-next bug or /ticket-next feature)",
-            "name": "ticket-next"
+            "description": "Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)",
+            "name": "claude-ticket-next"
           },
-          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /ticket-next bug or /ticket-next feature)",
+          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-next",
+          "frontmatter_name": "claude-ticket-next",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-next/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-next/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1127,25 +1127,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-reject",
+          "directory": "claude-ticket-reject",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /ticket-reject bug 42 <reason>)",
-            "name": "ticket-reject"
+            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)",
+            "name": "claude-ticket-reject"
           },
-          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /ticket-reject bug 42 <reason>)",
+          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-reject",
+          "frontmatter_name": "claude-ticket-reject",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-reject/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-reject/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1155,25 +1155,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-update",
+          "directory": "claude-ticket-update",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /ticket-update bug 42 <text>)",
-            "name": "ticket-update"
+            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)",
+            "name": "claude-ticket-update"
           },
-          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /ticket-update bug 42 <text>)",
+          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-update",
+          "frontmatter_name": "claude-ticket-update",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-update/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-update/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1183,25 +1183,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-work",
+          "directory": "claude-ticket-work",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Fix a bug or implement a feature by ticket ID (e.g., /ticket-work bug 42 or /ticket-work feature 7)",
-            "name": "ticket-work"
+            "description": "Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)",
+            "name": "claude-ticket-work"
           },
-          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /ticket-work bug 42 or /ticket-work feature 7)",
+          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-work",
+          "frontmatter_name": "claude-ticket-work",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/ticket-work/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-ticket-work/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1211,11 +1211,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "triage-to-proj",
+          "directory": "claude-triage-to-proj",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Convert a triage item into a new project",
-            "name": "triage-to-proj"
+            "name": "claude-triage-to-proj"
           },
           "frontmatter_description": "Convert a triage item into a new project",
           "frontmatter_fields": [
@@ -1224,35 +1224,35 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "triage-to-proj",
+          "frontmatter_name": "claude-triage-to-proj",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/triage-to-proj/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-triage-to-proj/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "validate-designs",
+          "directory": "claude-validate-designs",
           "expected_prefix": "claude-",
           "frontmatter": {
             "description": "Validate ship and complex designs against the component registry for crew housing, life support, mass budgets, and mass consistency",
-            "name": "validate-designs"
+            "name": "claude-validate-designs"
           },
           "frontmatter_description": "Validate ship and complex designs against the component registry for crew housing, life support, mass budgets, and mass consistency",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "validate-designs",
+          "frontmatter_name": "claude-validate-designs",
           "name_matches_directory": true,
           "opencode_permission": "deny",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".claude/skills/validate-designs/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-validate-designs/SKILL.md",
           "spec_violations": []
         }
       ],
@@ -1266,7 +1266,7 @@
       "kind": "skill_surface",
       "opencode_visible": true,
       "skill_names": [
-        "audit-shrink"
+        "ocode-audit-shrink"
       ],
       "skills": [
         {
@@ -1275,11 +1275,11 @@
           "claude_specific_frontmatter": [
             "argument-hint"
           ],
-          "directory": "audit-shrink",
+          "directory": "ocode-audit-shrink",
           "expected_prefix": "ocode-",
           "frontmatter": {
             "description": "Run a comprehensive code shrinkage audit. Combines deterministic tools (vulture, radon, clone detector, orphans, dependency graph, LOC tracking) with 6 agents for deep review of all 4 shards, cross-shard duplication, and dead code validation. Produces a unified report with shrinkage estimates. Production code only.",
-            "name": "audit-shrink"
+            "name": "ocode-audit-shrink"
           },
           "frontmatter_description": "Run a comprehensive code shrinkage audit. Combines deterministic tools (vulture, radon, clone detector, orphans, dependency graph, LOC tracking) with 6 agents for deep review of all 4 shards, cross-shard duplication, and dead code validation. Produces a unified report with shrinkage estimates. Production code only.",
           "frontmatter_fields": [
@@ -1287,12 +1287,12 @@
             "description",
             "name"
           ],
-          "frontmatter_name": "audit-shrink",
+          "frontmatter_name": "ocode-audit-shrink",
           "name_matches_directory": true,
           "opencode_permission": "allow",
           "opencode_visible": true,
-          "prefix_compliant": false,
-          "skill_md": ".opencode/skills/audit-shrink/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".opencode/skills/ocode-audit-shrink/SKILL.md",
           "spec_violations": []
         }
       ],
@@ -1306,108 +1306,108 @@
       "kind": "skill_surface",
       "opencode_visible": false,
       "skill_names": [
-        "analysis-complexity",
-        "analysis-dead-code",
-        "analysis-sweep",
-        "debug-sequential",
-        "deep-dive-sequential",
-        "fix-crash",
-        "loc",
-        "proj-add-to-plan",
-        "proj-archive",
-        "proj-audit",
-        "proj-close",
-        "proj-continue",
-        "proj-extract-phase",
-        "proj-manage-plan",
-        "proj-reset-baseline",
-        "proj-review",
-        "proj-revise",
-        "proj-sequential",
-        "proj-start",
-        "qa-feedback",
-        "qa-triage",
-        "ticket-add",
-        "ticket-answer",
-        "ticket-batch-close",
-        "ticket-close",
-        "ticket-continue",
-        "ticket-deep-dive",
-        "ticket-next",
-        "ticket-reject",
-        "ticket-update",
-        "ticket-work",
-        "triage-to-proj",
-        "validate-designs"
+        "anti-analysis-complexity",
+        "anti-analysis-dead-code",
+        "anti-analysis-sweep",
+        "anti-debug-sequential",
+        "anti-deep-dive-sequential",
+        "anti-fix-crash",
+        "anti-loc",
+        "anti-proj-add-to-plan",
+        "anti-proj-archive",
+        "anti-proj-audit",
+        "anti-proj-close",
+        "anti-proj-continue",
+        "anti-proj-extract-phase",
+        "anti-proj-manage-plan",
+        "anti-proj-reset-baseline",
+        "anti-proj-review",
+        "anti-proj-revise",
+        "anti-proj-sequential",
+        "anti-proj-start",
+        "anti-qa-feedback",
+        "anti-qa-triage",
+        "anti-ticket-add",
+        "anti-ticket-answer",
+        "anti-ticket-batch-close",
+        "anti-ticket-close",
+        "anti-ticket-continue",
+        "anti-ticket-deep-dive",
+        "anti-ticket-next",
+        "anti-ticket-reject",
+        "anti-ticket-update",
+        "anti-ticket-work",
+        "anti-triage-to-proj",
+        "anti-validate-designs"
       ],
       "skills": [
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "analysis-complexity",
+          "directory": "anti-analysis-complexity",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Run cyclomatic complexity analysis using radon and report high-complexity functions",
-            "name": "analysis-complexity"
+            "name": "anti-analysis-complexity"
           },
           "frontmatter_description": "Run cyclomatic complexity analysis using radon and report high-complexity functions",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "analysis-complexity",
+          "frontmatter_name": "anti-analysis-complexity",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/analysis-complexity/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-analysis-complexity/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "analysis-dead-code",
+          "directory": "anti-analysis-dead-code",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Run Vulture dead code analysis on game/ and tests/, categorize findings, and report confirmed dead code",
-            "name": "analysis-dead-code"
+            "name": "anti-analysis-dead-code"
           },
           "frontmatter_description": "Run Vulture dead code analysis on game/ and tests/, categorize findings, and report confirmed dead code",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "analysis-dead-code",
+          "frontmatter_name": "anti-analysis-dead-code",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/analysis-dead-code/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-analysis-dead-code/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "analysis-sweep",
+          "directory": "anti-analysis-sweep",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Automated codebase sweep \u2014 performs sequential waves of review across duplication, legacy, consistency, architecture, and test coverage.",
-            "name": "analysis-sweep"
+            "name": "anti-analysis-sweep"
           },
           "frontmatter_description": "Automated codebase sweep \u2014 performs sequential waves of review across duplication, legacy, consistency, architecture, and test coverage.",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "analysis-sweep",
+          "frontmatter_name": "anti-analysis-sweep",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/analysis-sweep/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-analysis-sweep/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1416,24 +1416,24 @@
           "claude_specific_frontmatter": [
             "argument-hint"
           ],
-          "directory": "debug-sequential",
+          "directory": "anti-debug-sequential",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Fix multiple bugs sequentially without parallel tracking (e.g., /debug-sequential 85 86 87 or /debug-sequential all)",
-            "name": "debug-sequential"
+            "description": "Fix multiple bugs sequentially without parallel tracking (e.g., /anti-debug-sequential 85 86 87 or /anti-debug-sequential all)",
+            "name": "anti-debug-sequential"
           },
-          "frontmatter_description": "Fix multiple bugs sequentially without parallel tracking (e.g., /debug-sequential 85 86 87 or /debug-sequential all)",
+          "frontmatter_description": "Fix multiple bugs sequentially without parallel tracking (e.g., /anti-debug-sequential 85 86 87 or /anti-debug-sequential all)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "name"
           ],
-          "frontmatter_name": "debug-sequential",
+          "frontmatter_name": "anti-debug-sequential",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/debug-sequential/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-debug-sequential/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1442,24 +1442,24 @@
           "claude_specific_frontmatter": [
             "argument-hint"
           ],
-          "directory": "deep-dive-sequential",
+          "directory": "anti-deep-dive-sequential",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Sequential deep-dive investigation of multiple tickets (e.g., /deep-dive-sequential or /deep-dive-sequential bug 85 86)",
-            "name": "deep-dive-sequential"
+            "description": "Sequential deep-dive investigation of multiple tickets (e.g., /anti-deep-dive-sequential or /anti-deep-dive-sequential bug 85 86)",
+            "name": "anti-deep-dive-sequential"
           },
-          "frontmatter_description": "Sequential deep-dive investigation of multiple tickets (e.g., /deep-dive-sequential or /deep-dive-sequential bug 85 86)",
+          "frontmatter_description": "Sequential deep-dive investigation of multiple tickets (e.g., /anti-deep-dive-sequential or /anti-deep-dive-sequential bug 85 86)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "name"
           ],
-          "frontmatter_name": "deep-dive-sequential",
+          "frontmatter_name": "anti-deep-dive-sequential",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/deep-dive-sequential/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-deep-dive-sequential/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1469,11 +1469,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "fix-crash",
+          "directory": "anti-fix-crash",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Diagnose a crash from a traceback \u2014 root cause analysis, pattern compliance check, and TDD fix with no bandaids",
-            "name": "fix-crash"
+            "name": "anti-fix-crash"
           },
           "frontmatter_description": "Diagnose a crash from a traceback \u2014 root cause analysis, pattern compliance check, and TDD fix with no bandaids",
           "frontmatter_fields": [
@@ -1482,12 +1482,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "fix-crash",
+          "frontmatter_name": "anti-fix-crash",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/fix-crash/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-fix-crash/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1496,11 +1496,11 @@
           "claude_specific_frontmatter": [
             "disable-model-invocation"
           ],
-          "directory": "loc",
+          "directory": "anti-loc",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Count lines of code across the project with breakdowns by section and file type",
-            "name": "loc"
+            "name": "anti-loc"
           },
           "frontmatter_description": "Count lines of code across the project with breakdowns by section and file type",
           "frontmatter_fields": [
@@ -1508,196 +1508,196 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "loc",
+          "frontmatter_name": "anti-loc",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/loc/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-loc/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-add-to-plan",
+          "directory": "anti-proj-add-to-plan",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Add one or more existing projects to the refactor plan",
-            "name": "proj-add-to-plan"
+            "name": "anti-proj-add-to-plan"
           },
           "frontmatter_description": "Add one or more existing projects to the refactor plan",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-add-to-plan",
+          "frontmatter_name": "anti-proj-add-to-plan",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-add-to-plan/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-add-to-plan/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-archive",
+          "directory": "anti-proj-archive",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Archive accepted projects from the refactor plan",
-            "name": "proj-archive"
+            "name": "anti-proj-archive"
           },
           "frontmatter_description": "Archive accepted projects from the refactor plan",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-archive",
+          "frontmatter_name": "anti-proj-archive",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-archive/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-archive/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-audit",
+          "directory": "anti-proj-audit",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Perform a skeptical audit of a completed project to verify quality and correctness",
-            "name": "proj-audit"
+            "name": "anti-proj-audit"
           },
           "frontmatter_description": "Perform a skeptical audit of a completed project to verify quality and correctness",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-audit",
+          "frontmatter_name": "anti-proj-audit",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-audit/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-audit/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-close",
+          "directory": "anti-proj-close",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Close and archive a completed project after audit passes",
-            "name": "proj-close"
+            "name": "anti-proj-close"
           },
           "frontmatter_description": "Close and archive a completed project after audit passes",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-close",
+          "frontmatter_name": "anti-proj-close",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-close/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-close/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-continue",
+          "directory": "anti-proj-continue",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Continue working on an active project using the autonomous TDD work loop",
-            "name": "proj-continue"
+            "name": "anti-proj-continue"
           },
           "frontmatter_description": "Continue working on an active project using the autonomous TDD work loop",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-continue",
+          "frontmatter_name": "anti-proj-continue",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-continue/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-continue/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-extract-phase",
+          "directory": "anti-proj-extract-phase",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Extract a complex phase from a project into its own independent project",
-            "name": "proj-extract-phase"
+            "name": "anti-proj-extract-phase"
           },
           "frontmatter_description": "Extract a complex phase from a project into its own independent project",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-extract-phase",
+          "frontmatter_name": "anti-proj-extract-phase",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-extract-phase/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-extract-phase/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-manage-plan",
+          "directory": "anti-proj-manage-plan",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Add, remove, update, or reorder projects in the master Projects/refactor_loop/refactor_plan.md",
-            "name": "proj-manage-plan"
+            "name": "anti-proj-manage-plan"
           },
           "frontmatter_description": "Add, remove, update, or reorder projects in the master Projects/refactor_loop/refactor_plan.md",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-manage-plan",
+          "frontmatter_name": "anti-proj-manage-plan",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-manage-plan/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-manage-plan/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-reset-baseline",
+          "directory": "anti-proj-reset-baseline",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Run tests and reset refactor plan baseline for a fresh loop run",
-            "name": "proj-reset-baseline"
+            "name": "anti-proj-reset-baseline"
           },
           "frontmatter_description": "Run tests and reset refactor plan baseline for a fresh loop run",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-reset-baseline",
+          "frontmatter_name": "anti-proj-reset-baseline",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-reset-baseline/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-reset-baseline/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1707,11 +1707,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "proj-review",
+          "directory": "anti-proj-review",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Review and validate a project plan against the current codebase, then interactively update it",
-            "name": "proj-review"
+            "name": "anti-proj-review"
           },
           "frontmatter_description": "Review and validate a project plan against the current codebase, then interactively update it",
           "frontmatter_fields": [
@@ -1720,35 +1720,35 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "proj-review",
+          "frontmatter_name": "anti-proj-review",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-review/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-review/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-revise",
+          "directory": "anti-proj-revise",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Revise a completed project by adding new phases based on real-world usage feedback",
-            "name": "proj-revise"
+            "name": "anti-proj-revise"
           },
           "frontmatter_description": "Revise a completed project by adding new phases based on real-world usage feedback",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-revise",
+          "frontmatter_name": "anti-proj-revise",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-revise/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-revise/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1757,47 +1757,47 @@
           "claude_specific_frontmatter": [
             "argument-hint"
           ],
-          "directory": "proj-sequential",
+          "directory": "anti-proj-sequential",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Execute multiple projects sequentially without parallel isolation (e.g., /proj-sequential PROJ-86 PROJ-87 or /proj-sequential all)",
-            "name": "proj-sequential"
+            "description": "Execute multiple projects sequentially without parallel isolation (e.g., /anti-proj-sequential PROJ-86 PROJ-87 or /anti-proj-sequential all)",
+            "name": "anti-proj-sequential"
           },
-          "frontmatter_description": "Execute multiple projects sequentially without parallel isolation (e.g., /proj-sequential PROJ-86 PROJ-87 or /proj-sequential all)",
+          "frontmatter_description": "Execute multiple projects sequentially without parallel isolation (e.g., /anti-proj-sequential PROJ-86 PROJ-87 or /anti-proj-sequential all)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-sequential",
+          "frontmatter_name": "anti-proj-sequential",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-sequential/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-sequential/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "proj-start",
+          "directory": "anti-proj-start",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Initialize a new refactoring/addition project with deep code review and planning",
-            "name": "proj-start"
+            "name": "anti-proj-start"
           },
           "frontmatter_description": "Initialize a new refactoring/addition project with deep code review and planning",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "proj-start",
+          "frontmatter_name": "anti-proj-start",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/proj-start/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-proj-start/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1807,11 +1807,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "qa-feedback",
+          "directory": "anti-qa-feedback",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Process a QA session interactively within the current agent session, using Socratic questioning to deeply understand each observation before continuing work",
-            "name": "qa-feedback"
+            "name": "anti-qa-feedback"
           },
           "frontmatter_description": "Process a QA session interactively within the current agent session, using Socratic questioning to deeply understand each observation before continuing work",
           "frontmatter_fields": [
@@ -1820,12 +1820,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "qa-feedback",
+          "frontmatter_name": "anti-qa-feedback",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/qa-feedback/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-qa-feedback/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1835,11 +1835,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "qa-triage",
+          "directory": "anti-qa-triage",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
-            "name": "qa-triage"
+            "name": "anti-qa-triage"
           },
           "frontmatter_description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
           "frontmatter_fields": [
@@ -1848,12 +1848,12 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "qa-triage",
+          "frontmatter_name": "anti-qa-triage",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/qa-triage/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-qa-triage/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1863,25 +1863,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-add",
+          "directory": "anti-ticket-add",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Create new bug or feature tickets (e.g., /ticket-add bug <descriptions> or /ticket-add feature <descriptions>)",
-            "name": "ticket-add"
+            "description": "Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)",
+            "name": "anti-ticket-add"
           },
-          "frontmatter_description": "Create new bug or feature tickets (e.g., /ticket-add bug <descriptions> or /ticket-add feature <descriptions>)",
+          "frontmatter_description": "Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-add",
+          "frontmatter_name": "anti-ticket-add",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-add/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-add/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1891,25 +1891,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-answer",
+          "directory": "anti-ticket-answer",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /ticket-answer bug 42 <answers>)",
-            "name": "ticket-answer"
+            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)",
+            "name": "anti-ticket-answer"
           },
-          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /ticket-answer bug 42 <answers>)",
+          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-answer",
+          "frontmatter_name": "anti-ticket-answer",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-answer/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-answer/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1919,25 +1919,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-batch-close",
+          "directory": "anti-ticket-batch-close",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Archive multiple confirmed tickets in one operation (e.g., /ticket-batch-close bug 46 49 50)",
-            "name": "ticket-batch-close"
+            "description": "Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)",
+            "name": "anti-ticket-batch-close"
           },
-          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /ticket-batch-close bug 46 49 50)",
+          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-batch-close",
+          "frontmatter_name": "anti-ticket-batch-close",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-batch-close/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-batch-close/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1947,25 +1947,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-close",
+          "directory": "anti-ticket-close",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /ticket-close bug 42)",
-            "name": "ticket-close"
+            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /anti-ticket-close bug 42)",
+            "name": "anti-ticket-close"
           },
-          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /ticket-close bug 42)",
+          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /anti-ticket-close bug 42)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-close",
+          "frontmatter_name": "anti-ticket-close",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-close/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-close/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1975,25 +1975,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-continue",
+          "directory": "anti-ticket-continue",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /ticket-continue bug or /ticket-continue feature)",
-            "name": "ticket-continue"
+            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)",
+            "name": "anti-ticket-continue"
           },
-          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /ticket-continue bug or /ticket-continue feature)",
+          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-continue",
+          "frontmatter_name": "anti-ticket-continue",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-continue/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-continue/SKILL.md",
           "spec_violations": []
         },
         {
@@ -2003,25 +2003,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-deep-dive",
+          "directory": "anti-ticket-deep-dive",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /ticket-deep-dive bug 42)",
-            "name": "ticket-deep-dive"
+            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)",
+            "name": "anti-ticket-deep-dive"
           },
-          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /ticket-deep-dive bug 42)",
+          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-deep-dive",
+          "frontmatter_name": "anti-ticket-deep-dive",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-deep-dive/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-deep-dive/SKILL.md",
           "spec_violations": []
         },
         {
@@ -2031,25 +2031,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-next",
+          "directory": "anti-ticket-next",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Pick the highest priority pending ticket and start working on it (e.g., /ticket-next bug or /ticket-next feature)",
-            "name": "ticket-next"
+            "description": "Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)",
+            "name": "anti-ticket-next"
           },
-          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /ticket-next bug or /ticket-next feature)",
+          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-next",
+          "frontmatter_name": "anti-ticket-next",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-next/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-next/SKILL.md",
           "spec_violations": []
         },
         {
@@ -2059,25 +2059,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-reject",
+          "directory": "anti-ticket-reject",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /ticket-reject bug 42 <reason>)",
-            "name": "ticket-reject"
+            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)",
+            "name": "anti-ticket-reject"
           },
-          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /ticket-reject bug 42 <reason>)",
+          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-reject",
+          "frontmatter_name": "anti-ticket-reject",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-reject/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-reject/SKILL.md",
           "spec_violations": []
         },
         {
@@ -2087,25 +2087,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-update",
+          "directory": "anti-ticket-update",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /ticket-update bug 42 <text>)",
-            "name": "ticket-update"
+            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)",
+            "name": "anti-ticket-update"
           },
-          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /ticket-update bug 42 <text>)",
+          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-update",
+          "frontmatter_name": "anti-ticket-update",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-update/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-update/SKILL.md",
           "spec_violations": []
         },
         {
@@ -2115,25 +2115,25 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "ticket-work",
+          "directory": "anti-ticket-work",
           "expected_prefix": "anti-",
           "frontmatter": {
-            "description": "Fix a bug or implement a feature by ticket ID (e.g., /ticket-work bug 42 or /ticket-work feature 7)",
-            "name": "ticket-work"
+            "description": "Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)",
+            "name": "anti-ticket-work"
           },
-          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /ticket-work bug 42 or /ticket-work feature 7)",
+          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "ticket-work",
+          "frontmatter_name": "anti-ticket-work",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/ticket-work/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-ticket-work/SKILL.md",
           "spec_violations": []
         },
         {
@@ -2143,11 +2143,11 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "triage-to-proj",
+          "directory": "anti-triage-to-proj",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Convert a triage item into a new project",
-            "name": "triage-to-proj"
+            "name": "anti-triage-to-proj"
           },
           "frontmatter_description": "Convert a triage item into a new project",
           "frontmatter_fields": [
@@ -2156,35 +2156,35 @@
             "disable-model-invocation",
             "name"
           ],
-          "frontmatter_name": "triage-to-proj",
+          "frontmatter_name": "anti-triage-to-proj",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/triage-to-proj/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-triage-to-proj/SKILL.md",
           "spec_violations": []
         },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
-          "directory": "validate-designs",
+          "directory": "anti-validate-designs",
           "expected_prefix": "anti-",
           "frontmatter": {
             "description": "Validate ship and complex designs against the component registry for crew housing, life support, mass budgets, and mass consistency",
-            "name": "validate-designs"
+            "name": "anti-validate-designs"
           },
           "frontmatter_description": "Validate ship and complex designs against the component registry for crew housing, life support, mass budgets, and mass consistency",
           "frontmatter_fields": [
             "description",
             "name"
           ],
-          "frontmatter_name": "validate-designs",
+          "frontmatter_name": "anti-validate-designs",
           "name_matches_directory": true,
           "opencode_permission": "not_visible",
           "opencode_visible": false,
-          "prefix_compliant": false,
-          "skill_md": ".agent/skills/validate-designs/SKILL.md",
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-validate-designs/SKILL.md",
           "spec_violations": []
         }
       ],
