@@ -1,68 +1,226 @@
-You are reviewing the implementation branch for the first Agent Coordination tooling slice in the Starship Battles repo.
+You are taking over the Agent Coordination implementation project for Starship Battles.
 
-Branch:
-- codex/agent-coordination-baseline-inventory
+You have a large context window and may use subagents. Please use them aggressively for parallel review, test design, and implementation slices, but keep the main agent responsible for integration, final decisions, and commits.
 
-Commit:
-- 22f17ba16 Add agent coordination baseline inventory
+Repository:
+- C:\Dev2\StarshipBattles
+- Current implementation branch should be:
+  - codex/agent-coordination-baseline-inventory
+- Existing commit on that branch:
+  - 22f17ba16 Add agent coordination baseline inventory
 
-Context:
-- This implements the first slice of AgentCoordination/codex_agent_coordination_plan_final.md.
-- Scope should be limited to generated test baseline support, generated agent surface inventory, and related docs/tests.
-- Do not review the future prefix rename, sanitizer, usage counters, or full validator except where this commit blocks or complicates them.
+Start by doing:
+1. Read AGENTS.md and follow it.
+2. Run `git status --short`.
+3. Read:
+   - AgentCoordination/codex_agent_coordination_plan_final.md
+   - AgentCoordination/generated/test_baseline.json
+   - AgentCoordination/generated/agent_surface_inventory.json
+   - Any review files in AgentCoordination/ created after the baseline/inventory commit, especially:
+     - claude_code_baseline_inventory_review.md
+     - opencode_deepseek_baseline_inventory_review.md
+4. Inspect the current branch diff/history enough to understand what has already landed.
+5. Use strict TDD for code changes.
 
-Files to review:
-- AgentCoordination/codex_agent_coordination_plan_final.md
-- AgentCoordination/generated/test_baseline.json
-- AgentCoordination/generated/agent_surface_inventory.json
-- Tools/test_sharded/test_sharded.py
-- Tools/test_sharded/README.md
-- Tools/agent_coordination/inventory_agent_surfaces.py
-- Tools/agent_coordination/README.md
-- tests/unit/tools/test_test_sharded_baseline.py
-- tests/unit/tools/test_agent_surface_inventory.py
-- AGENTS.md
-- CLAUDE.md
-- Tools/README.md
+Project goal:
+Finish the Agent Coordination project described in `AgentCoordination/codex_agent_coordination_plan_final.md`.
 
-Known validation already run:
-- `py -3.10 Tools/test_sharded/test_sharded.py --refresh-baseline-timestamp`
-  - Result: `16063 tests | 16060 passed | 0 failed | 0 errors | 3 skipped`
-- `py -3.10 -m pytest tests/unit/tools/test_agent_surface_inventory.py tests/unit/tools/test_test_sharded_baseline.py -q`
-  - Result: `9 passed`
+Important final decisions:
+- AGENTS.md is the shared source of truth.
+- Runtime skill prefixes:
+  - claude-
+  - anti-
+  - ocode-
+  - codex-
+- Prefix migration must be scripted, dry-run first, reviewed, then applied atomically.
+- Generated artifacts are tracked:
+  - AgentCoordination/generated/test_baseline.json
+  - AgentCoordination/generated/agent_surface_inventory.json
+- Test baseline policy:
+  - successful whole-suite run updates counts only when suite shape changes
+  - baseline_changed_at updates when counts change
+  - --refresh-baseline-timestamp updates verified_at on a successful whole-suite run even if counts are unchanged
+  - failed/partial/targeted runs never update the baseline
+- Sanitized Claude settings may be tracked if safe/stable.
+- Stale Starship Battles permission paths in Claude settings are warnings, not hard blockers.
+- Skill usage counters are per-repo-copy and script-driven.
+- Stable reinforcement duplication is allowed only with closed validator markers.
+- Stale .agent/workflows/ and .agent/MIGRATION_PROGRESS.md should be removed after replacement artifacts exist.
+- OpenCode should defensively deny anti-* even though .agent/skills is not currently documented as visible to OpenCode.
 
-Known point to scrutinize:
-- `AgentCoordination/generated/test_baseline.json` stores `git_sha` from the pre-commit HEAD, because the full suite ran before the commit existed. Decide whether that is acceptable, should be omitted, or should be handled differently.
+High-level implementation phases:
+1. Finish and stabilize the baseline/inventory slice.
+2. Implement Claude settings sanitizer dry-run/report.
+3. Implement prefix renamer dry-run.
+4. Apply atomic prefix rename after review.
+5. Implement usage counter scripts.
+6. Implement validator.
+7. Wire local/CI enforcement.
+8. Remove stale .agent workflow/migration files after replacement artifacts exist.
 
-Review goals:
-1. Identify correctness bugs, regression risks, missing tests, schema issues, or maintainability problems in this commit.
-2. Verify the baseline update policy:
-   - only successful whole-suite runs update the tracked baseline
-   - count changes update `baseline_changed_at`
-   - `--refresh-baseline-timestamp` updates `verified_at`
-   - failed/partial/targeted runs do not update baseline
-   - skipped counts are parsed correctly
-3. Verify the inventory tool:
-   - schema version is present
-   - surface counts and prefix expectations are correct
-   - OpenCode visibility is correct
-   - stale references are detected without overreaching
-   - output is deterministic enough for a tracked generated file
-4. Review whether docs now point agents at generated baseline/inventory correctly.
-5. Keep the review focused and actionable.
+Use subagents:
+- Subagent A: Review existing baseline/inventory implementation and tests for bugs.
+- Subagent B: Design and test Claude settings sanitizer edge cases.
+- Subagent C: Inventory all skill-name references that the prefix renamer must rewrite.
+- Subagent D: Design usage counter schema and tests.
+- Subagent E: Design validator checks and fixture strategy.
+Have subagents write concise reports under `.agent_reports/agent_coordination/` or another temporary ignored location. Do not let subagents make overlapping edits unless you assign disjoint files.
 
-Output requirements:
-- Do not modify files.
-- Write a concise review response in AgentCoordination/.
-- Filename:
-  - Claude Code: AgentCoordination/claude_code_baseline_inventory_review.md
-  - OpenCode/DeepSeek: AgentCoordination/opencode_deepseek_baseline_inventory_review.md
-- Use these sections:
-  - Summary Judgment
-  - Blocking Issues
-  - Non-Blocking Issues
-  - Questions
-  - Evidence
-  - Final Recommendation
+Work requirements:
+- Commit in small, reviewable commits by phase.
+- Before each commit, run focused tests for changed tooling.
+- Run the full sharded suite when a phase changes test baseline behavior or before final completion.
+- Use `py -3.10` if default Python lacks pytest in this checkout.
+- Do not delete stale .agent files until inventory, prefix migration, and validator coverage exist.
+- Do not apply the atomic prefix rename until the dry-run report is generated and reviewed. Ask the user before applying the rename if there is any ambiguity.
+- Do not auto-track unsafe `.claude/settings.local.json`; sanitizer must classify and report first.
+- Do not make usage counters auto-delete skills.
 
-If there are no issues in a section, write “None”.
+Specific tasks to complete:
+
+Task 1: Review and fix existing baseline/inventory implementation
+- Review current changes from commit `22f17ba16`.
+- If review files exist from Claude/DeepSeek, address their blocking issues.
+- Verify:
+  - baseline JSON schema and update rules
+  - skipped count parsing
+  - deterministic inventory output
+  - docs point to generated baseline/inventory
+- Resolve the `git_sha` design question. If the current pre-commit SHA behavior is undesirable, either omit `git_sha`, rename it to `source_git_sha`, or document the behavior clearly.
+- Keep or improve tests:
+  - tests/unit/tools/test_agent_surface_inventory.py
+  - tests/unit/tools/test_test_sharded_baseline.py
+
+Task 2: Claude settings sanitizer
+Implement:
+- Tools/agent_coordination/sanitize_claude_settings.py
+- tests/unit/tools/test_sanitize_claude_settings.py
+
+Behavior:
+- Dry-run by default.
+- Covers both:
+  - .claude/settings.json
+  - .claude/settings.local.json
+- Classifies permission entries:
+  - OK
+  - STALE_WARN
+  - EXTERNAL_REVIEW
+  - DANGEROUS
+- Stale/nonexistent Starship Battles paths are warnings, not failures.
+- External paths and dangerous broad permissions require review.
+- Secrets fail.
+- Do not broaden permissions while rewriting.
+- Provide a report format suitable for user review.
+- Only add apply mode if tests are strong and behavior is clear.
+
+Task 3: Prefix rename dry-run
+Implement:
+- Tools/agent_coordination/rename_skills_with_prefixes.py
+- Tools/agent_coordination/check_skill_prefixes.py
+- tests/unit/tools/test_agent_skill_prefix_renamer.py
+- tests/unit/tools/test_agent_skill_prefix_checker.py
+- AgentCoordination/skill_rename_map.toml generated or maintained by the tool
+- AgentCoordination/SKILL_RENAMES.md generated by dry-run
+
+Dry-run must:
+- Inventory all skill directories.
+- Map old names to:
+  - claude-*
+  - anti-*
+  - ocode-*
+  - codex-* unchanged where already correct
+- Refuse invalid Agent Skills names.
+- Report all planned directory renames and file rewrites.
+- Include repo-wide reference rewrites:
+  - AGENTS.md
+  - CLAUDE.md
+  - .agents/CODEX.md
+  - opencode.json command keys and template text bodies
+  - .agents/skills/*/agents/openai.yaml
+  - .claude/skills/**
+  - .agent/skills/**
+  - .opencode/skills/**
+  - Projects/protocols/**
+  - Tracking/protocols/**
+- Update OpenCode deny/allow patterns, including defensive anti-* deny.
+- Do not preserve old skill names as aliases.
+- Ask the user before applying the actual rename if dry-run shows ambiguous rewrites.
+
+Task 4: Apply atomic prefix rename
+Only after dry-run review:
+- Apply rename in one commit.
+- Run prefix checker.
+- Regenerate agent_surface_inventory.json.
+- Run focused tests.
+- Run broader tests if needed.
+- Ensure OpenCode cannot briefly expose renamed foreign skills due to stale deny patterns.
+
+Task 5: Usage counters
+Implement after prefix rename:
+- Tools/agent_coordination/log_skill_usage.py
+- Tools/agent_coordination/summarize_skill_usage.py
+- tests/unit/tools/test_skill_usage_tracking.py
+
+Behavior:
+- Per repo-copy install ID, not machine ID.
+- Local ignored:
+  - AgentCoordination/local/install_id.json
+- Tracked/generated:
+  - AgentCoordination/generated/skill_usage/by_install/<install_id>.json
+  - AgentCoordination/generated/skill_usage/summary.json
+- Agents call the script; they do not write JSON manually.
+- Summary sums all per-install counters.
+- Counters are advisory only and never auto-delete skills.
+
+Task 6: Full validator
+Implement:
+- Tools/agent_coordination/validate_agent_surfaces.py
+- tests/unit/tools/test_validate_agent_surfaces.py
+
+Validator checks:
+- Prefix compliance.
+- Agent Skills spec compliance.
+- OpenCode visibility and permissions.
+- Defensive anti-* deny.
+- Generated inventory freshness.
+- Test baseline artifact validity.
+- Reinforcement marker rules:
+  - allowed tags only: tdd, docs-first, code-doc-consistency, root-cause, no-ignore-folder, no-revert-unrelated
+  - marker syntax: `<!-- agent-coordination:reinforcement tdd -->`
+  - markers allowed in adapter files, not SKILL.md unless explicitly waived
+  - unmarked duplication of 5+ consecutive non-blank non-trivial AGENTS.md lines fails
+- Volatile fact checks:
+  - exact test counts in prose
+  - stale absolute path patterns outside settings warnings
+  - `python -m unittest discover`
+  - removed paths like docs/bug_tracker.md, docs/lessons_learned.md, assets/tools/ship_background_remover.py
+  - stale hardcoded baselines like 15405
+- Claude settings policy.
+- Usage counter schema if usage tracking is enabled.
+- Stale .agent/workflows and .agent/MIGRATION_PROGRESS.md are detected until removed.
+
+Task 7: CI/local enforcement
+- Add direct documented commands.
+- Optional pre-commit config is fine, but do not rely only on local hooks.
+- If this repo uses GitHub, add a GitHub Actions workflow for validator/inventory freshness. If not sure, keep CI instructions tool-neutral and ask user.
+
+Task 8: Remove stale surfaces
+After replacement artifacts and validator exist:
+- Delete `.agent/workflows/`
+- Delete `.agent/MIGRATION_PROGRESS.md`
+- Regenerate inventory.
+- Run validator.
+- Commit deletion separately.
+
+Testing expectations:
+- Run focused unit tests after each tool change.
+- Run full sharded suite before final completion:
+  - `py -3.10 Tools/test_sharded/test_sharded.py --refresh-baseline-timestamp`
+- If full suite is too expensive at an intermediate point, say so and run focused tests, but final completion should include full suite unless blocked.
+
+Final deliverable:
+- A sequence of commits on the branch.
+- Final clean working tree.
+- Summary of implemented phases.
+- Tests run and results.
+- Any remaining risks or user decisions.
