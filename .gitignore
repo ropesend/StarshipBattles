@@ -43,6 +43,9 @@ MagicMock/
 # Subagent temporary reports
 .agent_reports/
 
+# Agent coordination per-checkout state (install IDs, local usage logs).
+AgentCoordination/local/
+
 # Generated analysis output
 dead_code_candidates.txt
 
