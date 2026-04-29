@@ -251,6 +251,47 @@ class TestEventLogWindow:
 
         assert window_manager.event_log_window is None
 
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
+    def test_open_event_log_scopes_to_current_empire(
+        self, mock_window_class, window_manager, mock_scene
+    ):
+        """BUG-123: open_event_log threads scene.current_empire.id to facade."""
+        mock_scene.current_empire.id = 7
+        mock_scene.current_empire.name = "Chimera"
+        mock_scene.facade = mock_scene._facade
+        mock_scene.facade.get_all_events = Mock(return_value=[])
+
+        window_manager.open_event_log()
+
+        mock_scene.facade.get_all_events.assert_called_once_with(empire_id=7)
+
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
+    def test_open_event_log_passes_empire_name_to_window(
+        self, mock_window_class, window_manager, mock_scene
+    ):
+        """BUG-123: empire name is forwarded so the window title shows it."""
+        mock_scene.current_empire.id = 0
+        mock_scene.current_empire.name = "Lahore"
+        mock_scene.facade = mock_scene._facade
+        mock_scene.facade.get_all_events = Mock(return_value=[])
+
+        window_manager.open_event_log()
+
+        call_kwargs = mock_window_class.call_args[1]
+        assert call_kwargs.get("empire_name") == "Lahore"
+
+    @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
+    def test_open_event_log_with_events_forwards_empire_name(
+        self, mock_window_class, window_manager
+    ):
+        """BUG-123: open_event_log_with_events accepts and forwards empire_name."""
+        events = [{"category": "production", "turn": 1, "message": "Built"}]
+
+        window_manager.open_event_log_with_events(events, empire_name="Chimera")
+
+        call_kwargs = mock_window_class.call_args[1]
+        assert call_kwargs.get("empire_name") == "Chimera"
+
 
 # =============================================================================
 # PROJ-215 Phase 4: Event Log Navigation Tests

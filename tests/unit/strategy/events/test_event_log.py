@@ -403,3 +403,120 @@ class TestEventLogFilteringEdgeCases:
         events = log.get_all_events()
         events.clear()  # Mutate the returned list
         assert len(log.get_all_events()) == 1  # Internal list unaffected
+
+
+# --- BUG-123: Per-empire filtering ---
+
+
+class TestEventLogPerEmpireFilter:
+    """BUG-123: Event Log scopes events to a single empire's view.
+
+    The ``-1`` empire_id is the existing sentinel used by
+    ``GameSession._create_event_handler`` for events whose owner is
+    "the world" (environmental hazards, star destruction, etc.).
+    Default contract: those events broadcast to every empire.
+    """
+
+    def test_get_events_for_empire_filters_by_empire_id(self) -> None:
+        log = EventLog()
+        log.append(_make_event(empire_id=0, message="Empire 0 build"))
+        log.append(_make_event(empire_id=1, message="Empire 1 build"))
+        log.append(_make_event(empire_id=0, message="Empire 0 colony"))
+        log.append(_make_event(empire_id=2, message="Empire 2 stuff"))
+
+        empire_0 = log.get_events_for_empire(0)
+        assert len(empire_0) == 2
+        assert all(e.empire_id == 0 for e in empire_0)
+        assert {e.message for e in empire_0} == {"Empire 0 build", "Empire 0 colony"}
+
+    def test_get_events_for_empire_returns_empty_for_unknown_empire(self) -> None:
+        log = EventLog()
+        log.append(_make_event(empire_id=0))
+        assert log.get_events_for_empire(99) == []
+
+    def test_get_events_for_empire_includes_global_events_by_default(self) -> None:
+        """empire_id=-1 events are visible to every empire (broadcast)."""
+        log = EventLog()
+        log.append(_make_event(empire_id=0, message="Empire 0"))
+        log.append(_make_event(empire_id=1, message="Empire 1"))
+        log.append(_make_event(empire_id=-1, message="Star destroyed"))
+
+        for filter_empire in (0, 1):
+            scoped = log.get_events_for_empire(filter_empire)
+            messages = {e.message for e in scoped}
+            assert "Star destroyed" in messages, (
+                f"Empire {filter_empire} should see global events"
+            )
+
+    def test_get_events_for_empire_excludes_globals_when_opted_out(self) -> None:
+        """include_global=False suppresses the empire_id=-1 broadcast."""
+        log = EventLog()
+        log.append(_make_event(empire_id=0, message="Mine"))
+        log.append(_make_event(empire_id=-1, message="Star destroyed"))
+
+        scoped = log.get_events_for_empire(0, include_global=False)
+        assert len(scoped) == 1
+        assert scoped[0].message == "Mine"
+
+    def test_get_events_for_empire_does_not_leak_other_empires(self) -> None:
+        """No event with empire_id != active_empire ever crosses the filter."""
+        log = EventLog()
+        log.append(_make_event(empire_id=0, message="Mine"))
+        log.append(_make_event(empire_id=1, message="Theirs"))
+        log.append(_make_event(empire_id=2, message="Also theirs"))
+
+        scoped = log.get_events_for_empire(0)
+        assert all(e.empire_id in (0, -1) for e in scoped)
+        assert "Theirs" not in {e.message for e in scoped}
+        assert "Also theirs" not in {e.message for e in scoped}
+
+    def test_get_events_for_turn_with_empire_id_kwarg(self) -> None:
+        """Optional empire_id kwarg combines with turn filtering."""
+        log = EventLog()
+        log.append(_make_event(turn=1, empire_id=0, message="T1 mine"))
+        log.append(_make_event(turn=1, empire_id=1, message="T1 theirs"))
+        log.append(_make_event(turn=2, empire_id=0, message="T2 mine"))
+        log.append(_make_event(turn=1, empire_id=-1, message="T1 global"))
+
+        scoped = log.get_events_for_turn(1, empire_id=0)
+        messages = {e.message for e in scoped}
+        assert messages == {"T1 mine", "T1 global"}
+
+    def test_get_events_for_turn_without_empire_id_unchanged(self) -> None:
+        """Existing get_events_for_turn callers unaffected by the new kwarg."""
+        log = EventLog()
+        log.append(_make_event(turn=1, empire_id=0))
+        log.append(_make_event(turn=1, empire_id=1))
+        log.append(_make_event(turn=2, empire_id=0))
+
+        assert len(log.get_events_for_turn(1)) == 2  # both empires
+
+    def test_get_events_by_category_with_empire_id_kwarg(self) -> None:
+        """Category filter composes with the empire_id kwarg."""
+        log = EventLog()
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=0, message="P0"))
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=1, message="P1"))
+        log.append(_make_event(category=EventCategory.COMBAT, empire_id=0, message="C0"))
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=-1, message="Pglobal"))
+
+        scoped = log.get_events_by_category(EventCategory.PRODUCTION, empire_id=0)
+        assert {e.message for e in scoped} == {"P0", "Pglobal"}
+
+    def test_get_events_by_category_all_with_empire_id_kwarg(self) -> None:
+        """ALL category + empire_id returns every event scoped to that empire."""
+        log = EventLog()
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=0))
+        log.append(_make_event(category=EventCategory.COMBAT, empire_id=0))
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=1))
+
+        scoped = log.get_events_by_category(EventCategory.ALL, empire_id=0)
+        assert len(scoped) == 2
+        assert all(e.empire_id == 0 for e in scoped)
+
+    def test_get_events_by_category_without_empire_id_unchanged(self) -> None:
+        """Existing category callers unaffected."""
+        log = EventLog()
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=0))
+        log.append(_make_event(category=EventCategory.PRODUCTION, empire_id=1))
+
+        assert len(log.get_events_by_category(EventCategory.PRODUCTION)) == 2

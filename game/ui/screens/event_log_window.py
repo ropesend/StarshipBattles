@@ -47,6 +47,8 @@ class EventLogWindow(StrategyModalWindow):
     Double-clicking a row with location data navigates the camera to that location.
 
     PROJ-313: Migrated to StrategyModalWindow base class.
+    BUG-123: ``empire_name`` (optional) surfaces the active empire in
+    the window title so players can confirm per-empire scoping is active.
 
     Args:
         rect: Window position and size.
@@ -56,6 +58,10 @@ class EventLogWindow(StrategyModalWindow):
         on_close_callback: Called when the window is closed (registrar slot cleanup).
         on_navigate_callback: Called with [q, r] hex coords when user
             double-clicks an event row that has location data.
+        empire_name: BUG-123 — when set, the window title becomes
+            ``"Event Log — <empire_name> Empire"``. None falls back to
+            the plain ``"Event Log"`` title (back-compat for callers
+            that don't supply it, including tests).
     """
 
     def __init__(
@@ -67,11 +73,17 @@ class EventLogWindow(StrategyModalWindow):
         window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable] = None,
         on_navigate_callback: Optional[Callable] = None,
+        empire_name: Optional[str] = None,
     ) -> None:
+        title = (
+            f"Event Log — {empire_name} Empire"
+            if empire_name
+            else "Event Log"
+        )
         super().__init__(
             rect=rect,
             manager=manager,
-            window_display_title="Event Log",
+            window_display_title=title,
             resizable=True,
             window_manager=window_manager,
         )

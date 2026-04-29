@@ -357,12 +357,18 @@ class TestStrategyUIEventLogIntegration:
         ui.window_manager.open_event_log.assert_called_once()
 
     def test_open_event_log_with_events(self):
-        """open_event_log_with_events() should delegate to window manager."""
+        """open_event_log_with_events() should delegate to window manager.
+
+        BUG-123: empire_name is forwarded as a keyword arg (defaults to
+        None when caller omits it).
+        """
         ui, scene = self._make_strategy_ui()
         specific_events = [_make_event()]
         ui.open_event_log_with_events(specific_events)
         # Verify delegation with specific events
-        ui.window_manager.open_event_log_with_events.assert_called_once_with(specific_events)
+        ui.window_manager.open_event_log_with_events.assert_called_once_with(
+            specific_events, empire_name=None
+        )
 
 
 # ---------------------------------------------------------------------------

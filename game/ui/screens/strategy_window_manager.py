@@ -254,9 +254,16 @@ class StrategyWindowManager:
         """Open the Event Log Window showing all events (PROJ-77)."""
         self._event_log.open_all()
 
-    def open_event_log_with_events(self, events: list) -> None:
-        """Open the Event Log Window with a specific event list."""
-        self._event_log.open_with_events(events)
+    def open_event_log_with_events(
+        self, events: list, *, empire_name: "str | None" = None
+    ) -> None:
+        """Open the Event Log Window with a specific event list.
+
+        ``empire_name`` (BUG-123): forwarded to the registrar so the
+        window title shows the active empire. None falls back to the
+        plain "Event Log" title.
+        """
+        self._event_log.open_with_events(events, empire_name=empire_name)
 
     def open_empire_panel(self) -> None:
         """Open the Empire Panel Window."""

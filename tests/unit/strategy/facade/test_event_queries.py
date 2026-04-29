@@ -155,3 +155,41 @@ class TestFacadeGetEventsByCategory:
 
         result = facade.get_events_by_category("colonies")
         assert len(result) == 1
+
+
+class TestFacadeEventQueriesEmpireScoping:
+    """BUG-123: ``empire_id`` kwarg passes through facade -> slice -> EventLog."""
+
+    def _events_for_three_empires(self) -> list:
+        return [
+            Event(EventType.SHIP_BUILT, EventCategory.PRODUCTION, turn=1, empire_id=0, message="E0"),
+            Event(EventType.SHIP_BUILT, EventCategory.PRODUCTION, turn=1, empire_id=1, message="E1"),
+            Event(EventType.SHIP_BUILT, EventCategory.PRODUCTION, turn=2, empire_id=0, message="E0t2"),
+            Event(EventType.STAR_DESTROYED, EventCategory.SUPERWEAPONS, turn=1, empire_id=-1, message="Global"),
+        ]
+
+    def test_get_all_events_scopes_to_empire(self):
+        facade = _make_facade_with_events(self._events_for_three_empires())
+        result = facade.get_all_events(empire_id=0)
+        messages = {e["message"] for e in result}
+        assert messages == {"E0", "E0t2", "Global"}
+        assert "E1" not in messages
+
+    def test_get_all_events_unscoped_returns_everything(self):
+        """Default (no empire_id) preserves prior behaviour."""
+        facade = _make_facade_with_events(self._events_for_three_empires())
+        result = facade.get_all_events()
+        assert len(result) == 4
+
+    def test_get_turn_events_scopes_to_empire(self):
+        facade = _make_facade_with_events(self._events_for_three_empires(), turn_number=1)
+        result = facade.get_turn_events(turn=1, empire_id=1)
+        messages = {e["message"] for e in result}
+        assert messages == {"E1", "Global"}
+
+    def test_get_events_by_category_scopes_to_empire(self):
+        facade = _make_facade_with_events(self._events_for_three_empires())
+        result = facade.get_events_by_category(EventCategory.PRODUCTION, empire_id=0)
+        messages = {e["message"] for e in result}
+        assert messages == {"E0", "E0t2"}  # Global is SUPERWEAPONS, not PRODUCTION
+        assert "E1" not in messages

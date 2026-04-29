@@ -449,19 +449,35 @@ class StrategySessionFacade:
         """Get the session-scoped race registry (PROJ-287)."""
         return self._economy_slice.get_race_registry()
 
-    # --- Event log queries (PROJ-77) ---
+    # --- Event log queries (PROJ-77; BUG-123 per-empire scoping) ---
 
-    def get_turn_events(self, turn: int = None) -> List[dict]:
-        """Get events for a specific turn (or current turn if None)."""
-        return self._event_slice.get_turn_events(turn)
+    def get_turn_events(
+        self, turn: Optional[int] = None, *, empire_id: Optional[int] = None
+    ) -> List[dict]:
+        """Get events for a specific turn (or current turn if None).
 
-    def get_all_events(self) -> List[dict]:
-        """Get all events from the event log."""
-        return self._event_slice.get_all_events()
+        ``empire_id`` (BUG-123): when not None, scope to that empire's
+        view; global events (``empire_id == -1``) are included.
+        """
+        return self._event_slice.get_turn_events(turn, empire_id=empire_id)
 
-    def get_events_by_category(self, category: str) -> List[dict]:
-        """Get events filtered by category."""
-        return self._event_slice.get_events_by_category(category)
+    def get_all_events(self, *, empire_id: Optional[int] = None) -> List[dict]:
+        """Get all events from the event log.
+
+        ``empire_id`` (BUG-123): see :meth:`get_turn_events`.
+        """
+        return self._event_slice.get_all_events(empire_id=empire_id)
+
+    def get_events_by_category(
+        self, category: str, *, empire_id: Optional[int] = None
+    ) -> List[dict]:
+        """Get events filtered by category.
+
+        ``empire_id`` (BUG-123): see :meth:`get_turn_events`.
+        """
+        return self._event_slice.get_events_by_category(
+            category, empire_id=empire_id
+        )
 
     # --- Validation queries ---
 

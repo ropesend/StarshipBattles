@@ -104,12 +104,21 @@ class StrategyGameStateManager:
 
         self._screen.turn_processing = False
 
-        # PROJ-77: Show event log if there are events for this turn
-        turn_events = self._screen._facade.get_turn_events(turn=processed_turn)
+        # PROJ-77: Show event log if there are events for this turn.
+        # BUG-123: scope to the active empire; the auto-popup is now
+        # suppressed when the active empire produced no events even if
+        # other empires did (each player only sees their own log).
+        active_empire = self._screen.current_empire
+        turn_events = self._screen._facade.get_turn_events(
+            turn=processed_turn, empire_id=active_empire.id
+        )
         # FEAT-20: suppress per-turn popup during run_n_turns; events are still
         # returned to the caller so the bulk runner can surface a combined log.
         if turn_events and not self._suppress_event_log:
-            self._screen.ui.open_event_log_with_events(turn_events)
+            self._screen.ui.open_event_log_with_events(
+                turn_events,
+                empire_name=getattr(active_empire, "name", None),
+            )
 
         # Refresh UI for currently selected object
         if self._screen.selected_object:
@@ -164,8 +173,15 @@ class StrategyGameStateManager:
             self._screen.turn_processing_message = None
 
         # Surface a single combined event log at the end if any events occurred.
+        # BUG-123: per-turn calls to process_full_turn already filtered each
+        # batch to the active empire's view, so combined_events is already
+        # scoped. Surface the empire name in the title for consistency.
         if combined_events:
-            self._screen.ui.open_event_log_with_events(combined_events)
+            active_empire = self._screen.current_empire
+            self._screen.ui.open_event_log_with_events(
+                combined_events,
+                empire_name=getattr(active_empire, "name", None),
+            )
 
         # Update the player indicator after the bulk run completes.
         self._update_player_label()

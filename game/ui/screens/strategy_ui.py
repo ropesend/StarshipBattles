@@ -349,9 +349,17 @@ class StrategyUI:
         """Open the Event Log Window showing all events (PROJ-77)."""
         self.window_manager.open_event_log()
 
-    def open_event_log_with_events(self, events: list) -> None:
-        """Open the Event Log Window with a specific event list."""
-        self.window_manager.open_event_log_with_events(events)
+    def open_event_log_with_events(
+        self, events: list, *, empire_name: "str | None" = None
+    ) -> None:
+        """Open the Event Log Window with a specific event list.
+
+        ``empire_name`` (BUG-123): when set, the window title shows the
+        active empire so the player can confirm per-empire scoping.
+        """
+        self.window_manager.open_event_log_with_events(
+            events, empire_name=empire_name
+        )
 
     def open_orders_window(self, entity, entity_type: str = "fleet") -> None:
         """Open the Orders Window for a fleet or planet.

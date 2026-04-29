@@ -150,7 +150,12 @@ class TestProcessFullTurnLegacy:
         screen._facade.get_turn_events.assert_called()
 
     def test_opens_event_log_when_events_exist(self):
-        """process_full_turn() should open event log if there are events."""
+        """process_full_turn() should open event log if there are events.
+
+        BUG-123: empire_name is forwarded as a keyword arg sourced from
+        ``current_empire.name`` so the window title shows the active
+        empire.
+        """
         manager, screen = _make_game_state_manager()
         mock_events = [MagicMock()]
         screen._facade.get_turn_events.return_value = mock_events
@@ -158,7 +163,9 @@ class TestProcessFullTurnLegacy:
         with patch('pygame.display.get_surface', return_value=None):
             manager.process_full_turn()
 
-        screen.ui.open_event_log_with_events.assert_called_once_with(mock_events)
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            mock_events, empire_name=screen.current_empire.name
+        )
 
     def test_auto_saves_when_save_path_exists(self):
         """process_full_turn() should auto-save when session has save_path."""
@@ -183,6 +190,37 @@ class TestProcessFullTurnLegacy:
             manager.process_full_turn()
 
         screen.on_ui_selection.assert_called_once_with(screen.selected_object)
+
+
+class TestProcessFullTurnEmpireFilter:
+    """BUG-123: per-empire scoping of the per-turn auto-popup."""
+
+    def test_passes_active_empire_id_to_get_turn_events(self):
+        """process_full_turn must scope facade.get_turn_events to current_empire."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 7
+
+        with patch('pygame.display.get_surface', return_value=None):
+            manager.process_full_turn()
+
+        screen._facade.get_turn_events.assert_called_once_with(
+            turn=7, empire_id=screen.current_empire.id
+        )
+
+    def test_does_not_open_popup_when_active_empire_has_no_events(self):
+        """Empty turn_events suppresses the popup even if other empires had events.
+
+        Per-empire filtering happens at the facade call, so the manager
+        only sees the active empire's slice. Empty list -> no popup.
+        """
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+
+        with patch('pygame.display.get_surface', return_value=None):
+            manager.process_full_turn()
+
+        screen.ui.open_event_log_with_events.assert_not_called()
 
 
 class TestUpdatePlayerLabel:
