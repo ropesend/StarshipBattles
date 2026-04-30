@@ -86,8 +86,9 @@ class TestRaceFlagLoading:
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
-        # Verify RaceAssetLoader was called with empire and asset_base
-        mock_race_loader.load_all_empire_assets.assert_called_once_with(empire, mock_game_config.asset_base_path)
+        # Verify RaceAssetLoader was called with the empire (PROJ-314 / BUG-124:
+        # ShipThemeManager owns the asset directory, so asset_base is gone).
+        mock_race_loader.load_all_empire_assets.assert_called_once_with(empire)
 
         # Verify colony flag was loaded
         assert 'colony' in scene.empire_assets[1]
@@ -337,7 +338,7 @@ class TestMultipleEmpires:
 
         mock_race_loader = MagicMock()
 
-        def load_all_empire_assets_side_effect(emp, asset_base):
+        def load_all_empire_assets_side_effect(emp):
             if emp.id == 1:
                 return {'colony': theme_surface}  # Empire 1: theme colony flag
             elif emp.id == 2:

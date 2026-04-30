@@ -636,20 +636,12 @@ class StrategyScreen:
     def _load_assets(self) -> None:
         """Load visual assets using AssetManager and RaceAssetLoader."""
         from game.assets.asset_manager import get_asset_manager
-        from game.strategy.engine.game_config import GameConfig
 
         am = get_asset_manager()
         am.load_manifest()
 
-        # Get current asset base path (works regardless of saved paths)
-        config = GameConfig()
-        asset_base = config.asset_base_path
-
         for emp in self.empires:
-            self.empire_assets[emp.id] = self._race_loader.load_all_empire_assets(
-                emp,
-                asset_base
-            )
+            self.empire_assets[emp.id] = self._race_loader.load_all_empire_assets(emp)
 
     def _get_object_asset(self, obj) -> Any:
         """Resolve the visual asset for a data object."""

@@ -262,9 +262,7 @@ class TestEmpireAssetLoading:
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
         loader = RaceAssetLoader()
-
-        with patch('os.path.exists', return_value=False):
-            result = loader.load_empire_theme_assets("Federation", "/nonexistent/path")
+        result = loader.load_empire_theme_assets("__nonexistent_theme__")
 
         assert isinstance(result, dict)
 
@@ -273,79 +271,61 @@ class TestEmpireAssetLoading:
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
         loader = RaceAssetLoader()
-        result = loader.load_empire_theme_assets("", "/some/path")
+        result = loader.load_empire_theme_assets("")
 
         assert result == {}
 
-    def test_load_empire_theme_assets_empty_asset_base(self):
-        """load_empire_theme_assets returns empty dict for empty asset_base."""
+    def test_load_empire_theme_assets_unknown_theme(self):
+        """load_empire_theme_assets returns empty dict for an unknown theme."""
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
         loader = RaceAssetLoader()
-        result = loader.load_empire_theme_assets("Federation", "")
+        result = loader.load_empire_theme_assets("__nonexistent_theme__")
 
         assert result == {}
 
-    def test_load_empire_theme_assets_nonexistent_theme_dir(self):
-        """load_empire_theme_assets returns empty dict when theme dir doesn't exist."""
+    @pytest.mark.parametrize("theme_id", [
+        "Aetherwake",
+        "Atlantians",
+        "Federation",
+        "Klingons",
+        "Ossivine",
+        "Prismsteel",
+        "Romulans",
+        "Thoraliens",
+        "Voidforged",
+    ])
+    def test_load_empire_theme_assets_loads_real_fleet_icon_for_stock_theme(self, theme_id):
+        """BUG-124 regression: every stock theme on disk populates result['fleet'].
+
+        Hits real disk (no os.path.exists mocking) so a future filename
+        convention drift cannot silently re-break this. The loader must
+        delegate to ShipThemeManager (PROJ-314) which reads theme.json's
+        canonical 'assets:' schema rather than hardcoding a filename.
+        """
+        from game.ui.assets.ship_theme_manager import (
+            ShipThemeManager, set_default_ship_theme_manager,
+        )
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
-        loader = RaceAssetLoader()
-
-        with patch('os.path.exists', return_value=False):
-            result = loader.load_empire_theme_assets("Federation", "/some/path")
-
-        assert result == {}
-
-    @patch('game.ui.screens.race_asset_loader.get_asset_manager')
-    def test_load_empire_theme_assets_loads_colony_flag(self, mock_get_am):
-        """load_empire_theme_assets loads colony flag from Flags/Colony_Flag.jpg."""
-        from game.ui.screens.race_asset_loader import RaceAssetLoader
+        # Force a fresh manager instance so disk discovery runs against the
+        # real assets/ShipThemes/ tree (test fixtures reset the singleton).
+        manager = ShipThemeManager()
+        manager.initialize()
+        set_default_ship_theme_manager(manager)
 
         loader = RaceAssetLoader()
-        mock_surface = MagicMock(spec=pygame.Surface)
-        mock_am = MagicMock()
-        mock_am.load_external_image.return_value = mock_surface
-        mock_get_am.return_value = mock_am
+        result = loader.load_empire_theme_assets(theme_id)
 
-        def exists_side_effect(path):
-            # Theme dir exists, colony flag exists, fleet icon doesn't
-            if 'Federation' in path and 'Flags' not in path and 'Skins' not in path:
-                return True
-            if 'Colony_Flag' in path:
-                return True
-            return False
-
-        with patch('os.path.exists', side_effect=exists_side_effect):
-            result = loader.load_empire_theme_assets("Federation", "/assets/themes")
-
-        assert 'colony' in result
-        assert result['colony'] == mock_surface
-
-    @patch('game.ui.screens.race_asset_loader.get_asset_manager')
-    def test_load_empire_theme_assets_loads_fleet_icon(self, mock_get_am):
-        """load_empire_theme_assets loads fleet icon from Skins/Battlecruiser.png."""
-        from game.ui.screens.race_asset_loader import RaceAssetLoader
-
-        loader = RaceAssetLoader()
-        mock_surface = MagicMock(spec=pygame.Surface)
-        mock_am = MagicMock()
-        mock_am.load_external_image.return_value = mock_surface
-        mock_get_am.return_value = mock_am
-
-        def exists_side_effect(path):
-            # Theme dir exists, fleet icon exists, colony flag doesn't
-            if 'Federation' in path and 'Flags' not in path and 'Skins' not in path:
-                return True
-            if 'Battlecruiser' in path:
-                return True
-            return False
-
-        with patch('os.path.exists', side_effect=exists_side_effect):
-            result = loader.load_empire_theme_assets("Federation", "/assets/themes")
-
-        assert 'fleet' in result
-        assert result['fleet'] == mock_surface
+        assert 'fleet' in result, (
+            f"Theme {theme_id!r}: 'fleet' key missing from result; the loader "
+            f"failed to resolve battle_cruiser.png via ShipThemeManager."
+        )
+        surface = result['fleet']
+        assert isinstance(surface, pygame.Surface)
+        # Non-trivial surface — every stock theme ships a real PNG, not a 1x1.
+        assert surface.get_width() > 1
+        assert surface.get_height() > 1
 
     # -------------------------------------------------------------------------
     # load_all_empire_assets tests
@@ -360,7 +340,7 @@ class TestEmpireAssetLoading:
         mock_empire.flag_id = None
         mock_empire.empire_theme_id = None
 
-        result = loader.load_all_empire_assets(mock_empire, "/assets/themes")
+        result = loader.load_all_empire_assets(mock_empire)
 
         assert isinstance(result, dict)
 
@@ -381,7 +361,7 @@ class TestEmpireAssetLoading:
 
         with patch.object(loader, 'load_empire_race_assets', return_value={'colony': race_surface, 'fleet_flag': race_surface}):
             with patch.object(loader, 'load_empire_theme_assets', return_value={'colony': theme_surface, 'fleet': fleet_surface}):
-                result = loader.load_all_empire_assets(mock_empire, "/assets/themes")
+                result = loader.load_all_empire_assets(mock_empire)
 
         # Race colony should override theme colony
         assert result['colony'] == race_surface
@@ -401,7 +381,7 @@ class TestEmpireAssetLoading:
 
         with patch.object(loader, 'load_empire_race_assets', return_value={}):
             with patch.object(loader, 'load_empire_theme_assets', return_value={'colony': theme_surface, 'fleet': theme_surface}):
-                result = loader.load_all_empire_assets(mock_empire, "/assets/themes")
+                result = loader.load_all_empire_assets(mock_empire)
 
         assert result['colony'] == theme_surface
 
@@ -415,7 +395,7 @@ class TestEmpireAssetLoading:
         mock_empire.empire_theme_id = ""
         mock_empire.flag_id = ""
 
-        result = loader.load_all_empire_assets(mock_empire, "/assets/themes")
+        result = loader.load_all_empire_assets(mock_empire)
 
         assert isinstance(result, dict)
         assert result == {}
@@ -433,7 +413,7 @@ class TestEmpireAssetLoading:
 
         with patch.object(loader, 'load_empire_race_assets', return_value={'colony': fleet_flag_surface, 'fleet_flag': fleet_flag_surface}):
             with patch.object(loader, 'load_empire_theme_assets', return_value={}):
-                result = loader.load_all_empire_assets(mock_empire, "/assets/themes")
+                result = loader.load_all_empire_assets(mock_empire)
 
         assert 'fleet_flag' in result
 
@@ -555,30 +535,12 @@ class TestRaceAssetLoaderErrorHandling:
         # Surface should have alpha channel
         assert result.get_flags() & pygame.SRCALPHA
 
-    def test_load_empire_theme_assets_with_exception(self):
-        """load_empire_theme_assets handles exceptions from asset_manager."""
+    def test_load_empire_theme_assets_unknown_theme_returns_empty(self):
+        """load_empire_theme_assets returns an empty dict for an unknown theme."""
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
         loader = RaceAssetLoader()
+        result = loader.load_empire_theme_assets("__never_exists__")
 
-        def exists_side_effect(path):
-            if 'TestTheme' in path:
-                return True
-            if 'Colony_Flag' in path:
-                return True
-            return False
-
-        with patch('os.path.exists', side_effect=exists_side_effect):
-            with patch('game.ui.screens.race_asset_loader.get_asset_manager') as mock_get_am:
-                mock_am = MagicMock()
-                mock_am.load_external_image.side_effect = Exception("Load failed")
-                mock_get_am.return_value = mock_am
-
-                # This may raise, which is acceptable for unhandled exception
-                try:
-                    result = loader.load_empire_theme_assets("TestTheme", "/assets/themes")
-                except Exception:
-                    result = {}
-
-        # Should handle gracefully or raise - test that it doesn't crash pygame
         assert isinstance(result, dict)
+        assert result == {}
